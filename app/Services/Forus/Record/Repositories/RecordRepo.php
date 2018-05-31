@@ -135,12 +135,12 @@ class RecordRepo implements IRecordRepo
     public function identityIdByEmail(
         string $email
     ) {
-        $identity = Record::getModel()->where([
+        $record = Record::getModel()->where([
             'record_type_id' => $this->getTypeIdByKey('email'),
             'value' => $email,
         ])->first();
 
-        return $identity ? $identity->id : null;
+        return $record ? $record->identity_id : null;
     }
 
 

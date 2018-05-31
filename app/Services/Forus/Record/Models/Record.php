@@ -50,9 +50,9 @@ class Record extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function validations() {
-        return $this->belongsTo(RecordValidation::class);
+        return $this->hasMany(RecordValidation::class);
     }
 }

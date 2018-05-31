@@ -4,7 +4,7 @@ namespace App\Services\TokenGeneratorService;
 
 use Illuminate\Support\ServiceProvider;
 
-class UUIDGeneratorServiceProvider extends ServiceProvider
+class TokenGeneratorServiceProvider extends ServiceProvider
 {
     /**
      * Register the service provider.
