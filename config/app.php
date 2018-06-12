@@ -181,6 +181,7 @@ return [
         Dimsav\Translatable\TranslatableServiceProvider::class,
 
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
+        App\Services\ApiRequestService\ApiRequestServiceProvider::class,
 
 
         /*

@@ -1,5 +1,7 @@
 <?php
 
+use GuzzleHttp\Client as GuzzleClient;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes

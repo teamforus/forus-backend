@@ -26,7 +26,7 @@ interface IRecordRepo {
      * @param string $recordTypeKey
      * @param string $recordValue
      * @param mixed $excludeIdentity
-     * @return mixed
+     * @return boolean
      * @throws \Exception
      */
     public function isRecordUnique(
@@ -40,7 +40,7 @@ interface IRecordRepo {
      * @param string $recordTypeKey
      * @param string $recordValue
      * @param mixed $excludeIdentity
-     * @return mixed
+     * @return boolean
      * @throws \Exception
      */
     public function isRecordExists(
@@ -53,7 +53,7 @@ interface IRecordRepo {
     /**
      * Get identity id by email record
      * @param string $email
-     * @return mixed
+     * @return mixed|null
      */
     public function identityIdByEmail(
         string $email
@@ -62,7 +62,7 @@ interface IRecordRepo {
     /**
      * Get type id by key
      * @param string $key
-     * @return mixed
+     * @return int|null
      */
     public function getTypeIdByKey(
         string $key
@@ -177,7 +177,7 @@ interface IRecordRepo {
      * @param string $value
      * @param mixed|null $recordCategoryId
      * @param integer|null $order
-     * @return bool|array
+     * @return null|array
      */
     public function recordCreate(
         $identityId,

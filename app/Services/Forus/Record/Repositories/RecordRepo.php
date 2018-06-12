@@ -48,7 +48,7 @@ class RecordRepo implements IRecordRepo
      * @param string $recordTypeKey
      * @param string $recordValue
      * @param mixed $excludeIdentity
-     * @return mixed
+     * @return boolean
      * @throws \Exception
      */
     public function isRecordUnique(
@@ -89,7 +89,7 @@ class RecordRepo implements IRecordRepo
      * @param string $recordTypeKey
      * @param string $recordValue
      * @param mixed $excludeIdentity
-     * @return mixed
+     * @return boolean
      * @throws \Exception
      */
     public function isRecordExists(
@@ -130,7 +130,7 @@ class RecordRepo implements IRecordRepo
     /**
      * Get identity id by email record
      * @param string $email
-     * @return mixed
+     * @return mixed|null
      */
     public function identityIdByEmail(
         string $email
@@ -147,7 +147,7 @@ class RecordRepo implements IRecordRepo
     /**
      * Get type id by key
      * @param string $key
-     * @return mixed
+     * @return int|null
      */
     public function getTypeIdByKey(
         string $key
@@ -167,14 +167,14 @@ class RecordRepo implements IRecordRepo
         string $name,
         int $order
     ) {
-        /** @var Record $record */
-        $record =  RecordCategory::getModel()->create([
+        /** @var RecordCategory $recordCategory */
+        $recordCategory =  RecordCategory::getModel()->create([
             'identity_id' => $identityId,
             'name' => $name,
             'order' => $order ? $order : 0,
         ]);
 
-        return $this->categoryGet($identityId, $record->id);
+        return $this->categoryGet($identityId, $recordCategory->id);
     }
 
     /**
@@ -398,7 +398,7 @@ class RecordRepo implements IRecordRepo
      * @param string $value
      * @param mixed|null $recordCategoryId
      * @param integer|null $order
-     * @return bool|array
+     * @return null|array
      * @throws \Exception
      */
     public function recordCreate(
