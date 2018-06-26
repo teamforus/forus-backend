@@ -35,7 +35,6 @@ class IdentityController extends Controller
     public function store(IdentityStoreRequest $request)
     {
         $identityId = $this->identityRepo->make(
-            $request->input('type'),
             $request->input('pin_code'),
             $request->input('records')
         );

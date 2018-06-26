@@ -16,7 +16,6 @@ class CreateIdentitiesTable extends Migration
         Schema::create('identities', function (Blueprint $table) {
             $table->increments('id');
             $table->string('pin_code')->nullable();
-            $table->string('type');
             $table->string('address', 42)->nullable();
             $table->timestamps();
         });

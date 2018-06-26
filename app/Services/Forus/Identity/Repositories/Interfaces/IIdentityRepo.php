@@ -4,13 +4,11 @@ namespace App\Services\Forus\Identity\Repositories\Interfaces;
 interface IIdentityRepo {
     /**
      * Make new identity
-     * @param string $type
      * @param string|null $pinCode
      * @param array $records
      * @return mixed
      */
     public function make(
-        string $type,
         string $pinCode = null,
         array $records = []
     );

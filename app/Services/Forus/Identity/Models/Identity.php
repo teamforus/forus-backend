@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Model;
  * Class Identity
  * @property mixed $id
  * @property string $pin_code
- * @property string $type
  * @property Collection $types
  * @property Collection $proxies
  * @property String $address
@@ -26,7 +25,7 @@ class Identity extends Model
      * @var array
      */
     protected $fillable = [
-        'pin_code', 'type', 'address'
+        'pin_code', 'address'
     ];
 
     /**

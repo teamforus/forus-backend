@@ -21,18 +21,15 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     /**
      * Make new identity
-     * @param string $type
      * @param string|null $pinCode
      * @param array $records
      * @return mixed
      */
     public function make(
-        string $type,
         string $pinCode = null,
         array $records = []
     ) {
         $identity = $this->model->create([
-            'type'      => $type,
             'pin_code'  => $pinCode ? app('hash')->make($pinCode) : null
         ])->toArray();
 

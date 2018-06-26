@@ -28,7 +28,6 @@ class IdentityStoreRequest extends FormRequest
     {
         return [
             'pin_code'          => ['nullable', new IdentityPinCodeRule()],
-            'type'              => 'required|in:personal,organization',
             'records'           => ['required', 'array', new IdentityRecordsRule()],
             'records.email'     => ['required', 'email', new IdentityRecordsUniqueRule('email')],
         ];
