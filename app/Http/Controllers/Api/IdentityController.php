@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\Api\Identity\IdentityAuthorizeCodeRequest;
+use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
@@ -145,10 +147,10 @@ class IdentityController extends Controller
 
     /**
      * Authorize code
-     * @param Request $request
+     * @param IdentityAuthorizeCodeRequest $request
      * @return array|
      */
-    public function proxyAuthorizeCode(Request $request) {
+    public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request) {
         $status = $this->identityRepo->activateAuthorizationCodeProxy(
             $request->get('identity'),
             $request->post('auth_code', '')
@@ -179,10 +181,10 @@ class IdentityController extends Controller
 
     /**
      * Authorize token
-     * @param Request $request
+     * @param IdentityAuthorizeTokenRequest $request
      * @return array|
      */
-    public function proxyAuthorizeToken(Request $request) {
+    public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request) {
         $status = $this->identityRepo->activateAuthorizationTokenProxy(
             $request->get('identity'),
             $request->post('auth_token', '')

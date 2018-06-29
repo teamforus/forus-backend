@@ -14,7 +14,7 @@ class IdentityPinCodeRule implements Rule
      * @param integer $digits
      * @return void
      */
-    public function __construct($digits = 6)
+    public function __construct($digits = 4)
     {
         $this->digits = $digits;
     }
