@@ -25,7 +25,7 @@ class RecordType extends Model
      * @var array
      */
     protected $fillable = [
-        'key'
+        'key', 'type'
     ];
 
     /**

@@ -21,32 +21,37 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     /**
      * Make new identity
-     * @param string|null $pinCode
+     * @param string $pinCode
      * @param array $records
+     * @throws \Exception
      * @return mixed
      */
     public function make(
-        string $pinCode = null,
+        string $pinCode,
         array $records = []
     ) {
-        $identity = $this->model->create([
-            'pin_code'  => $pinCode ? app('hash')->make($pinCode) : null
-        ])->toArray();
+        $identity = $this->model->create(collect(
+            app('key_pair_generator')->make()
+        )->merge([
+            'pin_code' => app('hash')->make($pinCode)
+        ])->toArray())->toArray();
 
-        $this->recordRepo->updateRecords($identity['id'], $records);
+        $this->recordRepo->updateRecords($identity['address'], $records);
 
-        return $identity['id'];
+        return $identity['address'];
     }
 
     /**
      * Create new proxy for given identity
-     * @param $identityId
+     * @param $identityAddress string
      * @return array
      */
     public function makeIdentityPoxy(
-        $identityId
+        $identityAddress
     ) {
-        $identity = Identity::whereKey($identityId)->first();
+        $identity = Identity::getModel()->where(
+            'address', $identityAddress
+        )->first();
 
         $proxyIdentity = $identity->proxies()->create([
             'access_token'  => $this->makeAccessToken(),
@@ -95,14 +100,14 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     /**
      * Get proxy identity by access token
      * @param mixed $proxyIdentityId
-     * @return mixed
+     * @return string
      */
-    public function identityIdByProxyId(
+    public function identityAddressByProxyId(
         $proxyIdentityId = null
     ) {
         $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
 
-        return $proxyIdentity ? $proxyIdentity->identity_id : null;
+        return $proxyIdentity ? $proxyIdentity->identity->address : null;
     }
 
     /**
@@ -263,10 +268,12 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     /**
      * Make email_token authorization proxy identity
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @return array
      */
-    public function makeAuthorizationEmailProxy($identityId) {
+    public function makeAuthorizationEmailProxy(
+        string $identityAddress
+    ) {
         // 1 hour
         $expiresIn = 60 * 60;
 
@@ -277,7 +284,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         ])->count() > 0);
 
         $proxyIdentity = IdentityProxy::create([
-            'identity_id'       => $identityId,
+            'identity_address'  => $identityAddress,
             'access_token'      => $this->makeAccessToken(),
             'auth_email_token'  => $auth_email_token,
             'expires_in'        => $expiresIn,
@@ -291,12 +298,12 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     /**
      * Authorize proxy identity by code
-     * @param $identityId
+     * @param $identityAddress string
      * @param string $code
      * @return mixed
      */
     public function activateAuthorizationCodeProxy(
-        $identityId,
+        string $identityAddress,
         string $code
     ) {
         /** @var IdentityProxy $proxy */
@@ -321,19 +328,19 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         }
 
         return !!$proxy->update([
-            'identity_id'   => $identityId,
-            'state'         => 'active'
+            'identity_address'  => $identityAddress,
+            'state'             => 'active'
         ]);
     }
 
     /**
      * Authorize proxy identity by token
-     * @param $identityId
+     * @param $identityAddress string
      * @param string $token
      * @return mixed
      */
     public function activateAuthorizationTokenProxy(
-        $identityId,
+        string $identityAddress,
         string $token
     ) {
         /** @var IdentityProxy $proxy */
@@ -358,8 +365,8 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         }
 
         return !!$proxy->update([
-            'identity_id'   => $identityId,
-            'state'         => 'active'
+            'identity_address'  => $identityAddress,
+            'state'             => 'active'
         ]);
     }
 
@@ -400,11 +407,11 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     }
 
     private function makeAccessToken() {
-        return $this->makeToken(64);
+        return $this->makeToken(200);
     }
 
     private function makeAuthCode() {
-        return rand(000000, 999999);
+        return random_int(000000, 999999);
     }
 
     private function makeAuthToken() {

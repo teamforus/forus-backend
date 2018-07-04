@@ -15,17 +15,17 @@ class CreateRecordValidationsTable extends Migration
     {
         Schema::create('record_validations', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('uuid', 200)->unique();
             $table->integer('record_id')->unsigned();
-            $table->integer('validator_id')->unsigned();
+            $table->string('identity_address', 200)->nullable();
             $table->string('state', 20);
             $table->timestamps();
 
             $table->foreign('record_id'
             )->references('id')->on('records')->onDelete('cascade');
 
-            $table->foreign('validator_id'
-            )->references('id')->on('validators')->onDelete('cascade');
-
+            $table->foreign('identity_address'
+            )->references('address')->on('identities')->onDelete('cascade');
         });
     }
 

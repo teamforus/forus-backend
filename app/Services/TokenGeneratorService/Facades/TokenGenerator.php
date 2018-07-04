@@ -8,6 +8,6 @@ class TokenGenerator extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'uuid_generator';
+        return 'token_generator';
     }
 }

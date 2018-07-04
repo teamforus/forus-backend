@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api;
+namespace App\Http\Requests\Api\RecordValidations;
 
-use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class IdentityAuthorizationEmailTokenRequest extends FormRequest
+class RecordValidationStoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +24,7 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
     public function rules()
     {
         return [
-            'primary_email' => ['required', new IdentityRecordsExistsRule('primary_email')],
-            'source'        => 'required|exists:sources,key'
+            'record_id' => 'required',
         ];
     }
 }

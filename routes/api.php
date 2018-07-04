@@ -1,7 +1,5 @@
 <?php
 
-use GuzzleHttp\Client as GuzzleClient;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -13,66 +11,92 @@ use GuzzleHttp\Client as GuzzleClient;
 |
 */
 
-Route::group(['namespace' => 'Api'], function() {
-    Route::group(['prefix' => '/identity'], function() {
-        Route::post('/', 'IdentityController@store');
+$router = app()->make('router');
 
-        Route::group(['prefix' => '/proxy'], function() {
-            Route::post('/code', 'IdentityController@proxyAuthorizationCode');
-            Route::post('/token', 'IdentityController@proxyAuthorizationToken');
-            Route::post('/email', 'IdentityController@proxyAuthorizationEmailToken');
+/**
+ * No authorization required
+ */
+$router->group([], function() use ($router) {
+    $router->group(['prefix' => '/identity'], function() use ($router) {
+        $router->post('/', 'Api\IdentityController@store');
 
-            Route::group(['prefix' => '/authorize'], function() {
-                Route::get('/email/{source}/{emailToken}', 'IdentityController@proxyAuthorizeEmail');
+        $router->group(['prefix' => '/proxy'], function() use ($router) {
+            $router->post('/code', 'Api\IdentityController@proxyAuthorizationCode');
+            $router->post('/token', 'Api\IdentityController@proxyAuthorizationToken');
+            $router->post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
+
+            $router->group(['prefix' => '/authorize'], function() use ($router) {
+                $router->get('/email/{source}/{emailToken}', 'Api\IdentityController@proxyAuthorizeEmail');
             });
+        });
+
+        /**
+         * Record types
+         */
+        $router->group(['prefix' => '/record-types'], function() use ($router) {
+            $router->get('/', 'Api\Identity\RecordTypeController@index');
         });
     });
 });
 
-Route::group(['namespace' => 'Api', 'middleware' => ['api.auth']], function() {
-    Route::group(['prefix' => '/identity'], function() {
-        Route::get('/pin-code/{pinCode}', 'IdentityController@checkPinCode');
-        Route::post('/pin-code', 'IdentityController@updatePinCode');
+/**
+ * Authorization required
+ */
+$router->group(['middleware' => ['api.auth']], function() use ($router) {
+    $router->group(['prefix' => '/identity'], function() use ($router) {
+        $router->get('/', 'Api\IdentityController@getPublic');
+        $router->get('/pin-code/{pinCode}', 'Api\IdentityController@checkPinCode');
+        $router->post('/pin-code', 'Api\IdentityController@updatePinCode');
 
         /**
          * Identity proxies
          */
-        Route::group(['prefix' => '/proxy'], function() {
-            Route::delete('/', 'IdentityController@proxyDestroy');
+        $router->group(['prefix' => '/proxy'], function() use ($router) {
+            $router->delete('/', 'Api\IdentityController@proxyDestroy');
 
-            Route::group(['prefix' => '/authorize'], function() {
-                Route::post('/code', 'IdentityController@proxyAuthorizeCode');
-                Route::post('/token', 'IdentityController@proxyAuthorizeToken');
+            $router->group(['prefix' => '/authorize'], function() use ($router) {
+                $router->post('/code', 'Api\IdentityController@proxyAuthorizeCode');
+                $router->post('/token', 'Api\IdentityController@proxyAuthorizeToken');
             });
         });
 
         /**
          * Record categories
          */
-        Route::group(['prefix' => '/record-categories'], function() {
-            Route::get('/', 'Identity\RecordCategoryController@index');
-            Route::post('/', 'Identity\RecordCategoryController@store');
-            Route::patch('/sort', 'Identity\RecordCategoryController@sort');
-            Route::get('/{recordCategoryId}', 'Identity\RecordCategoryController@show');
-            Route::patch('/{recordCategoryId}', 'Identity\RecordCategoryController@update');
-            Route::delete('/{recordCategoryId}', 'Identity\RecordCategoryController@destroy');
+        $router->group(['prefix' => '/record-categories'], function() use ($router) {
+            $router->get('/', 'Api\Identity\RecordCategoryController@index');
+            $router->post('/', 'Api\Identity\RecordCategoryController@store');
+            $router->patch('/sort', 'Api\Identity\RecordCategoryController@sort');
+            $router->get('/{recordCategoryId}', 'Api\Identity\RecordCategoryController@show');
+            $router->patch('/{recordCategoryId}', 'Api\Identity\RecordCategoryController@update');
+            $router->delete('/{recordCategoryId}', 'Api\Identity\RecordCategoryController@destroy');
         });
 
         /**
          * Record
          */
-        Route::group(['prefix' => '/records'], function() {
-            Route::get('/', 'Identity\RecordController@index');
-            Route::post('/', 'Identity\RecordController@store');
-            Route::get('/types', 'Identity\RecordController@typeKeys');
-            Route::patch('/sort', 'Identity\RecordController@sort');
-            Route::get('/{recordId}', 'Identity\RecordController@show');
-            Route::patch('/{recordId}', 'Identity\RecordController@update');
-            Route::delete('/{recordId}', 'Identity\RecordController@destroy');
+        $router->group(['prefix' => '/records'], function() use ($router) {
+            $router->get('/', 'Api\Identity\RecordController@index');
+            $router->post('/', 'Api\Identity\RecordController@store');
+            $router->get('/types', 'Api\Identity\RecordController@typeKeys');
+            $router->patch('/sort', 'Api\Identity\RecordController@sort');
+            $router->get('/{recordId}', 'Api\Identity\RecordController@show');
+            $router->patch('/{recordId}', 'Api\Identity\RecordController@update');
+            $router->delete('/{recordId}', 'Api\Identity\RecordController@destroy');
+        });
+
+        /**
+         * Record validations
+         */
+        $router->group(['prefix' => '/record-validations'], function() use ($router) {
+            $router->post('/', 'Api\Identity\RecordValidationController@store');
+            $router->get('/{recordUuid}', 'Api\Identity\RecordValidationController@show');
+            $router->patch('/{recordUuid}/approve', 'Api\Identity\RecordValidationController@approve');
+            $router->patch('/{recordUuid}/decline', 'Api\Identity\RecordValidationController@decline');
         });
     });
 
-    Route::get('/status', function() {
+    $router->get('/status', function() {
         return [
             'status' => 'ok'
         ];

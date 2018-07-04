@@ -38,11 +38,13 @@ class IdentityRecordsRule implements Rule
             $this->recordRepo->getRecordTypes()
         )->pluck('key');
 
+
         foreach ($requestKeys as $requestKey) {
-            if ($recordTypes->search($requestKey) !== 0) {
+            if ($recordTypes->search($requestKey) === FALSE) {
                 $this->message = trans('validation.unknown_record_key', [
                     'key' => $requestKey
                 ]);
+
                 return false;
             }
         }

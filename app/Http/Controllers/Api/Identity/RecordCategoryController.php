@@ -41,7 +41,7 @@ class RecordCategoryController extends Controller
         $success = !!$this->recordRepo->categoryCreate(
             $request->get('identity'),
             $request->get('name'),
-            $request->input('order', null)
+            $request->input('order', 0)
         );
 
         return compact('success');

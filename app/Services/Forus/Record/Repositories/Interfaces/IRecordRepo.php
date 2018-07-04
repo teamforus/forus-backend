@@ -5,12 +5,12 @@ namespace App\Services\Forus\Record\Repositories\Interfaces;
 interface IRecordRepo {
     /**
      * Create or update records for given identity
-     * @param $identityId
+     * @param $identityAddress
      * @param array $records
      * @return \Illuminate\Support\Collection
      */
     public function updateRecords(
-        $identityId,
+        string $identityAddress,
         array $records
     );
 
@@ -70,47 +70,47 @@ interface IRecordRepo {
 
     /**
      * Add new record category to identity
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param string $name
      * @param int $order
      * @return array|null
      */
     public function categoryCreate(
-        $identityId,
+        string $identityAddress,
         string $name,
         int $order
     );
 
     /**
      * Get identity record categories
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @return array
      */
     public function categoriesList(
-        $identityId
+        string $identityAddress
     );
 
     /**
      * Get identity record category
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordCategoryId
      * @return array|null
      */
     public function categoryGet(
-        $identityId,
+        string $identityAddress,
         $recordCategoryId
     );
 
     /**
      * Update identity record category
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordCategoryId
      * @param string|null $name
      * @param int|null $order
      * @return bool
      */
     public function categoryUpdate(
-        $identityId,
+        string $identityAddress,
         $recordCategoryId,
         string $name,
         int $order = null
@@ -118,61 +118,52 @@ interface IRecordRepo {
 
     /**
      * Sort categories
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param array $orders
      * @return void
      */
     public function categoriesSort(
-        $identityId,
+        string $identityAddress,
         array $orders
     );
 
     /**
      * Delete category
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordCategoryId
      * @return mixed
      * @throws \Exception
      */
     public function categoryDelete(
-        $identityId,
+        string $identityAddress,
         $recordCategoryId
     );
 
     /**
      * Get identity records
-     * @param mixed $identityId
+     * @param string $identityAddress
+     * @param string|null $type
      * @return array
      */
     public function recordsList(
-        $identityId
+        string $identityAddress,
+        $type
     );
 
     /**
      * Get identity record
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordId
      * @return array
      */
     public function recordGet(
-        $identityId,
+        string $identityAddress,
         $recordId
     );
 
     /**
-     * Get identity record by key
-     * @param mixed $identityId
-     * @param mixed $typeKey
-     * @return mixed
-     */
-    public function recordGetByKey(
-        $identityId,
-        $typeKey
-    );
-
-    /**
      * Add new record to identity
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param string $typeKey
      * @param string $value
      * @param mixed|null $recordCategoryId
@@ -180,7 +171,7 @@ interface IRecordRepo {
      * @return null|array
      */
     public function recordCreate(
-        $identityId,
+        string $identityAddress,
         string $typeKey,
         string $value,
         $recordCategoryId = null,
@@ -189,14 +180,14 @@ interface IRecordRepo {
 
     /**
      * Update record
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordId
      * @param mixed|null $recordCategoryId
      * @param integer|null $order
      * @return bool
      */
     public function recordUpdate(
-        $identityId,
+        string $identityAddress,
         $recordId,
         $recordCategoryId = null,
         $order = null
@@ -204,24 +195,57 @@ interface IRecordRepo {
 
     /**
      * Sort records
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param array $orders
      * @return void
      */
     public function recordsSort(
-        $identityId,
+        string $identityAddress,
         array $orders
     );
 
     /**
      * Delete record
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordId
      * @return bool
      * @throws \Exception
      */
     public function recordDelete(
-        $identityId,
+        string $identityAddress,
         $recordId
+    );
+
+    /**
+     * Make record validation qr-code data
+     * @param string $identityAddress
+     * @param mixed $recordId
+     * @return mixed
+     */
+    public function makeValidationRequest(
+        string $identityAddress,
+        int $recordId
+    );
+
+    /**
+     * Approve validation request
+     * @param string $identityAddress
+     * @param string $validationUuid
+     * @return bool
+     */
+    public function approveValidationRequest(
+        string $identityAddress,
+        string $validationUuid
+    );
+
+    /**
+     * Decline validation request
+     * @param string $identityAddress
+     * @param string $validationUuid
+     * @return bool
+     */
+    public function declineValidationRequest(
+        string $identityAddress,
+        string $validationUuid
     );
 }

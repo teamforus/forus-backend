@@ -4,22 +4,22 @@ namespace App\Services\Forus\Identity\Repositories\Interfaces;
 interface IIdentityRepo {
     /**
      * Make new identity
-     * @param string|null $pinCode
+     * @param string $pinCode
      * @param array $records
      * @return mixed
      */
     public function make(
-        string $pinCode = null,
+        string $pinCode ,
         array $records = []
     );
 
     /**
      * Create new proxy for given identity
-     * @param $identityId
+     * @param $identityAddress string
      * @return array
      */
     public function makeIdentityPoxy(
-        $identityId
+        $identityAddress
     );
 
     /**
@@ -42,9 +42,9 @@ interface IIdentityRepo {
     /**
      * Get proxy identity by access token
      * @param mixed $proxyIdentityId
-     * @return mixed
+     * @return string
      */
-    public function identityIdByProxyId(
+    public function identityAddressByProxyId(
         $proxyIdentityId = null
     );
 
@@ -114,30 +114,32 @@ interface IIdentityRepo {
 
     /**
      * Make email token authorization proxy identity
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @return array
      */
-    function makeAuthorizationEmailProxy($identityId);
+    function makeAuthorizationEmailProxy(
+        string $identityAddress
+    );
 
     /**
      * Authorize proxy identity by code
-     * @param $identityId
+     * @param $identityAddress string
      * @param string $code
      * @return mixed
      */
     public function activateAuthorizationCodeProxy(
-        $identityId,
+        string $identityAddress,
         string $code
     );
 
     /**
      * Authorize proxy identity by token
-     * @param $identityId
+     * @param $identityAddress string
      * @param string $token
      * @return mixed
      */
     public function activateAuthorizationTokenProxy(
-        $identityId,
+        string $identityAddress,
         string $token
     );
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Records;
 
+use App\Rules\IdentityRecordsUniqueRule;
 use App\Rules\RecordCategoryIdRule;
 use App\Rules\RecordTypeKeyExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,9 +26,20 @@ class RecordStoreRequest extends FormRequest
      */
     public function rules()
     {
+        $type = request()->get('type');
+        $valueRules = ['required'];
+
+        if ($type == 'email' || $type == 'primary_email') {
+            array_push($valueRules, 'email');
+        }
+
+        if ($type == 'primary_email') {
+            array_push($valueRules, new IdentityRecordsUniqueRule('primary_email'));
+        }
+
         return [
-            'key' => ['required', new RecordTypeKeyExistsRule()],
-            'value' => 'required',
+            'type' => ['required', new RecordTypeKeyExistsRule()],
+            'value' => $valueRules,
             'order' => 'nullable|numeric|min:0',
             'record_category_id' => ['nullable', new RecordCategoryIdRule()]
         ];

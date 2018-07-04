@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Rules\IdentityPinCodeRule;
+use App\Rules\IdentityRecordsAddressRule;
 use App\Rules\IdentityRecordsRule;
 use App\Rules\IdentityRecordsUniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,9 +28,11 @@ class IdentityStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'pin_code'          => ['nullable', new IdentityPinCodeRule()],
-            'records'           => ['required', 'array', new IdentityRecordsRule()],
-            'records.email'     => ['required', 'email', new IdentityRecordsUniqueRule('email')],
+            'pin_code'                  => ['required', new IdentityPinCodeRule()],
+            'records'                   => ['required', 'array', new IdentityRecordsRule()],
+            'records.primary_email'     => ['required', 'email', new IdentityRecordsUniqueRule('primary_email')],
+            'records.address'           => [new IdentityRecordsAddressRule()],
+            'records.*'                 => ['required'],
         ];
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class RecordCategory
  * @property mixed $id
- * @property integer $identity_id
+ * @property string $identity_address
  * @property string $name
  * @property integer $order
  * @property Collection $records
@@ -25,7 +25,7 @@ class RecordCategory extends Model
      * @var array
      */
     protected $fillable = [
-        'identity_id', 'name', 'order'
+        'identity_address', 'name', 'order'
     ];
 
     /**

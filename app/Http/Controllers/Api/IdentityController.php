@@ -23,8 +23,11 @@ class IdentityController extends Controller
         $this->recordRepo = app()->make('forus.services.record');
     }
 
-    public function index() {
-        return json_encode($this->identityRepo);
+    public function getPublic(Request $request)
+    {
+        return [
+            'address' => $request->get('identity')
+        ];
     }
 
     /**
@@ -119,8 +122,9 @@ class IdentityController extends Controller
     public function proxyAuthorizationEmailToken(
         IdentityAuthorizationEmailTokenRequest $request
     ) {
-        $email = $request->input('email');
+        $email = $request->input('primary_email');
         $source = $request->input('source');
+
 
         $identityId = $this->recordRepo->identityIdByEmail($email);
         $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);

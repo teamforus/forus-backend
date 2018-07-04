@@ -26,7 +26,8 @@ class RecordController extends Controller
     public function index(Request $request)
     {
         return $this->recordRepo->recordsList(
-            $request->get('identity')
+            $request->get('identity'),
+            $request->get('type', null)
         );
     }
 
@@ -40,13 +41,12 @@ class RecordController extends Controller
     {
         return $this->recordRepo->recordCreate(
             $request->get('identity'),
-            $request->get('key'),
+            $request->get('type'),
             $request->get('value'),
             $request->get('record_category_id', null),
             $request->get('order', null)
         );
     }
-
 
     /**
      * Get record
@@ -144,13 +144,5 @@ class RecordController extends Controller
         $success = true;
 
         return compact('success');
-    }
-
-    /**
-     * Get available record type keys
-     * @return array
-     */
-    public function typeKeys() {
-        return $this->recordRepo->getRecordTypes();
     }
 }

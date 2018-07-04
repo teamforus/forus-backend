@@ -192,6 +192,8 @@ return [
         App\Services\Forus\Identity\IdentityServiceProvider::class,
         App\Services\Forus\Record\RecordServiceProvider::class,
 
+        App\Services\KeyPairGeneratorService\KeyPairGeneratorServiceProvider::class,
+
     ],
 
     /*

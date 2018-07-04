@@ -29,7 +29,7 @@ class IdentityProxy extends Model
      * @var array
      */
     protected $fillable = [
-        'identity_id', 'access_token', 'auth_token', 'auth_code',
+        'identity_address', 'access_token', 'auth_token', 'auth_code',
         'auth_email_token', 'state', 'expires_in', 'address'
     ];
 
@@ -37,6 +37,6 @@ class IdentityProxy extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function identity() {
-        return $this->belongsTo(Identity::class);
+        return $this->belongsTo(Identity::class, 'identity_address', 'address');
     }
 }

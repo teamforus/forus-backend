@@ -2,21 +2,23 @@
 
 namespace App\Services\Forus\Record\Repositories;
 
+use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Record\Models\Record;
 use App\Services\Forus\Record\Models\RecordCategory;
 use App\Services\Forus\Record\Models\RecordType;
+use App\Services\Forus\Record\Models\RecordValidation;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
 class RecordRepo implements IRecordRepo
 {
     /**
      * Create or update records for given identity
-     * @param $identityId
+     * @param $identityAddress string
      * @param array $records
      * @return void
      */
     public function updateRecords(
-        $identityId,
+        string $identityAddress,
         array $records
     ) {
         $recordTypes = RecordType::getModel()->pluck(
@@ -25,7 +27,7 @@ class RecordRepo implements IRecordRepo
 
         foreach ($records as $key => $value) {
             Record::firstOrCreate([
-                'identity_id' => $identityId,
+                'identity_address' => $identityAddress,
                 'record_type_id' => $recordTypes[$key]
             ])->update([
                 'value' => $value
@@ -39,7 +41,7 @@ class RecordRepo implements IRecordRepo
      */
     public function getRecordTypes() {
         return RecordType::getModel()->get()->map(function($recordType) {
-            return collect($recordType)->only(['id', 'key', 'name']);
+            return collect($recordType)->only(['id', 'key', 'name', 'type']);
         })->toArray();
     }
 
@@ -78,7 +80,7 @@ class RecordRepo implements IRecordRepo
 
         if ($excludeIdentity) {
             $record->where(
-                'identity_id', '!=', $excludeIdentity
+                'identity_address', '!=', $excludeIdentity
             );
         }
 
@@ -119,7 +121,7 @@ class RecordRepo implements IRecordRepo
 
         if ($excludeIdentity) {
             $record->where(
-                'identity_id', '!=', $excludeIdentity
+                'identity_address', '!=', $excludeIdentity
             );
         }
 
@@ -136,11 +138,11 @@ class RecordRepo implements IRecordRepo
         string $email
     ) {
         $record = Record::getModel()->where([
-            'record_type_id' => $this->getTypeIdByKey('email'),
+            'record_type_id' => $this->getTypeIdByKey('primary_email'),
             'value' => $email,
         ])->first();
 
-        return $record ? $record->identity_id : null;
+        return $record ? $record->identity_address : null;
     }
 
 
@@ -157,36 +159,36 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Add new record category to identity
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param string $name
      * @param int $order
      * @return array|null
      */
     public function categoryCreate(
-        $identityId,
+        string $identityAddress,
         string $name,
         int $order
     ) {
         /** @var RecordCategory $recordCategory */
         $recordCategory =  RecordCategory::getModel()->create([
-            'identity_id' => $identityId,
+            'identity_address' => $identityAddress,
             'name' => $name,
             'order' => $order ? $order : 0,
         ]);
 
-        return $this->categoryGet($identityId, $recordCategory->id);
+        return $this->categoryGet($identityAddress, $recordCategory->id);
     }
 
     /**
      * Get identity record categories
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @return array
      */
     public function categoriesList(
-        $identityId
+        string $identityAddress
     ) {
         return RecordCategory::getModel()->where([
-            'identity_id' => $identityId
+            'identity_address' => $identityAddress
         ])->select([
             'id', 'name', 'order'
         ])->orderBy('order')->get()->toArray();
@@ -194,17 +196,17 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Get identity record category
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordCategoryId
      * @return array|null
      */
     public function categoryGet(
-        $identityId,
+        string $identityAddress,
         $recordCategoryId
     ) {
         $record =  RecordCategory::getModel()->where([
             'id' => $recordCategoryId,
-            'identity_id' => $identityId
+            'identity_address' => $identityAddress
         ])->select([
             'id', 'name', 'order'
         ])->first();
@@ -214,21 +216,21 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Update identity record category
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordCategoryId
      * @param string|null $name
      * @param int|null $order
      * @return bool
      */
     public function categoryUpdate(
-        $identityId,
+        string $identityAddress,
         $recordCategoryId,
         string $name = null,
         int $order = null
     ) {
         $record =  RecordCategory::getModel()->where([
             'id' => $recordCategoryId,
-            'identity_id' => $identityId
+            'identity_address' => $identityAddress
         ])->first();
 
         if (!$record) {
@@ -244,38 +246,38 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Sort categories
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param array $orders
      * @return void
      */
     public function categoriesSort(
-        $identityId,
+        string $identityAddress,
         array $orders
     ) {
         $self = $this;
 
         collect($orders)->each(function(
             $categoryId, $order
-        ) use ($identityId, $self) {
-            $self->categoryUpdate($identityId, $categoryId, null, $order);
+        ) use ($identityAddress, $self) {
+            $self->categoryUpdate($identityAddress, $categoryId, null, $order);
         });
     }
 
     /**
      * Delete category
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordCategoryId
      * @return mixed
      * @throws \Exception
      */
     public function categoryDelete(
-        $identityId,
+        string $identityAddress,
         $recordCategoryId
     ) {
         /** @var RecordCategory $recordCategory */
         $recordCategory =  RecordCategory::getModel()->where([
             'id' => $recordCategoryId,
-            'identity_id' => $identityId
+            'identity_address' => $identityAddress
         ])->first();
 
         if (!$recordCategory) {
@@ -293,18 +295,30 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Get identity records
-     * @param mixed $identityId
+     * @param string $identityAddress
+     * @param string|null $type
      * @return array
      */
     public function recordsList(
-        $identityId
+        string $identityAddress,
+        $type = null
     ) {
+        $type = RecordType::getModel()->where([
+            'key' => $type
+        ])->first();
+
         // Todo: validation state
-        return Record::getModel()->where([
-            'identity_id' => $identityId
+        $query = Record::getModel()->where([
+            'identity_address' => $identityAddress
         ])->with([
             'record_type'
-        ])->orderBy('order')->get()->map(function($record) {
+        ]);
+
+        if ($type) {
+            $query->where('record_type_id', $type->id);
+        }
+
+        return $query->orderBy('order')->get()->map(function($record) {
             /** @var Record $record */
             return [
                 'id' => $record->id,
@@ -312,28 +326,31 @@ class RecordRepo implements IRecordRepo
                 'order' => $record->order,
                 'key' => $record->record_type->key,
                 'record_category_id' => $record->record_category_id,
-                'valid' => true,
-                'validations' => $record->validations()->select([
-                    'state', 'validator_id'
-                ])->get()->toArray()
+                'validations' => $record->validations()->where([
+                    'state' => 'approved'
+                ])->select([
+                    'state', 'identity_address', 'created_at', 'updated_at'
+                ])->groupBy('identity_address', 'record_id')->orderBy(
+                    'updated_at', 'DESC'
+                )->get()->toArray()
             ];
         })->toArray();
     }
 
     /**
      * Get identity record
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordId
      * @return array
      */
     public function recordGet(
-        $identityId,
+        string $identityAddress,
         $recordId
     ) {
         /** @var Record $record */
         $record = Record::getModel()->where([
             'id' => $recordId,
-            'identity_id' => $identityId,
+            'identity_address' => $identityAddress,
         ])->first();
 
         // Todo: validation state
@@ -341,59 +358,21 @@ class RecordRepo implements IRecordRepo
             'id' => $record->id,
             'value' => $record->value,
             'order' => $record->order,
-            'record_category_id' => $record->record_category_id,
             'key' => $record->record_type->key,
-            'valid' => true,
-            'validations' => $record->validations()->select([
-                'state', 'validator_id'
-            ])->get()->toArray()
-        ] : null;
-    }
-
-    /**
-     * Get identity record by key
-     * @param mixed $identityId
-     * @param mixed $typeKey
-     * @return mixed
-     * @throws \Exception
-     */
-    public function recordGetByKey(
-        $identityId,
-        $typeKey
-    ) {
-        $typeId = $this->getTypeIdByKey($typeKey);
-
-        if (!$typeId) {
-            throw new \Exception(
-                trans('record.exceptions.unknown_record_type', [
-                    'type' => $typeKey
-                ])
-            );
-        }
-
-        /** @var Record $record */
-        $record = Record::getModel()->where([
-            'record_type_id' => $typeId,
-            'identity_id' => $identityId,
-        ])->first();
-
-        // Todo: validation state
-        return $record ? [
-            'id' => $record->id,
-            'value' => $record->value,
-            'order' => $record->order,
             'record_category_id' => $record->record_category_id,
-            'key' => $record->record_type->key,
-            'valid' => true,
-            'validations' => $record->validations()->select([
-                'state', 'validator_id'
-            ])->get()->toArray()
+            'validations' => $record->validations()->where([
+                'state' => 'approved'
+            ])->select([
+                'state', 'identity_address', 'created_at', 'updated_at'
+            ])->distinct()->orderBy(
+                'updated_at', 'DESC'
+            )->get()->toArray()
         ] : null;
     }
 
     /**
      * Add new record to identity
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param string $typeKey
      * @param string $value
      * @param mixed|null $recordCategoryId
@@ -402,7 +381,7 @@ class RecordRepo implements IRecordRepo
      * @throws \Exception
      */
     public function recordCreate(
-        $identityId,
+        string $identityAddress,
         string $typeKey,
         string $value,
         $recordCategoryId = null,
@@ -420,26 +399,26 @@ class RecordRepo implements IRecordRepo
 
         /** @var Record $record */
         $record = Record::create([
-            'identity_id' => $identityId,
+            'identity_address' => $identityAddress,
             'order' => $order ? $order : 0,
             'value' => $value,
             'record_type_id' => $typeId,
             'record_category_id' => $recordCategoryId,
         ]);
 
-        return $this->recordGet($identityId, $record->id);
+        return $this->recordGet($identityAddress, $record->id);
     }
 
     /**
      * Update record
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordId
      * @param mixed|null $recordCategoryId
      * @param integer|null $order
      * @return bool
      */
     public function recordUpdate(
-        $identityId,
+        string $identityAddress,
         $recordId,
         $recordCategoryId = null,
         $order = null
@@ -453,43 +432,43 @@ class RecordRepo implements IRecordRepo
 
         return !!Record::getModel()->where([
             'id' => $recordId,
-            'identity_id' => $identityId
+            'identity_address' => $identityAddress
         ])->update($update->toArray());
     }
 
     /**
      * Sort records
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param array $orders
      * @return void
      */
     public function recordsSort(
-        $identityId,
+        string $identityAddress,
         array $orders
     ) {
         $self = $this;
 
         collect($orders)->each(function(
             $recordId, $order
-        ) use ($identityId, $self) {
-            $self->recordUpdate($identityId, $recordId, null, $order);
+        ) use ($identityAddress, $self) {
+            $self->recordUpdate($identityAddress, $recordId, null, $order);
         });
     }
 
     /**
      * Delete record
-     * @param mixed $identityId
+     * @param string $identityAddress
      * @param mixed $recordId
      * @return bool
      * @throws \Exception
      */
     public function recordDelete(
-        $identityId,
+        string $identityAddress,
         $recordId
     ) {
         $record =  Record::getModel()->where([
             'id' => $recordId,
-            'identity_id' => $identityId
+            'identity_address' => $identityAddress
         ])->first();
 
         if (!$record) {
@@ -497,5 +476,124 @@ class RecordRepo implements IRecordRepo
         }
 
         return !!$record->delete();
+    }
+
+    /**
+     * Make record validation qr-code data
+     * @param string $identityAddress
+     * @param mixed $recordId
+     * @return array|bool
+     */
+    public function makeValidationRequest(
+        string $identityAddress,
+        int $recordId
+    ) {
+        /** @var Record $record */
+        $record =  Record::getModel()->where([
+            'id' => $recordId,
+            'identity_address' => $identityAddress
+        ])->first();
+
+        if (!$record) {
+            return false;
+        }
+
+        return $record->validations()->create([
+            'uuid' => app()->make('token_generator')->generate(64),
+            'identity_address' => null,
+            'state' => 'pending'
+        ])->only([
+            'uuid'
+        ]);
+    }
+
+    /**
+     * Approve validation request
+     * @param string $identityAddress
+     * @param string $validationUuid
+     * @return bool
+     */
+    public function approveValidationRequest(
+        string $identityAddress,
+        string $validationUuid
+    ) {
+        /** @var
+         * Identity $identity
+         */
+        $validation = RecordValidation::getModel()->where(
+            'uuid', $validationUuid
+        )->first();
+
+        $identity = Identity::getModel()->where([
+            'address' => $identityAddress
+        ])->first();
+
+        if (!$identity || $validation->identity_address) {
+            return false;
+        }
+
+        return !!$validation->update([
+            'identity_address' => $identity->address,
+            'state' => 'approved'
+        ]);
+    }
+
+    /**
+     * Decline validation request
+     * @param string $identityAddress
+     * @param string $validationUuid
+     * @return bool
+     */
+    public function declineValidationRequest(
+        string $identityAddress,
+        string $validationUuid
+    ) {
+        /** @var
+         * Identity $identity
+         */
+        $validation = RecordValidation::getModel()->where(
+            'uuid', $validationUuid
+        )->first();
+
+        $identity = Identity::getModel()->where([
+            'address' => $identityAddress
+        ])->first();
+
+        if (!$identity || $validation->identity_address) {
+            return false;
+        }
+
+        return !!$validation->update([
+            'identity_address' => $identity->address,
+            'state' => 'declined'
+        ]);
+    }
+
+    /**
+     * Show validation request
+     * @param string $validationUuid
+     * @return bool
+     */
+    public function showValidationRequest(
+        string $validationUuid
+    ) {
+        /** @var RecordValidation $validation */
+        $validation = RecordValidation::getModel()->where(
+            'uuid', $validationUuid
+        )->first();
+
+        if (!$validation) {
+            return false;
+        }
+
+        $out = array_merge($validation->only([
+            'state', 'identity_address', 'uuid'
+        ]), $validation->record->only([
+            'value'
+        ]), $validation->record->record_type->only([
+            'key', 'name'
+        ]));
+
+        return $out;
     }
 }

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * Class Record
  * @mixin Eloquent
  * @property mixed $id
- * @property integer $identity_id
+ * @property string $identity_address
  * @property integer $record_type_id
  * @property integer $record_category_id
  * @property string $value
@@ -31,7 +31,7 @@ class Record extends Model
      * @var array
      */
     protected $fillable = [
-        'identity_id', 'record_type_id', 'record_category_id',
+        'identity_address', 'record_type_id', 'record_category_id',
         'value', 'order'
     ];
 

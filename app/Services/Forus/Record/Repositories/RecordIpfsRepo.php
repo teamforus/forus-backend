@@ -236,14 +236,16 @@ class RecordIpfsRepo implements IRecordRepo
     /**
      * Get identity records
      * @param mixed $identityId
+     * @param string|null $type
      * @return array
      */
     public function recordsList(
-        $identityId
+        $identityId,
+        $type
     ) {
         $response = $this->apiRequest->post(
             $this->serviceUrl . '/records-list', compact(
-                'identityId'
+                'identityId', 'type'
             )
         )->getBody();
 
@@ -267,26 +269,6 @@ class RecordIpfsRepo implements IRecordRepo
         )->getBody();
 
         return collect($response)->toArray();
-    }
-
-    /**
-     * Get identity record by key
-     * @param mixed $identityId
-     * @param mixed $typeKey
-     * @return array|null
-     * @throws \Exception
-     */
-    public function recordGetByKey(
-        $identityId,
-        $typeKey
-    ) {
-        $response = $this->apiRequest->post(
-            $this->serviceUrl . '/record-get-by-key', compact(
-                'identityId','typeKey'
-            )
-        )->getBody();
-
-        return $response ? collect($response)->toArray() : null;
     }
 
     /**

@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class RecordValidation
  * @property mixed $id
- * @property integer $validator_id
+ * @property string $uuid
+ * @property string $identity_address
  * @property integer $record_id
  * @property string $state
  * @property Record $record
@@ -24,7 +25,7 @@ class RecordValidation extends Model
      * @var array
      */
     protected $fillable = [
-        'validator_id', 'record_id', 'state'
+        'identity_address', 'record_id', 'state', 'uuid'
     ];
 
     /**

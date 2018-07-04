@@ -25,23 +25,13 @@ class Identity extends Model
      * @var array
      */
     protected $fillable = [
-        'pin_code', 'address'
+        'pin_code', 'address', 'passphrase', 'private_key', 'public_key'
     ];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
-     */
-    public function types() {
-        return $this->hasManyThrough(
-            IdentityType::class,
-            IdentityActiveType::class
-        );
-    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function proxies() {
-        return $this->hasMany(IdentityProxy::class);
+        return $this->hasMany(IdentityProxy::class, 'identity_address', 'address');
     }
 }

@@ -15,8 +15,11 @@ class CreateIdentitiesTable extends Migration
     {
         Schema::create('identities', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('pin_code')->nullable();
-            $table->string('address', 42)->nullable();
+            $table->string('pin_code');
+            $table->string('public_key', 200);
+            $table->string('private_key', 200);
+            $table->string('passphrase', 200)->nullable();
+            $table->string('address', 200)->unique();
             $table->timestamps();
         });
     }

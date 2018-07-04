@@ -22,7 +22,7 @@ class ApiAuthMiddleware
 
         $proxyIdentityId = $identityService->proxyIdByAccessToken($accessToken);
         $proxyIdentityState = $identityService->proxyStateById($proxyIdentityId);
-        $identityId = $identityService->identityIdByProxyId($proxyIdentityId);
+        $identityAddress = $identityService->identityAddressByProxyId($proxyIdentityId);
 
         if ($accessToken && $proxyIdentityState != 'active') {
             switch ($proxyIdentityState) {
@@ -34,13 +34,13 @@ class ApiAuthMiddleware
             }
         }
 
-        if (!$accessToken || !$proxyIdentityId || !$identityId) {
+        if (!$accessToken || !$proxyIdentityId || !$identityAddress) {
             return response()->json([
                 "message" => 'invalid_access_token'
             ])->setStatusCode(401);
         }
 
-        $request->attributes->set('identity', $identityId);
+        $request->attributes->set('identity', $identityAddress);
         $request->attributes->set('proxyIdentity', $proxyIdentityId);
 
         return $next($request);
