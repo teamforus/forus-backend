@@ -1,3 +1,8 @@
+**note:** work in progress, beware of the dragons 🐉 
+
+**This repository is maintained by:** [@dev-rminds](https://github.com/dev-rminds)
+
+
 <p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
 
 <p align="center">
