@@ -78,7 +78,7 @@ interface IRecordRepo {
     public function categoryCreate(
         string $identityAddress,
         string $name,
-        int $order
+        int $order = 0
     );
 
     /**

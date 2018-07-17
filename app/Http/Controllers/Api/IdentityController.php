@@ -39,12 +39,16 @@ class IdentityController extends Controller
      */
     public function store(IdentityStoreRequest $request)
     {
-        $identityId = $this->identityRepo->make(
+        $identityAddress = $this->identityRepo->make(
             $request->input('pin_code'),
             $request->input('records')
         );
 
-        $identityProxyId = $this->identityRepo->makeIdentityPoxy($identityId);
+        $identityProxyId = $this->identityRepo->makeIdentityPoxy(
+            $identityAddress
+        );
+
+        $this->recordRepo->categoryCreate($identityAddress, "Relaties");
 
         return [
             'access_token' => $this->identityRepo->getProxyAccessToken(

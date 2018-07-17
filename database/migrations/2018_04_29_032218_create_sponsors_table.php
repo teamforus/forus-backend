@@ -15,11 +15,11 @@ class CreateSponsorsTable extends Migration
     {
         Schema::create('sponsors', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('identity_id')->unsigned();
+            $table->string('identity_address', 200)->default('')->nullable();
             $table->timestamps();
 
-            $table->foreign('identity_id'
-            )->references('id')->on('identities')->onDelete('cascade');
+            $table->foreign('identity_address'
+            )->references('address')->on('identities')->onDelete('cascade');
         });
     }
 

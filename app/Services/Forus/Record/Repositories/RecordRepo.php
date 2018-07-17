@@ -167,13 +167,13 @@ class RecordRepo implements IRecordRepo
     public function categoryCreate(
         string $identityAddress,
         string $name,
-        int $order
+        int $order = 0
     ) {
         /** @var RecordCategory $recordCategory */
         $recordCategory =  RecordCategory::getModel()->create([
             'identity_address' => $identityAddress,
             'name' => $name,
-            'order' => $order ? $order : 0,
+            'order' => $order,
         ]);
 
         return $this->categoryGet($identityAddress, $recordCategory->id);

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Dimsav\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * Class ProductCategory
  * @property mixed $id
  * @property string $key
+ * @property string $name
  * @property integer $parent_id
  * @property ProductCategory $parent
  * @property Collection $products
@@ -20,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ProductCategory extends Model
 {
+    use Translatable;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -27,6 +31,15 @@ class ProductCategory extends Model
      */
     protected $fillable = [
         'key', 'parent_id'
+    ];
+
+    /**
+     * The attributes that are translatable.
+     *
+     * @var array
+     */
+    public $translatedAttributes = [
+        'name'
     ];
 
     /**
