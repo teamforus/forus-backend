@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateFundsTable extends Migration
+class CreateOrganizationProductCategoriesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,17 +13,17 @@ class CreateFundsTable extends Migration
      */
     public function up()
     {
-        Schema::create('funds', function (Blueprint $table) {
+        Schema::create('organization_product_categories', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('organization_id')->unsigned();
-            $table->string('name', 255);
-            $table->string('state', 20);
-            $table->timestamp('start_date');
-            $table->timestamp('end_date');
+            $table->integer('product_category_id')->unsigned();
             $table->timestamps();
 
             $table->foreign('organization_id'
             )->references('id')->on('organizations')->onDelete('cascade');
+
+            $table->foreign('product_category_id'
+            )->references('id')->on('product_categories')->onDelete('cascade');
         });
     }
 
@@ -34,6 +34,6 @@ class CreateFundsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('funds');
+        Schema::dropIfExists('organization_product_categories');
     }
 }

@@ -24,7 +24,7 @@ class FundValidator extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'url', 'token'
+        'fund_id', 'identity_address'
     ];
 
     /**

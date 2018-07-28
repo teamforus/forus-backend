@@ -2,7 +2,20 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Gate;
+use App\Models\FundValidator;
+use App\Models\Office;
+use App\Models\FundProvider;
+use App\Models\Product;
+use App\Policies\FundValidatorPolicy;
+use App\Policies\OfficePolicy;
+use App\Policies\OrganizationFundPolicy;
+use App\Policies\ProductPolicy;
+use Illuminate\Auth\Access\Gate;
+use Illuminate\Contracts\Auth\Access\Gate as GateContract;
+use App\Models\Fund;
+use App\Models\Organization;
+use App\Policies\FundPolicy;
+use App\Policies\OrganizationPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -13,7 +26,12 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        'App\Model' => 'App\Policies\ModelPolicy',
+        Fund::class                 => FundPolicy::class,
+        Office::class               => OfficePolicy::class,
+        Product::class              => ProductPolicy::class,
+        Organization::class         => OrganizationPolicy::class,
+        FundValidator::class        => FundValidatorPolicy::class,
+        FundProvider::class     => OrganizationFundPolicy::class,
     ];
 
     /**
@@ -26,5 +44,16 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         //
+    }
+
+    public function register()
+    {
+        $this->app->singleton(GateContract::class, function ($app) {
+            return new Gate($app, function () use ($app) {
+                return request()->get('identity', false);
+            });
+        });
+
+        parent::register();
     }
 }

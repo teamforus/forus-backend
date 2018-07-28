@@ -18,7 +18,7 @@ class OrganizationTypeController extends Controller
                 'value' => "Provider"
             ], [
                 'key' => "sponsor",
-                'value' => "Sponsor"
+                'value' => "Organization"
             ]
         ]));
     }

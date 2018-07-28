@@ -193,6 +193,7 @@ return [
         App\Services\Forus\Record\RecordServiceProvider::class,
 
         App\Services\KeyPairGeneratorService\KeyPairGeneratorServiceProvider::class,
+        App\Services\KvkApiService\KvkApiServiceProvider::class,
 
     ],
 

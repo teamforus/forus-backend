@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateProvidersTable extends Migration
+class CreateOfficeSchedulesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,13 @@ class CreateProvidersTable extends Migration
      */
     public function up()
     {
-        Schema::create('providers', function (Blueprint $table) {
+        Schema::create('office_schedules', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('identity_id')->unsigned();
+            $table->integer('office_id')->unsigned();
+            $table->integer('week_day')->unsigned();
+            $table->time('start_time')->nullable()->default('09:00:00');
+            $table->time('end_time')->nullable()->default('17:00:00');
             $table->timestamps();
-
-            $table->foreign('identity_id'
-            )->references('id')->on('identities')->onDelete('cascade');
         });
     }
 
@@ -30,6 +30,6 @@ class CreateProvidersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('providers');
+        Schema::dropIfExists('office_schedules');
     }
 }

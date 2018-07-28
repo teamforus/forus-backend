@@ -3,24 +3,21 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class FundSponsor
+ * Class FundProvider
  * @property mixed $id
- * @property integer $fund_id
- * @property integer $sponsor_id
  * @property string $state
- * @property Organization $sponsor
+ * @property int $fund_id
+ * @property int $organization_id
  * @property Fund $fund
- * @property Product $product
- * @property Collection $investments
+ * @property Organization $organization
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
  */
-class FundSponsor extends Model
+class FundProvider extends Model
 {
     /**
      * The attributes that are mass assignable.
@@ -28,7 +25,7 @@ class FundSponsor extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'sponsor_id', 'state'
+        'organization_id', 'fund_id', 'state'
     ];
 
     /**
@@ -41,14 +38,7 @@ class FundSponsor extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function sponsor() {
+    public function organization() {
         return $this->belongsTo(Organization::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function investments() {
-        return $this->hasMany(FundSponsorInvestment::class);
     }
 }

@@ -16,7 +16,7 @@ class CreateWalletVoucherTransactionsTable extends Migration
         Schema::create('wallet_voucher_transactions', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('token_id')->unsigned();
-            $table->integer('provider_id')->unsigned();
+            $table->integer('fund_provider_id')->unsigned();
             $table->integer('wallet_voucher_id')->unsigned();
             $table->integer('amount');
             $table->string('type', 20);
@@ -26,8 +26,8 @@ class CreateWalletVoucherTransactionsTable extends Migration
             $table->foreign('token_id'
             )->references('id')->on('tokens')->onDelete('cascade');
 
-            $table->foreign('provider_id'
-            )->references('id')->on('providers')->onDelete('cascade');
+            $table->foreign('fund_provider_id'
+            )->references('id')->on('fund_providers')->onDelete('cascade');
 
             $table->foreign('wallet_voucher_id'
             )->references('id')->on('wallet_vouchers')->onDelete('cascade');

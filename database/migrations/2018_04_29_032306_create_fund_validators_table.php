@@ -16,8 +16,7 @@ class CreateFundValidatorsTable extends Migration
         Schema::create('fund_validators', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('fund_id')->unsigned();
-            $table->string('url', 4096);
-            $table->string('token', 64);
+            $table->string('identity_address', 200);
             $table->timestamps();
 
             $table->foreign('fund_id'

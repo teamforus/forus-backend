@@ -93,6 +93,10 @@ return [
     'unknown_record_key'    => 'Unknown record key: ":key".',
     'unique_record'         => 'The :attribute record has already been taken.',
 
+    'organization_fund'     => [
+        'wrong_categories'  => 'validation.organization_fund.wrong_categories',
+        'already_requested' => 'validation.organization_fund.already_requested',
+    ],
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines

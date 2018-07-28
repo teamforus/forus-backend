@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateSponsorsTable extends Migration
+class CreateOrganizationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,17 @@ class CreateSponsorsTable extends Migration
      */
     public function up()
     {
-        Schema::create('sponsors', function (Blueprint $table) {
+        Schema::create('organizations', function (Blueprint $table) {
             $table->increments('id');
             $table->string('identity_address', 200)->default('')->nullable();
+
+            $table->string('name', 200)->default('');
+            $table->string('iban', 200)->default('');
+            $table->string('email', 200)->default('');
+            $table->string('phone', 200)->default('');
+            $table->string('kvk', 200)->default('');
+            $table->string('btw', 200)->default('');
+
             $table->timestamps();
 
             $table->foreign('identity_address'
@@ -30,6 +38,6 @@ class CreateSponsorsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sponsors');
+        Schema::dropIfExists('organizations');
     }
 }

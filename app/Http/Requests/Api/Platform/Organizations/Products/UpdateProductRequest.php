@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Requests\Api\Platform\Organizations\Products;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateProductRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'name'                  => 'required|between:2,200',
+            'description'           => 'required|between:5,1000',
+            'price'                 => 'required|numeric|min:.01',
+            'old_price'             => 'required|numeric|min:.01',
+            'total_amount'          => 'required|numeric|min:1',
+            'sold_amount'           => 'required|numeric|min:0',
+            'product_category_id'   => 'required|exists:product_categories,id',
+        ];
+    }
+}

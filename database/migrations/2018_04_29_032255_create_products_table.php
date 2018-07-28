@@ -15,35 +15,21 @@ class CreateProductsTable extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('provider_id')->unsigned();
+            $table->integer('organization_id')->unsigned();
             $table->integer('product_category_id')->unsigned();
-            $table->integer('old_price')->unsigned();
+            $table->string('name', 20);
+            $table->text('description');
             $table->integer('price')->unsigned();
-            $table->integer('amount')->unsigned();
+            $table->integer('old_price')->unsigned();
+            $table->integer('total_amount')->unsigned();
+            $table->integer('sold_amount')->unsigned();
             $table->timestamps();
 
-            $table->foreign('provider_id'
-            )->references('id')->on('providers')->onDelete('cascade');
+            $table->foreign('organization_id'
+            )->references('id')->on('organizations')->onDelete('cascade');
 
             $table->foreign('product_category_id'
             )->references('id')->on('product_categories')->onDelete('cascade');
-        });
-
-        Schema::create('product_translations', function (Blueprint $table) {
-            $table->increments('id');
-            $table->integer('product_id')->unsigned();
-            $table->string('locale', 3);
-            $table->string('name', 20);
-            $table->text('description');
-
-            $table->unique([
-                'product_id', 'locale'
-            ]);
-            $table->foreign(
-                'product_id'
-            )->references('id')->on(
-                'products'
-            )->onDelete('cascade');
         });
     }
 
@@ -54,7 +40,6 @@ class CreateProductsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('product_translations');
         Schema::dropIfExists('products');
     }
 }

@@ -9,17 +9,16 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class Fund
  * @property mixed $id
- * @property integer $sponsor_id
+ * @property integer $organization_id
  * @property string $state
- * @property integer $per_item_limit
  * @property string $name
- * @property string $description
- * @property Sponsor $owner
- * @property Collection $sponsors
+ * @property Organization $organization
  * @property Collection $metas
  * @property Collection $validators
  * @property Collection $products
  * @property Collection $product_categories
+ * @property Carbon $start_date
+ * @property Carbon $end_date
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -32,21 +31,14 @@ class Fund extends Model
      * @var array
      */
     protected $fillable = [
-        'sponsor_id', 'state', 'per_item_limit'
+        'organization_id', 'state', 'name', 'start_date', 'end_date'
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function owner() {
-        return $this->belongsTo(Sponsor::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function sponsors() {
-        return $this->hasMany(Sponsor::class);
+    public function organization() {
+        return $this->belongsTo(Organization::class);
     }
 
     /**
@@ -64,22 +56,22 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function products() {
-        return $this->hasManyThrough(
+        return $this->belongsToMany(
             Product::class,
-            FundProduct::class
+            'fund_products'
         );
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function product_categories() {
-        return $this->hasManyThrough(
+        return $this->belongsToMany(
             ProductCategory::class,
-            FundProductCategory::class
+            'fund_product_categories'
         );
     }
 }
