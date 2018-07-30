@@ -107,7 +107,11 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     ) {
         $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
 
-        return $proxyIdentity ? $proxyIdentity->identity->address : null;
+        if ($proxyIdentity && $proxyIdentity->identity) {
+            return $proxyIdentity->identity->address;
+        }
+
+        return null;
     }
 
     /**
