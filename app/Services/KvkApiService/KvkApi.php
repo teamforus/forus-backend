@@ -13,7 +13,7 @@ class KvkApi
     {
         $this->setApi($api_key);
 
-        if (env('KVK_FAKE', false))
+        if (env('KVK_DEBUG', false))
             $this->fake_response = '{
             "apiVersion": "2.0",
             "meta": {},

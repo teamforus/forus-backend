@@ -17,8 +17,8 @@ class CreateOfficeSchedulesTable extends Migration
             $table->increments('id');
             $table->integer('office_id')->unsigned();
             $table->integer('week_day')->unsigned();
-            $table->time('start_time')->nullable()->default('09:00:00');
-            $table->time('end_time')->nullable()->default('17:00:00');
+            $table->time('start_time')->nullable()->default(null);
+            $table->time('end_time')->nullable()->default(null);
             $table->timestamps();
         });
     }

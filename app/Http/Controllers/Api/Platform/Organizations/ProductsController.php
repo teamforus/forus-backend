@@ -94,4 +94,24 @@ class ProductsController extends Controller
 
         return new ProductResource($product);
     }
+
+    /**
+     * Destroy the specified resource in storage.
+     *
+     * @param Organization $organization
+     * @param Product $product
+     * @return string
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function destroy(
+        Organization $organization,
+        Product $product
+    ) {
+        $this->authorize('update', $organization);
+        $this->authorize('destroy', $product);
+
+        $product->delete();
+
+        return "";
+    }
 }

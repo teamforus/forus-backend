@@ -17,7 +17,12 @@ class FundProviderResource extends Resource
         return collect($this->resource)->only([
             'id', 'organization_id', 'fund_id', 'state'
         ])->merge([
-            'fund' => new FundResource($this->resource->fund)
+            'fund' => new FundResource(
+                $this->resource->fund
+            ),
+            'organization' => new OrganizationResource(
+                $this->resource->organization
+            ),
         ])->toArray();
     }
 }

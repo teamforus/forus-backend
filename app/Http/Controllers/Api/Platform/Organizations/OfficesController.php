@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Http\Requests\Api\Platform\Organizations\Offices\StoreOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
+use App\Http\Resources\OfficeScheduleResource;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
@@ -51,7 +52,17 @@ class OfficesController extends Controller
             function($val, $key) {
                 return in_array($key, range(0, 6));
             }
-        );
+        )->map(function($schedule) {
+            if ($schedule['start_time'] == 'null') {
+                $schedule['start_time'] = null;
+            }
+
+            if ($schedule['end_time'] == 'null') {
+                $schedule['end_time'] = null;
+            }
+
+            return $schedule;
+        });
 
         foreach ($schedules as $week_day => $schedule) {
             $office->schedules()->create(array_merge(
@@ -107,7 +118,18 @@ class OfficesController extends Controller
             function($val, $key) {
                 return in_array($key, range(0, 6));
             }
-        );
+        )->map(function($schedule) {
+            if ($schedule['start_time'] == 'null') {
+                $schedule['start_time'] = null;
+            }
+
+            if ($schedule['end_time'] == 'null') {
+                $schedule['end_time'] = null;
+            }
+
+            return $schedule;
+        });
+
 
         $office->schedules()->whereNotIn(
             'week_day', $schedules->keys()->toArray()
@@ -118,8 +140,6 @@ class OfficesController extends Controller
                 compact('week_day')
             )->update($schedule);
         }
-
-        $office->load('schedules');
 
         return new OfficeResource($office);
     }

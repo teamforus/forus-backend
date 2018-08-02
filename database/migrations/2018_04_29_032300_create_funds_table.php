@@ -17,7 +17,7 @@ class CreateFundsTable extends Migration
             $table->increments('id');
             $table->integer('organization_id')->unsigned();
             $table->string('name', 255);
-            $table->string('state', 20);
+            $table->string('state', 20)->default("active");
             $table->timestamp('start_date');
             $table->timestamp('end_date');
             $table->timestamps();

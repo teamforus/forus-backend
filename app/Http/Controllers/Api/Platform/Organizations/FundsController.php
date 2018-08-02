@@ -44,7 +44,7 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create($request->only([
-            'name', 'start_date', 'end_date'
+            'name', 'state', 'start_date', 'end_date'
         ]));
 
         $fund->product_categories()->sync(
@@ -90,7 +90,7 @@ class FundsController extends Controller
         $this->authorize('update', $fund);
 
         $fund->update($request->only([
-            'name', 'start_date', 'end_date'
+            'name', 'state', 'start_date', 'end_date'
         ]));
 
         $fund->product_categories()->sync(

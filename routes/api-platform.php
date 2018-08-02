@@ -36,6 +36,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     ]);
 
     $router->resource(
+        'funds',
+        "Api\Platform\FundsController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+
+    $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
         'only' => [
@@ -44,8 +52,19 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     ]);
 
     $router->resource(
+        'organizations.providers',
+        "Api\Platform\Organizations\FundProviderController", [
+        'only' => [
+            'index'
+        ],
+        'parameters' => [
+            'providers' => 'organization_fund'
+        ]
+    ]);
+
+    $router->resource(
         'organizations.funds.providers',
-        "Api\Platform\Organizations\Funds\Providers\FundProviderController", [
+        "Api\Platform\Organizations\Funds\FundProviderController", [
         'only' => [
             'index', 'show', 'update'
         ],

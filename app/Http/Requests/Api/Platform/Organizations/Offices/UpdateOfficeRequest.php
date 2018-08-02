@@ -30,7 +30,7 @@ class UpdateOfficeRequest extends FormRequest
             'schedule'      => 'required',
             'schedule.*'    => ['required', new ScheduleRule()],
             'phone'         => '',
-            'email'         => 'email',
+            'email'         => 'nullable|email',
         ];
     }
 }

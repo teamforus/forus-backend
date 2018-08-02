@@ -16,6 +16,13 @@ class OfficeScheduleResource extends Resource
     {
         return collect($this->resource)->only([
             'id', 'office_id', 'week_day', 'start_time', 'end_time'
+        ])->merge([
+            'start_time' => $this->resource ? collect(
+                explode(':', $this->resource->start_time)
+            )->splice(0, 2)->implode(':'): null,
+            'end_time' => $this->resource ? collect(
+                explode(':', $this->resource->end_time)
+            )->splice(0, 2)->implode(':'): null
         ])->toArray();
     }
 }

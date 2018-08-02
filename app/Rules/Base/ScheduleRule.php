@@ -32,14 +32,15 @@ class ScheduleRule implements Rule
         }
 
         // both are valid format
-        $is_valid = preg_match($reg_ex, $value['start_time']) &&
-            preg_match($reg_ex, $value['end_time']);
+        $is_valid = (
+                preg_match($reg_ex, $value['start_time']) ||
+                $value['start_time'] == 'null'
+            ) && (
+                preg_match($reg_ex, $value['end_time']) ||
+                $value['end_time'] == 'null'
+            );
 
-        // both are null
-        $is_null =  ($value['start_time'] == 'none') &&
-            ($value['end_time'] == 'none');
-
-        return $is_valid || $is_null;
+        return $is_valid;
     }
 
     /**

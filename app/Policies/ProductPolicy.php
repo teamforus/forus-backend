@@ -55,4 +55,16 @@ class ProductPolicy
             $identity_address
             ) == 0;
     }
+
+    /**
+     * @param $identity_address
+     * @param Product $product
+     * @return bool
+     */
+    public function destroy($identity_address, Product $product) {
+        return strcmp(
+            $product->organization->identity_address,
+            $identity_address
+        ) == 0;
+    }
 }

@@ -25,10 +25,10 @@ class StoreFundRequest extends FormRequest
     {
         return [
             'name'                  => 'required|between:2,200',
-            'description'           => 'required|between:5,1000',
+            'state'                 => 'required|in:active,paused,closed',
             'start_date'            => 'required|date',
             'end_date'              => 'required|date',
-            'product_categories'    => 'required|array',
+            'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
         ];
     }

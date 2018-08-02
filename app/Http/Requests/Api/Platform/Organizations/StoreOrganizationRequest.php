@@ -33,7 +33,7 @@ class StoreOrganizationRequest extends FormRequest
             'phone'                 => 'required|digits_between:6,20',
             'kvk'                   => ['required', new KvkRule()],
             'btw'                   => ['required', new BtwRule()],
-            'product_categories'    => 'required|array',
+            'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
         ];
     }

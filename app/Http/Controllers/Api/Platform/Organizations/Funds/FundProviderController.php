@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Platform\Organizations\Funds\Providers;
+namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
 use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
 use App\Http\Resources\FundProviderResource;

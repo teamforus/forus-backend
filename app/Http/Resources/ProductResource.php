@@ -16,7 +16,13 @@ class ProductResource extends Resource
     {
         return collect($this->resource)->only([
             'id', 'name', 'description', 'price', 'old_price',
-            'total_amount', 'sold_amount'
+            'total_amount', 'sold_amount', 'product_category_id',
+            'organization_id'
+        ])->merge([
+            'product_category' => new ProductCategoryResource(
+                $this->resource->product_category
+            ),
+            'funds' => "Lorem, Ipsum"
         ])->toArray();
     }
 }

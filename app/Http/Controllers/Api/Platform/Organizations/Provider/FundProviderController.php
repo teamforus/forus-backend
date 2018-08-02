@@ -39,7 +39,9 @@ class FundProviderController extends Controller
             'fund_id'
         )->unique()->toArray();
 
-        $funds = Fund::getModel()->whereIn('id', $fundIds)->get();
+        $funds = Fund::getModel()->where(
+            'state', '!=', 'closed'
+        )->whereIn('id', $fundIds)->get();
 
 
         return FundResource::collection($funds);
