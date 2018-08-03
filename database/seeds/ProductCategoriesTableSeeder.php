@@ -12,8 +12,38 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
     public function run()
     {
         ProductCategory::create([
-            'key'       => 'bikes',
-            'name'      => 'Bikes'
+            'key'       => 'boeken',
+            'name'      => 'Boeken'
+        ]);
+
+        ProductCategory::create([
+            'key'       => 'fiets',
+            'name'      => 'Fiets'
+        ]);
+
+        ProductCategory::create([
+            'key'       => 'sport-accessoires',
+            'name'      => 'Sport accessoires'
+        ]);
+
+        ProductCategory::create([
+            'key'       => 'zwemmen',
+            'name'      => 'Zwemmen'
+        ]);
+
+        ProductCategory::create([
+            'key'       => 'computer',
+            'name'      => 'Computer'
+        ]);
+
+        ProductCategory::create([
+            'key'       => 'kleding',
+            'name'      => 'Kleding'
+        ]);
+
+        ProductCategory::create([
+            'key'       => 'speelgoed',
+            'name'      => 'Speelgoed'
         ]);
     }
 }

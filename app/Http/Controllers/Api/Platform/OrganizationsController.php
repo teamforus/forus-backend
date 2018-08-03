@@ -7,19 +7,28 @@ use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use Illuminate\Http\Request;
 
 class OrganizationsController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index() {
+    public function index(
+        Request $request
+    ) {
         $this->authorize('index', Organization::class);
 
-        return OrganizationResource::collection(Organization::all());
+        return OrganizationResource::collection(
+            Organization::getModel()->where(
+                'identity_address',
+                $request->get('identity')
+            )->get()
+        );
     }
 
     /**
