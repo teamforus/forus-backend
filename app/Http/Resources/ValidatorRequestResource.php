@@ -15,7 +15,7 @@ class ValidatorRequestResource extends Resource
     public function toArray($request)
     {
         return collect($this->resource)->only([
-            'id', 'validator_id', 'record_validation_uid',
+            'id', 'validator_id', 'record_validation_uid', 'record_validation_uid',
             'identity_address', 'record_id', 'state'
         ])->merge([
             'validator' => new ValidatorResource($this->resource->validator)

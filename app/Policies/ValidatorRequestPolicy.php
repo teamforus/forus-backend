@@ -41,7 +41,7 @@ class ValidatorRequestPolicy
      * @param $identity_address
      * @return bool
      */
-    public function store($identity_address) {
+    public function request($identity_address) {
         return !empty($identity_address);
     }
 
