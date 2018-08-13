@@ -297,11 +297,13 @@ class RecordRepo implements IRecordRepo
      * Get identity records
      * @param string $identityAddress
      * @param string|null $type
+     * @param integer|null $categoryId
      * @return array
      */
     public function recordsList(
         string $identityAddress,
-        $type = null
+        $type = null,
+        $categoryId = null
     ) {
         $type = RecordType::getModel()->where([
             'key' => $type
@@ -316,6 +318,10 @@ class RecordRepo implements IRecordRepo
 
         if ($type) {
             $query->where('record_type_id', $type->id);
+        }
+
+        if ($categoryId) {
+            $query->where('record_category_id', $categoryId);
         }
 
         return $query->orderBy('order')->get()->map(function($record) {

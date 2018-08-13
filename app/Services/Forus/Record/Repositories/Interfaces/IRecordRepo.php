@@ -143,11 +143,13 @@ interface IRecordRepo {
      * Get identity records
      * @param string $identityAddress
      * @param string|null $type
+     * @param integer|null $categoryId
      * @return array
      */
     public function recordsList(
         string $identityAddress,
-        $type
+        $type,
+        $categoryId
     );
 
     /**

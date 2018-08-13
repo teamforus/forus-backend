@@ -27,7 +27,8 @@ class RecordController extends Controller
     {
         return $this->recordRepo->recordsList(
             $request->get('identity'),
-            $request->get('type', null)
+            $request->get('type', null),
+            $request->get('record_category_id', null)
         );
     }
 
