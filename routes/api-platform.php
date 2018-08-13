@@ -90,8 +90,8 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     ]);
 
     $router->resource(
-        'organizations.funds.fund-validators',
-        "Api\Platform\Organizations\Funds\FundValidatorsController", [
+        'organizations.validators',
+        "Api\Platform\Organizations\ValidatorController", [
         'only' => [
             'index', 'show', 'store', 'update', 'destroy'
         ]
@@ -110,6 +110,47 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ],
         'parameters' => [
             'funds' => 'organization_fund'
+        ]
+    ]);
+
+    // Prevalidations endpoints
+    $router->post(
+        'prevalidations/{prevalidations_uid}/redeem',
+        'Api\Platform\PrevalidationController@redeem');
+
+    $router->resource(
+        'prevalidations',
+        'Api\Platform\PrevalidationController',[
+            'only' => [
+                'index', 'store', 'show'
+            ],
+            'parameters' => [
+                'prevalidations' => 'prevalidation_uid'
+            ]
+        ]
+    );
+
+    $router->resource(
+        'validators',
+        "Api\Platform\ValidatorsController", [
+        'only' => [
+            'index'
+        ]
+    ]);
+
+    $router->resource(
+        'validator-requests',
+        "Api\Platform\ValidatorRequestController", [
+        'only' => [
+            'index', 'show', 'store'
+        ]
+    ]);
+
+    $router->resource(
+        'validator/validator-requests',
+        "Api\Platform\Validator\ValidatorRequestController", [
+        'only' => [
+            'index', 'show', 'update'
         ]
     ]);
 });

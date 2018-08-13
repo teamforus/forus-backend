@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Prevalidation;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
@@ -26,6 +27,14 @@ class RouteServiceProvider extends ServiceProvider
         //
 
         parent::boot();
+
+        $router = app()->make('router');
+
+        $router->bind('prevalidation_uid', function ($value) {
+            return Prevalidation::getModel()->where([
+                'uid' => $value
+            ])->first() ?? abort(404);
+        });
     }
 
     /**

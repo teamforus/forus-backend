@@ -42,6 +42,12 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         ]);
 
         RecordType::create([
+            'key'       => 'children_nth',
+            'name'      => 'Children count',
+            'type'      => 'number',
+        ]);
+
+        RecordType::create([
             'key'       => 'parent',
             'name'      => 'Parent',
             'type'      => 'string',
@@ -98,6 +104,12 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         RecordType::create([
             'key'       => 'bsn',
             'name'      => 'BSN',
+            'type'      => 'number',
+        ]);
+
+        RecordType::create([
+            'key'       => 'kindpakket_2018_eligible',
+            'name'      => 'Kindpakket Eligible',
             'type'      => 'number',
         ]);
     }

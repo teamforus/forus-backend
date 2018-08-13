@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $name
  * @property Organization $organization
  * @property Collection $metas
- * @property Collection $validators
  * @property Collection $products
  * @property Collection $product_categories
  * @property Carbon $start_date
@@ -46,13 +45,6 @@ class Fund extends Model
      */
     public function metas() {
         return $this->hasMany(FundMeta::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function validators() {
-        return $this->hasMany(FundValidator::class);
     }
 
     /**

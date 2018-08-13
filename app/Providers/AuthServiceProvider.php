@@ -2,14 +2,18 @@
 
 namespace App\Providers;
 
-use App\Models\FundValidator;
 use App\Models\Office;
 use App\Models\FundProvider;
+use App\Models\Prevalidation;
 use App\Models\Product;
-use App\Policies\FundValidatorPolicy;
+use App\Models\Validator;
+use App\Models\ValidatorRequest;
+use App\Policies\PrevalidationPolicy;
+use App\Policies\ValidatorPolicy;
 use App\Policies\OfficePolicy;
 use App\Policies\OrganizationFundPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\ValidatorRequestPolicy;
 use Illuminate\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use App\Models\Fund;
@@ -30,8 +34,10 @@ class AuthServiceProvider extends ServiceProvider
         Office::class               => OfficePolicy::class,
         Product::class              => ProductPolicy::class,
         Organization::class         => OrganizationPolicy::class,
-        FundValidator::class        => FundValidatorPolicy::class,
-        FundProvider::class     => OrganizationFundPolicy::class,
+        Validator::class            => ValidatorPolicy::class,
+        FundProvider::class         => OrganizationFundPolicy::class,
+        Prevalidation::class        => PrevalidationPolicy::class,
+        ValidatorRequest::class     => ValidatorRequestPolicy::class,
     ];
 
     /**

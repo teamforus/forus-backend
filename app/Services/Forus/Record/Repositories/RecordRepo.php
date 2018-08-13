@@ -13,7 +13,7 @@ class RecordRepo implements IRecordRepo
 {
     /**
      * Create or update records for given identity
-     * @param $identityAddress string
+     * @param string $identityAddress
      * @param array $records
      * @return void
      */
@@ -332,7 +332,7 @@ class RecordRepo implements IRecordRepo
                     'state', 'identity_address', 'created_at', 'updated_at'
                 ])->groupBy('identity_address', 'record_id')->orderBy(
                     'updated_at', 'DESC'
-                )->get()->toArray()
+                )->orderBy('created_at')->get()->toArray()
             ];
         })->toArray();
     }

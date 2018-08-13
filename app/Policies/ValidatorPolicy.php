@@ -2,10 +2,10 @@
 
 namespace App\Policies;
 
-use App\Models\FundValidator;
+use App\Models\Validator;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class FundValidatorPolicy
+class ValidatorPolicy
 {
     use HandlesAuthorization;
 
@@ -45,25 +45,25 @@ class FundValidatorPolicy
 
     /**
      * @param $identity_address
-     * @param FundValidator $fundValidator
+     * @param Validator $Validator
      * @return bool
      */
-    public function update($identity_address, FundValidator $fundValidator) {
+    public function update($identity_address, Validator $Validator) {
         return strcmp(
-            $fundValidator->fund->organization->identity_address,
+            $Validator->organization->identity_address,
             $identity_address
             ) == 0;
     }
 
     /**
      * @param $identity_address
-     * @param FundValidator $fundValidator
+     * @param Validator $Validator
      * @return bool
      */
-    public function destroy($identity_address, FundValidator $fundValidator) {
+    public function destroy($identity_address, Validator $Validator) {
         return strcmp(
-                $fundValidator->fund->organization->identity_address,
-                $identity_address
+            $Validator->organization->identity_address,
+            $identity_address
             ) == 0;
     }
 }

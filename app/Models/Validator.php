@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class Validator
  * @property mixed $id
- * @property integer $identity_id
+ * @property string $identity_address
  * @property string $key
  * @property string $name
- * @property Identity $identity
+ * @property Organization $organization
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -24,13 +24,13 @@ class Validator extends Model
      * @var array
      */
     protected $fillable = [
-        'identity_id', 'key', 'name'
+        'identity_address', 'key', 'name',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function identity() {
-        return $this->belongsTo(Identity::class);
+    public function organization() {
+        return $this->belongsTo(Organization::class);
     }
 }

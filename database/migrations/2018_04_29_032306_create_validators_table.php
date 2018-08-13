@@ -15,13 +15,12 @@ class CreateValidatorsTable extends Migration
     {
         Schema::create('validators', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('identity_id')->unsigned();
-            $table->string('key', 20);
-            $table->string('name', 20);
+            $table->integer('organization_id')->unsigned();
+            $table->string('identity_address', 200);
             $table->timestamps();
 
-            $table->foreign('identity_id'
-            )->references('id')->on('identities')->onDelete('cascade');
+            $table->foreign('organization_id'
+            )->references('id')->on('organizations')->onDelete('cascade');
         });
     }
 

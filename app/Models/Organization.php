@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $btw
  * @property Collection $funds
  * @property Collection $products
+ * @property Collection $validators
  * @property Collection $supplied_funds
  * @property Collection $organization_funds
  * @property Collection $product_categories
@@ -83,5 +84,12 @@ class Organization extends Model
      */
     public function organization_funds() {
         return $this->hasMany(FundProvider::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function validators() {
+        return $this->hasMany(Validator::class);
     }
 }

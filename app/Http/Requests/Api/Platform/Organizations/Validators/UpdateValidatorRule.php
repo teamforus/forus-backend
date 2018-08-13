@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds\Validators;
 use App\Rules\Base\EthAddressRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreFundValidatorRule extends FormRequest
+class UpdateValidatorRule extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

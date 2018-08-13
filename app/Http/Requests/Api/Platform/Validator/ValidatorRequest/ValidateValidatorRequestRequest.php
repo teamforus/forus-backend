@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Funds\Validators;
+namespace App\Http\Requests\Api\Platform\Validator\ValidatorRequest;
 
-use App\Rules\Base\EthAddressRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateFundValidatorRule extends FormRequest
+class ValidateValidatorRequestRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +24,7 @@ class UpdateFundValidatorRule extends FormRequest
     public function rules()
     {
         return [
-            'identity_address'  => ['required', new EthAddressRule()]
+            'state' => 'required|in:approved,declined'
         ];
     }
 }

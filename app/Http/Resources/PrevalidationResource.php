@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\Resource;
 
-class FundValidatorResource extends Resource
+class PrevalidationResource extends Resource
 {
     /**
      * Transform the resource into an array.
@@ -15,7 +15,11 @@ class FundValidatorResource extends Resource
     public function toArray($request)
     {
         return collect($this->resource)->only([
-            'id', 'identity_address'
+            'id', 'uid', 'state'
+        ])->merge([
+            'records' => PrevalidationRecordResource::collection(
+                $this->resource->records
+            )
         ])->toArray();
     }
 }
