@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Prevalidation;
+use App\Services\MediaService\Models\Media;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
@@ -32,8 +33,14 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('prevalidation_uid', function ($value) {
             return Prevalidation::getModel()->where([
-                'uid' => $value
-            ])->first() ?? abort(404);
+                    'uid' => $value
+                ])->first() ?? abort(404);
+        });
+
+        $router->bind('media_uid', function ($value) {
+            return Media::getModel()->where([
+                    'uid' => $value
+                ])->first() ?? abort(404);
         });
     }
 

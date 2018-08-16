@@ -8,12 +8,14 @@ use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Validator;
 use App\Models\ValidatorRequest;
+use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
 use App\Policies\ValidatorPolicy;
 use App\Policies\OfficePolicy;
 use App\Policies\OrganizationFundPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ValidatorRequestPolicy;
+use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use App\Models\Fund;
@@ -31,6 +33,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Fund::class                 => FundPolicy::class,
+        Media::class                => MediaPolicy::class,
         Office::class               => OfficePolicy::class,
         Product::class              => ProductPolicy::class,
         Organization::class         => OrganizationPolicy::class,

@@ -13,12 +13,18 @@ class CreateMediasTable extends Migration
      */
     public function up()
     {
-        Schema::create('medias', function (Blueprint $table) {
+        Schema::create('media', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('key',20);
+            $table->string('uid', 200)->nullable();
+            $table->string('original_name', 200)->nullable();
+
+            $table->string('type',20);
             $table->string('ext', 10);
+
             $table->tinyInteger('ratio');
             $table->boolean('confirmed')->default(0);
+
+            $table->string('identity_address', 200)->default('');
             $table->integer('mediable_id')->unsigned();
             $table->string('mediable_type', 80);
             $table->timestamps();
@@ -32,6 +38,6 @@ class CreateMediasTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('medias');
+        Schema::dropIfExists('media');
     }
 }

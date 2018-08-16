@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\MediaService\Traits\HasMedia;
+use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Class Organization
@@ -16,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $phone
  * @property string $kvk
  * @property string $btw
+ * @property Media $logo
  * @property Collection $funds
  * @property Collection $products
  * @property Collection $validators
@@ -29,6 +33,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Organization extends Model
 {
+    use HasMedia;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -91,5 +97,15 @@ class Organization extends Model
      */
     public function validators() {
         return $this->hasMany(Validator::class);
+    }
+
+    /**
+     * Get organization logo
+     * @return MorphOne
+     */
+    public function logo() {
+        return $this->morphOne(Media::class, 'mediable')->where([
+            'type' => 'organization_logo'
+        ]);
     }
 }

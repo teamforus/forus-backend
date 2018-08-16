@@ -18,6 +18,7 @@ class OrganizationResource extends Resource
             'id', 'identity_address', 'name', 'iban', 'email', 'phone',
             'kvk', 'btw'
         ])->merge([
+            'logo' => new MediaResource($this->resource->logo),
             'product_categories' => ProductCategoryResource::collection(
                 $this->resource->product_categories
             )

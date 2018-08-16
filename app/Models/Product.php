@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\MediaService\Models\Media;
+use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Class Product
@@ -26,6 +29,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Product extends Model
 {
+    use HasMedia;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -58,5 +63,15 @@ class Product extends Model
             Fund::class,
             FundProduct::class
         );
+    }
+
+    /**
+     * Get fund logo
+     * @return MorphOne
+     */
+    public function photo() {
+        return $this->morphOne(Media::class, 'mediable')->where([
+            'type' => 'product_photo'
+        ]);
     }
 }

@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Models;
+namespace App\Services\MediaService\Models;
 
+use App\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class MediaMeta
+ * Class MediaSize
  * @property mixed $id
  * @property integer $media_id
  * @property string $key
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon $updated_at
  * @package App\Models
  */
-class MediaMeta extends Model
+class MediaSize extends Model
 {
     /**
      * The attributes that are mass assignable.
@@ -31,5 +32,13 @@ class MediaMeta extends Model
      */
     public function media() {
         return $this->belongsTo(Media::class);
+    }
+
+    public function unlink() {
+        return app()->make('filesystem')->delete($this->path);
+    }
+
+    public function urlPublic() {
+        return asset('storage/' . ltrim($this->path, "public/"));
     }
 }

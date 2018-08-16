@@ -43,6 +43,15 @@ class OrganizationsController extends Controller
     ) {
         $this->authorize('store', Organization::class);
 
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $mediaService = app()->make('media');
+            $media = $mediaService->findByUid($media_uid);
+
+            $this->authorize('destroy', $media);
+        }
+
         $organization = Organization::create(
             collect($request->only([
                 'name', 'iban', 'email', 'phone', 'kvk', 'btw'
@@ -54,6 +63,10 @@ class OrganizationsController extends Controller
         $organization->product_categories()->sync(
             $request->input('product_categories', [])
         );
+
+        if ($media && $media->type == 'organization_logo') {
+            $organization->attachMedia($media);
+        }
 
         return new OrganizationResource($organization);
     }
@@ -87,6 +100,15 @@ class OrganizationsController extends Controller
     ) {
         $this->authorize('update', $organization);
 
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $mediaService = app()->make('media');
+            $media = $mediaService->findByUid($media_uid);
+
+            $this->authorize('destroy', $media);
+        }
+
         $organization->update($request->only([
             'name', 'iban', 'email', 'phone', 'kvk', 'btw'
         ]));
@@ -94,6 +116,10 @@ class OrganizationsController extends Controller
         $organization->product_categories()->sync(
             $request->input('product_categories', [])
         );
+
+        if ($media && $media->type == 'organization_logo') {
+            $organization->attachMedia($media);
+        }
 
         return new OrganizationResource($organization);
     }

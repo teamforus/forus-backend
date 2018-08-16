@@ -42,6 +42,15 @@ class FundsController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('store', Fund::class);
 
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $mediaService = app()->make('media');
+            $media = $mediaService->findByUid($media_uid);
+
+            $this->authorize('destroy', $media);
+        }
+
         /** @var Fund $fund */
         $fund = $organization->funds()->create($request->only([
             'name', 'state', 'start_date', 'end_date'
@@ -50,6 +59,10 @@ class FundsController extends Controller
         $fund->product_categories()->sync(
             $request->input('product_categories', [])
         );
+
+        if ($media && $media->type == 'fund_logo') {
+            $fund->attachMedia($media);
+        }
 
         return new FundResource($fund);
     }
@@ -89,6 +102,15 @@ class FundsController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('update', $fund);
 
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $mediaService = app()->make('media');
+            $media = $mediaService->findByUid($media_uid);
+
+            $this->authorize('destroy', $media);
+        }
+
         $fund->update($request->only([
             'name', 'state', 'start_date', 'end_date'
         ]));
@@ -96,6 +118,10 @@ class FundsController extends Controller
         $fund->product_categories()->sync(
             $request->input('product_categories', [])
         );
+
+        if ($media && $media->type == 'fund_logo') {
+            $fund->attachMedia($media);
+        }
 
         return new FundResource($fund);
     }

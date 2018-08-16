@@ -44,12 +44,28 @@ class ProductsController extends Controller
             Product::class, $organization
         ]);
 
-        return new ProductResource($organization->products()->create(
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $mediaService = app()->make('media');
+            $media = $mediaService->findByUid($media_uid);
+
+            $this->authorize('destroy', $media);
+        }
+
+        /** @var Product $product */
+        $product = $organization->products()->create(
             $request->only([
                 'name', 'description', 'price', 'old_price', 'total_amount',
                 'sold_amount', 'product_category_id'
             ])
-        ));
+        );
+
+        if ($media && $media->type == 'product_photo') {
+            $product->attachMedia($media);
+        }
+
+        return new ProductResource($product);
     }
 
     /**
@@ -87,10 +103,23 @@ class ProductsController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('update', $product);
 
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $mediaService = app()->make('media');
+            $media = $mediaService->findByUid($media_uid);
+
+            $this->authorize('destroy', $media);
+        }
+
         $product->update($request->only([
             'name', 'description', 'price', 'old_price', 'total_amount',
             'sold_amount', 'product_category_id'
         ]));
+
+        if ($media && $media->type == 'product_photo') {
+            $product->attachMedia($media);
+        }
 
         return new ProductResource($product);
     }

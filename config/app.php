@@ -195,6 +195,8 @@ return [
         App\Services\KeyPairGeneratorService\KeyPairGeneratorServiceProvider::class,
         App\Services\KvkApiService\KvkApiServiceProvider::class,
 
+        App\Services\MediaService\MediaServiceProvider::class,
+
     ],
 
     /*

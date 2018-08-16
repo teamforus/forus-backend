@@ -19,6 +19,7 @@ class FundResource extends Resource
             'id', 'name', 'organization_id',
             'state'
         ])->merge([
+            'logo' => new MediaResource($this->resource->logo),
             'start_date' => (new Carbon(
                 $this->resource->start_date
             ))->format('Y-m-d'),

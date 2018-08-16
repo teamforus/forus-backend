@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\MediaService\Models\Media;
+use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Class Fund
@@ -13,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $state
  * @property string $name
  * @property Organization $organization
+ * @property Media $logo
  * @property Collection $metas
  * @property Collection $products
  * @property Collection $product_categories
@@ -24,6 +28,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Fund extends Model
 {
+    use HasMedia;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -65,5 +71,15 @@ class Fund extends Model
             ProductCategory::class,
             'fund_product_categories'
         );
+    }
+
+    /**
+     * Get fund logo
+     * @return MorphOne
+     */
+    public function logo() {
+        return $this->morphOne(Media::class, 'mediable')->where([
+            'type' => 'fund_logo'
+        ]);
     }
 }

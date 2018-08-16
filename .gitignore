@@ -13,3 +13,5 @@ yarn-error.log
 /app/Http/Controllers/TestController.php
 .phpstorm.meta.php
 _ide_helper.php
+.DS_Store
+/app/Http/Controllers/TestController.php

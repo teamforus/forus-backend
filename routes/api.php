@@ -101,4 +101,13 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'status' => 'ok'
         ];
     });
+
+    $router->resource('medias', 'Api\MediaController', [
+        'only' => ['index', 'show', 'store', 'destroy'],
+        'parameters' => [
+            'medias' => 'media_uid'
+        ]
+    ]);
+
+    $router->get('/debug', 'TestController@test');
 });

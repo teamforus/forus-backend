@@ -19,6 +19,7 @@ class ProductResource extends Resource
             'total_amount', 'sold_amount', 'product_category_id',
             'organization_id'
         ])->merge([
+            'photo' => new MediaResource($this->resource->photo),
             'product_category' => new ProductCategoryResource(
                 $this->resource->product_category
             ),
