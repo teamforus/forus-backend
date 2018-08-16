@@ -22,6 +22,11 @@ class MediaServiceProvider extends ServiceProvider
         RecordCategory::class,
     ];
 
+    public function boot()
+    {
+        $this->loadMigrationsFrom(__DIR__ . '/migrations');
+    }
+
     /**
      * Register the service provider.
      *

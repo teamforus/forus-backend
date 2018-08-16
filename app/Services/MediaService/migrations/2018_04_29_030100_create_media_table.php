@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateMediasTable extends Migration
+class CreateMediaTable extends Migration
 {
     /**
      * Run the migrations.
@@ -21,12 +21,10 @@ class CreateMediasTable extends Migration
             $table->string('type',20);
             $table->string('ext', 10);
 
-            $table->tinyInteger('ratio');
-            $table->boolean('confirmed')->default(0);
-
             $table->string('identity_address', 200)->default('');
-            $table->integer('mediable_id')->unsigned();
-            $table->string('mediable_type', 80);
+
+            $table->integer('mediable_id')->nullable()->unsigned();
+            $table->string('mediable_type', 80)->nullable();
             $table->timestamps();
         });
     }
