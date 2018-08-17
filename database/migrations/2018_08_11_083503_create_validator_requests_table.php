@@ -16,7 +16,7 @@ class CreateValidatorRequestsTable extends Migration
         Schema::create('validator_requests', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('validator_id')->unsigned();
-            $table->string('record_validation_uid', 200);
+            $table->string('record_validation_uid', 200)->nullable()->default(null);
             $table->string('identity_address', 200);
             $table->integer('record_id')->unsigned();
             $table->string('state');
