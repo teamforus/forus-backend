@@ -28,6 +28,15 @@ return [
         "return" => "thumbnail"
     ],
 
+    "office_photo" => [
+        "size" => [
+            "thumbnail" => [100, 100],
+            "large" => [1200, 800]
+        ],
+        "type" => "single",
+        "return" => "thumbnail"
+    ],
+
     "product_photo" => [
         "size" => [
             "thumbnail" => [100, 100],

@@ -1,0 +1,68 @@
+{
+    "apiVersion": "2.0",
+    "meta": {},
+    "data": {
+        "itemsPerPage": 1,
+        "startPage": 1,
+        "totalItems": 1,
+        "items": [
+            {
+                "kvkNumber": "69097488",
+                "branchNumber": "000029030226",
+                "rsin": "857732894",
+                "tradeNames": {
+                    "businessName": "Rocket Minds",
+                    "shortBusinessName": "Rocket Minds",
+                    "currentTradeNames": [
+                        "Rocket Minds",
+                        "Weget Enterprise",
+                        "OnePlan"
+                    ],
+                    "currentNames": [
+                        "Rocket Minds"
+                    ],
+                    "formerNames": [
+                        "Weget Enterprise"
+                    ]
+                },
+                "legalForm": "Vennootschap onder firma",
+                "businessActivities": [
+                    {
+                        "sbiCode": "6201",
+                        "sbiCodeDescription": "Ontwikkelen, produceren en uitgeven van software",
+                        "isMainSbi": true
+                    }
+                ],
+                "hasEntryInBusinessRegister": true,
+                "hasCommercialActivities": true,
+                "hasNonMailingIndication": true,
+                "isLegalPerson": false,
+                "isBranch": true,
+                "isMainBranch": true,
+                "employees": 2,
+                "foundationDate": "20140114",
+                "registrationDate": "20170703",
+                "addresses": [
+                    {
+                        "type": "vestigingsadres",
+                        "bagId": "0014010011021267",
+                        "street": "Ulgersmaweg",
+                        "houseNumber": "35",
+                        "houseNumberAddition": "",
+                        "postalCode": "9731BK",
+                        "city": "Groningen",
+                        "country": "Nederland",
+                        "gpsLatitude": 53.23383975021,
+                        "gpsLongitude": 6.5872591201383,
+                        "rijksdriehoekX": 235129.241,
+                        "rijksdriehoekY": 583694.928,
+                        "rijksdriehoekZ": 0
+                    }
+                ],
+                "websites": [
+                    "www.rocketminds.nl"
+                ]
+            }
+        ]
+    }
+}

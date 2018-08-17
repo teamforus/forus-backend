@@ -5,13 +5,21 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Http\Requests\Api\Platform\Organizations\Offices\StoreOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
-use App\Http\Resources\OfficeScheduleResource;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 
 class OfficesController extends Controller
 {
+    protected $geocodeService;
+    protected $mediaService;
+
+    public function __construct()
+    {
+        $this->geocodeService = app()->make('geocode_api');
+        $this->mediaService = app()->make('media');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -43,6 +51,13 @@ class OfficesController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('store', Office::class);
 
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $media = $this->mediaService->findByUid($media_uid);
+            $this->authorize('destroy', $media);
+        }
+
         /** @var Office $office */
         $office = $organization->offices()->create(
             $request->only(['name', 'address', 'phone', 'email'])
@@ -72,6 +87,16 @@ class OfficesController extends Controller
         }
 
         $office->load('schedules');
+
+        if ($coordinates = $this->geocodeService->getCoordinates(
+            $office->address
+        )) {
+            $office->update($coordinates);
+        }
+
+        if ($media && $media->type == 'office_photo') {
+            $office->attachMedia($media);
+        }
 
         return new OfficeResource($office);
     }
@@ -109,6 +134,13 @@ class OfficesController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('update', $office);
 
+        $media = false;
+
+        if ($media_uid = $request->input('media_uid')) {
+            $media = $this->mediaService->findByUid($media_uid);
+            $this->authorize('destroy', $media);
+        }
+
         /** @var Office $office */
         $office->update(
             $request->only(['name', 'address', 'phone', 'email'])
@@ -130,7 +162,6 @@ class OfficesController extends Controller
             return $schedule;
         });
 
-
         $office->schedules()->whereNotIn(
             'week_day', $schedules->keys()->toArray()
         )->delete();
@@ -139,6 +170,16 @@ class OfficesController extends Controller
             $office->schedules()->firstOrCreate(
                 compact('week_day')
             )->update($schedule);
+        }
+
+        if ($coordinates = $this->geocodeService->getCoordinates(
+            $office->address
+        )) {
+            $office->update($coordinates);
+        }
+
+        if ($media && $media->type == 'office_photo') {
+            $office->attachMedia($media);
         }
 
         return new OfficeResource($office);

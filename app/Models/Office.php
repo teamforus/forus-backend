@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\MediaService\Models\Media;
+use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Class Office
@@ -24,6 +27,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Office extends Model
 {
+    use HasMedia;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -56,5 +61,15 @@ class Office extends Model
      */
     public function organization() {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Get fund logo
+     * @return MorphOne
+     */
+    public function photo() {
+        return $this->morphOne(Media::class, 'mediable')->where([
+            'type' => 'office_photo'
+        ]);
     }
 }

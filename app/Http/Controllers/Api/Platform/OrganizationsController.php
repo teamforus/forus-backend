@@ -68,6 +68,20 @@ class OrganizationsController extends Controller
             $organization->attachMedia($media);
         }
 
+        try {
+            $offices = collect(app()->make('kvk_api')->getOffices(
+                $request->input('kvk')
+            ));
+
+            foreach (collect($offices ?: null) as $office) {
+                $organization->offices()->create(
+                    collect($office)->only([
+                        'address', 'lon', 'lat'
+                    ])->toArray()
+                );
+            }
+        } catch (\Exception $e) { }
+
         return new OrganizationResource($organization);
     }
 

@@ -2,93 +2,87 @@
 
 namespace App\Services\KvkApiService;
 
+/**
+ * Class KvkApi
+ * @package App\Services\KvkApiService
+ */
 class KvkApi
 {   
     protected $api_url = "https://api.kvk.nl/";
+    protected $api_debug = null;
     protected $api_key = null;
 
-    protected $fake_response = false;
+    protected $cache_prefix = 'kvk_service:kvk-number:';
+    protected $cache_time = 10;
 
-    function __construct($api_key)
-    {
-        $this->setApi($api_key);
+    protected $test_response = false;
 
-        if (env('KVK_DEBUG', false))
-            $this->fake_response = '{
-            "apiVersion": "2.0",
-            "meta": {},
-            "data": {
-                "itemsPerPage": 1,
-                "startPage": 1,
-                "totalItems": 1,
-                "items": [{
-                    "kvkNumber": "69097488",
-                    "branchNumber": "000029030226",
-                    "rsin": "857732894",
-                    "tradeNames": {
-                        "businessName": "Rocket Minds",
-                        "shortBusinessName": "Rocket Minds",
-                        "currentTradeNames": ["Rocket Minds", "Weget Enterprise", "OnePlan"],
-                        "currentNames": ["Rocket Minds"],
-                        "formerNames": ["Weget Enterprise"]
-                    },
-                    "legalForm": "Vennootschap onder firma",
-                    "businessActivities": [{
-                        "sbiCode": "6201",
-                        "sbiCodeDescription": "Ontwikkelen, produceren en uitgeven van software",
-                        "isMainSbi": true
-                    }],
-                    "hasEntryInBusinessRegister": true,
-                    "hasCommercialActivities": true,
-                    "hasNonMailingIndication": true,
-                    "isLegalPerson": false,
-                    "isBranch": true,
-                    "isMainBranch": true,
-                    "employees": 2,
-                    "foundationDate": "20140114",
-                    "registrationDate": "20170703",
-                    "addresses": [{
-                        "type": "vestigingsadres",
-                        "bagId": "0014010011021267",
-                        "street": "Ulgersmaweg",
-                        "houseNumber": "35",
-                        "houseNumberAddition": "",
-                        "postalCode": "9731BK",
-                        "city": "Groningen",
-                        "country": "Nederland",
-                        "gpsLatitude": 53.23383975021,
-                        "gpsLongitude": 6.5872591201383,
-                        "rijksdriehoekX": 235129.241,
-                        "rijksdriehoekY": 583694.928,
-                        "rijksdriehoekZ": 0
-                    }],
-                    "websites": ["www.rocketminds.nl"]
-                }]
-            }
-        }';
+    function __construct(
+        $api_debug,
+        $api_key
+    ) {
+        $this->api_debug = $api_debug;
+        $this->api_key = $api_key;
     }
 
-    public function setApi($api_key)
-    {
-        $this->api_key = $api_key;
+    public function getApiUrl($kvk_number) {
+        return sprintf(
+            "%sapi/v2/profile/companies?q=%s&user_key=%s",
+            $this->api_url,
+            $kvk_number,
+            $this->api_key
+        );
     }
 
     public function kvkNumberData($kvk_number)
     {
-        $data = false;
-        
         try {
-            if (!$this->fake_response)
+            if ($this->api_debug) {
                 $response = json_decode(file_get_contents(
-                    $this->api_url . "api/v2/profile/companies?q=" . 
-                    $kvk_number . "&user_key=" . $this->api_key));
-            else
-                $response = json_decode($this->fake_response);
+                    __DIR__ . '/Debug/test.json'
+                ));
+            } else {
+                $self = $this;
 
-            if (is_object($response))
-                $data = $response;
+                $response =  cache()->remember(
+                    $this->cache_prefix . $kvk_number,
+                    $this->cache_time,
+                    function() use ($kvk_number, $self) {
+                    return json_decode(file_get_contents(
+                        $this->getApiUrl($kvk_number)
+                    ));
+                });
+            }
+
+            if (is_object($response)) {
+                return $response;
+            }
         } catch (\Exception $e) {}
 
-        return $data;
+        return false;
+    }
+
+    /**
+     * @param $kvk_number
+     * @return mixed
+     * @throws \Exception
+     */
+    public function getOffices($kvk_number) {
+        $kvkData = $this->kvkNumberData($kvk_number);
+        $addresses = $kvkData->data->items[0]->addresses;
+
+        return collect($addresses)->map(function($address) {
+            return [
+                'original' => $address,
+                'address' => sprintf(
+                    "%s %s %s %s%s, %s",
+                    $address->country, $address->city, $address->street,
+                    $address->houseNumber, $address->houseNumberAddition,
+                    $address->postalCode
+                ),
+                'lat' => $address->gpsLatitude,
+                'lon' => $address->gpsLongitude,
+            ];
+        });
     }
 }

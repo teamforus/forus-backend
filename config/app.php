@@ -196,6 +196,7 @@ return [
         App\Services\KvkApiService\KvkApiServiceProvider::class,
 
         App\Services\MediaService\MediaServiceProvider::class,
+        \App\Services\GeocodeService\GeocodeServiceProvider::class,
 
     ],
 

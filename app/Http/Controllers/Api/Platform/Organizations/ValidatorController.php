@@ -8,6 +8,7 @@ use App\Http\Resources\ValidatorResource;
 use App\Models\Validator;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\Record\Repositories\RecordRepo;
 
 class ValidatorController extends Controller
 {
@@ -42,11 +43,15 @@ class ValidatorController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('store', Validator::class);
 
-        return new ValidatorResource($organization->validators()->create(
-            $request->only([
-                'identity_address'
-            ])
-        ));
+        $identity_address = app()->make(
+            'forus.services.record'
+        )->identityIdByEmail(
+            $request->input('email')
+        );
+
+        return new ValidatorResource($organization->validators()->create([
+            'identity_address' => $identity_address
+        ]));
     }
 
     /**
@@ -84,8 +89,14 @@ class ValidatorController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('update', $validator);
 
+        $identity_address = app()->make(
+            'forus.services.record'
+        )->identityIdByEmail(
+            $request->input('email')
+        );
+
         $validator->update($request->only([
-            'identity_address'
+            'identity_address' => $identity_address
         ]));
 
         return new ValidatorResource($validator);

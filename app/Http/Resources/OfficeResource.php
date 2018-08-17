@@ -18,6 +18,7 @@ class OfficeResource extends Resource
             'id', 'organization_id', 'address', 'phone', 'email',
             'lon', 'lat'
         ])->merge([
+            'photo' => new MediaResource($this->resource->photo),
             'schedule' => OfficeScheduleResource::collection(
                 $this->resource->schedules
             )
