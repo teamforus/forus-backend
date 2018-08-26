@@ -28,6 +28,8 @@ $router->group([], function() use ($router) {
             $router->group(['prefix' => '/authorize'], function() use ($router) {
                 $router->get('/email/{source}/{emailToken}', 'Api\IdentityController@proxyAuthorizeEmail');
             });
+
+            $router->get('/check-token', 'Api\IdentityController@checkToken');
         });
 
         /**

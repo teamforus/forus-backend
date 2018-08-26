@@ -258,4 +258,48 @@ class IdentityController extends Controller
 
         return trans('identity-proxy.email.error');
     }
+
+    /**
+     * Check access_token state
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkToken(
+        Request $request
+    ) {
+        $accessToken = $request->input('access_token');
+
+        $proxyIdentityId = $this->identityRepo->proxyIdByAccessToken(
+            $accessToken
+        );
+
+        $proxyIdentityState = $this->identityRepo->proxyStateById(
+            $proxyIdentityId
+        );
+
+        $identityAddress = $this->identityRepo->identityAddressByProxyId(
+            $proxyIdentityId
+        );
+
+        if ($accessToken && $proxyIdentityState != 'active') {
+            switch ($proxyIdentityState) {
+                case 'pending': {
+                    return response()->json([
+                        "message" => 'pending'
+                    ]);
+                } break;
+            }
+        }
+
+        if (!$accessToken || !$proxyIdentityId || !$identityAddress) {
+            return response()->json([
+                "message" => 'invalid'
+            ]);
+        }
+
+        return response()->json([
+            "message" => 'active'
+        ]);
+    }
 }
