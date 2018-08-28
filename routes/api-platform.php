@@ -43,6 +43,47 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->post(
+        'funds/{fund_id}/apply',
+        "Api\Platform\FundsController@apply"
+    );
+
+    $router->resource(
+        'products',
+        "Api\Platform\ProductsController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+
+    $router->resource(
+        'vouchers',
+        "Api\Platform\VouchersController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'vouchers' => 'voucher_address'
+        ]
+    ]);
+
+    $router->get(
+        'vouchers/{voucher_address}/provider',
+        "Api\Platform\VouchersController@provider"
+    );
+
+    $router->resource(
+        'vouchers.transactions',
+        "Api\Platform\Vouchers\TransactionsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'vouchers' => 'voucher_address',
+            'transactions' => 'transaction_address',
+        ]
+    ]);
+
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
