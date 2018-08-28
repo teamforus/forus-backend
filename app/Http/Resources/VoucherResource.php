@@ -19,10 +19,12 @@ class VoucherResource extends Resource
          * @var Voucher $voucher
          */
         $voucher = $this->resource;
+        $amountLeft = $voucher->amount - $voucher->transactions->sum('amount');
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
+            'amount' => max($amountLeft, 0),
             'fund' => collect($voucher->fund)->only([
                 'id', 'name', 'state'
             ])->merge([
@@ -36,15 +38,6 @@ class VoucherResource extends Resource
                     $voucher->fund->product_categories
                 )
             ]),
-            'transactions' => VoucherTransactionResource::collection(
-                $this->resource->transactions
-            ),
-        ])->toArray();
-
-        return collect($this->resource)->only([
-            'identity_address', 'fund_id', 'created_at', 'address'
-        ])->merge([
-            'fund' => new FundResource($this->resource->fund),
             'transactions' => VoucherTransactionResource::collection(
                 $this->resource->transactions
             ),

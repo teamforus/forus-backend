@@ -23,6 +23,7 @@ class ProviderVoucherResource extends Resource
          * @var Voucher $voucher
          */
         $voucher = $this->resource;
+        $amountLeft = $voucher->amount - $voucher->transactions->sum('amount');
 
         $voucherOrganizations = $voucher->fund->providers->pluck('organization');
         $allowedOrganizations = Organization::getModel()->where([
@@ -39,6 +40,7 @@ class ProviderVoucherResource extends Resource
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
+            'amount' => max($amountLeft, 0),
             'fund' => collect($voucher->fund)->only([
                 'id', 'name', 'state'
             ])->merge([
