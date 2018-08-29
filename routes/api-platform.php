@@ -156,14 +156,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
 
     // Prevalidations endpoints
     $router->post(
-        'prevalidations/{prevalidations_uid}/redeem',
+        'prevalidations/{prevalidation_uid}/redeem',
         'Api\Platform\PrevalidationController@redeem');
 
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController',[
             'only' => [
-                'index', 'store', 'show'
+                'index', 'show', 'store'
             ],
             'parameters' => [
                 'prevalidations' => 'prevalidation_uid'

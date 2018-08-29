@@ -250,7 +250,7 @@ class MediaService
             }
 
             $image->save(
-                $storage->path($filePath), 95
+                $storage->path($filePath), 100
             );
 
             // media size row create
