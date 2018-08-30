@@ -40,6 +40,7 @@ return [
     "product_photo" => [
         "size" => [
             "thumbnail" => [200, 200],
+            "small" => [400, 300],
             "large" => [1200, 800]
         ],
         "type" => "single",

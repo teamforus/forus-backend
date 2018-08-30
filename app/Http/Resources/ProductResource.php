@@ -17,12 +17,18 @@ class ProductResource extends Resource
     {
         /** @var Product $product */
         $product = $this->resource;
+        $suppliedFundIds = $product->organization->supplied_funds_approved;
+
+        $funds = $product->product_category->funds()->whereIn(
+            'funds.id', $suppliedFundIds->pluck('id')
+        )->get();
 
         return collect($product)->only([
             'id', 'name', 'description', 'price', 'old_price',
             'total_amount', 'sold_amount', 'product_category_id',
             'organization_id'
         ])->merge([
+            'funds' => $funds->implode('name', ', '),
             'photo' => new MediaResource(
                 $product->photo
             ),
