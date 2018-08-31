@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Office;
+use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -21,9 +23,18 @@ class VoucherResource extends Resource
         $voucher = $this->resource;
         $amountLeft = $voucher->amount - $voucher->transactions->sum('amount');
 
+
+
+        $voucherOrganizations = $voucher->fund->providers->pluck('organization');
+
+        $offices = Office::getModel()->whereIn(
+            'organization_id', $voucherOrganizations
+        )->get();
+
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
+            'offices' => OfficeResource::collection($offices),
             'amount' => max($amountLeft, 0),
             'fund' => collect($voucher->fund)->only([
                 'id', 'name', 'state'

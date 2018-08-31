@@ -29,6 +29,7 @@ class ProductResource extends Resource
             'organization_id'
         ])->merge([
             'funds' => $funds->implode('name', ', '),
+            'offices' => OfficeResource::collection($product->organization->offices),
             'photo' => new MediaResource(
                 $product->photo
             ),

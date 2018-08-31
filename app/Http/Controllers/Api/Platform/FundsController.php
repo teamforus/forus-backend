@@ -14,12 +14,9 @@ class FundsController extends Controller
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index()
     {
-        $this->authorize('index', Fund::class);
-
         return FundResource::collection(Fund::getModel()->where(
             'state', 'active'
         )->get());
@@ -30,12 +27,9 @@ class FundsController extends Controller
      *
      * @param Fund $fund
      * @return FundResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(Fund $fund)
     {
-        $this->authorize('show', $fund);
-
         if ($fund->state != 'active') {
             return abort(404);
         }

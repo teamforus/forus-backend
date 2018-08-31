@@ -63,7 +63,7 @@ class FundsController extends Controller
 
         $fund->criteria()->create([
             'record_type_key' => 'kindpakket_2018_eligible',
-            'value' => 1,
+            'value' => "Ja",
             'operator' => '='
         ]);
 

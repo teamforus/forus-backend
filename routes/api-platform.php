@@ -13,10 +13,7 @@
 
 $router = app()->make('router');
 
-/**
- * Authorization required
- */
-$router->group(['middleware' => ['api.auth']], function() use ($router) {
+$router->group([], function() use ($router) {
     $router->get(
         '/organization-types',
         "Api\Platform\OrganizationTypeController@index"
@@ -28,14 +25,6 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     );
 
     $router->resource(
-        'organizations',
-        "Api\Platform\OrganizationsController", [
-        'only' => [
-            'index', 'show', 'store', 'update'
-        ]
-    ]);
-
-    $router->resource(
         'funds',
         "Api\Platform\FundsController", [
         'only' => [
@@ -43,10 +32,13 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
-    $router->post(
-        'funds/{fund_id}/apply',
-        "Api\Platform\FundsController@apply"
-    );
+    $router->resource(
+        'offices',
+        "Api\Platform\OfficesController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
 
     $router->resource(
         'products',
@@ -55,6 +47,24 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'index', 'show'
         ]
     ]);
+});
+
+/**
+ * Authorization required
+ */
+$router->group(['middleware' => ['api.auth']], function() use ($router) {
+    $router->resource(
+        'organizations',
+        "Api\Platform\OrganizationsController", [
+        'only' => [
+            'index', 'show', 'store', 'update'
+        ]
+    ]);
+
+    $router->post(
+        'funds/{fund_id}/apply',
+        "Api\Platform\FundsController@apply"
+    );
 
     $router->resource(
         'vouchers',

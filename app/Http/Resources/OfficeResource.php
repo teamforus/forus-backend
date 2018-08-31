@@ -19,6 +19,14 @@ class OfficeResource extends Resource
             'lon', 'lat'
         ])->merge([
             'photo' => new MediaResource($this->resource->photo),
+            'organization' => collect($this->resource->organization)->only([
+                'name', 'email', 'phone'
+            ])->merge([
+                'categories' => $this->resource->organization->product_categories->pluck('name')->implode(', '),
+                'product_categories' => ProductCategoryResource::collection(
+                    $this->resource->organization->product_categories
+                ),
+            ]),
             'schedule' => OfficeScheduleResource::collection(
                 $this->resource->schedules
             )
