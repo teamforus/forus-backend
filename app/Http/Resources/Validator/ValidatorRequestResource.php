@@ -21,11 +21,11 @@ class ValidatorRequestResource extends Resource
 
         $bsn = collect(
             $recordRepo->recordsList($resource->identity_address, 'bsn')
-        )->filter(function($record) use ($resource) {
+        )->filter(function($record) use ($request) {
             return collect(
                     $record['validations']
                 )->pluck('identity_address')->search(
-                    $resource->identity_address
+                    $request->get('identity')
                 ) !== FALSE;
         })->first();
 
