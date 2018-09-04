@@ -110,7 +110,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
         RecordType::create([
             'key'       => 'kindpakket_2018_eligible',
             'name'      => 'Kindpakket Eligible',
-            'type'      => 'number',
+            'type'      => 'string',
         ]);
     }
 }

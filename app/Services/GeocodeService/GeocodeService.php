@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Services\GeocodeService;
+use GuzzleHttp\Client;
+
 /**
  * Class GeocodeService
  * @package App\Services\GeocodeService
@@ -40,7 +42,10 @@ class GeocodeService
     public function getCoordinates($address)
     {
         try {
-            $coordinates = file_get_contents($this->getApiUrl($address));
+            $client = new Client();
+            $res = $client->get($this->getApiUrl($address));
+
+            $coordinates = $res->getBody();
             $coordinates = json_decode($coordinates);
 
             $location = $coordinates->results[0]->geometry->location;

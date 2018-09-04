@@ -129,6 +129,8 @@ return [
         'pin_code' => "Pin code",
         'records' => "Records",
         'email' => "e-mail",
+        'primary_email' => 'e-mail',
+        'records.primary_email' => 'e-mail',
     ],
 
 ];

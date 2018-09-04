@@ -8,6 +8,7 @@ use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Validator;
 use App\Models\ValidatorRequest;
+use App\Models\Voucher;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
 use App\Policies\ValidatorPolicy;
@@ -15,6 +16,7 @@ use App\Policies\OfficePolicy;
 use App\Policies\OrganizationFundPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ValidatorRequestPolicy;
+use App\Policies\VoucherPolicy;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
@@ -36,6 +38,7 @@ class AuthServiceProvider extends ServiceProvider
         Media::class                => MediaPolicy::class,
         Office::class               => OfficePolicy::class,
         Product::class              => ProductPolicy::class,
+        Voucher::class              => VoucherPolicy::class,
         Organization::class         => OrganizationPolicy::class,
         Validator::class            => ValidatorPolicy::class,
         FundProvider::class         => OrganizationFundPolicy::class,

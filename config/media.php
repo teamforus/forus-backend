@@ -3,7 +3,7 @@
 return [
     "record_category_icon" => [
         "size" => [
-            "thumbnail" => [100, 100],
+            "thumbnail" => [200, 200],
             "large" => [500, 500]
         ],
         "type" => "single",
@@ -12,7 +12,7 @@ return [
 
     "organization_logo" => [
         "size" => [
-            "thumbnail" => [100, 100],
+            "thumbnail" => [200, 200],
             "large" => [500, 500]
         ],
         "type" => "single",
@@ -21,7 +21,7 @@ return [
 
     "fund_logo" => [
         "size" => [
-            "thumbnail" => [100, 100],
+            "thumbnail" => [200, 200],
             "large" => [500, 500]
         ],
         "type" => "single",
@@ -30,7 +30,7 @@ return [
 
     "office_photo" => [
         "size" => [
-            "thumbnail" => [100, 100],
+            "thumbnail" => [200, 200],
             "large" => [1200, 800]
         ],
         "type" => "single",
@@ -39,7 +39,8 @@ return [
 
     "product_photo" => [
         "size" => [
-            "thumbnail" => [100, 100],
+            "thumbnail" => [200, 200],
+            "small" => [400, 300],
             "large" => [1200, 800]
         ],
         "type" => "single",

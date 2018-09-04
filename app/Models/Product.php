@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property integer $sold_amount
  * @property Organization $organization
  * @property ProductCategory $product_category
+ * @property Media $photo
  * @property Collection $funds
  * @property Carbon $created_at
  * @property Carbon $updated_at

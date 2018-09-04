@@ -13,10 +13,7 @@
 
 $router = app()->make('router');
 
-/**
- * Authorization required
- */
-$router->group(['middleware' => ['api.auth']], function() use ($router) {
+$router->group([], function() use ($router) {
     $router->get(
         '/organization-types',
         "Api\Platform\OrganizationTypeController@index"
@@ -28,6 +25,35 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     );
 
     $router->resource(
+        'funds',
+        "Api\Platform\FundsController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+
+    $router->resource(
+        'offices',
+        "Api\Platform\OfficesController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+
+    $router->resource(
+        'products',
+        "Api\Platform\ProductsController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+});
+
+/**
+ * Authorization required
+ */
+$router->group(['middleware' => ['api.auth']], function() use ($router) {
+    $router->resource(
         'organizations',
         "Api\Platform\OrganizationsController", [
         'only' => [
@@ -35,11 +61,36 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->post(
+        'funds/{fund_id}/apply',
+        "Api\Platform\FundsController@apply"
+    );
+
     $router->resource(
-        'funds',
-        "Api\Platform\FundsController", [
+        'vouchers',
+        "Api\Platform\VouchersController", [
         'only' => [
             'index', 'show'
+        ],
+        'parameters' => [
+            'vouchers' => 'voucher_address'
+        ]
+    ]);
+
+    $router->get(
+        'vouchers/{voucher_address}/provider',
+        "Api\Platform\VouchersController@provider"
+    );
+
+    $router->resource(
+        'vouchers.transactions',
+        "Api\Platform\Vouchers\TransactionsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'vouchers' => 'voucher_address',
+            'transactions' => 'transaction_address',
         ]
     ]);
 
@@ -115,14 +166,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
 
     // Prevalidations endpoints
     $router->post(
-        'prevalidations/{prevalidations_uid}/redeem',
+        'prevalidations/{prevalidation_uid}/redeem',
         'Api\Platform\PrevalidationController@redeem');
 
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController',[
             'only' => [
-                'index', 'store', 'show'
+                'index', 'show', 'store'
             ],
             'parameters' => [
                 'prevalidations' => 'prevalidation_uid'

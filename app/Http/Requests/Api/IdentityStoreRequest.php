@@ -6,7 +6,9 @@ use App\Rules\IdentityPinCodeRule;
 use App\Rules\IdentityRecordsAddressRule;
 use App\Rules\IdentityRecordsRule;
 use App\Rules\IdentityRecordsUniqueRule;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IdentityStoreRequest extends FormRequest
 {
@@ -33,6 +35,11 @@ class IdentityStoreRequest extends FormRequest
             'records.primary_email'     => ['required', 'email', new IdentityRecordsUniqueRule('primary_email')],
             'records.address'           => [new IdentityRecordsAddressRule()],
             'records.*'                 => ['required'],
+            'code'                      => [
+                Rule::exists('prevalidations', 'uid')->where(function(Builder $query) {
+                    $query->where('state', 'pending');
+                })
+            ]
         ];
     }
 }

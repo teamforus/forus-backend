@@ -32,6 +32,12 @@ class FundResource extends Resource
             'product_categories' => ProductCategoryResource::collection(
                 $this->resource->product_categories
             ),
+            'validators' => ValidatorResource::collection(
+                $this->resource->organization->validators
+            ),
+            'criteria' => FundCriterionResource::collection(
+                $this->resource->criteria
+            ),
             'budget' => [
                 'total' => 60000,
                 'validated' => 40000,

@@ -8,6 +8,7 @@ use App\Http\Resources\FundResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\Record\Models\RecordType;
 
 class FundsController extends Controller
 {
@@ -59,6 +60,12 @@ class FundsController extends Controller
         $fund->product_categories()->sync(
             $request->input('product_categories', [])
         );
+
+        $fund->criteria()->create([
+            'record_type_key' => 'kindpakket_2018_eligible',
+            'value' => "Ja",
+            'operator' => '='
+        ]);
 
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);

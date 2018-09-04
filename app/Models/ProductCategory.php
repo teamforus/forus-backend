@@ -14,8 +14,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $name
  * @property integer $parent_id
  * @property ProductCategory $parent
+ * @property Collection $funds
  * @property Collection $products
- * @property Collection $providers
+ * @property Collection $organizations
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -57,22 +58,22 @@ class ProductCategory extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function providers() {
-        return $this->hasManyThrough(
-            Provider::class,
-            ProviderProductCategory::class
+    public function organizations() {
+        return $this->belongsToMany(
+            Organization::class,
+            'organization_product_categories'
         );
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function funds() {
-        return $this->hasManyThrough(
+        return $this->belongsToMany(
             Fund::class,
-            FundProductCategory::class
+            'fund_product_categories'
         );
     }
 }

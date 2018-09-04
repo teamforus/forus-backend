@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $metas
  * @property Collection $products
  * @property Collection $product_categories
+ * @property Collection $criteria
+ * @property Collection $vouchers
+ * @property Collection $providers
  * @property Carbon $start_date
  * @property Carbon $end_date
  * @property Carbon $created_at
@@ -74,6 +77,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function criteria() {
+        return $this->hasMany(FundCriterion::class);
+    }
+
+    /**
      * Get fund logo
      * @return MorphOne
      */
@@ -81,5 +91,19 @@ class Fund extends Model
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'fund_logo'
         ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function vouchers() {
+        return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function providers() {
+        return $this->hasMany(FundProvider::class);
     }
 }

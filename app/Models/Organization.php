@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $products
  * @property Collection $validators
  * @property Collection $supplied_funds
+ * @property Collection $supplied_funds_approved
  * @property Collection $organization_funds
  * @property Collection $product_categories
  * @property Collection $offices
@@ -81,8 +82,18 @@ class Organization extends Model
     public function supplied_funds() {
         return $this->belongsToMany(
             Fund::class,
-            'organization_funds'
+            'fund_providers'
         );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where('fund_providers.state', 'approved');
     }
 
     /**

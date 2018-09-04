@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Product;
 use Illuminate\Http\Resources\Json\Resource;
 
 class ProductResource extends Resource
@@ -14,16 +15,27 @@ class ProductResource extends Resource
      */
     public function toArray($request)
     {
-        return collect($this->resource)->only([
+        /** @var Product $product */
+        $product = $this->resource;
+        $suppliedFundIds = $product->organization->supplied_funds_approved;
+
+        $funds = $product->product_category->funds()->whereIn(
+            'funds.id', $suppliedFundIds->pluck('id')
+        )->get();
+
+        return collect($product)->only([
             'id', 'name', 'description', 'price', 'old_price',
             'total_amount', 'sold_amount', 'product_category_id',
             'organization_id'
         ])->merge([
-            'photo' => new MediaResource($this->resource->photo),
-            'product_category' => new ProductCategoryResource(
-                $this->resource->product_category
+            'funds' => $funds->implode('name', ', '),
+            'offices' => OfficeResource::collection($product->organization->offices),
+            'photo' => new MediaResource(
+                $product->photo
             ),
-            'funds' => "Lorem, Ipsum"
+            'product_category' => new ProductCategoryResource(
+                $product->product_category
+            )
         ])->toArray();
     }
 }
