@@ -41,7 +41,7 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'read' => array(
+            'write' => array(
                 'host' => env('DB_HOST', '127.0.0.1')
             ),
             'read' => array(
