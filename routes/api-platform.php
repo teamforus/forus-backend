@@ -164,6 +164,17 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'organizations/{organization}/provider/identities',
+        "Api\Platform\Organizations\Provider\ProviderIdentitiesController", [
+        'only' => [
+            'index', 'show', 'store', 'destroy', 'update'
+        ],
+        'parameters' => [
+            'identities' => 'provider_identity'
+        ]
+    ]);
+
     // Prevalidations endpoints
     $router->post(
         'prevalidations/{prevalidation_uid}/redeem',

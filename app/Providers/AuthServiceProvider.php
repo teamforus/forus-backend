@@ -6,11 +6,13 @@ use App\Models\Office;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Product;
+use App\Models\ProviderIdentity;
 use App\Models\Validator;
 use App\Models\ValidatorRequest;
 use App\Models\Voucher;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
+use App\Policies\ProviderIdentityPolicy;
 use App\Policies\ValidatorPolicy;
 use App\Policies\OfficePolicy;
 use App\Policies\OrganizationFundPolicy;
@@ -44,6 +46,7 @@ class AuthServiceProvider extends ServiceProvider
         FundProvider::class         => OrganizationFundPolicy::class,
         Prevalidation::class        => PrevalidationPolicy::class,
         ValidatorRequest::class     => ValidatorRequestPolicy::class,
+        ProviderIdentity::class     => ProviderIdentityPolicy::class,
     ];
 
     /**

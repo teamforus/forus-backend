@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property mixed $id
  * @property integer $provider_id
  * @property integer $product_category_id
- * @property Provider $provider
+ * @property Organization $provider
  * @property ProductCategory $product_category
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -31,7 +31,7 @@ class ProviderProductCategory extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function provider() {
-        return $this->hasOne(Provider::class);
+        return $this->hasOne(Organization::class);
     }
 
     /**
