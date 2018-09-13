@@ -23,7 +23,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
         ProductCategory::create([
             'key'       => 'sport-accessoires',
-            'name'      => 'Sport accessoires'
+            'name'      => 'Sport'
         ]);
 
         ProductCategory::create([

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Fund;
 use App\Models\Prevalidation;
+use App\Models\ProviderIdentity;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Services\MediaService\Models\Media;
@@ -61,6 +62,12 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('transaction_address', function ($value) {
             return VoucherTransaction::getModel()->where([
                     'address' => $value
+                ])->first() ?? abort(404);
+        });
+
+        $router->bind('provider_identity', function ($value) {
+            return ProviderIdentity::getModel()->where([
+                    'id' => $value
                 ])->first() ?? abort(404);
         });
     }
