@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $supplied_funds_approved
  * @property Collection $organization_funds
  * @property Collection $product_categories
+ * @property Collection $provider_identities
  * @property Collection $offices
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -118,5 +119,12 @@ class Organization extends Model
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'organization_logo'
         ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function provider_identities() {
+        return $this->hasMany(ProviderIdentity::class, 'provider_id', 'id');
     }
 }

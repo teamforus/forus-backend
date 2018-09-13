@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Vouchers\Transactions;
 
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\ProviderIdentity;
 use App\Models\Voucher;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -32,7 +33,9 @@ class StoreVoucherTransactionRequest extends FormRequest
         $identityAddress = request()->get('identity');
         $identityOrganizations = Organization::getModel()->where([
             'identity_address' => $identityAddress
-        ])->pluck('id');
+        ])->orWhereIn('id', ProviderIdentity::getModel()->where([
+            'identity_address' => $identityAddress
+        ])->pluck('provider_id')->unique()->toArray())->pluck('id');
 
         /**
          * target voucher

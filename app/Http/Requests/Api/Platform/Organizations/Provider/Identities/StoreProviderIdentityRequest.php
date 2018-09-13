@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Provider\Identities;
 use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateProviderIdentityRequest extends FormRequest
+class StoreProviderIdentityRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
