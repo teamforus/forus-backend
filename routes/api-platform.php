@@ -47,6 +47,11 @@ $router->group([], function() use ($router) {
             'index', 'show'
         ]
     ]);
+
+    $router->get(
+        'config/{platform_config}',
+        'Api\Platform\ConfigController@getConfig'
+    );
 });
 
 /**

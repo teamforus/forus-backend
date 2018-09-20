@@ -70,6 +70,10 @@ class RouteServiceProvider extends ServiceProvider
                     'id' => $value
                 ])->first() ?? abort(404);
         });
+
+        $router->bind('platform_config', function ($value) {
+            return config('forus.features.' . $value);
+        });
     }
 
     /**
