@@ -70,6 +70,24 @@ class RouteServiceProvider extends ServiceProvider
                     'id' => $value
                 ])->first() ?? abort(404);
         });
+
+        $router->bind('platform_config', function ($value) {
+            $ver = request()->input('ver');
+
+            if (preg_match('/[^a-z_\-0-9]/i', $value)) {
+                exit(abort(403,''));
+            }
+
+            if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
+                exit(abort(403,''));
+            }
+
+            $config = config(
+                'forus.features.' . $value . ($ver ? '.' . $ver : '')
+            );
+
+            return $config ?: [];
+        });
     }
 
     /**

@@ -227,7 +227,10 @@ class IdentityController extends Controller
      * @param string $emailToken
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|string
      */
-    public function proxyAuthorizeEmail(string $source, string $emailToken) {
+    public function proxyAuthorizeEmail(
+        string $source,
+        string $emailToken
+    ) {
         $status = $this->identityRepo->activateAuthorizationEmailProxy(
             $emailToken
         );
