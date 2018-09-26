@@ -19,7 +19,7 @@ class VouchersController extends Controller
     public function index(Request $request)
     {
         return VoucherResource::collection(Voucher::getModel()->where(
-            'identity_address', $request->get('identity')
+            'identity_address', auth()->user()->getAuthIdentifier()
         )->get());
     }
 

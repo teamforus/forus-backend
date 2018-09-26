@@ -23,6 +23,6 @@ class TokenGenerator
      * @return string
      */
     public function address(){
-        return '0x' . $this->generate(41);
+        return '0x' . $this->generate(40);
     }
 }

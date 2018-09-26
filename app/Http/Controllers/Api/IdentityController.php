@@ -26,7 +26,7 @@ class IdentityController extends Controller
     public function getPublic(Request $request)
     {
         return [
-            'address' => $request->get('identity')
+            'address' => auth()->user()->getAuthIdentifier()
         ];
     }
 
@@ -160,7 +160,7 @@ class IdentityController extends Controller
      */
     public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request) {
         $status = $this->identityRepo->activateAuthorizationCodeProxy(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $request->post('auth_code', '')
         );
 
@@ -194,7 +194,7 @@ class IdentityController extends Controller
      */
     public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request) {
         $status = $this->identityRepo->activateAuthorizationTokenProxy(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $request->post('auth_token', '')
         );
 

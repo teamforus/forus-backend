@@ -59,13 +59,13 @@ return array(
     | Model locations to include
     |--------------------------------------------------------------------------
     |
-    | Define in which directories the ide-helper:models command should look
-    | for models.
+    | Define in which directories the ide-helper:Models command should look
+    | for Models.
     |
     */
 
     'model_locations' => array(
-        'app',
+        'app/Models',
     ),
 
 
@@ -129,7 +129,7 @@ return array(
     | our case it is 'json_array'. Doctrine types are listed here:
     | http://doctrine-dbal.readthedocs.org/en/latest/reference/types.html
     |
-    | So to support jsonb in your models when working with Postgres, just add the following entry to the array below:
+    | So to support jsonb in your Models when working with Postgres, just add the following entry to the array below:
     |
     | "postgresql" => array(
     |       "jsonb" => "json_array",
@@ -142,7 +142,7 @@ return array(
 
     /*
      |--------------------------------------------------------------------------
-     | Support for camel cased models
+     | Support for camel cased Models
      |--------------------------------------------------------------------------
      |
      | There are some Laravel packages (such as Eloquence) that allow for accessing

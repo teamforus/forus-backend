@@ -25,7 +25,7 @@ class ValidatorsController extends Controller
      */
     public function index(Request $request)
     {
-        $identity = $request->get('identity');
+        $identity = auth()->user()->getAuthIdentifier();
 
         $bsnValidations = collect($this->recordRepo->recordsList(
             $identity
