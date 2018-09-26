@@ -1,0 +1,27 @@
+version: '2'
+services:
+
+  app:
+    build: .
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+
+  # The Database
+  database:
+    image: mysql:5.6
+    volumes:
+      - dbdata:/var/lib/mysql
+    environment:
+      - "MYSQL_ROOT_PASSWORD=secret"
+      - "MYSQL_DATABASE=homestead"
+      - "MYSQL_USER=homestead"
+    ports:
+        - "33061:3306"
+
+volumes:
+  dbdata:
