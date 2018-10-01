@@ -28,7 +28,13 @@ class ProductResource extends Resource
             'total_amount', 'sold_amount', 'product_category_id',
             'organization_id'
         ])->merge([
-            'funds' => $funds->implode('name', ', '),
+            'funds' => $funds->map(function($fund) {
+                return [
+                    'logo' => new MediaResource($fund->logo),
+                    'id' => $fund->id,
+                    'name' => $fund->name
+                ];
+            }),
             'offices' => OfficeResource::collection($product->organization->offices),
             'photo' => new MediaResource(
                 $product->photo

@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property boolean $parsed
  * @property Organization $organization
  * @property Collection $schedules
+ * @property Media $photo
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models

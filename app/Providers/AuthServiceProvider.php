@@ -77,7 +77,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->app->singleton(GateContract::class, function ($app) {
             return new Gate($app, function () use ($app) {
-                return request()->get('identity', false);
+                return auth()->user() ?? false;
             });
         });
 

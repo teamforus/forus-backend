@@ -23,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $criteria
  * @property Collection $vouchers
  * @property Collection $providers
+ * @property Collection $provider_organizations
+ * @property Collection $provider_organizations_approved
  * @property Carbon $start_date
  * @property Carbon $end_date
  * @property Carbon $created_at
@@ -105,5 +107,25 @@ class Fund extends Model
      */
     public function providers() {
         return $this->hasMany(FundProvider::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_approved() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where('fund_providers.state', 'approved');
     }
 }

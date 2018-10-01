@@ -29,7 +29,7 @@ class ValidatorRequestController extends Controller
     }
 
     /**
-     * tore a newly created resource in storage.
+     * Store a newly created resource in storage.
      *
      * @param StoreValidatorRequestRequest $request
      * @return ValidatorRequestResource

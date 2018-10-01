@@ -60,6 +60,10 @@ class OrganizationsController extends Controller
             ])->toArray()
         );
 
+        $organization->provider_identities()->create([
+            'identity_address' => auth()->user()->getAuthIdentifier()
+        ]);
+
         $organization->product_categories()->sync(
             $request->input('product_categories', [])
         );

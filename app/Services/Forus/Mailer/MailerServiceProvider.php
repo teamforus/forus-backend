@@ -21,6 +21,7 @@ class MailerServiceProvider extends ServiceProvider
             ->hourly();
         });
     }
+
     /**
      * Register the service provider.
      *

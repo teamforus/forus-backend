@@ -14,8 +14,6 @@ class ProductCategoryController extends Controller
      */
     public function index()
     {
-        return auth()->user();
-
         return ProductCategoryResource::collection(ProductCategory::all());
     }
 }
