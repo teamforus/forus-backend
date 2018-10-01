@@ -11,7 +11,7 @@ use Illuminate\Support\ServiceProvider;
 class MediaServiceProvider extends ServiceProvider
 {
     /**
-     * List mediable models
+     * List mediable Models
      *
      * @var array
      */

@@ -3,20 +3,20 @@
 return [
     "records" => [
         // view records list
-        "list"      => false,
+        "list"      => true,
 
         // create new record
-        "create"    => false,
+        "create"    => true,
 
         // validate record
-        "validate"  => false
+        "validate"  => true
     ],
     "funds" => [
         // list all funds
-        "list"      => false,
+        "list"      => true,
 
         // view fund details
-        "show"      => false
+        "show"      => true
     ],
     // enable newsletter
     "newsletter"    => false,

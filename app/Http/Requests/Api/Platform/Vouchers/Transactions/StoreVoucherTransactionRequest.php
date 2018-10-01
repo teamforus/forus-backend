@@ -69,21 +69,49 @@ class StoreVoucherTransactionRequest extends FormRequest
             return $validCategories->search($product->product_category_id) !== false;
         })->pluck('id');
 
+        if ($voucher->product) {
+            $product = $voucher->product;
+        } else {
+            $product = Product::query()->find(request()->input('product_id'));
+        }
+
+        /**
+         * If the product is specified,
+         * limit available organization also by the product organization
+         */
+        if ($product) {
+            $validOrganizations = $validOrganizations->intersect([
+                $voucher->product->organization->id
+            ]);
+        }
+
+        if (!$voucher->product_id) {
+            return [
+                'amount'            => [
+                    'required_without:product_id',
+                    'numeric',
+                    'min:.01',
+                    'max:' . $voucher->amount_available,
+                ],
+                'product_id'        => [
+                    'exists:products,id',
+                    'in:' . $validProductsIds->implode(',')
+                ],
+                'organization_id'   => [
+                    'required',
+                    'exists:organizations,id',
+                    'in:' . $validOrganizations->implode(',')
+                ]
+            ];
+        }
+
+        return [];
+    }
+
+    public function messages()
+    {
         return [
-            'amount'            => [
-                'required_without:product_id',
-                'numeric',
-                'min:.01'
-            ],
-            'product_id'        => [
-                'exists:products,id',
-                'in:' . $validProductsIds->implode(',')
-            ],
-            'organization_id'   => [
-                'required',
-                'exists:organizations,id',
-                'in:' . $validOrganizations->implode(',')
-            ]
+            'amount.max' => trans('validation.voucher.not_enough_funds')
         ];
     }
 }

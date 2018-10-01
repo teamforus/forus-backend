@@ -36,7 +36,7 @@ class ProcessMailBusCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
     public function handle() {
 
@@ -46,7 +46,8 @@ class ProcessMailBusCommand extends Command
             $time = time();
             
             while($time + 60 > time()) {
-                while($mail = MailJob::whereState('pending')->first()) {
+                /** @var MailJob $mail */
+                while($mail = MailJob::query()->where('state', 'pending')->first()) {
                     $mailBusRepository->sendMail($mail);
 
                     if ($time + 60 < time())

@@ -22,14 +22,14 @@ class ValidatorRequestController extends Controller
         $this->authorize('index', ValidatorRequest::class);
 
         $validatorRequest = ValidatorRequest::getModel()->where([
-            'identity_address' => $request->get('identity')
+            'identity_address' => auth()->user()->getAuthIdentifier()
         ])->get();
 
         return ValidatorRequestResource::collection($validatorRequest);
     }
 
     /**
-     * tore a newly created resource in storage.
+     * Store a newly created resource in storage.
      *
      * @param StoreValidatorRequestRequest $request
      * @return ValidatorRequestResource
@@ -41,7 +41,7 @@ class ValidatorRequestController extends Controller
 
         return new ValidatorRequestResource(ValidatorRequest::create([
             'record_id' => $request->input('record_id'),
-            'identity_address' => $request->get('identity'),
+            'identity_address' => auth()->user()->getAuthIdentifier(),
             'validator_id' => $request->input('validator_id'),
             'state' => 'pending'
         ]));

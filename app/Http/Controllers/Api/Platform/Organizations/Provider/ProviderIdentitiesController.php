@@ -41,7 +41,6 @@ class ProviderIdentitiesController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('store', ProviderIdentity::class);
 
-        $provider_id = $organization->id;
         $identity_address = app()->make(
             'forus.services.record'
         )->identityIdByEmail(
@@ -49,7 +48,7 @@ class ProviderIdentitiesController extends Controller
         );
 
         $provider_identity = $organization->provider_identities()->create(
-            compact('provider_id', 'identity_address')
+            compact('identity_address')
         );
 
         return new ProviderIdentityResource($provider_identity);
