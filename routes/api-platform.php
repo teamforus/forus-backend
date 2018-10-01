@@ -75,7 +75,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'vouchers',
         "Api\Platform\VouchersController", [
         'only' => [
-            'index', 'show'
+            'index', 'show', 'store'
         ],
         'parameters' => [
             'vouchers' => 'voucher_address'

@@ -26,7 +26,7 @@ class OrganizationsController extends Controller
         return OrganizationResource::collection(
             Organization::getModel()->where(
                 'identity_address',
-                $request->get('identity')
+                auth()->user()->getAuthIdentifier()
             )->get()
         );
     }
@@ -56,9 +56,13 @@ class OrganizationsController extends Controller
             collect($request->only([
                 'name', 'iban', 'email', 'phone', 'kvk', 'btw'
             ]))->merge([
-                'identity_address' => $request->get('identity'),
+                'identity_address' => auth()->user()->getAuthIdentifier(),
             ])->toArray()
         );
+
+        $organization->provider_identities()->create([
+            'identity_address' => auth()->user()->getAuthIdentifier()
+        ]);
 
         $organization->product_categories()->sync(
             $request->input('product_categories', [])

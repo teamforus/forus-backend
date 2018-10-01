@@ -26,7 +26,7 @@ class RecordCategoryController extends Controller
     public function index(Request $request)
     {
         return $this->recordRepo->categoriesList(
-            $request->get('identity')
+            auth()->user()->getAuthIdentifier()
         );
     }
 
@@ -39,7 +39,7 @@ class RecordCategoryController extends Controller
         RecordCategoryStoreRequest $request
     ) {
         $success = !!$this->recordRepo->categoryCreate(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $request->get('name'),
             $request->input('order', 0)
         );
@@ -57,7 +57,7 @@ class RecordCategoryController extends Controller
         Request $request,
         int $recordCategoryId
     ) {
-        $identity = $request->get('identity');
+        $identity = auth()->user()->getAuthIdentifier();
 
         if (empty($this->recordRepo->categoryGet(
             $identity, $recordCategoryId
@@ -87,7 +87,7 @@ class RecordCategoryController extends Controller
         RecordCategoryUpdateRequest $request,
         int $recordCategoryId
     ) {
-        $identity = $request->get('identity');
+        $identity = auth()->user()->getAuthIdentifier();
 
         if (empty($this->recordRepo->categoryGet(
             $identity, $recordCategoryId
@@ -96,7 +96,7 @@ class RecordCategoryController extends Controller
         }
 
         $success = $this->recordRepo->categoryUpdate(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $recordCategoryId,
             $request->input('name', null),
             $request->input('order', null)
@@ -116,7 +116,7 @@ class RecordCategoryController extends Controller
         Request $request,
         int $recordCategoryId
     ) {
-        $identity = $request->get('identity');
+        $identity = auth()->user()->getAuthIdentifier();
 
         if (empty($this->recordRepo->categoryGet(
             $identity, $recordCategoryId
@@ -125,7 +125,7 @@ class RecordCategoryController extends Controller
         }
 
         $success = $this->recordRepo->categoryDelete(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $recordCategoryId
         );
 
@@ -141,7 +141,7 @@ class RecordCategoryController extends Controller
         Request $request
     ) {
         $this->recordRepo->categoriesSort(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             collect($request->get('categories', []))->toArray()
         );
 

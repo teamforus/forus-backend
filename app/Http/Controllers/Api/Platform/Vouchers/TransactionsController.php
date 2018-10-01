@@ -29,36 +29,44 @@ class TransactionsController extends Controller
      * @param StoreVoucherTransactionRequest $request
      * @param Voucher $voucher
      * @return VoucherTransactionResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         StoreVoucherTransactionRequest $request,
         Voucher $voucher
     ) {
-        /**
-         * @var Voucher $voucher
-         * @var Product|null $product
-         */
-        $maxAmount = $voucher->amount - $voucher->transactions->sum('amount');
-        $product = Product::getModel()->find($request->get('product_id'));
+        $this->authorize('useAsProvider', $voucher);
 
-        if (!$product) {
-            $amount = $request->input('amount');
-        } else {
+        /** @var Product|null $product */
+        if ($voucher->type == 'product') {
+            $product = $voucher->product;
             $amount = $product->price;
-        }
+            $organizationId = $product->organization_id;
+        } else {
+            $maxAmount = $voucher->amount - $voucher->transactions->sum('amount');
+            $product = Product::getModel()->find($request->get('product_id'));
 
-        if ($amount > $maxAmount) {
-            return response()->json([
-                'message' => trans('validation.voucher.not_enough_funds'),
-                'key' => 'not_enough_funds'
-            ], 403);
+            if (!$product) {
+                $amount = $request->input('amount');
+                $organizationId = $request->input('organization_id');
+            } else {
+                $amount = $product->price;
+                $organizationId = $product->organization_id;
+            }
+
+            if ($amount > $maxAmount) {
+                return response()->json([
+                    'message' => trans('validation.voucher.not_enough_funds'),
+                    'key' => 'not_enough_funds'
+                ], 403);
+            }
         }
 
         $transaction = $voucher->transactions()->create([
             'amount' => $amount,
             'product_id' => $product ? $product->id : null,
             'address' => app()->make('token_generator')->address(),
-            'organization_id' => $request->input('organization_id'),
+            'organization_id' => $organizationId,
         ]);
 
         return new VoucherTransactionResource($transaction);

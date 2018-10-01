@@ -119,7 +119,7 @@ class MediaService
     }
 
     /**
-     * Returns list of expired Media models
+     * Returns list of expired Media Models
      *
      * @param null $identity_address
      * @return Collection

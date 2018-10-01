@@ -24,6 +24,10 @@ class KeyPairGenerator
                 '0xdcc703c0E500B653Ca82273B7BFAd8045D85a470') {
                 throw new \Exception('Address is empty');
             }
+
+            if (env("ETH_ADDRESS_SIMULATE")){
+                $wallet->address = app()->make('token_generator')->address();
+            }
         } catch (\Exception $e) {
             return null;
         }

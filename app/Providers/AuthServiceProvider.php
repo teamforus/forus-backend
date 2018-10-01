@@ -19,6 +19,9 @@ use App\Policies\OrganizationFundPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ValidatorRequestPolicy;
 use App\Policies\VoucherPolicy;
+use App\Services\AuthService\BearerTokenGuard;
+use App\Services\AuthService\ServiceIdentityProvider;
+use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
@@ -27,6 +30,7 @@ use App\Models\Organization;
 use App\Policies\FundPolicy;
 use App\Policies\OrganizationPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Auth;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -58,14 +62,22 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        // add custom guard provider
+        Auth::provider('identity_service', function ($app, array $config) {
+            return new ServiceIdentityProvider(app()->make(IIdentityRepo::class));
+        });
+
+        // add custom guard
+        Auth::extend('header', function ($app, $name, array $config) {
+            return new BearerTokenGuard(Auth::createUserProvider($config['provider']), app()->make('request'));
+        });
     }
 
     public function register()
     {
         $this->app->singleton(GateContract::class, function ($app) {
             return new Gate($app, function () use ($app) {
-                return request()->get('identity', false);
+                return auth()->user() ?? false;
             });
         });
 
