@@ -59,7 +59,9 @@ class BunqService
                 $environmentType = BunqEnumApiEnvironmentType::PRODUCTION();
             }
 
-            $permittedIps = [];
+            $permittedIps = collect(explode(',', env(
+                'BUNQ_ALLOWED_IP', ''
+            )))->filter()->toArray();
 
             $apiContext = ApiContext::create(
                 $environmentType,
