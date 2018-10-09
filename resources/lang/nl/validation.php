@@ -15,7 +15,7 @@ return [
 
     'accepted'             => 'Het :attribute moet worden geaccepteerd.',
     'active_url'           => 'Het :attribute is geen geldige URL.',
-    'after'                => 'het :attribute moes een datum zijn na :date',
+    'after'                => 'het :attribute moet een datum zijn na :date',
     'after_or_equal'       => 'Het :attribute moet een datum gelijkwaardig of later dan :date zijn.',
     'alpha'                => 'Het :attribute mag alleen letters bevatten.',
     'alpha_dash'           => 'Het :attribute mag alleen letters, cijfers en streepjes bevatten.',
@@ -26,7 +26,7 @@ return [
     'between'              => [
         'numeric' => 'Het :attribute moet tussen :min en :max zijn.',
         'file'    => 'Het :attribute moet tussen :min en :max kilobytes zijn.',
-        'string'  => 'Het :attribute moet tussen :min en :max characters zijn.',
+        'string'  => 'Het :attribute moet tussen :min en :max karakters zijn.',
         'array'   => 'Het :attribute moet tussen :min en :max items zijn.',
     ],
     'boolean'              => 'Het :attribute veld moet true of false zijn.',
@@ -46,9 +46,9 @@ return [
     'in'                   => 'De geselecteerde :attribute is ongeldig.',
     'in_array'             => 'Het :attribute veld bestaat niet in :other.',
     'integer'              => 'Het :attribute moet integer zijn',
-    'ip'                   => 'Het :attribute moet een geldig IP address zijn.',
-    'ipv4'                 => 'Het :attribute moet een geldig IPv4 address zijn.',
-    'ipv6'                 => 'Het :attribute moet een geldig IPv6 address zijn.',
+    'ip'                   => 'Het :attribute moet een geldig IP adres zijn.',
+    'ipv4'                 => 'Het :attribute moet een geldig IPv4 adres zijn.',
+    'ipv6'                 => 'Het :attribute moet een geldig IPv6 adres zijn.',
     'json'                 => 'Het :attribute moet een geldig JSON string.',
     'max'                  => [
         'numeric' => 'Het :attribute mag niet groter zijn dan :max.',
@@ -89,7 +89,7 @@ return [
     'url'                  => 'Het :attribute formaat is ongeldig.',
 
     // Custom
-    'old_pin_code'          => 'De oude en nieuwe pincode komen niet overeen.',
+    'old_pin_code'          => 'De oude en nieuwe inlogcode komen niet overeen.',
     'unknown_record_key'    => 'Unknown record key: ":key".',
     'unique_record'         => 'Het :attribute eigenschap is al gekozen.',
 

@@ -16,7 +16,7 @@ return [
     'password' => 'Wachtwoorden moeten uit minimaal zes tekens bestaan ​​en overeenkomen met de bevestiging.',
     'reset' => 'Je wachtwoord is hersteld!',
     'sent' => 'We hebben een herstel link per e-mail gestuurd',
-    'token' => 'Dit wachtwoordherstel-token is ongeldig.',
-    'user' => "Dit e-mail adres is niet bij ons bekend",
+    'token' => 'Dit wachtwoordhersteltoken is ongeldig.',
+    'user' => "Dit e-mailadres is niet bij ons bekend",
 
 ];
