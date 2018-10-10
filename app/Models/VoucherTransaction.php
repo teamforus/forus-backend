@@ -36,7 +36,7 @@ class VoucherTransaction extends Model
     ];
 
     protected $hidden = [
-        'payment_id', 'voucher_id', 'last_attempt_at', 'attempts'
+        'voucher_id', 'last_attempt_at', 'attempts'
     ];
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Fund;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -15,6 +16,9 @@ class FundResource extends Resource
      */
     public function toArray($request)
     {
+        /** @var Fund $fund */
+        $fund = $this->resource;
+
         return collect($this->resource)->only([
             'id', 'name', 'organization_id',
             'state'
@@ -39,9 +43,9 @@ class FundResource extends Resource
                 $this->resource->criteria
             ),
             'budget' => [
-                'total' => 60000,
-                'validated' => 40000,
-                'used' => 20000
+                'total' => $fund->budget_total,
+                'validated' => $fund->budget_validated,
+                'used' => $fund->budget_used
             ]
         ])->toArray();
     }

@@ -16,12 +16,16 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property string $state
  * @property string $name
  * @property Organization $organization
+ * @property float $budget_total
+ * @property float $budget_validated
+ * @property float $budget_used
  * @property Media $logo
  * @property Collection $metas
  * @property Collection $products
  * @property Collection $product_categories
  * @property Collection $criteria
  * @property Collection $vouchers
+ * @property Collection $voucher_transactions
  * @property Collection $providers
  * @property Collection $provider_organizations
  * @property Collection $provider_organizations_approved
@@ -103,6 +107,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function voucher_transactions() {
+        return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function providers() {
@@ -117,6 +128,36 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function top_ups() {
+        return $this->hasMany(FundTopUp::class);
+    }
+
+    /**
+     * @return float
+     */
+    public function getBudgetTotalAttribute() {
+        return $this->top_ups()->where([
+            'state' => 'confirmed'
+        ])->sum('amount');
+    }
+
+    /**
+     * @return float
+     */
+    public function getBudgetValidatedAttribute() {
+        return 0;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBudgetUsedAttribute() {
+        return $this->voucher_transactions->sum('amount');
     }
 
     /**

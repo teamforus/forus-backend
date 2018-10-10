@@ -1,18 +1,24 @@
 <?php
 namespace App\Services\BunqService;
 
+use App\Models\FundTopUp;
 use App\Models\VoucherTransaction;
 use bunq\Context\BunqContext;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
+use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
+use bunq\Model\Generated\Endpoint\MonetaryAccountProfile;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Endpoint\RequestInquiry;
 use bunq\Model\Generated\Object\Amount;
+use bunq\Model\Generated\Object\LabelMonetaryAccount;
 use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use bunq\Context\ApiContext;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder;
+use PhpParser\Node\Stmt\TryCatch;
+use function PHPSTORM_META\type;
 
 class BunqService
 {
@@ -104,6 +110,23 @@ class BunqService
     }
 
     /**
+     * Get bank monetary account iban value
+     * @return string|false
+     */
+    public function getBankAccountIban()
+    {
+        $monetaryAccount = MonetaryAccount::listing()->getValue()[0];
+
+        $alias = collect(
+            $monetaryAccount->getMonetaryAccountBank()->getAlias()
+        )->filter(function(Pointer $alias) {
+            return $alias->getType() == 'IBAN';
+        })->first();
+
+        return $alias ? $alias->getValue() : false;
+    }
+
+    /**
      * @return array|MonetaryAccount[]
      */
     public function getMonetaryAccounts()
@@ -183,6 +206,13 @@ class BunqService
     }
 
     /**
+     * @return array|Payment[]
+     */
+    public function getPayments() {
+        return Payment::listing(null)->getValue();
+    }
+
+    /**
      * @return Collection
      */
     public function getQueue() {
@@ -229,6 +259,28 @@ class BunqService
                     Carbon::now(),
                     $e->getMessage()
                 ));
+            }
+        }
+    }
+
+    public function processTopUps() {
+        $payments = $this->getPayments();
+        $topUps = FundTopUp::query()->where([
+            'state' => 'pending'
+        ])->get();
+
+        /** @var FundTopUp $topUp */
+        foreach ($topUps as $topUp) {
+            foreach ($payments as $payment) {
+                if (strpos($payment->getDescription(), $topUp->code) !== FALSE) {
+                    try {
+                        $topUp->update([
+                            'state' => 'confirmed',
+                            'bunq_transaction_id' => $payment->getId(),
+                            'amount' => $payment->getAmount()->getValue()
+                        ]);
+                    } catch (\Exception $exception) {};
+                }
             }
         }
     }
