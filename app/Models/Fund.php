@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\BunqService\BunqService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $vouchers
  * @property Collection $voucher_transactions
  * @property Collection $providers
+ * @property Collection $validators
  * @property Collection $provider_organizations
  * @property Collection $provider_organizations_approved
  * @property Carbon $start_date
@@ -46,6 +48,10 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'start_date', 'end_date'
+    ];
+
+    protected $hidden = [
+        'fund_config'
     ];
 
     /**
@@ -168,5 +174,158 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         )->where('fund_providers.state', 'approved');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function validators() {
+        return $this->hasManyThrough(
+            Validator::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        );
+    }
+
+    /**
+     * @return mixed|null
+     */
+    private function getFundConfig() {
+        try {
+            $cfg = collect(json_decode(env('FUNDS_MAPPING')))->where(
+                'fund_id', '=', $this->id
+            )->first();
+
+            return is_object($cfg) ? $cfg : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function hasFundConfig() {
+        try {
+            return is_object($this->getFundConfig());
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getFundKey() {
+        try {
+            $cfg = $this->getFundConfig();
+            return object_get($cfg, 'key');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getBunqKey() {
+        try {
+            $cfg = $this->getFundConfig();
+
+            $allowed_ip = collect(
+                explode(',', object_get($cfg, 'bunq.allowed_ip', ''))
+            )->filter()->toArray();
+
+            return [
+                "key" => object_get($cfg, 'bunq.key', false),
+                "sandbox" => object_get($cfg, 'bunq.sandbox', false),
+                "allowed_ip" => $allowed_ip,
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getFundFormula() {
+        try {
+            $cfg = $this->getFundConfig();
+
+            return [
+                "amount" => object_get($cfg, 'formula.amount', false),
+                "multiplier" => object_get($cfg, 'formula.multiplier', false),
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public static function getTrustedRecordOfType(
+        Fund $fund,
+        string $identity_address,
+        string $recordType
+    ) {
+        $recordRepo = app()->make('forus.services.record');
+
+        $trustedIdentities = $fund->validators->pluck(
+            'identity_address'
+        );
+
+        /** @var FundCriterion $criterion */
+        $recordsOfType = collect($recordRepo->recordsList(
+            $identity_address, $recordType
+        ));
+
+        $validRecordsOfType = $recordsOfType->map(function($record) use (
+            $trustedIdentities
+        ) {
+            $record['validations'] = collect($record['validations'])->whereIn(
+                'identity_address', $trustedIdentities
+            )->sortByDesc('created_at');
+
+            return $record;
+        })->filter(function($record) {
+            return count($record['validations']) > 0;
+        })->sortByDesc(function($record) {
+            return $record['validations'][0]['created_at'];
+        });
+
+        return collect($validRecordsOfType)->first();
+    }
+
+    public static function amountForIdentity(Fund $fund, $identityAddress)
+    {
+        $fundFormula = $fund->getFundFormula();
+
+        $record = self::getTrustedRecordOfType(
+            $fund, $identityAddress, $fundFormula['multiplier']
+        );
+
+        return $fundFormula['amount'] * $record['value'];
+    }
+
+    /**
+     * @return BunqService|string
+     */
+    public function getBunq() {
+        $fundBunq = $this->getBunqKey();
+
+        if (empty($fundBunq) || empty($fundBunq['key'])) {
+            app('log')->alert('No bunq config for fund: ' . $this->id);
+        }
+
+        $bunqService = BunqService::create(
+            $this->id,
+            $fundBunq['key'],
+            $fundBunq['allowed_ip'],
+            $fundBunq['sandbox']
+        );
+
+        return $bunqService;
     }
 }

@@ -25,8 +25,16 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
     public function rules()
     {
         return [
-            'primary_email' => ['required', new IdentityRecordsExistsRule('primary_email')],
-            'source'        => 'required|exists:sources,key'
+            'primary_email' => [
+                'required',
+                new IdentityRecordsExistsRule('primary_email')
+            ],
+            'source' => [
+                'required',
+                'in:' . collect(
+                    config('forus.front_ends')
+                )->keys()->implode(',')
+            ]
         ];
     }
 }

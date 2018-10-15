@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer|null $bunq_transaction_id
  * @property string $code
  * @property string $state
+ * @property Fund $fund
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
@@ -27,4 +28,11 @@ class FundTopUp extends Model
     protected $fillable = [
         'fund_id', 'amount', 'bunq_transaction_id', 'code', 'state'
     ];
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function fund() {
+        return $this->belongsTo(Fund::class);
+    }
 }

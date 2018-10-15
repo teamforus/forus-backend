@@ -71,6 +71,12 @@ class FundsController extends Controller
             'operator' => '='
         ]);
 
+        $fund->criteria()->create([
+            'record_type_key' => 'children_nth',
+            'value' => 1,
+            'operator' => '>='
+        ]);
+
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }

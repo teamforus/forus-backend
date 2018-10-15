@@ -2,6 +2,7 @@
 
 namespace App\Services\BunqService\Commands;
 
+use App\Services\BunqService\BunqService;
 use Illuminate\Console\Command;
 
 class ProcessBunqPaymentsCommand extends Command
@@ -35,11 +36,8 @@ class ProcessBunqPaymentsCommand extends Command
      * @return void
      */
     public function handle() {
-
         try {
-            app()->make('bunq')->processQueue();
-        } catch (\Exception $e) {
-            
-        }
+            BunqService::processQueue();
+        } catch (\Exception $e) {}
     }
 }

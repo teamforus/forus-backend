@@ -2,6 +2,7 @@
 
 namespace App\Services\BunqService\Commands;
 
+use App\Services\BunqService\BunqService;
 use Illuminate\Console\Command;
 
 class ProcessBunqTopUpsCommand extends Command
@@ -35,11 +36,8 @@ class ProcessBunqTopUpsCommand extends Command
      * @return void
      */
     public function handle() {
-
         try {
-            app()->make('bunq')->processTopUps();
-        } catch (\Exception $e) {
-            
-        }
+            BunqService::processTopUps();
+        } catch (\Exception $e) {}
     }
 }

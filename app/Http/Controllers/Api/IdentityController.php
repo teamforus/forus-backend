@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
-use App\Models\Source;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -23,7 +22,7 @@ class IdentityController extends Controller
         $this->recordRepo = app()->make('forus.services.record');
     }
 
-    public function getPublic(Request $request)
+    public function getPublic()
     {
         return [
             'address' => auth()->user()->getAuthIdentifier()
@@ -129,7 +128,6 @@ class IdentityController extends Controller
         $email = $request->input('primary_email');
         $source = $request->input('source');
 
-
         $identityId = $this->recordRepo->identityIdByEmail($email);
         $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
 
@@ -148,8 +146,7 @@ class IdentityController extends Controller
         }
 
         return [
-            'success' => !empty($proxy),
-            'access_token' => !empty($proxy) ? $proxy['access_token'] : null
+            'success' => !empty($proxy)
         ];
     }
 
@@ -169,11 +166,11 @@ class IdentityController extends Controller
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "not-pending") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "expired") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === true) {
@@ -203,11 +200,11 @@ class IdentityController extends Controller
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "not-pending") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "expired") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === true) {
@@ -222,44 +219,49 @@ class IdentityController extends Controller
     }
 
     /**
+     * Redirect email token
+     * @param string $source
+     * @param string $emailToken
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function proxyRedirectEmail(
+        string $source,
+        string $emailToken
+    ) {
+        if (!array_has(config('forus.front_ends'), $source)) {
+            abort(404);
+        }
+
+        $sourceUrl = config('forus.front_ends.' . $source);
+        $redirectUrl = $sourceUrl . "identity-restore?token=" . $emailToken;
+
+        if ($source == 'app-me_app') {
+            return view()->make('auth.deep_link', compact('redirectUrl'));
+        }
+
+
+        return redirect($redirectUrl);
+    }
+
+    /**
      * Authorize email token
      * @param string $source
      * @param string $emailToken
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|string
+     * @return array
      */
     public function proxyAuthorizeEmail(
         string $source,
         string $emailToken
     ) {
-        $status = $this->identityRepo->activateAuthorizationEmailProxy(
+        if (!array_has(config('forus.front_ends'), $source)) {
+            abort(404);
+        }
+
+        $access_token = $this->identityRepo->activateAuthorizationEmailProxy(
             $emailToken
         );
 
-        if ($status === "not-found") {
-            return abort(404, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "not-pending") {
-            return abort(402, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "expired") {
-            return abort(402, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === true) {
-            $source = Source::getModel()->where([
-                'key' => $source
-            ])->first();
-
-            if ($source && $source->url) {
-                return redirect($source->url);
-            }
-
-            return trans('identity-proxy.email.success');
-        }
-
-        return trans('identity-proxy.email.error');
+        return compact('access_token');
     }
 
     /**

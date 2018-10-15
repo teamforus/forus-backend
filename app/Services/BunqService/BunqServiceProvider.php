@@ -28,10 +28,6 @@ class BunqServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('bunq', function () {
-            return app(BunqService::class);
-        });
-
         $this->commands([
             ProcessBunqPaymentsCommand::class,
             ProcessBunqTopUpsCommand::class,

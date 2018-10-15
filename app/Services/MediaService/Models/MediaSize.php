@@ -2,7 +2,6 @@
 
 namespace App\Services\MediaService\Models;
 
-use App\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,10 +34,10 @@ class MediaSize extends Model
     }
 
     public function unlink() {
-        return app()->make('filesystem')->delete($this->path);
+        return app()->make('media')->deleteFile($this->path);
     }
 
     public function urlPublic() {
-        return asset('storage/' . ltrim($this->path, "public/"));
+        return app()->make('media')->publicUrl($this->path);
     }
 }

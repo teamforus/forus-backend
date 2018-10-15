@@ -18,10 +18,13 @@ class TopUpResource extends Resource
     {
         /** @var FundTopUp $fundTopUp */
         $fundTopUp = $this->resource;
+        $bunq = $fundTopUp->fund->getBunq();
 
-        $bunqIban = cache()->remember('bunq_iban', 1, function () {
-            return app()->make('bunq')->getBankAccountIban();
-        });
+        if (!$bunq) {
+            abort(403, 'Top up for this fund not available yet.');
+        }
+
+        $bunqIban = $bunq->getBankAccountIban();
 
         return collect($fundTopUp)->only([
             'code', 'state'

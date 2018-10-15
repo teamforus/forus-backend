@@ -13,11 +13,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $product_id
  * @property string $address
  * @property float $amount
- * @property Fund $fund
  * @property integer $attempts
  * @property integer $payment_id
  * @property string $state
  * @property Product $product
+ * @property Voucher $voucher
  * @property Organization $organization
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -54,11 +54,18 @@ class VoucherTransaction extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function voucher() {
+        return $this->belongsTo(Voucher::class);
+    }
+
+    /**
      * @return mixed
      */
     public function getTransactionDetailsAttribute()
     {
-        return collect(app()->make('bunq')->paymentDetails(
+        return collect($this->voucher->fund->getBunq()->paymentDetails(
             $this->payment_id
         ));
     }

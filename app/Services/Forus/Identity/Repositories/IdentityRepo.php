@@ -289,14 +289,13 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
         $proxyIdentity = IdentityProxy::create([
             'identity_address'  => $identityAddress,
-            'access_token'      => $this->makeAccessToken(),
             'auth_email_token'  => $auth_email_token,
             'expires_in'        => $expiresIn,
             'state'             => "pending"
         ]);
 
         return collect($proxyIdentity)->only([
-            'auth_email_token', 'access_token'
+            'auth_email_token'
         ])->toArray();
     }
 
@@ -377,7 +376,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     /**
      * Authorize proxy identity by email token
      * @param string $email_token
-     * @return mixed
+     * @return string
      */
     public function activateAuthorizationEmailProxy(string $email_token) {
         /** @var IdentityProxy $proxy */
@@ -386,11 +385,11 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         ])->first();
 
         if (!$proxy) {
-            return 'not-found';
+            abort(404, trans('identity-proxy.code.not-found'));
         }
 
         if ($proxy->state != 'pending') {
-            return 'not-pending';
+            abort(403, trans('identity-proxy.code.not-pending'));
         }
 
         $expire_at = $proxy->created_at->addSeconds(
@@ -398,12 +397,17 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         )->timestamp;
 
         if ($expire_at < time()) {
-            return 'expired';
+            abort(403, trans('identity-proxy.code.expired'));
         }
 
-        return !!$proxy->update([
-            'state' => 'active'
+        $access_token = $this->makeAccessToken();
+
+        $proxy->update([
+            'state'         => 'active',
+            'access_token'  => $access_token
         ]);
+
+        return $access_token;
     }
 
     private function makeToken($size) {
