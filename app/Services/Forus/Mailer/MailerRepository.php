@@ -4,10 +4,17 @@ namespace App\Services\Forus\Mailer;
 
 
 use App\Services\Forus\Mailer\Models\MailJob;
+use Illuminate\Mail\Message;
 
 class MailerRepository
 {
     private $storage_path = 'mail_bus/attachments/';
+    private $storageDriver;
+
+    public function __construct()
+    {
+        $this->storageDriver = config('mail.storage_driver');
+    }
 
     public function push($view, $scope, $message, $attachments) {
         $attachments = $this->storeAttachments($attachments);
@@ -28,7 +35,7 @@ class MailerRepository
                 'token_generator'
                 )->generate(32);
 
-            app('filesystem')->put($path, $attachment[0]);
+            $this->storage()->put($path, $attachment[0]);
             $attachment[0] = $path;
             return $attachment;
         })->filter(function($attachment) {
@@ -49,7 +56,7 @@ class MailerRepository
         app('mailer')->send(
             $payload['view'],
             $payload['scope'],
-            function($msg) use ($message, $attachments) {
+            function(Message $msg) use ($message, $attachments) {
             foreach ($message as $key => $value) {
                 if (gettype($value) != 'array')
                     $value = [$value];
@@ -57,10 +64,10 @@ class MailerRepository
                 call_user_func_array([$msg, $key], $value);
             }
 
-            foreach($attachments as $attachment) {
+            /*foreach($attachments as $attachment) {
                 $attachment[0] = storage_path('app/' . $attachment[0]);
                 call_user_func_array([$msg,'attach'], $attachment);
-            }
+            }*/
         });
 
         $mailJob->update(['state' => 'success']);
@@ -71,13 +78,23 @@ class MailerRepository
      * @return void
      */
     public function clearOldAttachments() {
-        $files = collect(app('filesystem')->allFiles($this->storage_path));
+        $storage = $this->storage();
+        $files = collect($storage->allFiles($this->storage_path));
 
-        $files->each(function($file) {
-            $createdAt = app('filesystem')->lastModified($file);
+        $files->each(function($file) use ($storage) {
+            $createdAt = $storage->lastModified($file);
+
             if (strtotime('+1 day', $createdAt) < time()) {
-                app('filesystem')->delete($file);
+                $storage->delete($file);
             }
         });
+    }
+
+    /**
+     * Get storage
+     * @return \Storage
+     */
+    private function storage() {
+        return app()->make('filesystem')->disk($this->storageDriver);
     }
 }

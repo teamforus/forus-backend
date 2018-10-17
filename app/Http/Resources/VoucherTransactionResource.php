@@ -16,7 +16,7 @@ class VoucherTransactionResource extends Resource
     {
         return collect($this->resource)->only([
             "organization_id", "product_id", "amount", "created_at",
-            "updated_at", "address"
+            "updated_at", "address", "state", "payment_id"
         ])->merge([
             'date' => $this->resource->created_at->format('M d, Y'),
             'date_time' => $this->resource->created_at->format('M d, Y H:i'),

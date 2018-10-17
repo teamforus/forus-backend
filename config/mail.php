@@ -2,6 +2,8 @@
 
 return [
 
+    'storage_driver' => env('MAIL_STORAGE_DRIVER', 'local'),
+
     /*
     |--------------------------------------------------------------------------
     | Mail Driver

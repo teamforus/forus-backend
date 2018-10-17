@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'filesystem_driver'     => env('IMAGES_STORAGE_DRIVER', 'public'),
+    'storage_path'          => env('IMAGES_STORAGE_PATH', 'assets/media'),
+
     "record_category_icon" => [
         "size" => [
             "thumbnail" => [200, 200],

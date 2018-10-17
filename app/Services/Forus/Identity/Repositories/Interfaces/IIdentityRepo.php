@@ -146,7 +146,7 @@ interface IIdentityRepo {
     /**
      * Authorize proxy identity by email token
      * @param string $email_token
-     * @return mixed
+     * @return string
      */
     public function activateAuthorizationEmailProxy(
         string $email_token

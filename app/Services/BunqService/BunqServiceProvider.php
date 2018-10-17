@@ -3,6 +3,7 @@
 namespace App\Services\BunqService;
 
 use App\Services\BunqService\Commands\ProcessBunqPaymentsCommand;
+use App\Services\BunqService\Commands\ProcessBunqTopUpsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,6 +16,8 @@ class BunqServiceProvider extends ServiceProvider
 
             $schedule->command('forus.bunq:process')
                 ->everyMinute();
+            $schedule->command('forus.bunq:top_up_process')
+                ->everyMinute();
         });
     }
 
@@ -25,12 +28,9 @@ class BunqServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('bunq', function () {
-            return app(BunqService::class);
-        });
-
         $this->commands([
-            ProcessBunqPaymentsCommand::class
+            ProcessBunqPaymentsCommand::class,
+            ProcessBunqTopUpsCommand::class,
         ]);
     }
 }
