@@ -56,10 +56,14 @@ class VoucherResource extends Resource
         $fundResource = collect($voucher->fund)->only([
             'id', 'name', 'state'
         ])->merge([
-            'organization' => collect($voucher->fund->organization)->only([
+            'organization' => collect(
+                $voucher->fund->organization
+            )->only([
                 'id', 'name'
             ])->merge([
-                'logo' => new MediaCompactResource($voucher->fund->organization->logo)
+                'logo' => new MediaCompactResource(
+                    $voucher->fund->organization->logo
+                )
             ]),
             'logo' => new MediaCompactResource($voucher->fund->logo),
             'product_categories' => ProductCategoryResource::collection(
@@ -70,12 +74,31 @@ class VoucherResource extends Resource
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
+            'date' => $voucher->created_at->format('M d, Y'),
+            'date_time' => $voucher->created_at->format('M d, Y H:i'),
+            'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'offices' => OfficeResource::collection($offices),
             'product' => $productResource,
             'parent' => $voucher->parent ? collect($voucher->parent)->only([
                 'identity_address', 'fund_id', 'created_at', 'address'
             ]) : null,
+            'product_vouchers' => $voucher->product_vouchers ? collect(
+                $voucher->product_vouchers
+            )->map(function($product_voucher) {
+                return collect($product_voucher)->only([
+                    'identity_address', 'fund_id', 'created_at', 'address'
+                ])->merge([
+                    'date' => $product_voucher->created_at->format('M d, Y'),
+                    'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
+                    'timestamp' => $product_voucher->created_at->timestamp,
+                    'product' => collect($product_voucher->product)->only([
+                        'id', 'name', 'description', 'price', 'old_price',
+                        'total_amount', 'sold_amount', 'product_category_id',
+                        'organization_id'
+                    ])
+                ]);
+            }) : null,
             'amount' => max($amount, 0),
             'fund' => $fundResource,
             'transactions' => VoucherTransactionResource::collection(

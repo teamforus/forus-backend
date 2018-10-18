@@ -360,10 +360,15 @@ class BunqService
                     continue;
                 }
 
+                $paymentDescription = trans('bunq.transaction.from_fund', [
+                    'fund_name' => $transaction->voucher->fund->name
+                ]);
+
                 $payment_id = $bunq->makePayment(
                     $transaction->amount,
                     $transaction->organization->iban,
-                    $transaction->organization->name
+                    $transaction->organization->name,
+                    $paymentDescription
                 );
 
                 if (is_numeric($payment_id)) {

@@ -241,7 +241,9 @@ class FundsController extends Controller
         return [
             'dates' => $dates,
             'usage' => $dates->sum('value'),
-            'activations' => $fund->vouchers()->whereBetween('created_at', [
+            'activations' => $fund->vouchers()->whereNull(
+                'parent_id'
+            )->whereBetween('created_at', [
                 $startDate, $endDate
             ])->count(),
             'providers' => $fund->voucher_transactions()->whereBetween(

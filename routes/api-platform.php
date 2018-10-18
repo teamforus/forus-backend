@@ -126,6 +126,17 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'organizations.transactions',
+        "Api\Platform\Organizations\TransactionsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'transactions' => 'transaction_address',
+        ]
+    ]);
+
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/finances',
         "Api\Platform\Organizations\Funds\FundProviderController@finances");

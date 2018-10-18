@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property string $btw
  * @property Media $logo
  * @property Collection $funds
+ * @property Collection $vouchers
  * @property Collection $products
  * @property Collection $validators
  * @property Collection $supplied_funds
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $organization_funds
  * @property Collection $product_categories
  * @property Collection $provider_identities
+ * @property Collection $voucher_transactions
  * @property Collection $offices
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -65,6 +67,13 @@ class Organization extends Model
      */
     public function offices() {
         return $this->hasMany(Office::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function voucher_transactions() {
+        return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
@@ -126,5 +135,12 @@ class Organization extends Model
      */
     public function provider_identities() {
         return $this->hasMany(ProviderIdentity::class, 'provider_id', 'id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function vouchers() {
+        return $this->hasManyThrough(Voucher::class, Fund::class);
     }
 }

@@ -56,7 +56,9 @@ class Voucher extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function product() {
-        return $this->belongsTo(Product::class, 'product_id', 'id');
+        return $this->belongsTo(
+            Product::class, 'product_id', 'id'
+        )->withTrashed();
     }
 
     /**
