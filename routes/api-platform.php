@@ -99,6 +99,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/funds/{fund}/finances',
+        "Api\Platform\Organizations\FundsController@finances");
+
+    $router->post(
+        'organizations/{organization}/funds/{fund}/top-up',
+        "Api\Platform\Organizations\FundsController@topUp");
+
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
@@ -118,6 +126,18 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/finances',
+        "Api\Platform\Organizations\Funds\FundProviderController@finances");
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions',
+        "Api\Platform\Organizations\Funds\FundProviderController@transactions");
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/{transaction_address}',
+        "Api\Platform\Organizations\Funds\FundProviderController@transaction");
+
     $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
@@ -128,6 +148,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'providers' => 'organization_fund'
         ]
     ]);
+
 
     $router->resource(
         'organizations.products',

@@ -13,15 +13,22 @@ use Illuminate\Http\UploadedFile;
 class MediaService
 {
     /**
-     * Path to upload images in
-     */
-    const UPLOAD_PATH = 'public/assets/medias/';
-
-    /**
      * @var Media $model
      */
     protected $model;
     protected $mediable_models;
+
+    /**
+     * Filesystem driver to use for storage
+     * @var string $storageDriver
+     */
+    protected $storageDriver;
+
+    /**
+     * Path to upload images in
+     * @var string $storagePath
+     */
+    protected $storagePath;
 
     /**
      * Constructor
@@ -33,6 +40,7 @@ class MediaService
     ) {
         $this->model = Media::getModel();
         $this->mediable_models = collect($mediable_models);
+        $this->storageDriver = config('media.filesystem_driver');
     }
 
     /**
@@ -102,10 +110,10 @@ class MediaService
      * @return int count files deleted
      */
     public function clearStorage() {
-        $storage = app()->make('filesystem');
+        $storage = $this->storage();
 
         $dbFiles = collect(MediaSize::getModel()->pluck('path'));
-        $storageFiles = collect($storage->allFiles($this::UPLOAD_PATH));
+        $storageFiles = collect($storage->allFiles($this->storagePath));
 
         $unusedFiles = $storageFiles->filter(function($file) use ($dbFiles) {
             return $dbFiles->search($file) === false;
@@ -168,7 +176,7 @@ class MediaService
      */
     protected function makeUniqueFileNme($path, $ext) {
         $tokenGenerator = app()->make('token_generator');
-        $storage = app()->make('filesystem');
+        $storage = $this->storage();
 
         do {
             $name = $tokenGenerator->generate('62');
@@ -199,8 +207,6 @@ class MediaService
         $mediaConfig = config('media.' . $type);
         $mediaSizes = $mediaConfig['size'];
 
-        // exit(collect([$path, $name, $ext, $mediaType, $mediaConfig, $identity]));
-
         /** @var Model $model */
         $model = Media::getModel();
 
@@ -219,7 +225,7 @@ class MediaService
             'ext'               => $ext,
         ];
 
-        $storage = app()->make('filesystem');
+        $storage = $this->storage();
 
         // media row create
         /** @var mixed $media */
@@ -227,9 +233,9 @@ class MediaService
             return false;
         }
         foreach ($mediaSizes as $mediaSizeKey => $mediaSize) {
-            $uniqueName = $this->makeUniqueFileNme(self::UPLOAD_PATH, $ext);
+            $uniqueName = $this->makeUniqueFileNme($this->storagePath, $ext);
 
-            $filePath = self::UPLOAD_PATH . $uniqueName . '.' . $ext;
+            $filePath = $this->storagePath . $uniqueName . '.' . $ext;
 
             $storage->put($filePath, file_get_contents($path));
 
@@ -249,9 +255,8 @@ class MediaService
                 $image = $image->fit($mediaSize['x'], $mediaSize['y']);
             }
 
-            $image->save(
-                $storage->path($filePath), 100
-            );
+
+            $storage->put($filePath, $image->encode()->encoded, 'public');
 
             // media size row create
             $media->sizes()->create([
@@ -272,5 +277,29 @@ class MediaService
         $media = $this->model->where('uid', $uid)->first();
 
         return $media;
+    }
+
+    /**
+     * Get storage
+     * @return \Storage
+     */
+    private function storage() {
+        return app()->make('filesystem')->disk($this->storageDriver);
+    }
+
+    /**
+     * @param string $path
+     * @return mixed
+     */
+    public function publicUrl(string $path) {
+        return $this->storage()->url($path);
+    }
+
+    /**
+     * @param string $path
+     * @return mixed
+     */
+    public function deleteFile(string $path) {
+        return $this->storage()->delete($path);
     }
 }

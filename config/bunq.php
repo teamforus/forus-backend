@@ -1,6 +1,6 @@
 <?php
 
 return [
-    'key' => env('BUNQ_KEY', ""),
-    'sandbox' => env('BUNQ_SANDBOX', true),
+    'storage_driver' => env('BUNQ_STORAGE_DRIVER', "private"),
+    'storage_path' => 'bunq_context/funds/'
 ];

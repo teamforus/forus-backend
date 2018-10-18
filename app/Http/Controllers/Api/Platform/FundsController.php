@@ -51,7 +51,7 @@ class FundsController extends Controller
             'identity_address', $identity
         )->count() > 0) {
             return response()->json([
-                'message' => trans('validation.fund.already_taken'),
+                'message' => e(trans('validation.fund.already_taken')),
                 'key' => 'already_taken'
             ], 403);
         }
@@ -59,7 +59,7 @@ class FundsController extends Controller
         $this->authorize('apply', $fund);
 
         return new VoucherResource($fund->vouchers()->create([
-            'amount' => 300,
+            'amount' => Fund::amountForIdentity($fund, auth()->id()),
             'identity_address' => auth()->user()->getAuthIdentifier(),
             'address' => app()->make('token_generator')->address(),
         ]));
