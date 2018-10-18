@@ -22,14 +22,20 @@ class FundProviderController extends Controller
      *
      * @param Request $request
      * @param Organization $organization
+     * @param Fund $fund
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         Request $request,
-        Organization $organization
+        Organization $organization,
+        Fund $fund
     ) {
+        $this->authorize('show', $organization);
+        $this->authorize('show', $fund);
+
         $state = $request->input('state', false);
-        $organization_funds = $organization->organization_funds();
+        $organization_funds = $fund->providers();
 
         if ($state) {
             $organization_funds->where('state', $state);
