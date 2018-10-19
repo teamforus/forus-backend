@@ -93,6 +93,16 @@ class FundProviderController extends Controller
             'state'
         ]));
 
+        if ($request->input('state') == 'approved') {
+            app()->make('forus.services.mail_notification')->providerApproved(
+                $organizationFund->organization->identity_address,
+                $organizationFund->fund->name,
+                $organizationFund->organization->name,
+                $organizationFund->fund->organization->name,
+                $organizationFund->created_at->format('Y-m-d')
+            );
+        }
+
         return new FundProviderResource($organizationFund);
     }
 

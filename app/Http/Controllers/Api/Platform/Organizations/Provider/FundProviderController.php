@@ -85,11 +85,19 @@ class FundProviderController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('store', FundProvider::class);
 
-        return new FundProviderResource(
-            $organization->organization_funds()->firstOrCreate($request->only([
-                'fund_id'
-            ]))
+        /** @var FundProvider $fundProvider */
+        $fundProvider = $organization->organization_funds()->firstOrCreate($request->only([
+            'fund_id'
+        ]));
+
+        resolve('forus.services.mail_notification')->providerApplied(
+            $fundProvider->fund->organization->identity_address,
+            $fundProvider->fund->name,
+            $fundProvider->organization->name,
+            $fundProvider->fund->organization->name
         );
+
+        return new FundProviderResource($fundProvider);
     }
 
     /**

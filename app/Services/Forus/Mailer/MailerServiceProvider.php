@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Mailer;
 
+use App\Services\Forus\MailNotification\MailService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 
@@ -30,7 +31,7 @@ class MailerServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('forus.services.mailer', function () {
-            return new MailerService();
+            return new MailService();
         });
 
         $this->commands([

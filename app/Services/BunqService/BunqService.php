@@ -336,12 +336,14 @@ class BunqService
     }
 
     public static function processQueue() {
-        if (self::getQueue()->count() == 0) {
+        $transactions = self::getQueue();
+
+        if ($transactions->count() == 0) {
             return null;
         }
 
         /** @var VoucherTransaction $transaction */
-        while($transaction = self::getQueue()->first()) {
+        foreach($transactions as $transaction) {
             $transaction->forceFill([
                 'attempts'          => ++$transaction->attempts,
                 'last_attempt_at'   => Carbon::now(),

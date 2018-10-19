@@ -199,6 +199,7 @@ return [
         App\Services\GeocodeService\GeocodeServiceProvider::class,
 
         App\Services\BunqService\BunqServiceProvider::class,
+        App\Services\Forus\MailNotification\MailNotificationServiceProvider::class,
     ],
 
     /*
@@ -251,7 +252,7 @@ return [
         /*
          * Forus services
          */
-        'MailerService' => \App\Services\Mailer\Facades\MailerService::class,
+        'MailService' => \App\Services\Mailer\Facades\MailerService::class,
         'IdentityService' => \App\Services\Forus\Identity\Facades\IdentityService::class,
         'RecordService' => \App\Services\Forus\Record\Facades\RecordService::class,
 

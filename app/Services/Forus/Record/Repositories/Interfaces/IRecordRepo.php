@@ -59,6 +59,16 @@ interface IRecordRepo {
         string $email
     );
 
+
+    /**
+     * Get identity id by email record
+     * @param string $identityAddress
+     * @return mixed|null
+     */
+    public function primaryEmailByAddress(
+        string $identityAddress
+    );
+
     /**
      * Get type id by key
      * @param string $key

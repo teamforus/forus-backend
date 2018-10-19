@@ -8,6 +8,7 @@ use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\MailNotification\MailService;
 use Illuminate\Http\Request;
 
 class IdentityController extends Controller
@@ -16,10 +17,15 @@ class IdentityController extends Controller
     protected $identityRepo;
     protected $recordRepo;
 
+    /** @var MailService $mailService */
+    protected $mailService;
+
     public function __construct() {
         $this->mailerService = app()->make('forus.services.mailer');
         $this->identityRepo = app()->make('forus.services.identity');
         $this->recordRepo = app()->make('forus.services.record');
+
+        $this->mailService = app()->make('forus.services.mail_notification');
     }
 
     public function getPublic()
@@ -36,8 +42,9 @@ class IdentityController extends Controller
      * @return array
      * @throws \Exception
      */
-    public function store(IdentityStoreRequest $request)
-    {
+    public function store(
+        IdentityStoreRequest $request
+    ) {
         $identityAddress = $this->identityRepo->make(
             $request->input('pin_code'),
             $request->input('records')
@@ -48,6 +55,12 @@ class IdentityController extends Controller
         );
 
         $this->recordRepo->categoryCreate($identityAddress, "Relaties");
+
+        $this->mailService->addConnection(
+            $identityAddress,
+            $this->mailService::TYPE_EMAIL,
+            $request->input('records.primary_email')
+        );
 
         return [
             'access_token' => $this->identityRepo->getProxyAccessToken(
