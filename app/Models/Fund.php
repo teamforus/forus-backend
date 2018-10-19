@@ -317,6 +317,7 @@ class Fund extends Model
 
         if (empty($fundBunq) || empty($fundBunq['key'])) {
             app('log')->alert('No bunq config for fund: ' . $this->id);
+            return false;
         }
 
         $bunqService = BunqService::create(

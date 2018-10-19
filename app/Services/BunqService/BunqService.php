@@ -332,7 +332,7 @@ class BunqService
                 $query
                     ->whereNull('last_attempt_at')
                     ->orWhere('last_attempt_at', '<', Carbon::now()->subHours(8));
-            });
+            })->get();
     }
 
     public static function processQueue() {
