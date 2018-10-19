@@ -131,6 +131,7 @@ return [
         'email' => "e-mail",
         'primary_email' => 'e-mail',
         'records.primary_email' => 'e-mail',
+        'kvk' => 'KvK',
     ],
 
 ];
