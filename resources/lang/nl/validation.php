@@ -64,7 +64,7 @@ return [
         'string'  => 'Het :attribute moet op zijn minst :min characters zijn.',
         'array'   => 'Het :attribute moet op zijn minst :min item zijn.',
     ],
-    'not_in'               => 'Het geselecteerde :attribute is ongeldig.',
+    'not_in'               => 'Een ongeldige :attribute is ingevuld.',
     'numeric'              => 'Het :attribute moet een cijfer zijn.',
     'present'              => 'Het :attribute veld moet aanwezig zijn.',
     'regex'                => 'Het :attribute formaat is ongeldig.',
@@ -126,15 +126,16 @@ return [
     */
 
     'attributes' => [
-        'pin_code' => "Pin code",
-        'records' => "Records",
-        'email' => "e-mail",
-        'primary_email' => 'e-mail',
-        'records.primary_email' => 'e-mail',
+        'pin_code' => "pin code",
+        'records' => "eigenschappen",
+        'email' => "e-mailadres",
+        'primary_email' => 'e-mailadres',
+        'records.primary_email' => 'e-mailadres',
         'kvk' => 'KvK-nummer',
         'name' => 'naam',
         'phone' => 'telefoonnummer',
         'iban' => 'IBAN-nummer',
+        'code' => 'activatiecode',
     ],
 
 ];
