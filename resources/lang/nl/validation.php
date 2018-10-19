@@ -126,8 +126,8 @@ return [
     */
 
     'attributes' => [
-        'pin_code' => "Pin code",
-        'records' => "Records",
+        'pin_code' => "pin code",
+        'records' => "eigenschappen",
         'email' => "e-mailadres",
         'primary_email' => 'e-mailadres',
         'records.primary_email' => 'e-mailadres',
@@ -135,7 +135,7 @@ return [
         'name' => 'naam',
         'phone' => 'telefoonnummer',
         'iban' => 'IBAN-nummer',
-        'code' => 'Activatiecode',
+        'code' => 'activatiecode',
     ],
 
 ];
