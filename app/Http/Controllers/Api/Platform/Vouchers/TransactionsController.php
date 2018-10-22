@@ -62,12 +62,22 @@ class TransactionsController extends Controller
             }
         }
 
+        /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create([
             'amount' => $amount,
             'product_id' => $product ? $product->id : null,
             'address' => app()->make('token_generator')->address(),
             'organization_id' => $organizationId,
         ]);
+
+        $note = $request->input('note', false);
+
+        if ($note && !empty($note)) {
+            $transaction->notes()->create([
+                'message' => $note,
+                'group' => 'provider'
+            ]);
+        }
 
         return new VoucherTransactionResource($transaction);
     }

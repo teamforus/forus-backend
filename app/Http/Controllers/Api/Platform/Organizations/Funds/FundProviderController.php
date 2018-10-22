@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
 use App\Http\Resources\FundProviderResource;
-use App\Http\Resources\VoucherTransactionResource;
+use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
@@ -269,7 +269,7 @@ class FundProviderController extends Controller
             $organizationFund, $request->input('state')
         ]);
 
-        return VoucherTransactionResource::collection($fund->voucher_transactions()->where([
+        return SponsorVoucherTransactionResource::collection($fund->voucher_transactions()->where([
             'organization_id' => $organizationFund->organization_id
         ])->get());
     }
@@ -280,7 +280,7 @@ class FundProviderController extends Controller
      * @param Fund $fund
      * @param FundProvider $organizationFund
      * @param VoucherTransaction $transaction
-     * @return VoucherTransactionResource
+     * @return SponsorVoucherTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function transaction(
@@ -298,6 +298,6 @@ class FundProviderController extends Controller
 
         // $this->authorize('show', $transaction);
 
-        return new VoucherTransactionResource($transaction);
+        return new SponsorVoucherTransactionResource($transaction);
     }
 }

@@ -87,7 +87,7 @@ class VoucherResource extends Resource
                 $voucher->product_vouchers
             )->map(function($product_voucher) {
                 return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at', 'address'
+                    'identity_address', 'fund_id', 'created_at', 'address', 'amount'
                 ])->merge([
                     'date' => $product_voucher->created_at->format('M d, Y'),
                     'date_time' => $product_voucher->created_at->format('M d, Y H:i'),

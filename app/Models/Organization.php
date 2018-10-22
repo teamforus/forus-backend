@@ -6,7 +6,6 @@ use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
@@ -30,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $product_categories
  * @property Collection $provider_identities
  * @property Collection $voucher_transactions
+ * @property Collection $funds_voucher_transactions
  * @property Collection $offices
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -74,6 +74,13 @@ class Organization extends Model
      */
     public function voucher_transactions() {
         return $this->hasMany(VoucherTransaction::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function funds_voucher_transactions() {
+        return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
     }
 
     /**

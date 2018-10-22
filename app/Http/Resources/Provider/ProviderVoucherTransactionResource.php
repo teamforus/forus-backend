@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Provider;
 
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Resources\Json\Resource;
 
-class VoucherTransactionResource extends Resource
+class ProviderVoucherTransactionResource extends Resource
 {
     /**
      * Transform the resource into an array.
@@ -31,6 +33,9 @@ class VoucherTransactionResource extends Resource
             "fund" => collect($voucherTransaction->voucher->fund)->only([
                 "id", "name", "organization_id"
             ]),
+            'notes' => VoucherTransactionNoteResource::collection(
+                $voucherTransaction->notes->where('group', 'provider')->values()
+            )
         ])->toArray();
     }
 }
