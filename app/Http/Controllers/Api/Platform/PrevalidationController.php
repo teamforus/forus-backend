@@ -50,7 +50,7 @@ class PrevalidationController extends Controller
             return collect($records)->count();
         })->map(function($records) use ($request) {
             do {
-                $uid = app()->make('token_generator')->generate(6, 4);
+                $uid = app()->make('token_generator')->generate(4, 2);
             } while(Prevalidation::getModel()->where(
                 'uid', $uid
             )->count() > 0);
