@@ -10,6 +10,8 @@ use App\Models\ProviderIdentity;
 use App\Models\Validator;
 use App\Models\ValidatorRequest;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
+use App\Models\VoucherTransactionNote;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
 use App\Policies\ProviderIdentityPolicy;
@@ -19,6 +21,8 @@ use App\Policies\OrganizationFundPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ValidatorRequestPolicy;
 use App\Policies\VoucherPolicy;
+use App\Policies\VoucherTransactionNotePolicy;
+use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
@@ -40,17 +44,19 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        Fund::class                 => FundPolicy::class,
-        Media::class                => MediaPolicy::class,
-        Office::class               => OfficePolicy::class,
-        Product::class              => ProductPolicy::class,
-        Voucher::class              => VoucherPolicy::class,
-        Organization::class         => OrganizationPolicy::class,
-        Validator::class            => ValidatorPolicy::class,
-        FundProvider::class         => OrganizationFundPolicy::class,
-        Prevalidation::class        => PrevalidationPolicy::class,
-        ValidatorRequest::class     => ValidatorRequestPolicy::class,
-        ProviderIdentity::class     => ProviderIdentityPolicy::class,
+        Fund::class                     => FundPolicy::class,
+        Media::class                    => MediaPolicy::class,
+        Office::class                   => OfficePolicy::class,
+        Product::class                  => ProductPolicy::class,
+        Voucher::class                  => VoucherPolicy::class,
+        Organization::class             => OrganizationPolicy::class,
+        Validator::class                => ValidatorPolicy::class,
+        FundProvider::class             => OrganizationFundPolicy::class,
+        Prevalidation::class            => PrevalidationPolicy::class,
+        ValidatorRequest::class         => ValidatorRequestPolicy::class,
+        ProviderIdentity::class         => ProviderIdentityPolicy::class,
+        VoucherTransaction::class       => VoucherTransactionPolicy::class,
+        VoucherTransactionNote::class   => VoucherTransactionNotePolicy::class,
     ];
 
     /**

@@ -87,6 +87,7 @@ class StoreVoucherTransactionRequest extends FormRequest
 
         if (!$voucher->product_id) {
             return [
+                'note' => 'nullable|string|between:2,255',
                 'amount'            => [
                     'required_without:product_id',
                     'numeric',
@@ -105,7 +106,9 @@ class StoreVoucherTransactionRequest extends FormRequest
             ];
         }
 
-        return [];
+        return [
+            'note' => 'nullable|string|between:2,255',
+        ];
     }
 
     public function messages()
