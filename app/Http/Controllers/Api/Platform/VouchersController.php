@@ -43,6 +43,10 @@ class VouchersController extends Controller
             'address' => $request->input('voucher_address')
         ])->first();
 
+        $this->authorize('reserve', $product);
+
+        $product->updateSoldOutState();
+
         return new VoucherResource(Voucher::create([
             'identity_address'  => auth()->user()->getAuthIdentifier(),
             'parent_id'         => $voucher->id,

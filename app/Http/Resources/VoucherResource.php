@@ -36,6 +36,7 @@ class VoucherResource extends Resource
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
             ])->merge([
+                'expire_at_locale' => format_date_locale($voucher->product->expire_at),
                 'photo' => new MediaResource(
                     $voucher->product->photo
                 ),
@@ -72,10 +73,9 @@ class VoucherResource extends Resource
         ]);
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at', 'address'
+            'identity_address', 'fund_id', 'created_at_locale', 'address'
         ])->merge([
-            'date' => $voucher->created_at->format('M d, Y'),
-            'date_time' => $voucher->created_at->format('M d, Y H:i'),
+            'expire_at_locale' => $voucher->product ? format_date_locale($voucher->product->expire_at) : null,
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'offices' => OfficeResource::collection($offices),

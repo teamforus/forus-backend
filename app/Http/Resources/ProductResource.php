@@ -25,9 +25,11 @@ class ProductResource extends Resource
 
         return collect($product)->only([
             'id', 'name', 'description', 'price', 'old_price',
-            'total_amount', 'sold_amount', 'product_category_id',
-            'organization_id'
+            'total_amount', 'product_category_id', 'organization_id',
+            'sold_out',
         ])->merge([
+            'expire_at' => $product->expire_at->format('Y-m-d'),
+            'expired' => $product->expired,
             'funds' => $funds->map(function($fund) {
                 return [
                     'logo' => new MediaResource($fund->logo),

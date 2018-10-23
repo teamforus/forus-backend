@@ -27,6 +27,7 @@ class StoreVoucherTransactionRequest extends FormRequest
      */
     public function rules()
     {
+        $product = false;
         /**
          * shopkeeper identity and organizations
          */
@@ -71,7 +72,7 @@ class StoreVoucherTransactionRequest extends FormRequest
 
         if ($voucher->product) {
             $product = $voucher->product;
-        } else {
+        } else if (request()->has('product_id')) {
             $product = Product::query()->find(request()->input('product_id'));
         }
 
@@ -81,7 +82,7 @@ class StoreVoucherTransactionRequest extends FormRequest
          */
         if ($product) {
             $validOrganizations = $validOrganizations->intersect([
-                $voucher->product->organization->id
+                $product->organization_id
             ]);
         }
 

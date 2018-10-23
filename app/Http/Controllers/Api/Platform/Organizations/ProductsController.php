@@ -58,7 +58,7 @@ class ProductsController extends Controller
         $product = $organization->products()->create(
             $request->only([
                 'name', 'description', 'price', 'old_price', 'total_amount',
-                'sold_amount', 'product_category_id'
+                'product_category_id', 'expire_at'
             ])
         );
 
@@ -146,7 +146,7 @@ class ProductsController extends Controller
 
         $product->update($request->only([
             'name', 'description', 'price', 'old_price', 'total_amount',
-            'sold_amount', 'product_category_id'
+            'sold_amount', 'product_category_id', 'expire_at'
         ]));
 
         if ($media && $media->type == 'product_photo') {
