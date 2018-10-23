@@ -11,6 +11,7 @@ use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Models\OrganizationProductCategory;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
@@ -80,6 +81,32 @@ class FundsController extends Controller
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }
+
+        $organizations = Organization::query()->whereIn(
+            'id', OrganizationProductCategory::query()->whereIn(
+                'product_category_id',
+                $request->input('product_categories', [])
+            )->pluck('organization_id')->toArray()
+        )->get();
+
+        resolve('forus.services.mail_notification')->newFundCreated(
+            $organization->identity_address,
+            $fund->name,
+            $organization->name,
+            env('WEB_SHOP_GENERAL_URL')
+        );
+
+        /** @var Organization $organization */
+        foreach ($organizations as $organization) {
+            resolve('forus.services.mail_notification')->newFundApplicable(
+                $organization->identity_address,
+                $fund->name,
+                resolve('forus.services.record')->primaryEmailByAddress(
+                    $organization->identity_address
+                )
+            );
+        }
+
 
         return new FundResource($fund);
     }
@@ -241,7 +268,9 @@ class FundsController extends Controller
         return [
             'dates' => $dates,
             'usage' => $dates->sum('value'),
-            'activations' => $fund->vouchers()->whereBetween('created_at', [
+            'activations' => $fund->vouchers()->whereNull(
+                'parent_id'
+            )->whereBetween('created_at', [
                 $startDate, $endDate
             ])->count(),
             'providers' => $fund->voucher_transactions()->whereBetween(

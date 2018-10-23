@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
@@ -63,6 +64,37 @@ class ProductsController extends Controller
 
         if ($media && $media->type == 'product_photo') {
             $product->attachMedia($media);
+        }
+
+        $notifiedIdentities = [];
+
+        /** @var Fund $fund */
+        foreach ($organization->supplied_funds_approved as $fund) {
+            $productCategories = $fund->product_categories()->pluck(
+                'product_categories.id'
+            );
+
+            if ($productCategories->search(
+                $product->product_category_id) !== false
+            ) {
+                if (in_array(
+                    $fund->organization->identity_address,
+                    $notifiedIdentities
+                )) {
+                    continue;
+                }
+
+                array_push(
+                    $notifiedIdentities,
+                    $fund->organization->identity_address
+                );
+
+                resolve('forus.services.mail_notification')->newProductAdded(
+                    $product->organization->identity_address,
+                    $product->name,
+                    $product->organization->name
+                );
+            }
         }
 
         return new ProductResource($product);

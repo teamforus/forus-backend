@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class VoucherTransaction
@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Product $product
  * @property Voucher $voucher
  * @property Organization $organization
+ * @property Collection $notes
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -36,7 +37,7 @@ class VoucherTransaction extends Model
     ];
 
     protected $hidden = [
-        'voucher_id', 'last_attempt_at', 'attempts'
+        'voucher_id', 'last_attempt_at', 'attempts', 'notes'
     ];
 
     /**
@@ -58,6 +59,13 @@ class VoucherTransaction extends Model
      */
     public function voucher() {
         return $this->belongsTo(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notes() {
+        return $this->hasMany(VoucherTransactionNote::class);
     }
 
     /**

@@ -6,8 +6,8 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Product
@@ -30,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Product extends Model
 {
-    use HasMedia;
+    use HasMedia, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -40,6 +40,15 @@ class Product extends Model
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
         'price', 'old_price', 'total_amount', 'sold_amount'
+    ];
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'deleted_at'
     ];
 
     /**
@@ -74,5 +83,27 @@ class Product extends Model
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'product_photo'
         ]);
+    }
+
+    /**
+     * Get the product's price.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getPriceAttribute($value)
+    {
+        return round($value, 2);
+    }
+
+    /**
+     * Get the product's old price.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getOldPriceAttribute($value)
+    {
+        return round($value, 2);
     }
 }

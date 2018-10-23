@@ -332,16 +332,18 @@ class BunqService
                 $query
                     ->whereNull('last_attempt_at')
                     ->orWhere('last_attempt_at', '<', Carbon::now()->subHours(8));
-            });
+            })->get();
     }
 
     public static function processQueue() {
-        if (self::getQueue()->count() == 0) {
+        $transactions = self::getQueue();
+
+        if ($transactions->count() == 0) {
             return null;
         }
 
         /** @var VoucherTransaction $transaction */
-        while($transaction = self::getQueue()->first()) {
+        foreach($transactions as $transaction) {
             $transaction->forceFill([
                 'attempts'          => ++$transaction->attempts,
                 'last_attempt_at'   => Carbon::now(),
@@ -360,10 +362,15 @@ class BunqService
                     continue;
                 }
 
+                $paymentDescription = trans('bunq.transaction.from_fund', [
+                    'fund_name' => $transaction->voucher->fund->name
+                ]);
+
                 $payment_id = $bunq->makePayment(
                     $transaction->amount,
                     $transaction->organization->iban,
-                    $transaction->organization->name
+                    $transaction->organization->name,
+                    $paymentDescription
                 );
 
                 if (is_numeric($payment_id)) {

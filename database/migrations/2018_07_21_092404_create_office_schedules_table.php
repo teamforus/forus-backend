@@ -20,6 +20,9 @@ class CreateOfficeSchedulesTable extends Migration
             $table->time('start_time')->nullable()->default(null);
             $table->time('end_time')->nullable()->default(null);
             $table->timestamps();
+
+            $table->foreign('office_id'
+            )->references('id')->on('offices')->onDelete('cascade');
         });
     }
 

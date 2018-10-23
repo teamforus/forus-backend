@@ -201,6 +201,24 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'organizations/{organization}/provider/transactions',
+        "Api\Platform\Organizations\Provider\TransactionsController", [
+            'parameters' => [
+                'transactions' => 'transaction_address',
+            ]
+        ]
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/transactions',
+        "Api\Platform\Organizations\Sponsor\TransactionsController", [
+            'parameters' => [
+                'transactions' => 'transaction_address',
+            ]
+        ]
+    );
+
     // Prevalidations endpoints
     $router->post(
         'prevalidations/{prevalidation_uid}/redeem',

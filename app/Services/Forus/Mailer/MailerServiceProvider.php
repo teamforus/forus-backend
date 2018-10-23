@@ -13,12 +13,12 @@ class MailerServiceProvider extends ServiceProvider
 
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
-            
+
             $schedule->command('forus.services.mailer:process')
-            ->everyMinute();
-            
+                ->everyMinute();
+
             $schedule->command('forus.services.mailer:clear')
-            ->hourly();
+                ->hourly();
         });
     }
 

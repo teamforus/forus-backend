@@ -7,7 +7,6 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
@@ -317,6 +316,7 @@ class Fund extends Model
 
         if (empty($fundBunq) || empty($fundBunq['key'])) {
             app('log')->alert('No bunq config for fund: ' . $this->id);
+            return false;
         }
 
         $bunqService = BunqService::create(
@@ -327,5 +327,15 @@ class Fund extends Model
         );
 
         return $bunqService;
+    }
+
+    public static function configuredFunds () {
+        try {
+            return static::query()->whereIn('id', collect(json_decode(
+                env('FUNDS_MAPPING')
+            ))->pluck('fund_id')->toArray())->get();
+        } catch (\Exception $exception) {
+            return collect();
+        }
     }
 }

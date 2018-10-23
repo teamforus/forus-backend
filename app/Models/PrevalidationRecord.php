@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Services\Forus\Record\Models\RecordType;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class PrevalidationRecord
