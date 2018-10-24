@@ -15,7 +15,7 @@ return [
                     ],
                 'mustAcceptProducts' => false,
                 'allowPrevalidations' => true,
-                'allowValidationRequests' => true,
+                'allowValidationRequests' => false,
             ],
     ],
 ];
