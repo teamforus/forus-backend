@@ -37,7 +37,7 @@ class MediaController extends Controller
         $this->authorize('index', Media::class);
 
         $media = Media::getModel()->where([
-            'identity_address' => $request->get('identity')
+            'identity_address' => auth()->user()->getAuthIdentifier()
         ]);
 
         if ($type = $request->get('type', false)) {
@@ -62,7 +62,7 @@ class MediaController extends Controller
         return new MediaResource($this->mediaService->uploadSingle(
             $request->file('file'),
             $request->input('type'),
-            $request->get('identity')
+            auth()->user()->getAuthIdentifier()
         ));
     }
 

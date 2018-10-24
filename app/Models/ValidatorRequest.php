@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Record\Models\Record;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class ValidatorRequest

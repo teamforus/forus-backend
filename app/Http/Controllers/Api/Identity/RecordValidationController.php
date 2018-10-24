@@ -26,7 +26,7 @@ class RecordValidationController extends Controller
     public function store(RecordValidationStoreRequest $request)
     {
         $request = $this->recordRepo->makeValidationRequest(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $request->get('record_id', '')
         );
 
@@ -70,7 +70,7 @@ class RecordValidationController extends Controller
         string $recordUuid
     ) {
         $success = $this->recordRepo->approveValidationRequest(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $recordUuid
         );
 
@@ -94,7 +94,7 @@ class RecordValidationController extends Controller
         string $recordUuid
     ) {
         $success = $this->recordRepo->declineValidationRequest(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $recordUuid
         );
 

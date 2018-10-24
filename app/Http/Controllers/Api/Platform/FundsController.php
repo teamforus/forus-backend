@@ -44,14 +44,14 @@ class FundsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function apply(Request $request, Fund $fund) {
-        $identity = $request->get('identity');
+        $identity = auth()->user()->getAuthIdentifier();
 
         // The same identity can't apply twice to the same fund
         if ($fund->vouchers()->where(
             'identity_address', $identity
         )->count() > 0) {
             return response()->json([
-                'message' => trans('validation.fund.already_taken'),
+                'message' => e(trans('validation.fund.already_taken')),
                 'key' => 'already_taken'
             ], 403);
         }
@@ -59,8 +59,8 @@ class FundsController extends Controller
         $this->authorize('apply', $fund);
 
         return new VoucherResource($fund->vouchers()->create([
-            'amount' => 300,
-            'identity_address' => $request->get('identity'),
+            'amount' => Fund::amountForIdentity($fund, auth()->id()),
+            'identity_address' => auth()->user()->getAuthIdentifier(),
             'address' => app()->make('token_generator')->address(),
         ]));
     }

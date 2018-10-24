@@ -8,6 +8,7 @@ use App\Services\Forus\Record\Models\RecordCategory;
 use App\Services\Forus\Record\Models\RecordType;
 use App\Services\Forus\Record\Models\RecordValidation;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Database\Eloquent\Collection;
 
 class RecordRepo implements IRecordRepo
 {
@@ -143,6 +144,23 @@ class RecordRepo implements IRecordRepo
         ])->first();
 
         return $record ? $record->identity_address : null;
+    }
+
+
+    /**
+     * Get identity id by email record
+     * @param string $identityAddress
+     * @return mixed|null
+     */
+    public function primaryEmailByAddress(
+        string $identityAddress
+    ) {
+        $record = Record::getModel()->where([
+            'record_type_id' => $this->getTypeIdByKey('primary_email'),
+            'identity_address' => $identityAddress,
+        ])->first();
+
+        return $record ? $record->value : null;
     }
 
 
@@ -305,9 +323,6 @@ class RecordRepo implements IRecordRepo
         $type = null,
         $categoryId = null
     ) {
-        $type = RecordType::getModel()->where([
-            'key' => $type
-        ])->first();
 
         // Todo: validation state
         $query = Record::getModel()->where([
@@ -317,7 +332,15 @@ class RecordRepo implements IRecordRepo
         ]);
 
         if ($type) {
-            $query->where('record_type_id', $type->id);
+            $recordType = RecordType::getModel()->where([
+                'key' => $type
+            ])->first();
+
+            if ($recordType) {
+                $query->where('record_type_id', $recordType->id);
+            } else {
+                return null;
+            }
         }
 
         if ($categoryId) {
@@ -336,9 +359,11 @@ class RecordRepo implements IRecordRepo
                     'state' => 'approved'
                 ])->select([
                     'state', 'identity_address', 'created_at', 'updated_at'
-                ])->groupBy('identity_address', 'record_id')->orderBy(
-                    'updated_at', 'DESC'
-                )->orderBy('created_at')->get()->toArray()
+                ])->get()->groupBy(
+                    'identity_address'
+                )->map(function(Collection $record) {
+                    return $record->sortByDesc('created_at')->first();
+                })->flatten()->toArray()
             ];
         })->toArray();
     }

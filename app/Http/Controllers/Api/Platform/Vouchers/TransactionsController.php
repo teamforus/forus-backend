@@ -29,37 +29,75 @@ class TransactionsController extends Controller
      * @param StoreVoucherTransactionRequest $request
      * @param Voucher $voucher
      * @return VoucherTransactionResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         StoreVoucherTransactionRequest $request,
         Voucher $voucher
     ) {
-        /**
-         * @var Voucher $voucher
-         * @var Product|null $product
-         */
-        $maxAmount = $voucher->amount - $voucher->transactions->sum('amount');
-        $product = Product::getModel()->find($request->get('product_id'));
+        $this->authorize('useAsProvider', $voucher);
 
-        if (!$product) {
-            $amount = $request->input('amount');
+        /** @var Product|null $product */
+        if ($voucher->type == 'product') {
+            $product = $voucher->product;
+            $amount = $voucher->amount;
+            $organizationId = $product->organization_id;
         } else {
-            $amount = $product->price;
+            $maxAmount = $voucher->amount - $voucher->transactions->sum('amount');
+            $product = Product::getModel()->find($request->get('product_id'));
+
+            if (!$product) {
+                $amount = $request->input('amount');
+                $organizationId = $request->input('organization_id');
+            } else {
+                $amount = $product->price;
+                $organizationId = $product->organization_id;
+            }
+
+            if ($amount > $maxAmount) {
+                return response()->json([
+                    'message' => trans('validation.voucher.not_enough_funds'),
+                    'key' => 'not_enough_funds'
+                ], 403);
+            }
         }
 
-        if ($amount > $maxAmount) {
-            return response()->json([
-                'message' => trans('validation.voucher.not_enough_funds'),
-                'key' => 'not_enough_funds'
-            ], 403);
+        if ($product) {
+            if ($product->expired) {
+                return response()->json([
+                    'message' => trans('validation.voucher.product_expired'),
+                    'key' => 'product_expired'
+                ], 403);
+            }
+
+            if ($product->sold_out && $voucher->type != 'product') {
+                return response()->json([
+                    'message' => trans('validation.voucher.product_sold_out'),
+                    'key' => 'product_expired'
+                ], 403);
+            }
         }
 
+        /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create([
             'amount' => $amount,
             'product_id' => $product ? $product->id : null,
             'address' => app()->make('token_generator')->address(),
-            'organization_id' => $request->input('organization_id'),
+            'organization_id' => $organizationId,
         ]);
+
+        if ($product) {
+            $product->updateSoldOutState();
+        }
+
+        $note = $request->input('note', false);
+
+        if ($note && !empty($note)) {
+            $transaction->notes()->create([
+                'message' => $note,
+                'group' => 'provider'
+            ]);
+        }
 
         return new VoucherTransactionResource($transaction);
     }

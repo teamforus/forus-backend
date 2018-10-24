@@ -77,32 +77,18 @@ class FundPolicy
             return false;
         }
 
-        $self = $this;
-        $trustedIdentities = $fund->organization->validators->pluck(
-            'identity_address'
-        );
-
         $invalidCriteria = $fund->criteria->filter(function(
-            $criterion
-        ) use ($self, $identity_address, $trustedIdentities) {
-            /** @var FundCriterion $criterion */
-            $recordsOfType = collect($this->recordRepo->recordsList(
-                $identity_address, $criterion->record_type_key
-            ));
+            FundCriterion $criterion
+        ) use (
+            $identity_address, $fund
+        ) {
+            $record = Fund::getTrustedRecordOfType(
+                $fund, auth()->id(), $criterion->record_type_key
+            );
 
-            $validRecordsOfType = $recordsOfType->where(
-                'value', $criterion['operator'], $criterion['value']
-            )->filter(function(
-                $record
-            ) use ($trustedIdentities) {
-                return collect($record['validations'])->whereIn(
-                    'identity_address',
-                    $trustedIdentities
-                )->count() > 0;
-            });
-
-            // $trustedIdentities
-            return $validRecordsOfType->count() == 0;
+            return (collect([$record])->where(
+                'value', $criterion->operator, $criterion->value
+                )->count() == 0);
         });
 
         if ($invalidCriteria->count() > 0) {

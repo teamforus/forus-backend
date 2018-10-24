@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Provider;
 
 use App\Http\Resources\MediaCompactResource;
+use App\Http\Resources\MediaResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\Organization;
 use App\Models\Product;
@@ -21,17 +22,32 @@ class ProviderVoucherResource extends Resource
      */
     public function toArray($request)
     {
+        /** @var Voucher $voucher */
+        $voucher = $this->resource;
         $identityAddress = request()->get('identity');
 
-        /**
-         * @var Voucher $voucher
-         */
-        $voucher = $this->resource;
-        $amountLeft = $voucher->amount - $voucher->transactions->sum('amount');
+        if ($voucher->product) {
+            return $this->productVoucher($voucher);
+        }
 
+        return $this->regularVoucher($identityAddress, $voucher);
+    }
+
+    /**
+     * Transform the resource into an array.
+     *
+     * @param string $identityAddress
+     * @param Voucher $voucher
+     * @return mixed
+     */
+    private function regularVoucher(
+        string $identityAddress,
+        Voucher $voucher
+    ) {
+        $amountLeft = $voucher->amount - $voucher->transactions->sum('amount');
         $voucherOrganizations = $voucher->fund->providers->pluck('organization');
 
-        $allowedOrganizations = Organization::getModel()->where(function(
+        $allowedOrganizations = Organization::query()->where(function(
             Builder $query
         ) use (
             $identityAddress
@@ -46,13 +62,16 @@ class ProviderVoucherResource extends Resource
         $allowedProductCategories = $voucher->fund->product_categories;
         $allowedProducts = Product::getModel()->whereIn(
             'organization_id', $allowedOrganizations->pluck('id')
-        )->whereIn(
+        )->where('sold_out', '=', false)->whereIn(
             'product_category_id', $allowedProductCategories->pluck('id')
+        )->where('price', '<=', $amountLeft)->where(
+            'expire_at', '>', date('Y-m-d')
         )->get();
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
+            'type' => 'regular',
             'amount' => max($amountLeft, 0),
             'fund' => collect($voucher->fund)->only([
                 'id', 'name', 'state'
@@ -88,6 +107,36 @@ class ProviderVoucherResource extends Resource
                     )
                 ]);
             }),
+        ])->toArray();
+    }
+
+    /**
+     * Transform the resource into an array.
+     *
+     * @param Voucher $voucher
+     * @return mixed
+     */
+    private function productVoucher(
+        Voucher $voucher
+    ) {
+        return collect($voucher)->only([
+            'identity_address', 'fund_id', 'created_at', 'address'
+        ])->merge([
+            'type' => 'product',
+            'product' => collect($voucher->product)->only([
+                'id', 'name', 'description', 'price', 'old_price',
+                'total_amount', 'sold_amount', 'product_category_id',
+                'organization_id'
+            ])->merge([
+                'photo' => new MediaResource(
+                    $voucher->product->photo
+                ),
+                'organization' => collect($voucher->product->organization)->only([
+                    'id', 'name'
+                ])->merge([
+                    'logo' => new MediaCompactResource($voucher->product->organization->logo)
+                ]),
+            ])->toArray()
         ])->toArray();
     }
 }

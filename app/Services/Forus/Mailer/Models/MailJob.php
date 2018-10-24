@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $state
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @package App\Services\MailerService\Models
+ * @package App\Services\MailService\Models
  */
 class MailJob extends Model
 {

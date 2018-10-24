@@ -50,7 +50,7 @@ class PrevalidationController extends Controller
             return collect($records)->count();
         })->map(function($records) use ($request) {
             do {
-                $uid = app()->make('token_generator')->generate(6, 4);
+                $uid = app()->make('token_generator')->generate(4, 2);
             } while(Prevalidation::getModel()->where(
                 'uid', $uid
             )->count() > 0);
@@ -58,7 +58,7 @@ class PrevalidationController extends Controller
             $prevalidation = Prevalidation::create([
                 'uid' => $uid,
                 'state' => 'pending',
-                'identity_address' => $request->get('identity')
+                'identity_address' => auth()->user()->getAuthIdentifier()
             ]);
 
             foreach ($records as $record) {
@@ -84,7 +84,7 @@ class PrevalidationController extends Controller
         $this->authorize('index', Prevalidation::class);
 
         $prevalidations = Prevalidation::getModel()->where(
-            'identity_address', $request->get('identity')
+            'identity_address', auth()->user()->getAuthIdentifier()
         )->get();
 
         return PrevalidationResource::collection($prevalidations);
@@ -121,13 +121,13 @@ class PrevalidationController extends Controller
         foreach($prevalidation->records as $record) {
             /** @var $record PrevalidationRecord */
             $record = $this->recordRepo->recordCreate(
-                $request->get('identity'),
+                auth()->user()->getAuthIdentifier(),
                 $record->record_type->key,
                 $record->value
             );
 
             $validationRequest = $this->recordRepo->makeValidationRequest(
-                $request->get('identity'),
+                auth()->user()->getAuthIdentifier(),
                 $record['id']
             );
 
