@@ -58,7 +58,7 @@ class ProductsController extends Controller
         $product = $organization->products()->create(
             $request->only([
                 'name', 'description', 'price', 'old_price', 'total_amount',
-                'product_category_id', 'expire_at'
+                'sold_amount','product_category_id', 'expire_at'
             ])
         );
 
