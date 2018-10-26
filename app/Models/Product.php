@@ -54,10 +54,6 @@ class Product extends Model
         'expire_at', 'deleted_at'
     ];
 
-    protected $attributes = [
-        'expired'
-    ];
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
