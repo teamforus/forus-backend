@@ -259,4 +259,9 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'index', 'show', 'update'
         ]
     ]);
+
+    $router->post(
+        '/devices/register-push',
+        'Api\Platform\DevicesController@registerPush'
+    );
 });

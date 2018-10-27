@@ -4,6 +4,10 @@ namespace App\Services\Forus\MailNotification;
 
 use App\Services\ApiRequestService\ApiRequest;
 
+/**
+ * Class MailService
+ * @package App\Services\Forus\MailNotification
+ */
 class MailService
 {
     const TYPE_EMAIL = 1;
@@ -14,9 +18,26 @@ class MailService
     /** @var ApiRequest $apiRequest  */
     protected $apiRequest;
 
+    /**
+     * MailService constructor.
+     */
     public function __construct() {
         $this->apiRequest = app()->make('api_request');
         $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
+    }
+
+    /**
+     * Get endpoint url
+     *
+     * @param string $uri
+     * @return string
+     */
+    private function getEndpoint(
+        string $uri
+    ) {
+        $locale = config('app.locale', 'en');
+
+        return $this->serviceApiUrl . '/' . $locale . $uri;
     }
 
     public static function typeCodeToString(int $code) {
@@ -31,19 +52,24 @@ class MailService
     /**
      * Register new connection for given identifier
      *
-     * @param $userId
-     * @param $type
-     * @param $value
+     * @param string $identifier
+     * @param int $type
+     * @param string $value
      * @return bool
      */
-    public function addConnection($userId, $type, $value)
-    {
+    public function addConnection(
+        string $identifier,
+        int $type,
+        string $value
+    ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/user/connections/add/', [
-            'user_id'   => $userId,
+        $endpoint = $this->getEndpoint('/user/connections/add');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'user_id'   => $identifier,
             'type'      => $type,
             'value'     => $value,
         ]);
@@ -63,41 +89,36 @@ class MailService
         return true;
     }
 
-    public function providerApproved(
-        $reffer_id, $fund_name, $provider_name, $sponsor_name, $date_start
-    ) {
-        if (!$this->serviceApiUrl) {
-            return false;
-        }
-
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/sender/vouchers/provider_approved', compact(
-            'reffer_id', 'fund_name', 'provider_name', 'sponsor_name', 'date_start'
-        ));
-
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `providerApproved`: %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
-        }
-
-        return true;
-    }
-
+    /**
+     * Notify sponsor that new provider applied to his fund
+     *
+     * @param string $identifier
+     * @param string $provider_name
+     * @param string $sponsor_name
+     * @param string $fund_name
+     * @param string $sponsor_dashboard_link
+     * @return bool
+     */
     public function providerApplied(
-        $reffer_id, $fund_name, $provider_name, $sponsor_name
+        string $identifier,
+        string $provider_name,
+        string $sponsor_name,
+        string $fund_name,
+        string $sponsor_dashboard_link
     ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/sender/vouchers/provider_applied', compact(
-            'reffer_id', 'fund_name', 'provider_name', 'sponsor_name'
-        ));
+        $endpoint = $this->getEndpoint('/sender/vouchers/provider_applied');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'                 => $identifier,
+            'provider_name'             => $provider_name,
+            'sponsor_name'              => $sponsor_name,
+            'fund_name'                 => $fund_name,
+            'sponsor_dashboard_link'    => $sponsor_dashboard_link,
+        ]);
 
         if ($res->getStatusCode() != 200) {
             app()->make('log')->error(
@@ -113,16 +134,111 @@ class MailService
         return true;
     }
 
-    public function youAddedAsValidator(
-        $reffer_id, $sponsore_name, $validator_name
+    /**
+     * Notify provider that his request to apply for fund was approved
+     *
+     * @param string $identifier
+     * @param string $fund_name
+     * @param string $provider_name
+     * @param string $sponsor_name
+     * @return bool
+     */
+    public function providerApproved(
+        string $identifier,
+        string $fund_name,
+        string $provider_name,
+        string $sponsor_name
     ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/sender/sponsors/you_added_as_validator', compact(
-            'reffer_id', 'sponsore_name', 'validator_name'
-        ));
+        $endpoint = $this->getEndpoint('/sender/vouchers/provider_approved');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'     => $identifier,
+            'fund_name'     => $fund_name,
+            'provider_name' => $provider_name,
+            'sponsor_name'  => $sponsor_name,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `providerApproved`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Notify provider that his request to apply for fund was rejected
+     *
+     * @param string $identifier
+     * @param string $fund_name
+     * @param string $provider_name
+     * @param string $sponsor_name
+     * @return bool
+     */
+    public function providerRejected(
+        string $identifier,
+        string $fund_name,
+        string $provider_name,
+        string $sponsor_name
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/provider_rejected');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'     => $identifier,
+            'fund_name'     => $fund_name,
+            'provider_name' => $provider_name,
+            'sponsor_name'  => $sponsor_name
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `providerRejected`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Notify user that now he can validate records for the given sponsor
+     *
+     * @param string $identifier
+     * @param string $sponsor_name
+     * @return bool
+     */
+    public function youAddedAsValidator(
+        string $identifier,
+        string $sponsor_name
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/sponsors/you_added_as_validator');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id' => $identifier,
+            'sponsore_name' => $sponsor_name
+        ]);
 
         if ($res->getStatusCode() != 200) {
             app()->make('log')->error(
@@ -138,16 +254,27 @@ class MailService
         return true;
     }
 
+    /**
+     * Notify user about new validation request on validation dashboard
+     *
+     * @param string $identifier
+     * @param string $validator_dashboard_link
+     * @return bool
+     */
     public function newValidationRequest(
-        $reffer_id, $validator_name
+        string $identifier,
+        string $validator_dashboard_link
     ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/sender/validations/new_validation_request', compact(
-            'reffer_id', 'validator_name'
-        ));
+        $endpoint = $this->getEndpoint('/sender/validations/new_validation_request');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'                 => $identifier,
+            'validator_dashboard_link'  => $validator_dashboard_link
+        ]);
 
         if ($res->getStatusCode() != 200) {
             app()->make('log')->error(
@@ -163,21 +290,36 @@ class MailService
         return true;
     }
 
+
+    /**
+     * Notify provider about new fund available for sign up
+     *
+     * @param string $identifier
+     * @param string $fund_name
+     * @param string $provider_dashboard_link
+     * @return bool
+     */
     public function newFundApplicable(
-        $reffer_id, $fund_name, $username
+        string $identifier,
+        string $fund_name,
+        string $provider_dashboard_link
     ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/sender/vouchers/new_fund', compact(
-            'reffer_id', 'fund_name', 'username'
-        ));
+        $endpoint = $this->getEndpoint('/sender/vouchers/new_fund');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'                 => $identifier,
+            'fund_name'                 => $fund_name,
+            'provider_dashboard_link'   => $provider_dashboard_link,
+        ]);
 
         if ($res->getStatusCode() != 200) {
             app()->make('log')->error(
                 sprintf(
-                    'Error sending notification `newFundCreated`: %s',
+                    'Error sending notification `newFundApplicable`: %s',
                     $res->getBody()
                 )
             );
@@ -188,16 +330,30 @@ class MailService
         return true;
     }
 
+    /**
+     * Notify user that new fund was created
+     *
+     * @param string $identifier
+     * @param string $fund_name
+     * @param string $webshop_link
+     * @return bool
+     */
     public function newFundCreated(
-        $reffer_id, $fund_name, $requester_name, $link
+        string $identifier,
+        string $fund_name,
+        string $webshop_link
     ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/sender/vouchers/new_fund_created', compact(
-            'reffer_id', 'fund_name', 'requester_name', 'link'
-        ));
+        $endpoint = $this->getEndpoint('/sender/vouchers/new_fund_created');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'     => $identifier,
+            'fund_name'     => $fund_name,
+            'webshop_link'  => $webshop_link,
+        ]);
 
         if ($res->getStatusCode() != 200) {
             app()->make('log')->error(
@@ -213,21 +369,112 @@ class MailService
         return true;
     }
 
+
+    /**
+     * Notify user that new product added
+     * @param string $identifier
+     * @param string $sponsor_name
+     * @param string $fund_name
+     * @return bool
+     */
     public function newProductAdded(
-        $reffer_id, $product_name, $provider_name
+        string $identifier,
+        string $sponsor_name,
+        string $fund_name
     ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $res = $this->apiRequest->post($this->serviceApiUrl . '/en/sender/vouchers/new_product_added', compact(
-            'reffer_id', 'product_name', 'provider_name'
-        ));
+        $endpoint = $this->getEndpoint('/sender/vouchers/new_product_added');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'     => $identifier,
+            'sponsor_name'  => $sponsor_name,
+            'fund_name'     => $fund_name,
+        ]);
 
         if ($res->getStatusCode() != 200) {
             app()->make('log')->error(
                 sprintf(
                     'Error sending notification `newProductAdded`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Send voucher by email
+     *
+     * @param string $identifier
+     * @param string $fund_product_name
+     * @param string $qr_url
+     * @return bool
+     */
+    public function sendVoucher(
+        string $identifier,
+        string $fund_product_name,
+        string $qr_url
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/sended_via_email');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'             => $identifier,
+            'fund_product_name'     => $fund_product_name,
+            'qr_url'                => $qr_url,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `sendVoucher`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Send restore identity link to address email
+     * @param string $identifier
+     * @param string $link
+     * @param string $platform
+     * @return bool
+     */
+    public function loginViaEmail(
+        string $identifier,
+        string $link,
+        string $platform
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/login/login_via_email');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id' => $identifier,
+            'link'      => $link,
+            'platform'  => $platform,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `loginViaEmail`: %s',
                     $res->getBody()
                 )
             );

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
  * @property Fund $fund
  * @property Product|null $product
  * @property Voucher|null $parent
+ * @property Collection $tokens
  * @property Collection $transactions
  * @property Collection $product_vouchers
  * @property Carbon $created_at
@@ -85,5 +86,12 @@ class Voucher extends Model
         return $this->amount -
             $this->transactions->sum('amount') -
             $this->product_vouchers()->sum('amount');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function tokens() {
+        return $this->hasMany(VoucherToken::class);
     }
 }

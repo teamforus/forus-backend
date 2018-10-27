@@ -144,18 +144,23 @@ class IdentityController extends Controller
         $identityId = $this->recordRepo->identityIdByEmail($email);
         $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
 
-        if (!empty($proxy)) {
-            $view = 'emails.identity.authorize-email_token';
+        $link = url(sprintf(
+            '/api/v1/identity/proxy/redirect/email/%s/%s',
+            $source, $proxy['auth_email_token']
+        ));
 
-            $this->mailerService->push($view, [
-                'email_token'   => $proxy['auth_email_token'],
-                'source'        => $source
-            ], [
-                'to'            => $email,
-                'subject'       => trans(
-                    'identity-proxy.restore_email_subject'
-                )
-            ]);
+        $platform = '';
+
+        if (strpos($source, 'shop-') === 0) {
+            $platform = 'webshop';
+        } else if (strpos($source, 'panel-') === 0) {
+            $platform = 'panel';
+        } else if (strpos($source, 'app-me_app') === 0) {
+            $platform = 'meapp';
+        }
+
+        if (!empty($proxy)) {
+            $this->mailService->loginViaEmail($identityId, $link, $platform);
         }
 
         return [

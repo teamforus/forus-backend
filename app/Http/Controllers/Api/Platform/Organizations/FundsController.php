@@ -92,7 +92,6 @@ class FundsController extends Controller
         resolve('forus.services.mail_notification')->newFundCreated(
             $organization->identity_address,
             $fund->name,
-            $organization->name,
             env('WEB_SHOP_GENERAL_URL')
         );
 
@@ -101,9 +100,7 @@ class FundsController extends Controller
             resolve('forus.services.mail_notification')->newFundApplicable(
                 $organization->identity_address,
                 $fund->name,
-                resolve('forus.services.record')->primaryEmailByAddress(
-                    $organization->identity_address
-                )
+                config('forus.front_ends.panel-provider')
             );
         }
 

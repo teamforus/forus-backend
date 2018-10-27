@@ -91,8 +91,8 @@ class ProductsController extends Controller
 
                 resolve('forus.services.mail_notification')->newProductAdded(
                     $product->organization->identity_address,
-                    $product->name,
-                    $product->organization->name
+                    $product->organization->name,
+                    $fund->name
                 );
             }
         }

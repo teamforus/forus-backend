@@ -83,23 +83,29 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
+        $state = $request->input('state');
+
         $this->authorize('update', $organization);
         $this->authorize('update', $fund);
         $this->authorize('update', [
             $organizationFund, $request->input('state')
         ]);
 
-        $organizationFund->update($request->only([
-            'state'
-        ]));
+        $organizationFund->update(compact('state'));
 
-        if ($request->input('state') == 'approved') {
+        if ($state == 'approved') {
             app()->make('forus.services.mail_notification')->providerApproved(
                 $organizationFund->organization->identity_address,
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
-                $organizationFund->fund->organization->name,
-                $organizationFund->created_at->format('Y-m-d')
+                $organizationFund->fund->organization->name
+            );
+        } elseif ($state == 'declined') {
+            app()->make('forus.services.mail_notification')->providerRejected(
+                $organizationFund->organization->identity_address,
+                $organizationFund->fund->name,
+                $organizationFund->organization->name,
+                $organizationFund->fund->organization->name
             );
         }
 

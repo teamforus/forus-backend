@@ -49,9 +49,7 @@ class ValidatorRequestController extends Controller
 
         resolve('forus.services.mail_notification')->newValidationRequest(
             $validatorRequest->validator->identity_address,
-            resolve('forus.services.record')->primaryEmailByAddress(
-                $validatorRequest->validator->identity_address
-            )
+            config('forus.front_ends.panel-validator')
         );
 
         return new ValidatorRequestResource($validatorRequest);
