@@ -23,11 +23,13 @@ class StoreProductRequest extends FormRequest
      */
     public function rules()
     {
+        $price = $this->get('price', 0);
+
         return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,1000',
             'price'                 => 'required|numeric|min:.01',
-            'old_price'             => 'required|numeric|min:.01',
+            'old_price'             => 'nullable|numeric|min:' . $price,
             'total_amount'          => 'required|numeric|min:1',
             'expire_at'             => 'required|date|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
