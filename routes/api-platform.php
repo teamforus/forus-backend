@@ -87,6 +87,11 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         "Api\Platform\VouchersController@provider"
     );
 
+    $router->post(
+        'vouchers/{voucher_address}/send-email',
+        "Api\Platform\VouchersController@sendEmail"
+    );
+
     $router->resource(
         'vouchers.transactions',
         "Api\Platform\Vouchers\TransactionsController", [

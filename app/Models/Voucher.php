@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Collection;
  * @property integer|null $parent_id
  * @property integer $identity_address
  * @property string $amount
- * @property string $address
  * @property string $type
  * @property float $amount_available
  * @property Fund $fund
@@ -34,8 +33,7 @@ class Voucher extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'amount', 'address', 'product_id',
-        'parent_id'
+        'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
     ];
 
     /**
