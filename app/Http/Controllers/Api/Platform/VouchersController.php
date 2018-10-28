@@ -52,9 +52,13 @@ class VouchersController extends Controller
         /** @var Product $product */
         /** @var Voucher $voucher */
         $product = Product::query()->find($request->input('product_id'));
-        $voucher = Voucher::query()->where([
+
+        /** @var VoucherToken $voucherToken */
+        $voucherToken = VoucherToken::getModel()->where([
             'address' => $request->input('voucher_address')
-        ])->first();
+        ])->first() ?? abort(404);
+
+        $voucher = $voucherToken->voucher ?? abort(404);
 
         $this->authorize('reserve', $product);
 

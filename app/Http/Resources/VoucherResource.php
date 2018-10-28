@@ -73,7 +73,7 @@ class VoucherResource extends Resource
         ]);
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at_locale', 'address'
+            'identity_address', 'fund_id', 'created_at_locale'
         ])->merge([
             'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
@@ -83,13 +83,13 @@ class VoucherResource extends Resource
             'offices' => OfficeResource::collection($offices),
             'product' => $productResource,
             'parent' => $voucher->parent ? collect($voucher->parent)->only([
-                'identity_address', 'fund_id', 'created_at', 'address'
+                'identity_address', 'fund_id', 'created_at'
             ]) : null,
             'product_vouchers' => $voucher->product_vouchers ? collect(
                 $voucher->product_vouchers
             )->map(function($product_voucher) {
                 return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at', 'address', 'amount'
+                    'identity_address', 'fund_id', 'created_at', 'amount'
                 ])->merge([
                     'date' => $product_voucher->created_at->format('M d, Y'),
                     'date_time' => $product_voucher->created_at->format('M d, Y H:i'),

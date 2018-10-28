@@ -4,6 +4,7 @@ namespace App\Rules;
 
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Models\VoucherToken;
 use Illuminate\Contracts\Validation\Rule;
 
 class ProductIdToVoucherRule implements Rule
@@ -36,9 +37,13 @@ class ProductIdToVoucherRule implements Rule
          * @var Voucher $voucher
          */
         $product = Product::query()->find($value);
-        $voucher = Voucher::query()->where([
-            'address' => $this->voucherAddress
-        ])->first();
+
+        /** @var VoucherToken $voucherToken */
+        $voucherToken = VoucherToken::getModel()->where([
+                'address' => $this->voucherAddress
+            ])->first() ?? abort(404);
+
+        $voucher = $voucherToken->voucher ?? abort(404);
 
         if (!$voucher) {
             $this->message = trans(

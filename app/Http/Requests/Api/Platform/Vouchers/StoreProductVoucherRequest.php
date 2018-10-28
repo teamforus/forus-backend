@@ -26,19 +26,10 @@ class StoreProductVoucherRequest extends FormRequest
      */
     public function rules()
     {
-        $identityAddress = auth()->user()->getAuthIdentifier();
-
         return [
             'voucher_address'    => [
                 'required',
-                Rule::exists('vouchers', 'address')->where(function(
-                    Builder $query
-                ) use ($identityAddress) {
-                    $query->where([
-                        'identity_address'  => $identityAddress,
-                        'parent_id'         => null
-                    ]);
-                })
+                'exists:voucher_tokens,address'
             ],
             'product_id'    => [
                 'required',
