@@ -73,7 +73,7 @@ class VoucherResource extends Resource
         ]);
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at_locale'
+            'identity_address', 'fund_id', 'created_at', 'created_at_locale',
         ])->merge([
             'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
