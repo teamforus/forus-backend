@@ -42,12 +42,10 @@
 <body>
     <p class="app-missing">Please install me.app on this device first.</p>
     <p>
-        <a class="button" href="#">Open me.app</a>
+        <a class="button" href="#" onclick="onClick()">Open me.app</a>
     </p>
     <script>
-        document.querySelector('.button').onclick = function(e) {
-            e.preventDefault();
-
+        onClick = function() {
             let url = "{{ $redirectUrl }}";
             let userAgent = window.navigator.userAgent || '';
             let isIosOrFirefox = (
