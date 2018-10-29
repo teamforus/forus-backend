@@ -40,7 +40,7 @@ class TransactionsController extends Controller
         /** @var Product|null $product */
         if ($voucher->type == 'product') {
             $product = $voucher->product;
-            $amount = $product->price;
+            $amount = $voucher->amount;
             $organizationId = $product->organization_id;
         } else {
             $maxAmount = $voucher->amount - $voucher->transactions->sum('amount');
@@ -62,6 +62,22 @@ class TransactionsController extends Controller
             }
         }
 
+        if ($product) {
+            if ($product->expired) {
+                return response()->json([
+                    'message' => trans('validation.voucher.product_expired'),
+                    'key' => 'product_expired'
+                ], 403);
+            }
+
+            if ($product->sold_out && $voucher->type != 'product') {
+                return response()->json([
+                    'message' => trans('validation.voucher.product_sold_out'),
+                    'key' => 'product_expired'
+                ], 403);
+            }
+        }
+
         /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create([
             'amount' => $amount,
@@ -69,6 +85,10 @@ class TransactionsController extends Controller
             'address' => app()->make('token_generator')->address(),
             'organization_id' => $organizationId,
         ]);
+
+        if ($product) {
+            $product->updateSoldOutState();
+        }
 
         $note = $request->input('note', false);
 

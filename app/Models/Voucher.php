@@ -13,12 +13,12 @@ use Illuminate\Database\Eloquent\Collection;
  * @property integer|null $parent_id
  * @property integer $identity_address
  * @property string $amount
- * @property string $address
  * @property string $type
  * @property float $amount_available
  * @property Fund $fund
  * @property Product|null $product
  * @property Voucher|null $parent
+ * @property Collection $tokens
  * @property Collection $transactions
  * @property Collection $product_vouchers
  * @property Carbon $created_at
@@ -33,8 +33,7 @@ class Voucher extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'amount', 'address', 'product_id',
-        'parent_id'
+        'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
     ];
 
     /**
@@ -85,5 +84,12 @@ class Voucher extends Model
         return $this->amount -
             $this->transactions->sum('amount') -
             $this->product_vouchers()->sum('amount');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function tokens() {
+        return $this->hasMany(VoucherToken::class);
     }
 }

@@ -2,16 +2,29 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Events\Vouchers\VoucherCreated;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
 use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Models\VoucherToken;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class VouchersController extends Controller
 {
+    protected $identityRepo;
+    protected $recordRepo;
+
+    /**
+     * VouchersController constructor.
+     */
+    public function __construct() {
+        $this->identityRepo = app()->make('forus.services.identity');
+        $this->recordRepo = app()->make('forus.services.record');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -39,18 +52,29 @@ class VouchersController extends Controller
         /** @var Product $product */
         /** @var Voucher $voucher */
         $product = Product::query()->find($request->input('product_id'));
-        $voucher = Voucher::query()->where([
-            'address' => $request->input('voucher_address')
-        ])->first();
 
-        return new VoucherResource(Voucher::create([
+        /** @var VoucherToken $voucherToken */
+        $voucherToken = VoucherToken::getModel()->where([
+            'address' => $request->input('voucher_address')
+        ])->first() ?? abort(404);
+
+        $voucher = $voucherToken->voucher ?? abort(404);
+
+        $this->authorize('reserve', $product);
+
+        $product->updateSoldOutState();
+
+        $voucher = Voucher::create([
             'identity_address'  => auth()->user()->getAuthIdentifier(),
             'parent_id'         => $voucher->id,
             'fund_id'           => $voucher->fund_id,
             'product_id'        => $product->id,
-            'amount'            => $product->price,
-            'address'           => app()->make('token_generator')->address()
-        ]));
+            'amount'            => $product->price
+        ]);
+
+        VoucherCreated::dispatch($voucher);
+
+        return new VoucherResource($voucher);
     }
 
     /**
@@ -72,9 +96,37 @@ class VouchersController extends Controller
      * @return ProviderVoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function provider(Voucher $voucher) {
+    public function provider(
+        Voucher $voucher
+    ) {
         $this->authorize('useAsProvider', $voucher);
 
         return new ProviderVoucherResource($voucher);
+    }
+
+    /**
+     * Send target voucher to user email.
+     *
+     * @param Voucher $voucher
+     */
+    public function sendEmail(
+        Voucher $voucher
+    ) {
+        /** @var VoucherToken $voucherToken */
+        $voucherToken = $voucher->tokens()->where([
+            'need_confirmation' => false
+        ])->first();
+
+        if ($voucher->type == 'product') {
+            $fund_product_name = $voucher->product->name;
+        } else {
+            $fund_product_name = $voucher->fund->name;
+        }
+
+        resolve('forus.services.mail_notification')->sendVoucher(
+            auth()->user()->getAuthIdentifier(),
+            $fund_product_name,
+            $voucherToken->getQrCodeUrl()
+        );
     }
 }

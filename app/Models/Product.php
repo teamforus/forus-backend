@@ -19,11 +19,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property integer $price
  * @property integer $old_price
  * @property integer $total_amount
- * @property integer $sold_amount
+ * @property bool $is_offer
+ * @property bool $sold_out
+ * @property bool $expired
  * @property Organization $organization
  * @property ProductCategory $product_category
  * @property Media $photo
  * @property Collection $funds
+ * @property Carbon $expire_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -39,7 +42,7 @@ class Product extends Model
      */
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
-        'price', 'old_price', 'total_amount', 'sold_amount'
+        'price', 'old_price', 'total_amount', 'expire_at', 'sold_out'
     ];
 
     /**
@@ -47,8 +50,8 @@ class Product extends Model
      *
      * @var array
      */
-    protected $dates = [
-        'deleted_at'
+    public $dates = [
+        'expire_at', 'deleted_at'
     ];
 
     /**
@@ -56,6 +59,20 @@ class Product extends Model
      */
     public function organization() {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function vouchers() {
+        return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function voucher_transactions() {
+        return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
@@ -105,5 +122,62 @@ class Product extends Model
     public function getOldPriceAttribute($value)
     {
         return round($value, 2);
+    }
+
+    /**
+     * The product is offer
+     *
+     * @return bool
+     */
+    public function getIsOfferAttribute() {
+        return !!$this->old_price;
+    }
+
+    /**
+     * The product is sold out
+     *
+     * @param $value
+     * @return bool
+     */
+    public function getSoldOutAttribute($value) {
+        return !!$value;
+    }
+
+    /**
+     * The product is expired
+     *
+     * @return bool
+     */
+    public function getExpiredAttribute() {
+        return !!$this->expire_at->isPast();
+    }
+
+    /**
+     * Count vouchers generated for this product but not used
+     *
+     * @return int
+     */
+    public function countReserved() {
+        return $this->vouchers()->doesntHave('transactions')->count();
+    }
+
+    /**
+     * Count actually sold products
+     *
+     * @return int
+     */
+    public function countSold() {
+        return $this->voucher_transactions()->count();
+    }
+
+    /**
+     * Update sold out state for the product
+     */
+    public function updateSoldOutState() {
+        $totalProducts = $this->countReserved() + $this->countSold();
+
+        $this->update([
+            'sold_out' => $totalProducts >= $this->total_amount
+        ]);
     }
 }

@@ -43,16 +43,13 @@ class ValidatorController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('store', Validator::class);
 
-        $email = $request->input('email');
-
         $identity_address = resolve(
             'forus.services.record'
-        )->identityIdByEmail($email);
+        )->identityIdByEmail($request->input('email'));
 
         resolve('forus.services.mail_notification')->youAddedAsValidator(
             $identity_address,
-            $organization->name,
-            $email
+            $organization->name
         );
 
         return new ValidatorResource($organization->validators()->create([

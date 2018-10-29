@@ -92,9 +92,10 @@ class FundProviderController extends Controller
 
         resolve('forus.services.mail_notification')->providerApplied(
             $fundProvider->fund->organization->identity_address,
-            $fundProvider->fund->name,
             $fundProvider->organization->name,
-            $fundProvider->fund->organization->name
+            $fundProvider->fund->organization->name,
+            $fundProvider->fund->name,
+            config('forus.front_ends.panel-sponsor')
         );
 
         return new FundProviderResource($fundProvider);
