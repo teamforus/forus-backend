@@ -1,6 +1,6 @@
 <?php
 
 return [
-    'short_date_time' => 'M d, Y H:i',
-    'short_date_time_locale' => '%b %d, %Y %H:%m',
+    'short_date_time' => 'H:i - d M, Y',
+    'short_date_time_locale' => '%H:%m - %d %b, %Y',
 ];
