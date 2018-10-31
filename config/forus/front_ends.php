@@ -4,6 +4,7 @@ return [
     // Web shops
     'shop-general'          => env('WEB_SHOP_GENERAL_URL', false),
     'shop-zuidhorn'         => env('WEB_SHOP_ZUIDHORN_URL', false),
+    'shop-nijmegen'         => env('WEB_SHOP_NIJMEGEN_URL', false),
 
     // Panels
     'panel-sponsor'         => env('PANEL_SPONSOR_URL', false),
