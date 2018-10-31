@@ -66,7 +66,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/user/connections/add');
+        $endpoint = $this->getEndpoint('/user/connections/add/');
 
         $res = $this->apiRequest->post($endpoint, [
             'user_id'   => $identifier,
@@ -110,7 +110,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/provider_applied');
+        $endpoint = $this->getEndpoint('/sender/vouchers/provider_applied/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'                 => $identifier,
@@ -153,7 +153,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/provider_approved');
+        $endpoint = $this->getEndpoint('/sender/vouchers/provider_approved/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier,
@@ -195,7 +195,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/provider_rejected');
+        $endpoint = $this->getEndpoint('/sender/vouchers/provider_rejected/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier,
@@ -233,7 +233,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/sponsors/you_added_as_validator');
+        $endpoint = $this->getEndpoint('/sender/sponsors/you_added_as_validator/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id' => $identifier,
@@ -269,7 +269,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/validations/new_validation_request');
+        $endpoint = $this->getEndpoint('/sender/validations/new_validation_request/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'                 => $identifier,
@@ -308,7 +308,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/new_fund');
+        $endpoint = $this->getEndpoint('/sender/vouchers/new_fund/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'                 => $identifier,
@@ -347,7 +347,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/new_fund_created');
+        $endpoint = $this->getEndpoint('/sender/vouchers/new_fund_created/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier,
@@ -386,7 +386,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/new_product_added');
+        $endpoint = $this->getEndpoint('/sender/vouchers/new_product_added/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier,
@@ -425,7 +425,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/sended_via_email');
+        $endpoint = $this->getEndpoint('/sender/vouchers/sended_via_email/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'             => $identifier,
@@ -463,7 +463,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/login/login_via_email');
+        $endpoint = $this->getEndpoint('/sender/login/login_via_email/');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id' => $identifier,
