@@ -62,9 +62,11 @@ class ProviderVoucherResource extends Resource
         $allowedProductCategories = $voucher->fund->product_categories;
         $allowedProducts = Product::getModel()->whereIn(
             'organization_id', $allowedOrganizations->pluck('id')
-        )->whereIn(
+        )->where('sold_out', '=', false)->whereIn(
             'product_category_id', $allowedProductCategories->pluck('id')
-        )->where('price', '<=', $amountLeft)->get();
+        )->where('price', '<=', $amountLeft)->where(
+            'expire_at', '>', date('Y-m-d')
+        )->get();
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'

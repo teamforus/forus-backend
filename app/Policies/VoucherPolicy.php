@@ -48,17 +48,32 @@ class VoucherPolicy
                 'identity_address'
             )->search($identity_address) !== false;
         } else if ($voucher->type == 'product') {
-            $canUseAsProvider = ($voucher->product->organization->provider_identities->pluck(
-                'identity_address'
-            )->search($identity_address) !== false);
-
+            // Product vouchers can have no more than 1 transaction
             if ($voucher->transactions->count() > 0) {
                 throw new AuthorizationException(trans(
                     'validation.voucher.product_voucher_used'
                 ));
             }
 
-            return $canUseAsProvider;
+            // The product should not be expired
+            if ($voucher->product->expired) {
+                throw new AuthorizationException(trans(
+                    'validation.voucher.product_expired'
+                ));
+            }
+
+            // The product should not be sold out
+            if ($voucher->type != 'product' && $voucher->product->sold_out) {
+                throw new AuthorizationException(trans(
+                    'validation.voucher.product_sold_out'
+                ));
+            }
+
+            // The identity should be allowed to scan voucher for
+            // the provider organization
+            return $voucher->product->organization->provider_identities->pluck(
+                    'identity_address'
+                )->search($identity_address) !== false;
         }
 
         return false;

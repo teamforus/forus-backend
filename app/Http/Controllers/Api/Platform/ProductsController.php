@@ -19,12 +19,12 @@ class ProductsController extends Controller
     {
         $organizationIds = FundProvider::query()->whereIn(
             'fund_id', Fund::configuredFunds()->pluck('id')
-        )->where([
-            'state' => 'approved'
-        ])->pluck('organization_id');
+        )->where('state', 'approved')->pluck('organization_id');
 
         return ProductResource::collection(Product::query()->whereIn(
             'organization_id', $organizationIds
+        )->where('sold_out', false)->where(
+            'expire_at', '>', date('Y-m-d')
         )->get());
     }
 

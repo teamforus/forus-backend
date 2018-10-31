@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Events\Vouchers\VoucherCreated;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
@@ -58,10 +59,13 @@ class FundsController extends Controller
 
         $this->authorize('apply', $fund);
 
-        return new VoucherResource($fund->vouchers()->create([
+        $voucher = $fund->vouchers()->create([
             'amount' => Fund::amountForIdentity($fund, auth()->id()),
             'identity_address' => auth()->user()->getAuthIdentifier(),
-            'address' => app()->make('token_generator')->address(),
-        ]));
+        ]);
+
+        VoucherCreated::dispatch($voucher);
+
+        return new VoucherResource($voucher);
     }
 }

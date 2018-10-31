@@ -36,6 +36,7 @@ class VoucherResource extends Resource
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
             ])->merge([
+                'expire_at_locale' => format_date_locale($voucher->product->expire_at),
                 'photo' => new MediaResource(
                     $voucher->product->photo
                 ),
@@ -72,22 +73,23 @@ class VoucherResource extends Resource
         ]);
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at', 'address'
+            'identity_address', 'fund_id', 'created_at', 'created_at_locale',
         ])->merge([
-            'date' => $voucher->created_at->format('M d, Y'),
-            'date_time' => $voucher->created_at->format('M d, Y H:i'),
+            'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
+            'address_printable' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
+            'expire_at_locale' => $voucher->product ? format_date_locale($voucher->product->expire_at) : null,
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'offices' => OfficeResource::collection($offices),
             'product' => $productResource,
             'parent' => $voucher->parent ? collect($voucher->parent)->only([
-                'identity_address', 'fund_id', 'created_at', 'address'
+                'identity_address', 'fund_id', 'created_at'
             ]) : null,
             'product_vouchers' => $voucher->product_vouchers ? collect(
                 $voucher->product_vouchers
             )->map(function($product_voucher) {
                 return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at', 'address', 'amount'
+                    'identity_address', 'fund_id', 'created_at', 'amount', 'created_at_locale'
                 ])->merge([
                     'date' => $product_voucher->created_at->format('M d, Y'),
                     'date_time' => $product_voucher->created_at->format('M d, Y H:i'),

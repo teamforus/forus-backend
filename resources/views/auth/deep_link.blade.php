@@ -42,40 +42,14 @@
 <body>
     <p class="app-missing">Please install me.app on this device first.</p>
     <p>
-        <a class="button" href="#">Open me.app</a>
+        <a class="button" href="{{ $redirectUrl }}" onclick="onClick()">Open me.app</a>
     </p>
     <script>
-        document.querySelector('.button').onclick = function(e) {
-            e.preventDefault();
-
-            let url = "{{ $redirectUrl }}";
-            let userAgent = window.navigator.userAgent || '';
-            let isIosOrFirefox = (
-                /ios|iphone os|iphone|ipod|ipad/i.test(userAgent) ||
-                /firefox/i.test(userAgent)
-            );
-
+        onClick = function() {
             let showMessage = function () {
                 document.querySelector('.app-missing').style.display = "block";
             };
-
-            if (isIosOrFirefox) {
-                setTimeout(showMessage, 1500);
-                let iframeEl = document.createElement('iframe');
-                iframeEl.style.left = '100%';
-                iframeEl.style.top = '100%';
-                iframeEl.style.width = '0px';
-                iframeEl.style.height = '0px';
-                iframeEl.style.position = 'fixed';
-                document.body.appendChild(iframeEl);
-                iframeEl.src = url;
-            }
-            else {
-                setTimeout(showMessage, 2500);
-                setTimeout(function () {
-                    window.location.replace(url);
-                }, 100);
-            }
+            setTimeout(showMessage, 2500);
         }
     </script>
 </body>
