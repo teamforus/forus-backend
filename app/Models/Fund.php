@@ -194,7 +194,7 @@ class Fund extends Model
      */
     private function getFundConfig() {
         try {
-            $cfg = collect(json_decode(env('FUNDS_MAPPING')))->where(
+            $cfg = collect(json_decode(stripslashes(env('FUNDS_MAPPING'))))->where(
                 'fund_id', '=', $this->id
             )->first();
 
