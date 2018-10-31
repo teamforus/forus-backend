@@ -162,7 +162,7 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetUsedAttribute() {
-        return $this->voucher_transactions->sum('amount');
+        return number_format($this->voucher_transactions->sum('amount'), 2);
     }
 
     /**
