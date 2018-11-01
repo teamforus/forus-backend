@@ -43,7 +43,7 @@ class StoreVoucherTransactionRequest extends FormRequest
          *
          * @var Voucher $voucher
          */
-        $voucher = request()->voucher_address;
+        $voucher = request()->voucher_token_address->voucher;
         $voucherOrganizations = $voucher->fund->providers()->where([
             'state' => 'approved'
         ])->pluck('organization_id');

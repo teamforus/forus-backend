@@ -332,7 +332,7 @@ class Fund extends Model
     public static function configuredFunds () {
         try {
             return static::query()->whereIn('id', collect(json_decode(
-                env('FUNDS_MAPPING')
+                stripslashes(env('FUNDS_MAPPING'))
             ))->pluck('fund_id')->toArray())->get();
         } catch (\Exception $exception) {
             return collect();

@@ -53,13 +53,10 @@ class RouteServiceProvider extends ServiceProvider
                 ])->first() ?? abort(404);
         });
 
-        $router->bind('voucher_address', function ($value) {
-            /** @var VoucherToken $voucherToken */
-            $voucherToken = VoucherToken::getModel()->where([
+        $router->bind('voucher_token_address', function ($value) {
+            return VoucherToken::getModel()->where([
                     'address' => $value
                 ])->first() ?? abort(404);
-
-            return $voucherToken->voucher ?? abort(404);
         });
 
         $router->bind('transaction_address', function ($value) {

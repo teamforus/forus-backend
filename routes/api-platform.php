@@ -78,17 +78,17 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'index', 'show', 'store'
         ],
         'parameters' => [
-            'vouchers' => 'voucher_address'
+            'vouchers' => 'voucher_token_address'
         ]
     ]);
 
     $router->get(
-        'vouchers/{voucher_address}/provider',
+        'vouchers/{voucher_token_address}/provider',
         "Api\Platform\VouchersController@provider"
     );
 
     $router->post(
-        'vouchers/{voucher_address}/send-email',
+        'vouchers/{voucher_token_address}/send-email',
         "Api\Platform\VouchersController@sendEmail"
     );
 
@@ -99,7 +99,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'index', 'show', 'store'
         ],
         'parameters' => [
-            'vouchers' => 'voucher_address',
+            'vouchers' => 'voucher_token_address',
             'transactions' => 'transaction_address',
         ]
     ]);

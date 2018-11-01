@@ -44,7 +44,7 @@ class ProviderVoucherResource extends Resource
         string $identityAddress,
         Voucher $voucher
     ) {
-        $amountLeft = $voucher->amount - $voucher->transactions->sum('amount');
+        $amountLeft = $voucher->amount_available;
         $voucherOrganizations = $voucher->fund->providers->pluck('organization');
 
         $allowedOrganizations = Organization::query()->where(function(
