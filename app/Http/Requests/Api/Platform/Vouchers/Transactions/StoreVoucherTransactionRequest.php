@@ -86,6 +86,8 @@ class StoreVoucherTransactionRequest extends FormRequest
             ]);
         }
 
+        $maxAmount = number_format($voucher->amount_available, 2, '.', '');
+
         if (!$voucher->product_id) {
             return [
                 'note' => 'nullable|string|between:2,255',
@@ -93,7 +95,7 @@ class StoreVoucherTransactionRequest extends FormRequest
                     'required_without:product_id',
                     'numeric',
                     'min:.01',
-                    'max:' . $voucher->amount_available,
+                    'max:' . $maxAmount,
                 ],
                 'product_id'        => [
                     'exists:products,id',

@@ -15,13 +15,15 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Voucher $voucher
+     * @param VoucherToken $voucherToken
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
-        Voucher $voucher
+        VoucherToken $voucherToken
     ) {
-        return VoucherTransactionResource::collection($voucher->transactions);
+        return VoucherTransactionResource::collection(
+            $voucherToken->voucher->transactions
+        );
     }
 
     /**

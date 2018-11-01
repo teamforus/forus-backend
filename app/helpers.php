@@ -17,3 +17,9 @@ if  (!function_exists('format_date_locale')) {
         );
     }
 }
+
+if  (!function_exists('currency_format')) {
+    function currency_format($number, $decimals = 2, $dec_point = '.', $thousands_sep = '') {
+        return number_format($number, $decimals, $dec_point, $thousands_sep);
+    }
+}

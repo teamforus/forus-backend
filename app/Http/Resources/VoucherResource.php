@@ -75,8 +75,9 @@ class VoucherResource extends Resource
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'created_at_locale',
         ])->merge([
+            'amount' => number_format($amount),
             'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
-            'address_printable' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
+            'address_printable' => $voucher->tokens()->where('need_confirmation', 0)->first()->address,
             'expire_at_locale' => $voucher->product ? format_date_locale($voucher->product->expire_at) : null,
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
@@ -88,20 +89,23 @@ class VoucherResource extends Resource
             'product_vouchers' => $voucher->product_vouchers ? collect(
                 $voucher->product_vouchers
             )->map(function($product_voucher) {
+                /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at', 'amount', 'created_at_locale'
+                    'identity_address', 'fund_id', 'created_at', 'created_at_locale'
                 ])->merge([
+                    'amount' => currency_format($product_voucher->amount_available),
                     'date' => $product_voucher->created_at->format('M d, Y'),
                     'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
                     'timestamp' => $product_voucher->created_at->timestamp,
                     'product' => collect($product_voucher->product)->only([
-                        'id', 'name', 'description', 'price', 'old_price',
-                        'total_amount', 'sold_amount', 'product_category_id',
-                        'organization_id'
+                        'id', 'name', 'description', 'total_amount',
+                        'sold_amount', 'product_category_id', 'organization_id'
+                    ])->merge([
+                        'price' => currency_format($product_voucher->product->price),
+                        'old_price' => currency_format($product_voucher->product->old_price),
                     ])
                 ]);
             }) : null,
-            'amount' => max($amount, 0),
             'fund' => $fundResource,
             'transactions' => VoucherTransactionResource::collection(
                 $this->resource->transactions

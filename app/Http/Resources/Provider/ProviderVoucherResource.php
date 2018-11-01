@@ -72,7 +72,7 @@ class ProviderVoucherResource extends Resource
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
             'type' => 'regular',
-            'amount' => max($amountLeft, 0),
+            'amount' => currency_format($amountLeft),
             'fund' => collect($voucher->fund)->only([
                 'id', 'name', 'state'
             ])->merge([
@@ -98,9 +98,10 @@ class ProviderVoucherResource extends Resource
             'allowed_products' => collect($allowedProducts)->map(function($product) {
                 /** @var Product $product */
                 return collect($product)->only([
-                    'id', 'name', 'description', 'price', 'old_price',
-                    'total_amount', 'sold_amount'
+                    'id', 'name', 'description', 'total_amount', 'sold_amount'
                 ])->merge([
+                    'price' => currency_format($product->price),
+                    'old_price' => currency_format($product->old_price),
                     'photo' => new MediaCompactResource($product->photo),
                     'product_category' => new ProductCategoryResource(
                         $product->product_category
@@ -124,10 +125,11 @@ class ProviderVoucherResource extends Resource
         ])->merge([
             'type' => 'product',
             'product' => collect($voucher->product)->only([
-                'id', 'name', 'description', 'price', 'old_price',
-                'total_amount', 'sold_amount', 'product_category_id',
-                'organization_id'
+                'id', 'name', 'description', 'total_amount', 'sold_amount',
+                'product_category_id', 'organization_id'
             ])->merge([
+                'price' => currency_format($voucher->product->price),
+                'old_price' => currency_format($voucher->product->old_price),
                 'photo' => new MediaResource(
                     $voucher->product->photo
                 ),
