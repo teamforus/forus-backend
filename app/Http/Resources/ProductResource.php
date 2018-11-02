@@ -24,10 +24,11 @@ class ProductResource extends Resource
         )->get();
 
         return collect($product)->only([
-            'id', 'name', 'description', 'price', 'old_price',
-            'total_amount', 'product_category_id', 'organization_id',
-            'sold_out',
+            'id', 'name', 'description', 'total_amount', 'product_category_id',
+            'organization_id', 'sold_out',
         ])->merge([
+            'price' => currency_format($product->price),
+            'old_price' => currency_format($product->old_price),
             'expire_at' => $product->expire_at->format('Y-m-d'),
             'expired' => $product->expired,
             'funds' => $funds->map(function($fund) {

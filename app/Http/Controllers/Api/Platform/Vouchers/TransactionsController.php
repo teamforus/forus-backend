@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransaction
 use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
 
@@ -14,27 +15,31 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Voucher $voucher
+     * @param VoucherToken $voucherToken
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
-        Voucher $voucher
+        VoucherToken $voucherToken
     ) {
-        return VoucherTransactionResource::collection($voucher->transactions);
+        return VoucherTransactionResource::collection(
+            $voucherToken->voucher->transactions
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param StoreVoucherTransactionRequest $request
-     * @param Voucher $voucher
+     * @param VoucherToken $voucherToken
      * @return VoucherTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         StoreVoucherTransactionRequest $request,
-        Voucher $voucher
+        VoucherToken $voucherToken
     ) {
+        $voucher = $voucherToken->voucher;
+
         $this->authorize('useAsProvider', $voucher);
 
         /** @var Product|null $product */
@@ -105,14 +110,16 @@ class TransactionsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Voucher $voucher
+     * @param VoucherToken $voucherToken
      * @param VoucherTransaction $voucherTransaction
      * @return VoucherTransactionResource
      */
     public function show(
-        Voucher $voucher,
+        VoucherToken $voucherToken,
         VoucherTransaction $voucherTransaction
     ) {
+        $voucher = $voucherToken->voucher;
+
         if ($voucherTransaction->voucher_id != $voucher->id) {
             abort(404);
         }

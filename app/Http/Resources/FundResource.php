@@ -43,9 +43,9 @@ class FundResource extends Resource
                 $this->resource->criteria
             ),
             'budget' => [
-                'total' => $fund->budget_total,
-                'validated' => $fund->budget_validated,
-                'used' => $fund->budget_used
+                'total' => currency_format($fund->budget_total),
+                'validated' => currency_format($fund->budget_validated),
+                'used' => currency_format($fund->budget_used)
             ]
         ])->toArray();
     }

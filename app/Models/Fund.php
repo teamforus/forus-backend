@@ -146,9 +146,9 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetTotalAttribute() {
-        return $this->top_ups()->where([
+        return round($this->top_ups()->where([
             'state' => 'confirmed'
-        ])->sum('amount');
+        ])->sum('amount'), 2);
     }
 
     /**
@@ -162,7 +162,7 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetUsedAttribute() {
-        return number_format($this->voucher_transactions->sum('amount'), 2);
+        return round($this->voucher_transactions->sum('amount'), 2);
     }
 
     /**
@@ -332,7 +332,7 @@ class Fund extends Model
     public static function configuredFunds () {
         try {
             return static::query()->whereIn('id', collect(json_decode(
-                env('FUNDS_MAPPING')
+                stripslashes(env('FUNDS_MAPPING'))
             ))->pluck('fund_id')->toArray())->get();
         } catch (\Exception $exception) {
             return collect();

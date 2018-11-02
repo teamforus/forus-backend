@@ -9,7 +9,6 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class VouchersController extends Controller
@@ -28,11 +27,9 @@ class VouchersController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(Request $request)
-    {
+    public function index() {
         return VoucherResource::collection(Voucher::getModel()->where([
             'identity_address' => auth()->user()->getAuthIdentifier()
         ])->get());
@@ -45,8 +42,9 @@ class VouchersController extends Controller
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(StoreProductVoucherRequest $request)
-    {
+    public function store(
+        StoreProductVoucherRequest $request
+    ) {
         $this->authorize('store', Voucher::class);
 
         /** @var Product $product */
@@ -80,26 +78,33 @@ class VouchersController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Voucher $voucher
+     * @param VoucherToken $voucherToken
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Voucher $voucher)
-    {
+    public function show(
+        VoucherToken $voucherToken
+    ) {
+        $voucher = $voucherToken->voucher;
+
         $this->authorize('show', $voucher);
 
         return new VoucherResource($voucher);
     }
 
     /**
-     * @param Voucher $voucher
+     * @param VoucherToken $voucherToken
      * @return ProviderVoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function provider(
-        Voucher $voucher
+        VoucherToken $voucherToken
     ) {
+        $voucher = $voucherToken->voucher;
+
         $this->authorize('useAsProvider', $voucher);
+
+        $voucher->setAttribute('address', $voucherToken->address);
 
         return new ProviderVoucherResource($voucher);
     }
@@ -107,11 +112,13 @@ class VouchersController extends Controller
     /**
      * Send target voucher to user email.
      *
-     * @param Voucher $voucher
+     * @param VoucherToken $voucherToken
      */
     public function sendEmail(
-        Voucher $voucher
+        VoucherToken $voucherToken
     ) {
+        $voucher = $voucherToken->voucher;
+
         /** @var VoucherToken $voucherToken */
         $voucherToken = $voucher->tokens()->where([
             'need_confirmation' => false
