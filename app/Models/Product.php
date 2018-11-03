@@ -103,28 +103,6 @@ class Product extends Model
     }
 
     /**
-     * Get the product's price.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    public function getPriceAttribute($value)
-    {
-        return round($value, 2);
-    }
-
-    /**
-     * Get the product's old price.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    public function getOldPriceAttribute($value)
-    {
-        return round($value, 2);
-    }
-
-    /**
      * The product is offer
      *
      * @return bool

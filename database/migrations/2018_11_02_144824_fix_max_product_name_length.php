@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateMailJobsTable extends Migration
+class FixMaxProductNameLength extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,8 @@ class CreateMailJobsTable extends Migration
      */
     public function up()
     {
-        Schema::create('mail_jobs', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->longText('payload');
-            $table->text('state');
-            $table->timestamps();
+        Schema::table('products', function (Blueprint $table) {
+            $table->string('name',255)->change();
         });
     }
 
@@ -28,6 +25,8 @@ class CreateMailJobsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('mail_jobs');
+        Schema::table('products', function (Blueprint $table) {
+            $table->string('name',20)->change();
+        });
     }
 }

@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 
 class IdentityController extends Controller
 {
-    protected $mailerService;
     protected $identityRepo;
     protected $recordRepo;
 
@@ -21,7 +20,6 @@ class IdentityController extends Controller
     protected $mailService;
 
     public function __construct() {
-        $this->mailerService = app()->make('forus.services.mailer');
         $this->identityRepo = app()->make('forus.services.identity');
         $this->recordRepo = app()->make('forus.services.record');
 

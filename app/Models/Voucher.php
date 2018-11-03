@@ -81,9 +81,9 @@ class Voucher extends Model
     }
 
     public function getAmountAvailableAttribute() {
-        return $this->amount -
+        return round($this->amount -
             $this->transactions->sum('amount') -
-            $this->product_vouchers()->sum('amount');
+            $this->product_vouchers()->sum('amount'), 2);
     }
 
     /**

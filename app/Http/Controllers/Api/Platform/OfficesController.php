@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Resources\OfficeResource;
 use App\Http\Controllers\Controller;
 use App\Models\Office;
+use Illuminate\Database\Query\Builder;
 
 class OfficesController extends Controller
 {
@@ -15,7 +16,16 @@ class OfficesController extends Controller
      */
     public function index()
     {
-        return OfficeResource::collection(Office::all());
+        return OfficeResource::collection(Office::query()->whereIn(
+            'organization_id',
+            function (Builder $query) {
+                $query->from('fund_providers')->select([
+                    'organization_id'
+                ])->where([
+                    'state' => 'approved'
+                ]);
+            }
+        )->get());
     }
 
     /**
