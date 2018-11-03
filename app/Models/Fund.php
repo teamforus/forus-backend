@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property float $budget_validated
  * @property float $budget_used
  * @property Media $logo
+ * @property FundConfig $fund_config
  * @property Collection $metas
  * @property Collection $products
  * @property Collection $product_categories
@@ -190,78 +191,39 @@ class Fund extends Model
     }
 
     /**
-     * @return mixed|null
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    private function getFundConfig() {
-        try {
-            $cfg = collect(json_decode(stripslashes(env('FUNDS_MAPPING'))))->where(
-                'fund_id', '=', $this->id
-            )->first();
-
-            return is_object($cfg) ? $cfg : null;
-        } catch (\Exception $e) {
-            return null;
-        }
+    public function fund_config() {
+        return $this->hasOne(FundConfig::class);
     }
 
     /**
-     * @return mixed|null
-     */
-    public function hasFundConfig() {
-        try {
-            return is_object($this->getFundConfig());
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
-    /**
-     * @return mixed|null
-     */
-    public function getFundKey() {
-        try {
-            $cfg = $this->getFundConfig();
-            return object_get($cfg, 'key');
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
-    /**
-     * @return mixed|null
+     * @return array|null
      */
     public function getBunqKey() {
-        try {
-            $cfg = $this->getFundConfig();
-
-            $allowed_ip = collect(
-                explode(',', object_get($cfg, 'bunq.allowed_ip', ''))
-            )->filter()->toArray();
-
-            return [
-                "key" => object_get($cfg, 'bunq.key', false),
-                "sandbox" => object_get($cfg, 'bunq.sandbox', false),
-                "allowed_ip" => $allowed_ip,
-            ];
-        } catch (\Exception $e) {
+        if (!$this->fund_config) {
             return null;
         }
+
+        return [
+            "key" => $this->fund_config->bunq_key,
+            "sandbox" => $this->fund_config->bunq_sandbox,
+            "allowed_ip" => $this->fund_config->bunq_allowed_ip,
+        ];
     }
 
     /**
-     * @return mixed|null
+     * @return array|null
      */
     public function getFundFormula() {
-        try {
-            $cfg = $this->getFundConfig();
-
-            return [
-                "amount" => object_get($cfg, 'formula.amount', false),
-                "multiplier" => object_get($cfg, 'formula.multiplier', false),
-            ];
-        } catch (\Exception $e) {
+        if (!$this->fund_config) {
             return null;
         }
+
+        return [
+            "amount" => $this->fund_config->formula_amount,
+            "multiplier" => $this->fund_config->formula_multiplier,
+        ];
     }
 
     public static function getTrustedRecordOfType(
@@ -331,9 +293,7 @@ class Fund extends Model
 
     public static function configuredFunds () {
         try {
-            return static::query()->whereIn('id', collect(json_decode(
-                stripslashes(env('FUNDS_MAPPING'))
-            ))->pluck('fund_id')->toArray())->get();
+            return static::query()->whereHas('fund_config')->get();
         } catch (\Exception $exception) {
             return collect();
         }

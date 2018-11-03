@@ -188,7 +188,6 @@ return [
          * Forus Service Providers
          */
 
-        App\Services\Forus\Mailer\MailerServiceProvider::class,
         App\Services\Forus\Identity\IdentityServiceProvider::class,
         App\Services\Forus\Record\RecordServiceProvider::class,
 
