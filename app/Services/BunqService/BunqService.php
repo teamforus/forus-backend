@@ -243,20 +243,20 @@ class BunqService
     }
 
     /**
-     * @param $amount
-     * @param $iban
-     * @param $name
+     * @param string $amount
+     * @param string $iban
+     * @param string $name
      * @param string $description
      * @return int
      */
     public function makePayment(
-        float $amount,
+        string $amount,
         string $iban,
         string $name,
         string $description = ""
     ) {
         return Payment::create(
-            new Amount($amount, 'EUR'),
+            new Amount(number_format($amount, 2, '.', ''), 'EUR'),
             new Pointer('IBAN', $iban, $name),
             $description
         )->getValue();
