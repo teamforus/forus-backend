@@ -23,12 +23,12 @@ class OrganizationResource extends Resource
 
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = collect($organization)->only([
-                'iban', 'kvk', 'btw'
+                'iban', 'btw'
             ])->toArray();
         }
 
         return collect($organization)->only([
-            'id', 'identity_address', 'name', 'email', 'phone'
+            'id', 'identity_address', 'name', 'email', 'phone', 'kvk'
         ])->merge([
             'logo' => new MediaResource($organization->logo),
             'product_categories' => ProductCategoryResource::collection(
