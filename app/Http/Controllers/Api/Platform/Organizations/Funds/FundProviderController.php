@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
-use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundProviderRequest;
 use App\Http\Resources\FundProviderResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Fund;
@@ -31,8 +31,8 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
+        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('indexSponsor', [FundProvider::class, $organization, $fund]);
 
         $state = $request->input('state', false);
         $organization_funds = $fund->providers();
@@ -60,9 +60,9 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
-        $this->authorize('show', $organizationFund);
+        $this->authorize('update', $organization);
+        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('showSponsor', [FundProvider::class, $organization, $fund]);
 
         return new FundProviderResource($organizationFund);
     }
@@ -83,13 +83,11 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $state = $request->input('state');
-
         $this->authorize('update', $organization);
-        $this->authorize('update', $fund);
-        $this->authorize('update', [
-            $organizationFund, $request->input('state')
-        ]);
+        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('updateSponsor', [$organizationFund, $organization, $fund]);
+
+        $state = $request->input('state');
 
         $organizationFund->update(compact('state'));
 
@@ -126,11 +124,9 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
-        $this->authorize('show', [
-            $organizationFund, $request->input('state')
-        ]);
+        $this->authorize('update', $organization);
+        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('updateSponsor', [$organizationFund, $organization, $fund]);
 
         $dates = collect();
 
@@ -256,7 +252,6 @@ class FundProviderController extends Controller
     }
 
     /**
-     * @param Request $request
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $organizationFund
@@ -264,16 +259,13 @@ class FundProviderController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function transactions(
-        Request $request,
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
-        $this->authorize('show', [
-            $organizationFund, $request->input('state')
-        ]);
+        $this->authorize('show', [$fund, $organization]);
+        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
 
         return SponsorVoucherTransactionResource::collection($fund->voucher_transactions()->where([
             'organization_id' => $organizationFund->organization_id
@@ -281,7 +273,6 @@ class FundProviderController extends Controller
     }
 
     /**
-     * @param Request $request
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $organizationFund
@@ -290,19 +281,15 @@ class FundProviderController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function transaction(
-        Request $request,
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund,
         VoucherTransaction $transaction
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
-        $this->authorize('show', [
-            $organizationFund, $request->input('state')
-        ]);
-
-        // $this->authorize('show', $transaction);
+        $this->authorize('show', [$fund, $organization]);
+        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
+        $this->authorize('showSponsor', [$transaction, $organization, $fund]);
 
         return new SponsorVoucherTransactionResource($transaction);
     }

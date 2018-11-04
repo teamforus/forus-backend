@@ -14,10 +14,14 @@ class TransactionsController extends Controller
      *
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         Organization $organization
     ) {
+        $this->authorize('update', $organization);
+        $this->authorize('indexProvider', [VoucherTransaction::class, $organization]);
+
         return ProviderVoucherTransactionResource::collection(
             $organization->voucher_transactions
         );
@@ -34,7 +38,7 @@ class TransactionsController extends Controller
         VoucherTransaction $voucherTransaction
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('showProvider', $voucherTransaction);
+        $this->authorize('showProvider', [$voucherTransaction, $organization]);
 
         return new ProviderVoucherTransactionResource($voucherTransaction);
     }

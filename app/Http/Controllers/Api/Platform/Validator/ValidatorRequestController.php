@@ -21,7 +21,7 @@ class ValidatorRequestController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource.$organization
      *
      * @param Request $request
      * @return mixed

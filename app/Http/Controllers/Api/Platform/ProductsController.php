@@ -11,12 +11,15 @@ use App\Http\Controllers\Controller;
 class ProductsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index()
     {
+        $this->authorize('indexPublic', Product::class);
+
         $organizationIds = FundProvider::query()->whereIn(
             'fund_id', Fund::configuredFunds()->pluck('id')
         )->where('state', 'approved')->pluck('organization_id');
@@ -29,13 +32,14 @@ class ProductsController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
      * @param Product $product
      * @return ProductResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(Product $product)
     {
+        $this->authorize('showPublic', $product);
+
         return new ProductResource($product);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Fund;
 use Carbon\Carbon;
+use Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
 class FundResource extends Resource
@@ -18,6 +19,19 @@ class FundResource extends Resource
     {
         /** @var Fund $fund */
         $fund = $this->resource;
+
+        $ownerData = [];
+
+        if (Gate::allows('funds.update', $fund)) {
+            $ownerData['budget'] = [
+                'total' => currency_format($fund->budget_total),
+                'validated' => currency_format($fund->budget_validated),
+                'used' => currency_format($fund->budget_used)
+            ];
+
+            $ownerData['providers_count'] = $fund->provider_organizations_approved()->count();
+            $ownerData['validators_count'] = $this->resource->organization->validators->count();
+        }
 
         return collect($this->resource)->only([
             'id', 'name', 'organization_id',
@@ -36,17 +50,16 @@ class FundResource extends Resource
             'product_categories' => ProductCategoryResource::collection(
                 $this->resource->product_categories
             ),
-            'validators' => ValidatorResource::collection(
-                $this->resource->organization->validators
-            ),
             'criteria' => FundCriterionResource::collection(
                 $this->resource->criteria
             ),
-            'budget' => [
-                'total' => currency_format($fund->budget_total),
-                'validated' => currency_format($fund->budget_validated),
-                'used' => currency_format($fund->budget_used)
-            ]
-        ])->toArray();
+            'validators' => collect(
+                $this->resource->organization->validators
+            )->map(function($validator) {
+                return collect($validator)->only([
+                    'identity_address'
+                ]);
+            })
+        ])->merge($ownerData)->toArray();
     }
 }

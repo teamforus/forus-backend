@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\ValidatorRequest\StoreValidatorRequestRequest;
 use App\Http\Resources\ValidatorRequestResource;
-use App\Models\Validator;
 use App\Models\ValidatorRequest;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class ValidatorRequestController extends Controller
@@ -14,11 +12,10 @@ class ValidatorRequestController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(Request $request)
+    public function index()
     {
         $this->authorize('index', ValidatorRequest::class);
 
@@ -36,8 +33,9 @@ class ValidatorRequestController extends Controller
      * @return ValidatorRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(StoreValidatorRequestRequest $request)
-    {
+    public function store(
+        StoreValidatorRequestRequest $request
+    ) {
         $this->authorize('request', ValidatorRequest::class);
 
         $validatorRequest = ValidatorRequest::create([
@@ -62,8 +60,9 @@ class ValidatorRequestController extends Controller
      * @return ValidatorRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(ValidatorRequest $validatorRequest)
-    {
+    public function show(
+        ValidatorRequest $validatorRequest
+    ) {
         $this->authorize('show', $validatorRequest);
 
         return new ValidatorRequestResource($validatorRequest);

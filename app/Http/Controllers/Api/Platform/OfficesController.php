@@ -10,7 +10,7 @@ use Illuminate\Database\Query\Builder;
 class OfficesController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of all available offices.
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */

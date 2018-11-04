@@ -74,13 +74,10 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        Request $request
-    ) {
+    public function index() {
         $this->authorize('index', Prevalidation::class);
 
         $prevalidations = Prevalidation::getModel()->where(
@@ -107,13 +104,11 @@ class PrevalidationController extends Controller
     /**
      * Redeem prevalidation.
      *
-     * @param Request $request
      * @param Prevalidation $prevalidation
      * @return PrevalidationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function redeem(
-        Request $request,
         Prevalidation $prevalidation
     ) {
         $this->authorize('redeem', $prevalidation);

@@ -17,10 +17,14 @@ class TransactionsController extends Controller
      *
      * @param VoucherToken $voucherToken
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         VoucherToken $voucherToken
     ) {
+        $this->authorize('show', $voucherToken->voucher);
+        $this->authorize('index', [VoucherTransaction::class, $voucherToken]);
+
         return VoucherTransactionResource::collection(
             $voucherToken->voucher->transactions
         );
@@ -113,11 +117,14 @@ class TransactionsController extends Controller
      * @param VoucherToken $voucherToken
      * @param VoucherTransaction $voucherTransaction
      * @return VoucherTransactionResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         VoucherToken $voucherToken,
         VoucherTransaction $voucherTransaction
     ) {
+        $this->authorize('show', [VoucherTransaction::class, $voucherToken]);
+
         $voucher = $voucherToken->voucher;
 
         if ($voucherTransaction->voucher_id != $voucher->id) {

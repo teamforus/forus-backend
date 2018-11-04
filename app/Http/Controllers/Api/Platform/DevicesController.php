@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Requests\Api\Platform\RegisterDevicePushRequest;
 use App\Http\Controllers\Controller;
 
+/**
+ * Class DevicesController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class DevicesController extends Controller
 {
     /**
-     * RegisterDevicePushRequest
+     * Register identity push notification token
      *
      * @param RegisterDevicePushRequest $request
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response

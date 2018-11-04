@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Organization;
+use Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
 class OrganizationResource extends Resource
@@ -14,14 +16,24 @@ class OrganizationResource extends Resource
      */
     public function toArray($request)
     {
-        return collect($this->resource)->only([
-            'id', 'identity_address', 'name', 'iban', 'email', 'phone',
-            'kvk', 'btw'
+        /** @var Organization $organization */
+        $organization = $this->resource;
+
+        $ownerData = [];
+
+        if (Gate::allows('organizations.update', $organization)) {
+            $ownerData = collect($organization)->only([
+                'iban', 'kvk', 'btw'
+            ])->toArray();
+        }
+
+        return collect($organization)->only([
+            'id', 'identity_address', 'name', 'email', 'phone'
         ])->merge([
-            'logo' => new MediaResource($this->resource->logo),
+            'logo' => new MediaResource($organization->logo),
             'product_categories' => ProductCategoryResource::collection(
-                $this->resource->product_categories
+                $organization->product_categories
             )
-        ])->toArray();
+        ])->merge($ownerData)->toArray();
     }
 }
