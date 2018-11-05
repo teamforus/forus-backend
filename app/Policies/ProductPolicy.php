@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Organization;
 use App\Models\Product;
-use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductPolicy
@@ -23,38 +22,85 @@ class ProductPolicy
 
     /**
      * @param $identity_address
-     * @return mixed
+     * @param Organization|null $organization
+     * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index($identity_address) {
-        return !empty($identity_address);
+    public function index(
+        $identity_address,
+        Organization $organization = null
+    ) {
+        return $this->store($identity_address, $organization);
     }
 
     /**
-     * @param $identity_address
-     * @return mixed
-     */
-    public function show($identity_address) {
-        return !empty($identity_address);
-    }
-
-    /**
-     * @param $identity_address
      * @return bool
      */
-    public function store($identity_address) {
+    public function indexPublic() {
+        return true;
+    }
+
+    /**
+     * @param $identity_address
+     * @param Organization|null $organization
+     * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function store(
+        $identity_address,
+        Organization $organization = null
+    ) {
+        if ($organization) {
+            authorize('update', $organization);
+        }
+
         return !empty($identity_address);
     }
 
     /**
      * @param $identity_address
      * @param Product $product
+     * @param Organization|null $organization
+     * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function show(
+        $identity_address,
+        Product $product,
+        Organization $organization = null
+    ) {
+        return $this->update($identity_address, $product, $organization);
+    }
+
+    /**
      * @return bool
      */
-    public function update($identity_address, Product $product) {
+    public function showPublic() {
+        return true;
+    }
+
+    /**
+     * @param $identity_address
+     * @param Product $product
+     * @param Organization|null $organization
+     * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function update(
+        $identity_address,
+        Product $product,
+        Organization $organization = null
+    ) {
+        if ($organization) {
+            authorize('update', $organization);
+
+            if ($product->organization_id != $organization->id) {
+                return false;
+            }
+        }
+
         return strcmp(
-            $product->organization->identity_address,
-            $identity_address
-            ) == 0;
+                $product->organization->identity_address, $identity_address) == 0;
     }
 
     /**
@@ -65,27 +111,25 @@ class ProductPolicy
      * @param Product $product
      * @return bool
      */
-    public function reserve($identity_address, Product $product) {
-        return !$product->expired && !$product->sold_out;
+    public function reserve(
+        $identity_address,
+        Product $product
+    ) {
+        return !empty($identity_address) && !$product->expired && !$product->sold_out;
     }
 
     /**
-     *  Delete product policy
-     *
      * @param $identity_address
      * @param Product $product
+     * @param Organization|null $organization
      * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function destroy($identity_address, Product $product) {
-        // Provider should be able to delete only expired or sold out products
-        if (!$product->expired && !$product->sold_out) {
-            return false;
-        }
-
-        // Only product organization owner should be able to delete products
-        return strcmp(
-            $product->organization->identity_address,
-            $identity_address
-        ) == 0;
+    public function destroy(
+        $identity_address,
+        Product $product,
+        Organization $organization = null
+    ) {
+        return $this->update($identity_address, $product, $organization);
     }
 }

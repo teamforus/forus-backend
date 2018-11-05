@@ -13,23 +13,13 @@ use App\Http\Controllers\Controller;
 
 class VouchersController extends Controller
 {
-    protected $identityRepo;
-    protected $recordRepo;
-
     /**
-     * VouchersController constructor.
-     */
-    public function __construct() {
-        $this->identityRepo = app()->make('forus.services.identity');
-        $this->recordRepo = app()->make('forus.services.record');
-    }
-
-    /**
-     * Display a listing of the resource.
-     *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index() {
+        $this->authorize('index', Voucher::class);
+
         return VoucherResource::collection(Voucher::getModel()->where([
             'identity_address' => auth()->user()->getAuthIdentifier()
         ])->get());
@@ -85,11 +75,9 @@ class VouchersController extends Controller
     public function show(
         VoucherToken $voucherToken
     ) {
-        $voucher = $voucherToken->voucher;
+        $this->authorize('show', $voucherToken->voucher);
 
-        $this->authorize('show', $voucher);
-
-        return new VoucherResource($voucher);
+        return new VoucherResource($voucherToken->voucher);
     }
 
     /**
@@ -100,34 +88,33 @@ class VouchersController extends Controller
     public function provider(
         VoucherToken $voucherToken
     ) {
-        $voucher = $voucherToken->voucher;
+        $this->authorize('useAsProvider', $voucherToken->voucher);
 
-        $this->authorize('useAsProvider', $voucher);
+        $voucherToken->voucher->setAttribute('address', $voucherToken->address);
 
-        $voucher->setAttribute('address', $voucherToken->address);
-
-        return new ProviderVoucherResource($voucher);
+        return new ProviderVoucherResource($voucherToken->voucher);
     }
 
     /**
      * Send target voucher to user email.
      *
      * @param VoucherToken $voucherToken
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function sendEmail(
         VoucherToken $voucherToken
     ) {
-        $voucher = $voucherToken->voucher;
+        $this->authorize('show', $voucherToken->voucher);
 
         /** @var VoucherToken $voucherToken */
-        $voucherToken = $voucher->tokens()->where([
+        $voucherToken = $voucherToken->voucher->tokens()->where([
             'need_confirmation' => false
         ])->first();
 
-        if ($voucher->type == 'product') {
-            $fund_product_name = $voucher->product->name;
+        if ($voucherToken->voucher->type == 'product') {
+            $fund_product_name = $voucherToken->voucher->product->name;
         } else {
-            $fund_product_name = $voucher->fund->name;
+            $fund_product_name = $voucherToken->voucher->fund->name;
         }
 
         resolve('forus.services.mail_notification')->sendVoucher(

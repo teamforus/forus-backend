@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Validator;
 use Illuminate\Http\Resources\Json\Resource;
 
 class ValidatorResource extends Resource
@@ -16,16 +17,17 @@ class ValidatorResource extends Resource
     {
         $recordRepo = app()->make('forus.services.record');
 
-        return collect($this->resource)->only([
+        /** @var Validator $validator */
+        $validator = $this->resource;
+
+        return collect($validator)->only([
             'id', 'identity_address', 'organization_id'
         ])->merge([
-            'email' => collect($recordRepo->recordsList(
-                $this->resource->identity_address
-            ))->filter(function($record) {
-                return $record['key']== 'primary_email';
-            })->first()['value'],
+            'email' => $recordRepo->primaryEmailByAddress(
+                $validator->identity_address
+            ),
             'organization' => new OrganizationResource(
-                $this->resource->organization
+                $validator->organization
             )
         ])->toArray();
     }

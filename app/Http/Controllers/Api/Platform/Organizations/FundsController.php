@@ -120,8 +120,8 @@ class FundsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
+        $this->authorize('update', $organization);
+        $this->authorize('update', [$fund, $organization]);
 
         return new FundResource($fund);
     }
@@ -141,7 +141,7 @@ class FundsController extends Controller
         Fund $fund
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('update', $fund);
+        $this->authorize('update', [$fund, $organization]);
 
         $media = false;
 
@@ -179,8 +179,8 @@ class FundsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
+        $this->authorize('update', $organization);
+        $this->authorize('showFinances', [$fund, $organization]);
 
         $dates = collect();
 

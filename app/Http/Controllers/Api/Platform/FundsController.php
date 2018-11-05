@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class FundsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of all active funds.
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
@@ -20,7 +20,7 @@ class FundsController extends Controller
     {
         return FundResource::collection(Fund::getModel()->where(
             'state', 'active'
-        )->get());
+        )->has('fund_config')->get());
     }
 
     /**
@@ -39,24 +39,15 @@ class FundsController extends Controller
     }
 
     /**
-     * @param Request $request
+     * Apply fund for identity
+     *
      * @param Fund $fund
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function apply(Request $request, Fund $fund) {
-        $identity = auth()->user()->getAuthIdentifier();
-
-        // The same identity can't apply twice to the same fund
-        if ($fund->vouchers()->where(
-            'identity_address', $identity
-        )->count() > 0) {
-            return response()->json([
-                'message' => e(trans('validation.fund.already_taken')),
-                'key' => 'already_taken'
-            ], 403);
-        }
-
+    public function apply(
+        Fund $fund
+    ) {
         $this->authorize('apply', $fund);
 
         $voucher = $fund->vouchers()->create([

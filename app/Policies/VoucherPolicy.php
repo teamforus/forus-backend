@@ -20,11 +20,35 @@ class VoucherPolicy
         //
     }
 
-    public function store(string $identity_address) {
+    /**
+     * @param string $identity_address
+     * @return bool
+     */
+    public function index(
+        string $identity_address
+    ) {
         return !empty($identity_address);
     }
 
-    public function show(string $identity_address, Voucher $voucher) {
+    /**
+     * @param string $identity_address
+     * @return bool
+     */
+    public function store(
+        string $identity_address
+    ) {
+        return !empty($identity_address);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function show(
+        string $identity_address,
+        Voucher $voucher
+    ) {
         return strcmp(
             $identity_address,
             $voucher->identity_address
@@ -38,7 +62,10 @@ class VoucherPolicy
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function useAsProvider(string $identity_address, Voucher $voucher) {
+    public function useAsProvider(
+        string $identity_address,
+        Voucher $voucher
+    ) {
         if ($voucher->type == 'regular') {
             $organizations = $voucher->fund->provider_organizations_approved;
 
