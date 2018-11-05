@@ -3,9 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\Vouchers\VoucherCreated;
-use App\Models\VoucherToken;
 use Illuminate\Events\Dispatcher;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class VoucherSubscriber
 {
@@ -23,6 +21,8 @@ class VoucherSubscriber
             'address'           => app()->make('token_generator')->address(),
             'need_confirmation' => false,
         ]);
+
+        $voucher->sendToEmail();
     }
 
     /**
