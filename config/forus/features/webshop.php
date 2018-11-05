@@ -23,7 +23,7 @@ return [
         "list"      => true,
 
         // view fund details
-        "show"      => false
+        "show"      => true
     ],
     // enable newsletter
     "newsletter"    => false,
