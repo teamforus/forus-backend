@@ -12,7 +12,7 @@ return [
                 'vouchers' =>
                     [
                         'regular' => true,
-                        'products' => true,
+                        'products' => false,
                     ],
                 'mustAcceptProducts' => false,
                 'allowPrevalidations' => true,
@@ -20,7 +20,7 @@ return [
             ],
         "products" => [
             // list all funds
-            "list"      => true
+            "list"      => false
         ],
     ],
 ];
