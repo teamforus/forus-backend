@@ -36,6 +36,8 @@ class VoucherResource extends Resource
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
             ])->merge([
+                'product_category' => $voucher->product->product_category,
+                'expire_at' => $voucher->product->expire_at->format('Y-m-d'),
                 'expire_at_locale' => format_date_locale($voucher->product->expire_at),
                 'photo' => new MediaResource(
                     $voucher->product->photo
@@ -78,6 +80,7 @@ class VoucherResource extends Resource
             'amount' => currency_format($amount),
             'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens()->where('need_confirmation', 0)->first()->address,
+            'expire_at' => $voucher->product ? $voucher->product->expire_at->format('Y-m-d') : null,
             'expire_at_locale' => $voucher->product ? format_date_locale($voucher->product->expire_at) : null,
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,

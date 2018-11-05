@@ -12,15 +12,12 @@ use Illuminate\Http\Request;
 class OrganizationsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of all identity organizations.
      *
-     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        Request $request
-    ) {
+    public function index() {
         $this->authorize('index', Organization::class);
 
         return OrganizationResource::collection(
@@ -32,7 +29,7 @@ class OrganizationsController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created identity organization in storage.
      *
      * @param StoreOrganizationRequest $request
      * @return OrganizationResource
@@ -99,7 +96,7 @@ class OrganizationsController extends Controller
     public function show(
         Organization $organization
     ) {
-        $this->authorize('show', Organization::class);
+        $this->authorize('show', $organization);
 
         return new OrganizationResource($organization);
     }

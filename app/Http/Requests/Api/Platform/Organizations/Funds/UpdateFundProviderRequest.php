@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Provider;
+namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,7 +24,7 @@ class UpdateFundProviderRequest extends FormRequest
     public function rules()
     {
         return [
-            'state' => 'required|in:abandoned'
+            'state' => 'required|in:pending,approved,declined'
         ];
     }
 }

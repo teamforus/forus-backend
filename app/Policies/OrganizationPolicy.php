@@ -29,10 +29,14 @@ class OrganizationPolicy
 
     /**
      * @param $identity_address
-     * @return mixed
+     * @param Organization $organization
+     * @return bool
      */
-    public function show($identity_address) {
-        return !empty($identity_address);
+    public function show(
+        $identity_address,
+        Organization $organization
+    ) {
+        return $this->update($identity_address, $organization);
     }
 
     /**

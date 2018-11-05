@@ -20,10 +20,14 @@ class FundProviderController extends Controller
      *
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function availableFunds(
         Organization $organization
     ) {
+        $this->authorize('update', $organization);
+        $this->authorize('indexProvider', [FundProvider::class, $organization]);
+
         $requestedFundsIds = $organization->organization_funds()->pluck(
             'fund_id'
         )->toArray();
@@ -53,11 +57,15 @@ class FundProviderController extends Controller
      * @param Request $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         Request $request,
         Organization $organization
     ) {
+        $this->authorize('update', $organization);
+        $this->authorize('indexProvider', [FundProvider::class, $organization]);
+
         $state = $request->input('state', false);
         $organization_funds = $organization->organization_funds();
 
@@ -83,7 +91,7 @@ class FundProviderController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('store', FundProvider::class);
+        $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
         /** @var FundProvider $fundProvider */
         $fundProvider = $organization->organization_funds()->firstOrCreate($request->only([
@@ -113,8 +121,8 @@ class FundProviderController extends Controller
         Organization $organization,
         FundProvider $organizationFund
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $organizationFund);
+        $this->authorize('update', $organization);
+        $this->authorize('showProvider', [$organizationFund, $organization]);
 
         return new FundProviderResource($organizationFund);
     }
@@ -134,9 +142,7 @@ class FundProviderController extends Controller
         FundProvider $organizationFund
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('update', [
-            $organizationFund, $request->input('state')
-        ]);
+        $this->authorize('updateProvider', [$organizationFund, $organization]);
 
         $organizationFund->update($request->only([
             'state'

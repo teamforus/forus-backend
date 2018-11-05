@@ -7,28 +7,29 @@ use App\Models\Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+/**
+ * Class ValidatorsController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class ValidatorsController extends Controller
 {
-    protected $identityRepo;
     protected $recordRepo;
 
     public function __construct() {
-        $this->identityRepo = app()->make('forus.services.identity');
         $this->recordRepo = app()->make('forus.services.record');
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(Request $request)
-    {
-        $identity = auth()->user()->getAuthIdentifier();
+    public function index() {
+        $this->authorize(Validator::class, 'index');
 
         $bsnValidations = collect($this->recordRepo->recordsList(
-            $identity
+            auth()->user()->getAuthIdentifier()
         ))->filter(function($record) {
             return !empty($record['validations']) && $record['key'] == 'bsn';
         })->pluck('validations.*.identity_address')->flatten();

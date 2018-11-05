@@ -17,11 +17,10 @@ use App\Policies\PrevalidationPolicy;
 use App\Policies\ProviderIdentityPolicy;
 use App\Policies\ValidatorPolicy;
 use App\Policies\OfficePolicy;
-use App\Policies\OrganizationFundPolicy;
+use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ValidatorRequestPolicy;
 use App\Policies\VoucherPolicy;
-use App\Policies\VoucherTransactionNotePolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
@@ -51,12 +50,11 @@ class AuthServiceProvider extends ServiceProvider
         Voucher::class                  => VoucherPolicy::class,
         Organization::class             => OrganizationPolicy::class,
         Validator::class                => ValidatorPolicy::class,
-        FundProvider::class             => OrganizationFundPolicy::class,
+        FundProvider::class             => FundProviderPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         ValidatorRequest::class         => ValidatorRequestPolicy::class,
         ProviderIdentity::class         => ProviderIdentityPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
-        VoucherTransactionNote::class   => VoucherTransactionNotePolicy::class,
     ];
 
     /**
@@ -77,6 +75,11 @@ class AuthServiceProvider extends ServiceProvider
         Auth::extend('header', function ($app, $name, array $config) {
             return new BearerTokenGuard(Auth::createUserProvider($config['provider']), app()->make('request'));
         });
+
+        \Gate::resource('funds', FundPolicy::class, [
+            'viewBudget' => 'viewBudget',
+            'update' => 'update',
+        ]);
     }
 
     public function register()

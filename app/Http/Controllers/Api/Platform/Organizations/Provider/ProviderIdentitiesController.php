@@ -20,6 +20,7 @@ class ProviderIdentitiesController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
+        $this->authorize('index', [ProviderIdentity::class, $organization]);
 
         return ProviderIdentityResource::collection(
             $organization->provider_identities
@@ -39,7 +40,7 @@ class ProviderIdentitiesController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('store', ProviderIdentity::class);
+        $this->authorize('store', [ProviderIdentity::class, $organization]);
 
         $identity_address = app()->make(
             'forus.services.record'
@@ -67,7 +68,7 @@ class ProviderIdentitiesController extends Controller
         ProviderIdentity $providerIdentity
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('show', $providerIdentity);
+        $this->authorize('show', [$providerIdentity, $organization]);
 
         return new ProviderIdentityResource($providerIdentity);
     }
@@ -87,7 +88,7 @@ class ProviderIdentitiesController extends Controller
         ProviderIdentity $providerIdentity
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('update', $providerIdentity);
+        $this->authorize('update', [$providerIdentity, $organization]);
 
         $identity_address = app()->make(
             'forus.services.record'
@@ -112,7 +113,7 @@ class ProviderIdentitiesController extends Controller
         ProviderIdentity $providerIdentity
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('destroy', $providerIdentity);
+        $this->authorize('destroy', [$providerIdentity, $organization]);
 
         $providerIdentity->delete();
     }
