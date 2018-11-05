@@ -106,21 +106,6 @@ class VouchersController extends Controller
     ) {
         $this->authorize('show', $voucherToken->voucher);
 
-        /** @var VoucherToken $voucherToken */
-        $voucherToken = $voucherToken->voucher->tokens()->where([
-            'need_confirmation' => false
-        ])->first();
-
-        if ($voucherToken->voucher->type == 'product') {
-            $fund_product_name = $voucherToken->voucher->product->name;
-        } else {
-            $fund_product_name = $voucherToken->voucher->fund->name;
-        }
-
-        resolve('forus.services.mail_notification')->sendVoucher(
-            auth()->user()->getAuthIdentifier(),
-            $fund_product_name,
-            $voucherToken->getQrCodeUrl()
-        );
+        $voucherToken->voucher->sendToEmail();
     }
 }
