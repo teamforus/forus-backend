@@ -30,12 +30,16 @@ class MailService
      * Get endpoint url
      *
      * @param string $uri
+     * @param string|null $locale
      * @return string
      */
     private function getEndpoint(
-        string $uri
+        string $uri,
+        string $locale = null
     ) {
-        $locale = config('app.locale', 'en');
+        if (!$locale) {
+            $locale = config('app.locale', 'en');
+        }
 
         return $this->serviceApiUrl . '/' . $locale . $uri;
     }
@@ -66,7 +70,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/user/connections/add/');
+        $endpoint = $this->getEndpoint('/user/connections/add/', 'en');
 
         $res = $this->apiRequest->post($endpoint, [
             'user_id'   => $identifier,
