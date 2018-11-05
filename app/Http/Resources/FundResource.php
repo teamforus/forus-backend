@@ -37,6 +37,7 @@ class FundResource extends Resource
             'id', 'name', 'organization_id',
             'state'
         ])->merge([
+            'key' => $fund->fund_config ? $fund->fund_config->key : '',
             'logo' => new MediaResource($this->resource->logo),
             'start_date' => (new Carbon(
                 $this->resource->start_date

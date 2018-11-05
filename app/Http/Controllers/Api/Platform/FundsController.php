@@ -20,7 +20,7 @@ class FundsController extends Controller
     {
         return FundResource::collection(Fund::getModel()->where(
             'state', 'active'
-        )->get());
+        )->has('fund_config')->get());
     }
 
     /**

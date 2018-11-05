@@ -18,5 +18,9 @@ return [
                 'allowPrevalidations' => true,
                 'allowValidationRequests' => false,
             ],
+        "products" => [
+            // list all funds
+            "list"      => true
+        ],
     ],
 ];

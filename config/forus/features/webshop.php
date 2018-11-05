@@ -18,6 +18,13 @@ return [
         // view fund details
         "show"      => false
     ],
+    "products" => [
+        // list all funds
+        "list"      => false,
+
+        // view fund details
+        "show"      => false
+    ],
     // enable newsletter
     "newsletter"    => false,
 
