@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class VoucherTransaction
@@ -13,9 +13,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $product_id
  * @property string $address
  * @property float $amount
- * @property Fund $fund
+ * @property integer $attempts
+ * @property integer $payment_id
+ * @property string $state
  * @property Product $product
+ * @property Voucher $voucher
  * @property Organization $organization
+ * @property Collection $notes
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -28,7 +32,12 @@ class VoucherTransaction extends Model
      * @var array
      */
     protected $fillable = [
-        'voucher_id', 'organization_id', 'product_id', 'address', 'amount'
+        'voucher_id', 'organization_id', 'product_id', 'address', 'amount',
+        'state', 'payment_id', 'attempts', 'last_attempt_at'
+    ];
+
+    protected $hidden = [
+        'voucher_id', 'last_attempt_at', 'attempts', 'notes'
     ];
 
     /**
@@ -43,5 +52,29 @@ class VoucherTransaction extends Model
      */
     public function organization() {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function voucher() {
+        return $this->belongsTo(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notes() {
+        return $this->hasMany(VoucherTransactionNote::class);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTransactionDetailsAttribute()
+    {
+        return collect($this->voucher->fund->getBunq()->paymentDetails(
+            $this->payment_id
+        ));
     }
 }

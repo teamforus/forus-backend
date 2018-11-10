@@ -32,7 +32,10 @@ class ValidatorRequestPolicy
      * @param ValidatorRequest $validatorRequest
      * @return bool
      */
-    public function show($identity_address, ValidatorRequest $validatorRequest) {
+    public function show(
+        $identity_address,
+        ValidatorRequest $validatorRequest
+    ) {
         return $validatorRequest->identity_address == $identity_address ||
             $validatorRequest->validator->identity_address == $identity_address;
     }
@@ -57,7 +60,10 @@ class ValidatorRequestPolicy
      * @param ValidatorRequest $validatorRequest
      * @return bool
      */
-    public function validate($identity_address, ValidatorRequest $validatorRequest) {
+    public function validate(
+        $identity_address,
+        ValidatorRequest $validatorRequest
+    ) {
         return (strcmp(
                 $validatorRequest->validator->identity_address,
                 $identity_address
@@ -69,7 +75,10 @@ class ValidatorRequestPolicy
      * @param ValidatorRequest $validatorRequest
      * @return bool
      */
-    public function destroy($identity_address, ValidatorRequest $validatorRequest) {
+    public function destroy(
+        $identity_address,
+        ValidatorRequest $validatorRequest
+    ) {
         return strcmp(
                 $validatorRequest->identity_address,
                 $identity_address

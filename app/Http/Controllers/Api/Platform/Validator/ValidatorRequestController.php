@@ -21,7 +21,7 @@ class ValidatorRequestController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource.$organization
      *
      * @param Request $request
      * @return mixed
@@ -34,7 +34,7 @@ class ValidatorRequestController extends Controller
 
         $validatorIds = Validator::getModel()->where(
             'identity_address',
-            $request->get('identity')
+            auth()->user()->getAuthIdentifier()
         )->pluck('id');
 
         $validatorRequest = ValidatorRequest::getModel()->whereIn(
@@ -87,12 +87,12 @@ class ValidatorRequestController extends Controller
 
             if ($state == 'approved') {
                 $this->recordRepo->approveValidationRequest(
-                    $request->get('identity'),
+                    auth()->user()->getAuthIdentifier(),
                     $validationRequest['uuid']
                 );
             } else {
                 $this->recordRepo->approveValidationRequest(
-                    $request->get('identity'),
+                    auth()->user()->getAuthIdentifier(),
                     $validationRequest['uuid']
                 );
             }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Office;
 use Illuminate\Http\Resources\Json\Resource;
 
 class OfficeResource extends Resource
@@ -14,21 +15,29 @@ class OfficeResource extends Resource
      */
     public function toArray($request)
     {
-        return collect($this->resource)->only([
+        /** @var Office $office */
+        $office = $this->resource;
+
+        $organization = $office->organization;
+        $product_categories = $organization->product_categories;
+
+        return collect($office)->only([
             'id', 'organization_id', 'address', 'phone', 'email',
             'lon', 'lat'
         ])->merge([
-            'photo' => new MediaResource($this->resource->photo),
-            'organization' => collect($this->resource->organization)->only([
+            'photo' => new MediaResource($office->photo),
+            'organization' => collect($organization)->only([
                 'name', 'email', 'phone'
             ])->merge([
-                'categories' => $this->resource->organization->product_categories->pluck('name')->implode(', '),
+                'categories' => $product_categories->pluck(
+                    'name'
+                )->implode(', '),
                 'product_categories' => ProductCategoryResource::collection(
-                    $this->resource->organization->product_categories
+                    $product_categories
                 ),
             ]),
             'schedule' => OfficeScheduleResource::collection(
-                $this->resource->schedules
+                $office->schedules
             )
         ])->toArray();
     }

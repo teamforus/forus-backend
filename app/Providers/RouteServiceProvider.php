@@ -5,7 +5,7 @@ namespace App\Providers;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\ProviderIdentity;
-use App\Models\Voucher;
+use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Support\Facades\Route;
@@ -53,8 +53,8 @@ class RouteServiceProvider extends ServiceProvider
                 ])->first() ?? abort(404);
         });
 
-        $router->bind('voucher_address', function ($value) {
-            return Voucher::getModel()->where([
+        $router->bind('voucher_token_address', function ($value) {
+            return VoucherToken::getModel()->where([
                     'address' => $value
                 ])->first() ?? abort(404);
         });

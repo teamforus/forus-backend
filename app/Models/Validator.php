@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Validator
  * @property mixed $id
+ * @property mixed $organization_id
  * @property string $identity_address
  * @property string $key
  * @property string $name
@@ -24,7 +24,7 @@ class Validator extends Model
      * @var array
      */
     protected $fillable = [
-        'identity_address', 'key', 'name',
+        'identity_address', 'key', 'name', 'organization_id'
     ];
 
     /**

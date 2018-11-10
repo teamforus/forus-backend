@@ -22,8 +22,8 @@ class ValidatorController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('index', Validator::class);
+        $this->authorize('update', $organization);
+        $this->authorize('index', [Validator::class, $organization]);
 
         return ValidatorResource::collection($organization->validators);
     }
@@ -41,12 +41,15 @@ class ValidatorController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('store', Validator::class);
+        $this->authorize('store', [Validator::class, $organization]);
 
-        $identity_address = app()->make(
+        $identity_address = resolve(
             'forus.services.record'
-        )->identityIdByEmail(
-            $request->input('email')
+        )->identityIdByEmail($request->input('email'));
+
+        resolve('forus.services.mail_notification')->youAddedAsValidator(
+            $identity_address,
+            $organization->name
         );
 
         return new ValidatorResource($organization->validators()->create([
@@ -66,8 +69,8 @@ class ValidatorController extends Controller
         Organization $organization,
         Validator $validator
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $validator);
+        $this->authorize('update', $organization);
+        $this->authorize('show', [$validator, $organization]);
 
         return new ValidatorResource($validator);
     }
@@ -87,7 +90,7 @@ class ValidatorController extends Controller
         Validator $validator
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('update', $validator);
+        $this->authorize('update', [$validator, $organization]);
 
         $identity_address = app()->make(
             'forus.services.record'
@@ -115,7 +118,7 @@ class ValidatorController extends Controller
         Validator $validator
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('destroy', $validator);
+        $this->authorize('destroy', [$validator, $organization]);
 
         $validator->delete();
 

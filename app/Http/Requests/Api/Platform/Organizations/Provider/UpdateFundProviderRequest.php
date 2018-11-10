@@ -24,7 +24,7 @@ class UpdateFundProviderRequest extends FormRequest
     public function rules()
     {
         return [
-            'state' => 'required|in:pending,approved,declined,abandoned'
+            'state' => 'required|in:abandoned'
         ];
     }
 }

@@ -75,16 +75,21 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'vouchers',
         "Api\Platform\VouchersController", [
         'only' => [
-            'index', 'show'
+            'index', 'show', 'store'
         ],
         'parameters' => [
-            'vouchers' => 'voucher_address'
+            'vouchers' => 'voucher_token_address'
         ]
     ]);
 
     $router->get(
-        'vouchers/{voucher_address}/provider',
+        'vouchers/{voucher_token_address}/provider',
         "Api\Platform\VouchersController@provider"
+    );
+
+    $router->post(
+        'vouchers/{voucher_token_address}/send-email',
+        "Api\Platform\VouchersController@sendEmail"
     );
 
     $router->resource(
@@ -94,10 +99,18 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'index', 'show', 'store'
         ],
         'parameters' => [
-            'vouchers' => 'voucher_address',
+            'vouchers' => 'voucher_token_address',
             'transactions' => 'transaction_address',
         ]
     ]);
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/finances',
+        "Api\Platform\Organizations\FundsController@finances");
+
+    $router->post(
+        'organizations/{organization}/funds/{fund}/top-up',
+        "Api\Platform\Organizations\FundsController@topUp");
 
     $router->resource(
         'organizations.funds',
@@ -118,6 +131,18 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/finances',
+        "Api\Platform\Organizations\Funds\FundProviderController@finances");
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions',
+        "Api\Platform\Organizations\Funds\FundProviderController@transactions");
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/{transaction_address}',
+        "Api\Platform\Organizations\Funds\FundProviderController@transaction");
+
     $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
@@ -128,6 +153,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'providers' => 'organization_fund'
         ]
     ]);
+
 
     $router->resource(
         'organizations.products',
@@ -180,6 +206,24 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'organizations/{organization}/provider/transactions',
+        "Api\Platform\Organizations\Provider\TransactionsController", [
+            'parameters' => [
+                'transactions' => 'transaction_address',
+            ]
+        ]
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/transactions',
+        "Api\Platform\Organizations\Sponsor\TransactionsController", [
+            'parameters' => [
+                'transactions' => 'transaction_address',
+            ]
+        ]
+    );
+
     // Prevalidations endpoints
     $router->post(
         'prevalidations/{prevalidation_uid}/redeem',
@@ -220,4 +264,9 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'index', 'show', 'update'
         ]
     ]);
+
+    $router->post(
+        '/devices/register-push',
+        'Api\Platform\DevicesController@registerPush'
+    );
 });

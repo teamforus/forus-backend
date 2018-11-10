@@ -2,6 +2,7 @@
 
 return [
     'add_money' => false,
+    'validationRequests' => false,
     'organizations' => [
         'list' => true,
         'show' => true,
@@ -15,7 +16,11 @@ return [
                     ],
                 'mustAcceptProducts' => false,
                 'allowPrevalidations' => true,
-                'allowValidationRequests' => true,
+                'allowValidationRequests' => false,
             ],
+        "products" => [
+            // list all funds
+            "list"      => true
+        ],
     ],
 ];

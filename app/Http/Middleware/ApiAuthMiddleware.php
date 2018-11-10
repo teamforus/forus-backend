@@ -15,33 +15,26 @@ class ApiAuthMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $bearerToken = explode(' ', $request->headers->get('Authorization'));
-        $accessToken = count($bearerToken) == 2 ? $bearerToken[1] : null;
+        $proxyId = $request->user()->getProxyId();
+        $proxyState = $request->user()->getProxyState();
+        $address = $request->user()->getAddress();
 
-        $identityService = app()->make('forus.services.identity');
-
-        $proxyIdentityId = $identityService->proxyIdByAccessToken($accessToken);
-        $proxyIdentityState = $identityService->proxyStateById($proxyIdentityId);
-        $identityAddress = $identityService->identityAddressByProxyId($proxyIdentityId);
-
-        if ($accessToken && $proxyIdentityState != 'active') {
-            switch ($proxyIdentityState) {
-                case 'pending': {
-                    return response()->json([
-                        "message" => 'proxy_identity_pending'
-                    ])->setStatusCode(401);
-                } break;
-            }
+        switch ($proxyState) {
+            case 'pending': {
+                return response()->json([
+                    "message" => 'proxy_identity_pending'
+                ])->setStatusCode(401);
+            } break;
         }
 
-        if (!$accessToken || !$proxyIdentityId || !$identityAddress) {
+        if (!$proxyId || !$address) {
             return response()->json([
                 "message" => 'invalid_access_token'
             ])->setStatusCode(401);
         }
 
-        $request->attributes->set('identity', $identityAddress);
-        $request->attributes->set('proxyIdentity', $proxyIdentityId);
+        $request->attributes->set('identity', $address);
+        $request->attributes->set('proxyIdentity', $proxyId);
 
         return $next($request);
     }

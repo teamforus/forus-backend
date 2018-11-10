@@ -1,26 +1,25 @@
 <?php
 
-namespace App\Services\Forus\Mailer\Commands;
+namespace App\Services\BunqService\Commands;
 
+use App\Services\BunqService\BunqService;
 use Illuminate\Console\Command;
-use App\Services\Forus\Mailer\Models\MailJob;
-use App\Services\Forus\Mailer\MailerRepository;
 
-class ClearMailBusCommand extends Command
+class ProcessBunqTopUpsCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'forus.services.mailer:clear';
+    protected $signature = 'forus.bunq:top_up_process';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Delete old mail attachments.';
+    protected $description = 'Process bunq top ups queue.';
 
     /**
      * Create a new command instance.
@@ -34,10 +33,11 @@ class ClearMailBusCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
     public function handle() {
-        $mailBusRepository = new MailerRepository();
-        $mailBusRepository->clearOldAttachments();
+        try {
+            BunqService::processTopUps();
+        } catch (\Exception $e) {}
     }
 }

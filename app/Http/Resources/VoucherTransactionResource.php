@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\VoucherTransaction;
 use Illuminate\Http\Resources\Json\Resource;
 
 class VoucherTransactionResource extends Resource
@@ -14,21 +15,23 @@ class VoucherTransactionResource extends Resource
      */
     public function toArray($request)
     {
-        return collect($this->resource)->only([
-            "organization_id", "product_id", "amount", "created_at",
-            "updated_at", "address"
+        /** @var VoucherTransaction $voucherTransaction */
+        $voucherTransaction = $this->resource;
+
+        return collect($voucherTransaction)->only([
+            "organization_id", "product_id", "created_at",
+            "updated_at", "address", "state", "payment_id",
+            'created_at_locale', 'created_at_locale'
         ])->merge([
-            'date' => $this->resource->created_at->format('M d, Y'),
-            'date_time' => $this->resource->created_at->format('M d, Y H:i'),
-            "organization" => collect($this->resource->organization)->only([
-                "id", "identity_address", "name", "iban", "email", "phone",
-                "kvk", "btw"
-            ])->merge([
-                'logo' => new MediaCompactResource(
-                    $this->resource->organization->logo
-                )
+            'amount' => currency_format($voucherTransaction->amount),
+            'timestamp' => $voucherTransaction->created_at->timestamp,
+            "organization" => collect($voucherTransaction->organization)->only([
+                "id", "name"
             ]),
-            "product" => new ProductResource($this->resource->product),
+            "product" => new ProductResource($voucherTransaction->product),
+            "fund" => collect($voucherTransaction->voucher->fund)->only([
+                "id", "name", "organization_id"
+            ]),
         ])->toArray();
     }
 }

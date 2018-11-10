@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
@@ -21,8 +22,8 @@ class ProductsController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('index', Product::class);
+        $this->authorize('update', $organization);
+        $this->authorize('index', [Product::class, $organization]);
 
         return ProductResource::collection($organization->products);
     }
@@ -40,9 +41,7 @@ class ProductsController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('store', [
-            Product::class, $organization
-        ]);
+        $this->authorize('store', [Product::class, $organization]);
 
         $media = false;
 
@@ -57,12 +56,43 @@ class ProductsController extends Controller
         $product = $organization->products()->create(
             $request->only([
                 'name', 'description', 'price', 'old_price', 'total_amount',
-                'sold_amount', 'product_category_id'
+                'product_category_id', 'expire_at'
             ])
         );
 
         if ($media && $media->type == 'product_photo') {
             $product->attachMedia($media);
+        }
+
+        $notifiedIdentities = [];
+
+        /** @var Fund $fund */
+        foreach ($organization->supplied_funds_approved as $fund) {
+            $productCategories = $fund->product_categories()->pluck(
+                'product_categories.id'
+            );
+
+            if ($productCategories->search(
+                $product->product_category_id) !== false
+            ) {
+                if (in_array(
+                    $fund->organization->identity_address,
+                    $notifiedIdentities
+                )) {
+                    continue;
+                }
+
+                array_push(
+                    $notifiedIdentities,
+                    $fund->organization->identity_address
+                );
+
+                resolve('forus.services.mail_notification')->newProductAdded(
+                    $product->organization->identity_address,
+                    $product->organization->name,
+                    $fund->name
+                );
+            }
         }
 
         return new ProductResource($product);
@@ -80,8 +110,8 @@ class ProductsController extends Controller
         Organization $organization,
         Product $product
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('show', $product);
+        $this->authorize('update', $organization);
+        $this->authorize('show', [$product, $organization]);
 
         return new ProductResource($product);
     }
@@ -101,7 +131,7 @@ class ProductsController extends Controller
         Product $product
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('update', $product);
+        $this->authorize('update', [$product, $organization]);
 
         $media = false;
 
@@ -114,7 +144,7 @@ class ProductsController extends Controller
 
         $product->update($request->only([
             'name', 'description', 'price', 'old_price', 'total_amount',
-            'sold_amount', 'product_category_id'
+            'sold_amount', 'product_category_id', 'expire_at'
         ]));
 
         if ($media && $media->type == 'product_photo') {
@@ -137,7 +167,7 @@ class ProductsController extends Controller
         Product $product
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('destroy', $product);
+        $this->authorize('destroy', [$product, $organization]);
 
         $product->delete();
 

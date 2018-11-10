@@ -7,26 +7,29 @@ use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
-use App\Models\Source;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\MailNotification\MailService;
 use Illuminate\Http\Request;
 
 class IdentityController extends Controller
 {
-    protected $mailerService;
     protected $identityRepo;
     protected $recordRepo;
 
+    /** @var MailService $mailService */
+    protected $mailService;
+
     public function __construct() {
-        $this->mailerService = app()->make('forus.services.mailer');
         $this->identityRepo = app()->make('forus.services.identity');
         $this->recordRepo = app()->make('forus.services.record');
+
+        $this->mailService = app()->make('forus.services.mail_notification');
     }
 
-    public function getPublic(Request $request)
+    public function getPublic()
     {
         return [
-            'address' => $request->get('identity')
+            'address' => auth()->user()->getAuthIdentifier()
         ];
     }
 
@@ -37,8 +40,9 @@ class IdentityController extends Controller
      * @return array
      * @throws \Exception
      */
-    public function store(IdentityStoreRequest $request)
-    {
+    public function store(
+        IdentityStoreRequest $request
+    ) {
         $identityAddress = $this->identityRepo->make(
             $request->input('pin_code'),
             $request->input('records')
@@ -49,6 +53,12 @@ class IdentityController extends Controller
         );
 
         $this->recordRepo->categoryCreate($identityAddress, "Relaties");
+
+        $this->mailService->addConnection(
+            $identityAddress,
+            $this->mailService::TYPE_EMAIL,
+            $request->input('records.primary_email')
+        );
 
         return [
             'access_token' => $this->identityRepo->getProxyAccessToken(
@@ -129,27 +139,30 @@ class IdentityController extends Controller
         $email = $request->input('primary_email');
         $source = $request->input('source');
 
-
         $identityId = $this->recordRepo->identityIdByEmail($email);
         $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
 
-        if (!empty($proxy)) {
-            $view = 'emails.identity.authorize-email_token';
+        $link = url(sprintf(
+            '/api/v1/identity/proxy/redirect/email/%s/%s',
+            $source, $proxy['auth_email_token']
+        ));
 
-            $this->mailerService->push($view, [
-                'email_token'   => $proxy['auth_email_token'],
-                'source'        => $source
-            ], [
-                'to'            => $email,
-                'subject'       => trans(
-                    'identity-proxy.restore_email_subject'
-                )
-            ]);
+        $platform = '';
+
+        if (strpos($source, 'shop-') === 0) {
+            $platform = 'webshop';
+        } else if (strpos($source, 'panel-') === 0) {
+            $platform = 'panel';
+        } else if (strpos($source, 'app-me_app') === 0) {
+            $platform = 'meapp';
+        }
+
+        if (!empty($proxy)) {
+            $this->mailService->loginViaEmail($identityId, $link, $platform);
         }
 
         return [
-            'success' => !empty($proxy),
-            'access_token' => !empty($proxy) ? $proxy['access_token'] : null
+            'success' => !empty($proxy)
         ];
     }
 
@@ -160,7 +173,7 @@ class IdentityController extends Controller
      */
     public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request) {
         $status = $this->identityRepo->activateAuthorizationCodeProxy(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $request->post('auth_code', '')
         );
 
@@ -169,11 +182,11 @@ class IdentityController extends Controller
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "not-pending") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "expired") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === true) {
@@ -194,7 +207,7 @@ class IdentityController extends Controller
      */
     public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request) {
         $status = $this->identityRepo->activateAuthorizationTokenProxy(
-            $request->get('identity'),
+            auth()->user()->getAuthIdentifier(),
             $request->post('auth_token', '')
         );
 
@@ -203,11 +216,11 @@ class IdentityController extends Controller
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "not-pending") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === "expired") {
-            return abort(402, trans(
+            return abort(403, trans(
                 'identity-proxy.code.' . $status
             ));
         } elseif ($status === true) {
@@ -222,44 +235,49 @@ class IdentityController extends Controller
     }
 
     /**
+     * Redirect email token
+     * @param string $source
+     * @param string $emailToken
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function proxyRedirectEmail(
+        string $source,
+        string $emailToken
+    ) {
+        if (!array_has(config('forus.front_ends'), $source)) {
+            abort(404);
+        }
+
+        $sourceUrl = config('forus.front_ends.' . $source);
+        $redirectUrl = $sourceUrl . "identity-restore?token=" . $emailToken;
+
+        if ($source == 'app-me_app') {
+            return view()->make('auth.deep_link', compact('redirectUrl'));
+        }
+
+
+        return redirect($redirectUrl);
+    }
+
+    /**
      * Authorize email token
      * @param string $source
      * @param string $emailToken
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|string
+     * @return array
      */
     public function proxyAuthorizeEmail(
         string $source,
         string $emailToken
     ) {
-        $status = $this->identityRepo->activateAuthorizationEmailProxy(
+        if (!array_has(config('forus.front_ends'), $source)) {
+            abort(404);
+        }
+
+        $access_token = $this->identityRepo->activateAuthorizationEmailProxy(
             $emailToken
         );
 
-        if ($status === "not-found") {
-            return abort(404, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "not-pending") {
-            return abort(402, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "expired") {
-            return abort(402, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === true) {
-            $source = Source::getModel()->where([
-                'key' => $source
-            ])->first();
-
-            if ($source && $source->url) {
-                return redirect($source->url);
-            }
-
-            return trans('identity-proxy.email.success');
-        }
-
-        return trans('identity-proxy.email.error');
+        return compact('access_token');
     }
 
     /**

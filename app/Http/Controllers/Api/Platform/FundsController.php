@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Events\Vouchers\VoucherCreated;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 class FundsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of all active funds.
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
@@ -19,7 +20,7 @@ class FundsController extends Controller
     {
         return FundResource::collection(Fund::getModel()->where(
             'state', 'active'
-        )->get());
+        )->has('fund_config')->get());
     }
 
     /**
@@ -38,30 +39,24 @@ class FundsController extends Controller
     }
 
     /**
-     * @param Request $request
+     * Apply fund for identity
+     *
      * @param Fund $fund
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function apply(Request $request, Fund $fund) {
-        $identity = $request->get('identity');
-
-        // The same identity can't apply twice to the same fund
-        if ($fund->vouchers()->where(
-            'identity_address', $identity
-        )->count() > 0) {
-            return response()->json([
-                'message' => trans('validation.fund.already_taken'),
-                'key' => 'already_taken'
-            ], 403);
-        }
-
+    public function apply(
+        Fund $fund
+    ) {
         $this->authorize('apply', $fund);
 
-        return new VoucherResource($fund->vouchers()->create([
-            'amount' => 300,
-            'identity_address' => $request->get('identity'),
-            'address' => app()->make('token_generator')->address(),
-        ]));
+        $voucher = $fund->vouchers()->create([
+            'amount' => Fund::amountForIdentity($fund, auth()->id()),
+            'identity_address' => auth()->user()->getAuthIdentifier(),
+        ]);
+
+        VoucherCreated::dispatch($voucher);
+
+        return new VoucherResource($voucher);
     }
 }

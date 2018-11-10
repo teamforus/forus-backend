@@ -71,7 +71,7 @@ return [
 	'required'             => 'Het :attribute veld is verplicht.',
 	'required_if'          => 'Het :attribute veld is verplicht wanneer :other is :value.',
 	'required_with'        => 'Het :attribute veld is verplicht wanneer :values aanwezig is.',
-    'required_unless'      => 'Het :attribute veld in nodig tenzij :other in :values zit.',
+  'required_unless'      => 'Het :attribute veld in nodig tenzij :other in :values zit.',
 	'required_with_all'    => 'Het :attribute veld is verplicht wanneer :values aanwezig is.',
 	'required_without'     => 'Het :attribute veld is verplicht wanneer :values niet aanwezig is.',
 	'required_without_all' => 'Het :attribute veld is verplicht wanneer geen van :values aanwezig is.',
@@ -133,6 +133,12 @@ return [
         'records.primary_email' => 'e-mail',
         'validation.kvk' => 'Het KVK-nummer veld is verplicht.',
         'validation.iban' => 'Het IBAN-nummer veld is verplicht.',
+        'records.primary_email' => 'e-mailadres',
+        'kvk' => 'KvK-nummer',
+        'name' => 'naam',
+        'phone' => 'telefoonnummer',
+        'iban' => 'IBAN-nummer',
+        'code' => 'activatiecode',
     ],
 
 ];

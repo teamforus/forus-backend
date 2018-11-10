@@ -27,6 +27,7 @@ class StoreVoucherTransactionRequest extends FormRequest
      */
     public function rules()
     {
+        $product = false;
         /**
          * shopkeeper identity and organizations
          */
@@ -42,7 +43,7 @@ class StoreVoucherTransactionRequest extends FormRequest
          *
          * @var Voucher $voucher
          */
-        $voucher = request()->voucher_address;
+        $voucher = request()->voucher_token_address->voucher;
         $voucherOrganizations = $voucher->fund->providers()->where([
             'state' => 'approved'
         ])->pluck('organization_id');
@@ -69,21 +70,54 @@ class StoreVoucherTransactionRequest extends FormRequest
             return $validCategories->search($product->product_category_id) !== false;
         })->pluck('id');
 
+        if ($voucher->product) {
+            $product = $voucher->product;
+        } else if (request()->has('product_id')) {
+            $product = Product::query()->find(request()->input('product_id'));
+        }
+
+        /**
+         * If the product is specified,
+         * limit available organization also by the product organization
+         */
+        if ($product) {
+            $validOrganizations = $validOrganizations->intersect([
+                $product->organization_id
+            ]);
+        }
+
+        $maxAmount = number_format($voucher->amount_available, 2, '.', '');
+
+        if (!$voucher->product_id) {
+            return [
+                'note' => 'nullable|string|between:2,255',
+                'amount'            => [
+                    'required_without:product_id',
+                    'numeric',
+                    'min:.01',
+                    'max:' . $maxAmount,
+                ],
+                'product_id'        => [
+                    'exists:products,id',
+                    'in:' . $validProductsIds->implode(',')
+                ],
+                'organization_id'   => [
+                    'required',
+                    'exists:organizations,id',
+                    'in:' . $validOrganizations->implode(',')
+                ]
+            ];
+        }
+
         return [
-            'amount'            => [
-                'required_without:product_id',
-                'numeric',
-                'min:.01'
-            ],
-            'product_id'        => [
-                'exists:products,id',
-                'in:' . $validProductsIds->implode(',')
-            ],
-            'organization_id'   => [
-                'required',
-                'exists:organizations,id',
-                'in:' . $validOrganizations->implode(',')
-            ]
+            'note' => 'nullable|string|between:2,255',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'amount.max' => trans('validation.voucher.not_enough_funds')
         ];
     }
 }
