@@ -90,7 +90,7 @@ return [
 
     // Custom
     'old_pin_code'          => 'De oude en nieuwe inlogcode komen niet overeen.',
-    'unknown_record_key'    => 'Unknown record key: ':key'.',
+    'unknown_record_key'    => 'Unknown record key: ":key".',
     'unique_record'         => 'Het :attribute eigenschap is al gekozen.',
 
     'organization_fund'     => [
