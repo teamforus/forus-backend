@@ -124,15 +124,13 @@ return [
     | of 'email'. This simply helps us make messages a little cleaner.
     |
     */
-
+    'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
+    'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'attributes' => [
         'pin_code' => 'Pin code',
         'records' => 'Records',
         'email' => 'e-mail',
         'primary_email' => 'e-mail',
-        'records.primary_email' => 'e-mail',
-        'validation.kvk' => 'Het KVK-nummer veld is verplicht.',
-        'validation.iban' => 'Het IBAN-nummer veld is verplicht.',
         'records.primary_email' => 'e-mailadres',
         'kvk' => 'KvK-nummer',
         'name' => 'naam',
