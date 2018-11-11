@@ -24,7 +24,8 @@ class ProductResource extends Resource
         )->get();
 
         return collect($product)->only([
-            'id', 'name', 'description', 'total_amount', 'product_category_id', 'sold_out',
+            'id', 'name', 'description', 'total_amount', 'product_category_id',
+            'sold_out', 'organization_id'
         ])->merge([
             'organization' => collect($product->organization)->only([
                 'name', 'email', 'phone'
