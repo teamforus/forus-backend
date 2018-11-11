@@ -3,13 +3,13 @@
 return [
     "records" => [
         // view records list
-        "list"      => true,
+        "list"      => false,
 
         // create new record
-        "create"    => true,
+        "create"    => false,
 
         // validate record
-        "validate"  => true
+        "validate"  => false
     ],
     "funds" => [
         // list all funds
