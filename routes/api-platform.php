@@ -15,11 +15,6 @@ $router = app()->make('router');
 
 $router->group([], function() use ($router) {
     $router->get(
-        '/organization-types',
-        "Api\Platform\OrganizationTypeController@index"
-    );
-
-    $router->get(
         '/product-categories',
         "Api\Platform\ProductCategoryController@index"
     );
