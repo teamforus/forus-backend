@@ -80,6 +80,10 @@ class AuthServiceProvider extends ServiceProvider
             'viewBudget' => 'viewBudget',
             'update' => 'update',
         ]);
+
+        \Gate::resource('organizations', OrganizationPolicy::class, [
+            'update' => 'update'
+        ]);
     }
 
     public function register()
