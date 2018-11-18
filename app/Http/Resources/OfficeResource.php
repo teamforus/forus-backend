@@ -22,8 +22,7 @@ class OfficeResource extends Resource
         $product_categories = $organization->product_categories;
 
         return collect($office)->only([
-            'id', 'organization_id', 'address', 'phone', 'email',
-            'lon', 'lat'
+            'id', 'organization_id', 'address', 'phone', 'lon', 'lat'
         ])->merge([
             'photo' => new MediaResource($office->photo),
             'organization' => collect($organization)->only([
