@@ -204,7 +204,7 @@ class MediaService
     }
 
     protected function doUpload($path, $name, $ext, $type, $identity) {
-        $mediaConfig = config('media.' . $type);
+        $mediaConfig = config('media.sizes.' . $type);
         $mediaSizes = $mediaConfig['size'];
 
         /** @var Model $model */

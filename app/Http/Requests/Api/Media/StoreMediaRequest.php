@@ -25,7 +25,7 @@ class StoreMediaRequest extends FormRequest
     {
         return [
             'file' => 'required|file|image',
-            'type' => 'required|in:' . implode(',', array_keys(config('media')))
+            'type' => 'required|in:' . implode(',', array_keys(config('media.sizes')))
         ];
     }
 }

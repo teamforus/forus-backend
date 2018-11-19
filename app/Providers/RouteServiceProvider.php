@@ -86,6 +86,14 @@ class RouteServiceProvider extends ServiceProvider
                 'forus.features.' . $value . ($ver ? '.' . $ver : '')
             );
 
+            if (is_array($config)) {
+                $config['media'] = collect(config('media.sizes'))->map(function($size) {
+                    return collect($size)->only([
+                        'aspect_ratio', 'size'
+                    ]);
+                });
+            }
+
             return $config ?: [];
         });
     }
