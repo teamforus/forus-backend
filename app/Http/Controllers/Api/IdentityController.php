@@ -154,7 +154,7 @@ class IdentityController extends Controller
         } else if (strpos($source, 'panel-') === 0) {
             $platform = 'panel';
         } else if (strpos($source, 'app-me_app') === 0) {
-            $platform = 'meapp';
+            $platform = 'me';
         }
 
         if (!empty($proxy)) {
