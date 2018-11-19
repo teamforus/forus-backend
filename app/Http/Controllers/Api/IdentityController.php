@@ -152,7 +152,7 @@ class IdentityController extends Controller
         if (strpos($source, 'shop-') === 0) {
             $platform = 'webshop';
         } else if (strpos($source, 'panel-') === 0) {
-            $platform = 'panel';
+            $platform = 'dashboard';
         } else if (strpos($source, 'app-me_app') === 0) {
             $platform = 'me';
         }
