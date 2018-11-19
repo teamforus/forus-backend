@@ -52,7 +52,6 @@ class RecordRepo implements IRecordRepo
      * @param string $recordValue
      * @param mixed $excludeIdentity
      * @return boolean
-     * @throws \Exception
      */
     public function isRecordUnique(
         string $recordTypeKey,
@@ -67,11 +66,9 @@ class RecordRepo implements IRecordRepo
         ])->first();
 
         if (!$recordType) {
-            throw new \Exception(
-                trans('record.exceptions.unknown_record_type', [
-                    'type' => $recordTypeKey
-                ])
-            );
+            abort(403, trans('record.exceptions.unknown_record_type', [
+                'type' => $recordTypeKey
+            ]));
         }
 
         $record = Record::getModel()->where([
@@ -93,7 +90,6 @@ class RecordRepo implements IRecordRepo
      * @param string $recordValue
      * @param mixed $excludeIdentity
      * @return boolean
-     * @throws \Exception
      */
     public function isRecordExists(
         string $recordTypeKey,
@@ -108,11 +104,9 @@ class RecordRepo implements IRecordRepo
         ])->first();
 
         if (!$recordType) {
-            throw new \Exception(
-                trans('record.exceptions.unknown_record_type', [
-                    'type' => $recordTypeKey
-                ])
-            );
+            abort(403, trans('record.exceptions.unknown_record_type', [
+                'type' => $recordTypeKey
+            ]));
         }
 
         $record = Record::getModel()->where([
@@ -121,9 +115,7 @@ class RecordRepo implements IRecordRepo
         ]);
 
         if ($excludeIdentity) {
-            $record->where(
-                'identity_address', '!=', $excludeIdentity
-            );
+            $record->where('identity_address', '!=', $excludeIdentity);
         }
 
         return $record->count() != 0;
@@ -409,7 +401,6 @@ class RecordRepo implements IRecordRepo
      * @param mixed|null $recordCategoryId
      * @param integer|null $order
      * @return null|array
-     * @throws \Exception
      */
     public function recordCreate(
         string $identityAddress,
@@ -421,11 +412,16 @@ class RecordRepo implements IRecordRepo
         $typeId = $this->getTypeIdByKey($typeKey);
 
         if (!$typeId) {
-            throw new \Exception(
-                trans('record.exceptions.unknown_record_type', [
-                    'type' => $typeKey
-                ])
-            );
+            abort(403, trans('record.exceptions.unknown_record_type', [
+                'type' => $typeKey
+            ]));
+        }
+
+        if ($typeKey == 'primary_email' && Record::query()->where([
+                'identity_address' => $identityAddress,
+                'record_type_id' => $this->getTypeIdByKey('primary_email'),
+            ])->count() > 0) {
+            abort(403,'record.exceptions.primary_email_already_exists');
         }
 
         /** @var Record $record */
@@ -504,6 +500,12 @@ class RecordRepo implements IRecordRepo
 
         if (!$record) {
             return false;
+        }
+
+        $recordTypeId = $this->getTypeIdByKey('primary_email');
+
+        if ($record['record_type_id'] == $recordTypeId) {
+            abort(403,'record.exceptions.cant_delete_primary_email');
         }
 
         return !!$record->delete();

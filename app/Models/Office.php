@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property int $organization_id
  * @property string $address
  * @property string $phone
- * @property string $email
  * @property float $lon
  * @property float $lat
  * @property boolean $parsed
@@ -35,8 +34,7 @@ class Office extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'address', 'phone', 'email', 'lon', 'lat',
-        'parsed'
+        'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed'
     ];
 
     /**

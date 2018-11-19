@@ -62,7 +62,7 @@ class FundProviderController extends Controller
     ) {
         $this->authorize('update', $organization);
         $this->authorize('update', [$fund, $organization]);
-        $this->authorize('showSponsor', [FundProvider::class, $organization, $fund]);
+        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
 
         return new FundProviderResource($organizationFund);
     }

@@ -30,7 +30,7 @@ class ProductCategory extends Model
      * @var array
      */
     protected $fillable = [
-        'key', 'parent_id'
+        'key', 'parent_id', 'service'
     ];
 
     /**

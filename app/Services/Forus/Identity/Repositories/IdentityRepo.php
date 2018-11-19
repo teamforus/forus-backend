@@ -419,7 +419,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     }
 
     private function makeAuthCode() {
-        return random_int(000000, 999999);
+        return random_int(111111, 999999);
     }
 
     private function makeAuthToken() {
