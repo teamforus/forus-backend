@@ -22,45 +22,44 @@ class OfficePolicy
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         $identity_address,
-        Organization $organization = null
+        Organization $organization 
     ) {
-        return $this->store($identity_address, $organization);
+        return $organization->identityCan(
+            $identity_address,
+            'manage_offices'
+        );
     }
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         $identity_address,
-        Organization $organization = null
+        Organization $organization 
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan(
+            $identity_address,
+            'manage_offices'
+        );
     }
 
     /**
      * @param $identity_address
      * @param Office $office
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         $identity_address,
         Office $office,
-        Organization $organization = null
+        Organization $organization 
     ) {
         return $this->update($identity_address, $office, $organization);
     }
@@ -68,38 +67,34 @@ class OfficePolicy
     /**
      * @param $identity_address
      * @param Office $office
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         $identity_address,
         Office $office,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-
-            if ($office->organization_id != $organization->id) {
-                return false;
-            }
+        if ($office->organization_id != $organization->id) {
+            return false;
         }
 
-        return strcmp(
-                $office->organization->identity_address, $identity_address) == 0;
+        return $office->organization->identityCan(
+            $identity_address,
+            'manage_offices'
+        );
     }
 
     /**
      * @param $identity_address
      * @param Office $office
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function destroy(
         $identity_address,
         Office $office,
-        Organization $organization = null
+        Organization $organization 
     ) {
         return $this->update($identity_address, $office, $organization);
     }

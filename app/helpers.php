@@ -78,3 +78,14 @@ if  (!function_exists('authorize')) {
         return app(Gate::class)->authorize($ability, $arguments);
     }
 }
+
+if (!function_exists('is_collect')) {
+    /**
+     * Check if variable is instance of collection
+     * @param $value
+     * @return bool
+     */
+    function is_collect($value) {
+        return $value instanceof Collection;
+    }
+}

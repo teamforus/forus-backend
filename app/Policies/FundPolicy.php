@@ -23,71 +23,76 @@ class FundPolicy
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        return $this->store($identity_address, $organization);
+        return $organization->identityCan(
+            $identity_address, [
+                'manage_funds', 'view_finances'
+            ], false
+        );
     }
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan(
+            $identity_address,
+            'manage_funds'
+        );
     }
 
     /**
      * @param $identity_address
      * @param Fund $fund
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         $identity_address,
         Fund $fund,
-        Organization $organization = null
+        Organization $organization
     ) {
-        return $this->update($identity_address, $fund, $organization);
+        if ($fund->organization_id != $organization->id) {
+            return false;
+        }
+
+        return $fund->organization->identityCan(
+            $identity_address,
+            ['manage_funds', 'view_finances'],
+            false
+        );
     }
 
     /**
      * @param $identity_address
      * @param Fund $fund
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         $identity_address,
         Fund $fund,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-
-            if ($fund->organization_id != $organization->id) {
-                return false;
-            }
+        if ($fund->organization_id != $organization->id) {
+            return false;
         }
 
-        return strcmp(
-                $fund->organization->identity_address, $identity_address) == 0;
+        return $fund->organization->identityCan(
+            $identity_address,
+            'manage_funds'
+        );
     }
 
     /**
@@ -140,15 +145,21 @@ class FundPolicy
     /**
      * @param $identity_address
      * @param Fund $fund
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function showFinances(
         $identity_address,
         Fund $fund,
-        Organization $organization = null
+        Organization $organization
     ) {
-        return $this->update($identity_address, $fund, $organization);
+        if ($fund->organization_id != $organization->id) {
+            return false;
+        }
+
+        return $fund->organization->identityCan(
+            $identity_address,
+            'view_finances'
+        );
     }
 }

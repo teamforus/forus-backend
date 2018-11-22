@@ -23,93 +23,104 @@ class FundProviderPolicy
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function indexSponsor(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        return $this->storeSponsor($identity_address, $organization);
+        return $organization->identityCan($identity_address, [
+            'view_finances', 'manage_providers'
+        ], false);
     }
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function indexProvider(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        return $this->storeProvider($identity_address, $organization);
+        return $organization->identityCan($identity_address, [
+            'manage_provider_funds'
+        ], false);
     }
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function storeSponsor(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan($identity_address, [
+            'manage_providers'
+        ], false);
     }
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function storeProvider(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan($identity_address, [
+            'manage_provider_funds'
+        ], false);
     }
 
     /**
      * @param $identity_address
      * @param FundProvider $organizationFund
-     * @param Organization|null $organization
-     * @param Fund|null $fund
+     * @param Organization $organization
+     * @param Fund $fund
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function showSponsor(
         $identity_address,
         FundProvider $organizationFund,
-        Organization $organization = null,
-        Fund $fund = null
+        Organization $organization,
+        Fund $fund
     ) {
-        return $this->updateSponsor($identity_address, $organizationFund, $organization, $fund);
+        if ($organization->id != $organizationFund->fund->organization_id) {
+            return false;
+        }
+
+        if ($fund->id != $organizationFund->fund_id) {
+            return false;
+        }
+
+        return $organizationFund->fund->organization->identityCan($identity_address, [
+            'manage_funds', 'view_finances'
+        ], false);
     }
 
     /**
      * @param $identity_address
      * @param FundProvider $organizationFund
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
      */
     public function showProvider(
         $identity_address,
         FundProvider $organizationFund,
-        Organization $organization = null
+        Organization $organization
     ) {
-        return $this->updateProvider($identity_address, $organizationFund, $organization);
+        if ($organization->id != $organizationFund->organization_id) {
+            return false;
+        }
+
+        return $organizationFund->organization->identityCan($identity_address, [
+            'manage_provider_funds'
+        ], false);
     }
 
     /**
@@ -118,60 +129,43 @@ class FundProviderPolicy
      * @param Organization|null $organization
      * @param Fund|null $fund
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function updateSponsor(
         $identity_address,
         FundProvider $organizationFund,
-        Organization $organization = null,
-        Fund $fund = null
+        Organization $organization,
+        Fund $fund
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-
-            if ($organization->id != $organizationFund->fund->organization_id) {
-                return false;
-            }
+        if ($organization->id != $organizationFund->fund->organization_id) {
+            return false;
         }
 
-        if ($fund) {
-            authorize('update', $fund);
-
-            if ($organization && $fund->organization_id != $organization->id) {
-                return false;
-            }
-
-            if ($fund->id != $organizationFund->fund_id) {
-                return false;
-            }
+        if ($fund->id != $organizationFund->fund_id) {
+            return false;
         }
 
-        return strcmp(
-                $organizationFund->fund->organization->identity_address,
-                $identity_address
-            ) == 0;
+        return $organizationFund->fund->organization->identityCan($identity_address, [
+            'manage_funds'
+        ]);
     }
 
     /**
      * @param $identity_address
      * @param FundProvider $organizationFund
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
      */
     public function updateProvider(
         $identity_address,
         FundProvider $organizationFund,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            if ($organization->id != $organizationFund->organization->id) {
-                return false;
-            }
+        if ($organization->id != $organizationFund->organization_id) {
+            return false;
         }
 
-        return strcmp(
-                $organizationFund->organization->identity_address,
-                $identity_address
-            ) == 0;
+        return $organizationFund->organization->identityCan($identity_address, [
+            'manage_provider_funds'
+        ]);
     }
 }

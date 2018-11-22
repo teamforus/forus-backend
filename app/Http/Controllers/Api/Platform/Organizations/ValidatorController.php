@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Http\Requests\Api\Platform\Organizations\Funds\Validators\StoreValidatorRule;
-use App\Http\Requests\Api\Platform\Organizations\Funds\Validators\UpdateValidatorRule;
+use App\Http\Requests\Api\Platform\Organizations\Funds\Validators\StoreValidatorRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\Validators\UpdateValidatorRequest;
 use App\Http\Resources\ValidatorResource;
 use App\Models\Validator;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-use App\Services\Forus\Record\Repositories\RecordRepo;
 
 class ValidatorController extends Controller
 {
@@ -31,13 +30,13 @@ class ValidatorController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreValidatorRule $request
+     * @param StoreValidatorRequest $request
      * @param Organization $organization
      * @return ValidatorResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
-        StoreValidatorRule $request,
+        StoreValidatorRequest $request,
         Organization $organization
     ) {
         $this->authorize('update', $organization);
@@ -78,14 +77,14 @@ class ValidatorController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param UpdateValidatorRule $request
+     * @param UpdateValidatorRequest $request
      * @param Organization $organization
      * @param Validator $validator
      * @return ValidatorResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
-        UpdateValidatorRule $request,
+        UpdateValidatorRequest $request,
         Organization $organization,
         Validator $validator
     ) {

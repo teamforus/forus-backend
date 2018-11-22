@@ -17,7 +17,8 @@ class FundProviderController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
+        $this->authorize('indexSponsor', [FundProvider::class, $organization]);
 
         return FundProviderResource::collection(
             FundProvider::getModel()->whereIn(
