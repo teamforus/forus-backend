@@ -20,11 +20,12 @@ class OrganizationsController extends Controller
     public function index() {
         $this->authorize('index', Organization::class);
 
+        $identityAddress = auth()->user()->getAuthIdentifier();
+
         return OrganizationResource::collection(
-            Organization::getModel()->where(
-                'identity_address',
-                auth()->user()->getAuthIdentifier()
-            )->get()
+            Organization::queryByIdentityPermissions(
+                $identityAddress
+            )->orWhere('identity_address', $identityAddress)->get()
         );
     }
 
@@ -56,10 +57,6 @@ class OrganizationsController extends Controller
                 'identity_address' => auth()->user()->getAuthIdentifier(),
             ])->toArray()
         );
-
-        $organization->provider_identities()->create([
-            'identity_address' => auth()->user()->getAuthIdentifier()
-        ]);
 
         $organization->product_categories()->sync(
             $request->input('product_categories', [])

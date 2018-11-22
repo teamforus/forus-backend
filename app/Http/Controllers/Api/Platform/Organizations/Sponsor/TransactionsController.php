@@ -19,7 +19,7 @@ class TransactionsController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('indexSponsor', [VoucherTransaction::class, $organization]);
 
         return SponsorVoucherTransactionResource::collection(
@@ -41,7 +41,7 @@ class TransactionsController extends Controller
         Organization $organization,
         VoucherTransaction $voucherTransaction
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucherTransaction, $organization]);
 
         return new SponsorVoucherTransactionResource($voucherTransaction);

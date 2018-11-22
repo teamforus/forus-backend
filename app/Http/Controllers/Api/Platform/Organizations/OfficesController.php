@@ -30,7 +30,7 @@ class OfficesController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('index', [Office::class, $organization]);
 
         return OfficeResource::collection($organization->offices);
@@ -48,7 +48,7 @@ class OfficesController extends Controller
         StoreOfficeRequest $request,
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('store', [Office::class, $organization]);
 
         $media = false;
@@ -111,7 +111,7 @@ class OfficesController extends Controller
         Organization $organization,
         Office $office
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('show', [$office, $organization]);
 
         return new OfficeResource($office);
@@ -131,7 +131,7 @@ class OfficesController extends Controller
         Organization $organization,
         Office $office
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('update', [$office, $organization]);
 
         $media = false;
@@ -197,7 +197,7 @@ class OfficesController extends Controller
         Organization $organization,
         Office $office
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('destroy', [$office, $organization]);
 
         $office->delete();

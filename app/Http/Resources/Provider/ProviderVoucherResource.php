@@ -7,9 +7,7 @@ use App\Http\Resources\MediaResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\Organization;
 use App\Models\Product;
-use App\Models\ProviderIdentity;
 use App\Models\Voucher;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\Resource;
 
 class ProviderVoucherResource extends Resource
@@ -47,17 +45,9 @@ class ProviderVoucherResource extends Resource
         $amountLeft = $voucher->amount_available;
         $voucherOrganizations = $voucher->fund->providers->pluck('organization');
 
-        $allowedOrganizations = Organization::query()->where(function(
-            Builder $query
-        ) use (
-            $identityAddress
-        ) {
-            return $query->where([
-                'identity_address' => $identityAddress
-            ])->orWhereIn('id', ProviderIdentity::getModel()->where([
-                'identity_address' => $identityAddress
-            ])->pluck('provider_id')->unique()->toArray());
-        })->whereIn('id', $voucherOrganizations->pluck('id'))->get();
+        $allowedOrganizations = Organization::queryByIdentityPermissions(
+            $identityAddress, 'scan_vouchers'
+        )->whereIn('id', $voucherOrganizations->pluck('id'))->get();
 
         $allowedProductCategories = $voucher->fund->product_categories;
         $allowedProducts = Product::getModel()->whereIn(

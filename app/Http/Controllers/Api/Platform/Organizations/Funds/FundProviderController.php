@@ -31,7 +31,7 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('show', [$fund, $organization]);
         $this->authorize('indexSponsor', [FundProvider::class, $organization, $fund]);
 
         $state = $request->input('state', false);
@@ -60,8 +60,8 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $this->authorize('update', $organization);
-        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$fund, $organization]);
         $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
 
         return new FundProviderResource($organizationFund);
@@ -83,8 +83,8 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $this->authorize('update', $organization);
-        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$fund, $organization]);
         $this->authorize('updateSponsor', [$organizationFund, $organization, $fund]);
 
         $state = $request->input('state');
@@ -124,9 +124,9 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $this->authorize('update', $organization);
-        $this->authorize('update', [$fund, $organization]);
-        $this->authorize('updateSponsor', [$organizationFund, $organization, $fund]);
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$fund, $organization]);
+        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
 
         $dates = collect();
 
