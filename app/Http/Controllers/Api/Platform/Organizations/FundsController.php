@@ -28,7 +28,7 @@ class FundsController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('index', Fund::class);
+        $this->authorize('index', [Fund::class, $organization]);
 
         return FundResource::collection($organization->funds);
     }
@@ -45,8 +45,8 @@ class FundsController extends Controller
         StoreFundRequest $request,
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
-        $this->authorize('store', Fund::class);
+        $this->authorize('show', $organization);
+        $this->authorize('store', [Fund::class, $organization]);
 
         $media = false;
 
@@ -120,8 +120,8 @@ class FundsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('update', $organization);
-        $this->authorize('update', [$fund, $organization]);
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$fund, $organization]);
 
         return new FundResource($fund);
     }
@@ -140,7 +140,7 @@ class FundsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('update', [$fund, $organization]);
 
         $media = false;
@@ -179,7 +179,7 @@ class FundsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('showFinances', [$fund, $organization]);
 
         $dates = collect();
@@ -288,7 +288,7 @@ class FundsController extends Controller
         Fund $fund
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('show', $fund);
+        $this->authorize('show', [$fund, $organization]);
 
         do {
             $code = strtoupper(

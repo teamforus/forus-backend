@@ -150,11 +150,11 @@ class IdentityController extends Controller
         $platform = '';
 
         if (strpos($source, 'shop-') === 0) {
-            $platform = 'webshop';
+            $platform = 'de webshop';
         } else if (strpos($source, 'panel-') === 0) {
-            $platform = 'panel';
+            $platform = 'het dashboard';
         } else if (strpos($source, 'app-me_app') === 0) {
-            $platform = 'meapp';
+            $platform = 'Me';
         }
 
         if (!empty($proxy)) {

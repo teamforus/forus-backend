@@ -25,7 +25,7 @@ class FundProviderController extends Controller
     public function availableFunds(
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('indexProvider', [FundProvider::class, $organization]);
 
         $requestedFundsIds = $organization->organization_funds()->pluck(
@@ -63,7 +63,7 @@ class FundProviderController extends Controller
         Request $request,
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('indexProvider', [FundProvider::class, $organization]);
 
         $state = $request->input('state', false);

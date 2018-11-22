@@ -22,15 +22,17 @@ class ProductPolicy
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        return $this->store($identity_address, $organization);
+        return $organization->identityCan(
+            $identity_address,
+            'manage_products'
+        );
     }
 
     /**
@@ -42,32 +44,29 @@ class ProductPolicy
 
     /**
      * @param $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan(
+            $identity_address,
+            'manage_products'
+        );
     }
 
     /**
      * @param $identity_address
      * @param Product $product
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         $identity_address,
         Product $product,
-        Organization $organization = null
+        Organization $organization
     ) {
         return $this->update($identity_address, $product, $organization);
     }
@@ -82,25 +81,22 @@ class ProductPolicy
     /**
      * @param $identity_address
      * @param Product $product
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         $identity_address,
         Product $product,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            authorize('update', $organization);
-
-            if ($product->organization_id != $organization->id) {
-                return false;
-            }
+        if ($product->organization_id != $organization->id) {
+            return false;
         }
 
-        return strcmp(
-                $product->organization->identity_address, $identity_address) == 0;
+        return $product->organization->identityCan(
+            $identity_address,
+            'manage_products'
+        );
     }
 
     /**
@@ -121,14 +117,13 @@ class ProductPolicy
     /**
      * @param $identity_address
      * @param Product $product
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function destroy(
         $identity_address,
         Product $product,
-        Organization $organization = null
+        Organization $organization
     ) {
         return $this->update($identity_address, $product, $organization);
     }

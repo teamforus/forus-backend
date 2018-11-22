@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_offer
  * @property bool $sold_out
  * @property bool $expired
+ * @property bool $service
  * @property Organization $organization
  * @property ProductCategory $product_category
  * @property Media $photo

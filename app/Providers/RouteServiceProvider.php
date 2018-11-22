@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Fund;
+use App\Models\Employee;
 use App\Models\Prevalidation;
-use App\Models\ProviderIdentity;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Services\MediaService\Models\Media;
@@ -60,14 +60,14 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('transaction_address', function ($value) {
-            return VoucherTransaction::getModel()->where([
+            return VoucherTransaction::query()->where([
                     'address' => $value
                 ])->first() ?? abort(404);
         });
 
-        $router->bind('provider_identity', function ($value) {
-            return ProviderIdentity::getModel()->where([
-                    'id' => $value
+        $router->bind('employee_id', function ($value) {
+            return Employee::query()->where([
+                'id' => $value
                 ])->first() ?? abort(404);
         });
 
@@ -85,6 +85,14 @@ class RouteServiceProvider extends ServiceProvider
             $config = config(
                 'forus.features.' . $value . ($ver ? '.' . $ver : '')
             );
+
+            if (is_array($config)) {
+                $config['media'] = collect(config('media.sizes'))->map(function($size) {
+                    return collect($size)->only([
+                        'aspect_ratio', 'size'
+                    ]);
+                });
+            }
 
             return $config ?: [];
         });

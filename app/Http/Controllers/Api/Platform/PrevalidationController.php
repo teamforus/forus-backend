@@ -42,6 +42,10 @@ class PrevalidationController extends Controller
                     return false;
                 }
 
+                if (is_null($value)) {
+                    $value = '';
+                }
+
                 return compact('record_type_id', 'value');
             })->filter(function($value) {
                 return !!$value;

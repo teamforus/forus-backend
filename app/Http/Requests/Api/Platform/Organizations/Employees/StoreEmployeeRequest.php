@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Funds\Validators;
+namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
-use App\Rules\Base\EthAddressRule;
 use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreValidatorRule extends FormRequest
+class StoreEmployeeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,8 +25,9 @@ class StoreValidatorRule extends FormRequest
     public function rules()
     {
         return [
-            // 'identity_address'  => ['required', new EthAddressRule()]
-            'email' => ['required', new IdentityRecordsExistsRule('primary_email')],
+            'email'     => ['required', new IdentityRecordsExistsRule('primary_email')],
+            'roles'     => 'present|array',
+            'roles.*'   => 'exists:roles,id',
         ];
     }
 }

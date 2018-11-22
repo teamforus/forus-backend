@@ -2,19 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\Employee;
 use App\Models\Office;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Product;
-use App\Models\ProviderIdentity;
 use App\Models\Validator;
 use App\Models\ValidatorRequest;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Models\VoucherTransactionNote;
+use App\Policies\EmployeePolicy;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
-use App\Policies\ProviderIdentityPolicy;
 use App\Policies\ValidatorPolicy;
 use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
@@ -32,8 +31,8 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Policies\FundPolicy;
 use App\Policies\OrganizationPolicy;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -48,12 +47,12 @@ class AuthServiceProvider extends ServiceProvider
         Office::class                   => OfficePolicy::class,
         Product::class                  => ProductPolicy::class,
         Voucher::class                  => VoucherPolicy::class,
+        Employee::class                 => EmployeePolicy::class,
         Organization::class             => OrganizationPolicy::class,
         Validator::class                => ValidatorPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         ValidatorRequest::class         => ValidatorRequestPolicy::class,
-        ProviderIdentity::class         => ProviderIdentityPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
     ];
 
@@ -77,7 +76,11 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         \Gate::resource('funds', FundPolicy::class, [
-            'viewBudget' => 'viewBudget',
+            'showFinances' => 'showFinances',
+            'update' => 'update',
+        ]);
+
+        \Gate::resource('organizations', OrganizationPolicy::class, [
             'update' => 'update',
         ]);
     }

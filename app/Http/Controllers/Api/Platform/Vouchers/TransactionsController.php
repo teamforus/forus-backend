@@ -123,7 +123,7 @@ class TransactionsController extends Controller
         VoucherToken $voucherToken,
         VoucherTransaction $voucherTransaction
     ) {
-        $this->authorize('show', [VoucherTransaction::class, $voucherToken]);
+        $this->authorize('show', [$voucherTransaction, $voucherToken]);
 
         $voucher = $voucherToken->voucher;
 

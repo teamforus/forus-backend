@@ -64,8 +64,7 @@ class KvkApi
 
     /**
      * @param $kvk_number
-     * @return mixed
-     * @throws \Exception
+     * @return \Illuminate\Support\Collection
      */
     public function getOffices($kvk_number) {
         $kvkData = $this->kvkNumberData($kvk_number);
@@ -75,10 +74,12 @@ class KvkApi
             return [
                 'original' => $address,
                 'address' => sprintf(
-                    "%s %s %s %s%s, %s",
-                    $address->country, $address->city, $address->street,
-                    $address->houseNumber, $address->houseNumberAddition,
-                    $address->postalCode
+                    "%s %s%s, %s, %s",
+                    $address->street,
+                    $address->houseNumber,
+                    $address->houseNumberAddition,
+                    $address->postalCode,
+                    $address->city
                 ),
                 'lat' => $address->gpsLatitude,
                 'lon' => $address->gpsLongitude,

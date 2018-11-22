@@ -22,7 +22,7 @@ class ProductsController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('index', [Product::class, $organization]);
 
         return ProductResource::collection($organization->products);
@@ -40,7 +40,7 @@ class ProductsController extends Controller
         StoreProductRequest $request,
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('store', [Product::class, $organization]);
 
         $media = false;
@@ -110,7 +110,7 @@ class ProductsController extends Controller
         Organization $organization,
         Product $product
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('show', [$product, $organization]);
 
         return new ProductResource($product);
@@ -130,7 +130,7 @@ class ProductsController extends Controller
         Organization $organization,
         Product $product
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
         $media = false;
@@ -166,7 +166,7 @@ class ProductsController extends Controller
         Organization $organization,
         Product $product
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('destroy', [$product, $organization]);
 
         $product->delete();

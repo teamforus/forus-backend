@@ -36,7 +36,7 @@ class OrganizationPolicy
         $identity_address,
         Organization $organization
     ) {
-        return $this->update($identity_address, $organization);
+        return $organization->identityPermissions($identity_address)->count() > 0;
     }
 
     /**
@@ -53,6 +53,8 @@ class OrganizationPolicy
      * @return bool
      */
     public function update($identity_address, Organization $organization) {
-        return strcmp($organization->identity_address, $identity_address) == 0;
+        return $organization->identityCan($identity_address, [
+            'manage_organization'
+        ]);
     }
 }

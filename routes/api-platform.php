@@ -15,11 +15,6 @@ $router = app()->make('router');
 
 $router->group([], function() use ($router) {
     $router->get(
-        '/organization-types',
-        "Api\Platform\OrganizationTypeController@index"
-    );
-
-    $router->get(
         '/product-categories',
         "Api\Platform\ProductCategoryController@index"
     );
@@ -63,6 +58,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         "Api\Platform\OrganizationsController", [
         'only' => [
             'index', 'show', 'store', 'update'
+        ]
+    ]);
+
+    $router->resource(
+        'roles',
+        "Api\Platform\RolesController", [
+        'only' => [
+            'index', 'show'
         ]
     ]);
 
@@ -174,6 +177,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->resource(
         'organizations.validators',
         "Api\Platform\Organizations\ValidatorController", [
+        'only' => [
+            'index', 'show', 'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.employees',
+        "Api\Platform\Organizations\EmployeesController", [
         'only' => [
             'index', 'show', 'store', 'update', 'destroy'
         ]

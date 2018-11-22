@@ -30,6 +30,9 @@ class OrganizationResource extends Resource
         return collect($organization)->only([
             'id', 'identity_address', 'name', 'email', 'phone', 'kvk'
         ])->merge([
+            'permissions' => $organization->identityPermissions(
+                auth()->id()
+            )->pluck('key'),
             'logo' => new MediaResource($organization->logo),
             'product_categories' => ProductCategoryResource::collection(
                 $organization->product_categories
