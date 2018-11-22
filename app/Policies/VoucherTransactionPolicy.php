@@ -35,14 +35,15 @@ class VoucherTransactionPolicy
      * @param string $identity_address
      * @param Organization|null $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function indexSponsor(
         string $identity_address,
         Organization $organization = null
     ) {
         if ($organization) {
-            authorize('update', $organization);
+            return $organization->identityCan(
+                $identity_address, 'view_finances'
+            );
         }
 
         return !empty($identity_address);
@@ -52,14 +53,15 @@ class VoucherTransactionPolicy
      * @param string $identity_address
      * @param Organization|null $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function indexProvider(
         string $identity_address,
         Organization $organization = null
     ) {
         if ($organization) {
-            authorize('update', $organization);
+            return $organization->identityCan(
+                $identity_address, 'view_finances'
+            );
         }
 
         return !empty($identity_address);
@@ -85,7 +87,6 @@ class VoucherTransactionPolicy
      * @param Organization|null $organization
      * @param Fund|null $fund
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function showSponsor(
         string $identity_address,
@@ -94,25 +95,18 @@ class VoucherTransactionPolicy
         Fund $fund = null
     ) {
         if ($organization) {
-            authorize('update', $organization);
-
             if ($transaction->voucher->fund->organization_id != $organization->id) {
                 return false;
             }
-        }
 
-        if ($fund) {
-            authorize('update', $fund);
-
-            if ($transaction->voucher->fund_id != $fund->id) {
+            if ($fund && ($transaction->voucher->fund_id != $fund->id)) {
                 return false;
             }
         }
 
-        return strcmp(
-                $transaction->voucher->fund->organization->identity_address,
-                $identity_address
-            ) == 0;
+        return $transaction->voucher->fund->organization->identityCan(
+            $identity_address, 'view_finances'
+        );
     }
 
     /**
@@ -120,7 +114,6 @@ class VoucherTransactionPolicy
      * @param VoucherTransaction $transaction
      * @param Organization|null $organization
      * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function showProvider(
         string $identity_address,
@@ -128,16 +121,13 @@ class VoucherTransactionPolicy
         Organization $organization = null
     ) {
         if ($organization) {
-            authorize('update', $organization);
-
             if ($transaction->organization_id != $organization->id) {
                 return false;
             }
         }
 
-        return strcmp(
-                $transaction->organization->identity_address,
-                $identity_address
-            ) == 0;
+        return $transaction->organization->identityCan(
+            $identity_address, 'view_finances'
+        );
     }
 }

@@ -22,7 +22,9 @@ class FundResource extends Resource
 
         $ownerData = [];
 
-        if (Gate::allows('funds.update', $fund)) {
+        if (Gate::allows('funds.showFinances', [
+            $fund, $fund->organization
+        ])) {
             $ownerData['budget'] = [
                 'total' => currency_format($fund->budget_total),
                 'validated' => currency_format($fund->budget_validated),

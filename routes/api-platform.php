@@ -61,6 +61,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'roles',
+        "Api\Platform\RolesController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+
     $router->post(
         'funds/{fund_id}/apply',
         "Api\Platform\FundsController@apply"
@@ -169,6 +177,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->resource(
         'organizations.validators',
         "Api\Platform\Organizations\ValidatorController", [
+        'only' => [
+            'index', 'show', 'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.employees',
+        "Api\Platform\Organizations\EmployeesController", [
         'only' => [
             'index', 'show', 'store', 'update', 'destroy'
         ]

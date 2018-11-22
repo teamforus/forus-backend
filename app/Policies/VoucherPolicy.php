@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -68,12 +69,13 @@ class VoucherPolicy
     ) {
         if ($voucher->type == 'regular') {
             $organizations = $voucher->fund->provider_organizations_approved;
+            $identityOrganizations = Organization::queryByIdentityPermissions(
+                $identity_address, 'scan_vouchers'
+            )->pluck('id');
 
-            return $organizations->pluck(
-                'provider_identities'
-            )->flatten()->pluck(
-                'identity_address'
-            )->search($identity_address) !== false;
+            return $identityOrganizations->intersect(
+                $organizations->pluck('id')
+                )->count() > 0;
         } else if ($voucher->type == 'product') {
             // Product vouchers can have no more than 1 transaction
             if ($voucher->transactions->count() > 0) {
@@ -98,9 +100,9 @@ class VoucherPolicy
 
             // The identity should be allowed to scan voucher for
             // the provider organization
-            return $voucher->product->organization->provider_identities->pluck(
-                    'identity_address'
-                )->search($identity_address) !== false;
+            return $voucher->product->organization->identityCan(
+                $identity_address, 'scan_vouchers'
+            );
         }
 
         return false;
