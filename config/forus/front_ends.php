@@ -11,5 +11,8 @@ return [
     'panel-provider'        => env('PANEL_PROVIDER_URL', false),
     'panel-validator'       => env('PANEL_VALIDATOR_URL', false),
 
+    'panel-sponsor-nijmegen'  => env('PANEL_SPONSOR_NIJMEGEN_URL', false),
+    'panel-provider-nijmegen' => env('PANEL_PROVIDER_NIJMEGEN_URL', false),
+
     'app-me_app'            => env('ME_APP_URL', false),
 ];
