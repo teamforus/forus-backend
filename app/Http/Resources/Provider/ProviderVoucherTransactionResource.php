@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Provider;
 
+use App\Http\Resources\MediaResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
@@ -29,10 +30,14 @@ class ProviderVoucherTransactionResource extends Resource
             'timestamp' => $voucherTransaction->created_at->timestamp,
             "organization" => collect($voucherTransaction->organization)->only([
                 "id", "name"
+            ])->merge([
+                'logo' => new MediaResource($voucherTransaction->organization->logo),
             ]),
             "product" => new ProductResource($voucherTransaction->product),
             "fund" => collect($voucherTransaction->voucher->fund)->only([
                 "id", "name", "organization_id"
+            ])->merge([
+                'logo' => new MediaResource($voucherTransaction->voucher->fund->logo),
             ]),
             'notes' => VoucherTransactionNoteResource::collection(
                 $voucherTransaction->notes->where('group', 'provider')->values()
