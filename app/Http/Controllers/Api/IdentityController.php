@@ -8,6 +8,7 @@ use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
+use App\Models\Implementation;
 use App\Services\Forus\MailNotification\MailService;
 use Illuminate\Http\Request;
 
@@ -149,11 +150,15 @@ class IdentityController extends Controller
 
         $platform = '';
 
-        if (strpos($source, 'shop-') === 0) {
+        if (strpos($source, '-webshop') !== false) {
             $platform = 'de webshop';
-        } else if (strpos($source, 'panel-') === 0) {
+        } else if (strpos($source, '-sponsor') !== false) {
             $platform = 'het dashboard';
-        } else if (strpos($source, 'app-me_app') === 0) {
+        } else if (strpos($source, '-provider') !== false) {
+            $platform = 'het dashboard';
+        } else if (strpos($source, '-validator') !== false) {
+            $platform = 'het dashboard';
+        } else if (strpos($source, 'app-me_app') !== false) {
             $platform = 'Me';
         }
 
@@ -244,17 +249,25 @@ class IdentityController extends Controller
         string $source,
         string $emailToken
     ) {
-        if (!array_has(config('forus.front_ends'), $source)) {
+        if (Implementation::keysAvailable()->search($source) === false) {
             abort(404);
         }
 
-        $sourceUrl = config('forus.front_ends.' . $source);
+        list($implementation, $frontend) = explode('_', $source);
+
+        if ($source == 'app-me_app') {
+            $sourceUrl = config('forus.front_ends.app-me_app');
+        } else if ($implementation == 'general') {
+            $sourceUrl = Implementation::general_urls()['url_' . $frontend];
+        } else {
+            $sourceUrl = Implementation::query()->where('key', $implementation)->first()['url_' . $frontend];
+        }
+
         $redirectUrl = $sourceUrl . "identity-restore?token=" . $emailToken;
 
         if ($source == 'app-me_app') {
             return view()->make('auth.deep_link', compact('redirectUrl'));
-        }
-
+        };
 
         return redirect($redirectUrl);
     }
@@ -269,7 +282,7 @@ class IdentityController extends Controller
         string $source,
         string $emailToken
     ) {
-        if (!array_has(config('forus.front_ends'), $source)) {
+        if (Implementation::keysAvailable()->search($source) === false) {
             abort(404);
         }
 

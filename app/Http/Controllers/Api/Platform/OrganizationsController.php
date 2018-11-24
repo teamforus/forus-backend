@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
-use Illuminate\Http\Request;
 
 class OrganizationsController extends Controller
 {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Models\Implementation;
 use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -31,9 +32,7 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
             ],
             'source' => [
                 'required',
-                'in:' . collect(
-                    config('forus.front_ends')
-                )->keys()->implode(',')
+                'in:' . Implementation::keysAvailable()->implode(',')
             ]
         ];
     }
