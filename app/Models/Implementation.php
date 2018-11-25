@@ -24,20 +24,9 @@ use Illuminate\Database\Query\Builder;
  */
 class Implementation extends Model
 {
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-
-        $this->append('url_app');
-    }
-
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator'
-    ];
-
-    protected $attributes = [
-        'url_app'
     ];
 
     /**
@@ -52,10 +41,6 @@ class Implementation extends Model
             'id',
             'id'
         );
-    }
-
-    public function getUrlAppAttribute() {
-        return config('forus.front_ends.landing-app');
     }
 
     /**
@@ -85,7 +70,7 @@ class Implementation extends Model
             'url_sponsor'   => config('forus.front_ends.panel-sponsor'),
             'url_provider'  => config('forus.front_ends.panel-provider'),
             'url_validator' => config('forus.front_ends.panel-validator'),
-            'url_app'       => (new self())->getUrlAppAttribute(),
+            'url_app'       => config('forus.front_ends.landing-app'),
         ];
     }
 
