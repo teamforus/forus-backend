@@ -17,7 +17,7 @@ class ImplementationKeyMiddleware
     public function handle($request, Closure $next)
     {
         if (Implementation::implementationKeysAvailable()->search(
-            Implementation::activeKey(null)
+            Implementation::activeKey()
         ) === false) {
             return response()->json([
                 "message" => 'unknown_implementation_key'

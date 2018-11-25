@@ -149,8 +149,9 @@ class RouteServiceProvider extends ServiceProvider
              ->group(base_path('routes/api.php'));
 
         Route::prefix('api/v1/platform')
-            ->middleware('api')
-            ->middleware('implementation_key')
+            ->middleware([
+                'api', 'implementation_key'
+            ])
             ->namespace($this->namespace)
             ->group(base_path('routes/api-platform.php'));
     }
