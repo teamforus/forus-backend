@@ -150,13 +150,13 @@ class IdentityController extends Controller
 
         $platform = '';
 
-        if (strpos($source, '-webshop') !== false) {
+        if (strpos($source, '_webshop') !== false) {
             $platform = 'de webshop';
-        } else if (strpos($source, '-sponsor') !== false) {
+        } else if (strpos($source, '_sponsor') !== false) {
             $platform = 'het dashboard';
-        } else if (strpos($source, '-provider') !== false) {
+        } else if (strpos($source, '_provider') !== false) {
             $platform = 'het dashboard';
-        } else if (strpos($source, '-validator') !== false) {
+        } else if (strpos($source, '_validator') !== false) {
             $platform = 'het dashboard';
         } else if (strpos($source, 'app-me_app') !== false) {
             $platform = 'Me';
