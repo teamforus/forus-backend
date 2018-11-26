@@ -90,7 +90,7 @@ class FundProviderController extends Controller
         StoreFundProviderRequest $request,
         Organization $organization
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
         /** @var FundProvider $fundProvider */
@@ -121,7 +121,7 @@ class FundProviderController extends Controller
         Organization $organization,
         FundProvider $organizationFund
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('showProvider', [$organizationFund, $organization]);
 
         return new FundProviderResource($organizationFund);
@@ -141,7 +141,7 @@ class FundProviderController extends Controller
         Organization $organization,
         FundProvider $organizationFund
     ) {
-        $this->authorize('update', $organization);
+        $this->authorize('show', $organization);
         $this->authorize('updateProvider', [$organizationFund, $organization]);
 
         $organizationFund->update($request->only([
