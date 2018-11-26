@@ -20,7 +20,7 @@ return [
             ],
         "products" => [
             // list all funds
-            "list"      => false
+            "list"      => true
         ],
     ],
 ];
