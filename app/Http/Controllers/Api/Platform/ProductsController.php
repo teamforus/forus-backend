@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Resources\ProductResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Implementation;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 
@@ -21,7 +22,7 @@ class ProductsController extends Controller
         $this->authorize('indexPublic', Product::class);
 
         $organizationIds = FundProvider::query()->whereIn(
-            'fund_id', Fund::configuredFunds()->pluck('id')
+            'fund_id', Implementation::activeFunds()->pluck('id')
         )->where('state', 'approved')->pluck('organization_id');
 
         return ProductResource::collection(Product::query()->whereIn(

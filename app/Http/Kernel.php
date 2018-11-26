@@ -60,5 +60,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
         'cors' => \App\Http\Middleware\Cors::class,
+        'implementation_key' => \App\Http\Middleware\ImplementationKeyMiddleware::class,
     ];
 }

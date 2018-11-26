@@ -25,7 +25,7 @@ class Cors
 
         $allowed_headers = collect([
             'Content-Type', 'Access-Control-Allow-Headers', 'Authorization', 
-            'X-Requested-With', 'Locale'
+            'X-Requested-With', 'Locale', 'Client-Key'
         ]);
         
         $response = $next($request);

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Fund;
 use App\Models\Employee;
+use App\Models\Implementation;
 use App\Models\Prevalidation;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
@@ -94,6 +95,13 @@ class RouteServiceProvider extends ServiceProvider
                 });
             }
 
+            if (is_array($config)) {
+                $config['fronts'] = Implementation::active()->only([
+                    'url_webshop', 'url_sponsor', 'url_provider',
+                    'url_validator', 'url_app'
+                ]);
+            }
+
             return $config ?: [];
         });
     }
@@ -141,7 +149,9 @@ class RouteServiceProvider extends ServiceProvider
              ->group(base_path('routes/api.php'));
 
         Route::prefix('api/v1/platform')
-            ->middleware('api')
+            ->middleware([
+                'api', 'implementation_key'
+            ])
             ->namespace($this->namespace)
             ->group(base_path('routes/api-platform.php'));
     }
