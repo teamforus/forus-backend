@@ -89,3 +89,25 @@ if (!function_exists('is_collect')) {
         return $value instanceof Collection;
     }
 }
+
+if (!function_exists('implementation_key')) {
+    /**
+     * @return array|string
+     */
+    function implementation_key() {
+        return request()->header('Client-Key', false);
+    }
+}
+
+if (!function_exists('implementation_funds')) {
+    /**
+     * @return array|string
+     */
+    function implementation_funds() {
+        return Fund;
+
+        $funds = Implementatio::query()->where([
+            'key' => implementation_key()
+        ])->first()->funds;
+    }
+}

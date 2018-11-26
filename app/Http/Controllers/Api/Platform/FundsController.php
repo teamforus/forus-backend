@@ -7,6 +7,7 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Http\Controllers\Controller;
+use App\Models\Implementation;
 use Illuminate\Http\Request;
 
 class FundsController extends Controller
@@ -18,9 +19,7 @@ class FundsController extends Controller
      */
     public function index()
     {
-        return FundResource::collection(Fund::getModel()->where(
-            'state', 'active'
-        )->has('fund_config')->get());
+        return FundResource::collection(Implementation::activeFunds());
     }
 
     /**

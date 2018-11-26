@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Resources\OfficeResource;
 use App\Http\Controllers\Controller;
+use App\Models\Implementation;
 use App\Models\Office;
 use Illuminate\Database\Query\Builder;
 
@@ -23,7 +24,9 @@ class OfficesController extends Controller
                     'organization_id'
                 ])->where([
                     'state' => 'approved'
-                ]);
+                ])->whereIn(
+                    'fund_id', Implementation::activeFunds()->pluck('id')
+                );
             }
         )->get());
     }
