@@ -47,6 +47,16 @@ $router->group([], function() use ($router) {
         'config/{platform_config}',
         'Api\Platform\ConfigController@getConfig'
     );
+
+
+});
+
+// TODO TEMP added throttle 20 per minutes - must be secured
+$router->group(['middleware' => ['throttle:20']], function() use ($router) {
+    $router->post(
+        '/sms/send',
+        'Api\Platform\SmsController@send'
+    );
 });
 
 /**
