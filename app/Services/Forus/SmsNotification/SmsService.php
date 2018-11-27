@@ -20,7 +20,7 @@ class SmsService
      */
     public function __construct() {
         $this->apiRequest = app()->make('api_request');
-        $this->serviceApiUrl = env('NOTIFICATION_URL', false);
+        $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
     }
 
     /**

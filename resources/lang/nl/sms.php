@@ -13,6 +13,6 @@ return [
     |
     */
 
-    'failed' => 'Error sending sms'
+    'failed' => 'Het is niet gelukt om u een sms bericht te sturen.'
 
 ];
