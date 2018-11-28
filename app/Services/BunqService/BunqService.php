@@ -344,12 +344,20 @@ class BunqService
 
         /** @var VoucherTransaction $transaction */
         foreach($transactions as $transaction) {
+            $voucher = $transaction->voucher;
+
+            if ($voucher->fund->budget_left < $transaction->amount) {
+                $transaction->forceFill([
+                    'last_attempt_at'   => Carbon::now(),
+                ])->save();
+
+                continue;
+            }
+
             $transaction->forceFill([
                 'attempts'          => ++$transaction->attempts,
                 'last_attempt_at'   => Carbon::now(),
             ])->save();
-
-            $voucher = $transaction->voucher;
 
             try {
                 $bunq = $voucher->fund->getBunq();

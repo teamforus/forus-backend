@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property float $budget_total
  * @property float $budget_validated
  * @property float $budget_used
+ * @property float $budget_left
  * @property Media $logo
  * @property FundConfig $fund_config
  * @property Collection $metas
@@ -146,6 +147,13 @@ class Fund extends Model
     /**
      * @return float
      */
+    public function getBudgetValidatedAttribute() {
+        return 0;
+    }
+
+    /**
+     * @return float
+     */
     public function getBudgetTotalAttribute() {
         return round($this->top_ups()->where([
             'state' => 'confirmed'
@@ -155,15 +163,15 @@ class Fund extends Model
     /**
      * @return float
      */
-    public function getBudgetValidatedAttribute() {
-        return 0;
+    public function getBudgetUsedAttribute() {
+        return round($this->voucher_transactions->sum('amount'), 2);
     }
 
     /**
      * @return float
      */
-    public function getBudgetUsedAttribute() {
-        return round($this->voucher_transactions->sum('amount'), 2);
+    public function getBudgetLeftAttribute() {
+        return round($this->budget_total - $this->budget_used, 2);
     }
 
     /**
