@@ -199,6 +199,8 @@ return [
 
         App\Services\BunqService\BunqServiceProvider::class,
         App\Services\Forus\MailNotification\MailNotificationServiceProvider::class,
+
+        App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
     ],
 
     /*

@@ -24,7 +24,7 @@ class OrganizationsController extends Controller
         return OrganizationResource::collection(
             Organization::queryByIdentityPermissions(
                 $identityAddress
-            )->orWhere('identity_address', $identityAddress)->get()
+            )->get()
         );
     }
 

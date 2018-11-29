@@ -250,6 +250,6 @@ class Organization extends Model
                     })->get();
                 });
             });
-        });
+        })->orWhere('identity_address', $identityAddress);
     }
 }

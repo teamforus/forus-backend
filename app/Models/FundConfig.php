@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $bunq_sandbox
  * @property string $formula_amount
  * @property string $formula_multiplier
+ * @property Implementation $implementation
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -30,5 +31,12 @@ class FundConfig extends Model
 
     public function getBunqAllowedIpAttribute($value) {
         return collect(explode(',', $value))->filter()->toArray();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function implementation() {
+        return $this->belongsTo(Implementation::class);
     }
 }
