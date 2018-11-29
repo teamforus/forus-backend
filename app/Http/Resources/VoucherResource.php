@@ -18,12 +18,13 @@ class VoucherResource extends Resource
     {
         /** @var Voucher $voucher */
         $voucher = $this->resource;
+        $fund = $voucher->fund;
 
         if ($voucher->type == 'regular') {
             $amount = $voucher->amount_available;
             $offices = Office::getModel()->whereIn(
                 'organization_id',
-                $voucher->fund->providers->pluck('organization')
+                $fund->providers->pluck('organization')
             )->get();
 
             $productResource = null;
@@ -56,21 +57,27 @@ class VoucherResource extends Resource
             exit(abort("Unknown voucher type!", 403));
         }
 
-        $fundResource = collect($voucher->fund)->only([
+        $urlWebshop = null;
+
+        if ($fund->fund_config && 
+            $fund->fund_config->implementation) {
+            $urlWebshop = $fund->fund_config->implementation->url_webshop;
+        }
+
+        $fundResource = collect($fund)->only([
             'id', 'name', 'state'
         ])->merge([
+            'url_webshop' => $urlWebshop,
             'organization' => collect(
-                $voucher->fund->organization
+                $fund->organization
             )->only([
                 'id', 'name'
             ])->merge([
-                'logo' => new MediaCompactResource(
-                    $voucher->fund->organization->logo
-                )
+                'logo' => new MediaCompactResource($fund->organization->logo)
             ]),
-            'logo' => new MediaCompactResource($voucher->fund->logo),
+            'logo' => new MediaCompactResource($fund->logo),
             'product_categories' => ProductCategoryResource::collection(
-                $voucher->fund->product_categories
+                $fund->product_categories
             )
         ]);
 

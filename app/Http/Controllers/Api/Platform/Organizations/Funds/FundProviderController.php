@@ -99,12 +99,12 @@ class FundProviderController extends Controller
                 $organizationFund->fund->organization->name
             );
         } elseif ($state == 'declined') {
-            app()->make('forus.services.mail_notification')->providerRejected(
+            /*app()->make('forus.services.mail_notification')->providerRejected(
                 $organizationFund->organization->identity_address,
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
                 $organizationFund->fund->organization->name
-            );
+            );*/
         }
 
         return new FundProviderResource($organizationFund);
