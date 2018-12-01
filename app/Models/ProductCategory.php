@@ -33,6 +33,10 @@ class ProductCategory extends Model
         'key', 'parent_id', 'service'
     ];
 
+    protected $with = [
+        'translations'
+    ];
+
     /**
      * The attributes that are translatable.
      *
