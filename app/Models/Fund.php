@@ -306,4 +306,35 @@ class Fund extends Model
             return collect();
         }
     }
+
+    /**
+     */
+    public static function checkStateQueue() {
+        $funds = self::query()->has('fund_config')->whereDate('start_date', '<=', now())
+            ->get();
+
+        if ($funds->count() == 0) {
+            return null;
+        }
+
+        /** @var self $fund */
+        foreach($funds as $fund) {
+
+            $startDate = new Carbon($fund->start_date);
+            if ($startDate->isToday() && $fund->state != 'active') {
+                $fund->update([
+                    'start_date'    => $startDate->format('Y-m-d'),
+                    'state'         => 'active'
+                ]);
+            }
+
+            $endDate = new Carbon($fund->end_date);
+            if ($endDate->isToday() && $fund->state != 'closed') {
+                $fund->update([
+                    'start_date'    => $startDate->format('Y-m-d'),
+                    'state'         => 'closed'
+                ]);
+            }
+        }
+    }
 }
