@@ -78,17 +78,21 @@ class PrevalidationController extends Controller
     }
 
     /**
+     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index() {
+    public function index(Request $request) {
         $this->authorize('index', Prevalidation::class);
 
-        $prevalidations = Prevalidation::getModel()->where(
-            'identity_address', auth()->user()->getAuthIdentifier()
-        )->get();
-
-        return PrevalidationResource::collection($prevalidations);
+        return PrevalidationResource::collection(
+            Prevalidation::search(
+                auth()->user()->getAuthIdentifier(),
+                $request->input('q', false)
+            )->with('records.record_type')->paginate(
+                $request->has('per_page') ? $request->input('per_page') : null
+            )
+        );
     }
 
     /**

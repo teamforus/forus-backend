@@ -35,6 +35,11 @@ $router->group([], function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'products/sample',
+        "Api\Platform\ProductsController@sample"
+    );
+
     $router->resource(
         'products',
         "Api\Platform\ProductsController", [
