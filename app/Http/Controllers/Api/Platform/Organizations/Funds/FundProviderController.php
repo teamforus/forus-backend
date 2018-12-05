@@ -42,7 +42,9 @@ class FundProviderController extends Controller
         }
 
         return FundProviderResource::collection(
-            $organization_funds->get()
+            $organization_funds->paginate(
+                $request->has('per_page') ? $request->input('per_page') : null
+            )
         );
     }
 
