@@ -52,12 +52,15 @@ class VouchersController extends Controller
 
         $product->updateSoldOutState();
 
+        $voucherExpireAt = $voucher->fund->end_date->gt($product->expire_at) ? $product->expire_at : $voucher->fund->end_date;
+
         $voucher = Voucher::create([
             'identity_address'  => auth()->user()->getAuthIdentifier(),
             'parent_id'         => $voucher->id,
             'fund_id'           => $voucher->fund_id,
             'product_id'        => $product->id,
-            'amount'            => $product->price
+            'amount'            => $product->price,
+            'expire_at'         => $voucherExpireAt
         ]);
 
         VoucherCreated::dispatch($voucher);

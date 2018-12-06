@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -14,7 +15,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        CheckFundStateCommand::class
+        CheckFundStateCommand::class,
+        CheckFundConfigCommand::class
     ];
 
     /**
@@ -30,6 +32,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('forus.fund:check')
             ->daily();
+
+        $schedule->command('forus.fund.config:check')
+            ->everyMinute();
     }
 
     /**

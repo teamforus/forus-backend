@@ -84,28 +84,18 @@ class FundsController extends Controller
             $fund->attachMedia($media);
         }
 
-        $organizations = Organization::query()->whereIn(
-            'id', OrganizationProductCategory::query()->whereIn(
-                'product_category_id',
-                $request->input('product_categories', [])
-            )->pluck('organization_id')->toArray()
-        )->get();
+        $mailNotification = resolve('forus.services.mail_notification');
 
-        resolve('forus.services.mail_notification')->newFundCreated(
+        $mailNotification->newFundCreated(
             $organization->identity_address,
             $fund->name,
             env('WEB_SHOP_GENERAL_URL')
         );
 
-        /** @var Organization $organization */
-        foreach ($organizations as $organization) {
-            resolve('forus.services.mail_notification')->newFundApplicable(
-                $organization->identity_address,
-                $fund->name,
-                config('forus.front_ends.panel-provider')
-            );
-        }
-
+        $mailNotification->newFundCreatedNotifyCompany(
+            $fund->name,
+            $organization->name
+        );
 
         return new FundResource($fund);
     }

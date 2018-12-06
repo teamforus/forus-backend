@@ -375,6 +375,47 @@ class MailService
 
 
     /**
+     * Notify company that new fund was created
+     *
+     * @param string $fund_name
+     * @param string $organization_name
+     * @return bool
+     */
+    public function newFundCreatedNotifyCompany(
+        string $fund_name,
+        string $organization_name
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $email = config('app.debug') ?
+            env('EMAIL_FOR_FUND_CREATED_DEV', 'demo@forus.io') :
+            env('EMAIL_FOR_FUND_CREATED', 'deals@forus.io');
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/forus_new_fund_created/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'email'         => $email,
+            'fund_name'     => $fund_name,
+            'sponsor_name'  => $organization_name,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `newFundCreated` to forus: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Notify user that new product added
      * @param string $identifier
      * @param string $sponsor_name
