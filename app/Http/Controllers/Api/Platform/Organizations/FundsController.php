@@ -66,8 +66,10 @@ class FundsController extends Controller
             $request->input('product_categories', [])
         );
 
+        $criteriaKey = str_slug($fund->name) . '_' . now()->format('Y');
+
         $fund->criteria()->create([
-            'record_type_key' => 'kindpakket_2018_eligible',
+            'record_type_key' => $criteriaKey . '_eligible',
             'value' => "Ja",
             'operator' => '='
         ]);
