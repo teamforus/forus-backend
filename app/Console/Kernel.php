@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use Illuminate\Console\Scheduling\Schedule;
@@ -16,7 +17,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         CheckFundStateCommand::class,
-        CheckFundConfigCommand::class
+        CheckFundConfigCommand::class,
+        CalculateFundUsersCommand::class
     ];
 
     /**
@@ -27,14 +29,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
-
         $schedule->command('forus.fund:check')
             ->daily();
 
         $schedule->command('forus.fund.config:check')
             ->everyMinute();
+
+        $schedule->command('forus.fund.users:calculate')
+            ->monthly();
     }
 
     /**

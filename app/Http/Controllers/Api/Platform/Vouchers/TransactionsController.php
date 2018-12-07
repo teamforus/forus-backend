@@ -99,6 +99,8 @@ class TransactionsController extends Controller
             $product->updateSoldOutState();
         }
 
+        $voucher->sendEmailAvailableAmount();
+
         $note = $request->input('note', false);
 
         if ($note && !empty($note)) {
