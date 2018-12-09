@@ -1,39 +1,37 @@
 <?php
 
-namespace App\Events\Vouchers;
+namespace App\Events\Funds;
 
-use App\Models\Voucher;
+use App\Models\Fund;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
-class VoucherCreated
+class FundCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $voucher;
+    private $fund;
 
     /**
      * Create a new event instance.
      *
-     * @param  Voucher $voucher
-     * @return void
+     * @param Fund $fund
      */
-    public function __construct(
-        Voucher $voucher
-    ) {
-        $this->voucher = $voucher;
+    public function __construct(Fund $fund)
+    {
+        $this->fund = $fund;
     }
 
     /**
      * Get the voucher
      *
-     * @return Voucher
+     * @return Fund
      */
-    public function getVoucher()
+    public function getFund()
     {
-        return $this->voucher;
+        return $this->fund;
     }
 
     /**

@@ -353,6 +353,11 @@ class MailService
 
         $endpoint = $this->getEndpoint('/sender/vouchers/new_fund_created/');
 
+        resolve('log')->info(collect([$endpoint, [
+            'reffer_id'     => $identifier,
+            'fund_name'     => $fund_name,
+            'webshop_link'  => $webshop_link,
+        ]]));
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier,
             'fund_name'     => $fund_name,

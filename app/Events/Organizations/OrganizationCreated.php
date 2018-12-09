@@ -1,39 +1,38 @@
 <?php
 
-namespace App\Events\Vouchers;
+namespace App\Events\Organizations;
 
-use App\Models\Voucher;
+use App\Models\Organization;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
-class VoucherCreated
+class OrganizationCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $voucher;
+    protected $organization;
 
     /**
      * Create a new event instance.
      *
-     * @param  Voucher $voucher
-     * @return void
+     * OrganizationCreated constructor.
+     * @param Organization $organization
      */
-    public function __construct(
-        Voucher $voucher
-    ) {
-        $this->voucher = $voucher;
+    public function __construct(Organization $organization)
+    {
+        $this->organization = $organization;
     }
 
     /**
      * Get the voucher
      *
-     * @return Voucher
+     * @return Organization
      */
-    public function getVoucher()
+    public function getOrganization()
     {
-        return $this->voucher;
+        return $this->organization;
     }
 
     /**

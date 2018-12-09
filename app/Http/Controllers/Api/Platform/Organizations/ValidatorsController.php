@@ -9,7 +9,7 @@ use App\Models\Validator;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 
-class ValidatorController extends Controller
+class ValidatorsController extends Controller
 {
     /**
      * Display a listing of the resource.
