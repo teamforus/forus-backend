@@ -130,4 +130,19 @@ class Voucher extends Model
             $voucherToken->getQrCodeUrl()
         );
     }
+
+    /**
+     *
+     */
+    public function sendEmailAvailableAmount()
+    {
+        $amount = $this->parent->amount_available;
+        $fund_name = $this->fund->name;
+
+        resolve('forus.services.mail_notification')->transactionAvailableAmount(
+            $this->identity_address,
+            $fund_name,
+            $amount
+        );
+    }
 }

@@ -389,4 +389,53 @@ class Fund extends Model
             }
         }
     }
+
+    /**
+     * @return null
+     */
+    public static function calculateUsersQueue()
+    {
+        $funds = self::query()
+            ->whereHas('fund_config', function ($query){
+                return $query->where('is_configured', true);
+            })
+            ->whereIn('state', ['active', 'paused'])
+            ->get();
+
+        if ($funds->count() == 0) {
+            return null;
+        }
+
+        /** @var self $fund */
+        foreach($funds as $fund) {
+
+            $organization = $fund->organization;
+
+            $sponsorCount = $organization->employees->count() + 1;
+
+            $providers = $fund->providers()->where([
+                'state' => 'approved'
+            ])->get();
+
+            $providerCount = $providers->map(function ($fundProvider, $key){
+                /** @var FundProvider $fundProvider */
+                return $fundProvider->organization->employees->count() + 1;
+            })->sum();
+
+            if($fund->state == 'active'){
+                $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
+            }else{
+                $requesterCount = 0;
+            }
+
+            resolve('forus.services.mail_notification')->calculateFundUsers(
+                $fund->name,
+                $organization->name,
+                $sponsorCount,
+                $providerCount,
+                $requesterCount,
+                ($sponsorCount + $providerCount + $requesterCount)
+            );
+        }
+    }
 }
