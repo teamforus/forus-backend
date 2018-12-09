@@ -78,7 +78,11 @@ class VoucherResource extends Resource
             'logo' => new MediaCompactResource($fund->logo),
             'product_categories' => ProductCategoryResource::collection(
                 $fund->product_categories
-            )
+            ),
+            'start_date' => $fund->start_date->format('Y-m-d H:i'),
+            'start_date_locale' => format_date_locale($fund->start_date),
+            'end_date' => $fund->end_date->format('Y-m-d H:i'),
+            'end_date_locale' => format_date_locale($fund->end_date)
         ]);
 
         return collect($voucher)->only([
@@ -87,8 +91,8 @@ class VoucherResource extends Resource
             'amount' => currency_format($amount),
             'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens()->where('need_confirmation', 0)->first()->address,
-            'expire_at' => $voucher->product ? $voucher->product->expire_at->format('Y-m-d') : null,
-            'expire_at_locale' => $voucher->product ? format_date_locale($voucher->product->expire_at) : null,
+            'expire_at' => $voucher->product ? ($voucher->expire_at ? $voucher->expire_at->format('Y-m-d') : null) : null,
+            'expire_at_locale' => $voucher->product ? ($voucher->expire_at ? format_date_locale($voucher->expire_at) : null) : null,
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'offices' => OfficeResource::collection($offices),

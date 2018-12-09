@@ -181,12 +181,16 @@ class Organization extends Model
     }
 
     /**
-     * @param $identityAddress
+     * @param $identityAddress string
      * @param $permissions
      * @param $all boolean
      * @return bool
      */
-    public function identityCan($identityAddress, $permissions, $all = true) {
+    public function identityCan(
+        string $identityAddress,
+        $permissions,
+        $all = true
+    ) {
         // as owner of the organization you don't have any restrictions
         if (strcmp($identityAddress, $this->identity_address) === 0) {
             return true;
@@ -212,12 +216,12 @@ class Organization extends Model
     }
 
     /**
-     * @param $identityAddress
+     * @param $identityAddress string
      * @param $permissions
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function queryByIdentityPermissions (
-        $identityAddress,
+        string $identityAddress,
         $permissions = false
     ) {
         // convert string to array

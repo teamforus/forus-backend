@@ -23,11 +23,13 @@ class StoreFundRequest extends FormRequest
      */
     public function rules()
     {
+        $start_after = now()->addDays(5)->format('Y-m-d');
+
         return [
             'name'                  => 'required|between:2,200',
-            'state'                 => 'required|in:active,paused,closed',
-            'start_date'            => 'required|date',
-            'end_date'              => 'required|date',
+            'state'                 => 'required|in:waiting,active,paused,closed',
+            'start_date'            => 'required|date|after:' . $start_after,
+            'end_date'              => 'required|date|after:start_date',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
         ];
