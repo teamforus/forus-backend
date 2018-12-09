@@ -6,6 +6,7 @@ use App\Services\BunqService\BunqService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
@@ -322,7 +323,7 @@ class Fund extends Model
      */
     public static function checkStateQueue() {
         $funds = self::query()
-            ->whereHas('fund_config', function ($query){
+            ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
             })
             ->whereDate('start_date', '>=', now()->startOfDay())
@@ -355,10 +356,10 @@ class Fund extends Model
     public static function checkConfigStateQueue()
     {
         $funds = self::query()
-            ->whereHas('fund_config', function ($query){
+            ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
             })
-            ->whereState('waiting')
+            ->where('state', 'waiting')
             ->whereDate('start_date', '<', now())
             ->get();
 
@@ -370,6 +371,18 @@ class Fund extends Model
         foreach($funds as $fund) {
             $fund->update([
                 'state' => 'paused'
+            ]);
+
+            $fund->criteria()->create([
+                'record_type_key' => $fund->fund_config->key . '_eligible',
+                'value' => "Ja",
+                'operator' => '='
+            ]);
+
+            $fund->criteria()->create([
+                'record_type_key' => 'children_nth',
+                'value' => 1,
+                'operator' => '>='
             ]);
 
             $organizations = Organization::query()->whereIn(
@@ -396,7 +409,7 @@ class Fund extends Model
     public static function calculateUsersQueue()
     {
         $funds = self::query()
-            ->whereHas('fund_config', function ($query){
+            ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
             })
             ->whereIn('state', ['active', 'paused'])

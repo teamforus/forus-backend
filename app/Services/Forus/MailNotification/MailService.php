@@ -394,9 +394,7 @@ class MailService
             return false;
         }
 
-        $email = config('app.debug') ?
-            env('EMAIL_FOR_FUND_CREATED_DEV', 'demo@forus.io') :
-            env('EMAIL_FOR_FUND_CREATED', 'deals@forus.io');
+        $email = env('EMAIL_FOR_FUND_CREATED', 'demo@forus.io');
 
         $endpoint = $this->getEndpoint('/sender/vouchers/forus_new_fund_created/');
 
@@ -442,9 +440,7 @@ class MailService
             return false;
         }
 
-        $email = config('app.debug') ?
-            env('EMAIL_FOR_FUND_CALC_DEV', 'demo@forus.io') :
-            env('EMAIL_FOR_FUND_CALC', 'finance@forus.io');
+        $email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io');
 
         $endpoint = $this->getEndpoint('/sender/vouchers/forus_users_calc/');
 
