@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $provider_organizations_approved
  * @property Carbon $start_date
  * @property Carbon $end_date
+ * @property float $notification_amount
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -48,11 +49,21 @@ class Fund extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'state', 'name', 'start_date', 'end_date'
+        'organization_id', 'state', 'name', 'start_date', 'end_date', 'notification_amount'
     ];
 
     protected $hidden = [
         'fund_config'
+    ];
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'start_date',
+        'end_date'
     ];
 
     /**
@@ -304,6 +315,127 @@ class Fund extends Model
             return static::query()->whereHas('fund_config')->get();
         } catch (\Exception $exception) {
             return collect();
+        }
+    }
+
+    /**
+     */
+    public static function checkStateQueue() {
+        $funds = self::query()
+            ->whereHas('fund_config', function ($query){
+                return $query->where('is_configured', true);
+            })
+            ->whereDate('start_date', '>=', now()->startOfDay())
+            ->get();
+
+        if ($funds->count() == 0) {
+            return null;
+        }
+
+        /** @var self $fund */
+        foreach($funds as $fund) {
+
+            if (($fund->start_date->isToday() && $fund->state != 'active') || ($fund->start_date->gt(now()) && $fund->state == 'waiting')) {
+                $fund->update([
+                    'state' => 'active'
+                ]);
+            }
+
+            if ($fund->end_date->isToday() && $fund->state != 'closed') {
+                $fund->update([
+                    'state' => 'closed'
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @return null
+     */
+    public static function checkConfigStateQueue()
+    {
+        $funds = self::query()
+            ->whereHas('fund_config', function ($query){
+                return $query->where('is_configured', true);
+            })
+            ->whereState('waiting')
+            ->whereDate('start_date', '<', now())
+            ->get();
+
+        if ($funds->count() == 0) {
+            return null;
+        }
+
+        /** @var self $fund */
+        foreach($funds as $fund) {
+            $fund->update([
+                'state' => 'paused'
+            ]);
+
+            $organizations = Organization::query()->whereIn(
+                'id', OrganizationProductCategory::query()->whereIn(
+                'product_category_id',
+                $fund->product_categories()->pluck('id')->all()
+            )->pluck('organization_id')->toArray()
+            )->get();
+
+            /** @var Organization $organization */
+            foreach ($organizations as $organization) {
+                resolve('forus.services.mail_notification')->newFundApplicable(
+                    $organization->identity_address,
+                    $fund->name,
+                    config('forus.front_ends.panel-provider')
+                );
+            }
+        }
+    }
+
+    /**
+     * @return null
+     */
+    public static function calculateUsersQueue()
+    {
+        $funds = self::query()
+            ->whereHas('fund_config', function ($query){
+                return $query->where('is_configured', true);
+            })
+            ->whereIn('state', ['active', 'paused'])
+            ->get();
+
+        if ($funds->count() == 0) {
+            return null;
+        }
+
+        /** @var self $fund */
+        foreach($funds as $fund) {
+
+            $organization = $fund->organization;
+
+            $sponsorCount = $organization->employees->count() + 1;
+
+            $providers = $fund->providers()->where([
+                'state' => 'approved'
+            ])->get();
+
+            $providerCount = $providers->map(function ($fundProvider, $key){
+                /** @var FundProvider $fundProvider */
+                return $fundProvider->organization->employees->count() + 1;
+            })->sum();
+
+            if($fund->state == 'active'){
+                $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
+            }else{
+                $requesterCount = 0;
+            }
+
+            resolve('forus.services.mail_notification')->calculateFundUsers(
+                $fund->name,
+                $organization->name,
+                $sponsorCount,
+                $providerCount,
+                $requesterCount,
+                ($sponsorCount + $providerCount + $requesterCount)
+            );
         }
     }
 }

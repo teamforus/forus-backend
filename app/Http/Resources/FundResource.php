@@ -41,12 +41,8 @@ class FundResource extends Resource
         ])->merge([
             'key' => $fund->fund_config ? $fund->fund_config->key : '',
             'logo' => new MediaResource($this->resource->logo),
-            'start_date' => (new Carbon(
-                $this->resource->start_date
-            ))->format('Y-m-d'),
-            'end_date' => (new Carbon(
-                $this->resource->end_date
-            ))->format('Y-m-d'),
+            'start_date' => $this->resource->start_date->format('Y-m-d'),
+            'end_date' => $this->resource->end_date->format('Y-m-d'),
             'organization' => new OrganizationResource(
                 $this->resource->organization
             ),

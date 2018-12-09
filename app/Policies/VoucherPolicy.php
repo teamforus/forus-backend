@@ -91,6 +91,12 @@ class VoucherPolicy
                 ));
             }
 
+            if ($voucher->fund->state != 'active') {
+                throw new AuthorizationException(trans(
+                    'validation.voucher.fund_not_active'
+                ));
+            }
+
             // The product should not be sold out
             if ($voucher->type != 'product' && $voucher->product->sold_out) {
                 throw new AuthorizationException(trans(
