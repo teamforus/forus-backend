@@ -3,35 +3,12 @@
 namespace App\Listeners;
 
 use App\Events\Funds\FundCreated;
-use App\Models\Organization;
-use App\Models\OrganizationProductCategory;
 use Illuminate\Events\Dispatcher;
 
 class FundSubscriber
 {
     public function onFundCreated(FundCreated $fundCreated) {
         $fund = $fundCreated->getFund();
-
-        $criteriaKey = str_slug($fund->name) . '_' . now()->format('Y');
-
-        $fund->criteria()->create([
-            'record_type_key' => $criteriaKey . '_eligible',
-            'value' => "Ja",
-            'operator' => '='
-        ]);
-
-        $fund->criteria()->create([
-            'record_type_key' => 'children_nth',
-            'value' => 1,
-            'operator' => '>='
-        ]);
-
-        $organizations = Organization::query()->whereIn(
-            'id', OrganizationProductCategory::query()->whereIn(
-            'product_category_id',
-            $fund->product_categories
-        )->pluck('organization_id')->toArray()
-        )->get();
 
         $notificationService = resolve('forus.services.mail_notification');
 
@@ -41,14 +18,10 @@ class FundSubscriber
             env('WEB_SHOP_GENERAL_URL')
         );
 
-        /** @var Organization $organization */
-        foreach ($organizations as $organization) {
-            $notificationService->newFundApplicable(
-                $organization->identity_address,
-                $fund->name,
-                config('forus.front_ends.panel-provider')
-            );
-        }
+        $notificationService->newFundCreatedNotifyCompany(
+            $fund->name,
+            $fund->organization->name
+        );
     }
 
     /**
