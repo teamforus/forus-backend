@@ -188,7 +188,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'organizations.validators',
         "Api\Platform\Organizations\ValidatorsController", [
         'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
+            'index', 'show', /*'store', 'update', 'destroy'*/
         ]
     ]);
 

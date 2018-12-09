@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\EmployeeSubscriber;
 use App\Listeners\FundSubscriber;
 use App\Listeners\OrganizationSubscriber;
 use App\Listeners\VoucherSubscriber;
@@ -17,6 +18,7 @@ class EventServiceProvider extends ServiceProvider
     protected $subscribe = [
         FundSubscriber::class,
         VoucherSubscriber::class,
+        EmployeeSubscriber::class,
         OrganizationSubscriber::class,
     ];
     /**

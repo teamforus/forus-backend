@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Events\Employees\EmployeeCreated;
+use App\Events\Employees\EmployeeDeleted;
+use App\Events\Employees\EmployeeUpdated;
 use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
@@ -65,6 +68,8 @@ class EmployeesController extends Controller
 
         $employee->roles()->sync($request->input(['roles']));
 
+        EmployeeCreated::dispatch($employee);
+
         return new EmployeeResource($employee);
     }
 
@@ -105,6 +110,8 @@ class EmployeesController extends Controller
 
         $employee->roles()->sync($request->input('roles', []));
 
+        EmployeeUpdated::dispatch($employee);
+
         return new EmployeeResource($employee);
     }
 
@@ -123,5 +130,7 @@ class EmployeesController extends Controller
         $this->authorize('destroy', [$employee, $organization]);
 
         $employee->delete();
+
+        EmployeeDeleted::broadcast($employee);
     }
 }

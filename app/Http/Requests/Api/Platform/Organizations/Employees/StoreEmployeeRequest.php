@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
 use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\NotIn;
 
 class StoreEmployeeRequest extends FormRequest
 {
@@ -24,10 +25,24 @@ class StoreEmployeeRequest extends FormRequest
      */
     public function rules()
     {
+        $recordRepo = resolve('forus.services.record');
+        $primaryEmail = $recordRepo->primaryEmailByAddress(auth()->id());
+
         return [
-            'email'     => ['required', new IdentityRecordsExistsRule('primary_email')],
+            'email'     => [
+                'required',
+                new IdentityRecordsExistsRule('primary_email'),
+                new NotIn([$primaryEmail]),
+            ],
             'roles'     => 'present|array',
             'roles.*'   => 'exists:roles,id',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'email.not_in' => trans('validation.owner_cant_be_employee')
         ];
     }
 }
