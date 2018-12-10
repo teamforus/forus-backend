@@ -136,7 +136,7 @@ class Voucher extends Model
      */
     public function sendEmailAvailableAmount()
     {
-        $amount = $this->parent->amount_available;
+        $amount = $this->parent ? $this->parent->amount_available : $this->amount_available;
         $fund_name = $this->fund->name;
 
         resolve('forus.services.mail_notification')->transactionAvailableAmount(
