@@ -132,7 +132,7 @@ class Voucher extends Model
     }
 
     /**
-     *
+     * @return void
      */
     public function sendEmailAvailableAmount()
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Events\Organizations\OrganizationCreated;
+use App\Events\Organizations\OrganizationUpdated;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\OrganizationResource;
@@ -120,6 +121,8 @@ class OrganizationsController extends Controller
         if ($media && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
+
+        OrganizationUpdated::dispatch($organization);
 
         return new OrganizationResource($organization);
     }

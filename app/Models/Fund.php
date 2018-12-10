@@ -351,7 +351,7 @@ class Fund extends Model
     }
 
     /**
-     * @return null
+     * @return void
      */
     public static function checkConfigStateQueue()
     {
@@ -395,7 +395,7 @@ class Fund extends Model
             /** @var Organization $organization */
             foreach ($organizations as $organization) {
                 resolve('forus.services.mail_notification')->newFundApplicable(
-                    $organization->identity_address,
+                    $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
                 );
@@ -404,7 +404,7 @@ class Fund extends Model
     }
 
     /**
-     * @return null
+     * @return void
      */
     public static function calculateUsersQueue()
     {
@@ -430,7 +430,7 @@ class Fund extends Model
                 'state' => 'approved'
             ])->get();
 
-            $providerCount = $providers->map(function ($fundProvider, $key){
+            $providerCount = $providers->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */
                 return $fundProvider->organization->employees->count() + 1;
             })->sum();
