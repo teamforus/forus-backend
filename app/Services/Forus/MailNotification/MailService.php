@@ -94,6 +94,32 @@ class MailService
     }
 
     /**
+     * Register new email connection for given identifier
+     *
+     * @param string $identifier
+     * @param string $email_address
+     */
+    public function addEmailConnection(
+        string $identifier,
+        string $email_address
+    ) {
+        $this->addConnection($identifier,self::TYPE_EMAIL, $email_address);
+    }
+
+    /**
+     * Register new push message connection for given identifier
+     *
+     * @param string $identifier
+     * @param string $token
+     */
+    public function addPushMessageConnection(
+        string $identifier,
+        string $token
+    ) {
+        $this->addConnection($identifier,self::TYPE_PUSH_MESSAGE, $token);
+    }
+
+    /**
      * Notify sponsor that new provider applied to his fund
      *
      * @param string $identifier
@@ -353,6 +379,12 @@ class MailService
 
         $endpoint = $this->getEndpoint('/sender/vouchers/new_fund_created/');
 
+        resolve('log')->info(collect([$endpoint, [
+            'reffer_id'     => $identifier,
+            'fund_name'     => $fund_name,
+            'webshop_link'  => $webshop_link,
+        ]]));
+        
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier,
             'fund_name'     => $fund_name,
@@ -375,7 +407,96 @@ class MailService
 
 
     /**
-     * Notify user that new product added
+     * Notify company that new fund was created
+     *
+     * @param string $fund_name
+     * @param string $organization_name
+     * @return bool
+     */
+    public function newFundCreatedNotifyCompany(
+        string $fund_name,
+        string $organization_name
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $email = env('EMAIL_FOR_FUND_CREATED', 'demo@forus.io');
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/forus_new_fund_created/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'email'         => $email,
+            'fund_name'     => $fund_name,
+            'sponsor_name'  => $organization_name,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `newFundCreated` to forus: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $fund_name
+     * @param string $sponsor_name
+     * @param int $sponsor_amount
+     * @param int $provider_amount
+     * @param int $requester_amount
+     * @param int $total_amount
+     * @return bool
+     */
+    public function calculateFundUsers(
+        string $fund_name,
+        string $sponsor_name,
+        int $sponsor_amount,
+        int $provider_amount,
+        int $requester_amount,
+        int $total_amount
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io');
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/forus_users_calc/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'email'             => $email,
+            'fund_name'         => $fund_name,
+            'sponsor_name'      => $sponsor_name,
+            'sponsor_amount'    => $sponsor_amount,
+            'provider_amount'   => $provider_amount,
+            'requester_amount'  => $requester_amount,
+            'total_amount'      => $total_amount
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `calculateFundUsers`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Notify sponsor that new product added by provider
+     *
      * @param string $identifier
      * @param string $sponsor_name
      * @param string $fund_name
@@ -479,6 +600,43 @@ class MailService
             app()->make('log')->error(
                 sprintf(
                     'Error sending notification `loginViaEmail`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $identifier
+     * @param string $fund_name
+     * @param string $current_budget
+     * @return bool
+     */
+    public function transactionAvailableAmount(
+        string $identifier,
+        string $fund_name,
+        string $current_budget
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/payment_success/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'         => $identifier,
+            'fund_name'         => $fund_name,
+            'current_budget'    => $current_budget,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `transactionAvailableAmount`: %s',
                     $res->getBody()
                 )
             );
