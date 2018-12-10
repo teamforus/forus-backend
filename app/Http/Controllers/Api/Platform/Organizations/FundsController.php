@@ -120,9 +120,17 @@ class FundsController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        $fund->update($request->only([
-            'name', 'state', 'start_date', 'end_date'
-        ]));
+        if($fund->state == 'waiting') {
+            $params = $request->only([
+                'name', 'state', 'start_date', 'end_date'
+            ]);
+        }else{
+            $params = $request->only([
+                'name', 'state'
+            ]);
+        }
+
+        $fund->update($params);
 
         $fund->product_categories()->sync(
             $request->input('product_categories', [])
