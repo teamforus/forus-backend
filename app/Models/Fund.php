@@ -326,7 +326,7 @@ class Fund extends Model
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
             })
-            ->whereDate('start_date', '>=', now()->startOfDay())
+            ->whereDate('start_date', '<=', now())
             ->get();
 
         if ($funds->count() == 0) {
@@ -336,7 +336,7 @@ class Fund extends Model
         /** @var self $fund */
         foreach($funds as $fund) {
 
-            if (($fund->start_date->isToday() && $fund->state != 'active') || ($fund->start_date->gt(now()) && $fund->state == 'waiting')) {
+            if (($fund->start_date->isToday() && $fund->state != 'active') || ($fund->start_date->lt(now()) && $fund->state == 'waiting')) {
                 $fund->update([
                     'state' => 'active'
                 ]);
@@ -360,7 +360,7 @@ class Fund extends Model
                 return $query->where('is_configured', true);
             })
             ->where('state', 'waiting')
-            ->whereDate('start_date', '<', now())
+            ->whereDate('start_date', '>', now())
             ->get();
 
         if ($funds->count() == 0) {
