@@ -35,6 +35,11 @@ $router->group([], function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'products/sample',
+        "Api\Platform\ProductsController@sample"
+    );
+
     $router->resource(
         'products',
         "Api\Platform\ProductsController", [
@@ -186,9 +191,9 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
 
     $router->resource(
         'organizations.validators',
-        "Api\Platform\Organizations\ValidatorController", [
+        "Api\Platform\Organizations\ValidatorsController", [
         'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
+            'index', 'show', /*'store', 'update', 'destroy'*/
         ]
     ]);
 

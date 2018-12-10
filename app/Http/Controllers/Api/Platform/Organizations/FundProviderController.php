@@ -6,16 +6,18 @@ use App\Http\Resources\FundProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class FundProviderController extends Controller
 {
     /**
      * @param Organization $organization
+     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Organization $organization
+        Organization $organization,
+        Request $request
     ) {
         $this->authorize('show', $organization);
         $this->authorize('indexSponsor', [FundProvider::class, $organization]);
@@ -24,7 +26,9 @@ class FundProviderController extends Controller
             FundProvider::getModel()->whereIn(
                 'fund_id',
                 $organization->funds()->pluck('id')
-            )->get()
+            )->paginate(
+                $request->has('per_page') ? $request->input('per_page') : null
+            )
         );
     }
 }

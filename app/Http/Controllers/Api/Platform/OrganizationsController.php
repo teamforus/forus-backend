@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Events\Organizations\OrganizationCreated;
+use App\Events\Organizations\OrganizationUpdated;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\OrganizationResource;
@@ -65,19 +67,7 @@ class OrganizationsController extends Controller
             $organization->attachMedia($media);
         }
 
-        try {
-            $offices = collect(app()->make('kvk_api')->getOffices(
-                $request->input('kvk')
-            ));
-
-            foreach (collect($offices ?: null) as $office) {
-                $organization->offices()->create(
-                    collect($office)->only([
-                        'address', 'lon', 'lat'
-                    ])->toArray()
-                );
-            }
-        } catch (\Exception $e) { }
+        OrganizationCreated::dispatch($organization);
 
         return new OrganizationResource($organization);
     }
@@ -131,6 +121,8 @@ class OrganizationsController extends Controller
         if ($media && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
+
+        OrganizationUpdated::dispatch($organization);
 
         return new OrganizationResource($organization);
     }

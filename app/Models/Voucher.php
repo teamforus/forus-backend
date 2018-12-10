@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Collection;
  * @property Collection $product_vouchers
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property Carbon $expire_at
  * @package App\Models
  */
 class Voucher extends Model
@@ -33,7 +34,16 @@ class Voucher extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
+        'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id', 'expire_at'
+    ];
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'expire_at'
     ];
 
     /**
@@ -93,6 +103,15 @@ class Voucher extends Model
         return $this->hasMany(VoucherToken::class);
     }
 
+    /**
+     * The voucher is expired
+     *
+     * @return bool
+     */
+    public function getExpiredAttribute() {
+        return !!$this->expire_at->isPast();
+    }
+
     public function sendToEmail() {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
@@ -109,6 +128,21 @@ class Voucher extends Model
             auth()->user()->getAuthIdentifier(),
             $fund_product_name,
             $voucherToken->getQrCodeUrl()
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function sendEmailAvailableAmount()
+    {
+        $amount = $this->parent ? $this->parent->amount_available : $this->amount_available;
+        $fund_name = $this->fund->name;
+
+        resolve('forus.services.mail_notification')->transactionAvailableAmount(
+            $this->identity_address,
+            $fund_name,
+            $amount
         );
     }
 }

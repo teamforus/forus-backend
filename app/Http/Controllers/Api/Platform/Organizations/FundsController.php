@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Events\Funds\FundCreated;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
@@ -66,44 +67,11 @@ class FundsController extends Controller
             $request->input('product_categories', [])
         );
 
-        $fund->criteria()->create([
-            'record_type_key' => 'kindpakket_2018_eligible',
-            'value' => "Ja",
-            'operator' => '='
-        ]);
-
-        $fund->criteria()->create([
-            'record_type_key' => 'children_nth',
-            'value' => 1,
-            'operator' => '>='
-        ]);
-
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }
 
-        $organizations = Organization::query()->whereIn(
-            'id', OrganizationProductCategory::query()->whereIn(
-                'product_category_id',
-                $request->input('product_categories', [])
-            )->pluck('organization_id')->toArray()
-        )->get();
-
-        resolve('forus.services.mail_notification')->newFundCreated(
-            $organization->identity_address,
-            $fund->name,
-            env('WEB_SHOP_GENERAL_URL')
-        );
-
-        /** @var Organization $organization */
-        foreach ($organizations as $organization) {
-            resolve('forus.services.mail_notification')->newFundApplicable(
-                $organization->identity_address,
-                $fund->name,
-                config('forus.front_ends.panel-provider')
-            );
-        }
-
+        FundCreated::dispatch($fund);
 
         return new FundResource($fund);
     }
@@ -152,9 +120,17 @@ class FundsController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        $fund->update($request->only([
-            'name', 'state', 'start_date', 'end_date'
-        ]));
+        if($fund->state == 'waiting') {
+            $params = $request->only([
+                'name', 'state', 'start_date', 'end_date'
+            ]);
+        }else{
+            $params = $request->only([
+                'name', 'state'
+            ]);
+        }
+
+        $fund->update($params);
 
         $fund->product_categories()->sync(
             $request->input('product_categories', [])

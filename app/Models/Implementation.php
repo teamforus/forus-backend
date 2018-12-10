@@ -79,7 +79,7 @@ class Implementation extends Model
      */
     public static function activeFunds() {
         if (self::activeKey() == 'general') {
-            return Fund::query()->has('fund_config')->get();
+            return Fund::query()->has('fund_config')->where('state', 'active')->get();
         }
 
         return Fund::query()->whereIn('id', function(Builder $query) {
@@ -88,7 +88,8 @@ class Implementation extends Model
                     'key' => self::activeKey()
                 ])->first()->id
             ]);
-        })->get();
+        })->where('state', 'active')
+            ->get();
     }
 
     /**

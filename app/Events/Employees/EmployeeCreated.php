@@ -1,39 +1,38 @@
 <?php
 
-namespace App\Events\Vouchers;
+namespace App\Events\Employees;
 
-use App\Models\Voucher;
+use App\Models\Employee;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
-class VoucherCreated
+class EmployeeCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $voucher;
+    protected $employee;
 
     /**
      * Create a new event instance.
      *
-     * @param  Voucher $voucher
-     * @return void
+     * EmployeeCreated constructor.
+     * @param Employee $employee
      */
-    public function __construct(
-        Voucher $voucher
-    ) {
-        $this->voucher = $voucher;
+    public function __construct(Employee $employee)
+    {
+        $this->employee = $employee;
     }
 
     /**
      * Get the voucher
      *
-     * @return Voucher
+     * @return Employee
      */
-    public function getVoucher()
+    public function getEmployee()
     {
-        return $this->voucher;
+        return $this->employee;
     }
 
     /**
