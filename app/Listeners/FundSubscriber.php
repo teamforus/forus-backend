@@ -13,7 +13,7 @@ class FundSubscriber
         $notificationService = resolve('forus.services.mail_notification');
 
         $notificationService->newFundCreated(
-            $fund->organization->identity_address,
+            $fund->organization->emailServiceId(),
             $fund->name,
             env('WEB_SHOP_GENERAL_URL')
         );

@@ -153,6 +153,13 @@ class Organization extends Model
     }
 
     /**
+     * @return string
+     */
+    public function emailServiceId() {
+        return "organization_" . $this->id;
+    }
+
+    /**
      * Returns identity organization roles
      *
      * @param $identityAddress
