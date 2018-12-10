@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Events\Funds\FundCreated;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
@@ -66,36 +67,11 @@ class FundsController extends Controller
             $request->input('product_categories', [])
         );
 
-        $criteriaKey = str_slug($fund->name) . '_' . now()->format('Y');
-
-        $fund->criteria()->create([
-            'record_type_key' => $criteriaKey . '_eligible',
-            'value' => "Ja",
-            'operator' => '='
-        ]);
-
-        $fund->criteria()->create([
-            'record_type_key' => 'children_nth',
-            'value' => 1,
-            'operator' => '>='
-        ]);
-
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }
 
-        $mailNotification = resolve('forus.services.mail_notification');
-
-        $mailNotification->newFundCreated(
-            $organization->identity_address,
-            $fund->name,
-            env('WEB_SHOP_GENERAL_URL')
-        );
-
-        $mailNotification->newFundCreatedNotifyCompany(
-            $fund->name,
-            $organization->name
-        );
+        FundCreated::dispatch($fund);
 
         return new FundResource($fund);
     }
@@ -144,9 +120,17 @@ class FundsController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        $fund->update($request->only([
-            'name', 'state', 'start_date', 'end_date'
-        ]));
+        if($fund->state == 'waiting') {
+            $params = $request->only([
+                'name', 'state', 'start_date', 'end_date'
+            ]);
+        }else{
+            $params = $request->only([
+                'name', 'state'
+            ]);
+        }
+
+        $fund->update($params);
 
         $fund->product_categories()->sync(
             $request->input('product_categories', [])

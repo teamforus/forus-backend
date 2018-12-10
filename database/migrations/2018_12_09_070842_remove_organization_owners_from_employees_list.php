@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use App\Models\Organization;
+
+class RemoveOrganizationOwnersFromEmployeesList extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        // Remove organization owners from employees list
+        Organization::all()->map(function(Organization $organization) {
+            $organization->employees()->where([
+                'identity_address' => $organization->identity_address
+            ])->delete();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        //
+    }
+}

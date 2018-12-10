@@ -94,6 +94,32 @@ class MailService
     }
 
     /**
+     * Register new email connection for given identifier
+     *
+     * @param string $identifier
+     * @param string $email_address
+     */
+    public function addEmailConnection(
+        string $identifier,
+        string $email_address
+    ) {
+        $this->addConnection($identifier,self::TYPE_EMAIL, $email_address);
+    }
+
+    /**
+     * Register new push message connection for given identifier
+     *
+     * @param string $identifier
+     * @param string $token
+     */
+    public function addPushMessageConnection(
+        string $identifier,
+        string $token
+    ) {
+        $this->addConnection($identifier,self::TYPE_PUSH_MESSAGE, $token);
+    }
+
+    /**
      * Notify sponsor that new provider applied to his fund
      *
      * @param string $identifier
@@ -353,6 +379,12 @@ class MailService
 
         $endpoint = $this->getEndpoint('/sender/vouchers/new_fund_created/');
 
+        resolve('log')->info(collect([$endpoint, [
+            'reffer_id'     => $identifier,
+            'fund_name'     => $fund_name,
+            'webshop_link'  => $webshop_link,
+        ]]));
+        
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier,
             'fund_name'     => $fund_name,
@@ -389,9 +421,7 @@ class MailService
             return false;
         }
 
-        $email = config('app.debug') ?
-            env('EMAIL_FOR_FUND_CREATED_DEV', 'demo@forus.io') :
-            env('EMAIL_FOR_FUND_CREATED', 'deals@forus.io');
+        $email = env('EMAIL_FOR_FUND_CREATED', 'demo@forus.io');
 
         $endpoint = $this->getEndpoint('/sender/vouchers/forus_new_fund_created/');
 
@@ -431,15 +461,12 @@ class MailService
         int $provider_amount,
         int $requester_amount,
         int $total_amount
-    )
-    {
+    ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
 
-        $email = config('app.debug') ?
-            env('EMAIL_FOR_FUND_CALC_DEV', 'demo@forus.io') :
-            env('EMAIL_FOR_FUND_CALC', 'finance@forus.io');
+        $email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io');
 
         $endpoint = $this->getEndpoint('/sender/vouchers/forus_users_calc/');
 
@@ -468,7 +495,8 @@ class MailService
     }
 
     /**
-     * Notify user that new product added
+     * Notify sponsor that new product added by provider
+     *
      * @param string $identifier
      * @param string $sponsor_name
      * @param string $fund_name
@@ -592,8 +620,7 @@ class MailService
         string $identifier,
         string $fund_name,
         string $current_budget
-    )
-    {
+    ) {
         if (!$this->serviceApiUrl) {
             return false;
         }
