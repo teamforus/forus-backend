@@ -12,7 +12,6 @@ use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-use App\Models\OrganizationProductCategory;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
@@ -276,5 +275,25 @@ class FundsController extends Controller
             'code'      => $code,
             'state'     => 'pending'
         ]));
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return array
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function destroy(
+        Organization $organization,
+        Fund $fund
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('destroy', [$fund, $organization]);
+
+        $fund->delete();
+
+        return compact('success');
     }
 }
