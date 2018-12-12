@@ -147,7 +147,7 @@ return [
 	'total_amount' => 'aanbod',
 	'expire_at' => 'verloopdatum',
 	'today' => 'vandaag',
-	'product_category_id' => 'categorie id',
+	'product_category_id' => 'categorie',
 	'address' => 'adres',
 	'schedule' => 'openingstijden',
 	'state' => 'status',
