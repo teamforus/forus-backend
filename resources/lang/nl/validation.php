@@ -138,7 +138,7 @@ return [
 	'btw' => 'BTW-nummer',
 	'kvk' => 'KvK-nummer',    
         'code' => 'activatiecode',
-	'note' => 'notititie',
+	'note' => 'notitie',
 	'amount' => 'hoeveelheid',
 	'product_categories' => 'categorieën',
 	'old_price' => 'oude prijs',
