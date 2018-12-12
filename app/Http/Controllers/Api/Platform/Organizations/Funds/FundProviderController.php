@@ -271,7 +271,7 @@ class FundProviderController extends Controller
 
         return SponsorVoucherTransactionResource::collection($fund->voucher_transactions()->where([
             'organization_id' => $organizationFund->organization_id
-        ])->get());
+        ])->paginate());
     }
 
     /**
