@@ -23,6 +23,8 @@ class ProductResource extends Resource
             'funds.id', $suppliedFundIds->pluck('id')
         )->get();
 
+        $countReserved = $product->countReserved();
+
         return collect($product)->only([
             'id', 'name', 'description', 'total_amount', 'product_category_id',
             'sold_out', 'organization_id'
@@ -30,6 +32,8 @@ class ProductResource extends Resource
             'organization' => collect($product->organization)->only([
                 'name', 'email', 'phone'
             ]),
+            'reserved_amount' => $countReserved,
+            'stock_amount' => $countReserved - $product->countSold(),
             'price' => currency_format($product->price),
             'old_price' => currency_format($product->old_price),
             'expire_at' => $product->expire_at->format('Y-m-d'),
