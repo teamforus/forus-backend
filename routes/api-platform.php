@@ -134,7 +134,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
         'only' => [
-            'index', 'show', 'store', 'update'
+            'index', 'show', 'store', 'update', 'destroy'
         ]
     ]);
 

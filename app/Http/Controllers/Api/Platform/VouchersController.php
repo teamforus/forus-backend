@@ -50,8 +50,6 @@ class VouchersController extends Controller
 
         $this->authorize('reserve', $product);
 
-        $product->updateSoldOutState();
-
         $voucherExpireAt = $voucher->fund->end_date->gt($product->expire_at) ? $product->expire_at : $voucher->fund->end_date;
 
         $voucher = Voucher::create([
@@ -64,6 +62,8 @@ class VouchersController extends Controller
         ]);
 
         VoucherCreated::dispatch($voucher);
+
+        $product->updateSoldOutState();
 
         return new VoucherResource($voucher);
     }
