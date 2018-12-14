@@ -46,7 +46,7 @@ class VoucherResource extends Resource
                 'organization' => collect(
                     $voucher->product->organization
                 )->only([
-                    'id', 'name'
+                    'id', 'name', 'email', 'phone'
                 ])->merge([
                     'logo' => new MediaCompactResource(
                         $voucher->product->organization->logo
@@ -71,7 +71,7 @@ class VoucherResource extends Resource
             'organization' => collect(
                 $fund->organization
             )->only([
-                'id', 'name'
+                'id', 'name', 'email', 'phone'
             ])->merge([
                 'logo' => new MediaCompactResource($fund->organization->logo)
             ]),
@@ -91,8 +91,8 @@ class VoucherResource extends Resource
             'amount' => currency_format($amount),
             'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens()->where('need_confirmation', 0)->first()->address,
-            'expire_at' => $voucher->product ? ($voucher->expire_at ? $voucher->expire_at->format('Y-m-d') : null) : null,
-            'expire_at_locale' => $voucher->product ? ($voucher->expire_at ? format_date_locale($voucher->expire_at) : null) : null,
+            'expire_at' => $voucher->expire_at,
+            'expire_at_locale' => format_date_locale($voucher->expire_at),
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'offices' => OfficeResource::collection($offices),
