@@ -39,7 +39,7 @@ class VoucherResource extends Resource
             ])->merge([
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at->format('Y-m-d'),
-                'expire_at_locale' => format_date_locale($voucher->product->expire_at),
+                'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
                 'photo' => new MediaResource(
                     $voucher->product->photo
                 ),
@@ -80,7 +80,7 @@ class VoucherResource extends Resource
                 $fund->product_categories
             ),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
-            'start_date_locale' => format_date_locale($fund->start_date),
+            'start_date_locale' => format_datetime_locale($fund->start_date),
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
             'end_date_locale' => format_date_locale($fund->end_date)
         ]);

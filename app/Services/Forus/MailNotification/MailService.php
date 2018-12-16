@@ -171,13 +171,15 @@ class MailService
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
+     * @param string $provider_dashboard_link
      * @return bool
      */
     public function providerApproved(
         string $identifier,
         string $fund_name,
         string $provider_name,
-        string $sponsor_name
+        string $sponsor_name,
+        string $provider_dashboard_link
     ) {
         if (!$this->serviceApiUrl) {
             return false;
@@ -186,10 +188,11 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/provider_approved/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'     => $identifier,
-            'fund_name'     => $fund_name,
-            'provider_name' => $provider_name,
-            'sponsor_name'  => $sponsor_name,
+            'reffer_id'                 => $identifier,
+            'fund_name'                 => $fund_name,
+            'provider_name'             => $provider_name,
+            'sponsor_name'              => $sponsor_name,
+            'provider_dashboard_link'   => $provider_dashboard_link,
         ]);
 
         if ($res->getStatusCode() != 200) {

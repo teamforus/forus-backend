@@ -27,7 +27,7 @@ class Model extends \Illuminate\Database\Eloquent\Model
             return $value;
         }
 
-        return format_date_locale($value, 'short_date_time_locale');
+        return format_datetime_locale($value, 'short_date_time_locale');
     }
 
 
@@ -43,6 +43,6 @@ class Model extends \Illuminate\Database\Eloquent\Model
             return $value;
         }
 
-        return format_date_locale($value, 'short_date_time_locale');
+        return format_datetime_locale($value, 'short_date_time_locale');
     }
 }
