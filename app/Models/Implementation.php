@@ -58,7 +58,7 @@ class Implementation extends Model
      */
     public static function active() {
         if (self::activeKey() == 'general') {
-            return self::general_urls();
+            return collect(self::general_urls());
         }
 
         return collect(self::query()->where([
