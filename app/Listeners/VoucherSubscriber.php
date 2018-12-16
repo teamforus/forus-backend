@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Implementation;
 use Illuminate\Events\Dispatcher;
 
 class VoucherSubscriber
@@ -21,6 +22,25 @@ class VoucherSubscriber
             'address'           => app()->make('token_generator')->address(),
             'need_confirmation' => false,
         ]);
+
+        if ($product = $voucher->product) {
+            $product->updateSoldOutState();
+            $mailService = resolve('forus.services.mail_notification');
+
+            $mailService->productReserved(
+                $product->organization->emailServiceId(),
+                $product->name,
+                format_date_locale($product->expire_at)
+            );
+
+            if ($product->sold_out) {
+                $mailService->productSoldOut(
+                    $product->organization->emailServiceId(),
+                    $product->name,
+                    Implementation::active()['url_provider']
+                );
+            }
+        }
 
         $voucher->sendToEmail();
     }
