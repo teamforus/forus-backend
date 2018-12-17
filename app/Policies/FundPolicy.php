@@ -162,4 +162,26 @@ class FundPolicy
             'view_finances'
         );
     }
+
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     */
+    public function destroy(
+        $identity_address,
+        Fund $fund,
+        Organization $organization
+    )
+    {
+        if($organization->identityCan(
+            $identity_address,
+            'manage_funds'
+        )){
+            return $fund->state == 'waiting';
+        }
+
+        return false;
+    }
 }

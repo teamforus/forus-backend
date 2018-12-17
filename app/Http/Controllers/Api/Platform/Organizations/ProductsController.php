@@ -147,6 +147,8 @@ class ProductsController extends Controller
             'sold_amount', 'product_category_id', 'expire_at'
         ]));
 
+        $product->updateSoldOutState();
+
         if ($media && $media->type == 'product_photo') {
             $product->attachMedia($media);
         }

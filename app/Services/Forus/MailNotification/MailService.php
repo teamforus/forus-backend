@@ -171,13 +171,15 @@ class MailService
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
+     * @param string $provider_dashboard_link
      * @return bool
      */
     public function providerApproved(
         string $identifier,
         string $fund_name,
         string $provider_name,
-        string $sponsor_name
+        string $sponsor_name,
+        string $provider_dashboard_link
     ) {
         if (!$this->serviceApiUrl) {
             return false;
@@ -186,10 +188,11 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/provider_approved/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'     => $identifier,
-            'fund_name'     => $fund_name,
-            'provider_name' => $provider_name,
-            'sponsor_name'  => $sponsor_name,
+            'reffer_id'                 => $identifier,
+            'fund_name'                 => $fund_name,
+            'provider_name'             => $provider_name,
+            'sponsor_name'              => $sponsor_name,
+            'provider_dashboard_link'   => $provider_dashboard_link,
         ]);
 
         if ($res->getStatusCode() != 200) {
@@ -637,6 +640,85 @@ class MailService
             app()->make('log')->error(
                 sprintf(
                     'Error sending notification `transactionAvailableAmount`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Notify provider that a product was reserved and customer will come by
+     * in shop to pickup the product or service.
+     *
+     * @param string $identifier
+     * @param string $product_name
+     * @param string $expiration_date
+     * @return bool
+     */
+    public function productReserved(
+        string $identifier,
+        string $product_name,
+        string $expiration_date
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/product_bought/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'         => $identifier,
+            'product_name'      => $product_name,
+            'expiration_date'   => $expiration_date,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `productReserved`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Notify provider that a product was sold out.
+     *
+     * @param string $identifier
+     * @param string $product_name
+     * @param string $sponsor_dashboard_url
+     * @return bool
+     */
+    public function productSoldOut(
+        string $identifier,
+        string $product_name,
+        string $sponsor_dashboard_url
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/product_soldout/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'             => $identifier,
+            'product_name'          => $product_name,
+            'sponsor_dashboard_url' => $sponsor_dashboard_url,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `productSoldOut`: %s',
                     $res->getBody()
                 )
             );

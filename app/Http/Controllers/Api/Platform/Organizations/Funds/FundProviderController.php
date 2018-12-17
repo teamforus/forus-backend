@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundProviderRequest
 use App\Http\Resources\FundProviderResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Fund;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
@@ -92,16 +93,18 @@ class FundProviderController extends Controller
         $state = $request->input('state');
 
         $organizationFund->update(compact('state'));
+        $mailService = resolve('forus.services.mail_notification');
 
         if ($state == 'approved') {
-            app()->make('forus.services.mail_notification')->providerApproved(
+            $mailService->providerApproved(
                 $organizationFund->organization->emailServiceId(),
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
-                $organizationFund->fund->organization->name
+                $organizationFund->fund->organization->name,
+                Implementation::active()['url_provider']
             );
         } elseif ($state == 'declined') {
-            /*app()->make('forus.services.mail_notification')->providerRejected(
+            /*$mailService->providerRejected(
                 $organizationFund->organization->identity_address,
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
@@ -271,7 +274,7 @@ class FundProviderController extends Controller
 
         return SponsorVoucherTransactionResource::collection($fund->voucher_transactions()->where([
             'organization_id' => $organizationFund->organization_id
-        ])->get());
+        ])->paginate());
     }
 
     /**

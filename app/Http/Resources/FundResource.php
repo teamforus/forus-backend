@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundProvider;
 use Carbon\Carbon;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
@@ -35,6 +36,23 @@ class FundResource extends Resource
             $ownerData['validators_count'] = $this->resource->organization->validators->count();
         }
 
+        $sponsorCount = $fund->organization->employees->count() + 1;
+
+        $providers = $fund->providers()->where([
+            'state' => 'approved'
+        ])->get();
+
+        $providerCount = $providers->map(function ($fundProvider){
+            /** @var FundProvider $fundProvider */
+            return $fundProvider->organization->employees->count() + 1;
+        })->sum();
+
+        if($fund->state == 'active'){
+            $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
+        }else{
+            $requesterCount = 0;
+        }
+
         return collect($this->resource)->only([
             'id', 'name', 'organization_id',
             'state'
@@ -58,7 +76,10 @@ class FundResource extends Resource
                 return collect($validator)->only([
                     'identity_address'
                 ]);
-            })
+            }),
+            'sponsor_count' => $sponsorCount,
+            'provider_count' => $providerCount,
+            'requester_count' => $requesterCount
         ])->merge($ownerData)->toArray();
     }
 }
