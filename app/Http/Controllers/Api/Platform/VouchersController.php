@@ -63,8 +63,6 @@ class VouchersController extends Controller
 
         VoucherCreated::dispatch($voucher);
 
-        $product->updateSoldOutState();
-
         return new VoucherResource($voucher);
     }
 

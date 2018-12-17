@@ -17,6 +17,8 @@ use Illuminate\Database\Query\Builder;
  * @property string $url_provider
  * @property string $url_validator
  * @property string $url_app
+ * @property string $lon
+ * @property string $lat
  * @property Collection $funds
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -26,7 +28,7 @@ class Implementation extends Model
 {
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
-        'url_validator'
+        'url_validator', 'lon', 'lat'
     ];
 
     /**
@@ -52,11 +54,11 @@ class Implementation extends Model
     }
 
     /**
-     * @return Implementation
+     * @return \Illuminate\Support\Collection
      */
     public static function active() {
         if (self::activeKey() == 'general') {
-            return collect((object) self::general_urls());
+            return collect(self::general_urls());
         }
 
         return collect(self::query()->where([
@@ -71,6 +73,8 @@ class Implementation extends Model
             'url_provider'  => config('forus.front_ends.panel-provider'),
             'url_validator' => config('forus.front_ends.panel-validator'),
             'url_app'       => config('forus.front_ends.landing-app'),
+            'lon'           => config('forus.front_ends.map.lon'),
+            'lat'           => config('forus.front_ends.map.lat')
         ];
     }
 
