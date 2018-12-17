@@ -96,10 +96,21 @@ class RouteServiceProvider extends ServiceProvider
             }
 
             if (is_array($config)) {
-                $config['fronts'] = Implementation::active()->only([
+                $implementation = Implementation::active();
+
+                $config['fronts'] = $implementation->only([
                     'url_webshop', 'url_sponsor', 'url_provider',
                     'url_validator', 'url_app'
                 ]);
+
+                $config['map'] = [
+                    'lon' => doubleval(
+                        $implementation['lon'] ?: config('forus.front_ends.map.lon')
+                    ),
+                    'lat' => doubleval(
+                        $implementation['lat'] ?: config('forus.front_ends.map.lat')
+                    )
+                ];
             }
 
             return $config ?: [];
