@@ -43,11 +43,14 @@ class ProviderVoucherResource extends Resource
         Voucher $voucher
     ) {
         $amountLeft = $voucher->amount_available;
-        $voucherOrganizations = $voucher->fund->providers->pluck('organization');
+        $voucherOrganizations = $voucher->fund->provider_organizations_approved();
+        // $voucherOrganizations = $voucher->fund->providers->pluck('organization');
 
         $allowedOrganizations = Organization::queryByIdentityPermissions(
             $identityAddress, 'scan_vouchers'
-        )->whereIn('id', $voucherOrganizations->pluck('id'))->get();
+        )->whereIn('id', $voucherOrganizations->pluck(
+            'organizations.id'
+        ))->get();
 
         $allowedProductCategories = $voucher->fund->product_categories;
         $allowedProducts = Product::getModel()->whereIn(
