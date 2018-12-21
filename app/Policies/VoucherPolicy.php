@@ -67,6 +67,18 @@ class VoucherPolicy
         string $identity_address,
         Voucher $voucher
     ) {
+        if ($voucher->expire_at->isPast()) {
+            throw new AuthorizationException(trans(
+                'validation.voucher.expired'
+            ));
+        }
+
+        if ($voucher->fund->state != 'active') {
+            throw new AuthorizationException(trans(
+                'validation.voucher.fund_not_active'
+            ));
+        }
+
         if ($voucher->type == 'regular') {
             $organizations = $voucher->fund->provider_organizations_approved;
             $identityOrganizations = Organization::queryByIdentityPermissions(
@@ -81,26 +93,6 @@ class VoucherPolicy
             if ($voucher->transactions->count() > 0) {
                 throw new AuthorizationException(trans(
                     'validation.voucher.product_voucher_used'
-                ));
-            }
-
-            // The product should not be expired
-            if ($voucher->product->expired) {
-                throw new AuthorizationException(trans(
-                    'validation.voucher.product_expired'
-                ));
-            }
-
-            if ($voucher->fund->state != 'active') {
-                throw new AuthorizationException(trans(
-                    'validation.voucher.fund_not_active'
-                ));
-            }
-
-            // The product should not be sold out
-            if ($voucher->type != 'product' && $voucher->product->sold_out) {
-                throw new AuthorizationException(trans(
-                    'validation.voucher.product_sold_out'
                 ));
             }
 
