@@ -22,9 +22,9 @@ class AddExpireAtToVouchersTable extends Migration
 
         foreach ($vouchers as $voucher) {
             $voucher->update([
-                'expire_at' => $voucher->fund->end_date->gt($voucher->product->expire_at) ?
-                    $voucher->product->expire_at :
-                    $voucher->fund->end_date
+                'expire_at' => $voucher->fund->end_date->gt(
+                    $voucher->product->expire_at
+                ) ? $voucher->product->expire_at : $voucher->fund->end_date
             ]);
         }
     }

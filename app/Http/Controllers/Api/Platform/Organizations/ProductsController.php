@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
+use App\Models\Voucher;
 
 class ProductsController extends Controller
 {
@@ -148,6 +149,14 @@ class ProductsController extends Controller
         ]));
 
         $product->updateSoldOutState();
+
+        $product->vouchers()->each(function (Voucher $voucher) {
+            $voucher->update([
+                'expire_at' => $voucher->fund->end_date->gt(
+                    $voucher->product->expire_at
+                ) ? $voucher->product->expire_at : $voucher->fund->end_date
+            ]);
+        });
 
         if ($media && $media->type == 'product_photo') {
             $product->attachMedia($media);

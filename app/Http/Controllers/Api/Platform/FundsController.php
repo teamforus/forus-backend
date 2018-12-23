@@ -52,6 +52,7 @@ class FundsController extends Controller
         $voucher = $fund->vouchers()->create([
             'amount' => Fund::amountForIdentity($fund, auth()->id()),
             'identity_address' => auth()->user()->getAuthIdentifier(),
+            'expire_at' => $fund->end_date
         ]);
 
         VoucherCreated::dispatch($voucher);

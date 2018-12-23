@@ -128,7 +128,7 @@ class Product extends Model
      * @return bool
      */
     public function getExpiredAttribute() {
-        return !!$this->expire_at->isPast();
+        return $this->expire_at->isPast();
     }
 
     /**

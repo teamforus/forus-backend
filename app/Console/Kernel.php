@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('forus.fund:check')
-            ->daily();
+            ->hourlyAt(1);
 
         $schedule->command('forus.fund.config:check')
             ->everyMinute();
