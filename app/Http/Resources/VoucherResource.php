@@ -24,7 +24,7 @@ class VoucherResource extends Resource
             $amount = $voucher->amount_available;
             $offices = Office::getModel()->whereIn(
                 'organization_id',
-                $fund->providers->pluck('organization')
+                $fund->provider_organizations_approved()->pluck('organizations.id')
             )->get();
 
             $productResource = null;

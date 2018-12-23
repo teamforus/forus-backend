@@ -329,20 +329,16 @@ class Fund extends Model
             ->whereDate('start_date', '<=', now())
             ->get();
 
-        if ($funds->count() == 0) {
-            return null;
-        }
-
         /** @var self $fund */
         foreach($funds as $fund) {
 
-            if (($fund->start_date->isToday() && $fund->state != 'active') || ($fund->start_date->lt(now()) && $fund->state == 'waiting')) {
+            if ($fund->start_date->startOfDay()->isPast() && $fund->state == 'paused') {
                 $fund->update([
                     'state' => 'active'
                 ]);
             }
 
-            if ($fund->end_date->isToday() && $fund->state != 'closed') {
+            if ($fund->end_date->endOfDay()->isPast() && $fund->state != 'closed') {
                 $fund->update([
                     'state' => 'closed'
                 ]);
@@ -362,10 +358,6 @@ class Fund extends Model
             ->where('state', 'waiting')
             ->whereDate('start_date', '>', now())
             ->get();
-
-        if ($funds->count() == 0) {
-            return null;
-        }
 
         /** @var self $fund */
         foreach($funds as $fund) {
