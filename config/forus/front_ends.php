@@ -2,7 +2,7 @@
 
 return [
     // Web shops
-    'shop-general'          => env('WEB_SHOP_GENERAL_URL', false),
+    'webshop'               => env('WEB_SHOP_GENERAL_URL', false),
 
     // Panels
     'panel-sponsor'         => env('PANEL_SPONSOR_URL', false),
