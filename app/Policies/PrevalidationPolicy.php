@@ -56,8 +56,8 @@ class PrevalidationPolicy
      */
     public function redeem(
         $identity_address,
-        Prevalidation $prevalidation
+        Prevalidation $prevalidation = null
     ) {
-        return !empty($identity_address) && ($prevalidation->state == 'pending');
+        return !empty($identity_address) && ($prevalidation && $prevalidation->state == 'pending');
     }
 }
