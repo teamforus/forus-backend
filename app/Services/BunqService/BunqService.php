@@ -374,8 +374,15 @@ class BunqService
                     'fund_name' => $transaction->voucher->fund->name
                 ]);
 
+                $amount = $transaction->amount;
+                $voucher = $transaction->voucher;
+
+                if ($voucher->fund->fund_config->subtract_transaction_costs) {
+                    $amount = number_format($amount - .1, 2, '.', '');
+                }
+
                 $payment_id = $bunq->makePayment(
-                    $transaction->amount,
+                    $amount,
                     $transaction->organization->iban,
                     $transaction->organization->name,
                     $paymentDescription

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $bunq_sandbox
  * @property string $formula_amount
  * @property string $formula_multiplier
+ * @property boolean $subtract_transaction_costs
  * @property Implementation $implementation
  * @property boolean $is_configured
  * @property Carbon $created_at
@@ -27,7 +28,7 @@ class FundConfig extends Model
 
     protected $hidden = [
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
-        'formula_multiplier', 'is_configured'
+        'formula_multiplier', 'is_configured', 'subtract_transaction_costs'
     ];
 
     /**
