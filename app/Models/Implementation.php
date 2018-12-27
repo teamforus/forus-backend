@@ -57,18 +57,20 @@ class Implementation extends Model
      * @return \Illuminate\Support\Collection
      */
     public static function active() {
-        if (self::activeKey() == 'general') {
+        return self::byKey(self::activeKey());
+    }
+
+    public static function byKey($key) {
+        if ($key == 'general') {
             return collect(self::general_urls());
         }
 
-        return collect(self::query()->where([
-            'key' => request()->header('Client-Key')
-        ])->first());
+        return collect(self::query()->where(compact('key'))->first());
     }
 
     public static function general_urls() {
         return [
-            'url_webshop'   => config('forus.front_ends.shop-general'),
+            'url_webshop'   => config('forus.front_ends.webshop'),
             'url_sponsor'   => config('forus.front_ends.panel-sponsor'),
             'url_provider'  => config('forus.front_ends.panel-provider'),
             'url_validator' => config('forus.front_ends.panel-validator'),
@@ -76,6 +78,14 @@ class Implementation extends Model
             'lon'           => config('forus.front_ends.map.lon'),
             'lat'           => config('forus.front_ends.map.lat')
         ];
+    }
+
+    /**
+     * @param $key
+     * @return bool
+     */
+    public static function isValidKey($key) {
+        return self::implementationKeysAvailable()->search($key) !== false;
     }
 
     /**

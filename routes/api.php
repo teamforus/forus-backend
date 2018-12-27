@@ -25,8 +25,13 @@ $router->group([], function() use ($router) {
             $router->post('/token', 'Api\IdentityController@proxyAuthorizationToken');
             $router->post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
 
+            // email
             $router->get('/redirect/email/{source}/{emailToken}', 'Api\IdentityController@proxyRedirectEmail');
             $router->get('/authorize/email/{source}/{emailToken}', 'Api\IdentityController@proxyAuthorizeEmail');
+
+            // email confirmation
+            $router->get('/confirmation/redirect/{exchangeToken}/{clientType?}/{implementationKey?}', 'Api\IdentityController@emailConfirmationRedirect');
+            $router->get('/confirmation/exchange/{exchangeToken}', 'Api\IdentityController@emailConfirmationExchange');
 
             $router->get('/check-token', 'Api\IdentityController@checkToken');
         });

@@ -21,10 +21,8 @@ class DevicesController extends Controller
         RegisterDevicePushRequest $request
     ) {
         $mailNotification = resolve('forus.services.mail_notification');
-
-        $mailNotification->addConnection(
-            auth()->user()->getAuthIdentifier(),
-            $mailNotification::TYPE_PUSH_MESSAGE,
+        $mailNotification->addPushMessageConnection(
+            auth()->id(),
             $request->input('id')
         );
 
