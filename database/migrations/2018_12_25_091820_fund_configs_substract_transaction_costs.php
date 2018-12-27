@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddIsConfiguredToFundConfigsTable extends Migration
+class FundConfigsSubstractTransactionCosts extends Migration
 {
     /**
      * Run the migrations.
@@ -15,12 +14,8 @@ class AddIsConfiguredToFundConfigsTable extends Migration
     public function up()
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('is_configured')->default(0)->after('formula_multiplier');
+            $table->boolean('subtract_transaction_costs')->default(0)->after('formula_multiplier');
         });
-
-        DB::table('fund_configs')->where('id', '>', 0)->update([
-            'is_configured' => true
-        ]);
     }
 
     /**
@@ -31,7 +26,7 @@ class AddIsConfiguredToFundConfigsTable extends Migration
     public function down()
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('is_configured');
+            $table->dropColumn('subtract_transaction_costs');
         });
     }
 }

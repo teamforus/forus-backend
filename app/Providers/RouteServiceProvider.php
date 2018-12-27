@@ -39,7 +39,7 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('prevalidation_uid', function ($value) {
             return Prevalidation::getModel()->where([
                     'uid' => $value
-                ])->first() ?? abort(404);
+                ])->first() ?? null;
         });
 
         $router->bind('media_uid', function ($value) {

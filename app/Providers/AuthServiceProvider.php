@@ -80,6 +80,10 @@ class AuthServiceProvider extends ServiceProvider
             'update' => 'update',
         ]);
 
+        \Gate::resource('prevalidations', PrevalidationPolicy::class, [
+            'redeem' => 'redeem',
+        ]);
+
         \Gate::resource('organizations', OrganizationPolicy::class, [
             'update' => 'update',
         ]);
