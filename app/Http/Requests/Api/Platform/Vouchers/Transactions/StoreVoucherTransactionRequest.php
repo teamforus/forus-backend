@@ -90,7 +90,7 @@ class StoreVoucherTransactionRequest extends FormRequest
                 'amount'            => [
                     'required_without:product_id',
                     'numeric',
-                    'min:.01',
+                    'min:.02',
                     'max:' . $maxAmount,
                 ],
                 'product_id'        => [

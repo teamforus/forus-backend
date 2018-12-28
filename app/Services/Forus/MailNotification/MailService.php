@@ -728,4 +728,42 @@ class MailService
 
         return true;
     }
+
+    /**
+     * Send email confirmation link by identity address
+     * @param string $identifier
+     * @param string $confirmationLink
+     * @return bool
+     */
+    public function sendEmailConfirmationToken(
+        string $identifier,
+        string $confirmationLink
+    ) {
+        $platform = env('APP_NAME');
+
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/user/email_activation');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id' => $identifier,
+            'platform'  => $platform,
+            'link'      => $confirmationLink,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `sendPrimaryEmailConfirmation`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
 }

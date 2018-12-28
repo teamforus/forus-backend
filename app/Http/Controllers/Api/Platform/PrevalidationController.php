@@ -3,26 +3,36 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\SearchPrevalidationsRequest;
+use Illuminate\Support\Str;
 use App\Http\Requests\Api\Platform\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class PrevalidationController extends Controller
 {
+    use ThrottlesLogins;
+
     private $recordRepo;
+    private $maxAttempts = 3;
+    private $decayMinutes = 180;
 
     /**
      * RecordCategoryController constructor.
      */
     public function __construct() {
         $this->recordRepo = app()->make('forus.services.record');
+        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', $this->maxAttempts);
+        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', $this->decayMinutes);
     }
 
     /**
-     * @param UploadPrevalidationsRequest $request
+     * @param UploadPrevalidations
+     $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
@@ -153,14 +163,22 @@ class PrevalidationController extends Controller
     /**
      * Redeem prevalidation.
      *
-     * @param Prevalidation $prevalidation
+     * @param Request $request
+     * @param Prevalidation|null $prevalidation
      * @return PrevalidationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function redeem(
-        Prevalidation $prevalidation
+        Request $request,
+        Prevalidation $prevalidation = null
     ) {
+        if ($this->hasTooManyLoginAttempts($request)) {
+            abort(429, 'To many attempts.');
+        }
+
+        $this->incrementLoginAttempts($request);
         $this->authorize('redeem', $prevalidation);
+        $this->clearLoginAttempts($request);
 
         foreach($prevalidation->records as $record) {
             /** @var $record PrevalidationRecord */
@@ -186,5 +204,16 @@ class PrevalidationController extends Controller
         ]);
 
         return new PrevalidationResource($prevalidation);
+    }
+
+    /**
+     * Get the throttle key for the given request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return string
+     */
+    protected function throttleKey(Request $request)
+    {
+        return Str::lower($request->input(auth()->id())).'|'.$request->ip();
     }
 }

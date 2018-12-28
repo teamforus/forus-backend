@@ -34,12 +34,7 @@ class IdentityStoreRequest extends FormRequest
             'records'                   => ['required', 'array', new IdentityRecordsRule()],
             'records.primary_email'     => ['required', 'email', new IdentityRecordsUniqueRule('primary_email')],
             'records.address'           => [new IdentityRecordsAddressRule()],
-            'records.*'                 => ['required'],
-            'code'                      => [
-                Rule::exists('prevalidations', 'uid')->where(function(Builder $query) {
-                    $query->where('state', 'pending');
-                })
-            ]
+            'records.*'                 => ['required']
         ];
     }
 }
