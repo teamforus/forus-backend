@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\SearchPrevalidationsRequest;
 use Illuminate\Support\Str;
 use App\Http\Requests\Api\Platform\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
+use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
@@ -29,7 +31,8 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * @param UploadPrevalidationsRequest $request
+     * @param UploadPrevalidations
+     $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
@@ -40,8 +43,43 @@ class PrevalidationController extends Controller
 
         $data = $request->input('data');
 
-        $data = collect($data)->map(function($record) {
-            return collect($record)->map(function($value, $key) {
+        /** @var Fund $fund */
+        $fund = $request->input('fund_id', false);
+        $primaryKeyValues = collect();
+
+        if ($fund) {
+            $fund = Fund::query()->find($fund);
+            $fundPrevalidationPrimaryKey = resolve('forus.services.record')->getTypeIdByKey(
+                $fund->fund_config->csv_primary_key
+            );
+
+            $existingPrevalidations = Prevalidation::query()->where([
+                'identity_address' => auth()->id(),
+                'fund_id' => $fund->id
+            ])->pluck('id');
+
+            $primaryKeyValues = PrevalidationRecord::query()->whereIn(
+                'prevalidation_id', $existingPrevalidations
+            )->where([
+                'record_type_id' => $fundPrevalidationPrimaryKey,
+            ])->pluck('value');
+        }
+
+
+        $data = collect($data)->map(function($record) use (
+            $primaryKeyValues, $fund
+        ) {
+            $record = collect($record);
+
+            if ($fund) {
+                if ($primaryKeyValues->search(
+                    $record[$fund->fund_config->csv_primary_key]
+                    ) !== false) {
+                    return [];
+                }
+            }
+
+            return $record->map(function($value, $key) {
                 $record_type_id = app()->make(
                     'forus.services.record'
                 )->getTypeIdByKey($key);
@@ -70,6 +108,7 @@ class PrevalidationController extends Controller
             $prevalidation = Prevalidation::create([
                 'uid' => $uid,
                 'state' => 'pending',
+                'fund_id' => $request->input('fund_id', null),
                 'identity_address' => auth()->user()->getAuthIdentifier()
             ]);
 
@@ -86,21 +125,25 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * @param Request $request
+     * @param SearchPrevalidationsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(Request $request) {
+    public function index(
+        SearchPrevalidationsRequest $request
+    ) {
         $this->authorize('index', Prevalidation::class);
 
-        return PrevalidationResource::collection(
-            Prevalidation::search(
-                auth()->user()->getAuthIdentifier(),
-                $request->input('q', false)
-            )->with('records.record_type')->paginate(
-                $request->has('per_page') ? $request->input('per_page') : null
-            )
-        );
+        return PrevalidationResource::collection(Prevalidation::search(
+            auth()->user()->getAuthIdentifier(),
+            $request->input('q', null),
+            $request->input('fund_id', null),
+            $request->input('state', null),
+            $request->input('from', null),
+            $request->input('to', null)
+        )->with('records.record_type')->paginate(
+            $request->get('per_page', null)
+        ));
     }
 
     /**

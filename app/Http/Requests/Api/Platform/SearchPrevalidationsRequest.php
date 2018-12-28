@@ -3,10 +3,9 @@
 namespace App\Http\Requests\Api\Platform;
 
 use App\Models\Organization;
-use App\Rules\PrevalidationDataRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UploadPrevalidationsRequest extends FormRequest
+class SearchPrevalidationsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -31,10 +30,10 @@ class UploadPrevalidationsRequest extends FormRequest
         )->get()->pluck('funds')->flatten()->pluck('id');
 
         return [
+            'q' => '',
             'fund_id' => 'in:' . $fundsAvailable->implode(','),
-            'data' => ['required', 'array', new PrevalidationDataRule(
-                request()->input('fund_id')
-            )]
+            'from' => 'date_format:Y-m-d',
+            'to' => 'date_format:Y-m-d',
         ];
     }
 }
