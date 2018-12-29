@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Organization;
 use Carbon\Carbon;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
@@ -47,23 +48,30 @@ class FundResource extends Resource
             return $fundProvider->organization->employees->count() + 1;
         })->sum();
 
-        if($fund->state == 'active'){
+        if ($fund->state == 'active'){
             $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
-        }else{
+        } else {
             $requesterCount = 0;
         }
+
+        /** @var Organization $organization */
+        $organization = $this->resource->organization;
 
         return collect($this->resource)->only([
             'id', 'name', 'organization_id',
             'state'
-        ])->merge([
+        ])->merge($organization->identityCan(auth()->id(), [
+            'validate_records'
+        ]) ? [
+            'csv_primary_key' => $fund->fund_config ? $fund->fund_config->csv_primary_key : '',
+            'csv_required_keys' => $fund->requiredPrevalidationKeys()
+        ] : []
+        )->merge([
             'key' => $fund->fund_config ? $fund->fund_config->key : '',
             'logo' => new MediaResource($this->resource->logo),
             'start_date' => $this->resource->start_date->format('Y-m-d'),
             'end_date' => $this->resource->end_date->format('Y-m-d'),
-            'organization' => new OrganizationResource(
-                $this->resource->organization
-            ),
+            'organization' => new OrganizationResource($organization),
             'product_categories' => ProductCategoryResource::collection(
                 $this->resource->product_categories
             ),

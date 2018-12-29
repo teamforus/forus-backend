@@ -124,6 +124,10 @@ return [
     | of 'email'. This simply helps us make messages a little cleaner.
     |
     */
+    'prevalidation_missing_required_keys' => 'Het bestand bevat niet alle verplichte velden.',
+    'prevalidation_invalid_record_key' => 'Een veldtype dat is opgenomen in het bestand bestaat niet.',
+    'validation.prevalidation_invalid_type_primary_email' => 'Het primaire e-mailadres veld is een systeemveld en kan hier niet gebruikt worden.',
+    'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',	
     'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'attributes' => [

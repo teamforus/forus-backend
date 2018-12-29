@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property boolean $subtract_transaction_costs
  * @property Implementation $implementation
  * @property boolean $is_configured
+ * @property string $csv_primary_key
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -28,7 +29,8 @@ class FundConfig extends Model
 
     protected $hidden = [
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
-        'formula_multiplier', 'is_configured', 'subtract_transaction_costs'
+        'formula_multiplier', 'is_configured', 'csv_primary_key', 
+        'subtract_transaction_costs'
     ];
 
     /**

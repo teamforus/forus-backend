@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use phpDocumentor\Reflection\Types\Integer;
 
 /**
  * Class Prevalidation
@@ -30,7 +31,7 @@ class Prevalidation extends Model
      * @var array
      */
     protected $fillable = [
-        'uid', 'identity_address', 'state'
+        'uid', 'identity_address', 'state', 'fund_id'
     ];
 
     /**
@@ -42,30 +43,61 @@ class Prevalidation extends Model
 
     /**
      * @param $identity_address
-     * @param bool $q
+     * @param string|null $q
+     * @param int|null $fund_id
+     * @param string|null $state
+     * @param null $from
+     * @param null $to
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public static function search($identity_address, $q = false) {
+    public static function search(
+        $identity_address,
+        string $q = null,
+        int $fund_id = null,
+        string $state = null,
+        $from = null,
+        $to = null
+    ) {
         $prevalidations = Prevalidation::getModel()->where(compact(
             'identity_address'
         ));
 
-        if (!$q) {
-            return $prevalidations;
+        if ($q) {
+            $prevalidations->where(function(Builder $query) use ($q) {
+                $query->where(
+                    'uid', 'like', "%{$q}%"
+                )->orWhereIn('id', function(
+                    \Illuminate\Database\Query\Builder $query
+                ) use ($q) {
+                    $query->from(
+                        PrevalidationRecord::getModel()->getTable()
+                    )->where(
+                        'value', 'like', "%{$q}%"
+                    )->select('prevalidation_id');
+                });
+            });
         }
 
-        return $prevalidations->where(function(Builder $query) use ($q) {
-            $query->where(
-                'uid', 'like', "%{$q}%"
-            )->orWhereIn('id', function(
-                \Illuminate\Database\Query\Builder $query
-            ) use ($q) {
-                $query->from(
-                    PrevalidationRecord::getModel()->getTable()
-                )->where(
-                    'value', 'like', "%{$q}%"
-                )->select('prevalidation_id');
-            });
-        });
+        if ($fund_id) {
+            $prevalidations->where(compact('fund_id'));
+        }
+
+        if ($state) {
+            $prevalidations->where('state', $state);
+        }
+
+        if ($from) {
+            $prevalidations->where(
+                'created_at', '>', Carbon::make($from)->startOfDay()
+            );
+        }
+
+        if ($to) {
+            $prevalidations->where(
+                'created_at', '<', Carbon::make($to)->endOfDay()
+            );
+        }
+
+        return $prevalidations;
     }
 }
