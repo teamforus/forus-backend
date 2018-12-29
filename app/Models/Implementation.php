@@ -110,6 +110,10 @@ class Implementation extends Model
      * @return Collection
      */
     public static function activeProductCategories() {
+        if (self::activeKey() == 'general') {
+            return ProductCategory::all();
+        }
+
         return ProductCategory::query()->whereIn(
             'id', FundProductCategory::query()->whereIn(
             'fund_id', self::activeFunds()->pluck('id')
