@@ -109,7 +109,7 @@ class FundPolicy
             return false;
         }
 
-        if (!$fund->getFundFormula()) {
+        if (!$fund->fund_formulas()->count() > 0) {
             $this->deny(trans('fund.no_formula'));
         }
 

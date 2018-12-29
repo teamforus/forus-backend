@@ -15,11 +15,11 @@ interface IIdentityRepo {
 
     /**
      * Create new proxy for given identity
-     * @param $identityAddress string
+     * @param $identity string
      * @return array
      */
     public function makeIdentityPoxy(
-        $identityAddress
+        $identity
     );
 
     /**
@@ -123,9 +123,10 @@ interface IIdentityRepo {
 
     /**
      * Authorize proxy identity by code
-     * @param $identityAddress string
+     *
+     * @param string $identityAddress
      * @param string $code
-     * @return mixed
+     * @return bool
      */
     public function activateAuthorizationCodeProxy(
         string $identityAddress,
@@ -134,9 +135,10 @@ interface IIdentityRepo {
 
     /**
      * Authorize proxy identity by token
-     * @param $identityAddress string
+     *
+     * @param string $identityAddress
      * @param string $token
-     * @return mixed
+     * @return bool|mixed
      */
     public function activateAuthorizationTokenProxy(
         string $identityAddress,
@@ -145,10 +147,10 @@ interface IIdentityRepo {
 
     /**
      * Authorize proxy identity by email token
-     * @param string $email_token
+     * @param string $token
      * @return string
      */
     public function activateAuthorizationEmailProxy(
-        string $email_token
+        string $token
     );
 }

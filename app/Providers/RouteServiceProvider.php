@@ -39,7 +39,7 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('prevalidation_uid', function ($value) {
             return Prevalidation::getModel()->where([
                     'uid' => $value
-                ])->first() ?? abort(404);
+                ])->first() ?? null;
         });
 
         $router->bind('media_uid', function ($value) {
@@ -155,13 +155,15 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapApiRoutes()
     {
         Route::prefix('api/v1')
-             ->middleware('api')
+             ->middleware([
+                 'api', 'implementation_key', 'client_key'
+             ])
              ->namespace($this->namespace)
              ->group(base_path('routes/api.php'));
 
         Route::prefix('api/v1/platform')
             ->middleware([
-                'api', 'implementation_key'
+                'api', 'implementation_key', 'client_key'
             ])
             ->namespace($this->namespace)
             ->group(base_path('routes/api-platform.php'));

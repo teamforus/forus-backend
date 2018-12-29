@@ -6,11 +6,23 @@ use App\Services\Forus\Identity\Models\IdentityProxy;
 
 class IdentityRepo implements Interfaces\IIdentityRepo
 {
-    // 10 years
-    const PROXY_EXPIRES_IN = 60 * 60 * 24 * 365 * 10;
-
     protected $model;
     protected $recordRepo;
+
+    /**
+     * How many time user have to exchange their exchange_token
+     * @var array
+     */
+    protected $expirationTimes = [
+        // 10 minutes
+        'pin_code' => 60 * 10,
+        // 60 minutes
+        'qr_code' => 60 * 60,
+        // 60 minutes
+        'email_code' => 60 * 60,
+        // 1 month
+        'confirmation_code' => 60 * 60 * 24 * 30,
+    ];
 
     public function __construct(
         Identity $model
@@ -43,23 +55,15 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     /**
      * Create new proxy for given identity
-     * @param $identityAddress string
-     * @return array
+     *
+     * @param string $identity
+     * @return array|\Illuminate\Support\Collection
+     * @throws \Exception
      */
     public function makeIdentityPoxy(
-        $identityAddress
+        $identity
     ) {
-        $identity = Identity::getModel()->where(
-            'address', $identityAddress
-        )->first();
-
-        $proxyIdentity = $identity->proxies()->create([
-            'access_token'  => $this->makeAccessToken(),
-            'state'         => 'active',
-            'expires_in'    => self::PROXY_EXPIRES_IN
-        ]);
-
-        return $proxyIdentity['id'];
+        return $this->makeProxy('confirmation_code', $identity);
     }
 
     /**
@@ -215,173 +219,179 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     }
 
     /**
-     * Make code authorization proxy identity
-     * @return array
+     * @param $type
+     * @return int|string
+     * @throws \Exception
      */
-    public function makeAuthorizationCodeProxy() {
-        // 10 minutes
-        $expiresIn = 60 * 10;
-
+    private function uniqExchangeToken($type) {
         do {
-            $auth_code = $this->makeAuthCode();
+            switch ($type) {
+                case "pin_code": $token = random_int(111111, 999999); break;
+                case "qr_code": $token = $this->makeToken(64); break;
+                case "email_code": $token = $this->makeToken(128); break;
+                case "confirmation_code": $token = $this->makeToken(200); break;
+                default: throw new \Exception(trans('identity-proxy.unknown_token_type')); break;
+            }
         } while(IdentityProxy::getModel()->where([
-            'auth_code'         => $auth_code,
-            'state'             => 'pending'
+            'exchange_token' => $token
         ])->count() > 0);
 
-        $proxyIdentity = IdentityProxy::create([
-            'access_token'      => $this->makeAccessToken(),
-            'auth_code'         => $auth_code,
-            'expires_in'        => $expiresIn,
-            'state'             => "pending"
-        ]);
-
-        return collect($proxyIdentity)->only([
-            'auth_code', 'access_token'
-        ])->toArray();
+        return $token;
     }
 
+
+    /**
+     * Create new proxy of type
+     *
+     * @param string $type
+     * @param string|null $identityAddress
+     * @param string $state
+     * @return array
+     * @throws \Exception
+     */
+    public function makeProxy(
+        string $type,
+        string $identityAddress = null,
+        string $state = 'pending'
+    ) {
+        return $this->createProxy(
+            $this->uniqExchangeToken($type),
+            $type,
+            $this->expirationTimes[$type],
+            $identityAddress,
+            $state
+        );
+    }
+
+    /**
+     * Create new proxy
+     *
+     * @param string $exchange_token
+     * @param string $type
+     * @param int $expires_in
+     * @param string|null $identity_address
+     * @param string $state
+     * @return array
+     */
+    private function createProxy(
+        string $exchange_token,
+        string $type,
+        int $expires_in,
+        string $identity_address = null,
+        string $state = 'pending'
+    ) {
+          $access_token = $this->makeAccessToken();
+
+          return collect(IdentityProxy::create(compact(
+              'identity_address', 'exchange_token', 'type',
+              'expires_in', 'state', 'access_token'
+          )))->only([
+              'identity_address', 'exchange_token', 'type', 'expires_in',
+              'state', 'access_token'
+          ])->toArray();
+    }
+
+    /**
+     * Make code authorization proxy identity
+     *
+     * @return Identity|array|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
+     */
+    public function makeAuthorizationCodeProxy() {
+        return $this->makeProxy('pin_code');
+    }
 
     /**
      * Make token authorization proxy identity
+     *
      * @return array
+     * @throws \Exception
      */
     public function makeAuthorizationTokenProxy() {
-        // 1 hour
-        $expiresIn = 60 * 60;
-
-        do {
-            $auth_token = $this->makeAuthToken();
-        } while(IdentityProxy::getModel()->where([
-            'auth_token'        => $auth_token,
-            'state'             => 'pending'
-        ])->count() > 0);
-
-        $proxyIdentity = IdentityProxy::create([
-            'access_token'      => $this->makeAccessToken(),
-            'auth_token'        => $auth_token,
-            'expires_in'        => $expiresIn,
-            'state'             => "pending"
-        ]);
-
-        return collect($proxyIdentity)->only([
-            'auth_token', 'access_token'
-        ])->toArray();
+        return $this->makeProxy('qr_code');
     }
 
-
     /**
-     * Make email_token authorization proxy identity
+     * Make email token authorization proxy identity
+     *
      * @param string $identityAddress
      * @return array
+     * @throws \Exception
      */
-    public function makeAuthorizationEmailProxy(
-        string $identityAddress
-    ) {
-        // 1 hour
-        $expiresIn = 60 * 60;
-
-        do {
-            $auth_email_token = $this->makeAuthEmailToken();
-        } while(IdentityProxy::getModel()->where([
-            'auth_email_token'  => $auth_email_token
-        ])->count() > 0);
-
-        $proxyIdentity = IdentityProxy::create([
-            'identity_address'  => $identityAddress,
-            'auth_email_token'  => $auth_email_token,
-            'expires_in'        => $expiresIn,
-            'state'             => "pending"
-        ]);
-
-        return collect($proxyIdentity)->only([
-            'auth_email_token'
-        ])->toArray();
+    public function makeAuthorizationEmailProxy(string $identityAddress)
+    {
+        return $this->makeProxy('email_code', $identityAddress);
     }
 
     /**
      * Authorize proxy identity by code
-     * @param $identityAddress string
+     *
+     * @param string $identityAddress
      * @param string $code
-     * @return mixed
+     * @return bool
      */
     public function activateAuthorizationCodeProxy(
         string $identityAddress,
         string $code
     ) {
-        /** @var IdentityProxy $proxy */
-        $proxy = IdentityProxy::getModel()->where([
-            'auth_code' => $code
-        ])->first();
-
-        if (!$proxy) {
-            return 'not-found';
-        }
-
-        if ($proxy->state != 'pending') {
-            return 'not-pending';
-        }
-
-        $expire_at = $proxy->created_at->addSeconds(
-            $proxy->expires_in
-        )->timestamp;
-
-        if ($expire_at < time()) {
-            return 'expired';
-        }
-
-        return !!$proxy->update([
-            'identity_address'  => $identityAddress,
-            'state'             => 'active'
-        ]);
+        return !!$this->exchangeToken('pin_code', $code, $identityAddress);
     }
 
     /**
      * Authorize proxy identity by token
-     * @param $identityAddress string
+     *
+     * @param string $identityAddress
      * @param string $token
-     * @return mixed
+     * @return bool|mixed
      */
     public function activateAuthorizationTokenProxy(
         string $identityAddress,
         string $token
     ) {
-        /** @var IdentityProxy $proxy */
-        $proxy = IdentityProxy::getModel()->where([
-            'auth_token' => $token
-        ])->first();
-
-        if (!$proxy) {
-            return 'not-found';
-        }
-
-        if ($proxy->state != 'pending') {
-            return 'not-pending';
-        }
-
-        $expire_at = $proxy->created_at->addSeconds(
-            $proxy->expires_in
-        )->timestamp;
-
-        if ($expire_at < time()) {
-            return 'expired';
-        }
-
-        return !!$proxy->update([
-            'identity_address'  => $identityAddress,
-            'state'             => 'active'
-        ]);
+        return !!$this->exchangeToken('qr_code', $token, $identityAddress);
     }
 
     /**
      * Authorize proxy identity by email token
-     * @param string $email_token
+     *
+     * @param string $token
      * @return string
      */
-    public function activateAuthorizationEmailProxy(string $email_token) {
+    public function activateAuthorizationEmailProxy(
+        string $token
+    ) {
+        return $this->exchangeToken('email_code', $token)->access_token;
+    }
+
+    /**
+     * Authorize proxy identity by email token
+     *
+     * @param string $token
+     * @return string
+     */
+    public function exchangeEmailConfirmationToken(
+        string $token
+    ) {
+        return $this->exchangeToken('confirmation_code', $token)->access_token;
+    }
+
+    /**
+     * Activate proxy by exchange_token
+     *
+     * @param string $type
+     * @param string $exchange_token
+     * @param string $identity_address
+     * @return IdentityProxy
+     */
+    private function exchangeToken(
+        string $type,
+        string $exchange_token,
+        string $identity_address = null
+    ) {
         /** @var IdentityProxy $proxy */
         $proxy = IdentityProxy::getModel()->where([
-            'auth_email_token' => $email_token
+            'exchange_token'    => $exchange_token,
+            'type'              => $type
         ])->first();
 
         if (!$proxy) {
@@ -392,22 +402,16 @@ class IdentityRepo implements Interfaces\IIdentityRepo
             abort(403, trans('identity-proxy.code.not-pending'));
         }
 
-        $expire_at = $proxy->created_at->addSeconds(
-            $proxy->expires_in
-        )->timestamp;
-
-        if ($expire_at < time()) {
+        if ($proxy->exchange_time_expired) {
             abort(403, trans('identity-proxy.code.expired'));
         }
 
-        $access_token = $this->makeAccessToken();
+        // Update identity_address only if provided
+        $proxy->update(array_merge([
+            'state' => 'active',
+        ], $identity_address ? compact('identity_address') : []));
 
-        $proxy->update([
-            'state'         => 'active',
-            'access_token'  => $access_token
-        ]);
-
-        return $access_token;
+        return $proxy;
     }
 
     private function makeToken($size) {
@@ -416,17 +420,5 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     private function makeAccessToken() {
         return $this->makeToken(200);
-    }
-
-    private function makeAuthCode() {
-        return random_int(111111, 999999);
-    }
-
-    private function makeAuthToken() {
-        return $this->makeToken(64);
-    }
-
-    private function makeAuthEmailToken() {
-        return $this->makeToken(64);
     }
 }

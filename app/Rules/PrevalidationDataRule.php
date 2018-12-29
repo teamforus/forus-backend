@@ -2,20 +2,24 @@
 
 namespace App\Rules;
 
+use App\Models\Fund;
 use Illuminate\Contracts\Validation\Rule;
 
 class PrevalidationDataRule implements Rule
 {
     private $message;
+    private $fundId;
 
     /**
      * Create a new rule instance.
      *
+     * @param $fundId int
      * @return void
      */
-    public function __construct()
-    {
-
+    public function __construct(
+        int $fundId = null
+    ) {
+        $this->fundId = $fundId;
     }
 
     /**
@@ -39,12 +43,28 @@ class PrevalidationDataRule implements Rule
             return false;
         }
 
+        /** @var Fund $fund */
+        $fund = $this->fundId ? Fund::query()->find($this->fundId) : false;
+        $requiredKeys = $fund ? $fund->requiredPrevalidationKeys() : collect([]);
+
         foreach ($data as $records) {
             $records = collect($records);
 
-            if ($records->isEmpty()) {
+            if ($fund && $records->keys()->search(
+                $fund->fund_config->csv_primary_key
+                ) === false) {
                 $this->message = trans(
-                    'validation.prevalidated_empty_data_row'
+                    'validation.prevalidation_missing_primary_key'
+                );
+
+                return false;
+            }
+
+            if ($fund && $records->keys()->intersect(
+                $requiredKeys
+                )->count() < $requiredKeys->count()) {
+                $this->message = trans(
+                    'validation.prevalidation_missing_required_keys'
                 );
 
                 return false;
@@ -53,7 +73,7 @@ class PrevalidationDataRule implements Rule
             foreach ($records as $recordKey => $record) {
                 if ($recordTypes->search($recordKey) === false) {
                     $this->message = trans(
-                        'validation.prevalidated_invalid_row_record_type'
+                        'validation.prevalidation_invalid_record_key'
                     );
 
                     return false;
@@ -61,7 +81,7 @@ class PrevalidationDataRule implements Rule
 
                 if ($recordKey == 'primary_email') {
                     $this->message = trans(
-                        'validation.prevalidated_primary_email_type'
+                        'validation.prevalidation_invalid_type_primary_email'
                     );
 
                     return false;

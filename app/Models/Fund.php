@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * Class Fund
  * @property mixed $id
  * @property integer $organization_id
+ * @property integer|null $fund_id
  * @property string $state
  * @property string $name
  * @property Organization $organization
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property float $budget_left
  * @property Media $logo
  * @property FundConfig $fund_config
+ * @property Collection $fund_formulas
  * @property Collection $metas
  * @property Collection $products
  * @property Collection $product_categories
@@ -50,11 +52,12 @@ class Fund extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'state', 'name', 'start_date', 'end_date', 'notification_amount'
+        'organization_id', 'state', 'name', 'start_date', 'end_date',
+        'notification_amount', 'fund_id'
     ];
 
     protected $hidden = [
-        'fund_config'
+        'fund_config', 'fund_formulas'
     ];
 
     /**
@@ -218,6 +221,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_formulas() {
+        return $this->hasMany(FundFormula::class);
+    }
+
+    /**
      * @return array|null
      */
     public function getBunqKey() {
@@ -229,20 +239,6 @@ class Fund extends Model
             "key" => $this->fund_config->bunq_key,
             "sandbox" => $this->fund_config->bunq_sandbox,
             "allowed_ip" => $this->fund_config->bunq_allowed_ip,
-        ];
-    }
-
-    /**
-     * @return array|null
-     */
-    public function getFundFormula() {
-        if (!$this->fund_config) {
-            return null;
-        }
-
-        return [
-            "amount" => $this->fund_config->formula_amount,
-            "multiplier" => $this->fund_config->formula_multiplier,
         ];
     }
 
@@ -281,13 +277,29 @@ class Fund extends Model
 
     public static function amountForIdentity(Fund $fund, $identityAddress)
     {
-        $fundFormula = $fund->getFundFormula();
+        if (!$fundFormula = $fund->fund_formulas) {
+            return 0;
+        }
 
-        $record = self::getTrustedRecordOfType(
-            $fund, $identityAddress, $fundFormula['multiplier']
-        );
+        return $fundFormula->map(function(FundFormula $formula) use (
+            $fund, $identityAddress
+        ) {
+            switch ($formula->type) {
+                case 'fixed': return $formula->amount; break;
+                case 'multiply': {
+                    $record = self::getTrustedRecordOfType(
+                        $fund,
+                        $identityAddress,
+                        $formula->record_type_key
+                    );
 
-        return $fundFormula['amount'] * $record['value'];
+                    return is_numeric(
+                        $record['value']
+                    ) ? $formula->amount * $record['value'] : 0;
+                } break;
+                default: return 0; break;
+            }
+        })->sum();
     }
 
     /**
@@ -317,6 +329,19 @@ class Fund extends Model
         } catch (\Exception $exception) {
             return collect();
         }
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    public function requiredPrevalidationKeys() {
+        return collect()->merge(
+            $this->fund_config ? [$this->fund_config->csv_primary_key] : []
+        )->merge(
+            $this->fund_formulas()->where([
+                'type' => 'multiply'
+            ])->pluck('record_type_key')
+        )->merge($this->criteria()->pluck('record_type_key'))->unique();
     }
 
     /**
