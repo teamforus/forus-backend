@@ -28,7 +28,7 @@ class OrganizationResource extends Resource
         }
 
         return collect($organization)->only([
-            'id', 'identity_address', 'name', 'email', 'phone', 'kvk'
+            'id', 'identity_address', 'name', 'email', 'phone', 'kvk', 'website'
         ])->merge([
             'permissions' => $organization->identityPermissions(
                 auth()->id()
