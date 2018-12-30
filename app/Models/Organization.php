@@ -46,7 +46,8 @@ class Organization extends Model
      * @var array
      */
     protected $fillable = [
-        'identity_address', 'name', 'iban', 'email', 'phone', 'kvk', 'btw'
+        'identity_address', 'name', 'iban', 'email', 'phone', 'kvk', 'btw',
+        'website'
     ];
 
     /**
