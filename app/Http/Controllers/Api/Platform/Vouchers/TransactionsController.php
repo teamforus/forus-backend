@@ -99,7 +99,7 @@ class TransactionsController extends Controller
             $product->updateSoldOutState();
         }
 
-        if (!$product) {
+        if ($voucher->type != 'product') {
             $voucher->sendEmailAvailableAmount();
         }
 
