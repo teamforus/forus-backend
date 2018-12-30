@@ -26,7 +26,7 @@ class OfficeResource extends Resource
         ])->merge([
             'photo' => new MediaResource($office->photo),
             'organization' => collect($organization)->only([
-                'name', 'email', 'phone'
+                'name', 'email', 'phone', 'website'
             ])->merge([
                 'categories' => $product_categories->pluck(
                     'name'
