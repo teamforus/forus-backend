@@ -140,7 +140,7 @@ class IdentityController extends Controller
             'access_token', 'exchange_token'
         ]);
 
-        $proxy['auth_code'] = $proxy['exchange_token'];
+        $proxy['auth_code'] = intval($proxy['exchange_token']);
 
         return $proxy->toArray();
     }
