@@ -14,12 +14,20 @@ class PrevalidationResource extends Resource
      */
     public function toArray($request)
     {
+        $creatorFields = [];
+
+        if (auth()->id() == $this->resource->identity_address) {
+            $creatorFields = collect($this->resource)->only([
+                'fund_id', 'created_at', 'identity_address'
+            ]);
+        }
+
         return collect($this->resource)->only([
             'id', 'uid', 'state'
-        ])->merge([
+        ])->merge($creatorFields)->merge([
             'records' => PrevalidationRecordResource::collection(
                 $this->resource->records
             )
-        ])->toArray();
+        ]);
     }
 }

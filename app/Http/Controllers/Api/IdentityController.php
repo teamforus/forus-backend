@@ -21,16 +21,15 @@ class IdentityController extends Controller
     protected $mailService;
 
     public function __construct() {
+        $this->mailService = app()->make('forus.services.mail_notification');
         $this->identityRepo = app()->make('forus.services.identity');
         $this->recordRepo = app()->make('forus.services.record');
-
-        $this->mailService = app()->make('forus.services.mail_notification');
     }
 
     public function getPublic()
     {
         return [
-            'address' => auth()->user()->getAuthIdentifier()
+            'address' => auth()->id()
         ];
     }
 
@@ -49,23 +48,37 @@ class IdentityController extends Controller
             $request->input('records')
         );
 
-        $identityProxyId = $this->identityRepo->makeIdentityPoxy(
-            $identityAddress
-        );
-
+        $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);
         $this->recordRepo->categoryCreate($identityAddress, "Relaties");
-
-        $this->mailService->addConnection(
+        $this->mailService->addEmailConnection(
             $identityAddress,
-            $this->mailService::TYPE_EMAIL,
             $request->input('records.primary_email')
         );
 
-        return [
-            'access_token' => $this->identityRepo->getProxyAccessToken(
-                $identityProxyId
-            )
-        ];
+        $clientType = $request->headers->get('Client-Type', 'general');
+        $implementationKey = Implementation::activeKey();
+
+        if (collect(['webshop', 'app-me_app'])->search($clientType) !== false) {
+            $confirmationLink = url(
+                '/api/v1/identity/proxy/confirmation/redirect/' .
+                collect([
+                    $identityProxy['exchange_token'],
+                    $clientType,
+                    $implementationKey
+                ])->implode('/')
+            );
+
+            $this->mailService->sendEmailConfirmationToken(
+                $identityAddress,
+                $confirmationLink
+            );
+        } else {
+            $this->identityRepo->exchangeEmailConfirmationToken(
+                $identityProxy['exchange_token']
+            );
+        }
+
+        return collect($identityProxy)->only('access_token');
     }
 
     /**
@@ -115,24 +128,48 @@ class IdentityController extends Controller
 
     /**
      * Make new code authorization proxy identity
+     *
      * @return array
+     * @throws \Exception
      */
     public function proxyAuthorizationCode() {
-        return $this->identityRepo->makeAuthorizationCodeProxy();
+        // TODO: Remove legacy transformation when android/ios is ready
+        $proxy = collect(
+            $this->identityRepo->makeAuthorizationCodeProxy()
+        )->only([
+            'access_token', 'exchange_token'
+        ]);
+
+        $proxy['auth_code'] = intval($proxy['exchange_token']);
+
+        return $proxy->toArray();
     }
 
     /**
      * Make new token authorization proxy identity
+     *
      * @return array
+     * @throws \Exception
      */
     public function proxyAuthorizationToken() {
-        return $this->identityRepo->makeAuthorizationTokenProxy();
+        // TODO: Remove legacy transformation when android/ios is ready
+        $proxy = collect(
+            $this->identityRepo->makeAuthorizationTokenProxy()
+        )->only([
+            'access_token', 'exchange_token'
+        ]);
+
+        $proxy['auth_token'] = $proxy['exchange_token'];
+
+        return $proxy->toArray();
     }
 
     /**
      * Make new email authorization proxy identity
+     *
      * @param IdentityAuthorizationEmailTokenRequest $request
      * @return array
+     * @throws \Exception
      */
     public function proxyAuthorizationEmailToken(
         IdentityAuthorizationEmailTokenRequest $request
@@ -145,7 +182,7 @@ class IdentityController extends Controller
 
         $link = url(sprintf(
             '/api/v1/identity/proxy/redirect/email/%s/%s',
-            $source, $proxy['auth_email_token']
+            $source, $proxy['exchange_token']
         ));
 
         $platform = '';
@@ -177,32 +214,11 @@ class IdentityController extends Controller
      * @return array|
      */
     public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request) {
-        $status = $this->identityRepo->activateAuthorizationCodeProxy(
-            auth()->user()->getAuthIdentifier(),
-            $request->post('auth_code', '')
+        $success = $this->identityRepo->activateAuthorizationCodeProxy(
+            auth()->id(), $request->post('auth_code', '')
         );
 
-        if ($status === "not-found") {
-            return abort(404, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "not-pending") {
-            return abort(403, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "expired") {
-            return abort(403, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === true) {
-            return [
-                'success' => true
-            ];
-        }
-
-        return [
-            'success' => false
-        ];
+        return compact('success');
     }
 
     /**
@@ -211,32 +227,11 @@ class IdentityController extends Controller
      * @return array|
      */
     public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request) {
-        $status = $this->identityRepo->activateAuthorizationTokenProxy(
-            auth()->user()->getAuthIdentifier(),
-            $request->post('auth_token', '')
+        $success = $this->identityRepo->activateAuthorizationTokenProxy(
+            auth()->id(), $request->post('auth_token', '')
         );
 
-        if ($status === "not-found") {
-            return abort(404, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "not-pending") {
-            return abort(403, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === "expired") {
-            return abort(403, trans(
-                'identity-proxy.code.' . $status
-            ));
-        } elseif ($status === true) {
-            return [
-                'success' => true
-            ];
-        }
-
-        return [
-            'success' => false
-        ];
+        return compact('success');
     }
 
     /**
@@ -286,11 +281,47 @@ class IdentityController extends Controller
             abort(404);
         }
 
-        $access_token = $this->identityRepo->activateAuthorizationEmailProxy(
-            $emailToken
-        );
+        return [
+            'access_token' => $this->identityRepo->activateAuthorizationEmailProxy($emailToken)
+        ];
+    }
 
-        return compact('access_token');
+    public function emailConfirmationRedirect(
+        string $exchangeToken,
+        string $clientType = 'webshop',
+        string $implementationKey = 'general'
+    ) {
+        if (!Implementation::isValidKey($implementationKey)) {
+            abort(404, "Invalid implementation key.");
+        }
+
+        switch ($clientType) {
+            case 'webshop': {
+                $webshopUrl = Implementation::byKey(
+                    $implementationKey
+                )['url_webshop'];
+
+                return redirect(
+                    "{$webshopUrl}confirmation/email/{$exchangeToken}"
+                );
+            } break;
+            case 'app-me_app': {
+                $sourceUrl = config('forus.front_ends.app-me_app');
+                $redirectUrl = $sourceUrl . "identity-confirmation?token=" . $exchangeToken;
+
+                return view()->make('auth.deep_link', compact('redirectUrl'));
+            } break;
+        }
+
+        return abort(404);
+    }
+
+    public function emailConfirmationExchange(
+        $exchangeToken
+    ) {
+        return [
+            'access_token' => $this->identityRepo->exchangeEmailConfirmationToken($exchangeToken)
+        ];
     }
 
     /**
@@ -304,26 +335,14 @@ class IdentityController extends Controller
     ) {
         $accessToken = $request->input('access_token');
 
-        $proxyIdentityId = $this->identityRepo->proxyIdByAccessToken(
-            $accessToken
-        );
+        $proxyIdentityId = $this->identityRepo->proxyIdByAccessToken($accessToken);
+        $identityAddress = $this->identityRepo->identityAddressByProxyId($proxyIdentityId);
+        $proxyIdentityState = $this->identityRepo->proxyStateById($proxyIdentityId);
 
-        $proxyIdentityState = $this->identityRepo->proxyStateById(
-            $proxyIdentityId
-        );
-
-        $identityAddress = $this->identityRepo->identityAddressByProxyId(
-            $proxyIdentityId
-        );
-
-        if ($accessToken && $proxyIdentityState != 'active') {
-            switch ($proxyIdentityState) {
-                case 'pending': {
-                    return response()->json([
-                        "message" => 'pending'
-                    ]);
-                } break;
-            }
+        switch ($proxyIdentityState) {
+            case 'pending': return response()->json([
+                "message" => 'pending'
+            ]); break;
         }
 
         if (!$accessToken || !$proxyIdentityId || !$identityAddress) {
