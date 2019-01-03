@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Product;
+use App\Services\Markdown\Markdown;
 use Illuminate\Http\Resources\Json\Resource;
 
 class ProductResource extends Resource
@@ -26,6 +27,10 @@ class ProductResource extends Resource
         $totalAmount = $product->total_amount;
         $countReserved = $product->countReserved();
         $countSold = $product->countSold();
+
+        $parser = new Markdown();
+        $parser->enableNewlines = true;
+        $htmlDescription = $parser->parse($product->description);
 
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
@@ -55,7 +60,8 @@ class ProductResource extends Resource
             ),
             'product_category' => new ProductCategoryResource(
                 $product->product_category
-            )
+            ),
+            'html_description' => $htmlDescription
         ])->toArray();
     }
 }
