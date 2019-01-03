@@ -30,10 +30,13 @@ class StoreOrganizationRequest extends FormRequest
             'name'                  => 'required|between:2,200',
             'iban'                  => ['required', new IbanRule()],
             'email'                 => 'required|email',
+            'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:6,20',
+            'phone_public'          => 'boolean',
             'kvk'                   => ['required', new KvkRule()],
             'btw'                   => [new BtwRule()],
             'website'               => 'url|max:200',
+            'website_public'        => 'boolean',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
         ];

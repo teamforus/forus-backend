@@ -40,18 +40,10 @@ class VoucherResource extends Resource
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at->format('Y-m-d'),
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
-                'photo' => new MediaResource(
-                    $voucher->product->photo
-                ),
-                'organization' => collect(
+                'photo' => new MediaResource($voucher->product->photo),
+                'organization' => new OrganizationBasicResource(
                     $voucher->product->organization
-                )->only([
-                    'id', 'name', 'email', 'phone'
-                ])->merge([
-                    'logo' => new MediaCompactResource(
-                        $voucher->product->organization->logo
-                    )
-                ]),
+                ),
             ])->toArray();
         } else {
             exit(abort("Unknown voucher type!", 403));
@@ -68,21 +60,17 @@ class VoucherResource extends Resource
             'id', 'name', 'state'
         ])->merge([
             'url_webshop' => $urlWebshop,
-            'organization' => collect(
-                $fund->organization
-            )->only([
-                'id', 'name', 'email', 'phone'
-            ])->merge([
-                'logo' => new MediaCompactResource($fund->organization->logo)
-            ]),
             'logo' => new MediaCompactResource($fund->logo),
-            'product_categories' => ProductCategoryResource::collection(
-                $fund->product_categories
-            ),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
             'start_date_locale' => format_datetime_locale($fund->start_date),
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
-            'end_date_locale' => format_date_locale($fund->end_date)
+            'end_date_locale' => format_date_locale($fund->end_date),
+            'organization' => new OrganizationBasicResource(
+                $fund->organization
+            ),
+            'product_categories' => ProductCategoryResource::collection(
+                $fund->product_categories
+            ),
         ]);
 
         return collect($voucher)->only([

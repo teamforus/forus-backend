@@ -17,24 +17,13 @@ class OfficeResource extends Resource
     {
         /** @var Office $office */
         $office = $this->resource;
-
         $organization = $office->organization;
-        $product_categories = $organization->product_categories;
 
         return collect($office)->only([
             'id', 'organization_id', 'address', 'phone', 'lon', 'lat'
         ])->merge([
             'photo' => new MediaResource($office->photo),
-            'organization' => collect($organization)->only([
-                'name', 'email', 'phone', 'website'
-            ])->merge([
-                'categories' => $product_categories->pluck(
-                    'name'
-                )->implode(', '),
-                'product_categories' => ProductCategoryResource::collection(
-                    $product_categories
-                ),
-            ]),
+            'organization' => new OrganizationBasicResource($organization),
             'schedule' => OfficeScheduleResource::collection(
                 $office->schedules
             )

@@ -3,10 +3,13 @@
 namespace App\Http\Resources;
 
 use App\Models\Organization;
-use Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
-class OrganizationResource extends Resource
+/**
+ * Class OrganizationBasicResource
+ * @package App\Http\Resources
+ */
+class OrganizationBasicResource extends Resource
 {
     /**
      * Transform the resource into an array.
@@ -19,28 +22,21 @@ class OrganizationResource extends Resource
         /** @var Organization $organization */
         $organization = $this->resource;
 
-        $ownerData = [];
-
-        if (Gate::allows('organizations.update', $organization)) {
-            $ownerData = collect($organization)->only([
-                'iban', 'btw', 'website', 'phone', 'email', 'email_public',
-                'phone_public', 'website_public'
-            ])->toArray();
-        }
-
         return collect($organization)->only([
-            'id', 'identity_address', 'name', 'kvk',
+            'name',
             $organization->email_public ? 'email': '',
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': ''
         ])->merge([
-            'permissions' => $organization->identityPermissions(
-                auth()->id()
-            )->pluck('key'),
-            'logo' => new MediaResource($organization->logo),
+            'categories' => $organization->product_categories->pluck(
+                'name'
+            )->implode(', '),
             'product_categories' => ProductCategoryResource::collection(
                 $organization->product_categories
+            ),
+            'logo' => new MediaCompactResource(
+                $organization->logo
             )
-        ])->merge($ownerData)->toArray();
+        ]);
     }
 }
