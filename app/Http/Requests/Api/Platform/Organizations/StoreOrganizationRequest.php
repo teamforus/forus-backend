@@ -35,7 +35,7 @@ class StoreOrganizationRequest extends FormRequest
             'phone_public'          => 'boolean',
             'kvk'                   => ['required', new KvkRule()],
             'btw'                   => [new BtwRule()],
-            'website'               => 'url|max:200',
+            'website'               => 'nullable|max:200|url',
             'website_public'        => 'boolean',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
