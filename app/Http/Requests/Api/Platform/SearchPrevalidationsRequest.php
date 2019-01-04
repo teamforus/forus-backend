@@ -34,6 +34,7 @@ class SearchPrevalidationsRequest extends FormRequest
             'fund_id' => 'in:' . $fundsAvailable->implode(','),
             'from' => 'date_format:Y-m-d',
             'to' => 'date_format:Y-m-d',
+            'exported' => 'boolean'
         ];
     }
 }
