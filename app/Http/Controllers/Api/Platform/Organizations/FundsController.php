@@ -15,6 +15,10 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
+/**
+ * Class FundsController
+ * @package App\Http\Controllers\Api\Platform\Organizations
+ */
 class FundsController extends Controller
 {
     /**

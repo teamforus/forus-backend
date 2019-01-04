@@ -31,9 +31,9 @@ class ProductResource extends Resource
             'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id'
         ])->merge([
-            'organization' => collect($product->organization)->only([
-                'name', 'email', 'phone'
-            ]),
+            'organization' => new OrganizationBasicResource(
+                $product->organization
+            ),
             'total_amount' => $totalAmount,
             'reserved_amount' => $countReserved,
             'stock_amount' => $totalAmount - ($countReserved + $countSold),
