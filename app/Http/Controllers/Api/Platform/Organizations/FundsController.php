@@ -269,16 +269,15 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
 
-        do {
-            $code = strtoupper(
-                app()->make('token_generator')->generate(4,4)
-            );
-        } while(FundTopUp::query()->where('code', $code)->count() > 0);
+        if ($fund->top_ups()->count() == 0) {
+            $topUp = $fund->top_ups()->create([
+                'code' => FundTopUp::generateCode()
+            ]);
+        } else {
+            $topUp = $fund->top_ups()->first();
+        }
 
-        return new TopUpResource($fund->top_ups()->create([
-            'code'      => $code,
-            'state'     => 'pending'
-        ]));
+        return new TopUpResource($topUp);
     }
 
     /**
