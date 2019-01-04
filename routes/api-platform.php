@@ -110,6 +110,11 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         "Api\Platform\VouchersController@sendEmail"
     );
 
+    $router->post(
+        'vouchers/{voucher_token_address}/share',
+        "Api\Platform\VouchersController@shareVoucher"
+    );
+
     $router->resource(
         'vouchers.transactions',
         "Api\Platform\Vouchers\TransactionsController", [

@@ -132,6 +132,32 @@ class Voucher extends Model
     }
 
     /**
+     * @param string $reason
+     */
+    public function shareVoucherEmail(string $reason) {
+        /** @var VoucherToken $voucherToken */
+        $voucherToken = $this->tokens()->where([
+            'need_confirmation' => false
+        ])->first();
+
+        if ($voucherToken->voucher->type == 'product') {
+
+            $recordRepo = resolve('forus.services.record');
+            $primaryEmail = $recordRepo->primaryEmailByAddress(auth()->id());
+
+            $product_name = $voucherToken->voucher->product->name;
+
+            resolve('forus.services.mail_notification')->shareVoucher(
+                $voucherToken->voucher->product->organization->emailServiceId(),
+                $primaryEmail,
+                $product_name,
+                $voucherToken->getQrCodeUrl(),
+                $reason
+            );
+        }
+    }
+
+    /**
      * @return void
      */
     public function sendEmailAvailableAmount()

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Events\Vouchers\VoucherCreated;
+use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
 use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Http\Resources\VoucherResource;
@@ -108,5 +109,22 @@ class VouchersController extends Controller
         $this->authorize('show', $voucherToken->voucher);
 
         $voucherToken->voucher->sendToEmail();
+    }
+
+    /**
+     * Share product voucher to email.
+     *
+     * @param VoucherToken $voucherToken
+     * @param ShareProductVoucherRequest $request
+     */
+    public function shareVoucher(
+        VoucherToken $voucherToken,
+        ShareProductVoucherRequest $request
+    ) {
+        $this->authorize('show', $voucherToken->voucher);
+
+        $voucherToken->voucher->shareVoucherEmail(
+            $request->input('reason')
+        );
     }
 }

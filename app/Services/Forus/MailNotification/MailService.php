@@ -575,6 +575,52 @@ class MailService
         return true;
     }
 
+
+    /**
+     * Send voucher by email
+     *
+     * @param string $identifier
+     * @param string $requester_email
+     * @param string $product_name
+     * @param string $qr_url
+     * @param string $reason
+     * @return bool
+     */
+    public function shareVoucher(
+        string $identifier,
+        string $requester_email,
+        string $product_name,
+        string $qr_url,
+        string $reason
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/share_product/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'             => $identifier,
+            'product_name'          => $product_name,
+            'qr_url'                => $qr_url,
+            'requester_email'       => $requester_email,
+            'reason'                => $reason
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `shareVoucher`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Send restore identity link to address email
      * @param string $identifier
