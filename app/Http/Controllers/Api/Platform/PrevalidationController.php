@@ -140,10 +140,30 @@ class PrevalidationController extends Controller
             $request->input('fund_id', null),
             $request->input('state', null),
             $request->input('from', null),
-            $request->input('to', null)
-        )->with('records.record_type')->paginate(
-            $request->get('per_page', null)
-        ));
+            $request->input('to', null),
+            $request->input('exported', null)
+        )->with('records.record_type')->paginate());
+    }
+
+    /**
+     * @param SearchPrevalidationsRequest $request
+     * @return \Illuminate\Database\Eloquent\Model
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function export(
+        SearchPrevalidationsRequest $request
+    ) {
+        $this->authorize('index', Prevalidation::class);
+
+        return Prevalidation::export(
+            auth()->user()->getAuthIdentifier(),
+            $request->input('q', null),
+            $request->input('fund_id', null),
+            $request->input('state', null),
+            $request->input('from', null),
+            $request->input('to', null),
+            $request->input('exported', null)
+        );
     }
 
     /**

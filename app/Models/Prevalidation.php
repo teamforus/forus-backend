@@ -5,7 +5,6 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use phpDocumentor\Reflection\Types\Integer;
 
 /**
  * Class Prevalidation
@@ -14,6 +13,7 @@ use phpDocumentor\Reflection\Types\Integer;
  * @property string $identity_address
  * @property string $state
  * @property Collection $records
+ * @property boolean $exported
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -31,7 +31,7 @@ class Prevalidation extends Model
      * @var array
      */
     protected $fillable = [
-        'uid', 'identity_address', 'state', 'fund_id'
+        'uid', 'identity_address', 'state', 'fund_id', 'exported'
     ];
 
     /**
@@ -46,8 +46,9 @@ class Prevalidation extends Model
      * @param string|null $q
      * @param int|null $fund_id
      * @param string|null $state
-     * @param null $from
-     * @param null $to
+     * @param string|null $from
+     * @param string|null $to
+     * @param boolean|null $exported
      * @return \Illuminate\Database\Eloquent\Model
      */
     public static function search(
@@ -56,7 +57,8 @@ class Prevalidation extends Model
         int $fund_id = null,
         string $state = null,
         $from = null,
-        $to = null
+        $to = null,
+        $exported = null
     ) {
         $prevalidations = Prevalidation::getModel()->where(compact(
             'identity_address'
@@ -92,6 +94,10 @@ class Prevalidation extends Model
             );
         }
 
+        if ($exported !== null) {
+            $prevalidations->where('exported', '=', $exported);
+        }
+
         if ($to) {
             $prevalidations->where(
                 'created_at', '<', Carbon::make($to)->endOfDay()
@@ -99,5 +105,66 @@ class Prevalidation extends Model
         }
 
         return $prevalidations;
+    }
+
+    /**
+     * @param $identity_address
+     * @param string|null $q
+     * @param int|null $fund_id
+     * @param string|null $state
+     * @param string|null $from
+     * @param string|null $to
+     * @param boolean|null $exported
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public static function export(
+        $identity_address,
+        string $q = null,
+        int $fund_id = null,
+        string $state = null,
+        $from = null,
+        $to = null,
+        $exported = null
+    ) {
+        $query = self::search(
+            $identity_address, $q, $fund_id, $state, $from, $to, $exported
+        );
+
+        $query->update([
+            'exported' => true
+        ]);
+
+        $headers = [
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Content-type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=prevalidations.csv',
+            'Expires'             => '0',
+            'Pragma'              => 'public'
+        ];
+
+        $list = $query->with([
+            'records.record_type.translations'
+        ])->get()->map(function(Prevalidation $prevalidation) {
+            return collect([
+                'code' => $prevalidation->uid
+            ])->merge($prevalidation->records->pluck(
+                'value', 'record_type.name'
+            ))->toArray();
+        })->toArray();
+
+        // add headers for each column in the CSV download
+        array_unshift($list, array_keys($list[0]));
+
+        $callback = function() use ($list) {
+            $fileHandler = fopen('php://output', 'w');
+
+            foreach ($list as $row) {
+                fputcsv($fileHandler, $row);
+            }
+
+            fclose($fileHandler);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -23,7 +23,7 @@ class PrevalidationResource extends Resource
         }
 
         return collect($this->resource)->only([
-            'id', 'uid', 'state'
+            'id', 'uid', 'state', 'exported'
         ])->merge($creatorFields)->merge([
             'records' => PrevalidationRecordResource::collection(
                 $this->resource->records
