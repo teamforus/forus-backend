@@ -26,7 +26,9 @@ class PrevalidationResource extends Resource
             'id', 'uid', 'state', 'exported'
         ])->merge($creatorFields)->merge([
             'records' => PrevalidationRecordResource::collection(
-                $this->resource->records
+                $this->resource->records->filter(function($record) {
+                    return strpos($record->record_type->key, '_eligible') === false;
+                })
             )
         ]);
     }
