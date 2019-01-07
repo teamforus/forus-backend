@@ -16,9 +16,13 @@ use Illuminate\Database\Query\Builder;
  * @property string $name
  * @property string $iban
  * @property string $email
+ * @property bool $email_public
  * @property string $phone
+ * @property bool $phone_public
  * @property string $kvk
  * @property string $btw
+ * @property string $website
+ * @property bool $website_public
  * @property Media $logo
  * @property Collection $funds
  * @property Collection $vouchers
@@ -46,8 +50,8 @@ class Organization extends Model
      * @var array
      */
     protected $fillable = [
-        'identity_address', 'name', 'iban', 'email', 'phone', 'kvk', 'btw',
-        'website'
+        'identity_address', 'name', 'iban', 'email', 'email_public',
+        'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public'
     ];
 
     /**

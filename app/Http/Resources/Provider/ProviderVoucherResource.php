@@ -4,6 +4,7 @@ namespace App\Http\Resources\Provider;
 
 use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\MediaResource;
+use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\Organization;
 use App\Models\Product;
@@ -44,7 +45,6 @@ class ProviderVoucherResource extends Resource
     ) {
         $amountLeft = $voucher->amount_available;
         $voucherOrganizations = $voucher->fund->provider_organizations_approved();
-        // $voucherOrganizations = $voucher->fund->providers->pluck('organization');
 
         $allowedOrganizations = Organization::queryByIdentityPermissions(
             $identityAddress, 'scan_vouchers'
@@ -69,11 +69,9 @@ class ProviderVoucherResource extends Resource
             'fund' => collect($voucher->fund)->only([
                 'id', 'name', 'state'
             ])->merge([
-                'organization' => collect($voucher->fund->organization)->only([
-                    'id', 'name'
-                ])->merge([
-                    'logo' => new MediaCompactResource($voucher->fund->organization->logo)
-                ]),
+                'organization' => new OrganizationBasicResource(
+                    $voucher->fund->organization
+                ),
                 'logo' => new MediaCompactResource($voucher->fund->logo)
             ]),
             'allowed_organizations' => collect(
@@ -126,11 +124,9 @@ class ProviderVoucherResource extends Resource
                 'photo' => new MediaResource(
                     $voucher->product->photo
                 ),
-                'organization' => collect($voucher->product->organization)->only([
-                    'id', 'name'
-                ])->merge([
-                    'logo' => new MediaCompactResource($voucher->product->organization->logo)
-                ]),
+                'organization' => new OrganizationBasicResource(
+                    $voucher->product->organization
+                ),
             ])->toArray()
         ])->toArray();
     }

@@ -423,23 +423,32 @@ class BunqService
             }
 
             $payments = $bunq->getPayments();
+
             $topUps = $fund->top_ups()->where([
-                'state' => 'pending',
                 'fund_id' => $fund->id
             ])->get();
 
             /** @var FundTopUp $topUp */
             foreach ($topUps as $topUp) {
                 foreach ($payments as $payment) {
-                    if (strpos($payment->getDescription(), $topUp->code) !== FALSE) {
-                        try {
-                            $topUp->update([
-                                'state' => 'confirmed',
-                                'bunq_transaction_id' => $payment->getId(),
-                                'amount' => $payment->getAmount()->getValue()
-                            ]);
-                        } catch (\Exception $exception) {};
+                    if (strpos($payment->getDescription(), $topUp->code) === FALSE) {
+                        continue;
                     }
+
+                    if ($topUp->transactions()->where([
+                        'bunq_transaction_id' => $payment->getId()
+                        ])->count() > 0) {
+                        continue;
+                    }
+
+                    try {
+                        $topUp->transactions()->create([
+                            'bunq_transaction_id' => $payment->getId(),
+                            'amount' => $payment->getAmount()->getValue()
+                        ]);
+                    } catch (\Exception $exception) {
+                        resolve('log')->error($exception->getMessage());
+                    };
                 }
             }
         }

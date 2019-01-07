@@ -160,6 +160,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function top_up_transactions() {
+        return $this->hasManyThrough(FundTopUpTransaction::class, FundTopUp::class);
+    }
+
+    /**
      * @return float
      */
     public function getBudgetValidatedAttribute() {
@@ -170,9 +177,7 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetTotalAttribute() {
-        return round($this->top_ups()->where([
-            'state' => 'confirmed'
-        ])->sum('amount'), 2);
+        return round($this->top_up_transactions()->sum('amount'), 2);
     }
 
     /**

@@ -53,7 +53,8 @@ class OrganizationsController extends Controller
 
         $organization = Organization::create(
             collect($request->only([
-                'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website'
+                'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
+                'email_public', 'phone_public', 'website_public'
             ]))->merge([
                 'identity_address' => auth()->user()->getAuthIdentifier(),
             ])->toArray()
@@ -111,7 +112,8 @@ class OrganizationsController extends Controller
         }
 
         $organization->update($request->only([
-            'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website'
+            'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
+            'email_public', 'phone_public', 'website_public'
         ]));
 
         $organization->product_categories()->sync(

@@ -14,7 +14,7 @@ class AddFundIdToPrevalidations extends Migration
     public function up()
     {
         Schema::table('prevalidations', function(Blueprint $table) {
-            $table->integer('fund_id')->unsigned()->nullable();
+            $table->integer('fund_id')->unsigned()->nullable()->after('identity_address');
         });
 
         // roles with record validation permission
