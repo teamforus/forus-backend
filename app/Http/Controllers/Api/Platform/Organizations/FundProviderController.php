@@ -23,9 +23,9 @@ class FundProviderController extends Controller
         $this->authorize('indexSponsor', [FundProvider::class, $organization]);
 
         return FundProviderResource::collection(
-            FundProvider::getModel()->whereIn(
-                'fund_id',
-                $organization->funds()->pluck('id')
+            FundProvider::search(
+                $request,
+                $organization
             )->paginate(
                 $request->has('per_page') ? $request->input('per_page') : null
             )

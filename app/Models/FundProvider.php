@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use DB;
 
 /**
  * Class FundProvider
@@ -39,5 +41,44 @@ class FundProvider extends Model
      */
     public function organization() {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public static function search(
+        Request $request,
+        Organization $organization
+    ) {
+        $q = $request->input('q', null);
+        $state = $request->input('state', null);
+
+        $providers = FundProvider::getModel()->whereIn(
+            'fund_id',
+            $organization->funds()->pluck('id')
+        );
+
+        if ($q) {
+
+            $providers = $providers->whereHas('organization', function (\Illuminate\Database\Eloquent\Builder $query) use ($q){
+                return $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('kvk', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%")
+                    ->orWhereHas('product_categories', function (\Illuminate\Database\Eloquent\Builder $query) use($q){
+                        return $query->whereTranslationLike('name', "%{$q}%");
+                    });
+            });
+        }
+
+        if($state && in_array($state, ['approved', 'declined', 'pending'])){
+            $providers = $providers->where('state', $state);
+        }
+
+        $providers = $providers->orderBy(DB::raw('FIELD(state, "pending", "approved", "declined")'));
+
+        return $providers;
     }
 }
