@@ -86,7 +86,7 @@ return [
 	'timezone'             => ':attribute moet een geldige tijdszone zijn.',
 	'unique'               => ':attribute is al bezet.',
     'uploaded'             => 'Het is niet gelukt om :attribute te uploaden',
-	'url'                  => ':attribute formaat is ongeldig.',
+	'url'                  => ':attribute moet beginnen met http: // of https: //.',
 
     // Custom
     'old_pin_code'          => 'De oude en nieuwe inlogcode komen niet overeen.',
