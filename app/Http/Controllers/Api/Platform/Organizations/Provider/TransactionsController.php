@@ -13,20 +13,21 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Organization $organization
      * @param Request $request
+     * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Organization $organization,
-        Request $request
+        Request $request,
+        Organization $organization
     ) {
         $this->authorize('show', $organization);
         $this->authorize('indexProvider', [VoucherTransaction::class, $organization]);
 
         return ProviderVoucherTransactionResource::collection(
             $organization->voucher_transactions()->paginate(
-                $request->has('per_page') ? $request->input('per_page') : null
+                min($request->input('per_page', 25), 100)
             )
         );
     }
