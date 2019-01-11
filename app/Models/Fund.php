@@ -308,6 +308,24 @@ class Fund extends Model
     }
 
     /**
+     * @return mixed|null
+     */
+    public function amountFixedByFormula()
+    {
+        if (!$fundFormula = $this->fund_formulas) {
+            return null;
+        }
+
+        if($fundFormula->filter(function (FundFormula $formula){
+            return $formula->type != 'fixed';
+        })->count()){
+            return null;
+        }
+
+        return $fundFormula->sum('amount');
+    }
+
+    /**
      * @return BunqService|string
      */
     public function getBunq() {
