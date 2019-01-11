@@ -7,7 +7,6 @@ use App\Models\VoucherTransaction;
 use bunq\Context\BunqContext;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
 use bunq\Model\Generated\Endpoint\Payment;
-use bunq\Model\Generated\Endpoint\RequestInquiry;
 use bunq\Model\Generated\Object\Amount;
 use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
@@ -16,9 +15,13 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder;
 
+/**
+ * Class BunqService
+ * @package App\Services\BunqService
+ */
 class BunqService
 {
-    private $deviceDescription = "My Device Description";
+    private $deviceDescription = "Device description";
 
     /**
      * Filesystem driver to use for storage
@@ -34,6 +37,7 @@ class BunqService
 
     /**
      * BunqService constructor.
+     *
      * @param $fundId
      * @param $bunqKey
      * @param array $bunqAllowedIp
@@ -46,15 +50,14 @@ class BunqService
         $bunqAllowedIp = [],
         $bunqUseSandbox = true
     ) {
-
         $this->storagePath = config('bunq.storage_path');
         $this->storageDriver = config('bunq.storage_driver');
 
         if (!is_numeric($fundId) || $this->storageDriver == 'public') {
             if ($this->storageDriver == 'public') {
-                app('log')->error(
-                    'Bunq service: can\'t use `public` storage ' .
-                    'for sensitive bunq files.'
+                app('log')->alert(
+                    'BunqService->__construct: ' .
+                    "can't use `public` storage for bunq context files."
                 );
             }
 
@@ -85,7 +88,8 @@ class BunqService
     }
 
     /**
-     * Create bunq service instance
+     * Create new BunqService instance.
+     *
      * @param $fundId
      * @param $bunqKey
      * @param array $bunqAllowedIp
@@ -113,6 +117,8 @@ class BunqService
     }
 
     /**
+     * Create or restore existing bunq context.
+     *
      * @param string $bunqContextFilePath
      * @param bool $useSandbox
      * @param string $apiKey
@@ -155,6 +161,8 @@ class BunqService
     }
 
     /**
+     * Restore bunq context from stored file.
+     *
      * @param $bunqContextFilePath
      * @return ApiContext
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
@@ -167,6 +175,16 @@ class BunqService
         );
     }
 
+    /**
+     * Create new Bunq context and store to file.
+     *
+     * @param string $bunqContextFilePath
+     * @param bool $useSandbox
+     * @param string $apiKey
+     * @param array $permittedIps
+     * @param string $deviceDescription
+     * @return bool|ApiContext
+     */
     private function createAndStoreContext(
         string $bunqContextFilePath,
         bool $useSandbox,
@@ -174,7 +192,6 @@ class BunqService
         array $permittedIps,
         string $deviceDescription
     ) {
-
         if ($useSandbox) {
             $environmentType = BunqEnumApiEnvironmentType::SANDBOX();
         } else {
@@ -197,7 +214,7 @@ class BunqService
             return $apiContext;
         } catch (\Exception $exception) {
             app('log')->error(
-                'Bunq service: ' . $exception->getMessage()
+                'BunqService->restoreContext: ' . $exception->getMessage()
             );
         }
 
@@ -205,7 +222,8 @@ class BunqService
     }
 
     /**
-     * Get bank monetary account balance value
+     * Get bank monetary account balance amount.
+     *
      * @return float
      */
     public function getBankAccountBalanceValue()
@@ -219,6 +237,7 @@ class BunqService
 
     /**
      * Get bank monetary account iban value
+     *
      * @return string|false
      */
     public function getBankAccountIban()
@@ -235,14 +254,8 @@ class BunqService
     }
 
     /**
-     * @return array|MonetaryAccount[]
-     */
-    public function getMonetaryAccounts()
-    {
-        return MonetaryAccount::listing()->getValue();
-    }
-
-    /**
+     * Make new payment.
+     *
      * @param string $amount
      * @param string $iban
      * @param string $name
@@ -263,6 +276,8 @@ class BunqService
     }
 
     /**
+     * Get payment details.
+     *
      * @param $paymentId
      * @return Payment
      */
@@ -273,47 +288,8 @@ class BunqService
     }
 
     /**
-     * @param $amount
-     * @param $email
-     * @param $name
-     * @param string $description
-     * @return int
-     */
-    public function makePaymentRequest(
-        float $amount,
-        string $email,
-        string $name,
-        string $description = ""
-    ) {
-        return RequestInquiry::create(
-            new Amount($amount, 'EUR'),
-            new Pointer('EMAIL', $email, $name),
-            $description,
-            true
-        )->getValue();
-    }
-
-    /**
-     * @param $paymentRequestId
-     * @return RequestInquiry
-     */
-    public function paymentRequestDetails(
-        int $paymentRequestId
-    ) {
-        return RequestInquiry::get($paymentRequestId)->getValue();
-    }
-
-    /**
-     * @param $paymentRequestId
-     * @return \bunq\Model\Generated\Endpoint\BunqResponseRequestInquiry
-     */
-    public function revokePaymentRequest(
-        int $paymentRequestId
-    ) {
-        return RequestInquiry::update($paymentRequestId, null, 'REVOKED');
-    }
-
-    /**
+     * Get all payments.
+     *
      * @return array|Payment[]
      */
     public function getPayments() {
@@ -321,9 +297,11 @@ class BunqService
     }
 
     /**
+     * Get list pending transactions.
+     *
      * @return Collection
      */
-    public static function getQueue() {
+    public static function getTransactionsQueue() {
         return VoucherTransaction::query()->orderBy('updated_at', 'ASC')
             ->where('state', '=', 'pending')
             ->where('attempts', '<', 5)
@@ -335,8 +313,13 @@ class BunqService
             })->get();
     }
 
+    /**
+     * Process pending transactions.
+     *
+     * @return void
+     */
     public static function processQueue() {
-        $transactions = self::getQueue();
+        $transactions = self::getTransactionsQueue();
 
         if ($transactions->count() == 0) {
             return null;
@@ -360,13 +343,7 @@ class BunqService
             ])->save();
 
             try {
-                $bunq = $voucher->fund->getBunq();
-
-                if (!$bunq) {
-                    app('log')->error(
-                        'BunqService:processQueue invalid fund bunq - ' .
-                        $voucher->fund_id
-                    );
+                if (!$bunq = $voucher->fund->getBunq()) {
                     continue;
                 }
 
@@ -395,16 +372,20 @@ class BunqService
                     ])->save();
                 }
 
-            } catch(\Exception $e) {
-                app('log')->error(sprintf(
-                    "[%s] - %s",
-                    Carbon::now(),
-                    $e->getMessage()
-                ));
+            } catch (\Exception $e) {
+                app('log')->error(
+                    'BunqService->processQueue: ' .
+                    sprintf(" [%s] - %s", Carbon::now(), $e->getMessage())
+                );
             }
         }
     }
 
+    /**
+     * Check for new top ups.
+     *
+     * @return void
+     */
     public static function processTopUps() {
         $funds = Fund::all()->filter(function(Fund $fund) {
             return $fund->getBunqKey();
@@ -412,18 +393,11 @@ class BunqService
 
         /** @var Fund $fund */
         foreach ($funds as $fund) {
-            $bunq = $fund->getBunq();
-
-            if (!$bunq) {
-                app('log')->error(
-                    'BunqService:processQueue invalid fund bunq - ' .
-                    $fund->id
-                );
+            if (!$bunq = $fund->getBunq()) {
                 continue;
             }
 
             $payments = $bunq->getPayments();
-
             $topUps = $fund->top_ups()->where([
                 'fund_id' => $fund->id
             ])->get();
@@ -455,7 +429,8 @@ class BunqService
     }
 
     /**
-     * Get bunq costs
+     * Get bunq costs.
+     *
      * @param Carbon $fromDate
      * @return float|int
      */
@@ -474,7 +449,8 @@ class BunqService
     }
 
     /**
-     * Get storage
+     * Get storage.
+     *
      * @return \Storage
      */
     private function storage() {

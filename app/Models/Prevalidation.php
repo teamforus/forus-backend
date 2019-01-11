@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
  * @property string $uid
  * @property string $identity_address
  * @property string $state
+ * @property Fund $fund
  * @property Collection $records
  * @property boolean $exported
  * @property Carbon $created_at
@@ -40,6 +41,13 @@ class Prevalidation extends Model
      */
     public function records() {
         return $this->hasMany(PrevalidationRecord::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function fund() {
+        return $this->belongsTo(Fund::class);
     }
 
     /**

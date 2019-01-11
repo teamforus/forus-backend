@@ -70,6 +70,8 @@ class FundResource extends Resource
             'logo' => new MediaResource($this->resource->logo),
             'start_date' => $this->resource->start_date->format('Y-m-d'),
             'end_date' => $this->resource->end_date->format('Y-m-d'),
+            'start_date_locale' => format_date_locale($this->resource->start_date),
+            'end_date_locale' => format_date_locale($this->resource->end_date),
             'organization' => new OrganizationResource($organization),
             'product_categories' => ProductCategoryResource::collection(
                 $this->resource->product_categories
@@ -86,7 +88,8 @@ class FundResource extends Resource
             }),
             'sponsor_count' => $sponsorCount,
             'provider_count' => $providerCount,
-            'requester_count' => $requesterCount
+            'requester_count' => $requesterCount,
+            'fund_amount' => $fund->amountFixedByFormula()
         ])->merge($ownerData)->toArray();
     }
 }
