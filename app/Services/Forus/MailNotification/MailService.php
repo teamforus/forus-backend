@@ -410,6 +410,45 @@ class MailService
 
 
     /**
+     * Notify providers that new fund was started
+     *
+     * @param string $identifier
+     * @param string $fund_name
+     * @param string $sponsor_name
+     * @return bool
+     */
+    public function newFundStarted(
+        string $identifier,
+        string $fund_name,
+        string $sponsor_name
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/fund_started/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'     => $identifier,
+            'fund_name'     => $fund_name,
+            'sponsor_name'  => $sponsor_name,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `newFundStarted`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Notify company that new fund was created
      *
      * @param string $fund_name
