@@ -67,7 +67,7 @@ return [
      */
 
     'capture_ajax' => true,
-    'add_ajax_timing' => false,
+    'add_ajax_timing' => true,
 
     /*
      |--------------------------------------------------------------------------
@@ -89,7 +89,7 @@ return [
      | Extension, without the server-side code. It uses Debugbar collectors instead.
      |
      */
-    'clockwork' => false,
+    'clockwork' => true,
 
     /*
      |--------------------------------------------------------------------------
@@ -101,10 +101,10 @@ return [
      */
 
     'collectors' => [
-        'phpinfo'         => false,  // Php version
+        'phpinfo'         => true,  // Php version
         'messages'        => false,  // Messages
         'time'            => true,  // Time Datalogger
-        'memory'          => false,  // Memory usage
+        'memory'          => true,  // Memory usage
         'exceptions'      => true,  // Exception displayer
         'log'             => true,  // Logs from Monolog (merged in messages if enabled)
         'db'              => true,  // Show database (PDO) queries and bindings

@@ -23,6 +23,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $sold_out
  * @property bool $expired
  * @property bool $service
+ * @property Collection $vouchers_reserved
+ * @property Collection $voucher_transactions
  * @property Organization $organization
  * @property ProductCategory $product_category
  * @property Media $photo
@@ -67,6 +69,13 @@ class Product extends Model
      */
     public function vouchers() {
         return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function vouchers_reserved() {
+        return $this->hasMany(Voucher::class)->whereDoesntHave('transactions');
     }
 
     /**
