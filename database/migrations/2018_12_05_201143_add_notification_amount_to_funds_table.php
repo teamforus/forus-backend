@@ -15,7 +15,7 @@ class AddNotificationAmountToFundsTable extends Migration
     public function up()
     {
         Schema::table('funds', function (Blueprint $table) {
-            $table->decimal('notification_amount', 10, 2)->nullable();
+            $table->decimal('notification_amount', 10, 2)->nullable()->after('state');
 
             DB::statement('ALTER TABLE funds MODIFY start_date TIMESTAMP NULL');
         });

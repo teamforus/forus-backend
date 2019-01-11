@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection $voucher_transactions
  * @property Collection $providers
  * @property Collection $validators
+ * @property Collection $fund_providers
  * @property Collection $provider_organizations
  * @property Collection $provider_organizations_approved
  * @property Carbon $start_date
@@ -150,6 +151,13 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_providers() {
+        return $this->hasMany(FundProvider::class);
     }
 
     /**
@@ -332,7 +340,6 @@ class Fund extends Model
         $fundBunq = $this->getBunqKey();
 
         if (empty($fundBunq) || empty($fundBunq['key'])) {
-            app('log')->alert('No bunq config for fund: ' . $this->id);
             return false;
         }
 
