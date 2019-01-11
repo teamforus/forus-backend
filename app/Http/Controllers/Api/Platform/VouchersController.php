@@ -21,9 +21,9 @@ class VouchersController extends Controller
     public function index() {
         $this->authorize('index', Voucher::class);
 
-        return VoucherResource::collection(Voucher::getModel()->where([
+        return VoucherResource::collection(Voucher::query()->where([
             'identity_address' => auth()->user()->getAuthIdentifier()
-        ])->get());
+        ])->get()->load(VoucherResource::$load));
     }
 
     /**
@@ -43,7 +43,7 @@ class VouchersController extends Controller
         $product = Product::query()->find($request->input('product_id'));
 
         /** @var VoucherToken $voucherToken */
-        $voucherToken = VoucherToken::getModel()->where([
+        $voucherToken = VoucherToken::query()->where([
             'address' => $request->input('voucher_address')
         ])->first() ?? abort(404);
 
@@ -64,7 +64,7 @@ class VouchersController extends Controller
 
         VoucherCreated::dispatch($voucher);
 
-        return new VoucherResource($voucher);
+        return new VoucherResource($voucher->load(VoucherResource::$load));
     }
 
     /**
@@ -79,7 +79,9 @@ class VouchersController extends Controller
     ) {
         $this->authorize('show', $voucherToken->voucher);
 
-        return new VoucherResource($voucherToken->voucher);
+        return new VoucherResource(
+            $voucherToken->voucher->load(VoucherResource::$load)
+        );
     }
 
     /**
@@ -116,6 +118,7 @@ class VouchersController extends Controller
      *
      * @param VoucherToken $voucherToken
      * @param ShareProductVoucherRequest $request
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function shareVoucher(
         VoucherToken $voucherToken,

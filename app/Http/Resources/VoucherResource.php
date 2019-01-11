@@ -2,12 +2,40 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Office;
 use App\Models\Voucher;
 use Illuminate\Http\Resources\Json\Resource;
 
 class VoucherResource extends Resource
 {
+    /**
+     * @var array
+     */
+    public static $load = [
+        'parent',
+        'tokens',
+        'transactions.voucher.fund.logo.sizes',
+        'transactions.organization.logo.sizes',
+        'transactions.product.photo.sizes',
+        'product_vouchers.product.photo.sizes',
+        'product.photo.sizes',
+        'product.product_category.translations',
+        'product.organization.logo.sizes',
+        'product.organization.offices.schedules',
+        'product.organization.offices.photo.sizes',
+        'product.organization.offices.organization.logo.sizes',
+        'product.organization.offices.organization.product_categories.translations',
+        'product.organization.product_categories.translations',
+        'fund.fund_config.implementation',
+        'fund.product_categories.translations',
+        'fund.provider_organizations_approved.offices.schedules',
+        'fund.provider_organizations_approved.offices.photo.sizes',
+        'fund.provider_organizations_approved.offices.organization.logo.sizes',
+        'fund.provider_organizations_approved.offices.organization.product_categories.translations',
+        'fund.logo.sizes',
+        'fund.organization.logo.sizes',
+        'fund.organization.product_categories.translations',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -18,20 +46,18 @@ class VoucherResource extends Resource
     {
         /** @var Voucher $voucher */
         $voucher = $this->resource;
+
         $fund = $voucher->fund;
 
         if ($voucher->type == 'regular') {
-            $amount = $voucher->amount_available;
-            $offices = Office::getModel()->whereIn(
-                'organization_id',
-                $fund->provider_organizations_approved()->pluck('organizations.id')
-            )->get();
-
+            $amount = $voucher->amount_available_cached;
+            $offices = $voucher->fund->provider_organizations_approved->pluck(
+                'offices'
+            )->flatten();
             $productResource = null;
         } elseif ($voucher->type == 'product') {
             $amount = $voucher->amount;
             $offices = $voucher->product->organization->offices;
-
             $productResource = collect($voucher->product)->only([
                 'id', 'name', 'description', 'price', 'old_price',
                 'total_amount', 'sold_amount', 'product_category_id',
@@ -51,7 +77,7 @@ class VoucherResource extends Resource
 
         $urlWebshop = null;
 
-        if ($fund->fund_config && 
+        if ($fund->fund_config &&
             $fund->fund_config->implementation) {
             $urlWebshop = $fund->fund_config->implementation->url_webshop;
         }
@@ -73,16 +99,21 @@ class VoucherResource extends Resource
             ),
         ]);
 
+        $transactions = VoucherTransactionResource::collection(
+            $voucher->transactions
+        );
+
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'created_at_locale',
         ])->merge([
             'amount' => currency_format($amount),
-            'address' => $voucher->tokens()->where('need_confirmation', 1)->first()->address,
-            'address_printable' => $voucher->tokens()->where('need_confirmation', 0)->first()->address,
+            'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
+            'address_printable' => $voucher->tokens->where('need_confirmation', 0)->first()->address,
             'expire_at' => $voucher->expire_at,
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
+            'fund' => $fundResource,
             'offices' => OfficeResource::collection($offices),
             'product' => $productResource,
             'parent' => $voucher->parent ? collect($voucher->parent)->only([
@@ -96,7 +127,7 @@ class VoucherResource extends Resource
                     'identity_address', 'fund_id', 'created_at', 'created_at_locale'
                 ])->merge([
                     'amount' => currency_format(
-                        $product_voucher->type == 'regular' ? $product_voucher->amount_available : $product_voucher->amount
+                        $product_voucher->type == 'regular' ? $product_voucher->amount_available_cached : $product_voucher->amount
                     ),
                     'date' => $product_voucher->created_at->format('M d, Y'),
                     'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
@@ -110,10 +141,7 @@ class VoucherResource extends Resource
                     ])
                 ]);
             }) : null,
-            'fund' => $fundResource,
-            'transactions' => VoucherTransactionResource::collection(
-                $this->resource->transactions
-            ),
+            'transactions' => $transactions,
         ])->toArray();
     }
 }

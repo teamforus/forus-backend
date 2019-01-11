@@ -7,6 +7,22 @@ use Illuminate\Http\Resources\Json\Resource;
 
 class ProductResource extends Resource
 {
+    public static $load = [
+        'voucher_transactions',
+        'vouchers_reserved',
+        'photo.sizes',
+        'product_category.translations',
+        'product_category.funds',
+        'organization.product_categories.translations',
+        'organization.offices.photo.sizes',
+        'organization.offices.schedules',
+        'organization.offices.organization',
+        'organization.offices.organization.logo.sizes',
+        'organization.offices.organization.product_categories.translations',
+        'organization.supplied_funds_approved',
+        'organization.logo.sizes',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -19,13 +35,13 @@ class ProductResource extends Resource
         $product = $this->resource;
         $suppliedFundIds = $product->organization->supplied_funds_approved;
 
-        $funds = $product->product_category->funds()->whereIn(
-            'funds.id', $suppliedFundIds->pluck('id')
-        )->get();
+        $funds = $product->product_category->funds->whereIn(
+            'id', $suppliedFundIds->pluck('id')
+        );
 
         $totalAmount = $product->total_amount;
-        $countReserved = $product->countReserved();
-        $countSold = $product->countSold();
+        $countReserved = $product->vouchers_reserved->count();
+        $countSold = $product->voucher_transactions->count();
 
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
@@ -49,7 +65,9 @@ class ProductResource extends Resource
                     'name' => $fund->name
                 ];
             }),
-            'offices' => OfficeResource::collection($product->organization->offices),
+            'offices' => OfficeResource::collection(
+                $product->organization->offices
+            ),
             'photo' => new MediaResource(
                 $product->photo
             ),
