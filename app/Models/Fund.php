@@ -384,6 +384,22 @@ class Fund extends Model
                 $fund->update([
                     'state' => 'active'
                 ]);
+
+                $organizations = Organization::query()->whereIn(
+                    'id', OrganizationProductCategory::query()->whereIn(
+                    'product_category_id',
+                    $fund->product_categories()->pluck('id')->all()
+                )->pluck('organization_id')->toArray()
+                )->get();
+
+                /** @var Organization $organization */
+                foreach ($organizations as $organization) {
+                    resolve('forus.services.mail_notification')->newFundStarted(
+                        $organization->emailServiceId(),
+                        $fund->name,
+                        $fund->organization->name
+                    );
+                }
             }
 
             if ($fund->end_date->endOfDay()->isPast() && $fund->state != 'closed') {
