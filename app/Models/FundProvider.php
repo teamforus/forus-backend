@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use \Illuminate\Database\Eloquent\Builder;
 use DB;
 
 /**
@@ -61,13 +62,12 @@ class FundProvider extends Model
         );
 
         if ($q) {
-
-            $providers = $providers->whereHas('organization', function (\Illuminate\Database\Eloquent\Builder $query) use ($q){
+            $providers = $providers->whereHas('organization', function (Builder $query) use ($q) {
                 return $query->where('name', 'like', "%{$q}%")
                     ->orWhere('kvk', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
                     ->orWhere('phone', 'like', "%{$q}%")
-                    ->orWhereHas('product_categories', function (\Illuminate\Database\Eloquent\Builder $query) use($q){
+                    ->orWhereHas('product_categories', function (Builder $query) use($q){
                         return $query->whereTranslationLike('name', "%{$q}%");
                     });
             });
@@ -77,7 +77,9 @@ class FundProvider extends Model
             $providers = $providers->where('state', $state);
         }
 
-        $providers = $providers->orderBy(DB::raw('FIELD(state, "pending", "approved", "declined")'));
+        $providers = $providers->orderBy(
+            DB::raw('FIELD(state, "pending", "approved", "declined")')
+        );
 
         return $providers;
     }
