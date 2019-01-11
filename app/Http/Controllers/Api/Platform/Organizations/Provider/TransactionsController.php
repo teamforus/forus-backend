@@ -6,6 +6,7 @@ use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class TransactionsController extends Controller
 {
@@ -13,17 +14,20 @@ class TransactionsController extends Controller
      * Display a listing of the resource.
      *
      * @param Organization $organization
+     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Organization $organization
+        Organization $organization,
+        Request $request
     ) {
         $this->authorize('show', $organization);
         $this->authorize('indexProvider', [VoucherTransaction::class, $organization]);
 
         return ProviderVoucherTransactionResource::collection(
-            $organization->voucher_transactions
+            $organization->voucher_transactions()->paginate(
+                $request->has('per_page') ? $request->input('per_page') : null
+            )
         );
     }
 
