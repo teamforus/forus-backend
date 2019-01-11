@@ -53,7 +53,7 @@ class LoremDbSeeder extends Seeder
         $this->success("Sponsors created!");
 
         $this->info("Making Providers!");
-        $this->makeProviders($this->baseIdentity, 20);
+        $this->makeProviders($this->baseIdentity, 40);
         $this->success("Providers created!");
 
         $this->applyFunds(
