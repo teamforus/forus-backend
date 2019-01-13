@@ -86,7 +86,7 @@ return [
     'timezone'             => 'The :attribute must be a valid zone.',
     'unique'               => 'The :attribute has already been taken.',
     'uploaded'             => 'The :attribute failed to upload.',
-    'url'                  => 'The :attribute format is invalid.',
+    'url'                  => 'The :attribute must start with http:// or https://.',
 
     // Custom
     'old_pin_code'          => 'Old pin code don\'t match.',

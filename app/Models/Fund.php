@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property float $budget_left
  * @property Media $logo
  * @property FundConfig $fund_config
+ * @property Collection $top_up_transactions
  * @property Collection $fund_formulas
  * @property Collection $metas
  * @property Collection $products
@@ -185,7 +186,7 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetTotalAttribute() {
-        return round($this->top_up_transactions()->sum('amount'), 2);
+        return round($this->top_up_transactions->sum('amount'), 2);
     }
 
     /**
@@ -368,10 +369,10 @@ class Fund extends Model
         return collect()->merge(
             $this->fund_config ? [$this->fund_config->csv_primary_key] : []
         )->merge(
-            $this->fund_formulas()->where([
-                'type' => 'multiply'
-            ])->pluck('record_type_key')
-        )->merge($this->criteria()->pluck('record_type_key'))->unique();
+            $this->fund_formulas->where('type', 'multiply')->pluck('record_type_key')
+        )->merge(
+            $this->criteria->pluck('record_type_key')
+        )->unique();
     }
 
     /**
