@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Exports\PrevalidationsExport;
 use App\Http\Requests\Api\Platform\SearchPrevalidationsRequest;
 use Illuminate\Support\Str;
 use App\Http\Requests\Api\Platform\UploadPrevalidationsRequest;
@@ -31,8 +32,7 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * @param UploadPrevalidations
-     $request
+     * @param UploadPrevalidationsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
@@ -135,34 +135,25 @@ class PrevalidationController extends Controller
         $this->authorize('index', Prevalidation::class);
 
         return PrevalidationResource::collection(Prevalidation::search(
-            auth()->user()->getAuthIdentifier(),
-            $request->input('q', null),
-            $request->input('fund_id', null),
-            $request->input('state', null),
-            $request->input('from', null),
-            $request->input('to', null),
-            $request->input('exported', null)
+            $request
         )->with('records.record_type')->paginate());
     }
 
     /**
      * @param SearchPrevalidationsRequest $request
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function export(
         SearchPrevalidationsRequest $request
     ) {
         $this->authorize('index', Prevalidation::class);
 
-        return Prevalidation::export(
-            auth()->user()->getAuthIdentifier(),
-            $request->input('q', null),
-            $request->input('fund_id', null),
-            $request->input('state', null),
-            $request->input('from', null),
-            $request->input('to', null),
-            $request->input('exported', null)
+        return resolve('excel')->download(
+            new PrevalidationsExport($request),
+            date('Y-m-d H:i:s') . '.xls'
         );
     }
 

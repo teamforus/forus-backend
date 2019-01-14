@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
  * @property string $amount
  * @property string $type
  * @property float $amount_available
+ * @property float $amount_available_cached
  * @property Fund $fund
  * @property Product|null $product
  * @property Voucher|null $parent
@@ -94,6 +95,12 @@ class Voucher extends Model
         return round($this->amount -
             $this->transactions()->sum('amount') -
             $this->product_vouchers()->sum('amount'), 2);
+    }
+
+    public function getAmountAvailableCachedAttribute() {
+        return round($this->amount -
+            $this->transactions->sum('amount') -
+            $this->product_vouchers->sum('amount'), 2);
     }
 
     /**

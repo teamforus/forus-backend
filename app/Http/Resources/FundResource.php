@@ -32,23 +32,19 @@ class FundResource extends Resource
                 'used' => currency_format($fund->budget_used)
             ];
 
-            $ownerData['providers_count'] = $fund->provider_organizations_approved()->count();
+            $ownerData['providers_count'] = $fund->provider_organizations_approved->count();
             $ownerData['validators_count'] = $this->resource->organization->validators->count();
         }
 
         $sponsorCount = $fund->organization->employees->count() + 1;
 
-        $providers = $fund->providers()->where([
-            'state' => 'approved'
-        ])->get();
+        $providerCount = $fund->provider_organizations_approved;
+        $providerCount = $providerCount->reduce(function (int $carry, Organization $organization) {
+            return $carry + ($organization->employees->count() + 1);
+        }, 0);
 
-        $providerCount = $providers->map(function ($fundProvider){
-            /** @var FundProvider $fundProvider */
-            return $fundProvider->organization->employees->count() + 1;
-        })->sum();
-
-        if ($fund->state == 'active'){
-            $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
+        if ($fund->state == 'active') {
+            $requesterCount = $fund->vouchers->where('parent_id', null)->count();
         } else {
             $requesterCount = 0;
         }
@@ -70,6 +66,8 @@ class FundResource extends Resource
             'logo' => new MediaResource($this->resource->logo),
             'start_date' => $this->resource->start_date->format('Y-m-d'),
             'end_date' => $this->resource->end_date->format('Y-m-d'),
+            'start_date_locale' => format_date_locale($this->resource->start_date),
+            'end_date_locale' => format_date_locale($this->resource->end_date),
             'organization' => new OrganizationResource($organization),
             'product_categories' => ProductCategoryResource::collection(
                 $this->resource->product_categories
@@ -86,7 +84,8 @@ class FundResource extends Resource
             }),
             'sponsor_count' => $sponsorCount,
             'provider_count' => $providerCount,
-            'requester_count' => $requesterCount
+            'requester_count' => $requesterCount,
+            'fund_amount' => $fund->amountFixedByFormula()
         ])->merge($ownerData)->toArray();
     }
 }

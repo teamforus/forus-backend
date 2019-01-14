@@ -33,12 +33,7 @@ class ProductsController extends Controller
             'organization_id', $organizationIds
         )->where('sold_out', false)->where(
             'expire_at', '>', date('Y-m-d')
-        )->orderBy('created_at', 'desc')->with([
-            'photo.sizes',
-            'organization.product_categories',
-            'organization.offices.schedules',
-            'organization.offices.photo.sizes'
-        ]);
+        )->orderBy('created_at', 'desc');
 
         if ($request->has('product_category_id')) {
             $query->where('product_category_id', $request->input(
@@ -50,7 +45,9 @@ class ProductsController extends Controller
             $query->where('name', 'LIKE', "%{$request->input('q')}%");
         }
 
-        return ProductResource::collection($query->paginate(15));
+        return ProductResource::collection($query->with(
+            ProductResource::$load
+        )->paginate(15));
     }
 
     /**
@@ -92,12 +89,7 @@ class ProductsController extends Controller
 
         return ProductResource::collection(Product::query()->whereIn(
             'id', $resultProducts->pluck('id')
-        )->with([
-            'photo.sizes',
-            'organization.product_categories',
-            'organization.offices.schedules',
-            'organization.offices.photo.sizes'
-        ])->get());
+        )->get()->load(ProductResource::$load));
     }
 
     /**
@@ -109,6 +101,6 @@ class ProductsController extends Controller
     {
         $this->authorize('showPublic', $product);
 
-        return new ProductResource($product);
+        return new ProductResource($product->load(ProductResource::$load));
     }
 }

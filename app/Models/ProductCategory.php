@@ -33,6 +33,11 @@ class ProductCategory extends Model
         'key', 'parent_id', 'service'
     ];
 
+    /**
+     * The relations to eager load on every query.
+     *
+     * @var array
+     */
     protected $with = [
         'translations'
     ];

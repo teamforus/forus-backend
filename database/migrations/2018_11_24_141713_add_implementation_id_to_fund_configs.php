@@ -30,6 +30,7 @@ class AddImplementationIdToFundConfigs extends Migration
     public function down()
     {
         Schema::table('fund_configs', function (Blueprint $table) {
+            $table->dropForeign('fund_configs_implementation_id_foreign');
             $table->dropColumn('implementation_id');
         });
     }

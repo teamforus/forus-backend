@@ -112,5 +112,11 @@ class RecordTypesTableSeeder extends DatabaseSeeder
             'name'      => 'Kindpakket Eligible',
             'type'      => 'string',
         ]);
+
+        RecordType::create([
+            'key'       => 'uid',
+            'name'      => 'UID',
+            'type'      => 'string',
+        ]);
     }
 }
