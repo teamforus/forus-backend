@@ -126,7 +126,7 @@ class VoucherTransactionPolicy
             }
         }
 
-        return $transaction->organization->identityCan(
+        return $transaction->provider->identityCan(
             $identity_address, 'view_finances'
         );
     }

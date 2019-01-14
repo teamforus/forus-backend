@@ -14,7 +14,7 @@ class VoucherResource extends Resource
         'parent',
         'tokens',
         'transactions.voucher.fund.logo.sizes',
-        'transactions.organization.logo.sizes',
+        'transactions.provider.logo.sizes',
         'transactions.product.photo.sizes',
         'product_vouchers.product.photo.sizes',
         'product.photo.sizes',

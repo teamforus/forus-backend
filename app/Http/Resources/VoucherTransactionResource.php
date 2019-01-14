@@ -25,10 +25,10 @@ class VoucherTransactionResource extends Resource
         ])->merge([
             'amount' => currency_format($voucherTransaction->amount),
             'timestamp' => $voucherTransaction->created_at->timestamp,
-            "organization" => collect($voucherTransaction->organization)->only([
+            "organization" => collect($voucherTransaction->provider)->only([
                 "id", "name"
             ])->merge([
-                'logo' => new MediaResource($voucherTransaction->organization->logo),
+                'logo' => new MediaResource($voucherTransaction->provider->logo),
             ]),
             "product" => new ProductResource($voucherTransaction->product),
             "fund" => collect($voucherTransaction->voucher->fund)->only([
