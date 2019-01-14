@@ -27,7 +27,7 @@ class SponsorVoucherTransactionResource extends Resource
         ])->merge([
             'amount' => currency_format($voucherTransaction->amount),
             'timestamp' => $voucherTransaction->created_at->timestamp,
-            "organization" => collect($voucherTransaction->organization)->only([
+            "organization" => collect($voucherTransaction->provider)->only([
                 "id", "name"
             ]),
             "product" => new ProductResource($voucherTransaction->product),
