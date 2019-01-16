@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\Employee;
 use App\Models\Implementation;
 use App\Models\Prevalidation;
+use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Services\MediaService\Models\Media;
@@ -70,6 +71,12 @@ class RouteServiceProvider extends ServiceProvider
             return Employee::query()->where([
                 'id' => $value
                 ])->first() ?? abort(404);
+        });
+
+        $router->bind('product_with_trashed', function ($value) {
+            return Product::query()->where([
+                    'id' => $value
+                ])->withTrashed()->first() ?? abort(404);
         });
 
         $router->bind('platform_config', function ($value) {
