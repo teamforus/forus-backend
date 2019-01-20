@@ -360,8 +360,8 @@ class BunqService
 
                 $payment_id = $bunq->makePayment(
                     $amount,
-                    $transaction->organization->iban,
-                    $transaction->organization->name,
+                    $transaction->provider->iban,
+                    $transaction->provider->name,
                     $paymentDescription
                 );
 

@@ -58,6 +58,9 @@ class ProductResource extends Resource
             'expire_at' => $product->expire_at->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($product->expire_at),
             'expired' => $product->expired,
+            'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
+            'deleted_at_locale' => $product->deleted_at ? format_date_locale($product->deleted_at) : null,
+            'deleted' => !is_null($product->deleted_at),
             'funds' => $funds->map(function($fund) {
                 return [
                     'logo' => new MediaResource($fund->logo),

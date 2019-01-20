@@ -2,33 +2,32 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class TransactionsController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
+     * @param IndexTransactionsRequest $request
      * @param Organization $organization
-     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Organization $organization,
-        Request $request
+        IndexTransactionsRequest $request,
+        Organization $organization
     ) {
         $this->authorize('show', $organization);
         $this->authorize('indexSponsor', [VoucherTransaction::class, $organization]);
 
         return SponsorVoucherTransactionResource::collection(
-            VoucherTransaction::query()->whereIn(
-                'voucher_id', $organization->vouchers->pluck('id')
-            )->paginate(
-                $request->has('per_page') ? $request->input('per_page') : null
+            VoucherTransaction::searchSponsor($organization, $request)->paginate(
+                $request->input('per_page', 25)
             )
         );
     }
