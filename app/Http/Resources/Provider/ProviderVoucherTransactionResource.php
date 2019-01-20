@@ -10,6 +10,16 @@ use Illuminate\Http\Resources\Json\Resource;
 
 class ProviderVoucherTransactionResource extends Resource
 {
+    public static $load = [
+        'provider',
+        'provider.product_categories.translations',
+        'provider.logo.sizes',
+        'voucher.fund',
+        'voucher.fund.logo.sizes',
+        'product',
+        'notes',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -28,10 +38,10 @@ class ProviderVoucherTransactionResource extends Resource
         ])->merge([
             'amount' => currency_format($voucherTransaction->amount),
             'timestamp' => $voucherTransaction->created_at->timestamp,
-            "organization" => collect($voucherTransaction->organization)->only([
+            "organization" => collect($voucherTransaction->provider)->only([
                 "id", "name"
             ])->merge([
-                'logo' => new MediaResource($voucherTransaction->organization->logo),
+                'logo' => new MediaResource($voucherTransaction->provider->logo),
             ]),
             "product" => new ProductResource($voucherTransaction->product),
             "fund" => collect($voucherTransaction->voucher->fund)->only([

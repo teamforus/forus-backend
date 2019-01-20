@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
+use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Product;
-use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
@@ -15,18 +15,22 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param IndexTransactionsRequest $request
      * @param VoucherToken $voucherToken
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        IndexTransactionsRequest $request,
         VoucherToken $voucherToken
     ) {
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('index', [VoucherTransaction::class, $voucherToken]);
 
         return VoucherTransactionResource::collection(
-            $voucherToken->voucher->transactions
+            VoucherTransaction::searchVoucher($voucherToken->voucher, $request)->paginate(
+                $request->input('per_page', 25)
+            )
         );
     }
 
