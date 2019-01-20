@@ -44,9 +44,14 @@ $router->group([], function() use ($router) {
         'products',
         "Api\Platform\ProductsController", [
         'only' => [
-            'index', 'show'
+            'index'
         ]
     ]);
+
+    $router->get(
+        'products/{product_with_trashed}',
+        "Api\Platform\ProductsController@show"
+    );
 
     $router->get(
         'config/{platform_config}',
