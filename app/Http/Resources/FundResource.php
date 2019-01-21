@@ -29,7 +29,8 @@ class FundResource extends Resource
             $ownerData['budget'] = [
                 'total' => currency_format($fund->budget_total),
                 'validated' => currency_format($fund->budget_validated),
-                'used' => currency_format($fund->budget_used)
+                'used' => currency_format($fund->budget_used),
+                'left' => currency_format($fund->budget_left)
             ];
 
             $ownerData['providers_count'] = $fund->provider_organizations_approved->count();
