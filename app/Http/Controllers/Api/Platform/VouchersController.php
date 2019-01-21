@@ -127,7 +127,8 @@ class VouchersController extends Controller
         $this->authorize('show', $voucherToken->voucher);
 
         $voucherToken->voucher->shareVoucherEmail(
-            $request->input('reason')
+            $request->input('reason'),
+            (bool)$request->get('send_copy', false)
         );
     }
 }
