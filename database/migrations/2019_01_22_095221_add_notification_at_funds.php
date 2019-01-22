@@ -14,7 +14,7 @@ class AddNotificationAtFunds extends Migration
     public function up()
     {
         Schema::table('funds', function (Blueprint $table) {
-            $table->timestamp('notified_at')->nullable();
+            $table->timestamp('notified_at')->nullable()->after('notification_amount');
         });
 
         DB::table('funds')->update([

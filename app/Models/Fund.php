@@ -520,7 +520,7 @@ class Fund extends Model
     /**
      * @return void
      */
-    public static function notifyAboutReachedNotificationAmountQueue()
+    public static function notifyAboutReachedNotificationAmount()
     {
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){

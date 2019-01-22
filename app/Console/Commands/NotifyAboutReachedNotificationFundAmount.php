@@ -39,7 +39,7 @@ class NotifyAboutReachedNotificationFundAmount extends Command
     public function handle()
     {
         try {
-            Fund::notifyAboutReachedNotificationAmountQueue();
+            Fund::notifyAboutReachedNotificationAmount();
         } catch (\Exception $e) {}
     }
 }
