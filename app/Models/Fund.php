@@ -55,7 +55,7 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'start_date', 'end_date',
-        'notification_amount', 'fund_id'
+        'notification_amount', 'fund_id', 'notified_at'
     ];
 
     protected $hidden = [
@@ -69,7 +69,8 @@ class Fund extends Model
      */
     protected $dates = [
         'start_date',
-        'end_date'
+        'end_date',
+        'notified_at'
     ];
 
     /**
@@ -515,4 +516,42 @@ class Fund extends Model
             );
         }
     }
+
+    /**
+     * @return void
+     */
+    public static function notifyAboutReachedNotificationAmountQueue()
+    {
+        $funds = self::query()
+            ->whereHas('fund_config', function (Builder $query){
+                return $query->where('is_configured', true);
+            })
+            ->where(function (Builder $query){
+                return $query->whereNull('notified_at')
+                    ->orWhereDate('notified_at', '<=', now()->subDays(7)->startOfDay());
+            })
+            ->where('state', 'active')
+            ->where('notification_amount', '>', 0)
+            ->with('organization')
+            ->get();
+
+        /** @var self $fund */
+        foreach($funds as $fund) {
+
+            if($fund->budget_left <= $fund->notification_amount) {
+                resolve('forus.services.mail_notification')->fundNotifyReachedNotificationAmount(
+                    $fund->organization->emailServiceId(),
+                    config('forus.front_ends.panel-sponsor'),
+                    $fund->organization->name,
+                    $fund->name,
+                    currency_format($fund->notification_amount)
+                );
+
+                $fund->update([
+                    'notified_at' => now()
+                ]);
+            }
+        }
+    }
+
 }

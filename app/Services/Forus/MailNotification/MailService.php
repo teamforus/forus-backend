@@ -904,4 +904,48 @@ class MailService
 
         return true;
     }
+
+    /**
+     * @param string $identifier
+     * @param string $link
+     * @param string $sponsor_name
+     * @param string $fund_name
+     * @param string $notification_amount
+     * @return bool
+     */
+    public function fundNotifyReachedNotificationAmount(
+        string $identifier,
+        string $link,
+        string $sponsor_name,
+        string $fund_name,
+        string $notification_amount
+    )
+    {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/fund_balance_warning');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'                 => $identifier,
+            'fund_name'                 => $fund_name,
+            'sponsor_name'              => $sponsor_name,
+            'treshold_amount'           => $notification_amount,
+            'sponsor_dashboard_link'    => $link
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `fundNotifyReachedNotificationAmount`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
 }
