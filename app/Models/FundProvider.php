@@ -56,8 +56,9 @@ class FundProvider extends Model
     ) {
         $q = $request->input('q', null);
         $state = $request->input('state', null);
+        $fund_id = $request->input('fund_id', null);
 
-        $providers = FundProvider::getModel()->whereIn(
+        $providers = FundProvider::query()->whereIn(
             'fund_id',
             $organization->funds()->pluck('id')
         );
@@ -82,7 +83,11 @@ class FundProvider extends Model
             });
         }
 
-        if($state && in_array($state, ['approved', 'declined', 'pending'])){
+        if ($fund_id) {
+            $providers->where('fund_id', $fund_id);
+        }
+
+        if ($state && in_array($state, ['approved', 'declined', 'pending'])){
             $providers = $providers->where('state', $state);
         }
 
