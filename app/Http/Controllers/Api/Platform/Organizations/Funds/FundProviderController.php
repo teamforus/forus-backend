@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
+use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundProviderRequest;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\FundProviderResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Fund;
@@ -257,6 +259,7 @@ class FundProviderController extends Controller
     }
 
     /**
+     * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $organizationFund
@@ -264,6 +267,7 @@ class FundProviderController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function transactions(
+        IndexTransactionsRequest $request,
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund
@@ -272,9 +276,45 @@ class FundProviderController extends Controller
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
 
-        return SponsorVoucherTransactionResource::collection($fund->voucher_transactions()->where([
-            'organization_id' => $organizationFund->organization_id
-        ])->paginate());
+        return SponsorVoucherTransactionResource::collection(
+            VoucherTransaction::searchSponsor(
+                $request,
+                $organization,
+                $fund,
+                $organizationFund->organization
+            )->paginate()
+        );
+    }
+
+
+    /**
+     * @param IndexTransactionsRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param FundProvider $organizationFund
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function transactionsExport(
+        IndexTransactionsRequest $request,
+        Organization $organization,
+        Fund $fund,
+        FundProvider $organizationFund
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$fund, $organization]);
+        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
+
+        return resolve('excel')->download(
+            new VoucherTransactionsSponsorExport(
+                $request,
+                $organization,
+                $fund,
+                $organizationFund->organization
+            ), date('Y-m-d H:i:s') . '.xls'
+        );
     }
 
     /**
