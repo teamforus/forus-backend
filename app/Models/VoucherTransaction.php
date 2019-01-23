@@ -21,7 +21,6 @@ use Illuminate\Http\Request;
  * @property Product $product
  * @property Voucher $voucher
  * @property Organization $provider
- * @property Organization $organization
  * @property Collection $notes
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -136,27 +135,49 @@ class VoucherTransaction extends Model
     }
 
     /**
-     * @param Organization $organization
      * @param Request $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param Organization $provider
      * @return Builder
      */
     public static function searchSponsor(
+        Request $request,
         Organization $organization,
-        Request $request
+        Fund $fund = null,
+        Organization $provider = null
     ) {
-        return self::search($request)->whereHas('voucher.fund.organization', function (Builder $query) use ($organization) {
+        $builder = self::search(
+            $request
+        )->whereHas('voucher.fund.organization', function (
+            Builder $query
+        ) use ($organization) {
             $query->where('id', $organization->id);
         });
+
+        if ($provider) {
+            $builder->where('organization_id', $provider->id);
+        }
+
+        if ($fund) {
+            $builder->whereHas('voucher', function (
+                Builder $builder
+            ) use ($fund) {
+                $builder->where('fund_id', $fund->id);
+            });
+        }
+
+        return $builder;
     }
 
     /**
-     * @param Organization $organization
      * @param Request $request
+     * @param Organization $organization
      * @return Builder
      */
     public static function searchProvider(
-        Organization $organization,
-        Request $request
+        Request $request,
+        Organization $organization
     ) {
         return self::search($request)->where([
             'organization_id' => $organization->id
@@ -175,5 +196,64 @@ class VoucherTransaction extends Model
         return self::search($request)->where([
             'voucher_id' => $voucher->id
         ]);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    private static function exportTransform(Builder $builder) {
+        $transKey = "export.voucher_transactions";
+
+        return $builder->with([
+            'voucher.fund',
+            'provider',
+        ])->get()->map(function(
+            VoucherTransaction $transaction
+        ) use ($transKey) {
+            return [
+                trans("$transKey.amount") => currency_format(
+                    $transaction->amount
+                ),
+                trans("$transKey.date") => $transaction->created_at_locale,
+                trans("$transKey.fund") => $transaction->voucher->fund->name,
+                trans("$transKey.provider") => $transaction->provider->name,
+                trans("$transKey.state") => trans(
+                    "$transKey.state-values.{$transaction->state}"
+                ),
+            ];
+        })->values();
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function exportProvider(
+        Request $request,
+        Organization $organization
+    ) {
+        return self::exportTransform(
+            self::searchProvider($request, $organization)
+        );
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param Fund|null $fund
+     * @param Organization|null $provider
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function exportSponsor(
+        Request $request,
+        Organization $organization,
+        Fund $fund = null,
+        Organization $provider = null
+    ) {
+        return self::exportTransform(
+            self::searchSponsor($request, $organization, $fund, $provider)
+        );
     }
 }
