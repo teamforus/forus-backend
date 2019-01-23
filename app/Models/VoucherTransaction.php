@@ -130,6 +130,8 @@ class VoucherTransaction extends Model
             $query->where('amount', '<=', $amount_max);
         }
 
+        $query = $query->latest();
+
         return $query;
     }
 
