@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
+use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -20,7 +21,8 @@ class Kernel extends ConsoleKernel
         CheckFundStateCommand::class,
         CheckFundConfigCommand::class,
         CalculateFundUsersCommand::class,
-        NotifyAboutVoucherExpireCommand::class
+        NotifyAboutVoucherExpireCommand::class,
+        NotifyAboutReachedNotificationFundAmount::class
     ];
 
     /**
@@ -42,6 +44,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('forus.voucher:check-expire')
             ->dailyAt('09:00');
+
+        $schedule->command('forus.fund:check-amount')
+            ->cron('0 */8 * * *');
     }
 
     /**

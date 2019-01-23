@@ -55,7 +55,7 @@ class FundResource extends Resource
 
         return collect($this->resource)->only([
             'id', 'name', 'organization_id',
-            'state'
+            'state', 'notification_amount'
         ])->merge($organization->identityCan(auth()->id(), [
             'validate_records'
         ]) ? [
