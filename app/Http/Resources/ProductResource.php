@@ -39,10 +39,6 @@ class ProductResource extends Resource
             'id', $suppliedFundIds->pluck('id')
         );
 
-        $totalAmount = $product->total_amount;
-        $countReserved = $product->vouchers_reserved->count();
-        $countSold = $product->voucher_transactions->count();
-
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id'
@@ -50,9 +46,9 @@ class ProductResource extends Resource
             'organization' => new OrganizationBasicResource(
                 $product->organization
             ),
-            'total_amount' => $totalAmount,
-            'reserved_amount' => $countReserved,
-            'stock_amount' => $totalAmount - ($countReserved + $countSold),
+            'total_amount' => $product->total_amount,
+            'reserved_amount' => $product->vouchers_reserved->count(),
+            'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
             'old_price' => currency_format($product->old_price),
             'expire_at' => $product->expire_at->format('Y-m-d'),
@@ -67,7 +63,7 @@ class ProductResource extends Resource
                     'id' => $fund->id,
                     'name' => $fund->name
                 ];
-            }),
+            })->values(),
             'offices' => OfficeResource::collection(
                 $product->organization->offices
             ),
