@@ -81,6 +81,52 @@ class VoucherTransaction extends Model
     }
 
     /**
+     * @return void
+     */
+    public function sendPushNotificationTransaction() {
+        $mailService = resolve('forus.services.mail_notification');
+        $voucher = $this->voucher;
+
+        if (!$voucher->product) {
+            $transData = [
+                "amount" => currency_format_locale($this->amount),
+                "fund_name" => $voucher->fund->name,
+            ];
+
+            $title = trans('push.transactions.offline_regular_voucher.title', $transData);
+            $body = trans('push.transactions.offline_regular_voucher.body', $transData);
+        } else {
+            $transData = [
+                "product_name" => $voucher->product->name,
+            ];
+
+            $title = trans('push.transactions.offline_product_voucher.title', $transData);
+            $body = trans('push.transactions.offline_product_voucher.body', $transData);
+        }
+
+        $mailService->sendPushNotification(
+            $voucher->identity_address, $title, $body
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function sendPushBunqTransactionSuccess() {
+        $mailService = resolve('forus.services.mail_notification');
+        $transData = [
+            "amount" => currency_format_locale($this->amount)
+        ];
+
+        $title = trans('push.bunq_transactions.complete.title', $transData);
+        $body = trans('push.bunq_transactions.complete.body', $transData);
+
+        $mailService->sendPushNotification(
+            $this->provider->identity_address, $title, $body
+        );
+    }
+
+    /**
      * @param Request $request
      * @return Builder
      */

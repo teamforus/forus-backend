@@ -120,6 +120,45 @@ class MailService
     }
 
     /**
+     * Send push notification
+     *
+     * @param string $identifier
+     * @param string $title
+     * @param string $body
+     * @return bool
+     */
+    public function sendPushNotification(
+        string $identifier,
+        string $title,
+        string $body
+    ) {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/mobile/push/');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id' => $identifier,
+            'title'     => $title,
+            'body'      => $body,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `sendPushNotification`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Notify sponsor that new provider applied to his fund
      *
      * @param string $identifier
