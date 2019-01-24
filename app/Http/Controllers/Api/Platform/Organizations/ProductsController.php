@@ -89,8 +89,8 @@ class ProductsController extends Controller
                 );
 
                 resolve('forus.services.mail_notification')->newProductAdded(
-                    $product->organization->emailServiceId(),
-                    $product->organization->name,
+                    $fund->organization->emailServiceId(),
+                    $fund->organization->name,
                     $fund->name
                 );
             }
