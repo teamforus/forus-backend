@@ -140,8 +140,9 @@ class Voucher extends Model
 
     /**
      * @param string $reason
+     * @param bool $sendCopyToUser
      */
-    public function shareVoucherEmail(string $reason) {
+    public function shareVoucherEmail(string $reason, $sendCopyToUser = false) {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -161,6 +162,16 @@ class Voucher extends Model
                 $voucherToken->getQrCodeUrl(),
                 $reason
             );
+
+            if($sendCopyToUser) {
+                resolve('forus.services.mail_notification')->shareVoucher(
+                    auth()->id(),
+                    $primaryEmail,
+                    $product_name,
+                    $voucherToken->getQrCodeUrl(),
+                    $reason
+                );
+            }
         }
     }
 
@@ -178,4 +189,47 @@ class Voucher extends Model
             $amount
         );
     }
+
+    /**
+     *
+     */
+    public static function checkVoucherExpireQueue()
+    {
+        $date = now()->addDays(4*7)->startOfDay();
+        $vouchers = self::query()
+            ->whereNull('product_id')
+            ->with(['fund', 'fund.organization'])
+            ->whereDate('expire_at', $date)
+            ->get();
+
+        /** @var self $voucher */
+        foreach ($vouchers as $voucher) {
+
+            if($voucher->amount_available_cached > 0){
+
+                $recordRepo = resolve('forus.services.record');
+                $primaryEmail = $recordRepo->primaryEmailByAddress($voucher->identity_address);
+
+                $fund_name = $voucher->fund->name;
+                $sponsor_name = $voucher->fund->organization->name;
+                $start_date = $voucher->fund->start_date->format('Y');
+                $end_date = $voucher->fund->end_date->format('d/m/Y');
+                $phone = $voucher->fund->organization->phone;
+                $email = $voucher->fund->organization->email;
+                $webshopLink = env('WEB_SHOP_GENERAL_URL');
+
+                resolve('forus.services.mail_notification')->voucherExpire(
+                    $primaryEmail,
+                    $fund_name,
+                    $sponsor_name,
+                    $start_date,
+                    $end_date,
+                    $phone,
+                    $email,
+                    $webshopLink
+                );
+            }
+        }
+    }
+
 }

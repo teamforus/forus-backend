@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property integer $price
  * @property integer $old_price
  * @property integer $total_amount
+ * @property integer $stock_amount
  * @property bool $is_offer
  * @property bool $sold_out
  * @property bool $expired
@@ -157,6 +158,15 @@ class Product extends Model
      */
     public function countSold() {
         return $this->voucher_transactions()->count();
+    }
+
+    /**
+     * @return int
+     */
+    public function getStockAmountAttribute() {
+        return $this->total_amount - (
+            $this->vouchers_reserved->count() +
+            $this->voucher_transactions->count());
     }
 
     /**

@@ -32,6 +32,7 @@ class UpdateFundRequest extends FormRequest
             'end_date'              => 'required|date|after:start_date',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
+            'notification_amount'   => 'nullable|numeric'
         ];
     }
 }

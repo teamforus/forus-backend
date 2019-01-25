@@ -2,6 +2,12 @@
 
 namespace App\Models;
 
+/**
+ * Class Model
+ * @property string $created_at_locale
+ * @property string $updated_at_locale
+ * @package App\Models
+ */
 class Model extends \Illuminate\Database\Eloquent\Model
 {
     public function __construct(array $attributes = [])

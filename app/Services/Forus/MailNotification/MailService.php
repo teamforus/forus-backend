@@ -851,4 +851,101 @@ class MailService
 
         return true;
     }
+
+    /**
+     * @param string $email
+     * @param string $fund_name
+     * @param string $sponsor_name
+     * @param string $start_date
+     * @param string $end_date
+     * @param string $sponsor_phone
+     * @param string $sponsor_email
+     * @param string $webshopLink
+     * @return bool
+     */
+    public function voucherExpire(
+        string $email,
+        string $fund_name,
+        string $sponsor_name,
+        string $start_date,
+        string $end_date,
+        string $sponsor_phone,
+        string $sponsor_email,
+        string $webshopLink
+    )
+    {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/fund_expires');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'email'                     => $email,
+            'fund_name'                 => $fund_name,
+            'sponsor_name'              => $sponsor_name,
+            'start_date_fund'           => $start_date,
+            'end_date_fund'             => $end_date,
+            'phonenumber_sponsor'       => $sponsor_phone,
+            'emailaddress_sponsor'      => $sponsor_email,
+            'shop_implementation_url'   => $webshopLink
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `voucherExpire`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $identifier
+     * @param string $link
+     * @param string $sponsor_name
+     * @param string $fund_name
+     * @param string $notification_amount
+     * @return bool
+     */
+    public function fundNotifyReachedNotificationAmount(
+        string $identifier,
+        string $link,
+        string $sponsor_name,
+        string $fund_name,
+        string $notification_amount
+    )
+    {
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/sender/vouchers/fund_balance_warning');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'reffer_id'                 => $identifier,
+            'fund_name'                 => $fund_name,
+            'sponsor_name'              => $sponsor_name,
+            'treshold_amount'           => $notification_amount,
+            'sponsor_dashboard_link'    => $link
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `fundNotifyReachedNotificationAmount`: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
 }
