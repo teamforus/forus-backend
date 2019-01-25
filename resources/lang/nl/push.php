@@ -33,8 +33,8 @@ return [
             "body" => "U bent toegevoegd aan :org_name as :role_name_list.",
         ],
         "updated" => [
-            "title" => "",
-            "body" => "",
+            "title" => ":org_name",
+            "body" => "Uw rechten zijn aangepast. Vraag uw beheerder.",
         ],
         "removed" => [
             "title" => ":org_name",
