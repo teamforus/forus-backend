@@ -7,6 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class ProductsController extends Controller
@@ -42,7 +43,11 @@ class ProductsController extends Controller
         }
 
         if ($request->has('q')) {
-            $query->where('name', 'LIKE', "%{$request->input('q')}%");
+            $query->where(function (Builder $query) use($request){
+                return $query->where('name', 'LIKE', "%{$request->input('q')}%")
+                    ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
+            });
+
         }
 
         return ProductResource::collection($query->with(
