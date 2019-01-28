@@ -96,6 +96,17 @@ class OfficePolicy
         Office $office,
         Organization $organization 
     ) {
-        return $this->update($identity_address, $office, $organization);
+        if ($office->organization_id != $organization->id) {
+            return false;
+        }
+
+        if($organization->offices()->count() <= 1){
+            return false;
+        }
+
+        return $office->organization->identityCan(
+            $identity_address,
+            'manage_offices'
+        );
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
+use App\Exports\VoucherTransactionsProviderExport;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
@@ -26,11 +27,31 @@ class TransactionsController extends Controller
         $this->authorize('indexProvider', [VoucherTransaction::class, $organization]);
 
         return ProviderVoucherTransactionResource::collection(
-            VoucherTransaction::searchProvider($organization, $request)->with(
+            VoucherTransaction::searchProvider($request, $organization)->with(
                 ProviderVoucherTransactionResource::$load
             )->paginate(
                 $request->input('per_page', 25)
             )
+        );
+    }
+
+    /**
+     * @param IndexTransactionsRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexTransactionsRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('index', Organization::class);
+
+        return resolve('excel')->download(
+            new VoucherTransactionsProviderExport($request, $organization),
+            date('Y-m-d H:i:s') . '.xls'
         );
     }
 

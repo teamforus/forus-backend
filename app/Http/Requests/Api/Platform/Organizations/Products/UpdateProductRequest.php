@@ -27,7 +27,7 @@ class UpdateProductRequest extends FormRequest
         /** @var Product $product */
         $product = request()->product;
         $currentExpire = $product->expire_at->format('Y-m-d');
-        $currentAmount = $product->total_amount;
+        $minAmount = $product->countReserved() + $product->countSold();
 
         $price = $this->get('price', 0);
 
@@ -40,9 +40,10 @@ class UpdateProductRequest extends FormRequest
                 'numeric',
                 'min:' . (is_numeric($price) ? $price : 0)
             ],
-            'total_amount'          => 'required|numeric|min:' . $currentAmount,
+            'total_amount'          => 'required|numeric|min:' . $minAmount,
             'expire_at'             => 'required|date|after:today|after_or_equal:' . $currentExpire,
             'product_category_id'   => 'required|exists:product_categories,id',
         ];
     }
 }
+    

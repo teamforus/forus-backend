@@ -29,7 +29,8 @@ class FundResource extends Resource
             $ownerData['budget'] = [
                 'total' => currency_format($fund->budget_total),
                 'validated' => currency_format($fund->budget_validated),
-                'used' => currency_format($fund->budget_used)
+                'used' => currency_format($fund->budget_used),
+                'left' => currency_format($fund->budget_left)
             ];
 
             $ownerData['providers_count'] = $fund->provider_organizations_approved->count();
@@ -54,7 +55,7 @@ class FundResource extends Resource
 
         return collect($this->resource)->only([
             'id', 'name', 'organization_id',
-            'state'
+            'state', 'notification_amount'
         ])->merge($organization->identityCan(auth()->id(), [
             'validate_records'
         ]) ? [

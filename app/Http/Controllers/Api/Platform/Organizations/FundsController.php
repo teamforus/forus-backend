@@ -63,7 +63,7 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create($request->only([
-            'name', 'state', 'start_date', 'end_date'
+            'name', 'state', 'start_date', 'end_date', 'notification_amount'
         ]));
 
         $fund->product_categories()->sync(
@@ -125,11 +125,11 @@ class FundsController extends Controller
 
         if ($fund->state == 'waiting') {
             $params = $request->only([
-                'name', 'state', 'start_date', 'end_date'
+                'name', 'state', 'start_date', 'end_date', 'notification_amount'
             ]);
         } else {
             $params = $request->only([
-                'name', 'state'
+                'name', 'state', 'notification_amount'
             ]);
         }
 

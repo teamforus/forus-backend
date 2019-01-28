@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
@@ -26,9 +27,29 @@ class TransactionsController extends Controller
         $this->authorize('indexSponsor', [VoucherTransaction::class, $organization]);
 
         return SponsorVoucherTransactionResource::collection(
-            VoucherTransaction::searchSponsor($organization, $request)->paginate(
+            VoucherTransaction::searchSponsor($request, $organization)->paginate(
                 $request->input('per_page', 25)
             )
+        );
+    }
+
+    /**
+     * @param IndexTransactionsRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexTransactionsRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('index', Organization::class);
+
+        return resolve('excel')->download(
+            new VoucherTransactionsSponsorExport($request, $organization),
+            date('Y-m-d H:i:s') . '.xls'
         );
     }
 

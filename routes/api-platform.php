@@ -148,6 +148,11 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/providers/export',
+        "Api\Platform\Organizations\FundProviderController@export"
+    );
+
     $router->resource(
         'organizations.providers',
         "Api\Platform\Organizations\FundProviderController", [
@@ -166,6 +171,10 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions',
         "Api\Platform\Organizations\Funds\FundProviderController@transactions");
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/export',
+        "Api\Platform\Organizations\Funds\FundProviderController@transactionsExport");
 
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/{transaction_address}',
@@ -242,6 +251,12 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+
+    $router->get(
+        'organizations/{organization}/provider/transactions/export',
+        "Api\Platform\Organizations\Provider\TransactionsController@export"
+    );
+
     $router->resource(
         'organizations/{organization}/provider/transactions',
         "Api\Platform\Organizations\Provider\TransactionsController", [
@@ -249,6 +264,11 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
                 'transactions' => 'transaction_address',
             ]
         ]
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/transactions/export',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
 
     $router->resource(
