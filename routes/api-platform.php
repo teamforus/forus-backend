@@ -57,8 +57,6 @@ $router->group([], function() use ($router) {
         'config/{platform_config}',
         'Api\Platform\ConfigController@getConfig'
     );
-
-
 });
 
 // TODO TEMP added throttle 20 per minutes - must be secured

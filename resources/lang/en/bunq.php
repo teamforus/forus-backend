@@ -2,6 +2,6 @@
 
 return [
     'transaction' => [
-        'from_fund' => 'Fund - :fund_name'
+        'from_fund' => ':fund_name'
     ]
 ];

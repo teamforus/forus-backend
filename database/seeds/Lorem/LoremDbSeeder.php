@@ -99,7 +99,8 @@ class LoremDbSeeder extends Seeder
     ) {
         $organizations = [
             $this->makeOrganization('Zuidhorn', $identity_address),
-            $this->makeOrganization('Nijmegen', $identity_address)
+            $this->makeOrganization('Nijmegen', $identity_address),
+            $this->makeOrganization('Westerkwartier', $identity_address)
         ];
 
         foreach ($organizations as $organization) {

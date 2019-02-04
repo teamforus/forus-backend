@@ -80,14 +80,21 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('platform_config', function ($value) {
+            if (Implementation::implementationKeysAvailable()->search(
+                Implementation::activeKey()
+            ) === false) {
+                return abort(403, 'unknown_implementation_key');
+            };
+
+
             $ver = request()->input('ver');
 
             if (preg_match('/[^a-z_\-0-9]/i', $value)) {
-                exit(abort(403,''));
+                abort(403);
             }
 
             if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
-                exit(abort(403,''));
+                abort(403);
             }
 
             $config = config(
