@@ -20,19 +20,25 @@ class OrganizationResource extends Resource
         $organization = $this->resource;
 
         $ownerData = [];
+        $website = [];
 
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = collect($organization)->only([
-                'iban', 'btw', 'website', 'phone', 'email', 'email_public',
+                'iban', 'btw', 'phone', 'email', 'email_public',
                 'phone_public', 'website_public'
+            ])->merge([
+                'website' => $organization->website ? : ''
             ])->toArray();
+        }
+
+        if($organization->website_public){
+            $website = ['website' => $organization->website ? : ''];
         }
 
         return collect($organization)->only([
             'id', 'identity_address', 'name', 'kvk',
             $organization->email_public ? 'email': '',
-            $organization->phone_public ? 'phone': '',
-            $organization->website_public ? 'website': ''
+            $organization->phone_public ? 'phone': ''
         ])->merge([
             'permissions' => $organization->identityPermissions(
                 auth()->id()
@@ -41,6 +47,6 @@ class OrganizationResource extends Resource
             'product_categories' => ProductCategoryResource::collection(
                 $organization->product_categories
             )
-        ])->merge($ownerData)->toArray();
+        ])->merge($website)->merge($ownerData)->toArray();
     }
 }
