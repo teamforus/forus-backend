@@ -241,9 +241,13 @@ class FundsController extends Controller
                 );
 
                 if ($product_category_id) {
-                    $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use($product_category_id){
-                        return $query->where('product_category_id', $product_category_id);
-                    });
+                    if($product_category_id == -1){
+                        $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
+                    }else {
+                        $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
+                            return $query->where('product_category_id', $product_category_id);
+                        });
+                    }
                 }
 
                 return [
@@ -264,9 +268,13 @@ class FundsController extends Controller
         ]);
 
         if($product_category_id){
-            $providers = $providers->whereHas('product', function (Builder $query) use($product_category_id){
-                return $query->where('product_category_id', $product_category_id);
-            });
+            if($product_category_id == -1){
+                $providers = $providers->whereNull('voucher_transactions.product_id');
+            }else{
+                $providers = $providers->whereHas('product', function (Builder $query) use($product_category_id){
+                    return $query->where('product_category_id', $product_category_id);
+                });
+            }
         }
 
         return [
