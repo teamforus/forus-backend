@@ -14,6 +14,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class FundsController
@@ -166,6 +167,7 @@ class FundsController extends Controller
         $type = $request->input('type');
         $year = $request->input('year');
         $nth = $request->input('nth', 1);
+        $product_category_id = $request->input('product_category');
 
         $rangeBetween = function(Carbon $startDate, Carbon $endDate, $countDates) {
             $countDates--;
@@ -229,17 +231,51 @@ class FundsController extends Controller
             exit();
         }
 
-        $dates = $dates->map(function (Carbon $date, $key) use ($fund, $dates) {
-            return [
-                "key" => $date->format('Y-m-d'),
-                "value" => $key == 0 ? 0 : $fund->voucher_transactions()->whereBetween(
+        $dates = $dates->map(function (Carbon $date, $key) use ($fund, $dates, $product_category_id) {
+            if($key > 0) {
+                $voucherQuery = $fund->voucher_transactions()->whereBetween(
                     'voucher_transactions.created_at', [
                         $dates[$key - 1]->copy()->endOfDay(),
                         $date->copy()->endOfDay()
                     ]
-                )->sum('voucher_transactions.amount')
+                );
+
+                if ($product_category_id) {
+                    if($product_category_id == -1){
+                        $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
+                    }else {
+                        $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
+                            return $query->where('product_category_id', $product_category_id);
+                        });
+                    }
+                }
+
+                return [
+                    "key" => $date->format('Y-m-d'),
+                    "value" => $voucherQuery->sum('voucher_transactions.amount')
+                ];
+            }
+
+            return [
+                "key" => $date->format('Y-m-d'),
+                "value" => 0
             ];
         });
+
+        $providers = $fund->voucher_transactions()->whereBetween(
+            'voucher_transactions.created_at', [
+            $startDate, $endDate
+        ]);
+
+        if($product_category_id){
+            if($product_category_id == -1){
+                $providers = $providers->whereNull('voucher_transactions.product_id');
+            }else{
+                $providers = $providers->whereHas('product', function (Builder $query) use($product_category_id){
+                    return $query->where('product_category_id', $product_category_id);
+                });
+            }
+        }
 
         return [
             'dates' => $dates,
@@ -249,10 +285,7 @@ class FundsController extends Controller
             )->whereBetween('created_at', [
                 $startDate, $endDate
             ])->count(),
-            'providers' => $fund->voucher_transactions()->whereBetween(
-                'voucher_transactions.created_at', [
-                $startDate, $endDate
-            ])->distinct()->groupBy('organization_id')->count()
+            'providers' => $providers->distinct()->groupBy('organization_id')->count()
         ];
     }
 
