@@ -219,9 +219,13 @@ class FundProviderController extends Controller
                 ]);
 
                 if ($product_category_id) {
-                    $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use($product_category_id){
-                        return $query->where('product_category_id', $product_category_id);
-                    });
+                    if($product_category_id == -1){
+                        $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
+                    }else {
+                        $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
+                            return $query->where('product_category_id', $product_category_id);
+                        });
+                    }
                 }
 
                 return [
@@ -246,9 +250,13 @@ class FundProviderController extends Controller
         ]);
 
         if($product_category_id){
-            $transactions = $transactions->whereHas('product', function (Builder $query) use($product_category_id){
-                return $query->where('product_category_id', $product_category_id);
-            });
+            if($product_category_id == -1){
+                $transactions = $transactions->whereNull('voucher_transactions.product_id');
+            }else{
+                $transactions = $transactions->whereHas('product', function (Builder $query) use($product_category_id){
+                    return $query->where('product_category_id', $product_category_id);
+                });
+            }
         }
 
         $avg_transaction = $dates->where('value', '>', 0)->avg('value');
@@ -263,9 +271,13 @@ class FundProviderController extends Controller
         ]);
 
         if($product_category_id){
-            $fundUsageInRange = $fundUsageInRange->whereHas('product', function (Builder $query) use($product_category_id){
-                return $query->where('product_category_id', $product_category_id);
-            });
+            if($product_category_id == -1){
+                $fundUsageInRange = $fundUsageInRange->whereNull('voucher_transactions.product_id');
+            }else{
+                $fundUsageInRange = $fundUsageInRange->whereHas('product', function (Builder $query) use($product_category_id){
+                    return $query->where('product_category_id', $product_category_id);
+                });
+            }
         }
 
         $fundUsageInRange = $fundUsageInRange->sum('voucher_transactions.amount');
@@ -275,9 +287,13 @@ class FundProviderController extends Controller
         ]);
 
         if($product_category_id){
-            $fundUsageTotal = $fundUsageTotal->whereHas('product', function (Builder $query) use($product_category_id){
-                return $query->where('product_category_id', $product_category_id);
-            });
+            if($product_category_id == -1){
+                $fundUsageTotal = $fundUsageTotal->whereNull('voucher_transactions.product_id');
+            }else{
+                $fundUsageTotal = $fundUsageTotal->whereHas('product', function (Builder $query) use($product_category_id){
+                    return $query->where('product_category_id', $product_category_id);
+                });
+            }
         }
 
         $fundUsageTotal = $fundUsageTotal->sum('voucher_transactions.amount');
@@ -288,9 +304,13 @@ class FundProviderController extends Controller
         ]);
 
         if($product_category_id){
-            $providerUsageTotal = $providerUsageTotal->whereHas('product', function (Builder $query) use($product_category_id){
-                return $query->where('product_category_id', $product_category_id);
-            });
+            if($product_category_id == -1){
+                $providerUsageTotal = $providerUsageTotal->whereNull('voucher_transactions.product_id');
+            }else{
+                $providerUsageTotal = $providerUsageTotal->whereHas('product', function (Builder $query) use($product_category_id){
+                    return $query->where('product_category_id', $product_category_id);
+                });
+            }
         }
 
         $providerUsageTotal = $providerUsageTotal->sum('voucher_transactions.amount');
