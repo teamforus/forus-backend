@@ -348,7 +348,8 @@ class BunqService
                 }
 
                 $paymentDescription = trans('bunq.transaction.from_fund', [
-                    'fund_name' => $transaction->voucher->fund->name
+                    'fund_name' => $transaction->voucher->fund->name,
+                    'transaction_id' => $transaction->id
                 ]);
 
                 $amount = $transaction->amount;
