@@ -12,5 +12,5 @@
 */
 
 Route::get('/', function () {
-    return request()->server('HTTP_USER_AGENT');
+    return "";
 });
