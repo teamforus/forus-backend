@@ -98,7 +98,7 @@ class VoucherTransaction extends Model
                 $query->orWhereHas('voucher.fund', function (Builder $query) use ($q) {
                     $query->where('name', 'LIKE', "%{$q}%");
                 });
-            });
+            })->orWhere('voucher_transactions.id','LIKE', "%{$q}%");
         }
 
         if ($request->has('state') && $state = $request->input('state')) {
