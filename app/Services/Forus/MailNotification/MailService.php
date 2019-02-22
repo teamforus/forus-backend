@@ -12,6 +12,8 @@ class MailService
 {
     const TYPE_EMAIL = 1;
     const TYPE_PUSH_MESSAGE = 2;
+    const TYPE_PUSH_ANDROID = 2;
+    const TYPE_PUSH_IOS = 3;
 
     protected $serviceApiUrl;
 
@@ -47,7 +49,8 @@ class MailService
     public static function typeCodeToString(int $code) {
         switch ($code) {
             case self::TYPE_EMAIL: return "Email"; break;
-            case self::TYPE_PUSH_MESSAGE: return "Push message"; break;
+            case self::TYPE_PUSH_ANDROID: return "Push message android"; break;
+            case self::TYPE_PUSH_IOS: return "Push message ios"; break;
         }
 
         return "Unknown";
@@ -107,16 +110,39 @@ class MailService
     }
 
     /**
-     * Register new push message connection for given identifier
+     * Register new connection for given identifier
      *
      * @param string $identifier
-     * @param string $token
+     * @param string $value
+     * @return bool
      */
-    public function addPushMessageConnection(
+    public function deleteConnection(
         string $identifier,
-        string $token
+        string $value
     ) {
-        $this->addConnection($identifier,self::TYPE_PUSH_MESSAGE, $token);
+        if (!$this->serviceApiUrl) {
+            return false;
+        }
+
+        $endpoint = $this->getEndpoint('/user/connections/remove/', 'en');
+
+        $res = $this->apiRequest->post($endpoint, [
+            'user_id'   => $identifier,
+            'value'     => $value,
+        ]);
+
+        if ($res->getStatusCode() != 200) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error removing user push token: %s',
+                    $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
