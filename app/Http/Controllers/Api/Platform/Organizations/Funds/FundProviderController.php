@@ -106,14 +106,24 @@ class FundProviderController extends Controller
                 $organizationFund->fund->organization->name,
                 Implementation::active()['url_provider']
             );
-        } elseif ($state == 'declined') {
-            /*$mailService->providerRejected(
+
+            $transData =  [
+                "fund_name" => $organizationFund->fund->name
+            ];
+
+            $mailService->sendPushNotification(
+                $organizationFund->organization->identity_address,
+                trans('push.providers.accepted.title', $transData),
+                trans('push.providers.accepted.body', $transData)
+            );
+        } /* elseif ($state == 'declined') {
+            $mailService->providerRejected(
                 $organizationFund->organization->identity_address,
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
                 $organizationFund->fund->organization->name
-            );*/
-        }
+            );
+        }*/
 
         return new FundProviderResource($organizationFund);
     }

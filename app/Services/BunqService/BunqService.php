@@ -371,6 +371,8 @@ class BunqService
                         'state'             => 'success',
                         'payment_id'        => $payment_id
                     ])->save();
+
+                    $transaction->sendPushBunqTransactionSuccess();
                 }
 
             } catch (\Exception $e) {

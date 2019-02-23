@@ -328,4 +328,9 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         '/devices/register-push',
         'Api\Platform\DevicesController@registerPush'
     );
+
+    $router->delete(
+        '/devices/delete-push',
+        'Api\Platform\DevicesController@deletePush'
+    );
 });

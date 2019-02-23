@@ -55,6 +55,16 @@ if  (!function_exists('currency_format')) {
     }
 }
 
+if  (!function_exists('currency_format_locale')) {
+    /**
+     * @param $number
+     * @return string
+     */
+    function currency_format_locale($number) {
+        return ($number % 1 == 0 ? intval($number) : currency_format($number)) . ',-';
+    }
+}
+
 if  (!function_exists('authorize')) {
     /**
      * @param $ability
