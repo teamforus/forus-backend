@@ -14,7 +14,7 @@ return [
     "transactions" => [
         "offline_regular_voucher" => [
             "title" => ":fund_name",
-            "body" => "Er is zojuist een betaling plaats gevonden van &euro;:amount van uw ':fund_name' voucher",
+            "body" => "U heeft betaald! €:amount is afgeschreven van uw tegoed.",
         ],
         "offline_product_voucher" => [
             "title" => ":product_name",
@@ -24,7 +24,7 @@ return [
     "bunq_transactions" => [
         "complete" => [
             "title" => "Uitbetaling",
-            "body" => "Uw transactie van &euro;:amount is uitbetaald.",
+            "body" => "Uw transactie van €:amount is uitbetaald.",
         ]
     ],
     "access_levels" => [
