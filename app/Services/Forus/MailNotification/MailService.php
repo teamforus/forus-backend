@@ -162,7 +162,7 @@ class MailService
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/mobile/push/');
+        $endpoint = $this->getEndpoint('/sender/mobile/push/', 'en');
 
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id' => $identifier,
