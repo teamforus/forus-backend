@@ -21,7 +21,7 @@ class SponsorVoucherTransactionResource extends Resource
         $voucherTransaction = $this->resource;
 
         return collect($voucherTransaction)->only([
-            "organization_id", "product_id", "created_at",
+            "id", "organization_id", "product_id", "created_at",
             "updated_at", "address", "state", "payment_id",
             'created_at_locale', 'created_at_locale'
         ])->merge([
