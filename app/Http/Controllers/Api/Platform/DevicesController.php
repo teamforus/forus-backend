@@ -34,8 +34,8 @@ class DevicesController extends Controller
 
         $this->mailNotification->addConnection(
             auth()->id(),
-            $ios ? $this->mailNotification::TYPE_PUSH_ANDROID :
-                $this->mailNotification::TYPE_PUSH_IOS,
+            $ios ? $this->mailNotification::TYPE_PUSH_IOS:
+                $this->mailNotification::TYPE_PUSH_ANDROID,
             $request->input('id')
         );
 

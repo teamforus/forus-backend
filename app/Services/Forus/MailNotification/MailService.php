@@ -11,7 +11,6 @@ use App\Services\ApiRequestService\ApiRequest;
 class MailService
 {
     const TYPE_EMAIL = 1;
-    const TYPE_PUSH_MESSAGE = 2;
     const TYPE_PUSH_ANDROID = 2;
     const TYPE_PUSH_IOS = 3;
 
