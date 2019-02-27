@@ -367,13 +367,13 @@ class Fund extends Model
      * @return \Illuminate\Support\Collection
      */
     public function requiredPrevalidationKeys() {
-        return collect()->merge(
+        return collect(collect()->merge(
             $this->fund_config ? [$this->fund_config->csv_primary_key] : []
         )->merge(
             $this->fund_formulas->where('type', 'multiply')->pluck('record_type_key')
         )->merge(
             $this->criteria->pluck('record_type_key')
-        )->unique();
+        ))->unique();
     }
 
     /**
