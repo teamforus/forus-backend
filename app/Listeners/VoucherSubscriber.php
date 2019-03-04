@@ -8,6 +8,19 @@ use Illuminate\Events\Dispatcher;
 
 class VoucherSubscriber
 {
+    private $mailService;
+
+    /**
+     * VoucherSubscriber constructor.
+     */
+    public function __construct()
+    {
+        $this->mailService = resolve('forus.services.mail_notification');
+    }
+
+    /**
+     * @param VoucherCreated $voucherCreated
+     */
     public function onVoucherCreated(VoucherCreated $voucherCreated) {
         $voucher = $voucherCreated->getVoucher();
 
@@ -25,21 +38,44 @@ class VoucherSubscriber
 
         if ($product = $voucher->product) {
             $product->updateSoldOutState();
-            $mailService = resolve('forus.services.mail_notification');
-
-            $mailService->productReserved(
-                $product->organization->emailServiceId(),
-                $product->name,
-                format_date_locale($product->expire_at)
-            );
 
             if ($product->sold_out) {
-                $mailService->productSoldOut(
+                $this->mailService->productSoldOut(
                     $product->organization->emailServiceId(),
                     $product->name,
                     Implementation::active()['url_provider']
                 );
             }
+
+            $this->mailService->productReserved(
+                $product->organization->emailServiceId(),
+                $product->name,
+                format_date_locale($product->expire_at)
+            );
+
+            $imp = Implementation::query()->where([
+                'key' => Implementation::activeKey('general')
+            ])->first();
+
+            $transData = [
+                "implementation_name" => $imp ? $imp->name : 'General'
+            ];
+
+            $this->mailService->sendPushNotification(
+                $voucher->identity_address,
+                trans('push.voucher.bought.title', $transData),
+                trans('push.voucher.bought.body', $transData)
+            );
+        } else {
+            $transData = [
+                "fund_name" => $voucher->fund->name
+            ];
+
+            $this->mailService->sendPushNotification(
+                $voucher->identity_address,
+                trans('push.voucher.activated.title', $transData),
+                trans('push.voucher.activated.body', $transData)
+            );
         }
 
         $voucher->sendToEmail();
