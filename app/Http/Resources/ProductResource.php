@@ -43,6 +43,9 @@ class ProductResource extends Resource
             'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id'
         ])->merge([
+            'description_html' => resolve('markdown')->convertToHtml(
+                $product->description
+            ),
             'organization' => new OrganizationBasicResource(
                 $product->organization
             ),
