@@ -163,7 +163,7 @@ class Voucher extends Model
                 $reason
             );
 
-            if($sendCopyToUser) {
+            if ($sendCopyToUser) {
                 resolve('forus.services.mail_notification')->shareVoucher(
                     auth()->id(),
                     $primaryEmail,

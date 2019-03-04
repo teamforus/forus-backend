@@ -10,12 +10,36 @@ use Illuminate\Events\Dispatcher;
 
 class EmployeeSubscriber
 {
+    private $mailService;
+
+    /**
+     * EmployeeSubscriber constructor.
+     */
+    public function __construct()
+    {
+        $this->mailService = resolve('forus.services.mail_notification');
+    }
+
     /**
      * @param EmployeeCreated $employeeCreated
      * @throws \Exception
      */
     public function onEmployeeCreated(EmployeeCreated $employeeCreated) {
-        $this->updateValidatorEmployee($employeeCreated->getEmployee());
+        $employee = $employeeCreated->getEmployee();
+
+        $this->updateValidatorEmployee($employee);
+
+        $transData = [
+            "org_name" => $employee->organization->name,
+            "role_name_list" => $employee->roles->implode('name', ', '),
+        ];
+
+        $title = trans('push.access_levels.added.title', $transData);
+        $body = trans('push.access_levels.added.body', $transData);
+
+        $this->mailService->sendPushNotification(
+            $employee->identity_address, $title, $body
+        );
     }
 
     /**
@@ -36,6 +60,17 @@ class EmployeeSubscriber
         $employee->organization->validators()->where([
             'identity_address' => $employee->identity_address
         ])->delete();
+
+        $transData = [
+            "org_name" => $employee->organization->name
+        ];
+
+        $title = trans('push.access_levels.removed.title', $transData);
+        $body = trans('push.access_levels.removed.body', $transData);
+
+        $this->mailService->sendPushNotification(
+            $employee->identity_address, $title, $body
+        );
     }
 
     /**

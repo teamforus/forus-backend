@@ -99,6 +99,8 @@ class TransactionsController extends Controller
             'organization_id' => $organizationId,
         ]);
 
+        $transaction->sendPushNotificationTransaction();
+
         if ($product) {
             $product->updateSoldOutState();
         }

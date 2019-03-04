@@ -9,16 +9,13 @@ use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
-use App\Services\Forus\MailNotification\MailService;
 use Illuminate\Http\Request;
 
 class IdentityController extends Controller
 {
+    protected $mailService;
     protected $identityRepo;
     protected $recordRepo;
-
-    /** @var MailService $mailService */
-    protected $mailService;
 
     public function __construct() {
         $this->mailService = app()->make('forus.services.mail_notification');
