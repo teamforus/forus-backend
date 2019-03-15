@@ -65,6 +65,29 @@ if  (!function_exists('currency_format_locale')) {
     }
 }
 
+if  (!function_exists('rule_number_format')) {
+    /**
+     * @param $number
+     * @param int $decimals
+     * @param string $dec_point
+     * @param string $thousands_sep
+     * @return string
+     */
+    function rule_number_format(
+        $number,
+        $decimals = 2,
+        $dec_point = '.',
+        $thousands_sep = ''
+    ) {
+        return number_format(
+            floatval(is_numeric($number) ? $number : 0),
+            $decimals,
+            $dec_point,
+            $thousands_sep
+        );
+    }
+}
+
 if  (!function_exists('authorize')) {
     /**
      * @param $ability
