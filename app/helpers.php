@@ -65,6 +65,7 @@ if  (!function_exists('currency_format_locale')) {
     }
 }
 
+
 if  (!function_exists('rule_number_format')) {
     /**
      * @param $number
@@ -87,6 +88,7 @@ if  (!function_exists('rule_number_format')) {
         );
     }
 }
+
 
 if  (!function_exists('authorize')) {
     /**
