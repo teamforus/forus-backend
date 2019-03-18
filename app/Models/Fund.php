@@ -522,13 +522,17 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
+        $mailService = resolve('forus.services.mail_notification');
+
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
             })
             ->where(function (Builder $query){
                 return $query->whereNull('notified_at')
-                    ->orWhereDate('notified_at', '<=', now()->subDays(7)->startOfDay());
+                    ->orWhereDate('notified_at', '<=', now()->subDays(
+                        7
+                    )->startOfDay());
             })
             ->where('state', 'active')
             ->where('notification_amount', '>', 0)
@@ -537,15 +541,20 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-
             if($fund->budget_left <= $fund->notification_amount) {
-                resolve('forus.services.mail_notification')->fundNotifyReachedNotificationAmount(
-                    $fund->organization->emailServiceId(),
-                    config('forus.front_ends.panel-sponsor'),
-                    $fund->organization->name,
-                    $fund->name,
-                    currency_format($fund->notification_amount)
-                );
+                $referrers = $fund->organization->employeesOfRole('finance');
+                $referrers = $referrers->pluck('identity_address');
+                $referrers->push($fund->organization->emailServiceId());
+
+                foreach ($referrers as $referrer) {
+                    $mailService->fundNotifyReachedNotificationAmount(
+                        $referrer,
+                        config('forus.front_ends.panel-sponsor'),
+                        $fund->organization->name,
+                        $fund->name,
+                        currency_format($fund->notification_amount)
+                    );
+                }
 
                 $fund->update([
                     'notified_at' => now()

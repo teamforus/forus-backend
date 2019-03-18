@@ -23,7 +23,7 @@ class StoreProductRequest extends FormRequest
      */
     public function rules()
     {
-        $price = $this->get('price', 0);
+        $price = rule_number_format($this->input('price', 0));
 
         return [
             'name'                  => 'required|between:2,200',
