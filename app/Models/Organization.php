@@ -158,6 +158,18 @@ class Organization extends Model
     }
 
     /**
+     * @param string $role
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     */
+    public function employeesOfRole(string $role) {
+        return $this->employees()->whereHas('roles', function(
+            \Illuminate\Database\Eloquent\Builder $query
+        ) use ($role) {
+            $query->where('key', 'finance');
+        })->get();
+    }
+
+    /**
      * @return string
      */
     public function emailServiceId() {
