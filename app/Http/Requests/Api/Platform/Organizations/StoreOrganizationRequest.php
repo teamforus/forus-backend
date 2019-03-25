@@ -33,7 +33,7 @@ class StoreOrganizationRequest extends FormRequest
             'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:6,20',
             'phone_public'          => 'boolean',
-            'kvk'                   => ['required', new KvkRule()],
+            'kvk'                   => ['required','unique:organizations,kvk', new KvkRule()],
             'btw'                   => [new BtwRule()],
             'website'               => 'nullable|max:200|url',
             'website_public'        => 'boolean',
