@@ -10,6 +10,8 @@ use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Writer;
 
 class IdentityController extends Controller
 {
@@ -75,7 +77,8 @@ class IdentityController extends Controller
             );
         }
 
-        return collect($identityProxy)->only('access_token');
+        // Exhange_token is sent back with the response, so jMeter is able to verify the created user manually
+        return collect($identityProxy)->only(['access_token', 'exchange_token']);
     }
 
     /**
