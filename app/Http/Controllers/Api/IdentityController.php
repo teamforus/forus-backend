@@ -75,7 +75,8 @@ class IdentityController extends Controller
             );
         }
 
-        return collect($identityProxy)->only('access_token');
+        // Exhange_token is sent back with the response, so jMeter is able to verify the created user manually
+        return collect($identityProxy)->only(['access_token', 'exchange_token']);
     }
 
     /**
