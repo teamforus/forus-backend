@@ -202,7 +202,8 @@ class IdentityController extends Controller
         }
 
         return [
-            'success' => !empty($proxy)
+            'success' => !empty($proxy),
+            'exchange_token' => !empty($proxy) && $proxy['exchange_token']
         ];
     }
 
