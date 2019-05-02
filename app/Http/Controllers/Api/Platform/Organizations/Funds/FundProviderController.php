@@ -109,7 +109,7 @@ class FundProviderController extends Controller
 
             $transData =  [
                 "fund_name" => $organizationFund->fund->name,
-                "sponsor_phone" => $organizationFund->organization->name
+                "sponsor_phone" => $organizationFund->organization->phone
             ];
 
             $mailService->sendPushNotification(
