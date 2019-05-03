@@ -108,7 +108,8 @@ class FundProviderController extends Controller
             );
 
             $transData =  [
-                "fund_name" => $organizationFund->fund->name
+                "fund_name" => $organizationFund->fund->name,
+                "sponsor_phone" => $organizationFund->organization->phone
             ];
 
             $mailService->sendPushNotification(
@@ -116,14 +117,14 @@ class FundProviderController extends Controller
                 trans('push.providers.accepted.title', $transData),
                 trans('push.providers.accepted.body', $transData)
             );
-        } /* elseif ($state == 'declined') {
+        } elseif ($state == 'declined') {
             $mailService->providerRejected(
                 $organizationFund->organization->identity_address,
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
                 $organizationFund->fund->organization->name
             );
-        }*/
+        }
 
         return new FundProviderResource($organizationFund);
     }
