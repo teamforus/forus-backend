@@ -285,7 +285,7 @@ class FundsController extends Controller
             )->whereBetween('created_at', [
                 $startDate, $endDate
             ])->count(),
-            'providers' => $providers->distinct()->groupBy('organization_id')->count()
+            'providers' => $providers->count(DB::raw('DISTICT organization_id'))
         ];
     }
 
