@@ -131,4 +131,18 @@ class VouchersController extends Controller
             (bool)$request->get('send_copy', false)
         );
     }
+
+    public function destroy(
+        VoucherToken $voucherToken
+    ) {
+        $this->authorize('show', $voucherToken->voucher);
+
+        $voucher = Voucher::query()->where([
+            'identity_address' => $voucherToken->voucher->identity_address
+        ])->where('parent_id', '<>', '')->first() ?? abort(404);
+
+        $voucher->delete();
+
+        return compact('success');
+    }
 }
