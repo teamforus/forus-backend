@@ -288,6 +288,10 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'Api\Platform\PrevalidationController@export'
     );
 
+    $router->get(
+        'prevalidations/{prevalidation_uid}/fund',
+        'Api\Platform\PrevalidationController@showFundId'
+    );
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController', [
