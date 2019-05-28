@@ -10,6 +10,7 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
+use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
 
 class VouchersController extends Controller
@@ -140,6 +141,13 @@ class VouchersController extends Controller
         $voucher = Voucher::query()->where([
             'identity_address' => $voucherToken->voucher->identity_address
         ])->where('parent_id', '<>', '')->first() ?? abort(404);
+
+        if(null !== VoucherTransaction::query()->where([
+            'voucher_id' => $voucherToken->voucher->id
+        ])->first())
+        {
+            abort(404);
+        }
 
         $voucher->delete();
 
