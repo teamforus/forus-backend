@@ -15,6 +15,7 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class FundsController
@@ -285,7 +286,7 @@ class FundsController extends Controller
             )->whereBetween('created_at', [
                 $startDate, $endDate
             ])->count(),
-            'providers' => $providers->distinct()->groupBy('organization_id')->count()
+            'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
         ];
     }
 
