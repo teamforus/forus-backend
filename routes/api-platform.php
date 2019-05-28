@@ -96,7 +96,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'vouchers',
         "Api\Platform\VouchersController", [
         'only' => [
-            'index', 'show', 'store'
+            'index', 'show', 'store', 'destroy'
         ],
         'parameters' => [
             'vouchers' => 'voucher_token_address'
