@@ -32,7 +32,7 @@ class FundProviderController extends Controller
             'fund_id'
         )->toArray();
 
-        $fundIds = FundProductCategory::getModel()->whereIn(
+        /*$fundIds = FundProductCategory::getModel()->whereIn(
             'product_category_id',
             $organization->product_categories->pluck('id')->toArray()
         )->whereNotIn(
@@ -41,11 +41,13 @@ class FundProviderController extends Controller
             'fund_id'
         )->distinct()->get()->pluck(
             'fund_id'
-        )->unique()->toArray();
+        )->unique()->toArray();*/
 
         $funds = Fund::getModel()->whereNotIn(
             'state', ['closed', 'waiting']
-        )->whereIn('id', $fundIds)->get();
+        )->whereNotIn(
+            'id', $requestedFundsIds
+        )->distinct()->get()->unique();
 
 
         return FundResource::collection($funds);

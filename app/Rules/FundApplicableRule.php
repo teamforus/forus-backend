@@ -33,7 +33,7 @@ class FundApplicableRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        $fundIds = FundProductCategory::getModel()->whereIn(
+        /*$fundIds = FundProductCategory::getModel()->whereIn(
             'product_category_id',
             $this->organization->product_categories->pluck('id')->toArray()
         )->select('fund_id')->distinct()->get()->pluck(
@@ -46,7 +46,7 @@ class FundApplicableRule implements Rule
             );
 
             return false;
-        }
+        }*/
 
         if (!empty($this->organization->organization_funds()->where(
             'fund_id', $value
