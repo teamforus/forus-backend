@@ -204,6 +204,10 @@ class Fund extends Model
         return round($this->budget_total - $this->budget_used, 2);
     }
 
+    public function getFundId() {
+        return $this->id;
+    }
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
