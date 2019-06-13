@@ -146,6 +146,17 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'organizations.funds.transactions',
+        "Api\Platform\Organizations\Funds\TransactionsController", [
+        'only' => [
+            'index', 'show',
+        ],
+        'parameters' => [
+            'transactions' => 'transaction_address',
+        ]
+    ]);
+
     $router->get(
         'organizations/{organization}/providers/export',
         "Api\Platform\Organizations\FundProviderController@export"

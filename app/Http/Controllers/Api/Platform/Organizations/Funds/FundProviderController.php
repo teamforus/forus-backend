@@ -36,20 +36,19 @@ class FundProviderController extends Controller
         Fund $fund
     ) {
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('indexSponsor', [FundProvider::class, $organization, $fund]);
+        $this->authorize('indexSponsor', [
+            FundProvider::class, $organization, $fund
+        ]);
 
-        $state = $request->input('state', false);
         $organization_funds = $fund->providers();
 
-        if ($state) {
+        if ($state = $request->input('state', false)) {
             $organization_funds->where('state', $state);
         }
 
-        return FundProviderResource::collection(
-            $organization_funds->paginate(
-                $request->has('per_page') ? $request->input('per_page') : null
-            )
-        );
+        return FundProviderResource::collection($organization_funds->paginate(
+            $request->input('per_page', null)
+        ));
     }
 
     /**
@@ -66,9 +65,10 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
+        $this->authorize('showSponsor', [
+            $organizationFund, $organization, $fund
+        ]);
 
         return new FundProviderResource($organizationFund);
     }
@@ -91,7 +91,9 @@ class FundProviderController extends Controller
     ) {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('updateSponsor', [$organizationFund, $organization, $fund]);
+        $this->authorize('updateSponsor', [
+            $organizationFund, $organization, $fund
+        ]);
 
         $state = $request->input('state');
 
@@ -145,7 +147,9 @@ class FundProviderController extends Controller
     ) {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
+        $this->authorize('showSponsor', [
+            $organizationFund, $organization, $fund
+        ]);
 
         $dates = collect();
 

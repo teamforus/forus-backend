@@ -28,7 +28,7 @@ class Employee extends Model
     public function roles() {
         return $this->belongsToMany(
             Role::class,
-            EmployeeRole::getModel()->getTable()
+            (new EmployeeRole)->getTable()
         );
     }
 
