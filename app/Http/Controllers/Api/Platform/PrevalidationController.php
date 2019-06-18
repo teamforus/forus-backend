@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Platform\SearchPrevalidationsRequest;
 use Illuminate\Support\Str;
 use App\Http\Requests\Api\Platform\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
-use App\Http\Resources\FundRedeemPrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
@@ -172,8 +171,24 @@ class PrevalidationController extends Controller
         return new PrevalidationResource($prevalidation);
     }
 
-    public function showFundId(Prevalidation $prevalidation) {
-        return new FundRedeemPrevalidationResource($prevalidation);
+    /**
+     * @param Request $request
+     * @param Prevalidation $prevalidation
+     * @return array
+     */
+    public function showFundId(
+        Request $request,
+        Prevalidation $prevalidation
+    ) {
+        if ($this->hasTooManyLoginAttempts($request)) {
+            abort(429, 'To many attempts.');
+        }
+
+        $this->incrementLoginAttempts($request);
+
+        return [
+            'data' => $prevalidation->only('fund_id')
+        ];
     }
 
     /**
@@ -230,6 +245,6 @@ class PrevalidationController extends Controller
      */
     protected function throttleKey(Request $request)
     {
-        return Str::lower($request->input(auth()->id())).'|'.$request->ip();
+        return Str::lower($request->ip());
     }
 }

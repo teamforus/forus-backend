@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 /**
  * Class Prevalidation
  * @property int $id
+ * @property int $fund_id
  * @property string $uid
  * @property string $identity_address
  * @property string $state

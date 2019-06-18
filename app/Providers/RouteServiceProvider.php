@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\BunqMeTab;
 use App\Models\Fund;
 use App\Models\Employee;
 use App\Models\Implementation;
@@ -37,6 +38,13 @@ class RouteServiceProvider extends ServiceProvider
 
         $router = app()->make('router');
 
+        $router->bind('bunq_transactions_paid', function ($value) {
+            return BunqMeTab::query()->where([
+                    'status' => 'PAID',
+                    'id' => $value,
+                ])->first() ?? abort(404);
+        });
+
         $router->bind('prevalidation_uid', function ($value) {
             return Prevalidation::getModel()->where([
                     'uid' => $value
@@ -53,6 +61,12 @@ class RouteServiceProvider extends ServiceProvider
             return Fund::getModel()->where([
                     'id' => $value
                 ])->first() ?? abort(404);
+        });
+
+        $router->bind('configured_fund_id', function ($value) {
+            return Fund::getModel()->where([
+                    'id' => $value
+                ])->has('fund_config')->first() ?? abort(404);
         });
 
         $router->bind('voucher_token_address', function ($value) {

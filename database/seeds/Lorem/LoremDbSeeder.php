@@ -151,7 +151,7 @@ class LoremDbSeeder extends Seeder
 
             /** @var Fund $fund */
             foreach ($funds as $fund) {
-                $fund->fund_providers()->create([
+                $fund->providers()->create([
                     'organization_id'   => $organization->id,
                     'state'             => [
                         0 => 'pending',

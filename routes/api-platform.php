@@ -92,6 +92,16 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         "Api\Platform\FundsController@apply"
     );
 
+    $router->get(
+        'funds/{configured_fund_id}/ideal/issuers',
+        "Api\Platform\FundsController@idealIssuers"
+    );
+
+    $router->post(
+        'funds/{fund_id}/ideal/requests',
+        "Api\Platform\FundsController@idealMakeRequest"
+    );
+
     $router->resource(
         'vouchers',
         "Api\Platform\VouchersController", [
@@ -186,6 +196,17 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ],
         'parameters' => [
             'providers' => 'organization_fund'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.bunq-transactions',
+        "Api\Platform\Organizations\Funds\BunqTransactionsController", [
+        'only' => [
+            'index'
+        ],
+        'parameters' => [
+            'bunq-transactions' => 'bunq_transactions_paid'
         ]
     ]);
 
