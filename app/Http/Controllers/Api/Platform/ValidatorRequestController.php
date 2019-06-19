@@ -19,7 +19,7 @@ class ValidatorRequestController extends Controller
     {
         $this->authorize('index', ValidatorRequest::class);
 
-        $validatorRequest = ValidatorRequest::getModel()->where([
+        $validatorRequest = ValidatorRequest::query()->where([
             'identity_address' => auth()->user()->getAuthIdentifier()
         ])->get();
 

@@ -102,7 +102,7 @@ class PrevalidationController extends Controller
         })->map(function($records) use ($request) {
             do {
                 $uid = app()->make('token_generator')->generate(4, 2);
-            } while(Prevalidation::getModel()->where(
+            } while(Prevalidation::query()->where(
                 'uid', $uid
             )->count() > 0);
 

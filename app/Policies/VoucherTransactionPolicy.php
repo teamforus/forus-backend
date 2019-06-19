@@ -69,6 +69,21 @@ class VoucherTransactionPolicy
 
     /**
      * @param string $identity_address
+     * @param Fund|null $fund
+     * @param Organization|null $organization
+     * @return bool
+     */
+    public function indexPublic(
+        string $identity_address,
+        Fund $fund,
+        Organization $organization
+    ) {
+        return isset($identity_address) && (
+            $fund->organization_id == $organization->id && $fund->public);
+    }
+
+    /**
+     * @param string $identity_address
      * @param VoucherTransaction $transaction
      * @return bool
      */
@@ -76,9 +91,9 @@ class VoucherTransactionPolicy
         string $identity_address,
         VoucherTransaction $transaction
     ) {
-        return !empty($identity_address) && strcmp(
-                $transaction->voucher->identity_address, $identity_address
-            ) == 0;
+        return !empty($identity_address) && ((strcmp(
+            $transaction->voucher->identity_address, $identity_address
+        ) == 0) || $transaction->voucher->fund->public);
     }
 
     /**
@@ -129,5 +144,23 @@ class VoucherTransactionPolicy
         return $transaction->provider->identityCan(
             $identity_address, 'view_finances'
         );
+    }
+
+    /**
+     * @param string $identity_address
+     * @param VoucherTransaction $transaction
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     */
+    public function showPublic(
+        string $identity_address,
+        VoucherTransaction $transaction,
+        Fund $fund,
+        Organization $organization
+    ) {
+        return isset($identity_address) && $fund->public &&
+            ($fund->organization_id == $organization->id && $fund->public) &&
+            $transaction->voucher->fund_id == $fund->id;
     }
 }

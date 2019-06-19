@@ -20,10 +20,9 @@ class RecordCategoryController extends Controller
 
     /**
      * Get list categories
-     * @param Request $request
      * @return array
      */
-    public function index(Request $request)
+    public function index()
     {
         return $this->recordRepo->categoriesList(
             auth()->user()->getAuthIdentifier()
@@ -49,12 +48,10 @@ class RecordCategoryController extends Controller
 
     /**
      * Get record category
-     * @param Request $request
      * @param int $recordCategoryId
      * @return array|null
      */
     public function show(
-        Request $request,
         int $recordCategoryId
     ) {
         $identity = auth()->user()->getAuthIdentifier();
@@ -107,13 +104,11 @@ class RecordCategoryController extends Controller
 
     /**
      * Delete record category
-     * @param Request $request
      * @param int $recordCategoryId
      * @return array
      * @throws \Exception
      */
     public function destroy(
-        Request $request,
         int $recordCategoryId
     ) {
         $identity = auth()->user()->getAuthIdentifier();

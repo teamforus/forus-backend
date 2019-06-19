@@ -48,7 +48,7 @@ class FundProvider extends Model
     /**
      * @param Request $request
      * @param Organization $organization
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return Builder
      */
     public static function search(
         Request $request,
