@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\SearchPrevalidationsRequest;
 use Illuminate\Support\Str;
 use App\Http\Requests\Api\Platform\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
+use App\Http\Resources\FundRedeemPrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
@@ -101,7 +102,7 @@ class PrevalidationController extends Controller
         })->map(function($records) use ($request) {
             do {
                 $uid = app()->make('token_generator')->generate(4, 2);
-            } while(Prevalidation::getModel()->where(
+            } while(Prevalidation::query()->where(
                 'uid', $uid
             )->count() > 0);
 
@@ -169,6 +170,10 @@ class PrevalidationController extends Controller
         $this->authorize('show', $prevalidation);
 
         return new PrevalidationResource($prevalidation);
+    }
+
+    public function showFundId(Prevalidation $prevalidation) {
+        return new FundRedeemPrevalidationResource($prevalidation);
     }
 
     /**

@@ -36,7 +36,7 @@ class ValidatorsController extends Controller
 
         $bsnValidations = $bsnValidations->unique();
 
-        return ValidatorResource::collection(Validator::getModel()->whereIn(
+        return ValidatorResource::collection(Validator::query()->whereIn(
             'identity_address', $bsnValidations
         )->get());
     }

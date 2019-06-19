@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property float $budget_left
  * @property float $notification_amount
  * @property Media $logo
+ * @property boolean $public
  * @property FundConfig $fund_config
  * @property Organization $organization
  * @property Collection|BunqMeTab[] $bunq_me_tabs_paid
@@ -56,11 +57,15 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'start_date', 'end_date',
-        'notification_amount', 'fund_id', 'notified_at'
+        'notification_amount', 'fund_id', 'notified_at', 'public'
     ];
 
     protected $hidden = [
         'fund_config', 'fund_formulas'
+    ];
+
+    protected $casts = [
+        'public' => 'boolean',
     ];
 
     /**
@@ -71,7 +76,7 @@ class Fund extends Model
     protected $dates = [
         'start_date',
         'end_date',
-        'notified_at'
+        'notified_at',
     ];
 
     /**

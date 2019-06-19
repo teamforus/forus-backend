@@ -36,7 +36,7 @@ class MediaController extends Controller
     ) {
         $this->authorize('index', Media::class);
 
-        $media = Media::getModel()->where([
+        $media = Media::query()->where([
             'identity_address' => auth()->user()->getAuthIdentifier()
         ]);
 
@@ -45,7 +45,6 @@ class MediaController extends Controller
         }
 
         return MediaResource::collection($media->get());
-
     }
 
     /**

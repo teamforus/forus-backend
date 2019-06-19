@@ -57,7 +57,7 @@ class TransactionsController extends Controller
             $organizationId = $product->organization_id;
         } else {
             $maxAmount = $voucher->amount - $voucher->transactions->sum('amount');
-            $product = Product::getModel()->find($request->get('product_id'));
+            $product = Product::query()->find($request->get('product_id'));
 
             if (!$product) {
                 $amount = $request->input('amount');

@@ -258,15 +258,15 @@ class Organization extends Model
          * or is the creator
          */
         return Organization::query()->whereIn('id', function(Builder $query) use ($identityAddress, $permissions) {
-            $query->select(['organization_id'])->from(Employee::getModel()->getTable())->where([
+            $query->select(['organization_id'])->from((new Employee)->getTable())->where([
                 'identity_address' => $identityAddress
             ])->whereIn('id', function (Builder $query) use ($permissions) {
-                $query->select('employee_id')->from(EmployeeRole::getModel()->getTable())->whereIn('role_id', function (Builder $query) use ($permissions) {
-                    $query->select(['id'])->from(Role::getModel()->getTable())->whereIn('id', function (
+                $query->select('employee_id')->from((new EmployeeRole)->getTable())->whereIn('role_id', function (Builder $query) use ($permissions) {
+                    $query->select(['id'])->from((new Role)->getTable())->whereIn('id', function (
                         Builder $query
                     )  use ($permissions) {
-                        return $query->select(['role_id'])->from(RolePermission::getModel()->getTable())->whereIn('permission_id', function (Builder $query) use ($permissions) {
-                            $query->select('id')->from(Permission::getModel()->getTable());
+                        return $query->select(['role_id'])->from((new RolePermission)->getTable())->whereIn('permission_id', function (Builder $query) use ($permissions) {
+                            $query->select('id')->from((new Permission)->getTable());
 
                             // allow any permission
                             if ($permissions !== false) {
