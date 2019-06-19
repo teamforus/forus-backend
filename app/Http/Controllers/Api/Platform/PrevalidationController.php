@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Platform\SearchPrevalidationsRequest;
 use Illuminate\Support\Str;
 use App\Http\Requests\Api\Platform\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
-use App\Http\Resources\FundRedeemPrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\PrevalidationRecord;
@@ -156,24 +155,6 @@ class PrevalidationController extends Controller
             new PrevalidationsExport($request),
             date('Y-m-d H:i:s') . '.xls'
         );
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param Prevalidation $prevalidation
-     * @return PrevalidationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function show(Prevalidation $prevalidation)
-    {
-        $this->authorize('show', $prevalidation);
-
-        return new PrevalidationResource($prevalidation);
-    }
-
-    public function showFundId(Prevalidation $prevalidation) {
-        return new FundRedeemPrevalidationResource($prevalidation);
     }
 
     /**
