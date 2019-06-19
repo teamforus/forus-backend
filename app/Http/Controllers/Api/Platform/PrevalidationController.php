@@ -177,6 +177,26 @@ class PrevalidationController extends Controller
     }
 
     /**
+     * @param Request $request
+     * @param Prevalidation $prevalidation
+     * @return array
+     */
+    public function showFundId(
+        Request $request,
+        Prevalidation $prevalidation
+    ) {
+        if ($this->hasTooManyLoginAttempts($request)) {
+            abort(429, 'To many attempts.');
+        }
+
+        $this->incrementLoginAttempts($request);
+
+        return [
+            'data' => $prevalidation->only('fund_id')
+        ];
+    }
+
+    /**
      * Redeem prevalidation.
      *
      * @param Request $request
@@ -230,6 +250,6 @@ class PrevalidationController extends Controller
      */
     protected function throttleKey(Request $request)
     {
-        return Str::lower($request->input(auth()->id())).'|'.$request->ip();
+        return Str::lower($request->ip());
     }
 }

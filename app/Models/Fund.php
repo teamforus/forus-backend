@@ -17,30 +17,31 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property integer|null $fund_id
  * @property string $state
  * @property string $name
- * @property Organization $organization
  * @property float $budget_total
  * @property float $budget_validated
  * @property float $budget_used
  * @property float $budget_left
+ * @property float $notification_amount
  * @property Media $logo
  * @property boolean $public
  * @property FundConfig $fund_config
- * @property Collection $top_up_transactions
- * @property Collection $fund_formulas
- * @property Collection $metas
- * @property Collection $products
- * @property Collection $product_categories
- * @property Collection $criteria
- * @property Collection $vouchers
- * @property Collection $voucher_transactions
- * @property Collection $providers
- * @property Collection $validators
- * @property Collection $fund_providers
- * @property Collection $provider_organizations
- * @property Collection $provider_organizations_approved
+ * @property Organization $organization
+ * @property Collection|BunqMeTab[] $bunq_me_tabs_paid
+ * @property Collection|BunqMeTab[] $bunq_me_tabs
+ * @property Collection|FundTopUpTransaction[] $top_up_transactions
+ * @property Collection|FundFormula[] $fund_formulas
+ * @property Collection|FundMeta[] $metas
+ * @property Collection|Product[] $products
+ * @property Collection|ProductCategory[] $product_categories
+ * @property Collection|FundCriterion[] $criteria
+ * @property Collection|Voucher[] $vouchers
+ * @property Collection|VoucherTransaction[] $voucher_transactions
+ * @property Collection|FundProvider[] $providers
+ * @property Collection|Validator[] $validators
+ * @property Collection|Organization[] $provider_organizations
+ * @property Collection|Organization[] $provider_organizations_approved
  * @property Carbon $start_date
  * @property Carbon $end_date
- * @property float $notification_amount
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -163,13 +164,6 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_providers() {
-        return $this->hasMany(FundProvider::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function top_ups() {
         return $this->hasMany(FundTopUp::class);
     }
@@ -192,7 +186,10 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetTotalAttribute() {
-        return round($this->top_up_transactions->sum('amount'), 2);
+        return round(array_sum([
+            $this->top_up_transactions->sum('amount'),
+            $this->bunq_me_tabs_paid->sum('amount')
+        ]), 2);
     }
 
     /**
@@ -249,6 +246,22 @@ class Fund extends Model
      */
     public function fund_formulas() {
         return $this->hasMany(FundFormula::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bunq_me_tabs() {
+        return $this->hasMany(BunqMeTab::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bunq_me_tabs_paid() {
+        return $this->hasMany(BunqMeTab::class)->where([
+            'status' => 'PAID'
+        ]);
     }
 
     /**
@@ -572,4 +585,44 @@ class Fund extends Model
         }
     }
 
+    /**
+     * @param float $amount
+     * @param string $description
+     * @param string|null $issuer
+     * @return \Illuminate\Database\Eloquent\Model
+     * @throws \Exception
+     */
+    public function makeBunqMeTab(
+        float $amount,
+        string $description = '',
+        string $issuer = null
+    ) {
+        $tabRequest = $this->getBunq()->makeBunqMeTabRequest(
+            $amount,
+            $description
+        );
+
+        $bunqMeTab = $tabRequest->getBunqMeTab();
+        $amount = $bunqMeTab->getBunqmeTabEntry()->getAmountInquired();
+        $description = $bunqMeTab->getBunqmeTabEntry()->getDescription();
+        $issuer_auth_url = null;
+
+
+        if (env('BUNQ_IDEAL_USE_ISSUERS', true) && $issuer) {
+            $issuer_auth_url = $tabRequest->makeIdealIssuerRequest(
+                $issuer
+            )->getUrl();
+        }
+
+        return $this->bunq_me_tabs()->create([
+            'bunq_me_tab_id'            => $bunqMeTab->getId(),
+            'status'                    => $bunqMeTab->getStatus(),
+            'monetary_account_id'       => $bunqMeTab->getMonetaryAccountId(),
+            'amount'                    => $amount->getValue(),
+            'description'               => $description,
+            'uuid'                      => $tabRequest->getUuid(),
+            'share_url'                 => $tabRequest->getShareUrl(),
+            'issuer_authentication_url' => $issuer_auth_url
+        ]);
+    }
 }

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class ChangeWebsiteColumnOrganizationTable extends Migration
+class CreateBunqIdealIssuersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,12 @@ class ChangeWebsiteColumnOrganizationTable extends Migration
      */
     public function up()
     {
-        Schema::table('organizations', function (Blueprint $table) {
-            $table->string('website', 200)->default('')->change();
+        Schema::create('bunq_ideal_issuers', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name', 200);
+            $table->string('bic', 200);
+            $table->boolean('sandbox');
+            $table->timestamps();
         });
     }
 
@@ -25,8 +29,6 @@ class ChangeWebsiteColumnOrganizationTable extends Migration
      */
     public function down()
     {
-        Schema::table('organizations', function (Blueprint $table) {
-            $table->string('website', 200)->default('')->nullable()->change();
-        });
+        Schema::dropIfExists('bunq_ideal_issuers');
     }
 }
