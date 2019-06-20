@@ -42,7 +42,8 @@ class FundProviderPolicy
             return true;
         }
 
-        return $organization->identityCan($identity_address, [
+        return $identity_address &&
+            $organization->identityCan($identity_address, [
             'view_finances', 'manage_providers'
         ], false);
     }
@@ -110,10 +111,14 @@ class FundProviderPolicy
             return false;
         }
 
-        return $fundProvider->fund->public ||
-            $fundProvider->fund->organization->identityCan($identity_address, [
-            'manage_funds', 'view_finances'
-        ], false);
+        if ($fund->public) {
+            return true;
+        }
+
+        return $identity_address && $organization->identityCan(
+            $identity_address, [
+                'manage_funds', 'view_finances'
+            ], false);
     }
 
     /**

@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class FundResource
- * @property Fund$resource
+ * @property Fund $resource
  * @package App\Http\Resources
  */
 class FundResource extends Resource

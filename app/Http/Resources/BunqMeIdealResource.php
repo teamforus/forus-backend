@@ -21,8 +21,8 @@ class BunqMeIdealResource extends Resource
      */
     public function toArray($request)
     {
-        return $this->resource->only([
-            'id', 'amount', 'status', 'created_at', 'updated_at', 'fund_id',
+        return collect($this->resource)->only([
+            'id', 'amount', 'status', 'fund_id', 'created_at', 'updated_at',
         ]);
     }
 }

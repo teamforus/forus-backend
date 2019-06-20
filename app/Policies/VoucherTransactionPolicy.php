@@ -78,8 +78,9 @@ class VoucherTransactionPolicy
         Fund $fund,
         Organization $organization
     ) {
-        return isset($identity_address) && (
-            $fund->organization_id == $organization->id && $fund->public);
+        // identity_address not required
+        return isset($identity_address) && $fund->public && (
+            $fund->organization_id == $organization->id);
     }
 
     /**
@@ -159,8 +160,9 @@ class VoucherTransactionPolicy
         Fund $fund,
         Organization $organization
     ) {
-        return isset($identity_address) && $fund->public &&
-            ($fund->organization_id == $organization->id && $fund->public) &&
-            $transaction->voucher->fund_id == $fund->id;
+        // identity_address not required
+        return isset($identity_address) && $fund->public && (
+            $fund->organization_id == $organization->id) && (
+                $transaction->voucher->fund_id == $fund->id);
     }
 }

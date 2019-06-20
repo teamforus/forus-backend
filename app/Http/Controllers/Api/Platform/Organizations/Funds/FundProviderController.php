@@ -35,7 +35,6 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('show', [$fund, $organization]);
         $this->authorize('indexSponsor', [
             FundProvider::class, $organization, $fund
         ]);
@@ -65,7 +64,6 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund
     ) {
-        $this->authorize('show', [$fund, $organization]);
         $this->authorize('showSponsor', [
             $organizationFund, $organization, $fund
         ]);
@@ -158,7 +156,10 @@ class FundProviderController extends Controller
         $nth = $request->input('nth', 1);
         $product_category_id = $request->input('product_category');
 
-        $rangeBetween = function(Carbon $startDate, Carbon $endDate, $countDates) {
+        $rangeBetween = function(
+            Carbon $startDate,
+            Carbon $endDate, $countDates
+        ) {
             $countDates--;
             $dates = collect();
             $diffBetweenDates = $startDate->diffInDays($endDate);
@@ -356,7 +357,9 @@ class FundProviderController extends Controller
     ) {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
+        $this->authorize('showSponsor', [
+            $organizationFund, $organization, $fund
+        ]);
 
         return SponsorVoucherTransactionResource::collection(
             VoucherTransaction::searchSponsor(
@@ -387,7 +390,9 @@ class FundProviderController extends Controller
     ) {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
+        $this->authorize('showSponsor', [
+            $organizationFund, $organization, $fund
+        ]);
 
         return resolve('excel')->download(
             new VoucherTransactionsSponsorExport(
@@ -415,8 +420,12 @@ class FundProviderController extends Controller
     ) {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('showSponsor', [$organizationFund, $organization, $fund]);
-        $this->authorize('showSponsor', [$transaction, $organization, $fund]);
+        $this->authorize('showSponsor', [
+            $organizationFund, $organization, $fund
+        ]);
+        $this->authorize('showSponsor', [
+            $transaction, $organization, $fund
+        ]);
 
         return new SponsorVoucherTransactionResource($transaction);
     }

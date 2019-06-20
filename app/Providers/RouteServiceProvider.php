@@ -38,7 +38,7 @@ class RouteServiceProvider extends ServiceProvider
 
         $router = app()->make('router');
 
-        $router->bind('bunq_transactions_paid', function ($value) {
+        $router->bind('bunq_me_tab_paid', function ($value) {
             return BunqMeTab::query()->where([
                     'status' => 'PAID',
                     'id' => $value,
@@ -46,31 +46,31 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('prevalidation_uid', function ($value) {
-            return Prevalidation::getModel()->where([
+            return Prevalidation::query()->where([
                     'uid' => $value
                 ])->first() ?? null;
         });
 
         $router->bind('media_uid', function ($value) {
-            return Media::getModel()->where([
+            return Media::query()->where([
                     'uid' => $value
                 ])->first() ?? abort(404);
         });
 
         $router->bind('fund_id', function ($value) {
-            return Fund::getModel()->where([
+            return Fund::query()->where([
                     'id' => $value
                 ])->first() ?? abort(404);
         });
 
         $router->bind('configured_fund_id', function ($value) {
-            return Fund::getModel()->where([
+            return Fund::query()->where([
                     'id' => $value
                 ])->has('fund_config')->first() ?? abort(404);
         });
 
         $router->bind('voucher_token_address', function ($value) {
-            return VoucherToken::getModel()->where([
+            return VoucherToken::query()->where([
                     'address' => $value
                 ])->first() ?? abort(404);
         });

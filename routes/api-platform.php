@@ -68,6 +68,60 @@ $router->group(['middleware' => ['throttle:20']], function() use ($router) {
 });
 
 /**
+ * Public api routes
+ */
+$router->resource(
+    'organizations.funds.bunq-transactions',
+    "Api\Platform\Organizations\Funds\BunqMeTabsController", [
+    'only' => [
+        'index', 'show'
+    ],
+    'parameters' => [
+        'bunq-transactions' => 'bunq_me_tab_paid'
+    ]
+]);
+
+$router->resource(
+    'organizations.funds.transactions',
+    "Api\Platform\Organizations\Funds\TransactionsController", [
+    'only' => [
+        'index', 'show',
+    ],
+    'parameters' => [
+        'transactions' => 'transaction_address',
+    ]
+]);
+
+$router->resource(
+    'organizations.funds.providers',
+    "Api\Platform\Organizations\Funds\FundProviderController", [
+    'only' => [
+        'index', 'show'
+    ],
+    'parameters' => [
+        'providers' => 'organization_fund'
+    ]
+]);
+
+$router->resource(
+    'organizations.funds',
+    "Api\Platform\Organizations\FundsController", [
+    'only' => [
+        'index', 'show'
+    ]
+]);
+
+$router->get(
+    'funds/{configured_fund_id}/ideal/issuers',
+    "Api\Platform\FundsController@idealIssuers"
+);
+
+$router->post(
+    'funds/{fund_id}/ideal/requests',
+    "Api\Platform\FundsController@idealMakeRequest"
+);
+
+/**
  * Authorization required
  */
 $router->group(['middleware' => ['api.auth']], function() use ($router) {
@@ -90,16 +144,6 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->post(
         'funds/{fund_id}/apply',
         "Api\Platform\FundsController@apply"
-    );
-
-    $router->get(
-        'funds/{configured_fund_id}/ideal/issuers',
-        "Api\Platform\FundsController@idealIssuers"
-    );
-
-    $router->post(
-        'funds/{fund_id}/ideal/requests',
-        "Api\Platform\FundsController@idealMakeRequest"
     );
 
     $router->resource(
@@ -152,18 +196,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
         'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
-        ]
-    ]);
-
-    $router->resource(
-        'organizations.funds.transactions',
-        "Api\Platform\Organizations\Funds\TransactionsController", [
-        'only' => [
-            'index', 'show',
-        ],
-        'parameters' => [
-            'transactions' => 'transaction_address',
+            'store', 'update', 'destroy'
         ]
     ]);
 
@@ -203,24 +236,12 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
         'only' => [
-            'index', 'show', 'update'
+            'update'
         ],
         'parameters' => [
             'providers' => 'organization_fund'
         ]
     ]);
-
-    $router->resource(
-        'organizations.funds.bunq-transactions',
-        "Api\Platform\Organizations\Funds\BunqTransactionsController", [
-        'only' => [
-            'index'
-        ],
-        'parameters' => [
-            'bunq-transactions' => 'bunq_transactions_paid'
-        ]
-    ]);
-
 
     $router->resource(
         'organizations.products',

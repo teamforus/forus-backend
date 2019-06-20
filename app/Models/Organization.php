@@ -211,10 +211,14 @@ class Organization extends Model
      * @return bool
      */
     public function identityCan(
-        string $identityAddress,
-        $permissions,
+        string $identityAddress = null,
+        $permissions = [],
         $all = true
     ) {
+        if (!$identityAddress) {
+            return false;
+        }
+
         // as owner of the organization you don't have any restrictions
         if (strcmp($identityAddress, $this->identity_address) === 0) {
             return true;

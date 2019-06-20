@@ -87,6 +87,8 @@ class FundsController extends Controller
         StoreIdealBunqMeRequestRequest $request,
         Fund $fund
     ) {
+        $this->authorize('idealRequest', $fund);
+
         return new BunqMeIdealRequestResource($fund->makeBunqMeTab(
             $request->input('amount'),
             (string) $request->input('description'),

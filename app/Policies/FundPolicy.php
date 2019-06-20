@@ -183,4 +183,17 @@ class FundPolicy
 
         return false;
     }
+
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @return bool
+     */
+    public function idealRequest(
+        $identity_address,
+        Fund $fund
+    ) {
+        // identity_address not required
+        return $identity_address && $fund->public;
+    }
 }

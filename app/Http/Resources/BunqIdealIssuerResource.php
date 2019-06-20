@@ -20,7 +20,7 @@ class BunqIdealIssuerResource extends Resource
      */
     public function toArray($request)
     {
-        return $this->resource->only([
+        return collect($this->resource)->only([
             'id', 'name', 'bic',
         ]);
     }

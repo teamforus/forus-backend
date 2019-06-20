@@ -24,6 +24,18 @@ use Illuminate\Database\Eloquent\Model;
  */
 class BunqMeTab extends Model
 {
+    const STATUS_PAID = 'PAID';
+    const STATUS_EXPIRED = 'EXPIRED';
+    const STATUS_CANCELED = 'CANCELED';
+    const STATUS_WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT';
+
+    const STATUSES = [
+        self::STATUS_PAID,
+        self::STATUS_EXPIRED,
+        self::STATUS_CANCELED,
+        self::STATUS_WAITING_FOR_PAYMENT,
+    ];
+
     /**
      * @var array
      */
@@ -37,7 +49,7 @@ class BunqMeTab extends Model
      * @var array
      */
     protected $dates = [
-        'last_check_at',
+        'last_check_at', 'created_at', 'updated_at',
     ];
 
     /**

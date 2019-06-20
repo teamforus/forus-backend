@@ -2,7 +2,20 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 
+/**
+ * Class OfficeSchedule
+ * @property int $id
+ * @property int $office_id
+ * @property int $week_day
+ * @property string $start_time
+ * @property string $end_time
+ * @property Office $office
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @package App\Models
+ */
 class OfficeSchedule extends Model
 {
     /**

@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property float $lat
  * @property boolean $parsed
  * @property Organization $organization
- * @property Collection $schedules
+ * @property Collection|OfficeSchedule[] $schedules
  * @property Media $photo
  * @property Carbon $created_at
  * @property Carbon $updated_at
