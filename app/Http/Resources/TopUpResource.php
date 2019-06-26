@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\FundTopUp;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class TopUpResource
+ * @property FundTopUp $resource
+ * @package App\Http\Resources
+ */
 class TopUpResource extends Resource
 {
     /**
@@ -16,20 +21,14 @@ class TopUpResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var FundTopUp $fundTopUp */
-        $fundTopUp = $this->resource;
-        $bunq = $fundTopUp->fund->getBunq();
-
-        if (!$bunq) {
+        if (!$bunq = $this->resource->fund->getBunq()) {
             abort(403, 'Top up for this fund not available yet.');
         }
 
-        $bunqIban = $bunq->getBankAccountIban();
-
-        return collect($fundTopUp)->only([
+        return collect($this->resource)->only([
             'code', 'state'
         ])->merge([
-            'iban' => e($bunqIban),
+            'iban' => e($bunq->getBankAccountIban()),
         ]);
     }
 }

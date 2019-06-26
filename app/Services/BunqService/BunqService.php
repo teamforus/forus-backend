@@ -4,14 +4,24 @@ namespace App\Services\BunqService;
 use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\VoucherTransaction;
+use App\Services\BunqService\Endpoint\BunqMeTabB;
+use App\Services\BunqService\Models\BunqIdealIssuer;
 use bunq\Context\BunqContext;
+use bunq\Model\Generated\Endpoint\BunqMeTab;
+use bunq\Model\Generated\Endpoint\BunqMeTabEntry;
+use bunq\Model\Generated\Endpoint\BunqMeTabResultInquiry;
+use bunq\Model\Generated\Endpoint\BunqMeTabResultResponse;
+use bunq\Model\Generated\Endpoint\BunqResponseBunqMeTabResultResponse;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
+use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Object\Amount;
 use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use bunq\Context\ApiContext;
 use Carbon\Carbon;
+use Faker\Test\Provider\PaymentTest;
+use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder;
 
@@ -36,6 +46,12 @@ class BunqService
     protected $storagePath;
 
     /**
+     * Bunq API mode
+     * @var bool
+     */
+    protected $bunqUseSandbox;
+
+    /**
      * BunqService constructor.
      *
      * @param $fundId
@@ -52,6 +68,7 @@ class BunqService
     ) {
         $this->storagePath = config('bunq.storage_path');
         $this->storageDriver = config('bunq.storage_driver');
+        $this->bunqUseSandbox = $bunqUseSandbox;
 
         if (!is_numeric($fundId) || $this->storageDriver == 'public') {
             if ($this->storageDriver == 'public') {
@@ -385,7 +402,7 @@ class BunqService
     }
 
     /**
-     * Check for new top ups.
+     * Check for new top-ups.
      *
      * @return void
      */
@@ -408,7 +425,10 @@ class BunqService
             /** @var FundTopUp $topUp */
             foreach ($topUps as $topUp) {
                 foreach ($payments as $payment) {
-                    if (strpos($payment->getDescription(), $topUp->code) === FALSE) {
+                    if (strpos(
+                        $payment->getDescription(),
+                        $topUp->code
+                        ) === FALSE) {
                         continue;
                     }
 
@@ -432,6 +452,131 @@ class BunqService
     }
 
     /**
+     * Get bunq ideal issuers from db (local db cache)
+     *
+     * @param bool $sandbox
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection
+     */
+    public static function getIdealIssuers($sandbox = false) {
+        return BunqIdealIssuer::query()->where([
+            'sandbox' => $sandbox
+        ])->get();
+    }
+
+    /**
+     * Get bunq ideal issuers list from bunq API
+     *
+     * @param bool $sandbox
+     * @return array
+     * @throws \Exception
+     */
+    private static function _getIdealIssuers($sandbox = false) {
+        $data = (new Client())->get(
+            join('', [
+                ForusBunqMeTabRequest::getApiUrl($sandbox),
+                "bunqme-merchant-directory-ideal"
+            ]), [
+                'headers' => [
+                    'X-Bunq-Client-Request-Id' => '',
+                    'X-Bunq-Language' => 'en_US',
+                ]
+            ]
+        );
+
+        if ($data->getStatusCode() == 200) {
+            try {
+                return json_decode(
+                    $data->getBody()->getContents()
+                )->Response[0]->IdealDirectory->country[0]->issuer;
+            } catch (\Exception $exception) {
+                throwException(new \Exception(
+                    "Error while parsing iDEAL issuers list.\n" .
+                    $exception->getMessage(), 503
+                ));
+
+                return [];
+            }
+        }
+
+        throw new \Exception(
+            "Error while parsing iDEAL issuers list.\n" .
+            "Api response code: " . $data->getStatusCode(), 503
+        );
+    }
+
+    /**
+     * @param bool $sandbox
+     * @return \Illuminate\Support\Collection
+     * @throws \Exception
+     */
+    public static function updateIdealIssuers(bool $sandbox) {
+        $issuers = collect(self::_getIdealIssuers($sandbox));
+
+        BunqIdealIssuer::query()
+            ->whereNotIn('bic', $issuers->pluck('bic'))
+            ->where('sandbox', $sandbox)->delete();
+
+        return $issuers->map(function($issuer) use ($sandbox) {
+            return BunqIdealIssuer::query()->firstOrCreate([
+                'bic'       => $issuer->bic,
+                'sandbox'   => $sandbox,
+            ])->update([
+                'name'      => $issuer->name,
+            ]);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection
+     * @throws \Exception
+     */
+    public static function updateIdealSandboxIssuers() {
+        return self::updateIdealIssuers(true);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection
+     * @throws \Exception
+     */
+    public static function updateIdealProductionIssuers() {
+        return self::updateIdealIssuers(false);
+    }
+
+    /**
+     * @param float $amount
+     * @param string $description
+     * @return ForusBunqMeTabRequest
+     */
+    public function makeBunqMeTabRequest(
+        float $amount,
+        string $description = ''
+    ) {
+        $amount = number_format($amount, 2, '.', '');
+        $monetaryAccount = MonetaryAccountBank::listing()->getValue()[0];
+
+        $bunqMeTabEntryId = BunqMeTab::create(
+            new BunqMeTabEntry(new Amount($amount, 'EUR'), $description),
+            $monetaryAccount->getId()
+        )->getValue();
+
+        return new ForusBunqMeTabRequest(
+            $this->bunqUseSandbox,
+            BunqMeTab::get(
+            $bunqMeTabEntryId,
+            $monetaryAccount->getId()
+        )->getValue());
+    }
+
+    public function getBunqMeTabRequest(
+        int $bunqMeTabEntryId
+    ) {
+        return BunqMeTab::get(
+            $bunqMeTabEntryId// ,
+            // MonetaryAccountBank::listing()->getValue()[0]->getId()
+        )->getValue();
+    }
+
+    /**
      * Get bunq costs.
      *
      * @param Carbon $fromDate
@@ -449,6 +594,95 @@ class BunqService
         $amount += ($fromDate->diffInMonths(new Carbon()) * 9.99);
 
         return $amount;
+    }
+
+    public static function getBunqMeTabsQueue(
+        Fund $fund
+    ) {
+        return $fund->bunq_me_tabs()->whereNotIn('status', [
+            'PAID', 'CANCELLED', 'EXPIRED'
+        ])->where('created_at', '>', now()->subDays(5));
+    }
+
+    public static function processBunqMeTabQueue(
+        Fund $fund
+    ) {
+        $queue = self::getBunqMeTabsQueue($fund)->get();
+
+        $queue = $queue->filter(function(\App\Models\BunqMeTab $bunqMeTab) {
+            if (($last_check_at = $bunqMeTab->last_check_at) == null) {
+                return true;
+            }
+
+            // first 15 minutes check once per minute
+            if ($bunqMeTab->created_at > now()->subMinutes(15)) {
+                return $last_check_at < now()->subMinute();
+            }
+
+            // between 15 and 30 minutes check once per 5 minutes
+            if ($bunqMeTab->created_at > now()->subMinutes(30)) {
+                return $last_check_at < now()->subMinutes(5);
+            }
+
+            // between 30 and 60 minutes check once per 10 minutes
+            if ($bunqMeTab->created_at > now()->subMinutes(60)) {
+                echo $last_check_at->format('H:i:s') . " --- " . now()->subMinutes(10)->format('H:i:s');
+                return $last_check_at < now()->subMinutes(10);
+            }
+
+            // between 1 and 5 hours check once per 30 minutes
+            if ($bunqMeTab->created_at > now()->subHour(5)) {
+                return $last_check_at < now()->subMinutes(30);
+            }
+
+            // between 5 and 10 hours check once per hour
+            if ($bunqMeTab->created_at > now()->subHour(10)) {
+                return $last_check_at < now()->subHour();
+            }
+
+            // between 10 and 24 hours check once per 2 hours
+            if ($bunqMeTab->created_at > now()->subDay()) {
+                return $last_check_at < now()->subHours(2);
+            }
+
+            // between 1 and 10 days check once per day
+            if ($bunqMeTab->created_at > now()->subDays(10)) {
+                return $last_check_at < now()->subDay();
+            }
+
+            // between 10 and 30 days check once per 5 days
+            if ($bunqMeTab->created_at > now()->subDays(30)) {
+                return $last_check_at < now()->subDays(5);
+            }
+
+            // between 1 and 12 months check once per month
+            if ($bunqMeTab->created_at > now()->subMonths(12)) {
+                return $last_check_at < now()->subMonth();
+            }
+
+            $bunqMeTab->update([
+                'status' => 'EXPIRED'
+            ]);
+
+            return false;
+        });
+
+        // load bunq context
+        if ($queue->count() == 0 || !$fund->getBunq()) {
+            return;
+        }
+
+        $queue->each(function (\App\Models\BunqMeTab $bunqMeTab) {
+            $status = BunqMeTabB::checkStatus($bunqMeTab->bunq_me_tab_id);
+
+            $bunqMeTab->update([
+                'last_check_at' => now(),
+                'status' => $status['amount_paid'] >= $bunqMeTab->amount ?
+                    'PAID' : $status['status'],
+            ]);
+
+            sleep(1);
+        });
     }
 
     /**

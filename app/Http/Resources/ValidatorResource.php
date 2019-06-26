@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\Validator;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class ValidatorResource
+ * @property Validator $resource
+ * @package App\Http\Resources
+ */
 class ValidatorResource extends Resource
 {
     /**
@@ -15,10 +20,8 @@ class ValidatorResource extends Resource
      */
     public function toArray($request)
     {
-        $recordRepo = app()->make('forus.services.record');
-
-        /** @var Validator $validator */
         $validator = $this->resource;
+        $recordRepo = app()->make('forus.services.record');
 
         return collect($validator)->only([
             'id', 'identity_address', 'organization_id'

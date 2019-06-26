@@ -2,8 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\FundProvider;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class FundProviderResource
+ * @property FundProvider $resource
+ * @package App\Http\Resources
+ */
 class FundProviderResource extends Resource
 {
     public static $load = [

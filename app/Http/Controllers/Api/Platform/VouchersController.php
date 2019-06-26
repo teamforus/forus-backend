@@ -10,7 +10,6 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
-use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
 
 class VouchersController extends Controller
@@ -52,7 +51,9 @@ class VouchersController extends Controller
 
         $this->authorize('reserve', $product);
 
-        $voucherExpireAt = $voucher->fund->end_date->gt($product->expire_at) ? $product->expire_at : $voucher->fund->end_date;
+        $voucherExpireAt = $voucher->fund->end_date->gt(
+            $product->expire_at
+        ) ? $product->expire_at : $voucher->fund->end_date;
 
         $voucher = Voucher::create([
             'identity_address'  => auth()->user()->getAuthIdentifier(),
@@ -133,24 +134,18 @@ class VouchersController extends Controller
         );
     }
 
+    /**
+     * @param VoucherToken $voucherToken
+     * @return array
+     * @throws \Exception
+     */
     public function destroy(
         VoucherToken $voucherToken
     ) {
-        $this->authorize('show', $voucherToken->voucher);
+        $this->authorize('destroy', $voucherToken->voucher);
 
-        $voucher = Voucher::query()->where([
-            'identity_address' => $voucherToken->voucher->identity_address
-        ])->where('parent_id', '<>', '')->first() ?? abort(404);
-
-        if(null !== VoucherTransaction::query()->where([
-            'voucher_id' => $voucherToken->voucher->id
-        ])->first())
-        {
-            abort(404);
-        }
-
-        $voucher->delete();
-
-        return compact('success');
+        return [
+            'success' => $voucherToken->voucher->delete() === true
+        ];
     }
 }
