@@ -6,6 +6,11 @@ use App\Models\Organization;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class OrganizationResource
+ * @property Organization $resource
+ * @package App\Http\Resources
+ */
 class OrganizationResource extends Resource
 {
     /**
@@ -16,7 +21,6 @@ class OrganizationResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Organization $organization */
         $organization = $this->resource;
 
         $ownerData = [];
@@ -31,7 +35,7 @@ class OrganizationResource extends Resource
             ])->toArray();
         }
 
-        if($organization->website_public){
+        if ($organization->website_public) {
             $website = ['website' => $organization->website ? : ''];
         }
 

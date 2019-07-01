@@ -2,9 +2,15 @@
 
 namespace App\Http\Resources;
 
+use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaSize;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class MediaCompactResource
+ * @property Media $resource
+ * @package App\Http\Resources
+ */
 class MediaCompactResource extends Resource
 {
     /**

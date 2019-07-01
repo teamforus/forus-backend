@@ -2,8 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\FundCriterion;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class FundCriterionResource
+ * @property FundCriterion $resource
+ * @package App\Http\Resources
+ */
 class FundCriterionResource extends Resource
 {
     /**

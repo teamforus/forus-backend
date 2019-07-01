@@ -2,8 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\PrevalidationRecord;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class PrevalidationRecordResource
+ * @property PrevalidationRecord $resource
+ * @package App\Http\Resources
+ */
 class PrevalidationRecordResource extends Resource
 {
     /**

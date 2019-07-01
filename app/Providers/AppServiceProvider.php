@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         setlocale(LC_ALL, $locale);
+
         Carbon::setLocale($locale);
     }
 

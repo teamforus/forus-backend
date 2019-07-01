@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\Voucher;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class VoucherResource
+ * @property Voucher $resource
+ * @package App\Http\Resources
+ */
 class VoucherResource extends Resource
 {
     /**
@@ -44,10 +49,8 @@ class VoucherResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Voucher $voucher */
         $voucher = $this->resource;
-
-        $fund = $voucher->fund;
+        $fund = $this->resource->fund;
 
         if ($voucher->type == 'regular') {
             $amount = $voucher->amount_available_cached;

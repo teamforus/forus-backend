@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\Role;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class RoleResource
+ * @property Role $resource
+ * @package App\Http\Resources
+ */
 class RoleResource extends Resource
 {
     /**
@@ -15,10 +20,7 @@ class RoleResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Role $role */
-        $role = $this->resource;
-
-        return collect($role)->only([
+        return collect($this->resource)->only([
             'id', 'key', 'name'
         ]);
     }
