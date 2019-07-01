@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\Office;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class OfficeResource
+ * @property Office $resource
+ * @package App\Http\Resources
+ */
 class OfficeResource extends Resource
 {
     /**
@@ -15,7 +20,6 @@ class OfficeResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Office $office */
         $office = $this->resource;
         $organization = $office->organization;
 

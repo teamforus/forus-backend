@@ -13,7 +13,9 @@ class ChangeWebsiteColumnOrganizationTable extends Migration
      */
     public function up()
     {
-        DB::statement("ALTER TABLE organizations MODIFY website VARCHAR(200) DEFAULT '';");
+        Schema::table('organizations', function (Blueprint $table) {
+            $table->string('website', 200)->default('')->change();
+        });
     }
 
     /**
@@ -23,6 +25,8 @@ class ChangeWebsiteColumnOrganizationTable extends Migration
      */
     public function down()
     {
-        DB::statement("ALTER TABLE organizations MODIFY website VARCHAR(200) NOT NULL DEFAULT '';");
+        Schema::table('organizations', function (Blueprint $table) {
+            $table->string('website', 200)->default('')->nullable()->change();
+        });
     }
 }

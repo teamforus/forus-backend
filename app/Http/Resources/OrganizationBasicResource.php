@@ -7,6 +7,7 @@ use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class OrganizationBasicResource
+ * @property Organization $resource
  * @package App\Http\Resources
  */
 class OrganizationBasicResource extends Resource
@@ -19,7 +20,6 @@ class OrganizationBasicResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Organization $organization */
         $organization = $this->resource;
 
         return collect($organization)->only([

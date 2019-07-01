@@ -2,9 +2,15 @@
 
 namespace App\Http\Resources;
 
+use App\Services\BunqService\Models\BunqIdealIssuer;
 use Illuminate\Http\Resources\Json\Resource;
 
-class OrganizationTypeResource extends Resource
+/**
+ * Class BunqIdealIssuerResource
+ * @property BunqIdealIssuer $resource
+ * @package App\Http\Resources
+ */
+class BunqIdealIssuerResource extends Resource
 {
     /**
      * Transform the resource into an array.
@@ -15,7 +21,7 @@ class OrganizationTypeResource extends Resource
     public function toArray($request)
     {
         return collect($this->resource)->only([
-            'key', 'value'
-        ])->toArray();
+            'id', 'name', 'bic',
+        ]);
     }
 }

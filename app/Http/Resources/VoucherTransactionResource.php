@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class VoucherTransactionResource
+ * @property VoucherTransaction $resource
+ * @package App\Http\Resources
+ */
 class VoucherTransactionResource extends Resource
 {
     /**
@@ -15,26 +20,25 @@ class VoucherTransactionResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var VoucherTransaction $voucherTransaction */
-        $voucherTransaction = $this->resource;
+        $transaction = $this->resource;
 
-        return collect($voucherTransaction)->only([
+        return collect($transaction)->only([
             "id", "organization_id", "product_id", "created_at",
             "updated_at", "address", "state", "payment_id",
             'created_at_locale', 'created_at_locale'
         ])->merge([
-            'amount' => currency_format($voucherTransaction->amount),
-            'timestamp' => $voucherTransaction->created_at->timestamp,
-            "organization" => collect($voucherTransaction->provider)->only([
+            'amount' => currency_format($transaction->amount),
+            'timestamp' => $transaction->created_at->timestamp,
+            "organization" => collect($transaction->provider)->only([
                 "id", "name"
             ])->merge([
-                'logo' => new MediaResource($voucherTransaction->provider->logo),
+                'logo' => new MediaResource($transaction->provider->logo),
             ]),
-            "product" => new ProductResource($voucherTransaction->product),
-            "fund" => collect($voucherTransaction->voucher->fund)->only([
+            "product" => new ProductResource($transaction->product),
+            "fund" => collect($transaction->voucher->fund)->only([
                 "id", "name", "organization_id"
             ])->merge([
-                'logo' => new MediaResource($voucherTransaction->voucher->fund->logo),
+                'logo' => new MediaResource($transaction->voucher->fund->logo),
             ]),
         ])->toArray();
     }

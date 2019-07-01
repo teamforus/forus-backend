@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\BunqMeTab;
 use App\Models\Employee;
 use App\Models\Office;
 use App\Models\FundProvider;
@@ -11,6 +12,7 @@ use App\Models\Validator;
 use App\Models\ValidatorRequest;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
+use App\Policies\BunqMeTabPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
@@ -48,8 +50,9 @@ class AuthServiceProvider extends ServiceProvider
         Product::class                  => ProductPolicy::class,
         Voucher::class                  => VoucherPolicy::class,
         Employee::class                 => EmployeePolicy::class,
-        Organization::class             => OrganizationPolicy::class,
+        BunqMeTab::class                => BunqMeTabPolicy::class,
         Validator::class                => ValidatorPolicy::class,
+        Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         ValidatorRequest::class         => ValidatorRequestPolicy::class,

@@ -105,4 +105,18 @@ class VoucherPolicy
 
         return false;
     }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function destroy(
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return $this->show($identity_address, $voucher) &&
+            $voucher->parent_id != null &&
+            $voucher->transactions->count() == 0;
+    }
 }

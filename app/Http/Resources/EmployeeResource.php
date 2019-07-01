@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\Employee;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class EmployeeResource
+ * @property Employee $resource
+ * @package App\Http\Resources
+ */
 class EmployeeResource extends Resource
 {
     /**
@@ -15,9 +20,7 @@ class EmployeeResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Employee$employee */
         $employee = $this->resource;
-
         $recordRepo = app()->make('forus.services.record');
 
         return collect($employee)->only([

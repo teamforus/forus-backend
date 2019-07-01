@@ -24,13 +24,26 @@ class FundProviderPolicy
     /**
      * @param $identity_address
      * @param Organization $organization
+     * @param Fund|null $fund
      * @return bool
      */
     public function indexSponsor(
         $identity_address,
-        Organization $organization
+        Organization $organization,
+        Fund $fund = null
     ) {
-        return $organization->identityCan($identity_address, [
+        if ($fund && $organization ? (
+            $fund->organization_id != $organization->id
+        ) : false) {
+            return false;
+        }
+
+        if ($fund && $fund->public) {
+            return true;
+        }
+
+        return $identity_address &&
+            $organization->identityCan($identity_address, [
             'view_finances', 'manage_providers'
         ], false);
     }
@@ -79,28 +92,33 @@ class FundProviderPolicy
 
     /**
      * @param $identity_address
-     * @param FundProvider $organizationFund
+     * @param FundProvider $fundProvider
      * @param Organization $organization
      * @param Fund $fund
      * @return bool
      */
     public function showSponsor(
         $identity_address,
-        FundProvider $organizationFund,
+        FundProvider $fundProvider,
         Organization $organization,
         Fund $fund
     ) {
-        if ($organization->id != $organizationFund->fund->organization_id) {
+        if ($organization->id != $fundProvider->fund->organization_id) {
             return false;
         }
 
-        if ($fund->id != $organizationFund->fund_id) {
+        if ($fund->id != $fundProvider->fund_id) {
             return false;
         }
 
-        return $organizationFund->fund->organization->identityCan($identity_address, [
-            'manage_funds', 'view_finances'
-        ], false);
+        if ($fund->public) {
+            return true;
+        }
+
+        return $identity_address && $organization->identityCan(
+            $identity_address, [
+                'manage_funds', 'view_finances'
+            ], false);
     }
 
     /**

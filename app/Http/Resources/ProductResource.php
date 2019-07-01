@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class ProductResource
+ * @property Product $resource
+ * @package App\Http\Resources
+ */
 class ProductResource extends Resource
 {
     public static $load = [
@@ -31,7 +36,6 @@ class ProductResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Product $product */
         $product = $this->resource;
         $suppliedFundIds = $product->organization->supplied_funds_approved;
 
