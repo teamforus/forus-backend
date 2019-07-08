@@ -35,7 +35,7 @@ class FundsController extends Controller
     ) {
         $this->authorize('index', [Fund::class, $organization]);
 
-        if (!auth()->id()) {
+        if (auth()->id()) {
             return FundResource::collection($organization->funds);
         }
 
