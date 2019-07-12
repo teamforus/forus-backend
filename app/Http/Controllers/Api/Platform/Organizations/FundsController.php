@@ -129,7 +129,7 @@ class FundsController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        if ($fund->state == 'waiting') {
+        if ($fund->state == Fund::STATE_WAITING) {
             $params = $request->only([
                 'name', 'state', 'start_date', 'end_date', 'notification_amount'
             ]);

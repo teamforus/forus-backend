@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
 use App\Exports\VoucherTransactionsProviderExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexVouchersRequest;
 use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
@@ -14,13 +14,13 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param IndexTransactionsRequest $request
+     * @param IndexVouchersRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        IndexTransactionsRequest $request,
+        IndexVouchersRequest $request,
         Organization $organization
     ) {
         $this->authorize('show', $organization);
@@ -36,7 +36,7 @@ class TransactionsController extends Controller
     }
 
     /**
-     * @param IndexTransactionsRequest $request
+     * @param IndexVouchersRequest $request
      * @param Organization $organization
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -44,7 +44,7 @@ class TransactionsController extends Controller
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function export(
-        IndexTransactionsRequest $request,
+        IndexVouchersRequest $request,
         Organization $organization
     ) {
         $this->authorize('index', Organization::class);

@@ -21,13 +21,14 @@ class PermissionsTableSeeder extends Seeder
             'manage_offices'        => "Manage offices",
             'manage_validators'     => "Manage validators",
             'manage_employees'      => "Manage employees",
+            'manage_vouchers'       => "Manage vouchers",
             'view_finances'         => "See financial overview",
             'validate_records'      => "Validate records",
             'scan_vouchers'         => "Scan vouchers",
         ];
 
         collect($permissions)->each(function($name, $key) {
-            Permission::create(compact('name', 'key'));
+            Permission::query()->create(compact('name', 'key'));
         });
     }
 }

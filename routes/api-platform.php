@@ -325,8 +325,33 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
         "Api\Platform\Organizations\Sponsor\TransactionsController", [
+            'only' => [
+                'index', 'show'
+            ],
             'parameters' => [
                 'transactions' => 'transaction_address',
+            ]
+        ]
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/{voucher_id}/send',
+        "Api\Platform\Organizations\Sponsor\VouchersController@sendByEmail"
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher_id}/assign',
+        "Api\Platform\Organizations\Sponsor\VouchersController@assign"
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/vouchers',
+        "Api\Platform\Organizations\Sponsor\VouchersController", [
+            'only' => [
+                'index', 'show', 'store'
+            ],
+            'parameters' => [
+                'vouchers' => 'voucher_id',
             ]
         ]
     );

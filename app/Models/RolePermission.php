@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use \Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\EloquentModel;
 
 /**
  * Class RolePermission
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class RolePermission extends Model
 {
+    use EloquentModel;
+
     protected $fillable = [
         'role_id', 'permission_id'
     ];

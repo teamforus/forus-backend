@@ -38,9 +38,7 @@ class VouchersController extends Controller
     ) {
         $this->authorize('store', Voucher::class);
 
-        /** @var Product $product */
-        /** @var Voucher $voucher */
-        $product = Product::query()->find($request->input('product_id'));
+        $product = Product::find($request->input('product_id'));
 
         /** @var VoucherToken $voucherToken */
         $voucherToken = VoucherToken::query()->where([

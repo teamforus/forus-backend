@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\Vouchers\VoucherCreated;
 use App\Services\BunqService\BunqService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -49,6 +50,18 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class Fund extends Model
 {
     use HasMedia;
+
+    const STATE_ACTIVE = 'active';
+    const STATE_CLOSED = 'closed';
+    const STATE_PAUSED = 'paused';
+    const STATE_WAITING = 'waiting';
+
+    const STATES = [
+        self::STATE_ACTIVE,
+        self::STATE_CLOSED,
+        self::STATE_PAUSED,
+        self::STATE_WAITING,
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -411,9 +424,10 @@ class Fund extends Model
         /** @var self $fund */
         foreach($funds as $fund) {
 
-            if ($fund->start_date->startOfDay()->isPast() && $fund->state == 'paused') {
+            if ($fund->start_date->startOfDay()->isPast() &&
+                $fund->state == self::STATE_PAUSED) {
                 $fund->update([
-                    'state' => 'active'
+                    'state' => self::STATE_ACTIVE
                 ]);
 
                 $organizations = Organization::query()->whereIn(
@@ -433,9 +447,10 @@ class Fund extends Model
                 }
             }
 
-            if ($fund->end_date->endOfDay()->isPast() && $fund->state != 'closed') {
+            if ($fund->end_date->endOfDay()->isPast() &&
+                $fund->state != self::STATE_CLOSED) {
                 $fund->update([
-                    'state' => 'closed'
+                    'state' => self::STATE_CLOSED
                 ]);
             }
         }
@@ -495,22 +510,22 @@ class Fund extends Model
      */
     public static function calculateUsersQueue()
     {
-        $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
-                return $query->where('is_configured', true);
-            })
-            ->whereIn('state', ['active', 'paused'])
-            ->get();
+        /** @var Collection|Fund[] $funds */
+        $funds = self::query()->whereHas('fund_config', function (
+            Builder $query
+        ) {
+            return $query->where('is_configured', true);
+        })->whereIn('state', [
+            self::STATE_ACTIVE,
+            self::STATE_PAUSED,
+        ])->get();
 
         if ($funds->count() == 0) {
             return null;
         }
 
-        /** @var self $fund */
         foreach($funds as $fund) {
-
             $organization = $fund->organization;
-
             $sponsorCount = $organization->employees->count() + 1;
 
             $providers = $fund->providers()->where([
@@ -522,9 +537,9 @@ class Fund extends Model
                 return $fundProvider->organization->employees->count() + 1;
             })->sum();
 
-            if($fund->state == 'active'){
+            if ($fund->state == self::STATE_ACTIVE) {
                 $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
-            }else{
+            } else {
                 $requesterCount = 0;
             }
 
@@ -624,5 +639,30 @@ class Fund extends Model
             'share_url'                 => $tabRequest->getShareUrl(),
             'issuer_authentication_url' => $issuer_auth_url
         ]);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param float|null $amount
+     * @param Carbon|null $expire_at
+     * @param string|null $note
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function makeVoucher(
+        string $identity_address = null,
+        float $amount = null,
+        Carbon $expire_at = null,
+        string $note = null
+    ) {
+        $amount = $amount ?: self::amountForIdentity($this, $identity_address);
+        $expire_at = $expire_at ?: $this->end_date;
+
+        $voucher = $this->vouchers()->create(compact(
+            'identity_address', 'amount', 'expire_at', 'note'
+        ));
+
+        VoucherCreated::dispatch($voucher);
+
+        return $voucher;
     }
 }

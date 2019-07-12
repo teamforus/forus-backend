@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Events\Vouchers\VoucherAssigned;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 
 /**
  * Class Voucher
@@ -14,11 +17,15 @@ use Illuminate\Database\Eloquent\Collection;
  * @property integer $identity_address
  * @property string $amount
  * @property string $type
+ * @property string|null $note
  * @property float $amount_available
  * @property float $amount_available_cached
+ * @property boolean $is_granted
  * @property Fund $fund
  * @property Product|null $product
  * @property Voucher|null $parent
+ * @property VoucherToken $token_without_confirmation
+ * @property VoucherToken $token_with_confirmation
  * @property Collection $tokens
  * @property Collection $transactions
  * @property Collection $product_vouchers
@@ -35,7 +42,8 @@ class Voucher extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id', 'expire_at'
+        'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
+        'expire_at', 'note',
     ];
 
     /**
@@ -111,6 +119,24 @@ class Voucher extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function token_without_confirmation() {
+        return $this->hasOne(VoucherToken::class)->where([
+            'need_confirmation' => false
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function token_with_confirmation() {
+        return $this->hasOne(VoucherToken::class)->where([
+            'need_confirmation' => true
+        ]);
+    }
+
+    /**
      * The voucher is expired
      *
      * @return bool
@@ -119,7 +145,12 @@ class Voucher extends Model
         return !!$this->expire_at->isPast();
     }
 
-    public function sendToEmail() {
+    /**
+     * @param string|null $identity_address
+     */
+    public function sendToEmail(
+        string $identity_address = null
+    ) {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -132,7 +163,7 @@ class Voucher extends Model
         }
 
         resolve('forus.services.mail_notification')->sendVoucher(
-            auth()->user()->getAuthIdentifier(),
+            $identity_address ?: $this->identity_address,
             $fund_product_name,
             $voucherToken->getQrCodeUrl()
         );
@@ -232,4 +263,90 @@ class Voucher extends Model
         }
     }
 
+    /**
+     * @param Request $request
+     * @return Builder
+     */
+    public static function search(
+        Request $request
+    ) {
+        $query = self::query();
+
+        if (($granted = $request->input('granted', null)) !== null) {
+            if (!$granted) {
+                $query->whereNull('identity_address');
+            } else {
+                $query->whereNotNull('identity_address');
+            }
+        }
+
+        if ($request->has('amount_min')) {
+            $query->where('amount', '>=', $request->input('amount_min'));
+        }
+
+        if ($request->has('amount_max')) {
+            $query->where('amount', '<=', $request->input('amount_max'));
+        }
+
+        if ($request->has('from')) {
+            $query->where('created_at', '>=', Carbon::parse(
+                $request->input('from'))->startOfDay()
+            );
+        }
+
+        if ($request->has('to')) {
+            $query->where('created_at', '<=', Carbon::parse(
+                $request->input('to'))->endOfDay()
+            );
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return Builder
+     */
+    public static function searchSponsor(
+        Request $request,
+        Organization $organization,
+        Fund $fund = null
+    ) {
+        $query = self::search(
+            $request
+        )->whereHas('fund', function(Builder $query) use (
+            $organization, $fund
+        ) {
+            $query->where('organization_id', $organization->id);
+
+            if ($fund) {
+                $query->where('id', $fund->id);
+            }
+        });
+
+        return $query;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsGrantedAttribute() {
+        return !empty($this->identity_address);
+    }
+
+    /**
+     * Assign voucher to identity
+     *
+     * @param $identity_address
+     * @return $this
+     */
+    public function assignToIdentity(string $identity_address) {
+        $this->update(compact('identity_address'));
+
+        VoucherAssigned::dispatch($this);
+
+        return $this;
+    }
 }

@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Implementation;
 use App\Models\Prevalidation;
 use App\Models\Product;
+use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Services\MediaService\Models\Media;
@@ -78,6 +79,12 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('transaction_address', function ($value) {
             return VoucherTransaction::query()->where([
                     'address' => $value
+                ])->first() ?? abort(404);
+        });
+
+        $router->bind('voucher_id', function ($value) {
+            return Voucher::query()->where([
+                    'id' => $value
                 ])->first() ?? abort(404);
         });
 
