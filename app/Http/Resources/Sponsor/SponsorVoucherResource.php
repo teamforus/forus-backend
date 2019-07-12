@@ -25,7 +25,7 @@ class SponsorVoucherResource extends Resource
             $voucher->token_without_confirmation->address ?? null;
 
         return array_merge(collect($voucher)->only([
-            "id", 'amount',
+            "id", 'amount', 'note',
         ])->toArray(), [
             'is_granted' => $voucher->is_granted,
             'address' => $address,

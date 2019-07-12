@@ -326,6 +326,10 @@ class Voucher extends Model
             }
         });
 
+        if ($request->has('q') && $q = $request->input('q')) {
+            $query->where('note', 'LIKE', "%{$q}%");
+        }
+
         return $query;
     }
 
