@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
-use App\Events\Vouchers\VoucherCreated;
 use App\Http\Requests\Api\Platform\Funds\StoreIdealBunqMeRequestRequest;
 use App\Http\Resources\BunqIdealIssuerResource;
 use App\Http\Resources\BunqMeIdealRequestResource;

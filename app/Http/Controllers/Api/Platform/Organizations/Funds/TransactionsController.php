@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexVouchersRequest;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -14,14 +14,14 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param IndexVouchersRequest $request
+     * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        IndexVouchersRequest $request,
+        IndexTransactionsRequest $request,
         Organization $organization,
         Fund $fund
     ) {

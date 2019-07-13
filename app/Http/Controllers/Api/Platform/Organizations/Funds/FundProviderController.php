@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundProviderRequest;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexVouchersRequest;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\FundProviderResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Fund;
@@ -342,7 +342,7 @@ class FundProviderController extends Controller
     }
 
     /**
-     * @param IndexVouchersRequest $request
+     * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $organizationFund
@@ -350,7 +350,7 @@ class FundProviderController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function transactions(
-        IndexVouchersRequest $request,
+        IndexTransactionsRequest $request,
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund
@@ -373,7 +373,7 @@ class FundProviderController extends Controller
 
 
     /**
-     * @param IndexVouchersRequest $request
+     * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $organizationFund
@@ -383,7 +383,7 @@ class FundProviderController extends Controller
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function transactionsExport(
-        IndexVouchersRequest $request,
+        IndexTransactionsRequest $request,
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund

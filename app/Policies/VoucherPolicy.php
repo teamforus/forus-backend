@@ -29,7 +29,7 @@ class VoucherPolicy
     public function index(
         string $identity_address
     ) {
-        return !empty($identity_address) && false;
+        return !empty($identity_address);
     }
 
     /**
