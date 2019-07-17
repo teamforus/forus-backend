@@ -314,11 +314,11 @@ class Voucher extends Model
         Organization $organization,
         Fund $fund = null
     ) {
-        $query = self::search(
-            $request
-        )->whereHas('fund', function(Builder $query) use (
-            $organization, $fund
-        ) {
+        $query = self::search($request);
+
+        $query->whereNull('parent_id')->whereHas('fund', function(
+            Builder $query
+        ) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
 
             if ($fund) {

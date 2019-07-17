@@ -72,9 +72,10 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ) {
-        return $organization->identityCan($identity_address, [
+        return is_null($voucher->parent_id) && $organization->identityCan(
+            $identity_address, [
             'manage_vouchers'
-        ]) && $voucher->fund->organization_id == $organization->id;
+        ]) && ($voucher->fund->organization_id == $organization->id);
     }
 
     /**

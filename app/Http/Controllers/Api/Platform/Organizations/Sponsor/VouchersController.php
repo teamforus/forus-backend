@@ -34,7 +34,7 @@ class VouchersController extends Controller
             Voucher::searchSponsor(
                 $request,
                 $organization,
-                Fund::find($request->get('fund_id')),
+                Fund::find($request->get('fund_id'))
             )->paginate(
                 $request->input('per_page', 25)
             )
