@@ -58,7 +58,7 @@ class VoucherPolicy
         Fund $fund
     ) {
         return $this->indexSponsor($identity_address, $organization) &&
-            $fund->organization_id == $fund->id;
+            $fund->organization_id == $organization->id;
     }
 
     /**
