@@ -21,17 +21,17 @@ class RolePermissionsTableSeeder extends Seeder
             "admin" => [
                 "manage_funds", "manage_providers", "manage_products",
                 "manage_offices", "view_finances", "validate_records",
-                "scan_vouchers", "manage_provider_funds"
+                "scan_vouchers", "manage_provider_funds", "manage_vouchers",
             ],
             "finance" => [
-                "view_finances"
+                "view_finances", "manage_vouchers",
             ],
             "validation" => [
                 "validate_records"
             ],
             "policy_officer" => [
                 "manage_funds", 'manage_providers', 'manage_products',
-                "manage_offices", "manage_provider_funds"
+                "manage_offices", "manage_provider_funds",
             ],
             "operation_officer" => [
                 "scan_vouchers"

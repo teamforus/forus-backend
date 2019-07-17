@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
-use App\Events\Vouchers\VoucherCreated;
 use App\Http\Requests\Api\Platform\Funds\StoreIdealBunqMeRequestRequest;
 use App\Http\Resources\BunqIdealIssuerResource;
 use App\Http\Resources\BunqMeIdealRequestResource;
@@ -33,7 +32,7 @@ class FundsController extends Controller
      */
     public function show(Fund $fund)
     {
-        if ($fund->state != 'active') {
+        if ($fund->state != Fund::STATE_ACTIVE) {
             return abort(404);
         }
 
@@ -52,15 +51,7 @@ class FundsController extends Controller
     ) {
         $this->authorize('apply', $fund);
 
-        $voucher = $fund->vouchers()->create([
-            'amount' => Fund::amountForIdentity($fund, auth()->id()),
-            'identity_address' => auth()->user()->getAuthIdentifier(),
-            'expire_at' => $fund->end_date
-        ]);
-
-        VoucherCreated::dispatch($voucher);
-
-        return new VoucherResource($voucher);
+        return new VoucherResource($fund->makeVoucher(auth()->id()));
     }
 
     /**

@@ -51,12 +51,10 @@ class RecordController extends Controller
 
     /**
      * Get record
-     * @param Request $request
      * @param int $recordId
      * @return array
      */
     public function show(
-        Request $request,
         int $recordId
     ) {
         $identity = auth()->user()->getAuthIdentifier();
@@ -104,13 +102,11 @@ class RecordController extends Controller
 
     /**
      * Delete record
-     * @param Request $request
      * @param int $recordId
      * @return array
      * @throws \Exception
      */
     public function destroy(
-        Request $request,
         int $recordId
     ) {
         $identity = auth()->user()->getAuthIdentifier();

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -33,6 +34,84 @@ class VoucherPolicy
 
     /**
      * @param string $identity_address
+     * @param Organization $organization
+     * @return mixed
+     */
+    public function indexSponsor(
+        string $identity_address,
+        Organization $organization
+    ) {
+        return $organization->identityCan($identity_address, [
+            'manage_vouchers'
+        ]);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return bool
+     */
+    public function storeSponsor(
+        string $identity_address,
+        Organization $organization,
+        Fund $fund
+    ) {
+        return $this->indexSponsor($identity_address, $organization) &&
+            $fund->organization_id == $organization->id;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function showSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ) {
+        return is_null($voucher->parent_id) && $organization->identityCan(
+            $identity_address, [
+            'manage_vouchers'
+        ]) && ($voucher->fund->organization_id == $organization->id);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function assignSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ) {
+        return $organization->identityCan($identity_address, [
+            'manage_vouchers'
+        ]) && (
+            $voucher->fund->organization_id == $organization->id
+        ) && !$voucher->is_granted;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function sendByEmailSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ) {
+        return $this->assignSponsor($identity_address, $voucher, $organization);
+    }
+
+    /**
+     * @param string $identity_address
      * @return bool
      */
     public function store(
@@ -50,10 +129,7 @@ class VoucherPolicy
         string $identity_address,
         Voucher $voucher
     ) {
-        return strcmp(
-            $identity_address,
-            $voucher->identity_address
-            ) == 0;
+        return strcmp($identity_address, $voucher->identity_address) == 0;
     }
 
     /**
@@ -73,7 +149,7 @@ class VoucherPolicy
             ));
         }
 
-        if ($voucher->fund->state != 'active') {
+        if ($voucher->fund->state != Fund::STATE_ACTIVE) {
             throw new AuthorizationException(trans(
                 'validation.voucher.fund_not_active'
             ));

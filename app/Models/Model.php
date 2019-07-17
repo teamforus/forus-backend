@@ -2,20 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Traits\EloquentModel;
+
 /**
  * Class Model
  * @property string $created_at_locale
  * @property string $updated_at_locale
- * @method static static find($id, $columns = ['*'])
- * @method static static make($attributes = array())
- * @method static static create($attributes = array())
- * @method static static findOrFail($id, $columns = array())
- * @method static static findOrNew($id, $columns = array())
- * @method static static firstOrNew($id, $columns = array())
  * @package App\Models
  */
 class Model extends \Illuminate\Database\Eloquent\Model
 {
+    use EloquentModel;
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);

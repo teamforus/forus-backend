@@ -35,7 +35,7 @@ class FundResource extends Resource
             return $carry + ($organization->employees->count() + 1);
         }, 0);
 
-        if ($fund->state == 'active') {
+        if ($fund->state == Fund::STATE_ACTIVE) {
             $requesterCount = $fund->vouchers->where(
                 'parent_id', '=', null
             )->count();
