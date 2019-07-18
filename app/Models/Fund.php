@@ -41,6 +41,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property Collection|Validator[] $validators
  * @property Collection|Organization[] $provider_organizations
  * @property Collection|Organization[] $provider_organizations_approved
+ * @property Collection|Organization[] $provider_organizations_declined
+ * @property Collection|Organization[] $provider_organizations_pending
  * @property Carbon $start_date
  * @property Carbon $end_date
  * @property Carbon $created_at
@@ -231,6 +233,26 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         )->where('fund_providers.state', 'approved');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_declined() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where('fund_providers.state', 'declined');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_pending() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where('fund_providers.state', 'pending');
     }
 
     /**

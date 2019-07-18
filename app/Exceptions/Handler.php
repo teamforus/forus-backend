@@ -4,6 +4,10 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 class Handler extends ExceptionHandler
 {
@@ -31,8 +35,9 @@ class Handler extends ExceptionHandler
      *
      * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
      *
-     * @param  \Exception  $exception
-     * @return void
+     * @param Exception $exception
+     * @return mixed|void
+     * @throws Exception
      */
     public function report(Exception $exception)
     {
@@ -42,12 +47,41 @@ class Handler extends ExceptionHandler
     /**
      * Render an exception into an HTTP response.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $exception
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $request
+     * @param Exception $exception
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function render($request, Exception $exception)
     {
         return parent::render($request, $exception);
+    }
+
+    /**
+     * Convert the given exception to an array.
+     *
+     * @param  \Exception  $e
+     * @return array
+     */
+    protected function convertExceptionToArray(Exception $e)
+    {
+        if ($e->getMessage() instanceof Collection) {
+            $message = collect($e->getMessage())->toArray();
+
+            $data = config('app.debug') ? $message :
+                $this->isHttpException($e) ? $message : [
+                'message' => 'Server Error'
+            ];
+
+            return array_merge(config('app.debug') ? [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => collect($e->getTrace())->map(function ($trace) {
+                    return Arr::except($trace, ['args']);
+                })->all(),
+            ] : [], $data);
+        }
+
+        return parent::convertExceptionToArray($e);
     }
 }
