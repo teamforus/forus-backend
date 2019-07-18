@@ -35,18 +35,20 @@ class AwsSecretServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->client = new SecretsManagerClient([
-            'profile' => 'default',
-            'version' => 'latest',
-            'region' => 'eu-west-1'
-        ]);
+        if ($this->app->environment() === 'production') {
+            $this->client = new SecretsManagerClient([
+                'profile' => 'default',
+                'version' => 'latest',
+                'region' => 'eu-west-1'
+            ]);
 
-        try {
-            $this->secrets = $this->client->listSecrets([]);
+            try {
+                $this->secrets = $this->client->listSecrets([]);
 
-            $this->checkSecrets();
+                $this->checkSecrets();
+            }
+            catch (AwsException $e) {}
         }
-        catch (AwsException $e) {}
     }
 
     /**
