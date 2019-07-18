@@ -57,13 +57,9 @@ class AwsSecretServiceProvider extends ServiceProvider
     private function checkSecrets()
     {
         foreach ($this->configs as $config) {
-            $value = config($config);
-
-            if(strpos($value, 'aws:')) {
-                $secretIdToUse = explode(':', $value);
-
+            if ($secretName = config('forus.aws.secret_names.' . $config)) {
                 foreach ($this->secrets['SecretList'] as $secret) {
-                    if ($secret['Name'] === $secretIdToUse[1]) {
+                    if ($secret['Name'] === $secretName) {
                         $this->setPasswords($config, $secret['Name']);
                     }
                 }
