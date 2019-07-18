@@ -183,6 +183,8 @@ return [
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
         App\Services\ApiRequestService\ApiRequestServiceProvider::class,
 
+        App\Services\AwsSecretService\AwsSecretServiceProvider::class,
+
 
         /*
          * Forus Service Providers
