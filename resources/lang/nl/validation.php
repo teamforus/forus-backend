@@ -127,7 +127,7 @@ return [
     'prevalidation_missing_required_keys' => 'Het bestand bevat niet alle verplichte velden.',
     'prevalidation_invalid_record_key' => 'Een veldtype dat is opgenomen in het bestand bestaat niet.',
     'validation.prevalidation_invalid_type_primary_email' => 'Het primaire e-mailadres veld is een systeemveld en kan hier niet gebruikt worden.',
-    'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',	
+    'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',
     'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'attributes' => [
@@ -140,7 +140,7 @@ return [
         'phone' => 'telefoonnummer',
         'iban' => 'IBAN-nummer',
 	'btw' => 'BTW-nummer',
-	'kvk' => 'KvK-nummer',    
+	'kvk' => 'KvK-nummer',
         'code' => 'activatiecode',
 	'note' => 'notitie',
 	'amount' => 'hoeveelheid',
@@ -158,5 +158,6 @@ return [
 	'start_date' => 'startdatum',
 	'end_date' => 'einddatum',
     ],
+    'owner_cant_be_employee' => 'De aanbieder kan niet toegevoegd worden als medewerker'
 
 ];
