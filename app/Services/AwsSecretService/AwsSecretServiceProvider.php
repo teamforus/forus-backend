@@ -79,7 +79,7 @@ class AwsSecretServiceProvider extends ServiceProvider
             'SecretId' => $secretId
         ]);
 
-        if(isset($result['SecretString'])) {
+        if(isset($secretValue['SecretString'])) {
             $secret = json_decode($secretValue['SecretString']);
         }
         else {
