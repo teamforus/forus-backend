@@ -5,6 +5,6 @@
  */
 return [
     'secret_names' => [
-        'database.connections.mysql.password' => 'prod/db/mysql'
+        'database_connections_mysql_password' => 'prod/db/mysql'
     ]
 ];

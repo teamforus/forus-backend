@@ -25,7 +25,7 @@ class AwsSecretServiceProvider extends ServiceProvider
      * @var array $configs
      */
     private $configs = [
-        'database.connections.mysql.password'
+        'database_connections_mysql_password'
     ];
 
     /**
@@ -85,6 +85,8 @@ class AwsSecretServiceProvider extends ServiceProvider
         else {
             $secret = json_decode(base64_decode($secretValue['SecretBinary']));
         }
+
+        $config = str_replace('_', '.', $config);
 
         config([$config => $secret['password']]);
     }
