@@ -174,25 +174,6 @@ class FundsController extends Controller
         $nth = $request->input('nth', 1);
         $product_category_id = $request->input('product_category');
 
-        $rangeBetween = function(Carbon $startDate, Carbon $endDate, $countDates) {
-            $countDates--;
-            $dates = collect();
-            $diffBetweenDates = $startDate->diffInDays($endDate);
-
-            $countDates = min($countDates, $diffBetweenDates);
-            $interval = $diffBetweenDates / $countDates;
-
-            if ($diffBetweenDates > 1) {
-                for ($i = 0; $i < $countDates; $i++) {
-                    $dates->push($startDate->copy()->addDays($i * $interval));
-                }
-            }
-
-            $dates->push($endDate);
-
-            return $dates;
-        };
-
         if ($type == 'quarter') {
             $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfQuarter()->endOfDay();
@@ -222,50 +203,89 @@ class FundsController extends Controller
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
             $dates = collect(CarbonPeriod::between($startDate, $endDate)->toArray());
+
+            $dates->prepend(
+                $dates[0]->copy()->subDay(1)->endOfDay()
+            );
+
         } elseif ($type == 'all') {
-            $firstTransaction = $fund->voucher_transactions()->orderBy(
-                'created_at'
-            )->first();
+            $startDate = Carbon::createFromDate($year, 1, 1)->startOfDay();
+            $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
 
-            $startDate = $firstTransaction ? $firstTransaction->created_at->subDay() : Carbon::now();
-            $endDate = Carbon::now();
-
-            $dates = $rangeBetween($startDate, $endDate, 8);
+            $dates->push($startDate);
+            $dates->push($startDate->copy()->addQuarters(1));
+            $dates->push($startDate->copy()->addQuarters(2));
+            $dates->push($startDate->copy()->addQuarters(3));
+            $dates->push($endDate);
         } else {
             abort(403, "");
             exit();
         }
 
-        $dates = $dates->map(function (Carbon $date, $key) use ($fund, $dates, $product_category_id) {
-            if($key > 0) {
-                $voucherQuery = $fund->voucher_transactions()->whereBetween(
-                    'voucher_transactions.created_at', [
-                        $dates[$key - 1]->copy()->endOfDay(),
-                        $date->copy()->endOfDay()
-                    ]
-                );
-
-                if ($product_category_id) {
-                    if($product_category_id == -1){
-                        $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
-                    }else {
-                        $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
-                            return $query->where('product_category_id', $product_category_id);
-                        });
-                    }
-                }
-
+        $dates = $dates->map(function (Carbon $date, $key) use ($fund, $dates, $product_category_id, $type) {
+            $previousIntervalEntry = $date;
+            if ($key === 0 && $type !== 'week') {
                 return [
-                    "key" => $date->format('Y-m-d'),
-                    "value" => $voucherQuery->sum('voucher_transactions.amount')
+                    "key" => null,
+                    "value" => null
                 ];
             }
+            elseif ($key > 0) {
+                $previousIntervalEntry = $dates[$key - 1];
+            }
 
-            return [
-                "key" => $date->format('Y-m-d'),
-                "value" => 0
-            ];
+            $voucherQuery = $fund->voucher_transactions()->whereBetween(
+                'voucher_transactions.created_at', [
+                    $previousIntervalEntry->copy()->endOfDay(),
+                    $date->copy()->endOfDay()
+                ]
+            );
+
+            if ($product_category_id) {
+                if($product_category_id == -1){
+                    $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
+                }else {
+                    $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
+                        return $query->where('product_category_id', $product_category_id);
+                    });
+                }
+            }
+
+            switch ($type) {
+                case 'quarter':
+                    return [
+                        "key" => trans('time.to', [
+                            'from_time' => $previousIntervalEntry->copy()->endOfDay()->formatLocalized('%d %h'),
+                            'to_time' =>  $date->formatLocalized('%d %h')
+                        ]),
+                        "value" => $voucherQuery->sum('voucher_transactions.amount')
+                    ];
+                case 'month':
+                    return [
+                        "key" => trans('time.to', [
+                            'from_time' => $previousIntervalEntry->copy()->endOfDay()->formatLocalized('%d'),
+                            'to_time' =>  $date->formatLocalized('%d')
+                        ]),
+                        "value" => $voucherQuery->sum('voucher_transactions.amount')
+                    ];
+                case 'week':
+                    return [
+                        "key" => $date->formatLocalized('%A'),
+                        "value" => $voucherQuery->sum('voucher_transactions.amount')
+                    ];
+                case 'all':
+                    return [
+                        "key" => trans('time.quarter') . " " . $key,
+                        "value" => $voucherQuery->sum('voucher_transactions.amount')
+                    ];
+                default:
+                    return [
+                        "key" => $date->formatLocalized('Y-m-d'),
+                        "value" => $voucherQuery->sum('voucher_transactions.amount')
+                    ];
+            }
         });
+        $dates->shift();
 
         $providers = $fund->voucher_transactions()->whereBetween(
             'voucher_transactions.created_at', [
