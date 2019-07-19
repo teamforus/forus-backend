@@ -139,6 +139,7 @@ return [
         'provider_pending' => 'You can not scan this voucher! Your application for this fund is still pending.',
         'provider_denied' => 'You can not scan this voucher! Your application for this fund is denied.',
         'fund_not_active' => 'Your can not scan this voucher! The fund is not active (anymore).',
+        'not_enough_funds' => 'Not enough credit on voucher.',
     ],
 
 ];

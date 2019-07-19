@@ -137,6 +137,7 @@ return [
         'provider_pending' => 'U mag deze voucher niet scannen! Status voor aanmelding van het fonds van deze voucher is wachtend.',
         'provider_denied' => 'U mag deze voucher niet scannen! Uw organisatie is geweigerd om deel te nemen aan het fonds. Zoek contact op met sponsor voor een reden.',
         'fund_not_active' => 'U mag deze voucher nog niet scannen! Het fonds is niet actief.',
+        'not_enough_funds' => 'Onvoldoende tegoed op de voucher.',
     ],
     'attributes' => [
         'pin_code' => 'pincode',
