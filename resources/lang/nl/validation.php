@@ -133,7 +133,7 @@ return [
     'voucher' => [
         'expired' => 'De voucher is verlopen.',
         'product_voucher_used' => 'De voucher voor deze aanbieding is al gebruikt!',
-        'provider_not_applied' => 'U mag deze voucher niet scannen! Dit profiels organisatie is nog niet aangemeld bij het fonds van deze voucher.',
+        'provider_not_applied' => 'U mag deze voucher niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van deze voucher.',
         'provider_pending' => 'U mag deze voucher niet scannen! Status voor aanmelding van het fonds van deze voucher is wachtend.',
         'provider_denied' => 'U mag deze voucher niet scannen! Uw organisatie is geweigerd om deel te nemen aan het fonds. Zoek contact op met sponsor voor een reden.',
         'fund_not_active' => 'U mag deze voucher nog niet scannen! Het fonds is niet actief.',
