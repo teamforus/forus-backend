@@ -80,10 +80,10 @@ class AwsSecretServiceProvider extends ServiceProvider
         ]);
 
         if(isset($secretValue['SecretString'])) {
-            $secret = json_decode($secretValue['SecretString']);
+            $secret = json_decode($secretValue['SecretString'], true);
         }
         else {
-            $secret = json_decode(base64_decode($secretValue['SecretBinary']));
+            $secret = json_decode(base64_decode($secretValue['SecretBinary'], true));
         }
 
         $config = str_replace('_', '.', $config);
