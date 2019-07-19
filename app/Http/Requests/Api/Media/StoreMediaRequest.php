@@ -24,7 +24,7 @@ class StoreMediaRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => 'required|file|image',
+            'file' => 'required|file|image|max:4096',
             'type' => 'required|in:' . implode(',', array_keys(config('media.sizes')))
         ];
     }

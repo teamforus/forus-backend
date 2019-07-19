@@ -8,6 +8,7 @@ use App\Http\Middleware\Cors;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Http\Middleware\RecordApmTransactions;
+use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
@@ -52,6 +53,7 @@ class Kernel extends HttpKernel
         'api' => [
             // 'throttle:120D,1',
             'bindings',
+            'locale'
         ],
     ];
 
@@ -71,6 +73,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'api.auth' => ApiAuthMiddleware::class,
         'cors' => Cors::class,
+        'locale' => LocaleMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,
     ];
