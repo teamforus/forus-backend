@@ -22,13 +22,6 @@ class AwsSecretServiceProvider extends ServiceProvider
     private $secrets;
 
     /**
-     * @var array $configs
-     */
-    private $configs = [
-        'database_connections_mysql_password'
-    ];
-
-    /**
      * Bootstrap AWS secret manager service
      *
      * @throws AwsException
@@ -54,14 +47,12 @@ class AwsSecretServiceProvider extends ServiceProvider
     /**
      * Checks for matching aws secret names
      */
-    private function checkSecrets()
+    private function checkSecrets(): void
     {
-        foreach ($this->configs as $config) {
-            if ($secretName = config('forus.aws.secret_names.' . $config)) {
-                foreach ($this->secrets['SecretList'] as $secret) {
-                    if ($secret['Name'] === $secretName) {
-                        $this->setPasswords($config, $secret['Name']);
-                    }
+        foreach (config('forus.aws.secret_names') as $configKey => $secretName) {
+            foreach ($this->secrets['SecretList'] as $secret) {
+                if ($secret['Name'] === $secretName) {
+                    $this->setPasswords($configKey, $secret['Name']);
                 }
             }
         }

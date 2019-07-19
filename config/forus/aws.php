@@ -5,6 +5,6 @@
  */
 return [
     'secret_names' => [
-        'database_connections_mysql_password' => 'prod/db/mysql'
+        'database_connections_mysql_password' => env( 'AWS_MYSQL_SECRET_NAME', '')
     ]
 ];
