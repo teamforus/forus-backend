@@ -4,9 +4,11 @@
 namespace App\Services\AwsSecretService;
 
 
+use Aws\Credentials\CredentialProvider;
 use Aws\Exception\AwsException;
 use Aws\SecretsManager\SecretsManagerClient;
 use Config;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\ServiceProvider;
 
 class AwsSecretServiceProvider extends ServiceProvider
@@ -29,14 +31,17 @@ class AwsSecretServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->environment() === 'production') {
+            $credentials = CredentialProvider::defaultProvider();
+
             $this->client = new SecretsManagerClient([
-                'profile' => 'default',
                 'version' => 'latest',
-                'region' => 'eu-west-1'
+                'region' => 'eu-west-1',
+                'credentials' => $credentials
             ]);
 
+
             try {
-                $this->secrets = $this->client->listSecrets([]);
+                $this->secrets = $this->client->listSecrets();
 
                 $this->checkSecrets();
             }
@@ -79,6 +84,10 @@ class AwsSecretServiceProvider extends ServiceProvider
 
         $config = str_replace('_', '.', $config);
 
-        config([$config => $secret['password']]);
+        if (config($config) !== $secret['password']) {
+            config([$config => $secret['password']]);
+
+            Artisan::call('config:clear');
+        }
     }
 }
