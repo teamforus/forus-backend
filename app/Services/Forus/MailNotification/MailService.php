@@ -58,13 +58,13 @@ class MailService
     /**
      * Register new connection for given identifier
      *
-     * @param string $identifier
+     * @param $identifier
      * @param int $type
      * @param string $value
      * @return bool
      */
     public function addConnection(
-        string $identifier,
+        $identifier,
         int $type,
         string $value
     ) {
@@ -75,7 +75,7 @@ class MailService
         $endpoint = $this->getEndpoint('/user/connections/add/', 'en');
 
         $res = $this->apiRequest->post($endpoint, [
-            'user_id'   => $identifier,
+            'user_id'   => $identifier ?? '',
             'type'      => $type,
             'value'     => $value,
         ]);
@@ -98,11 +98,11 @@ class MailService
     /**
      * Register new email connection for given identifier
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $email_address
      */
     public function addEmailConnection(
-        string $identifier,
+        $identifier,
         string $email_address
     ) {
         $this->addConnection($identifier,self::TYPE_EMAIL, $email_address);
@@ -111,12 +111,12 @@ class MailService
     /**
      * Register new connection for given identifier
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $value
      * @return bool
      */
     public function deleteConnection(
-        string $identifier,
+        $identifier,
         string $value
     ) {
         if (!$this->serviceApiUrl) {
@@ -126,7 +126,7 @@ class MailService
         $endpoint = $this->getEndpoint('/user/connections/remove/', 'en');
 
         $res = $this->apiRequest->post($endpoint, [
-            'user_id'   => $identifier,
+            'user_id'   => $identifier ?? '',
             'value'     => $value,
         ]);
 
@@ -147,13 +147,13 @@ class MailService
     /**
      * Send push notification
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $title
      * @param string $body
      * @return bool
      */
     public function sendPushNotification(
-        string $identifier,
+        $identifier,
         string $title,
         string $body
     ) {
@@ -164,7 +164,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/mobile/push/', 'en');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id' => $identifier,
+            'reffer_id' => $identifier ?? '',
             'title'     => $title,
             'body'      => $body,
         ]);
@@ -186,7 +186,7 @@ class MailService
     /**
      * Notify sponsor that new provider applied to his fund
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $provider_name
      * @param string $sponsor_name
      * @param string $fund_name
@@ -194,7 +194,7 @@ class MailService
      * @return bool
      */
     public function providerApplied(
-        string $identifier,
+        $identifier,
         string $provider_name,
         string $sponsor_name,
         string $fund_name,
@@ -207,7 +207,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/provider_applied/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'                 => $identifier,
+            'reffer_id'                 => $identifier ?? '',
             'provider_name'             => $provider_name,
             'sponsor_name'              => $sponsor_name,
             'fund_name'                 => $fund_name,
@@ -231,7 +231,7 @@ class MailService
     /**
      * Notify provider that his request to apply for fund was approved
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
@@ -239,7 +239,7 @@ class MailService
      * @return bool
      */
     public function providerApproved(
-        string $identifier,
+        $identifier,
         string $fund_name,
         string $provider_name,
         string $sponsor_name,
@@ -252,7 +252,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/provider_approved/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'                 => $identifier,
+            'reffer_id'                 => $identifier ?? '',
             'fund_name'                 => $fund_name,
             'provider_name'             => $provider_name,
             'sponsor_name'              => $sponsor_name,
@@ -276,14 +276,14 @@ class MailService
     /**
      * Notify provider that his request to apply for fund was rejected
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
      * @return bool
      */
     public function providerRejected(
-        string $identifier,
+        $identifier,
         string $fund_name,
         string $provider_name,
         string $sponsor_name
@@ -295,7 +295,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/provider_rejected/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'     => $identifier,
+            'reffer_id'     => $identifier ?? '',
             'fund_name'     => $fund_name,
             'provider_name' => $provider_name,
             'sponsor_name'  => $sponsor_name
@@ -318,12 +318,12 @@ class MailService
     /**
      * Notify user that now he can validate records for the given sponsor
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $sponsor_name
      * @return bool
      */
     public function youAddedAsValidator(
-        string $identifier,
+        $identifier,
         string $sponsor_name
     ) {
         if (!$this->serviceApiUrl) {
@@ -333,7 +333,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/sponsors/you_added_as_validator/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id' => $identifier,
+            'reffer_id' => $identifier ?? '',
             'sponsore_name' => $sponsor_name
         ]);
 
@@ -354,12 +354,12 @@ class MailService
     /**
      * Notify user about new validation request on validation dashboard
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $validator_dashboard_link
      * @return bool
      */
     public function newValidationRequest(
-        string $identifier,
+        $identifier,
         string $validator_dashboard_link
     ) {
         if (!$this->serviceApiUrl) {
@@ -369,7 +369,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/validations/new_validation_request/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'                 => $identifier,
+            'reffer_id'                 => $identifier ?? '',
             'validator_dashboard_link'  => $validator_dashboard_link
         ]);
 
@@ -391,13 +391,13 @@ class MailService
     /**
      * Notify provider about new fund available for sign up
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $fund_name
      * @param string $provider_dashboard_link
      * @return bool
      */
     public function newFundApplicable(
-        string $identifier,
+        $identifier,
         string $fund_name,
         string $provider_dashboard_link
     ) {
@@ -408,7 +408,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/new_fund/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'                 => $identifier,
+            'reffer_id'                 => $identifier ?? '',
             'fund_name'                 => $fund_name,
             'provider_dashboard_link'   => $provider_dashboard_link,
         ]);
@@ -430,13 +430,13 @@ class MailService
     /**
      * Notify user that new fund was created
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $fund_name
      * @param string $webshop_link
      * @return bool
      */
     public function newFundCreated(
-        string $identifier,
+        $identifier,
         string $fund_name,
         string $webshop_link
     ) {
@@ -447,13 +447,13 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/new_fund_created/');
 
         resolve('log')->info(collect([$endpoint, [
-            'reffer_id'     => $identifier,
+            'reffer_id'     => $identifier ?? '',
             'fund_name'     => $fund_name,
             'webshop_link'  => $webshop_link,
         ]]));
         
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'     => $identifier,
+            'reffer_id'     => $identifier ?? '',
             'fund_name'     => $fund_name,
             'webshop_link'  => $webshop_link,
         ]);
@@ -476,13 +476,13 @@ class MailService
     /**
      * Notify providers that new fund was started
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $fund_name
      * @param string $sponsor_name
      * @return bool
      */
     public function newFundStarted(
-        string $identifier,
+        $identifier,
         string $fund_name,
         string $sponsor_name
     ) {
@@ -493,7 +493,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/fund_started/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'     => $identifier,
+            'reffer_id'     => $identifier ?? '',
             'fund_name'     => $fund_name,
             'sponsor_name'  => $sponsor_name,
         ]);
@@ -603,13 +603,13 @@ class MailService
     /**
      * Notify sponsor that new product added by provider
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $sponsor_name
      * @param string $fund_name
      * @return bool
      */
     public function newProductAdded(
-        string $identifier,
+        $identifier,
         string $sponsor_name,
         string $fund_name
     ) {
@@ -620,7 +620,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/new_product_added/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'     => $identifier,
+            'reffer_id'     => $identifier ?? '',
             'sponsor_name'  => $sponsor_name,
             'fund_name'     => $fund_name,
         ]);
@@ -642,13 +642,13 @@ class MailService
     /**
      * Send voucher by email
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $fund_product_name
      * @param string $qr_url
      * @return bool
      */
     public function sendVoucher(
-        string $identifier,
+        $identifier,
         string $fund_product_name,
         string $qr_url
     ) {
@@ -659,7 +659,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/sended_via_email/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'             => $identifier,
+            'reffer_id'             => $identifier ?? '',
             'fund_product_name'     => $fund_product_name,
             'qr_url'                => $qr_url,
         ]);
@@ -682,7 +682,7 @@ class MailService
     /**
      * Send voucher by email
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $requester_email
      * @param string $product_name
      * @param string $qr_url
@@ -690,7 +690,7 @@ class MailService
      * @return bool
      */
     public function shareVoucher(
-        string $identifier,
+        $identifier,
         string $requester_email,
         string $product_name,
         string $qr_url,
@@ -703,7 +703,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/share_product/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'             => $identifier,
+            'reffer_id'             => $identifier ?? '',
             'product_name'          => $product_name,
             'qr_url'                => $qr_url,
             'requester_email'       => $requester_email,
@@ -726,13 +726,13 @@ class MailService
 
     /**
      * Send restore identity link to address email
-     * @param string $identifier
+     * @param $identifier
      * @param string $link
      * @param string $platform
      * @return bool
      */
     public function loginViaEmail(
-        string $identifier,
+        $identifier,
         string $link,
         string $platform
     ) {
@@ -743,7 +743,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/login/login_via_email/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id' => $identifier,
+            'reffer_id' => $identifier ?? '',
             'link'      => $link,
             'platform'  => $platform,
         ]);
@@ -763,13 +763,13 @@ class MailService
     }
 
     /**
-     * @param string $identifier
+     * @param $identifier
      * @param string $fund_name
      * @param string $current_budget
      * @return bool
      */
     public function transactionAvailableAmount(
-        string $identifier,
+        $identifier,
         string $fund_name,
         string $current_budget
     ) {
@@ -780,7 +780,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/payment_success/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'         => $identifier,
+            'reffer_id'         => $identifier ?? '',
             'fund_name'         => $fund_name,
             'current_budget'    => $current_budget,
         ]);
@@ -803,13 +803,13 @@ class MailService
      * Notify provider that a product was reserved and customer will come by
      * in shop to pickup the product or service.
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $product_name
      * @param string $expiration_date
      * @return bool
      */
     public function productReserved(
-        string $identifier,
+        $identifier,
         string $product_name,
         string $expiration_date
     ) {
@@ -820,7 +820,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/product_bought/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'         => $identifier,
+            'reffer_id'         => $identifier ?? '',
             'product_name'      => $product_name,
             'expiration_date'   => $expiration_date,
         ]);
@@ -842,13 +842,13 @@ class MailService
     /**
      * Notify provider that a product was sold out.
      *
-     * @param string $identifier
+     * @param $identifier
      * @param string $product_name
      * @param string $sponsor_dashboard_url
      * @return bool
      */
     public function productSoldOut(
-        string $identifier,
+        $identifier,
         string $product_name,
         string $sponsor_dashboard_url
     ) {
@@ -859,7 +859,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/product_soldout/');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'             => $identifier,
+            'reffer_id'             => $identifier ?? '',
             'product_name'          => $product_name,
             'sponsor_dashboard_url' => $sponsor_dashboard_url,
         ]);
@@ -880,12 +880,12 @@ class MailService
 
     /**
      * Send email confirmation link by identity address
-     * @param string $identifier
+     * @param $identifier
      * @param string $confirmationLink
      * @return bool
      */
     public function sendEmailConfirmationToken(
-        string $identifier,
+        $identifier,
         string $confirmationLink
     ) {
         $platform = env('APP_NAME');
@@ -897,7 +897,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/user/email_activation');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id' => $identifier,
+            'reffer_id' => $identifier ?? '',
             'platform'  => $platform,
             'link'      => $confirmationLink,
         ]);
@@ -970,7 +970,7 @@ class MailService
     }
 
     /**
-     * @param string $identifier
+     * @param $identifier
      * @param string $link
      * @param string $sponsor_name
      * @param string $fund_name
@@ -978,7 +978,7 @@ class MailService
      * @return bool
      */
     public function fundNotifyReachedNotificationAmount(
-        string $identifier,
+        $identifier,
         string $link,
         string $sponsor_name,
         string $fund_name,
@@ -992,7 +992,7 @@ class MailService
         $endpoint = $this->getEndpoint('/sender/vouchers/fund_balance_warning');
 
         $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'                 => $identifier,
+            'reffer_id'                 => $identifier ?? '',
             'fund_name'                 => $fund_name,
             'sponsor_name'              => $sponsor_name,
             'treshold_amount'           => $notification_amount,

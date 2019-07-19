@@ -68,6 +68,60 @@ $router->group(['middleware' => ['throttle:20']], function() use ($router) {
 });
 
 /**
+ * Public api routes
+ */
+$router->resource(
+    'organizations.funds.bunq-transactions',
+    "Api\Platform\Organizations\Funds\BunqMeTabsController", [
+    'only' => [
+        'index', 'show'
+    ],
+    'parameters' => [
+        'bunq-transactions' => 'bunq_me_tab_paid'
+    ]
+]);
+
+$router->resource(
+    'organizations.funds.transactions',
+    "Api\Platform\Organizations\Funds\TransactionsController", [
+    'only' => [
+        'index', 'show',
+    ],
+    'parameters' => [
+        'transactions' => 'transaction_address',
+    ]
+]);
+
+$router->resource(
+    'organizations.funds.providers',
+    "Api\Platform\Organizations\Funds\FundProviderController", [
+    'only' => [
+        'index', 'show'
+    ],
+    'parameters' => [
+        'providers' => 'organization_fund'
+    ]
+]);
+
+$router->resource(
+    'organizations.funds',
+    "Api\Platform\Organizations\FundsController", [
+    'only' => [
+        'index', 'show'
+    ]
+]);
+
+$router->get(
+    'funds/{configured_fund_id}/ideal/issuers',
+    "Api\Platform\FundsController@idealIssuers"
+);
+
+$router->post(
+    'funds/{fund_id}/ideal/requests',
+    "Api\Platform\FundsController@idealMakeRequest"
+);
+
+/**
  * Authorization required
  */
 $router->group(['middleware' => ['api.auth']], function() use ($router) {
@@ -96,7 +150,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'vouchers',
         "Api\Platform\VouchersController", [
         'only' => [
-            'index', 'show', 'store'
+            'index', 'show', 'store', 'destroy'
         ],
         'parameters' => [
             'vouchers' => 'voucher_token_address'
@@ -142,7 +196,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
         'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
+            'store', 'update', 'destroy'
         ]
     ]);
 
@@ -182,13 +236,12 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
         'only' => [
-            'index', 'show', 'update'
+            'update'
         ],
         'parameters' => [
             'providers' => 'organization_fund'
         ]
     ]);
-
 
     $router->resource(
         'organizations.products',
@@ -272,8 +325,33 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
         "Api\Platform\Organizations\Sponsor\TransactionsController", [
+            'only' => [
+                'index', 'show'
+            ],
             'parameters' => [
                 'transactions' => 'transaction_address',
+            ]
+        ]
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/{voucher_id}/send',
+        "Api\Platform\Organizations\Sponsor\VouchersController@sendByEmail"
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher_id}/assign',
+        "Api\Platform\Organizations\Sponsor\VouchersController@assign"
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/vouchers',
+        "Api\Platform\Organizations\Sponsor\VouchersController", [
+            'only' => [
+                'index', 'show', 'store'
+            ],
+            'parameters' => [
+                'vouchers' => 'voucher_id',
             ]
         ]
     );
@@ -288,6 +366,10 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         'Api\Platform\PrevalidationController@export'
     );
 
+    $router->get(
+        'prevalidations/{prevalidation_uid}/fund',
+        'Api\Platform\PrevalidationController@showFundId'
+    );
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController', [

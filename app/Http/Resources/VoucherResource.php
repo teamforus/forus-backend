@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\Voucher;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class VoucherResource
+ * @property Voucher $resource
+ * @package App\Http\Resources
+ */
 class VoucherResource extends Resource
 {
     /**
@@ -44,10 +49,8 @@ class VoucherResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var Voucher $voucher */
         $voucher = $this->resource;
-
-        $fund = $voucher->fund;
+        $fund = $this->resource->fund;
 
         if ($voucher->type == 'regular') {
             $amount = $voucher->amount_available_cached;
@@ -75,17 +78,17 @@ class VoucherResource extends Resource
             exit(abort("Unknown voucher type!", 403));
         }
 
-        $urlWebshop = null;
+        $urlWebShop = null;
 
         if ($fund->fund_config &&
             $fund->fund_config->implementation) {
-            $urlWebshop = $fund->fund_config->implementation->url_webshop;
+            $urlWebShop = $fund->fund_config->implementation->url_webshop;
         }
 
         $fundResource = collect($fund)->only([
             'id', 'name', 'state'
         ])->merge([
-            'url_webshop' => $urlWebshop,
+            'url_webshop' => $urlWebShop,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
             'start_date_locale' => format_datetime_locale($fund->start_date),

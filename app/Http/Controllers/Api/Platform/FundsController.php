@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
-use App\Events\Vouchers\VoucherCreated;
+use App\Http\Requests\Api\Platform\Funds\StoreIdealBunqMeRequestRequest;
+use App\Http\Resources\BunqIdealIssuerResource;
+use App\Http\Resources\BunqMeIdealRequestResource;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
-use Illuminate\Http\Request;
+use App\Services\BunqService\BunqService;
 
 class FundsController extends Controller
 {
@@ -30,7 +32,7 @@ class FundsController extends Controller
      */
     public function show(Fund $fund)
     {
-        if ($fund->state != 'active') {
+        if ($fund->state != Fund::STATE_ACTIVE) {
             return abort(404);
         }
 
@@ -49,14 +51,39 @@ class FundsController extends Controller
     ) {
         $this->authorize('apply', $fund);
 
-        $voucher = $fund->vouchers()->create([
-            'amount' => Fund::amountForIdentity($fund, auth()->id()),
-            'identity_address' => auth()->user()->getAuthIdentifier(),
-            'expire_at' => $fund->end_date
-        ]);
+        return new VoucherResource($fund->makeVoucher(auth()->id()));
+    }
 
-        VoucherCreated::dispatch($voucher);
+    /**
+     * @param Fund $fund
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
+    public function idealIssuers(Fund $fund) {
+        $allowIssuers = env('BUNQ_IDEAL_USE_ISSUERS', true);
 
-        return new VoucherResource($voucher);
+        return BunqIdealIssuerResource::collection(
+            $allowIssuers ? BunqService::getIdealIssuers(
+                $fund->fund_config->bunq_sandbox
+            ) : collect()
+        );
+    }
+
+    /**
+     * @param StoreIdealBunqMeRequestRequest $request
+     * @param Fund $fund
+     * @return BunqMeIdealRequestResource
+     * @throws \Exception
+     */
+    public function idealMakeRequest(
+        StoreIdealBunqMeRequestRequest $request,
+        Fund $fund
+    ) {
+        $this->authorize('idealRequest', $fund);
+
+        return new BunqMeIdealRequestResource($fund->makeBunqMeTab(
+            $request->input('amount'),
+            (string) $request->input('description'),
+            $request->input('issuer', false)
+        ));
     }
 }

@@ -38,9 +38,7 @@ class VouchersController extends Controller
     ) {
         $this->authorize('store', Voucher::class);
 
-        /** @var Product $product */
-        /** @var Voucher $voucher */
-        $product = Product::query()->find($request->input('product_id'));
+        $product = Product::find($request->input('product_id'));
 
         /** @var VoucherToken $voucherToken */
         $voucherToken = VoucherToken::query()->where([
@@ -51,7 +49,9 @@ class VouchersController extends Controller
 
         $this->authorize('reserve', $product);
 
-        $voucherExpireAt = $voucher->fund->end_date->gt($product->expire_at) ? $product->expire_at : $voucher->fund->end_date;
+        $voucherExpireAt = $voucher->fund->end_date->gt(
+            $product->expire_at
+        ) ? $product->expire_at : $voucher->fund->end_date;
 
         $voucher = Voucher::create([
             'identity_address'  => auth()->user()->getAuthIdentifier(),
@@ -130,5 +130,20 @@ class VouchersController extends Controller
             $request->input('reason'),
             (bool)$request->get('send_copy', false)
         );
+    }
+
+    /**
+     * @param VoucherToken $voucherToken
+     * @return array
+     * @throws \Exception
+     */
+    public function destroy(
+        VoucherToken $voucherToken
+    ) {
+        $this->authorize('destroy', $voucherToken->voucher);
+
+        return [
+            'success' => $voucherToken->voucher->delete() === true
+        ];
     }
 }

@@ -101,7 +101,7 @@ class PrevalidationController extends Controller
         })->map(function($records) use ($request) {
             do {
                 $uid = app()->make('token_generator')->generate(4, 2);
-            } while(Prevalidation::getModel()->where(
+            } while(Prevalidation::query()->where(
                 'uid', $uid
             )->count() > 0);
 
@@ -158,17 +158,23 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
+     * @param Request $request
      * @param Prevalidation $prevalidation
-     * @return PrevalidationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return array
      */
-    public function show(Prevalidation $prevalidation)
-    {
-        $this->authorize('show', $prevalidation);
+    public function showFundId(
+        Request $request,
+        Prevalidation $prevalidation
+    ) {
+        if ($this->hasTooManyLoginAttempts($request)) {
+            abort(429, 'To many attempts.');
+        }
 
-        return new PrevalidationResource($prevalidation);
+        $this->incrementLoginAttempts($request);
+
+        return [
+            'data' => $prevalidation->only('fund_id')
+        ];
     }
 
     /**
@@ -225,6 +231,6 @@ class PrevalidationController extends Controller
      */
     protected function throttleKey(Request $request)
     {
-        return Str::lower($request->input(auth()->id())).'|'.$request->ip();
+        return Str::lower($request->ip());
     }
 }

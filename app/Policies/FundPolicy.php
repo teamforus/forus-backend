@@ -67,7 +67,7 @@ class FundPolicy
             return false;
         }
 
-        return $fund->organization->identityCan(
+        return $fund->public || $fund->organization->identityCan(
             $identity_address,
             ['manage_funds', 'view_finances'],
             false
@@ -105,7 +105,7 @@ class FundPolicy
         $identity_address,
         Fund $fund
     ) {
-        if (empty($identity_address) && ($fund->state != 'active')) {
+        if (empty($identity_address) && $fund->state != Fund::STATE_ACTIVE) {
             return false;
         }
 
@@ -157,7 +157,7 @@ class FundPolicy
             return false;
         }
 
-        return $fund->organization->identityCan(
+        return $fund->public || $fund->organization->identityCan(
             $identity_address,
             'view_finances'
         );
@@ -173,15 +173,22 @@ class FundPolicy
         $identity_address,
         Fund $fund,
         Organization $organization
-    )
-    {
-        if($organization->identityCan(
-            $identity_address,
+    ) {
+        return $organization->identityCan($identity_address, [
             'manage_funds'
-        )){
-            return $fund->state == 'waiting';
-        }
+        ]) && $fund->state == Fund::STATE_WAITING;
+    }
 
-        return false;
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @return bool
+     */
+    public function idealRequest(
+        $identity_address,
+        Fund $fund
+    ) {
+        // identity_address not required
+        return $identity_address && $fund->public;
     }
 }

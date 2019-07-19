@@ -33,10 +33,15 @@ class FundsController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('show', $organization);
         $this->authorize('index', [Fund::class, $organization]);
 
-        return FundResource::collection($organization->funds);
+        if (auth()->id()) {
+            return FundResource::collection($organization->funds);
+        }
+
+        return FundResource::collection($organization->funds()->where([
+            'public' => true
+        ])->get());
     }
 
     /**
@@ -93,7 +98,6 @@ class FundsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
 
         return new FundResource($fund);
@@ -125,7 +129,7 @@ class FundsController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        if ($fund->state == 'waiting') {
+        if ($fund->state == Fund::STATE_WAITING) {
             $params = $request->only([
                 'name', 'state', 'start_date', 'end_date', 'notification_amount'
             ]);

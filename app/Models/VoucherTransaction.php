@@ -85,19 +85,18 @@ class VoucherTransaction extends Model
      */
     public function sendPushNotificationTransaction() {
         $mailService = resolve('forus.services.mail_notification');
-        $voucher = $this->voucher;
 
-        if (!$voucher->product) {
+        if (!$this->voucher->product) {
             $transData = [
                 "amount" => currency_format_locale($this->amount),
-                "fund_name" => $voucher->fund->name,
+                "fund_name" => $this->voucher->fund->name,
             ];
 
             $title = trans('push.transactions.offline_regular_voucher.title', $transData);
             $body = trans('push.transactions.offline_regular_voucher.body', $transData);
         } else {
             $transData = [
-                "product_name" => $voucher->product->name,
+                "product_name" => $this->voucher->product->name,
             ];
 
             $title = trans('push.transactions.offline_product_voucher.title', $transData);
@@ -105,7 +104,7 @@ class VoucherTransaction extends Model
         }
 
         $mailService->sendPushNotification(
-            $voucher->identity_address, $title, $body
+            $this->voucher->identity_address, $title, $body
         );
     }
 

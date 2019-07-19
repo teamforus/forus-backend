@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 /**
  * Class Prevalidation
  * @property int $id
+ * @property int $fund_id
  * @property string $uid
  * @property string $identity_address
  * @property string $state
@@ -66,7 +67,7 @@ class Prevalidation extends Model
         $to = $request->input('to', null);
         $exported = $request->input('exported', null);
 
-        $prevalidations = Prevalidation::getModel()->where(compact(
+        $prevalidations = Prevalidation::query()->where(compact(
             'identity_address'
         ));
 
@@ -78,7 +79,7 @@ class Prevalidation extends Model
                     \Illuminate\Database\Query\Builder $query
                 ) use ($q) {
                     $query->from(
-                        PrevalidationRecord::getModel()->getTable()
+                        (new PrevalidationRecord)->getTable()
                     )->where(
                         'value', 'like', "%{$q}%"
                     )->select('prevalidation_id');

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\Vouchers\VoucherCreated;
 use App\Services\BunqService\BunqService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -17,29 +18,31 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property integer|null $fund_id
  * @property string $state
  * @property string $name
- * @property Organization $organization
  * @property float $budget_total
  * @property float $budget_validated
  * @property float $budget_used
  * @property float $budget_left
+ * @property float $notification_amount
  * @property Media $logo
+ * @property boolean $public
  * @property FundConfig $fund_config
- * @property Collection $top_up_transactions
- * @property Collection $fund_formulas
- * @property Collection $metas
- * @property Collection $products
- * @property Collection $product_categories
- * @property Collection $criteria
- * @property Collection $vouchers
- * @property Collection $voucher_transactions
- * @property Collection $providers
- * @property Collection $validators
- * @property Collection $fund_providers
- * @property Collection $provider_organizations
- * @property Collection $provider_organizations_approved
+ * @property Organization $organization
+ * @property Collection|BunqMeTab[] $bunq_me_tabs_paid
+ * @property Collection|BunqMeTab[] $bunq_me_tabs
+ * @property Collection|FundTopUpTransaction[] $top_up_transactions
+ * @property Collection|FundFormula[] $fund_formulas
+ * @property Collection|FundMeta[] $metas
+ * @property Collection|Product[] $products
+ * @property Collection|ProductCategory[] $product_categories
+ * @property Collection|FundCriterion[] $criteria
+ * @property Collection|Voucher[] $vouchers
+ * @property Collection|VoucherTransaction[] $voucher_transactions
+ * @property Collection|FundProvider[] $providers
+ * @property Collection|Validator[] $validators
+ * @property Collection|Organization[] $provider_organizations
+ * @property Collection|Organization[] $provider_organizations_approved
  * @property Carbon $start_date
  * @property Carbon $end_date
- * @property float $notification_amount
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
@@ -48,6 +51,18 @@ class Fund extends Model
 {
     use HasMedia;
 
+    const STATE_ACTIVE = 'active';
+    const STATE_CLOSED = 'closed';
+    const STATE_PAUSED = 'paused';
+    const STATE_WAITING = 'waiting';
+
+    const STATES = [
+        self::STATE_ACTIVE,
+        self::STATE_CLOSED,
+        self::STATE_PAUSED,
+        self::STATE_WAITING,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -55,11 +70,15 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'start_date', 'end_date',
-        'notification_amount', 'fund_id', 'notified_at'
+        'notification_amount', 'fund_id', 'notified_at', 'public'
     ];
 
     protected $hidden = [
         'fund_config', 'fund_formulas'
+    ];
+
+    protected $casts = [
+        'public' => 'boolean',
     ];
 
     /**
@@ -70,7 +89,7 @@ class Fund extends Model
     protected $dates = [
         'start_date',
         'end_date',
-        'notified_at'
+        'notified_at',
     ];
 
     /**
@@ -158,13 +177,6 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_providers() {
-        return $this->hasMany(FundProvider::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function top_ups() {
         return $this->hasMany(FundTopUp::class);
     }
@@ -187,7 +199,10 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetTotalAttribute() {
-        return round($this->top_up_transactions->sum('amount'), 2);
+        return round(array_sum([
+            $this->top_up_transactions->sum('amount'),
+            $this->bunq_me_tabs_paid->sum('amount')
+        ]), 2);
     }
 
     /**
@@ -202,6 +217,10 @@ class Fund extends Model
      */
     public function getBudgetLeftAttribute() {
         return round($this->budget_total - $this->budget_used, 2);
+    }
+
+    public function getFundId() {
+        return $this->id;
     }
 
     /**
@@ -240,6 +259,22 @@ class Fund extends Model
      */
     public function fund_formulas() {
         return $this->hasMany(FundFormula::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bunq_me_tabs() {
+        return $this->hasMany(BunqMeTab::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bunq_me_tabs_paid() {
+        return $this->hasMany(BunqMeTab::class)->where([
+            'status' => 'PAID'
+        ]);
     }
 
     /**
@@ -389,9 +424,10 @@ class Fund extends Model
         /** @var self $fund */
         foreach($funds as $fund) {
 
-            if ($fund->start_date->startOfDay()->isPast() && $fund->state == 'paused') {
+            if ($fund->start_date->startOfDay()->isPast() &&
+                $fund->state == self::STATE_PAUSED) {
                 $fund->update([
-                    'state' => 'active'
+                    'state' => self::STATE_ACTIVE
                 ]);
 
                 $organizations = Organization::query()->whereIn(
@@ -411,9 +447,10 @@ class Fund extends Model
                 }
             }
 
-            if ($fund->end_date->endOfDay()->isPast() && $fund->state != 'closed') {
+            if ($fund->end_date->endOfDay()->isPast() &&
+                $fund->state != self::STATE_CLOSED) {
                 $fund->update([
-                    'state' => 'closed'
+                    'state' => self::STATE_CLOSED
                 ]);
             }
         }
@@ -473,22 +510,22 @@ class Fund extends Model
      */
     public static function calculateUsersQueue()
     {
-        $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
-                return $query->where('is_configured', true);
-            })
-            ->whereIn('state', ['active', 'paused'])
-            ->get();
+        /** @var Collection|Fund[] $funds */
+        $funds = self::query()->whereHas('fund_config', function (
+            Builder $query
+        ) {
+            return $query->where('is_configured', true);
+        })->whereIn('state', [
+            self::STATE_ACTIVE,
+            self::STATE_PAUSED,
+        ])->get();
 
         if ($funds->count() == 0) {
             return null;
         }
 
-        /** @var self $fund */
         foreach($funds as $fund) {
-
             $organization = $fund->organization;
-
             $sponsorCount = $organization->employees->count() + 1;
 
             $providers = $fund->providers()->where([
@@ -500,9 +537,9 @@ class Fund extends Model
                 return $fundProvider->organization->employees->count() + 1;
             })->sum();
 
-            if($fund->state == 'active'){
+            if ($fund->state == self::STATE_ACTIVE) {
                 $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
-            }else{
+            } else {
                 $requesterCount = 0;
             }
 
@@ -563,4 +600,69 @@ class Fund extends Model
         }
     }
 
+    /**
+     * @param float $amount
+     * @param string $description
+     * @param string|null $issuer
+     * @return \Illuminate\Database\Eloquent\Model
+     * @throws \Exception
+     */
+    public function makeBunqMeTab(
+        float $amount,
+        string $description = '',
+        string $issuer = null
+    ) {
+        $tabRequest = $this->getBunq()->makeBunqMeTabRequest(
+            $amount,
+            $description
+        );
+
+        $bunqMeTab = $tabRequest->getBunqMeTab();
+        $amount = $bunqMeTab->getBunqmeTabEntry()->getAmountInquired();
+        $description = $bunqMeTab->getBunqmeTabEntry()->getDescription();
+        $issuer_auth_url = null;
+
+
+        if (env('BUNQ_IDEAL_USE_ISSUERS', true) && $issuer) {
+            $issuer_auth_url = $tabRequest->makeIdealIssuerRequest(
+                $issuer
+            )->getUrl();
+        }
+
+        return $this->bunq_me_tabs()->create([
+            'bunq_me_tab_id'            => $bunqMeTab->getId(),
+            'status'                    => $bunqMeTab->getStatus(),
+            'monetary_account_id'       => $bunqMeTab->getMonetaryAccountId(),
+            'amount'                    => $amount->getValue(),
+            'description'               => $description,
+            'uuid'                      => $tabRequest->getUuid(),
+            'share_url'                 => $tabRequest->getShareUrl(),
+            'issuer_authentication_url' => $issuer_auth_url
+        ]);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param float|null $amount
+     * @param Carbon|null $expire_at
+     * @param string|null $note
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function makeVoucher(
+        string $identity_address = null,
+        float $amount = null,
+        Carbon $expire_at = null,
+        string $note = null
+    ) {
+        $amount = $amount ?: self::amountForIdentity($this, $identity_address);
+        $expire_at = $expire_at ?: $this->end_date;
+
+        $voucher = $this->vouchers()->create(compact(
+            'identity_address', 'amount', 'expire_at', 'note'
+        ));
+
+        VoucherCreated::dispatch($voucher);
+
+        return $voucher;
+    }
 }

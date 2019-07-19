@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Traits\EloquentModel;
+
 /**
  * Class Model
  * @property string $created_at_locale
@@ -10,6 +12,8 @@ namespace App\Models;
  */
 class Model extends \Illuminate\Database\Eloquent\Model
 {
+    use EloquentModel;
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);

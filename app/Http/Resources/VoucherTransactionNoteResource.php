@@ -5,6 +5,11 @@ namespace App\Http\Resources;
 use App\Models\VoucherTransactionNote;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class VoucherTransactionNoteResource
+ * @property VoucherTransactionNote $resource
+ * @package App\Http\Resources
+ */
 class VoucherTransactionNoteResource extends Resource
 {
     /**
@@ -15,11 +20,7 @@ class VoucherTransactionNoteResource extends Resource
      */
     public function toArray($request)
     {
-
-        /** @var VoucherTransactionNote $voucherTransaction */
-        $voucherTransactionNote = $this->resource;
-
-        return collect($voucherTransactionNote)->only([
+        return collect($this->resource)->only([
             'id', 'message', 'icon', 'group', 'created_at', 'created_at',
             'created_at_locale', 'created_at_locale'
         ]);

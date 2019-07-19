@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Resources\ValidatorResource;
 use App\Models\Validator;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 /**
  * Class ValidatorsController
@@ -36,7 +35,7 @@ class ValidatorsController extends Controller
 
         $bsnValidations = $bsnValidations->unique();
 
-        return ValidatorResource::collection(Validator::getModel()->whereIn(
+        return ValidatorResource::collection(Validator::query()->whereIn(
             'identity_address', $bsnValidations
         )->get());
     }

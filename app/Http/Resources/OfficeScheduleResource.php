@@ -2,8 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\OfficeSchedule;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class OfficeScheduleResource
+ * @property OfficeSchedule $resource
+ * @package App\Http\Resources
+ */
 class OfficeScheduleResource extends Resource
 {
     /**
