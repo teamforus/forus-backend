@@ -143,7 +143,7 @@ class VoucherPolicy
         Voucher $voucher
     ) {
         $fund = $voucher->fund;
-        $id = 'fund_providers.id';
+        $id = 'organizations.id';
 
         if ($voucher->expire_at->isPast()) {
             $this->deny('voucher_expired');
