@@ -11,6 +11,7 @@ namespace App\Models\Traits;
  * @method static static findOrFail($id, $columns = array())
  * @method static static findOrNew($id, $columns = array())
  * @method static static firstOrNew($id, $columns = array())
+ * @method static static firstOrCreate($columns = array())
  * @package App\Models\Traits
  */
 trait EloquentModel
