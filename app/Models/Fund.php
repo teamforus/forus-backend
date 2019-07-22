@@ -167,16 +167,6 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function provider_organizations() {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        );
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function top_ups() {
@@ -253,6 +243,16 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         )->where('fund_providers.state', 'pending');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        );
     }
 
     /**
