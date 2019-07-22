@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Record\Models;
 
+use App\Models\Traits\EloquentModel;
 use Barryvdh\LaravelIdeHelper\Eloquent;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +26,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Record extends Model
 {
+    use EloquentModel;
+
     /**
      * The attributes that are mass assignable.
      *
