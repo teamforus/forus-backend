@@ -22,7 +22,7 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         array $records
     ) {
-        $recordTypes = RecordType::getModel()->pluck(
+        $recordTypes = RecordType::query()->pluck(
             'id', 'key'
         )->toArray();
 
@@ -317,7 +317,7 @@ class RecordRepo implements IRecordRepo
     ) {
 
         // Todo: validation state
-        $query = Record::getModel()->where([
+        $query = Record::query()->where([
             'identity_address' => $identityAddress
         ])->with([
             'record_type'
@@ -346,6 +346,7 @@ class RecordRepo implements IRecordRepo
                 'value' => $record->value,
                 'order' => $record->order,
                 'key' => $record->record_type->key,
+                'name' => $record->record_type->name,
                 'record_category_id' => $record->record_category_id,
                 'validations' => $record->validations()->where([
                     'state' => 'approved'
@@ -382,6 +383,7 @@ class RecordRepo implements IRecordRepo
             'value' => $record->value,
             'order' => $record->order,
             'key' => $record->record_type->key,
+            'name' => $record->record_type->name,
             'record_category_id' => $record->record_category_id,
             'validations' => $record->validations()->where([
                 'state' => 'approved'
