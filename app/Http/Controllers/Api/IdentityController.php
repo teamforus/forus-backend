@@ -208,6 +208,38 @@ class IdentityController extends Controller
     }
 
     /**
+     * Create and activate a short living token for current user
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public function proxyAuthorizationShortToken() {
+        $proxy = $this->identityRepo->makeAuthorizationShortTokenProxy();
+
+        $this->identityRepo->activateAuthorizationShortTokenProxy(
+            auth()->id(), $proxy['exchange_token']
+        );
+
+        return array_only($proxy,[
+            'exchange_token'
+        ]);
+    }
+
+    /**
+     *
+     * @param string $shortToken
+     * @return array
+     */
+    public function proxyExchangeAuthorizationShortToken(
+        string $shortToken
+    ) {
+        return [
+            'access_token' => $this->identityRepo
+                ->exchangeAuthorizationShortTokenProxy($shortToken)
+        ];
+    }
+
+    /**
      * Authorize code
      * @param IdentityAuthorizeCodeRequest $request
      * @return array|
@@ -254,7 +286,9 @@ class IdentityController extends Controller
         } else if ($implementation == 'general') {
             $sourceUrl = Implementation::general_urls()['url_' . $frontend];
         } else {
-            $sourceUrl = Implementation::query()->where('key', $implementation)->first()['url_' . $frontend];
+            $sourceUrl = Implementation::query()->where([
+                'key' => $implementation
+            ])->first()['url_' . $frontend];
         }
 
         $redirectUrl = $sourceUrl . "identity-restore?token=" . $emailToken;
@@ -315,6 +349,10 @@ class IdentityController extends Controller
         return abort(404);
     }
 
+    /**
+     * @param $exchangeToken
+     * @return array
+     */
     public function emailConfirmationExchange(
         $exchangeToken
     ) {

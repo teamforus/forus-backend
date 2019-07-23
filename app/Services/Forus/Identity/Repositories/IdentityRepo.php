@@ -14,6 +14,8 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      * @var array
      */
     protected $expirationTimes = [
+        // 1 minute
+        'short_token' => 60,
         // 10 minutes
         'pin_code' => 60 * 10,
         // 60 minutes
@@ -75,9 +77,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function getProxyAccessToken(
         $proxyIdentityId
     ) {
-        $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
-
-        if (!$proxyIdentity) {
+        if (!$proxyIdentity = IdentityProxy::find($proxyIdentityId)) {
             throw new \Exception(
                 trans('identity.exceptions.unknown_identity')
             );
@@ -94,9 +94,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function proxyIdByAccessToken(
         string $access_token = null
     ) {
-        $proxyIdentity = IdentityProxy::getModel()->where([
-            'access_token' => $access_token
-        ])->first();
+        $proxyIdentity = IdentityProxy::findByAccessToken($access_token);
 
         return $proxyIdentity ? $proxyIdentity->id : null;
     }
@@ -109,7 +107,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function identityAddressByProxyId(
         $proxyIdentityId = null
     ) {
-        $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
+        $proxyIdentity = IdentityProxy::find($proxyIdentityId);
 
         if ($proxyIdentity && $proxyIdentity->identity) {
             return $proxyIdentity->identity->address;
@@ -126,9 +124,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function proxyStateById(
         $proxyIdentityId = null
     ) {
-        $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
-
-        return $proxyIdentity ? $proxyIdentity->state : null;
+        return IdentityProxy::find($proxyIdentityId)->state ?? null;
     }
 
     /**
@@ -140,7 +136,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function destroyProxyIdentity(
         $proxyIdentityId
     ) {
-        IdentityProxy::whereKey($proxyIdentityId)->delete();
+        IdentityProxy::find($proxyIdentityId)->delete();
     }
 
     /**
@@ -149,9 +145,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      * @throws \Exception
      */
     public function hasPinCode($proxyIdentityId) {
-        $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
-
-        if (!$proxyIdentity) {
+        if (!$proxyIdentity = IdentityProxy::find($proxyIdentityId)) {
             throw new \Exception(
                 trans('identity.exceptions.unknown_identity')
             );
@@ -170,18 +164,15 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         $proxyIdentityId,
         $pinCode
     ) {
-        $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
-
-        if (!$proxyIdentity) {
+        if (!$proxyIdentity = IdentityProxy::find($proxyIdentityId)) {
             throw new \Exception(
                 trans('identity.exceptions.unknown_identity')
             );
         }
 
-        return app('hash')->check(
-            $pinCode,
-            $proxyIdentity->identity->pin_code
-        );
+        $identity = $proxyIdentity->identity;
+
+        return app('hash')->check($pinCode, $identity);
     }
 
     /**
@@ -196,10 +187,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         $pinCode,
         $oldPinCode = null
     ) {
-        $proxyIdentity = IdentityProxy::whereKey($proxyIdentityId)->first();
-
-
-        if (!$proxyIdentity) {
+        if (!$proxyIdentity = IdentityProxy::find($proxyIdentityId)) {
             throw new \Exception(
                 trans('identity.exceptions.unknown_identity')
             );
@@ -226,13 +214,14 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     private function uniqExchangeToken($type) {
         do {
             switch ($type) {
-                case "pin_code": $token = random_int(111111, 999999); break;
                 case "qr_code": $token = $this->makeToken(64); break;
+                case "pin_code": $token = random_int(111111, 999999); break;
                 case "email_code": $token = $this->makeToken(128); break;
+                case "short_token": $token = $this->makeToken(200); break;
                 case "confirmation_code": $token = $this->makeToken(200); break;
                 default: throw new \Exception(trans('identity-proxy.unknown_token_type')); break;
             }
-        } while(IdentityProxy::getModel()->where([
+        } while(IdentityProxy::query()->where([
             'exchange_token' => $token
         ])->count() > 0);
 
@@ -280,15 +269,15 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         string $identity_address = null,
         string $state = 'pending'
     ) {
-          $access_token = $this->makeAccessToken();
+        $access_token = $this->makeAccessToken();
 
-          return collect(IdentityProxy::create(compact(
-              'identity_address', 'exchange_token', 'type',
-              'expires_in', 'state', 'access_token'
-          )))->only([
-              'identity_address', 'exchange_token', 'type', 'expires_in',
-              'state', 'access_token'
-          ])->toArray();
+        return collect(IdentityProxy::query()->create(compact(
+            'identity_address', 'exchange_token', 'type',
+            'expires_in', 'state', 'access_token'
+        )))->only([
+            'identity_address', 'exchange_token', 'type', 'expires_in',
+            'state', 'access_token'
+        ])->toArray();
     }
 
     /**
@@ -309,6 +298,16 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      */
     public function makeAuthorizationTokenProxy() {
         return $this->makeProxy('qr_code');
+    }
+
+    /**
+     * Make token authorization proxy identity
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public function makeAuthorizationShortTokenProxy() {
+        return $this->makeProxy('short_token');
     }
 
     /**
@@ -352,6 +351,42 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     }
 
     /**
+     * Authorize proxy identity by token
+     *
+     * @param string $identityAddress
+     * @param string $token
+     * @return bool|mixed
+     */
+    public function activateAuthorizationShortTokenProxy(
+        string $identityAddress,
+        string $token
+    ) {
+        return !!$this->exchangeToken('short_token', $token, $identityAddress);
+    }
+
+    /**
+     * Authorize proxy identity by token
+     *
+     * @param string $token
+     * @return bool|mixed
+     */
+    public function exchangeAuthorizationShortTokenProxy(
+        string $token
+    ) {
+        $proxy = $this->proxyByExchangeToken($token, 'short_token');
+
+        if (!$proxy) {
+            abort(404, trans('identity-proxy.code.not-found'));
+        }
+
+        if ($proxy->exchange_time_expired) {
+            abort(403, trans('identity-proxy.code.expired'));
+        }
+
+        return $proxy->access_token;
+    }
+
+    /**
      * Authorize proxy identity by email token
      *
      * @param string $token
@@ -376,6 +411,30 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     }
 
     /**
+     * Authorize proxy identity by email token
+     *
+     * @param string $token
+     * @return string
+     */
+    public function exchangeQrCodeToken(
+        string $token
+    ) {
+        return $this->exchangeToken('qr_code', $token)->access_token;
+    }
+
+    /**
+     * @param $exchange_token
+     * @param $type
+     * @return IdentityProxy
+     */
+    private function proxyByExchangeToken($exchange_token, $type) {
+        return IdentityProxy::query()->where([
+            'exchange_token'    => $exchange_token,
+            'type'              => $type
+        ])->first();
+    }
+
+    /**
      * Activate proxy by exchange_token
      *
      * @param string $type
@@ -388,11 +447,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         string $exchange_token,
         string $identity_address = null
     ) {
-        /** @var IdentityProxy $proxy */
-        $proxy = IdentityProxy::getModel()->where([
-            'exchange_token'    => $exchange_token,
-            'type'              => $type
-        ])->first();
+        $proxy = $this->proxyByExchangeToken($exchange_token, $type);
 
         if (!$proxy) {
             abort(404, trans('identity-proxy.code.not-found'));

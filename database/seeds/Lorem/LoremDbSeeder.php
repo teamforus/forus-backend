@@ -44,6 +44,8 @@ class LoremDbSeeder extends Seeder
      */
     public function run()
     {
+        $countProviders = env('DB_SEED_PROVIDERS', 20);
+
         $this->info("Making base identity!");
         $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
         $this->success("Identity created!");
@@ -53,7 +55,7 @@ class LoremDbSeeder extends Seeder
         $this->success("Sponsors created!");
 
         $this->info("Making Providers!");
-        $this->makeProviders($this->baseIdentity, 40);
+        $this->makeProviders($this->baseIdentity, $countProviders);
         $this->success("Providers created!");
 
         $this->applyFunds(
@@ -225,7 +227,7 @@ class LoremDbSeeder extends Seeder
 
             while ($voucher->amount_available > ($voucher->amount / 2)) {
                 $voucher->transactions()->create([
-                    'amount' => 1,
+                    'amount' => rand(5, 50),
                     'product_id' => null,
                     'address' => app()->make('token_generator')->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
@@ -493,7 +495,7 @@ class LoremDbSeeder extends Seeder
         })->map(function($records) use ($fund, $identity_address) {
             do {
                 $uid = app()->make('token_generator')->generate(4, 2);
-            } while(Prevalidation::getModel()->where(
+            } while(Prevalidation::query()->where(
                 'uid', $uid
             )->count() > 0);
 

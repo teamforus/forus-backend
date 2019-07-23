@@ -3,6 +3,8 @@
 
 namespace App\Models\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
+
 /**
  * Trait EloquentModel
  * @method static static find($id, $columns = ['*'])
@@ -12,6 +14,8 @@ namespace App\Models\Traits;
  * @method static static findOrNew($id, $columns = array())
  * @method static static firstOrNew($id, $columns = array())
  * @method static static firstOrCreate($columns = array())
+ * @method static Builder where($id)
+ * @method static Builder whereKey($id)
  * @package App\Models\Traits
  */
 trait EloquentModel

@@ -53,7 +53,7 @@ class ProviderVoucherResource extends Resource
         ))->get();
 
         $allowedProductCategories = $voucher->fund->product_categories;
-        $allowedProducts = Product::getModel()->whereIn(
+        $allowedProducts = Product::query()->whereIn(
             'organization_id', $allowedOrganizations->pluck('id')
         )->where('sold_out', '=', false)->whereIn(
             'product_category_id', $allowedProductCategories->pluck('id')
