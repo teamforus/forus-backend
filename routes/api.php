@@ -25,6 +25,10 @@ $router->group([], function() use ($router) {
             $router->post('/token', 'Api\IdentityController@proxyAuthorizationToken');
             $router->post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
 
+            # short tokens
+            $router->post('/short-token', 'Api\IdentityController@proxyAuthorizationShortToken');
+            $router->get('/short-token/{shortToken}', 'Api\IdentityController@proxyExchangeAuthorizationShortToken');
+
             // email
             $router->get('/redirect/email/{source}/{emailToken}', 'Api\IdentityController@proxyRedirectEmail');
             $router->get('/authorize/email/{source}/{emailToken}', 'Api\IdentityController@proxyAuthorizeEmail');
