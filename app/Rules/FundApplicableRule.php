@@ -33,7 +33,7 @@ class FundApplicableRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        $fundIds = FundProductCategory::getModel()->whereIn(
+        $fundIds = FundProductCategory::query()->whereIn(
             'product_category_id',
             $this->organization->product_categories->pluck('id')->toArray()
         )->select('fund_id')->distinct()->get()->pluck(

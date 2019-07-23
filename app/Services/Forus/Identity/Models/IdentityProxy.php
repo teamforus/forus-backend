@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Identity\Models;
 
+use App\Models\Traits\EloquentModel;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 

@@ -94,7 +94,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function proxyIdByAccessToken(
         string $access_token = null
     ) {
-        $proxyIdentity = IdentityProxy::getModel()->where([
+        $proxyIdentity = IdentityProxy::query()->where([
             'access_token' => $access_token
         ])->first();
 
@@ -232,7 +232,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
                 case "confirmation_code": $token = $this->makeToken(200); break;
                 default: throw new \Exception(trans('identity-proxy.unknown_token_type')); break;
             }
-        } while(IdentityProxy::getModel()->where([
+        } while(IdentityProxy::query()->where([
             'exchange_token' => $token
         ])->count() > 0);
 
@@ -389,7 +389,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         string $identity_address = null
     ) {
         /** @var IdentityProxy $proxy */
-        $proxy = IdentityProxy::getModel()->where([
+        $proxy = IdentityProxy::query()->where([
             'exchange_token'    => $exchange_token,
             'type'              => $type
         ])->first();

@@ -38,7 +38,7 @@ class MediaService
     public function __construct(
         array $mediable_models = []
     ) {
-        $this->model = Media::getModel();
+        $this->model = Media::query();
         $this->mediable_models = collect($mediable_models);
         $this->storageDriver = config('media.filesystem_driver');
     }
@@ -112,7 +112,7 @@ class MediaService
     public function clearStorage() {
         $storage = $this->storage();
 
-        $dbFiles = collect(MediaSize::getModel()->pluck('path'));
+        $dbFiles = collect(MediaSize::query()->pluck('path'));
         $storageFiles = collect($storage->allFiles($this->storagePath));
 
         $unusedFiles = $storageFiles->filter(function($file) use ($dbFiles) {
@@ -208,7 +208,7 @@ class MediaService
         $mediaSizes = $mediaConfig['size'];
 
         /** @var Model $model */
-        $model = Media::getModel();
+        $model = Media::query();
 
         do {
             $uid = app()->make('token_generator')->generate('64');
