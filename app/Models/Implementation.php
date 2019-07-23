@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\EloquentModel;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,8 @@ use Illuminate\Database\Query\Builder;
  */
 class Implementation extends Model
 {
+    use EloquentModel;
+
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator', 'lon', 'lat'

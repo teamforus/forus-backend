@@ -41,8 +41,8 @@ class RecordRepo implements IRecordRepo
      * @return array
      */
     public function getRecordTypes() {
-        return RecordType::query()->get()->map(function($recordType) {
-            return collect($recordType)->only(['id', 'key', 'name', 'type']);
+        return RecordType::query()->get()->map(function(RecordType $recordType) {
+            return $recordType->only(['id', 'key', 'name', 'type']);
         })->toArray();
     }
 
