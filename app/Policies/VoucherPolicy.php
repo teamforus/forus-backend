@@ -2,10 +2,10 @@
 
 namespace App\Policies;
 
+use App\Exceptions\AuthorizationJsonException;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class VoucherPolicy
@@ -136,40 +136,60 @@ class VoucherPolicy
      * @param string $identity_address
      * @param Voucher $voucher
      * @return bool
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationJsonException
      */
     public function useAsProvider(
         string $identity_address,
         Voucher $voucher
     ) {
+        $fund = $voucher->fund;
+        $id = 'organizations.id';
+
         if ($voucher->expire_at->isPast()) {
-            throw new AuthorizationException(trans(
-                'validation.voucher.expired'
-            ));
+            $this->deny('voucher_expired');
         }
 
         if ($voucher->fund->state != Fund::STATE_ACTIVE) {
-            throw new AuthorizationException(trans(
-                'validation.voucher.fund_not_active'
-            ));
+            $this->deny('fund_not_active');
         }
 
-        if ($voucher->type == 'regular') {
-            $organizations = $voucher->fund->provider_organizations_approved;
-            $identityOrganizations = Organization::queryByIdentityPermissions(
-                $identity_address, 'scan_vouchers'
-            )->pluck('id');
+        $providersApproved = $fund->provider_organizations_approved()
+            ->pluck($id);
+        $providersDeclined = $fund->provider_organizations_declined()
+            ->pluck($id);
+        $providersPending = $fund->provider_organizations_pending()
+            ->pluck($id);
+        $providersApplied = $fund->provider_organizations()
+            ->pluck($id);
 
-            return $identityOrganizations->intersect(
-                $organizations->pluck('id')
-                )->count() > 0;
+        $providers = Organization::queryByIdentityPermissions(
+            $identity_address, 'scan_vouchers'
+        )->pluck('id');
+
+        // None of identity organizations applied to the fund
+        if ($providers->intersect($providersApplied)->count() == 0) {
+            $this->deny('provider_not_applied');
+        }
+
+        // No approved identity organizations but have pending
+        if ($providers->intersect($providersApproved)->count() == 0 &&
+            $providers->intersect($providersPending)->count() > 0 ) {
+            $this->deny('provider_pending');
+        }
+
+        // No approved identity organizations but have declined
+        if ($providers->intersect($providersApproved)->count() == 0 &&
+            $providers->intersect($providersDeclined)->count() > 0 ) {
+            $this->deny('provider_declined');
+        }
+
+        // No approved identity organizations but hav pending
+        if ($voucher->type == 'regular') {
+            return $providers->intersect($providersApproved)->count() > 0;
         } else if ($voucher->type == 'product') {
             // Product vouchers can have no more than 1 transaction
             if ($voucher->transactions->count() > 0) {
-                throw new AuthorizationException(trans(
-                    'validation.voucher.product_voucher_used'
-                ));
+                $this->deny('product_voucher_used');
             }
 
             // The identity should be allowed to scan voucher for
@@ -194,5 +214,18 @@ class VoucherPolicy
         return $this->show($identity_address, $voucher) &&
             $voucher->parent_id != null &&
             $voucher->transactions->count() == 0;
+    }
+
+    /**
+     * @param string $error
+     * @throws AuthorizationJsonException
+     */
+    protected function deny(string $error)
+    {
+        $message = trans("validation.voucher.{$error}");
+
+        throw new AuthorizationJsonException(json_encode(
+            compact('error', 'message')
+        ), 403);
     }
 }
