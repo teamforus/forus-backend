@@ -14,6 +14,20 @@ interface IIdentityRepo {
     );
 
     /**
+     * Make new identity by email
+     * @param string $primaryEmail
+     * @param array $records
+     * @param int $pinCode
+     * @return mixed
+     * @throws \Exception
+     */
+    public function makeByEmail(
+        string $primaryEmail,
+        array $records = [],
+        $pinCode = 1111
+    );
+
+    /**
      * Create new proxy for given identity
      * @param $identity string
      * @return array
