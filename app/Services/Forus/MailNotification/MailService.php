@@ -650,6 +650,7 @@ class MailService
      * @param $identifier
      * @param string $fund_product_name
      * @param string $qr_url
+     * @param null|string $implementation
      *
      * @return bool
      */
@@ -738,7 +739,7 @@ class MailService
             $platform
         ));
 
-        return $this->checkFailure();
+        return $this->checkFailure('UserLogin');
     }
 
     /**

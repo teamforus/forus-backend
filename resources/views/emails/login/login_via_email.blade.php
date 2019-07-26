@@ -3,7 +3,7 @@
 @section('button_text', 'Inloggen')
 @section('link', $link)
 @section('title', 'Log in op ' . $platform)
-@section('header_image', 'https://media.forus.io/static/iphone_shield_594x594.png')
+@section('header_image', 'https://media.forus.io/static/bla.png')
 
 @section('html')
 Beste gebruiker,

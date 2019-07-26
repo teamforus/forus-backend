@@ -16,7 +16,11 @@
                             </tr>
                             <tr>
                                 <td style="border-collapse: collapse; padding-bottom: 25px;">
-                                    <img src="@yield('header_image')" style="width: 297px; display: block; margin: 0 auto;">
+                                    @if(isset($implementation) && array_key_exists('header_image', $implementation))
+                                        <img src="{{ $implementation['header_image'] }}" style="width: 297px; display: block; margin: 0 auto;">
+                                    @else
+                                        <img src="@yield('header_image')" style="width: 297px; display: block; margin: 0 auto;">
+                                    @endif
                                 </td>
                             </tr>
                             <tr>

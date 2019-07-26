@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
 use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Http\Resources\VoucherResource;
+use App\Models\Implementation;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
