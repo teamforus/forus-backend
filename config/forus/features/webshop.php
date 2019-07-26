@@ -3,7 +3,7 @@
 return [
     "records" => [
         // view records list
-        "list"      => false,
+        "list"      => true,
 
         // create new record
         "create"    => false,
@@ -24,6 +24,9 @@ return [
 
         // view fund details
         "show"      => true
+    ],
+    "identity"      => [
+        "address"   => true
     ],
     // enable newsletter
     "newsletter"    => false,
