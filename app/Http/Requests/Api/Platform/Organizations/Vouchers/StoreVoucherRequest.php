@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Rules\VouchersUploadArrayRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreVoucherRequest extends FormRequest
@@ -30,10 +31,20 @@ class StoreVoucherRequest extends FormRequest
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
 
         return [
-            'amount' => 'required|numeric|between:.1,' . $max,
-            'fund_id' => 'required|exists:funds,id',
-            'note' => 'nullable|string|max:280',
-            'expires_at' => 'nullable|date_format:Y-m-d|after:' . $endDate,
+            'fund_id'           => 'required|exists:funds,id',
+            'note'              => 'nullable|string|max:280',
+            'amount'            => 'required_without:vouchers|numeric|between:.1,' . $max,
+            'expires_at'        => 'nullable|date_format:Y-m-d|after:' . $endDate,
+            'email'             => 'nullable|email',
+            'vouchers'          => [
+                'required_without:amount',
+                new VouchersUploadArrayRule($fund)
+            ],
+            'vouchers.*'            => 'required|array',
+            'vouchers.*.amount'     => 'required|numeric|between:.1,' . $max,
+            'vouchers.*.expires_at' => 'nullable|date_format:Y-m-d|after:' . $endDate,
+            'vouchers.*.note'       => 'nullable|string|max:280',
+            'vouchers.*.email'      => 'nullable|email',
         ];
     }
 }
