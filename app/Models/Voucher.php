@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
+use App\Services\Forus\Identity\Models\Identity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 
 /**
@@ -145,11 +148,8 @@ class Voucher extends Model
         return !!$this->expire_at->isPast();
     }
 
-    /**
-     * @param string|null $identity_address
-     */
     public function sendToEmail(
-        string $identity_address = null
+        ?string $email
     ) {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
@@ -163,7 +163,8 @@ class Voucher extends Model
         }
 
         resolve('forus.services.mail_notification')->sendVoucher(
-            $identity_address ?: $this->identity_address,
+            $email,
+            $this->identity->get,
             $fund_product_name,
             $voucherToken->getQrCodeUrl()
         );

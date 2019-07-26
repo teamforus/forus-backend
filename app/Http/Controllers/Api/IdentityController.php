@@ -197,7 +197,7 @@ class IdentityController extends Controller
         }
 
         if (!empty($proxy)) {
-            $this->mailService->loginViaEmail($identityId, $link, $platform);
+            $this->mailService->loginViaEmail($email, $identityId, $link, $platform);
         }
 
         return [

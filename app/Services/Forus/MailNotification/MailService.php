@@ -2,7 +2,11 @@
 
 namespace App\Services\Forus\MailNotification;
 
+use App\Mail\Auth\UserLogin;
+use App\Mail\Vouchers\ProviderApplied;
+use App\Mail\Vouchers\Voucher;
 use App\Services\ApiRequestService\ApiRequest;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Class MailService
@@ -451,7 +455,7 @@ class MailService
             'fund_name'     => $fund_name,
             'webshop_link'  => $webshop_link,
         ]]));
-        
+
         $res = $this->apiRequest->post($endpoint, [
             'reffer_id'     => $identifier ?? '',
             'fund_name'     => $fund_name,
@@ -642,40 +646,27 @@ class MailService
     /**
      * Send voucher by email
      *
+     * @param string $email
      * @param $identifier
      * @param string $fund_product_name
      * @param string $qr_url
+     *
      * @return bool
      */
     public function sendVoucher(
+        string $email,
         $identifier,
         string $fund_product_name,
         string $qr_url
-    ) {
-        if (!$this->serviceApiUrl) {
-            return false;
-        }
+    ): bool {
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/sended_via_email/');
+        Mail::send(new Voucher(
+            $email,
+            $fund_product_name,
+            $qr_url
+        ));
 
-        $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'             => $identifier ?? '',
-            'fund_product_name'     => $fund_product_name,
-            'qr_url'                => $qr_url,
-        ]);
-
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `sendVoucher`: %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
-        }
-
-        return true;
+        return $this->checkFailure('Voucher');
     }
 
 
@@ -726,40 +717,28 @@ class MailService
 
     /**
      * Send restore identity link to address email
+     *
+     * @param string $email
      * @param $identifier
      * @param string $link
      * @param string $platform
+     *
      * @return bool
      */
     public function loginViaEmail(
+        string $email,
         $identifier,
         string $link,
         string $platform
     ) {
-        if (!$this->serviceApiUrl) {
-            return false;
-        }
+        Mail::send(new UserLogin(
+            $email,
+            $identifier,
+            $link,
+            $platform
+        ));
 
-        $endpoint = $this->getEndpoint('/sender/login/login_via_email/');
-
-        $res = $this->apiRequest->post($endpoint, [
-            'reffer_id' => $identifier ?? '',
-            'link'      => $link,
-            'platform'  => $platform,
-        ]);
-
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `loginViaEmail`: %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
-        }
-
-        return true;
+        return $this->checkFailure();
     }
 
     /**
@@ -1004,6 +983,22 @@ class MailService
                 sprintf(
                     'Error sending notification `fundNotifyReachedNotificationAmount`: %s',
                     $res->getBody()
+                )
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function checkFailure(string $mailName): bool
+    {
+        if (Mail::failures()) {
+            app()->make('log')->error(
+                sprintf(
+                    'Error sending notification `%s`',
+                    $mailName
                 )
             );
 
