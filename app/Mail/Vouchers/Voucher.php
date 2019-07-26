@@ -29,7 +29,7 @@ class Voucher extends Mailable
     public function build(): Mailable
     {
         return $this
-            ->from('info@eranmachiels.nl')
+            ->from(config('forus.mail.from.no-reply'))
             ->to($this->email)
             ->subject(trans('mails.vouchers.voucher_sent.subject'))
             ->view('emails.vouchers.voucher_sent', [
