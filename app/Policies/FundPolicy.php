@@ -105,7 +105,7 @@ class FundPolicy
         $identity_address,
         Fund $fund
     ) {
-        if (empty($identity_address) && ($fund->state != 'active')) {
+        if (empty($identity_address) && $fund->state != Fund::STATE_ACTIVE) {
             return false;
         }
 
@@ -174,14 +174,9 @@ class FundPolicy
         Fund $fund,
         Organization $organization
     ) {
-        if($organization->identityCan(
-            $identity_address,
+        return $organization->identityCan($identity_address, [
             'manage_funds'
-        )){
-            return $fund->state == 'waiting';
-        }
-
-        return false;
+        ]) && $fund->state == Fund::STATE_WAITING;
     }
 
     /**

@@ -132,5 +132,14 @@ return [
         'primary_email' => 'e-mail',
         'records.primary_email' => 'e-mail',
     ],
+    'voucher' => [
+        'expired' => 'This voucher is expired',
+        'product_voucher_used' => 'This product voucher is already used.',
+        'provider_not_applied' => 'You can not scan this voucher! You are not applied for this fund.',
+        'provider_pending' => 'You can not scan this voucher! Your application for this fund is still pending.',
+        'provider_denied' => 'You can not scan this voucher! Your application for this fund is denied.',
+        'fund_not_active' => 'Your can not scan this voucher! The fund is not active (anymore).',
+        'not_enough_funds' => 'Not enough credit on voucher.',
+    ],
 
 ];

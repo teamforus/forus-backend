@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Requests\Api\Media;
+namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
+use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreMediaRequest extends FormRequest
+class SendVoucherRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +25,10 @@ class StoreMediaRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => 'required|file|image|max:4096',
-            'type' => 'required|in:' . implode(',', array_keys(config('media.sizes')))
+            'email'     => [
+                'required',
+                new IdentityRecordsExistsRule('primary_email')
+            ],
         ];
     }
 }

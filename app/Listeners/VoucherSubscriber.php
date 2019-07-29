@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Implementation;
 use Illuminate\Events\Dispatcher;
@@ -9,6 +10,7 @@ use Illuminate\Events\Dispatcher;
 class VoucherSubscriber
 {
     private $mailService;
+    private $tokenGenerator;
 
     /**
      * VoucherSubscriber constructor.
@@ -16,6 +18,7 @@ class VoucherSubscriber
     public function __construct()
     {
         $this->mailService = resolve('forus.services.mail_notification');
+        $this->tokenGenerator = resolve('token_generator');
     }
 
     /**
@@ -24,15 +27,13 @@ class VoucherSubscriber
     public function onVoucherCreated(VoucherCreated $voucherCreated) {
         $voucher = $voucherCreated->getVoucher();
 
-        $voucherTokens = [];
-
-        $voucherTokens[] = $voucher->tokens()->create([
-            'address'           => app()->make('token_generator')->address(),
+        $voucher->tokens()->create([
+            'address'           => $this->tokenGenerator->address(),
             'need_confirmation' => true,
         ]);
 
-        $voucherTokens[] = $voucher->tokens()->create([
-            'address'           => app()->make('token_generator')->address(),
+        $voucher->tokens()->create([
+            'address'           => $this->tokenGenerator->address(),
             'need_confirmation' => false,
         ]);
 
@@ -52,7 +53,20 @@ class VoucherSubscriber
                 $product->name,
                 format_date_locale($product->expire_at)
             );
+        }
 
+        if ($voucher->identity_address) {
+            VoucherAssigned::dispatch($voucher);
+        }
+    }
+
+    /**
+     * @param VoucherAssigned $voucherCreated
+     */
+    public function onVoucherAssigned(VoucherAssigned $voucherCreated) {
+        $voucher = $voucherCreated->getVoucher();
+
+        if ($product = $voucher->product) {
             $imp = Implementation::query()->where([
                 'key' => Implementation::activeKey('general')
             ])->first();
@@ -82,16 +96,6 @@ class VoucherSubscriber
     }
 
     /**
-     * Get storage
-     * @return \Storage
-     */
-    private function storage() {
-        return app()->make('filesystem')->disk(
-            env('VOUCHER_QR_STORAGE_DRIVER', 'public')
-        );
-    }
-
-    /**
      * The events dispatcher
      *
      * @param Dispatcher $events
@@ -101,6 +105,11 @@ class VoucherSubscriber
         $events->listen(
             VoucherCreated::class,
             '\App\Listeners\VoucherSubscriber@onVoucherCreated'
+        );
+
+        $events->listen(
+            VoucherAssigned::class,
+            '\App\Listeners\VoucherSubscriber@onVoucherAssigned'
         );
     }
 }

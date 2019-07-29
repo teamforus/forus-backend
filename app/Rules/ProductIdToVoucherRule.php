@@ -39,7 +39,7 @@ class ProductIdToVoucherRule implements Rule
         $product = Product::query()->find($value);
 
         /** @var VoucherToken $voucherToken */
-        $voucherToken = VoucherToken::getModel()->where([
+        $voucherToken = VoucherToken::query()->where([
                 'address' => $this->voucherAddress
             ])->first() ?? abort(404);
 

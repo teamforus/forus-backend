@@ -61,12 +61,10 @@ class RecordValidationController extends Controller
 
     /**
      * Approve validation request
-     * @param Request $request
      * @param string $recordUuid
      * @return mixed
      */
     public function approve(
-        Request $request,
         string $recordUuid
     ) {
         $success = $this->recordRepo->approveValidationRequest(
@@ -85,12 +83,10 @@ class RecordValidationController extends Controller
 
     /**
      * Decline validation request
-     * @param Request $request
      * @param string $recordUuid
      * @return mixed
      */
     public function decline(
-        Request $request,
         string $recordUuid
     ) {
         $success = $this->recordRepo->declineValidationRequest(

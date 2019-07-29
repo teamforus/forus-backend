@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Resources\ValidatorResource;
 use App\Models\Validator;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 /**
  * Class ValidatorsController

@@ -22,7 +22,7 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         array $records
     ) {
-        $recordTypes = RecordType::getModel()->pluck(
+        $recordTypes = RecordType::query()->pluck(
             'id', 'key'
         )->toArray();
 
@@ -41,8 +41,8 @@ class RecordRepo implements IRecordRepo
      * @return array
      */
     public function getRecordTypes() {
-        return RecordType::getModel()->get()->map(function($recordType) {
-            return collect($recordType)->only(['id', 'key', 'name', 'type']);
+        return RecordType::query()->get()->map(function(RecordType $recordType) {
+            return $recordType->only(['id', 'key', 'name', 'type']);
         })->toArray();
     }
 
@@ -61,7 +61,7 @@ class RecordRepo implements IRecordRepo
         /**
          * @var RecordType $recordType
          */
-        $recordType = RecordType::getModel()->where([
+        $recordType = RecordType::query()->where([
             'key' => $recordTypeKey
         ])->first();
 
@@ -71,7 +71,7 @@ class RecordRepo implements IRecordRepo
             ]));
         }
 
-        $record = Record::getModel()->where([
+        $record = Record::query()->where([
             'record_type_id' => $recordType->id,
             'value' => $recordValue
         ]);
@@ -99,7 +99,7 @@ class RecordRepo implements IRecordRepo
         /**
          * @var RecordType $recordType
          */
-        $recordType = RecordType::getModel()->where([
+        $recordType = RecordType::query()->where([
             'key' => $recordTypeKey
         ])->first();
 
@@ -109,7 +109,7 @@ class RecordRepo implements IRecordRepo
             ]));
         }
 
-        $record = Record::getModel()->where([
+        $record = Record::query()->where([
             'record_type_id' => $recordType->id,
             'value' => $recordValue
         ]);
@@ -130,7 +130,7 @@ class RecordRepo implements IRecordRepo
     public function identityIdByEmail(
         string $email
     ) {
-        $record = Record::getModel()->where([
+        $record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('primary_email'),
             'value' => $email,
         ])->first();
@@ -147,7 +147,7 @@ class RecordRepo implements IRecordRepo
     public function primaryEmailByAddress(
         string $identityAddress
     ) {
-        $record = Record::getModel()->where([
+        $record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('primary_email'),
             'identity_address' => $identityAddress,
         ])->first();
@@ -164,7 +164,7 @@ class RecordRepo implements IRecordRepo
     public function getTypeIdByKey(
         string $key
     ) {
-        return RecordType::getModel()->where('key', $key)->first()->id;
+        return RecordType::query()->where('key', $key)->first()->id;
     }
 
     /**
@@ -180,7 +180,7 @@ class RecordRepo implements IRecordRepo
         int $order = 0
     ) {
         /** @var RecordCategory $recordCategory */
-        $recordCategory =  RecordCategory::getModel()->create([
+        $recordCategory =  RecordCategory::query()->create([
             'identity_address' => $identityAddress,
             'name' => $name,
             'order' => $order,
@@ -197,7 +197,7 @@ class RecordRepo implements IRecordRepo
     public function categoriesList(
         string $identityAddress
     ) {
-        return RecordCategory::getModel()->where([
+        return RecordCategory::query()->where([
             'identity_address' => $identityAddress
         ])->select([
             'id', 'name', 'order'
@@ -214,7 +214,7 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         $recordCategoryId
     ) {
-        $record =  RecordCategory::getModel()->where([
+        $record =  RecordCategory::query()->where([
             'id' => $recordCategoryId,
             'identity_address' => $identityAddress
         ])->select([
@@ -238,7 +238,7 @@ class RecordRepo implements IRecordRepo
         string $name = null,
         int $order = null
     ) {
-        $record =  RecordCategory::getModel()->where([
+        $record =  RecordCategory::query()->where([
             'id' => $recordCategoryId,
             'identity_address' => $identityAddress
         ])->first();
@@ -285,7 +285,7 @@ class RecordRepo implements IRecordRepo
         $recordCategoryId
     ) {
         /** @var RecordCategory $recordCategory */
-        $recordCategory =  RecordCategory::getModel()->where([
+        $recordCategory =  RecordCategory::query()->where([
             'id' => $recordCategoryId,
             'identity_address' => $identityAddress
         ])->first();
@@ -317,14 +317,14 @@ class RecordRepo implements IRecordRepo
     ) {
 
         // Todo: validation state
-        $query = Record::getModel()->where([
+        $query = Record::query()->where([
             'identity_address' => $identityAddress
         ])->with([
             'record_type'
         ]);
 
         if ($type) {
-            $recordType = RecordType::getModel()->where([
+            $recordType = RecordType::query()->where([
                 'key' => $type
             ])->first();
 
@@ -346,6 +346,7 @@ class RecordRepo implements IRecordRepo
                 'value' => $record->value,
                 'order' => $record->order,
                 'key' => $record->record_type->key,
+                'name' => $record->record_type->name,
                 'record_category_id' => $record->record_category_id,
                 'validations' => $record->validations()->where([
                     'state' => 'approved'
@@ -371,7 +372,7 @@ class RecordRepo implements IRecordRepo
         $recordId
     ) {
         /** @var Record $record */
-        $record = Record::getModel()->where([
+        $record = Record::query()->where([
             'id' => $recordId,
             'identity_address' => $identityAddress,
         ])->first();
@@ -382,6 +383,7 @@ class RecordRepo implements IRecordRepo
             'value' => $record->value,
             'order' => $record->order,
             'key' => $record->record_type->key,
+            'name' => $record->record_type->name,
             'record_category_id' => $record->record_category_id,
             'validations' => $record->validations()->where([
                 'state' => 'approved'
@@ -457,7 +459,7 @@ class RecordRepo implements IRecordRepo
             $update->put('order', $order);
         }
 
-        return !!Record::getModel()->where([
+        return !!Record::query()->where([
             'id' => $recordId,
             'identity_address' => $identityAddress
         ])->update($update->toArray());
@@ -493,7 +495,7 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         $recordId
     ) {
-        $record =  Record::getModel()->where([
+        $record =  Record::query()->where([
             'id' => $recordId,
             'identity_address' => $identityAddress
         ])->first();
@@ -522,7 +524,7 @@ class RecordRepo implements IRecordRepo
         int $recordId
     ) {
         /** @var Record $record */
-        $record =  Record::getModel()->where([
+        $record =  Record::query()->where([
             'id' => $recordId,
             'identity_address' => $identityAddress
         ])->first();
@@ -553,11 +555,11 @@ class RecordRepo implements IRecordRepo
         /** @var
          * Identity $identity
          */
-        $validation = RecordValidation::getModel()->where(
+        $validation = RecordValidation::query()->where(
             'uuid', $validationUuid
         )->first();
 
-        $identity = Identity::getModel()->where([
+        $identity = Identity::query()->where([
             'address' => $identityAddress
         ])->first();
 
@@ -584,11 +586,11 @@ class RecordRepo implements IRecordRepo
         /** @var
          * Identity $identity
          */
-        $validation = RecordValidation::getModel()->where(
+        $validation = RecordValidation::query()->where(
             'uuid', $validationUuid
         )->first();
 
-        $identity = Identity::getModel()->where([
+        $identity = Identity::query()->where([
             'address' => $identityAddress
         ])->first();
 
@@ -611,7 +613,7 @@ class RecordRepo implements IRecordRepo
         string $validationUuid
     ) {
         /** @var RecordValidation $validation */
-        $validation = RecordValidation::getModel()->where(
+        $validation = RecordValidation::query()->where(
             'uuid', $validationUuid
         )->first();
 

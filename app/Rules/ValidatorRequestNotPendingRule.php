@@ -29,7 +29,7 @@ class ValidatorRequestNotPendingRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        return ValidatorRequest::getModel()->where([
+        return ValidatorRequest::query()->where([
             'validator_id' => $this->validatorId,
             'record_id' => $value,
             'state' => 'pending'
