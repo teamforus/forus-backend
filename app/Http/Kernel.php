@@ -7,6 +7,7 @@ use App\Http\Middleware\ClientTypeMiddleware;
 use App\Http\Middleware\Cors;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\ImplementationKeyMiddleware;
+use App\Http\Middleware\RecordApmTransactions;
 use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\TrimStrings;
@@ -30,6 +31,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         TrustProxies::class,
         Cors::class,
+        RecordApmTransactions::class,
     ];
 
     /**
