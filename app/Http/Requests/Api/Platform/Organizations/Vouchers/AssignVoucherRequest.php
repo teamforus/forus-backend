@@ -25,10 +25,7 @@ class AssignVoucherRequest extends FormRequest
     public function rules()
     {
         return [
-            'email'     => [
-                'required',
-                new IdentityRecordsExistsRule('primary_email')
-            ],
+            'email' => 'required|email',
         ];
     }
 }
