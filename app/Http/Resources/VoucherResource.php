@@ -108,12 +108,13 @@ class VoucherResource extends Resource
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'created_at_locale',
+            'expire_at', 'expire_at_locale',
         ])->merge([
+            // 'expire_at' => $voucher->expire_at
+            'expire_at_locale' => format_date_locale($voucher->expire_at),
             'amount' => currency_format($amount),
             'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens->where('need_confirmation', 0)->first()->address,
-            'expire_at' => $voucher->expire_at,
-            'expire_at_locale' => format_date_locale($voucher->expire_at),
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'fund' => $fundResource,
@@ -127,8 +128,11 @@ class VoucherResource extends Resource
             )->map(function($product_voucher) {
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at', 'created_at_locale'
+                    'identity_address', 'fund_id', 'created_at',
+                    'created_at_locale'
                 ])->merge([
+                    'address' => $product_voucher->tokens->where(
+                        'need_confirmation', 1)->first()->address,
                     'amount' => currency_format(
                         $product_voucher->type == 'regular' ? $product_voucher->amount_available_cached : $product_voucher->amount
                     ),
