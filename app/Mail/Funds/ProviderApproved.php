@@ -28,10 +28,10 @@ class ProviderApproved extends ImplementationMail
         ->to($this->email)
         ->subject(trans())
         ->view('emails.funds.provider_approved', [
-            'fund_name'                 => $this->$fund_name,
-            'provider_name'             => $this->$provider_name,
-            'sponsor_name'              => $this->$sponsor_name,
-            'provider_dashboard_link'    => $this->$provider_dashboard_link,
+            'fund_name'                 => $this->fund_name,
+            'provider_name'             => $this->provider_name,
+            'sponsor_name'              => $this->sponsor_name,
+            'provider_dashboard_link'    => $this->provider_dashboard_link,
             'implementation' => $this->getImplementation()
         ]);
     }

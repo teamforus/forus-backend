@@ -34,10 +34,10 @@ class ProviderApplied extends ImplementationMail
         ->to($this->email)
         ->subject(trans())
         ->view('emails.funds.provider_applied', [
-            'provider_name'             => $this->$provider_name,
-            'sponsor_name'              => $this->$sponsor_name,
-            'fund_name'                 => $this->$fund_name,
-            'sponsor_dashboard_link'    => $this->$sponsor_dashboard_link,
+            'provider_name'             => $this->provider_name,
+            'sponsor_name'              => $this->sponsor_name,
+            'fund_name'                 => $this->fund_name,
+            'sponsor_dashboard_link'    => $this->sponsor_dashboard_link,
             'implementation' => $this->getImplementation()
         ]);
     }

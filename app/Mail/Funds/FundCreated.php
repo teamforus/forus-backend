@@ -7,7 +7,7 @@ use App\Mail\ImplementationMail;
 class FundCreated extends ImplementationMail
 {
     private $fund_name;
-    private $sponsor_dashboard_link;
+    private $webshop_dashboard_link;
 
     public function __construct(
         string $email,        
@@ -27,8 +27,8 @@ class FundCreated extends ImplementationMail
         ->to($this->email)
         ->subject(trans())
         ->view('emails.funds.new_fund_created', [
-            'fund_name'      => $this->$fund_name,
-            'webshop_link'   => $this->$webshop_link,
+            'fund_name'      => $this->fund_name,
+            'webshop_link'   => $this->webshop_link,
             'implementation' => $this->getImplementation()
         ]);
     }

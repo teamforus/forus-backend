@@ -27,9 +27,9 @@ class ProviderRejected extends ImplementationMail
         ->to($this->email)
         ->subject(trans())
         ->view('emails.funds.provider_rejected', [
-            'fund_name'                 => $this->$fund_name,
-            'provider_name'             => $this->$provider_name,
-            'sponsor_name'              => $this->$sponsor_name,
+            'fund_name'                 => $this->fund_name,
+            'provider_name'             => $this->provider_name,
+            'sponsor_name'              => $this->sponsor_name,
             'implementation' => $this->getImplementation()
         ]);
     }
