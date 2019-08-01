@@ -60,8 +60,9 @@ class IdentityController extends Controller
             );
 
             $this->mailService->sendEmailConfirmationToken(
-                $identityAddress,
-                $confirmationLink
+                $request->input('records.primary_email'),
+                $confirmationLink,
+                $identityAddress
             );
         } else {
             $this->identityRepo->exchangeEmailConfirmationToken(
