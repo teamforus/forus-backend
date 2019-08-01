@@ -16,11 +16,6 @@ class UserLogin extends ImplementationMail
      */
     private $platform;
 
-    /**
-     * @var string $key
-     */
-    protected $name = 'login_via_email';
-
     public function __construct(
         string $email,
         string $link,
