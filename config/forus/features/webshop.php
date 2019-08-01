@@ -6,10 +6,10 @@ return [
         "list"      => true,
 
         // create new record
-        "create"    => false,
+        "create"    => true,
 
         // validate record
-        "validate"  => false
+        "validate"  => true
     ],
     "funds" => [
         // list all funds

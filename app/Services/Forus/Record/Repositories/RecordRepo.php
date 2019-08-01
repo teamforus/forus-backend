@@ -8,7 +8,6 @@ use App\Services\Forus\Record\Models\RecordCategory;
 use App\Services\Forus\Record\Models\RecordType;
 use App\Services\Forus\Record\Models\RecordValidation;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Database\Eloquent\Collection;
 
 class RecordRepo implements IRecordRepo
 {
@@ -339,8 +338,32 @@ class RecordRepo implements IRecordRepo
             $query->where('record_category_id', $categoryId);
         }
 
-        return $query->orderBy('order')->get()->map(function($record) {
-            /** @var Record $record */
+        return $query->orderBy('order')->get()->map(function(
+            Record $record
+        ) {
+            $validations = $record->validations()->where([
+                'state' => 'approved'
+            ])->select([
+                'state', 'identity_address', 'created_at', 'updated_at',
+                'organization_id'
+            ])->get()->load('organization')->map(function (
+                RecordValidation $validation
+            ) {
+                $organization = $validation->organization ?
+                    $validation->organization->only([
+                        'id', 'name'
+                    ]) : null;
+
+                unset($validation->organization_id);
+                unset($validation->organization);
+
+                $validation->organization = $organization;
+
+                return $validation;
+            })/*->groupBy('identity_address')->map(function(Collection $record) {
+                return $record->sortByDesc('created_at')->first();
+            })->flatten()->toArray()*/;
+
             return [
                 'id' => $record->id,
                 'value' => $record->value,
@@ -348,15 +371,7 @@ class RecordRepo implements IRecordRepo
                 'key' => $record->record_type->key,
                 'name' => $record->record_type->name,
                 'record_category_id' => $record->record_category_id,
-                'validations' => $record->validations()->where([
-                    'state' => 'approved'
-                ])->select([
-                    'state', 'identity_address', 'created_at', 'updated_at'
-                ])->get()->groupBy(
-                    'identity_address'
-                )->map(function(Collection $record) {
-                    return $record->sortByDesc('created_at')->first();
-                })->flatten()->toArray()
+                'validations' => $validations
             ];
         })->toArray();
     }
@@ -377,6 +392,29 @@ class RecordRepo implements IRecordRepo
             'identity_address' => $identityAddress,
         ])->first();
 
+        $validations = $record->validations()->where([
+            'state' => 'approved'
+        ])->select([
+            'state', 'identity_address', 'created_at', 'updated_at',
+            'organization_id'
+        ])->distinct()->orderBy(
+            'updated_at', 'DESC'
+        )->get()->load('organization')->map(function (
+            RecordValidation $validation
+        ) {
+            $organization = $validation->organization ?
+                $validation->organization->only([
+                    'id', 'name'
+                ]) : null;
+
+            unset($validation->organization_id);
+            unset($validation->organization);
+
+            $validation->organization = $organization;
+
+            return $validation;
+        })->toArray();
+
         // Todo: validation state
         return $record ? [
             'id' => $record->id,
@@ -385,13 +423,7 @@ class RecordRepo implements IRecordRepo
             'key' => $record->record_type->key,
             'name' => $record->record_type->name,
             'record_category_id' => $record->record_category_id,
-            'validations' => $record->validations()->where([
-                'state' => 'approved'
-            ])->select([
-                'state', 'identity_address', 'created_at', 'updated_at'
-            ])->distinct()->orderBy(
-                'updated_at', 'DESC'
-            )->get()->toArray()
+            'validations' => $validations
         ] : null;
     }
 
@@ -544,13 +576,16 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Approve validation request
+     *
      * @param string $identityAddress
      * @param string $validationUuid
+     * @param int|null $organization_id
      * @return bool
      */
     public function approveValidationRequest(
         string $identityAddress,
-        string $validationUuid
+        string $validationUuid,
+        int $organization_id = null
     ) {
         /** @var
          * Identity $identity
@@ -569,6 +604,7 @@ class RecordRepo implements IRecordRepo
 
         return !!$validation->update([
             'identity_address' => $identity->address,
+            'organization_id' => $organization_id,
             'state' => 'approved'
         ]);
     }

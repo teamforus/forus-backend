@@ -31,7 +31,7 @@ class UploadPrevalidationsRequest extends FormRequest
         )->get()->pluck('funds')->flatten()->pluck('id');
 
         return [
-            'fund_id' => 'in:' . $fundsAvailable->implode(','),
+            'fund_id' => 'required|in:' . $fundsAvailable->implode(','),
             'data' => ['required', 'array', new PrevalidationDataRule(
                 request()->input('fund_id')
             )]
