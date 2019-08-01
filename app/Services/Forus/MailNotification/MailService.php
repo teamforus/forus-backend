@@ -734,9 +734,9 @@ class MailService
     ) {
         Mail::send(new UserLogin(
             $email,
-            $identifier,
             $link,
-            $platform
+            $platform,
+            $identifier
         ));
 
         return $this->checkFailure('UserLogin');

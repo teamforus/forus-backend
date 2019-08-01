@@ -135,3 +135,24 @@ if (!function_exists('implementation_key')) {
         return request()->header('Client-Key', false);
     }
 }
+
+if (!function_exists('flattenBy_key')) {
+    /**
+     * flattens a multi dimensional array into an associative array,
+     * having the in-depth indexes as keys
+     */
+    function flatten_by_key(array $array, string $prefix = ''): array {
+        $result = [];
+
+        foreach($array as $key => $value) {
+            if(is_array($value)) {
+                $result = $result + flatten_by_key($value, $prefix . $key . '.');
+            }
+            else {
+                $result[$prefix . $key] = $value;
+            }
+        }
+
+        return $result;
+    }
+}

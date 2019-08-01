@@ -2,25 +2,10 @@
 
 namespace App\Mail\Auth;
 
-use App\Models\Implementation;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
+use App\Mail\ImplementationMail;
 
-class UserLogin extends Mailable
+class UserLogin extends ImplementationMail
 {
-    use Queueable, SerializesModels;
-
-    /**
-     * @var string $email
-     */
-    private $email;
-
-    /**
-     * @var string|null $identityId
-     */
-    private $identityId;
-
     /**
      * @var string $link
      */
@@ -32,24 +17,23 @@ class UserLogin extends Mailable
     private $platform;
 
     /**
-     * @var array|string $implementation
+     * @var string $key
      */
-    private $implementation;
+    protected $name = 'login_via_email';
 
     public function __construct(
         string $email,
-        ?string $identityId,
         string $link,
-        string $platform
+        string $platform,
+        ?string $identityId
     ) {
-        $this->email = $email;
-        $this->identityId = $identityId;
+        parent::__construct($email, $identityId);
+
         $this->link = $link;
         $this->platform = $platform;
-        $this->implementation = Implementation::activeKey();
     }
 
-    public function build(): Mailable
+    public function build(): ImplementationMail
     {
         return $this
             ->from(config('forus.mail.from.no-reply'))
@@ -58,7 +42,7 @@ class UserLogin extends Mailable
             ->view('emails.login.login_via_email', [
                 'platform' => $this->platform,
                 'link' => $this->link,
-                'implementation' => config('forus.mails.implementations.' . $this->implementation)
+                'implementation' => $this->getImplementation()
             ]);
     }
 }
