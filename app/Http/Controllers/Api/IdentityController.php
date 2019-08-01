@@ -196,8 +196,7 @@ class IdentityController extends Controller
                 $email,
                 $identityId,
                 $link,
-                $platform,
-                Implementation::activeKey()
+                $platform
             );
         }
 
