@@ -3,7 +3,7 @@
 namespace App\Services\Forus\MailNotification;
 
 use App\Mail\Auth\UserLogin;
-use App\Mail\Vouchers\ProviderApplied;
+use App\Mail\Funds\ProviderApplied;
 use App\Mail\Vouchers\Voucher;
 use App\Services\ApiRequestService\ApiRequest;
 use Illuminate\Support\Facades\Mail;
@@ -190,6 +190,7 @@ class MailService
     /**
      * Notify sponsor that new provider applied to his fund
      *
+     * @param $email
      * @param $identifier
      * @param string $provider_name
      * @param string $sponsor_name
@@ -198,38 +199,22 @@ class MailService
      * @return bool
      */
     public function providerApplied(
+        $email,
         $identifier,
         string $provider_name,
         string $sponsor_name,
         string $fund_name,
         string $sponsor_dashboard_link
     ) {
-        if (!$this->serviceApiUrl) {
-            return false;
-        }
-
-        $endpoint = $this->getEndpoint('/sender/vouchers/provider_applied/');
-
-        $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'                 => $identifier ?? '',
-            'provider_name'             => $provider_name,
-            'sponsor_name'              => $sponsor_name,
-            'fund_name'                 => $fund_name,
-            'sponsor_dashboard_link'    => $sponsor_dashboard_link,
-        ]);
-
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `providerApplied`: %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
-        }
-
-        return true;
+        Mail::send(new ProviderApplied(
+            $email,
+            $identifier,
+            $provider_name,
+            $sponsor_name,
+            $fund_name,
+            $sponsor_dashboard_link
+        ));
+        return $this->checkFailure('ProviderApplied');
     }
 
     /**
