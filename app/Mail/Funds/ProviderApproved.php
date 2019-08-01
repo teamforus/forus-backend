@@ -11,7 +11,7 @@ class ProviderApproved extends ImplementationMail
         string $fund_name,
         string $provider_name,
         string $sponsor_name,
-        string $provider_dashboard_link
+        string $provider_dashboard_link,
         ?string $identityId
     ) {
         parent::__construct($email, $identityId);
@@ -21,7 +21,7 @@ class ProviderApproved extends ImplementationMail
         $this->sponsor_name             = $sponsor_name;
         $this->provider_dashboard_link   = $provider_dashboard_link;
     }
-    public function build(): Mailable
+    public function build(): ImplementationMail
     {
         return $this
         ->from(config('forus.mail.from.no-reply'))

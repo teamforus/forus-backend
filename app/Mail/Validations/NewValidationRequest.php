@@ -15,7 +15,7 @@ class NewValidationRequest extends ImplementationMail
 
         $this->validator_dashboard_link   = $validator_dashboard_link;
     }
-    public function build(): Mailable
+    public function build(): ImplementationMail
     {
         return $this
         ->from(config('forus.mail.from.no-reply'))

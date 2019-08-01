@@ -12,7 +12,7 @@ class FundStarted extends ImplementationMail
     public function __construct(
         string $email,        
         string $fund_name,
-        string $sponsor_name
+        string $sponsor_name,
         ?string $identityId
     ) {
         parent::__construct($email, $identityId);
@@ -20,7 +20,7 @@ class FundStarted extends ImplementationMail
         $this->sponsor_name  = $sponsor_name;
     }
 
-    public function build(): Mailable
+    public function build(): ImplementationMail
     {
         return $this
         ->from(config('forus.mail.from.no-reply'))

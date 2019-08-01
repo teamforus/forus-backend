@@ -1,6 +1,10 @@
-@extends('emails.base)
+@extends('emails.base')
 
-@section('title', trans('mails.funds.provider_applied.title'))
+@section('button_text', 'Ga naar het dashboard')
+@section('link', $sponsor_dashboard_link)
+@section('title', $provider_name . ' wilt zich aanmelden voor '. $fund_name)
+@section('header_image', 'https://media.forus.io/static/bla.png')
+
 @section('html')
     Beste {{ $sponsor_name }},
     <br/>

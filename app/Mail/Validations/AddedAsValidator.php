@@ -15,7 +15,7 @@ class AddedAsValidator extends ImplementationMail
 
         $this->sponsor_name             = $sponsor_name;
     }
-    public function build(): Mailable
+    public function build(): ImplementationMail
     {
         return $this
         ->from(config('forus.mail.from.no-reply'))

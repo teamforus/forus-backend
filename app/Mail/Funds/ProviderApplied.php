@@ -17,7 +17,7 @@ class ProviderApplied extends ImplementationMail
         string $provider_name,
         string $sponsor_name,
         string $fund_name,
-        string $sponsor_dashboard_link
+        string $sponsor_dashboard_link,
         ?string $identityId
     ) {
         parent::__construct($email, $identityId);
@@ -27,7 +27,7 @@ class ProviderApplied extends ImplementationMail
         $this->sponsor_dashboard_link   = $sponsor_dashboard_link;
     }
 
-    public function build(): Mailable
+    public function build(): ImplementationMail
     {
         return $this
         ->from(config('forus.mail.from.no-reply'))
