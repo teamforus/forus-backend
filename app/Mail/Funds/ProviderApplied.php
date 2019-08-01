@@ -13,11 +13,14 @@ class ProviderApplied extends ImplementationMail
     private $sponsor_dashboard_link;
 
     public function __construct(
+        string $email,        
         string $provider_name,
         string $sponsor_name,
         string $fund_name,
         string $sponsor_dashboard_link
+        ?string $identityId
     ) {
+        parent::__construct($email, $identityId);
         $this->provider_name            = $provider_name;
         $this->sponsor_name             = $sponsor_name;
         $this->fund_name                = $fund_name;
@@ -31,11 +34,11 @@ class ProviderApplied extends ImplementationMail
         ->to($this->email)
         ->subject(trans())
         ->view('emails.funds.provider_applied', [
-            'provider_name'             => $provider_name,
-            'sponsor_name'              => $sponsor_name,
-            'fund_name'                 => $fund_name,
-            'sponsor_dashboard_link'    => $sponsor_dashboard_link,
-            'implementation' => config('forus.mails.implementations.' . $this->implementation)
+            'provider_name'             => $this->$provider_name,
+            'sponsor_name'              => $this->$sponsor_name,
+            'fund_name'                 => $this->$fund_name,
+            'sponsor_dashboard_link'    => $this->$sponsor_dashboard_link,
+            'implementation' => $this->getImplementation()
         ]);
     }
 }
