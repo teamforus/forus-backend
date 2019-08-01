@@ -1,6 +1,6 @@
 @extends('emails.base)
 
-@section('title', trans('mails.validations.you_added_as_validator.title'))
+@section('title', trans('mails.validations.new_validation_request.title'))
 @section('html')
     Beste validator,
     <br/>
