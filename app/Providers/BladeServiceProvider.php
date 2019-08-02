@@ -18,10 +18,10 @@ class BladeServiceProvider extends ServiceProvider
 
         Blade::directive('implementationmail', function (string $data) use ($implementation) {
             if (config()->has('forus.mails.implementations.' . $implementation . '.' . $data)) {
-                return config('forus.mails.implementations.' . $implementation . '.' . $data);
+                return "<?= config('forus.mails.implementations.${implementation}.${data}); ?>";
             }
             elseif (config()->has('forus.mails.implementations.general.' . $data)) {
-                return config('forus.mails.implementations.general.' . $data);
+                return "<?= config('forus.mails.implementations.general.${data}); ?>";
             }
 
             return $data;
