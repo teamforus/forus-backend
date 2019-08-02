@@ -6,32 +6,37 @@ use App\Mail\ImplementationMail;
 
 class ProviderApproved extends ImplementationMail
 {
+    private $fundName;
+    private $providerName;
+    private $sponsorName;
+    private $link;
+
     public function __construct(
         string $email,
-        string $fund_name,
-        string $provider_name,
-        string $sponsor_name,
-        string $provider_dashboard_link,
+        string $fundName,
+        string $providerName,
+        string $sponsorName,
+        string $link,
         ?string $identityId
     ) {
         parent::__construct($email, $identityId);
 
-        $this->fund_name                = $fund_name;
-        $this->provider_name            = $provider_name;
-        $this->sponsor_name             = $sponsor_name;
-        $this->provider_dashboard_link   = $provider_dashboard_link;
+        $this->fundName = $fundName;
+        $this->providerName = $providerName;
+        $this->sponsorName = $sponsorName;
+        $this->link = $link;
     }
     public function build(): ImplementationMail
     {
         return $this
         ->from(config('forus.mail.from.no-reply'))
         ->to($this->email)
-        ->subject(trans())
+        ->subject('mails.funds.provider_approved.title')
         ->view('emails.funds.provider_approved', [
-            'fund_name'                 => $this->fund_name,
-            'provider_name'             => $this->provider_name,
-            'sponsor_name'              => $this->sponsor_name,
-            'provider_dashboard_link'    => $this->provider_dashboard_link,
+            'fund_name'                 => $this->fundName,
+            'provider_name'             => $this->providerName,
+            'sponsor_name'              => $this->sponsorName,
+            'provider_dashboard_link'    => $this->providerName,
             'implementation' => $this->getImplementation()
         ]);
     }

@@ -42,6 +42,7 @@ class VoucherSubscriber
 
             if ($product->sold_out) {
                 $this->mailService->productSoldOut(
+                    $product->organization->email,
                     $product->organization->emailServiceId(),
                     $product->name,
                     Implementation::active()['url_provider']

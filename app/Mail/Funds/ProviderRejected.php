@@ -6,6 +6,9 @@ use App\Mail\ImplementationMail;
 
 class ProviderRejected extends ImplementationMail
 {
+    private $fundName;
+    private $providerName;
+    private $sponsorName;
 
     public function __construct(
         string $email,
@@ -16,20 +19,20 @@ class ProviderRejected extends ImplementationMail
     ) {
         parent::__construct($email, $identityId);
 
-        $this->fund_name                = $fund_name;
-        $this->provider_name            = $provider_name;
-        $this->sponsor_name             = $sponsor_name;
+        $this->fundName                = $fund_name;
+        $this->providerName            = $provider_name;
+        $this->sponsorName             = $sponsor_name;
     }
     public function build(): ImplementationMail
     {
         return $this
         ->from(config('forus.mail.from.no-reply'))
         ->to($this->email)
-        ->subject(trans())
+        ->subject(trans('mails.funds.provider_rejected.title'))
         ->view('emails.funds.provider_rejected', [
-            'fund_name'                 => $this->fund_name,
-            'provider_name'             => $this->provider_name,
-            'sponsor_name'              => $this->sponsor_name,
+            'fund_name'                 => $this->fundName,
+            'provider_name'             => $this->providerName,
+            'sponsor_name'              => $this->sponsorName,
             'implementation' => $this->getImplementation()
         ]);
     }
