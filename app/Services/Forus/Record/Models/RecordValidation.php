@@ -43,7 +43,7 @@ class RecordValidation extends Model
      */
     public function organization() {
         return $this->belongsTo(Organization::class)->select([
-            'id', 'name',
+            'id', 'name', 'email',
         ]);
     }
 }

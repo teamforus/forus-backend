@@ -346,23 +346,16 @@ class RecordRepo implements IRecordRepo
             ])->select([
                 'state', 'identity_address', 'created_at', 'updated_at',
                 'organization_id'
-            ])->get()->load('organization')->map(function (
+            ])->get()->load('organization')->map(function(
                 RecordValidation $validation
             ) {
-                $organization = $validation->organization ?
-                    $validation->organization->only([
-                        'id', 'name'
-                    ]) : null;
-
-                unset($validation->organization_id);
-                unset($validation->organization);
-
-                $validation->organization = $organization;
-
-                return $validation;
-            })/*->groupBy('identity_address')->map(function(Collection $record) {
-                return $record->sortByDesc('created_at')->first();
-            })->flatten()->toArray()*/;
+                return $validation->setAttribute(
+                    'email',
+                    $validation->organization ? null :$this->primaryEmailByAddress(
+                        $validation->identity_address
+                    )
+                );
+            });
 
             return [
                 'id' => $record->id,
@@ -399,20 +392,15 @@ class RecordRepo implements IRecordRepo
             'organization_id'
         ])->distinct()->orderBy(
             'updated_at', 'DESC'
-        )->get()->load('organization')->map(function (
+        )->get()->load('organization')->map(function(
             RecordValidation $validation
         ) {
-            $organization = $validation->organization ?
-                $validation->organization->only([
-                    'id', 'name'
-                ]) : null;
-
-            unset($validation->organization_id);
-            unset($validation->organization);
-
-            $validation->organization = $organization;
-
-            return $validation;
+            return $validation->setAttribute(
+                'email',
+                $validation->organization ? null :$this->primaryEmailByAddress(
+                    $validation->identity_address
+                )
+            );
         })->toArray();
 
         // Todo: validation state
