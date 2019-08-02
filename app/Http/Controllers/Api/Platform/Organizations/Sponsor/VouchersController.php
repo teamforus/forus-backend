@@ -124,9 +124,11 @@ class VouchersController extends Controller
         $this->authorize('assignSponsor', [$voucher, $organization]);
 
         $email = $request->post('email');
+        $identityRepo = resolve('forus.services.identity');
         $recordRepo = resolve('forus.services.record');
 
-        $voucher->assignToIdentity($recordRepo->identityIdByEmail($email));
+        $voucher->assignToIdentity($recordRepo->identityIdByEmail($email) ?:
+            $identityRepo->makeByEmail($email));
 
         return new SponsorVoucherResource($voucher);
     }

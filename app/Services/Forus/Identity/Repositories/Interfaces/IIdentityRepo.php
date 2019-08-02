@@ -29,7 +29,7 @@ interface IIdentityRepo {
 
     /**
      * Create new proxy for given identity
-     * @param $identity string
+     * @param string $identity
      * @return array
      */
     public function makeIdentityPoxy(
