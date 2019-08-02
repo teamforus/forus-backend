@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Implementation;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\ServiceProvider;
 
 class BladeServiceProvider extends ServiceProvider
@@ -24,8 +25,11 @@ class BladeServiceProvider extends ServiceProvider
             elseif (config()->has('forus.mails.implementations.general.' . $data)) {
                 return config('forus.mails.implementations.general.' . $data);
             }
+            elseif(Lang::has('forus.mails.implementations.' . $implementation . '.' . $data)) {
+                return Lang::get('forus.mails.implementations.' . $implementation . '.' . $data);
+            }
 
-            return $data;
+            return Lang::get('forus.mails.implementations.general.' . $data);
         });
     }
 
