@@ -28,8 +28,7 @@ class EmailActivation extends ImplementationMail
             ->to($this->email)
             ->subject('E-mailactivering')
             ->view('emails.user.email_activation', [
-                'link' => $this->link,
-                'implementation' => $this->getImplementation()
+                'link' => $this->link
             ]);
     }
 }

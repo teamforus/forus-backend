@@ -37,8 +37,7 @@ class BalanceWarning extends ImplementationMail
                 'fund_name' => $this->fundName,
                 'sponsor_name' => $this->sponsorName,
                 'notification_amount' => $this->notificationAmount,
-                'link' => $this->link,
-                'implementation' => $this->getImplementation()
+                'link' => $this->link
             ]);
     }
 }

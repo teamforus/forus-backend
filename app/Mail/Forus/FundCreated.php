@@ -28,8 +28,7 @@ class FundCreated extends ImplementationMail
         ->subject('Er is een nieuw fonds toegevoegd: ' . $this->fundName)
         ->view('emails.forus.new_fund_created', [
             'fund_name' => $this->fundName,
-            'organization_name' => $this->organizationName,
-            'implementation' => $this->getImplementation()
+            'organization_name' => $this->organizationName
         ]);
     }
 }

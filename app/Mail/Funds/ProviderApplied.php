@@ -13,7 +13,7 @@ class ProviderApplied extends ImplementationMail
     private $sponsor_dashboard_link;
 
     public function __construct(
-        string $email,        
+        string $email,
         string $provider_name,
         string $sponsor_name,
         string $fund_name,
@@ -37,8 +37,7 @@ class ProviderApplied extends ImplementationMail
             'provider_name'             => $this->provider_name,
             'sponsor_name'              => $this->sponsor_name,
             'fund_name'                 => $this->fund_name,
-            'sponsor_dashboard_link'    => $this->sponsor_dashboard_link,
-            'implementation' => $this->getImplementation()
+            'sponsor_dashboard_link'    => $this->sponsor_dashboard_link
         ]);
     }
 }

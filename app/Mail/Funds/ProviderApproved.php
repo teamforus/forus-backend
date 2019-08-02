@@ -36,8 +36,7 @@ class ProviderApproved extends ImplementationMail
             'fund_name'                 => $this->fundName,
             'provider_name'             => $this->providerName,
             'sponsor_name'              => $this->sponsorName,
-            'provider_dashboard_link'    => $this->providerName,
-            'implementation' => $this->getImplementation()
+            'provider_dashboard_link'    => $this->providerName
         ]);
     }
 

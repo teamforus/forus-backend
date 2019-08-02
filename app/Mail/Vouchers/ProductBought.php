@@ -29,8 +29,7 @@ class ProductBought extends ImplementationMail
             ->subject('Uw aanbod' . $this->productName .' is gereserveerd!')
             ->view('emails.funds.product_bought', [
                 'product_name' => $this->productName,
-                'expiration_date' => $this->expirationDate,
-                'implementation' => $this->getImplementation()
+                'expiration_date' => $this->expirationDate
             ]);
     }
 }

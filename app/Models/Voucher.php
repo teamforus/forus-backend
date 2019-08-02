@@ -188,6 +188,7 @@ class Voucher extends Model
             $product_name = $voucherToken->voucher->product->name;
 
             resolve('forus.services.mail_notification')->shareVoucher(
+                $voucherToken->voucher->product->organization->email,
                 $voucherToken->voucher->product->organization->emailServiceId(),
                 $primaryEmail,
                 $product_name,
@@ -197,6 +198,7 @@ class Voucher extends Model
 
             if ($sendCopyToUser) {
                 resolve('forus.services.mail_notification')->shareVoucher(
+                    $primaryEmail,
                     auth()->id(),
                     $primaryEmail,
                     $product_name,
@@ -214,8 +216,12 @@ class Voucher extends Model
     {
         $amount = $this->parent ? $this->parent->amount_available : $this->amount_available;
         $fund_name = $this->fund->name;
+        $email = resolve('forus.services.record')->primaryEmailByAddress(
+            $this->identity_address
+        );
 
         resolve('forus.services.mail_notification')->transactionAvailableAmount(
+            $email,
             $this->identity_address,
             $fund_name,
             $amount

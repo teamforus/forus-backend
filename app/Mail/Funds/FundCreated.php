@@ -28,8 +28,7 @@ class FundCreated extends ImplementationMail
             ->subject(trans('mails.funds.new_fund_created.title'))
             ->view('emails.funds.new_fund_created', [
                 'fund_name' => $this->fundName,
-                'webshop_link' => $this->link,
-                'implementation' => $this->getImplementation()
+                'webshop_link' => $this->link
             ]);
     }
 }

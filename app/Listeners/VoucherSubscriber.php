@@ -50,6 +50,7 @@ class VoucherSubscriber
             }
 
             $this->mailService->productReserved(
+                $product->organization->email,
                 $product->organization->emailServiceId(),
                 $product->name,
                 format_date_locale($product->expire_at)

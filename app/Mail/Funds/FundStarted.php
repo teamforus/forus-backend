@@ -10,7 +10,7 @@ class FundStarted extends ImplementationMail
     private $sponsor_name;
 
     public function __construct(
-        string $email,        
+        string $email,
         string $fund_name,
         string $sponsor_name,
         ?string $identityId
@@ -28,8 +28,7 @@ class FundStarted extends ImplementationMail
         ->subject(trans())
         ->view('emails.funds.new_fund_created', [
             'fund_name'      => $this->fund_name,
-            'sponsor_name'   => $this->sponsor_name,
-            'implementation' => $this->getImplementation()
+            'sponsor_name'   => $this->sponsor_name
         ]);
     }
 }

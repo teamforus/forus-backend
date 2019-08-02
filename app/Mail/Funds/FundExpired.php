@@ -49,8 +49,7 @@ class FundExpired extends ImplementationMail
                 'end_date_fund' => $this->endDateFund,
                 'phone_number_sponsor' => $this->phoneNumberSponsor,
                 'email_address_sponsor' => $this->emailAddressSponsor,
-                'shop_implementation_url' => $this->shopImplementationUrl,
-                'implementation' => $this->getImplementation()
+                'shop_implementation_url' => $this->shopImplementationUrl
             ]);
     }
 }

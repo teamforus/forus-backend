@@ -17,8 +17,10 @@ use App\Mail\User\EmailActivation;
 use App\Mail\Validations\AddedAsValidator;
 use App\Mail\Validations\NewValidationRequest;
 use App\Mail\Vouchers\FundStatistics;
+use App\Mail\Vouchers\PaymentSuccesss;
 use App\Mail\Vouchers\ProductBought;
 use App\Mail\Vouchers\ProductSoldOut;
+use App\Mail\Vouchers\ShareProduct;
 use App\Mail\Vouchers\Voucher;
 use App\Services\ApiRequestService\ApiRequest;
 use Illuminate\Support\Facades\Mail;
@@ -214,7 +216,7 @@ class MailService
      * @return bool
      */
     public function providerApplied(
-        $email,
+        string $email,
         $identifier,
         string $provider_name,
         string $sponsor_name,
@@ -235,6 +237,7 @@ class MailService
     /**
      * Notify provider that his request to apply for fund was approved
      *
+     * @param string $email
      * @param $identifier
      * @param string $fund_name
      * @param string $provider_name
@@ -265,14 +268,15 @@ class MailService
     /**
      * Notify provider that his request to apply for fund was rejected
      *
+     * @param $email
      * @param $identifier
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
-     * @return bool
+     * @return void
      */
     public function providerRejected(
-        $email,
+        string $email,
         $identifier,
         string $fund_name,
         string $provider_name,
@@ -312,12 +316,13 @@ class MailService
     /**
      * Notify user about new validation request on validation dashboard
      *
+     * @param string $email
      * @param $identifier
      * @param string $validator_dashboard_link
      * @return bool
      */
     public function newValidationRequest(
-        $email,
+        string $email,
         $identifier,
         string $validator_dashboard_link
     ) {
@@ -359,6 +364,7 @@ class MailService
     /**
      * Notify user that new fund was created
      *
+     * @param string $email
      * @param $identifier
      * @param string $fund_name
      * @param string $webshop_link
@@ -384,13 +390,14 @@ class MailService
     /**
      * Notify providers that new fund was started
      *
+     * @param string $email
      * @param $identifier
      * @param string $fund_name
      * @param string $sponsor_name
      * @return bool
      */
     public function newFundStarted(
-        $email,
+        string $email,
         $identifier,
         string $fund_name,
         string $sponsor_name
@@ -444,10 +451,6 @@ class MailService
         int $requester_amount,
         int $total_amount
     ) {
-        if (!$this->serviceApiUrl) {
-            return false;
-        }
-
         $email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io');
 
         Mail::send(new FundStatistics(
@@ -460,18 +463,20 @@ class MailService
             $total_amount
         ));
 
-
+        return $this->checkFailure('FundStatistics');
     }
 
     /**
      * Notify sponsor that new product added by provider
      *
+     * @param string $email
      * @param $identifier
      * @param string $sponsor_name
      * @param string $fund_name
-     * @return bool
+     * @return void
      */
     public function newProductAdded(
+        string $email,
         $identifier,
         string $sponsor_name,
         string $fund_name
@@ -493,7 +498,6 @@ class MailService
      * @param $identifier
      * @param string $fund_product_name
      * @param string $qr_url
-     * @param null|string $implementation
      *
      * @return bool
      */
@@ -507,7 +511,8 @@ class MailService
         Mail::send(new Voucher(
             $email,
             $fund_product_name,
-            $qr_url
+            $qr_url,
+            $identifier
         ));
 
         return $this->checkFailure('Voucher');
@@ -517,46 +522,30 @@ class MailService
     /**
      * Send voucher by email
      *
+     * @param string $email
      * @param $identifier
      * @param string $requester_email
      * @param string $product_name
      * @param string $qr_url
      * @param string $reason
-     * @return bool
+     * @return void
      */
     public function shareVoucher(
+        string $email,
         $identifier,
         string $requester_email,
         string $product_name,
         string $qr_url,
         string $reason
     ) {
-        if (!$this->serviceApiUrl) {
-            return false;
-        }
-
-        $endpoint = $this->getEndpoint('/sender/vouchers/share_product/');
-
-        $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'             => $identifier ?? '',
-            'product_name'          => $product_name,
-            'qr_url'                => $qr_url,
-            'requester_email'       => $requester_email,
-            'reason'                => $reason
-        ]);
-
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `shareVoucher`: %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
-        }
-
-        return true;
+        Mail::send(new ShareProduct(
+            $email,
+            $requester_email,
+            $product_name,
+            $qr_url,
+            $reason,
+            $identifier
+        ));
     }
 
     /**
@@ -586,53 +575,40 @@ class MailService
     }
 
     /**
+     * @param string $email
      * @param $identifier
      * @param string $fund_name
      * @param string $current_budget
      * @return bool
      */
     public function transactionAvailableAmount(
+        string $email,
         $identifier,
         string $fund_name,
         string $current_budget
     ) {
-        if (!$this->serviceApiUrl) {
-            return false;
-        }
+        Mail::send(new PaymentSuccesss(
+            $email,
+            $fund_name,
+            $current_budget,
+            $identifier
+        ));
 
-        $endpoint = $this->getEndpoint('/sender/vouchers/payment_success/');
-
-        $res = $this->apiRequest->post($endpoint, [
-            'reffer_id'         => $identifier ?? '',
-            'fund_name'         => $fund_name,
-            'current_budget'    => $current_budget,
-        ]);
-
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `transactionAvailableAmount`: %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
-        }
-
-        return true;
+        return $this->checkFailure('PaymentSuccess');
     }
 
     /**
      * Notify provider that a product was reserved and customer will come by
      * in shop to pickup the product or service.
      *
+     * @param string $email
      * @param $identifier
      * @param string $product_name
      * @param string $expiration_date
      * @return bool
      */
     public function productReserved(
-        $email,
+        string $email,
         $identifier,
         string $product_name,
         string $expiration_date
@@ -650,13 +626,14 @@ class MailService
     /**
      * Notify provider that a product was sold out.
      *
+     * @param string $email
      * @param $identifier
      * @param string $product_name
      * @param string $sponsor_dashboard_url
      * @return bool
      */
     public function productSoldOut(
-        $email,
+        string $email,
         $identifier,
         string $product_name,
         string $sponsor_dashboard_url
@@ -673,6 +650,7 @@ class MailService
 
     /**
      * Send email confirmation link by identity address
+     * @param string $email
      * @param $identifier
      * @param string $confirmationLink
      * @return bool
@@ -732,11 +710,11 @@ class MailService
 
     public function fundNotifyReachedNotificationAmount(
         string $email,
+        $identifier,
         string $link,
         string $sponsor_name,
         string $fund_name,
-        string $notification_amount,
-        ?string $identifier
+        string $notification_amount
     ): bool {
         Mail::send(new BalanceWarning(
             $email,

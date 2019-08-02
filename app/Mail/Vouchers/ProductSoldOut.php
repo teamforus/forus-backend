@@ -31,8 +31,7 @@ class ProductSoldOut extends ImplementationMail
             ->subject('Uitverkocht: aanbod ' . $this->productName)
             ->view('emails.funds.product_sold_out', [
                 'product_name' => $this->productName,
-                'link' => $this->link,
-                'implementation' => $this->getImplementation()
+                'link' => $this->link
             ]);
     }
 }

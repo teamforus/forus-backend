@@ -24,8 +24,7 @@ class NewValidationRequest extends ImplementationMail
         ->to($this->email)
         ->subject(trans('mails.validations.new_validation_request.title'))
         ->view('emails.validations.new_validation_request', [
-            'validator_dashboard_link' => $this->link,
-            'implementation' => $this->getImplementation()
+            'validator_dashboard_link' => $this->link
         ]);
     }
 }

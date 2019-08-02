@@ -36,8 +36,7 @@ class UserLogin extends ImplementationMail
             ->subject('Inloggen op Forus')
             ->view('emails.login.login_via_email', [
                 'platform' => $this->platform,
-                'link' => $this->link,
-                'implementation' => $this->getImplementation()
+                'link' => $this->link
             ]);
     }
 }

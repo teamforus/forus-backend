@@ -9,4 +9,5 @@
     <br/>
     Vanaf nu kunt u aanvragers toevoegen, dit kunt u doen door naar het dashboard te gaan een een .CSV bestand te uploaden.
     <br/>
+    @implementation('login_by_email.css.header')
 @endsection
