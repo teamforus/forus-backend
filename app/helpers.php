@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Implementation;
 use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Support\Facades\Lang;
 
 if  (!function_exists('format_date')) {
     /**
@@ -154,5 +156,40 @@ if (!function_exists('flattenBy_key')) {
         }
 
         return $result;
+    }
+}
+
+if (!function_exists('implementation_trans')) {
+    /**
+     * Returns translations based on the current implementation
+     *
+     * @param string $key
+     * @param array $replace
+     * @param string|null $locale
+     * @return string|array|null
+     */
+    function implementation_trans(
+        string $key,
+        array $replace = [],
+        string $locale = null
+    ) {
+        $implementation = Implementation::activeKey();
+
+        if(Lang::has('mails.implementations.' . $implementation . '.' . $key)) {
+            return Lang::get(
+                'mails.implementations.' . $implementation . '.' . $key,
+                $replace,
+                $locale
+            );
+        }
+        elseif(Lang::has('mails.implementations.general.' . $key)) {
+            return Lang::get(
+                'mails.implementations.general.' . $key,
+                $replace,
+                $locale
+            );
+        }
+
+        return trans($key, $replace, $locale);
     }
 }
