@@ -1,10 +1,12 @@
 @extends('emails.base')
-@section('title', 'Er is een nieuw fonds toegevoegd: ' . $fund_name)
+@section('title', implementation_trans('fund_created.title', ['fund_name' => $fund_name]))
 @section('html')
-Beste Forus,
-<br/>
-<br/>
-Er is een nieuw fonds aangemaakt: {{ $fund_name }}     <br/>
-Door: {{ $organization_name }}    <br/>
-<br/>
+    {{ implementation_trans('dear_forus') }},
+    <br/>
+    <br/>
+    {{ implementation_trans('fund_created.new_fund_created', ['fund_name' => $fund_name]) }}
+    <br/>
+    {{ implementation_trans('fund_created.by', ['organization_name' => $organization_name]) }}
+    <br/>
+    <br/>
 @endsection

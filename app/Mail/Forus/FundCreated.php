@@ -23,12 +23,12 @@ class FundCreated extends ImplementationMail
     public function build(): ImplementationMail
     {
         return $this
-        ->from(config('forus.mail.from.no-reply'))
-        ->to($this->email)
-        ->subject('Er is een nieuw fonds toegevoegd: ' . $this->fundName)
-        ->view('emails.forus.new_fund_created', [
-            'fund_name' => $this->fundName,
-            'organization_name' => $this->organizationName
-        ]);
+            ->from(config('forus.mail.from.no-reply'))
+            ->to($this->email)
+            ->subject(implementation_trans('fund_created.title'))
+            ->view('emails.forus.new_fund_created', [
+                'fund_name' => $this->fundName,
+                'organization_name' => $this->organizationName
+            ]);
     }
 }

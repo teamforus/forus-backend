@@ -1,27 +1,28 @@
 @extends('emails.base)
 
-@section('title', trans('mails.funds.provider_approved.title'))
+@section('title', implementation_trans('provider_approved.title'))
 @section('html')
-    Uw aanmelding is geaccepteerd!
+    {{ implementation_trans('provider_approved.application_approved') }}
     <br/>
     <br/>
-    Beste {{ $provider_name }},
+    {{ implementation_trans('dear_provider', ['provider_name' => $provider_name]) }}
     <br/>
     <br/>
-    Kort geleden heeft u zich aangemeld voor '{{ $fund_name }}'.
+    {{ implementation_trans('provider_approved.applied_for', ['fund_name' => $fund_name]) }}
     <br/>
-    {{ $sponsor_name }} heeft uw aanmelding geaccepteerd.
-    <br/>
-    <br/>
-    Dit betekent dat u vanaf nu uw aanbiedingen kan leveren aan klanten die recht hebben op {{ $fund_name }}.
+    {{ implementation_trans('provider_approved.sponsor_application_approved', ['sponsor_name' => $sponsor_name]) }}
     <br/>
     <br/>
-    Met vriendelijke groet,
+    {{ implementation_trans('provider_approved.this_means_that', ['fund_name' => $fund_name]) }}
     <br/>
     <br/>
-    Team {{$fund_name}}<br />
+    {{ implementation_trans('greets') }},
     <br/>
     <br/>
-    Log in op uw gebruikersomgeving om aanbiedingen toe te voegen, door <a href="{{ $provider_dashboard_link }}" target="_blank" style="color: #315efd; text-decoration: underline;">hier</a> of op de onderstaande knop te klikken.<br/>
+    {{ implementation_trans('team_fund', ['fund_name' => $fund_name]) }}
+    <br />
+    <br/>
+    <br/>
+    {{ implementation_trans('provider_approved.log_in', ['link' => $provider_dashboard_link]) }}
 @endsection
 

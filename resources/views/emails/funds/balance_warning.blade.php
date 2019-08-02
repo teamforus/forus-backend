@@ -1,11 +1,11 @@
 @extends('emails.base)
-@section('title', 'Uw fonds heeft uw ingestelde grens bereikt')
+@section('title', implementation_trans('balance_warning.title'))
 @section('link', $link)
 @section('html')
-    Beste {{ $sponsor_name }},
+    {{ implementation_trans('dear_sponsor', ['sponsor_name' => $sponsor_name]) }}
     <br />
     <br />
-    Het budget op fonds '{{ $fund_name }}' heeft de grens van €{{ $notification_amount }} bereikt.
+    {{ implementation_trans('balance_warning', ['fund_name' => $fund_name, 'notification_amount' => $notification_amount]) }}
     <br />
-    U kunt inloggen op het sponsordashboard om uw budget aan te vullen.
+    {{ implementation_trans('balance_warning.you_can_login') }}
 @endsection

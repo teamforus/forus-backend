@@ -32,7 +32,7 @@ class BalanceWarning extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'))
             ->to($this->email)
-            ->subject('Uw fonds heeft uw ingestelde grens bereikt')
+            ->subject(implementation_trans('balance_warning.title'))
             ->view('emails.funds.balance_warning', [
                 'fund_name' => $this->fundName,
                 'sponsor_name' => $this->sponsorName,

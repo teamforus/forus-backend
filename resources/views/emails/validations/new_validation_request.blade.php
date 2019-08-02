@@ -1,12 +1,12 @@
 @extends('emails.base)
 
-@section('title', trans('mails.validations.new_validation_request.title'))
+@section('title', implementation_trans('new_validation_request.title'))
 @section('html')
-    Beste validator,
+    {{ implementation_trans('dear_validator') }}
     <br/>
     <br/>
-    Er staat een verzoek voor u klaar om eigenschappen te valideren.
+    {{ implementation_trans('new_validation_request.request_ready') }}
     <br/>
     <br/>
-    Ga naar het validator dashboard <a href="{{ $validator_dashboard_link }}" target="_blank" style="color: #315efd; text-decoration: underline;">{{ $validator_dashboard_link }}</a> om dit verzoek te behandelen.
+    {{ implementation_trans('new_validation_request.dashboard_button', ['link' => $validator_dashboard_link]) }}
 @endsection

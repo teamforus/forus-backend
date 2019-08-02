@@ -1,10 +1,11 @@
 @extends('emails.base')
 
-@section('title', 'Er is een bedrag van uw ' . $fund_name .'-voucher afgeschreven')
+@section('title', implementation_trans('payment_success.title', ['fund_name' => $fund_name]))
 @section('html')
-Beste gebruiker,
-<br/>
-<br/>
-Er is met uw voucher een aankoop gedaan. Hierdoor is er een bedrag afgeschreven.<br/>
-Het huidige bedrag van uw '{{ $fund_name }}'-voucher is €{{ $current_budget }}
+    {{ implementation_trans('dear_user') }}
+    <br/>
+    <br/>
+    {{ implementation_trans('payment_success.something_bought_something_withdrawn') }}
+    <br/>
+    {{ implementation_trans('payment_success.current_value', ['fund_name' => $fund_name, 'current_budget' => $current_budget]) }}
 @endsection

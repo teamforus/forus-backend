@@ -1,17 +1,17 @@
 @extends('emails.base')
 
-@section('button_text', 'Inloggen')
+@section('button_text', implementation_trans('login_via_email.button_text'))
 @section('link', $link)
-@section('title', 'Log in op ' . $platform)
-@section('header_image', 'https://media.forus.io/static/bla.png')
+@section('title', implementation_trans('login_via_email.title', ['platform' => $platform]))
+@section('header_image', implementation_config('login_via_email.header_image'))
 
 @section('html')
-Beste gebruiker,
-<br/>
-<br/>
-U heeft zojuist aangegeven dat u wilt inloggen op {{ $platform }}.
-<br/>
-Klik <a href="{{ $link }}" target="_blank" style="color: #315efd; text-decoration: underline;">hier</a> of op de knop hieronder om in te loggen.
-<br/>
+    {{ implementation_trans('dear_user') }},
+    <br/>
+    <br/>
+    {{ implementation_trans('login_via_email.login_on_platform', ['platform' => $platform]) }}.
+    <br/>
+    {!! implementation_trans('login_via_email.login_button', ['link' => $link]) !!}
+    <br/>
 @endsection
 

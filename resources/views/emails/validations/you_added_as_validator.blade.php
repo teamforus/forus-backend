@@ -1,13 +1,12 @@
 @extends('emails.base)
 
-@section('title', trans('mails.validations.you_added_as_validator.title'))
+@section('title', implementation_trans('you_added_as_validator.title'))
 @section('html')
-    Beste medewerker,
+    {{ implementation_trans('dear_coworker') }}
     <br/>
     <br/>
-    {{ $sponsor_name }} heeft u toegevoegd als validator.
+    {{ implementation_trans('you_added_as_validator.added_by_sponsor', ['sponsor_name' => $sponsor_name]) }}
     <br/>
-    Vanaf nu kunt u aanvragers toevoegen, dit kunt u doen door naar het dashboard te gaan een een .CSV bestand te uploaden.
+    {{ implementation_trans('you_added_as_validator.from_now_on') }}
     <br/>
-    @implementation('login_by_email.css.header')
 @endsection

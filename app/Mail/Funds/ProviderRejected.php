@@ -28,7 +28,7 @@ class ProviderRejected extends ImplementationMail
         return $this
         ->from(config('forus.mail.from.no-reply'))
         ->to($this->email)
-        ->subject(trans('mails.funds.provider_rejected.title'))
+        ->subject(implementation_trans('provider_rejected.title'))
         ->view('emails.funds.provider_rejected', [
             'fund_name'                 => $this->fundName,
             'provider_name'             => $this->providerName,

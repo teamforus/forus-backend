@@ -26,7 +26,7 @@ class PaymentSuccesss extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'))
             ->to($this->email)
-            ->subject('Er is een bedrag van uw ' . $this->fundName . '-voucher afgeschreven')
+            ->subject(implementation_trans('payment_success.title', ['fund_name' => $this->fundName]))
             ->view('emails.vouchers.payment_success', [
                 'fund_name' => $this->fundName,
                 'current_budget' => $this->currentBudget

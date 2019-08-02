@@ -1,12 +1,16 @@
 @extends('emails.base')
-@section('title', 'Uw aanbod' . $product_name . 'is gereserveerd!')
+@section('title', implementation_trans('product_bought.title', ['product_name' => $product_name]))
 @section('html')
-Beste gebruiker,<br/>
-<br/>
-<br/>
-Zojuist heeft iemand uw aanbieding '{{ $product_name }}' in de webshop gereserveerd. De klant kan daarom elk moment deze aanbieding komen ophalen of afnemen.<br/>
-<br/>
-De uiterlijke datum dat de klant langs kan komen is {{ $expiration_date }}<br/>
-<br/>
-Hopelijk hebben we u hiermee voldoende geïnformeerd.<br/>
+    {{ implementation_trans('dear_user') }}
+    <br/>
+    <br/>
+    <br/>
+    {{ implementation_trans('product_bought.product_reserved', ['product_name' => $product_name]) }}
+    <br/>
+    <br/>
+    {{ implementation_trans('product_bought.deadline', ['expiration_date' => $expiration_date]) }}
+    <br/>
+    <br/>
+    {{ implementation_trans('hopefully_informed_enough') }}
+    <br/>
 @endsection

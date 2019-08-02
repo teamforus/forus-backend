@@ -26,7 +26,7 @@ class EmailActivation extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'))
             ->to($this->email)
-            ->subject('E-mailactivering')
+            ->subject(implementation_trans('email_activation.title'))
             ->view('emails.user.email_activation', [
                 'link' => $this->link
             ]);

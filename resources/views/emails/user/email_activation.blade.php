@@ -1,13 +1,13 @@
 @extends('emails.base')
 
-@section('button_text', 'Ga naar stap 3')
+@section('button_text', implementation_trans('email_activation.button_text'))
 @section('link', $link)
-@section('title', 'Stap 2 van 3: E-mailadres bevestigen')
-@section('header_image', 'https://media.forus.io/static/iphone_shield_594x594.png')
+@section('title', implementation_trans('email_activation.title'))
+@section('header_image', implementation_config('email_activation.header_image'))
 @section('html')
-U krijgt deze e-mail omdat u op een gemeentelijke webshop uw e-mailadres hebt ingevuld. Met deze e-mail willen we bevestigen of u toegang heeft tot dit e-mailadres.
-<br/>
-<br/>
-Als u op deze <a style="color: #315efd; text-decoration: underline;" href="{{ $link }}" target="blank">link</a> klikt of op de onderstaande knop wordt uw e-mailadres bevestigd.
-<br/>
+    {{ implementation_trans('email_activation.you_get_this_mail_because') }}
+    <br/>
+    <br/>
+    {!! implementation_trans('email_activation.confirmation_button') !!}
+    <br/>
 @endsection

@@ -26,7 +26,7 @@ class ProductBought extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'))
             ->to($this->email)
-            ->subject('Uw aanbod' . $this->productName .' is gereserveerd!')
+            ->subject(implementation_trans('product_bought.title', ['product_name' => $this->productName]))
             ->view('emails.funds.product_bought', [
                 'product_name' => $this->productName,
                 'expiration_date' => $this->expirationDate

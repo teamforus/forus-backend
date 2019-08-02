@@ -41,7 +41,7 @@ class FundExpired extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'))
             ->to($this->email)
-            ->subject($this->fundName . ' verloop binnenkort')
+            ->subject(implementation_trans('fund_expires.title'))
             ->view('emails.funds.fund_expires', [
                 'fund_name' => $this->fundName,
                 'sponsor_name' => $this->sponsorName,

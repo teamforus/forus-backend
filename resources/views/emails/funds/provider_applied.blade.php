@@ -1,18 +1,20 @@
 @extends('emails.base')
 
-@section('button_text', 'Ga naar het dashboard')
+@section('button_text', implementation_trans('provider_applied.button_text'))
 @section('link', $sponsor_dashboard_link)
-@section('title', $provider_name . ' wilt zich aanmelden voor '. $fund_name)
-@section('header_image', 'https://media.forus.io/static/bla.png')
+@section('title', implementation_trans('provider_applied.title', [
+    'provider_name' => $provider_name,
+    'fund_name' => $fund_name
+]))
 
 @section('html')
-    Beste {{ $sponsor_name }},
+    {{ implementation_trans('dear_sponsor', ['sponsor_name' => $sponsor_name]) }},
     <br/>
     <br/>
-    Er is een aanmelding binnengekomen om deel te nemen aan {{ $fund_name }}.
+    {{ implementation_trans('provider_applied.new_applicant', ['fund_name' => $fund_name]) }}
     <br/>
     <br/>
-    Controleer of {{ $provider_name }} voldoet aan uw voorwaarden om deel te nemen.
+    {{ implementation_trans('provider_applied.check_if_valid', ['provider_name' => $provider_name]) }}
     <br/>
-    Meld u aan op het sponsor dashboard <a href="{{ $sponsor_dashboard_link }}" target="_blank" style="color: #315efd; text-decoration: underline;">{{ $sponsor_dashboard_link }}</a> om deze aanvraag te behandelen.
+    {!! implementation_trans('provider_applied.apply_on_dashboard', ['link' => $sponsor_dashboard_link]) !!}
 @endsection

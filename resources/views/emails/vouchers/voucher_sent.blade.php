@@ -1,15 +1,15 @@
 @extends('emails.base)
 
-@section('title', trans('mails.vouchers.voucher.title'))
+@section('title', implementation_trans('voucher_sent.title'))
 @section('html')
-    Beste gebruiker,
+    {{ implementation_trans('dear_user') }}
     <br/>
     <br/>
-    U heeft gevraagd uw {{ $fund_product_name }}-voucher per e-mail te ontvangen.
+    {{ implementation_trans('voucher_sent.you_have_asked', ['product_name' => $fund_product_name]) }}
     <br/>
-    Onderstaande QR-code laat u bij de aanbieder zien.
+    {{ implementation_trans('voucher_sent.qr_code_under') }}
     <br/>
-    De aanbieder scant deze code en de betaling gebeurt automatisch, daar hoeft u niks voor te doen.
+    {{ implementation_trans('voucher_sent.provider_scans') }}
     <br/>
     <br/>
     <img style="display: block; margin: 0 auto;" src="{{ $qr_url }}" width="300" />

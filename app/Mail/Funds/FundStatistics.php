@@ -37,7 +37,10 @@ class FundStatistics extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'))
             ->to($this->email)
-            ->subject('Totaal aantal gebruikers ' . $this->sponsorName . ' - ' . $this->fundName)
+            ->subject(implementation_trans('fund_statistics.title', [
+                    'sponsor_name' => $this->sponsorName,
+                    'fund_name' => $this->fundName
+                ]))
             ->view('emails.forus.fund_statistics', [
                 'fund_name' => $this->fundName,
                 'sponsor_name' => $this->sponsorName,

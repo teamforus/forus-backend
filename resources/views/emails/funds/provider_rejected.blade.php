@@ -1,25 +1,28 @@
 @extends('emails.base)
 
-@section('title', trans('mails.funds.provider_rejected.title'))
+@section('title', implementation_trans('provider_rejected.title'))
 @section('html')
-    Beste {{ $provider_name }},
+    {{ implementation_trans('dear_provider') }},
     <br/>
     <br/>
-    Onlangs heeft u zich aangemeld voor {{ $fund_name }}.
+    {{ implementation_trans('provider_rejected.applied_for_fund', ['fund_name' => $fund_name]) }}
     <br/>
-    {{ sponsor_name }} heeft uw aanmelding beoordeeld en heeft besloten dat u voor {{ $fund_name }} bent afgewezen.
+    {{ implementation_trans('provider_rejected.sponsor_decided', [
+        'sponsor_name' => $sponsor_name,
+        'fund_name' => $fund_name
+    ]) }}
     <br/>
     <br/>
-    Mocht u hierover meer willen weten, dan kunt u contact opnemen met {{ $sponsor_name }}.
+    {{ implementation_trans('provider_rejected.want_to_know_more', ['sponsor_name' => $sponsor_name]) }}
     <br />
-    Telefoonnummer: {{ $sponsor_phone }}
+    {{ implementation_trans('provider_rejected.phonenumber', ['phone_number' => '']) }}
     <br />
-    We hopen u hiermee voldoende te hebben geïnformeerd.
+    {{ implementation_trans('hopefully_informed_enough') }}
     <br/>
     <br/>
-    Met vriendelijke groet,
+    {{ implementation_trans('greets') }}
     <br/>
     <br/>
-    Team {{ $fund_name }}
+    {{ implementation_trans('team_fund') }}
 @endsection
 

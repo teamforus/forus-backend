@@ -193,3 +193,26 @@ if (!function_exists('implementation_trans')) {
         return trans($key, $replace, $locale);
     }
 }
+
+if (!function_exists('implementation_config')) {
+    /**
+     * Returns translations based on the current implementation
+     *
+     * @param string $data
+     * @return string|array
+     */
+    function implementation_config(
+        string $data
+    ) {
+        $implementation = Implementation::activeKey();
+
+        if(config()->has('mails.implementations.' . $implementation . '.' . $data)) {
+            return config()->get('mails.implementations.' . $implementation . '.' . $data);
+        }
+        elseif(config()->has('mails.implementations.general.' . $data)) {
+            return config()->get('mails.implementations.general.' . $data);
+        }
+
+        return $data;
+    }
+}
