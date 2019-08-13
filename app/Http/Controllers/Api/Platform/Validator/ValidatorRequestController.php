@@ -32,20 +32,11 @@ class ValidatorRequestController extends Controller
     ) {
         $this->authorize('index', ValidatorRequest::class);
 
-        $validatorIds = Validator::query()->where(
-            'identity_address',
-            auth()->user()->getAuthIdentifier()
-        )->pluck('id');
-
-        $validatorRequest = ValidatorRequest::query()->whereIn(
-            'validator_id', $validatorIds
-        );
-
-        if ($state = $request->get('state')) {
-            $validatorRequest->where('state', $state);
-        }
-
-        return ValidatorRequestResource::collection($validatorRequest->get());
+        return ValidatorRequestResource::collection(ValidatorRequest::search(
+            $request
+        )->paginate(
+            $request->input('per_page', 20)
+        ));
     }
 
     /**

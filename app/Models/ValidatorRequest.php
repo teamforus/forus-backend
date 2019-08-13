@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Record\Models\Record;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 /**
  * Class ValidatorRequest
@@ -56,5 +58,34 @@ class ValidatorRequest extends Model
      */
     public function validator() {
         return $this->belongsTo(Validator::class);
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function search(Request $request) {
+        $validatorIds = Validator::query()->where(
+            'identity_address',
+            auth()->user()->getAuthIdentifier()
+        )->pluck('id');
+
+        $query = ValidatorRequest::query()->whereIn(
+            'validator_id', $validatorIds
+        );
+
+        if ($state = $request->get('state')) {
+            $query->where('state', $state);
+        }
+
+        if ($q = $request->get('q')) {
+            $query->whereHas('record', function(Builder $builder) use (
+                $q
+            ) {
+                $builder->where('value', 'like', "%$q%");
+            });
+        }
+
+        return $query;
     }
 }
