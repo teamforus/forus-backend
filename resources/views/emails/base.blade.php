@@ -17,8 +17,10 @@
                             <tr>
                                 <td style="border-collapse: collapse; padding-bottom: 25px;">
                                     @if(trim($__env->yieldContent('header_image')))
+                                        Image fallback 1
                                         <img src="@yield('header_image')" style="width: 297px; display: block; margin: 0 auto;">
                                     @elseif(implementation_config('base.header_image') !== 'base.header_image')
+                                        Image fallback 2
                                         <img src="{{ implementation_config('base.header_image') }}" style="width: 297px; display: block; margin: 0 auto;">
                                     @endif
                                 </td>
