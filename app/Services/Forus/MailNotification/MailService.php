@@ -657,8 +657,8 @@ class MailService
      */
     public function sendEmailConfirmationToken(
         string $email,
-        $identifier,
-        string $confirmationLink
+        string $confirmationLink,
+        $identifier
     ) {
         $platform = env('APP_NAME');
 
