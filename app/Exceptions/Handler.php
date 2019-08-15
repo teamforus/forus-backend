@@ -2,8 +2,10 @@
 
 namespace App\Exceptions;
 
+use ElasticApm;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
 
 class Handler extends ExceptionHandler
 {
@@ -37,6 +39,16 @@ class Handler extends ExceptionHandler
      */
     public function report(Exception $exception)
     {
+        try {
+            if ($exception->getCode() >= 500) {
+                ElasticApm::captureThrowable($exception);
+                ElasticApm::send();
+            }
+        }
+        catch (\Throwable $e) {
+            Log::error($e);
+        }
+
         parent::report($exception);
     }
 
