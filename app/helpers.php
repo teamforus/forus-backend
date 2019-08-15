@@ -212,11 +212,11 @@ if (!function_exists('implementation_config')) {
     ) {
         $implementation = Implementation::activeKey();
 
-        if(config()->has('mails.implementations.' . $implementation . '.' . $data)) {
-            return config()->get('mails.implementations.' . $implementation . '.' . $data);
+        if(config()->has('forus.mails.implementations.' . $implementation . '.' . $data)) {
+            return config()->get('forus.mails.implementations.' . $implementation . '.' . $data);
         }
-        elseif(config()->has('mails.implementations.general.' . $data)) {
-            return config()->get('mails.implementations.general.' . $data);
+        elseif(config()->has('forus.mails.implementations.general.' . $data)) {
+            return config()->get('forus.mails.implementations.general.' . $data);
         }
 
         return $data;
