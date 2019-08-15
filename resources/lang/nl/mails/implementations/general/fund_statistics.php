@@ -6,6 +6,6 @@ return [
     'fund' => 'Fonds: :fund_name',
     'sponsor_count' => 'Aantal sponsors: :sponsor_count',
     'provider_count' => 'Aantal aanbieders: :provider_count',
-    'request_count' => 'Aantal aanvragers: :request_amount',
-    'total_count' => 'Totaal aantal gebruikers: :total_amount'
+    'request_count' => 'Aantal aanvragers: :request_count',
+    'total_count' => 'Totaal aantal gebruikers: :total_count'
 ];

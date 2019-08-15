@@ -11,14 +11,14 @@
     {{ implementation_trans('fund_statistics.fund', ['fund_name' => $fund_name]) }}
     <br />
     <br />
-    {{ implementation_trans('fund_statistics.sponsor_count', ['sponsor_amount' => $sponsor_amount]) }}
+    {{ implementation_trans('fund_statistics.sponsor_count', ['sponsor_count' => $sponsor_amount]) }}
     <br />
     {{ implementation_trans('fund_statistics.provider_count', ['provider_count' => $provider_amount]) }}
     <br />
-    {{ implementation_trans('fund_statistics.request_amount', ['request_amount' => $request_amount]) }}
+    {{ implementation_trans('fund_statistics.request_count', ['request_count' => $request_amount]) }}
     <br />
     <hr>
-    {{ implementation_trans('fund_statistics.total_amount', ['total_amount' => $total_amount]) }}
+    {{ implementation_trans('fund_statistics.total_amount', ['total_count' => $total_amount]) }}
     <br />
 @endsection
 
