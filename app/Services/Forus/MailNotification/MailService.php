@@ -268,11 +268,12 @@ class MailService
     /**
      * Notify provider that his request to apply for fund was rejected
      *
-     * @param $email
+     * @param string $email
      * @param $identifier
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
+     * @param string $phone_number
      * @return void
      */
     public function providerRejected(
@@ -280,13 +281,15 @@ class MailService
         $identifier,
         string $fund_name,
         string $provider_name,
-        string $sponsor_name
+        string $sponsor_name,
+        string $phone_number
     ) {
         Mail::send( new ProviderRejected(
             $email,
             $fund_name,
             $provider_name,
             $sponsor_name,
+            $phone_number,
             $identifier
         ));
     }

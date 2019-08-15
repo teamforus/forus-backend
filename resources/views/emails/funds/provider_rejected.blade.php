@@ -15,7 +15,7 @@
     <br/>
     {{ implementation_trans('provider_rejected.want_to_know_more', ['sponsor_name' => $sponsor_name]) }}
     <br />
-    {{ implementation_trans('provider_rejected.phone_number', ['phone_number' => '']) }}
+    {{ implementation_trans('provider_rejected.phone_number', ['phone_number' => $phone_number]) }}
     <br />
     {{ implementation_trans('hopefully_informed_enough') }}
     <br/>

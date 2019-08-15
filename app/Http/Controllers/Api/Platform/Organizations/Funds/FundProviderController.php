@@ -124,7 +124,8 @@ class FundProviderController extends Controller
                 $organizationFund->organization->identity_address,
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
-                $organizationFund->fund->organization->name
+                $organizationFund->fund->organization->name,
+                $organizationFund->fund->organization->phone
             );
         }
 

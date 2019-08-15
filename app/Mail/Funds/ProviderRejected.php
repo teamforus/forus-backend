@@ -9,12 +9,14 @@ class ProviderRejected extends ImplementationMail
     private $fundName;
     private $providerName;
     private $sponsorName;
+    private $phoneNumber;
 
     public function __construct(
         string $email,
         string $fund_name,
         string $provider_name,
         string $sponsor_name,
+        string $phone_number,
         ?string $identityId
     ) {
         parent::__construct($email, $identityId);
@@ -22,6 +24,7 @@ class ProviderRejected extends ImplementationMail
         $this->fundName                = $fund_name;
         $this->providerName            = $provider_name;
         $this->sponsorName             = $sponsor_name;
+        $this->phoneNumber             = $phone_number;
     }
     public function build(): ImplementationMail
     {
@@ -32,7 +35,8 @@ class ProviderRejected extends ImplementationMail
         ->view('emails.funds.provider_rejected', [
             'fund_name'                 => $this->fundName,
             'provider_name'             => $this->providerName,
-            'sponsor_name'              => $this->sponsorName
+            'sponsor_name'              => $this->sponsorName,
+            'phone_number'              => $this->phoneNumber
         ]);
     }
 }
