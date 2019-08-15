@@ -1,4 +1,4 @@
-@extends('emails.base)
+@extends('emails.base')
 
 @section('title', implementation_trans('provider_approved.title'))
 @section('html')

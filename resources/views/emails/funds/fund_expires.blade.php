@@ -1,4 +1,4 @@
-@extends('emails.base)
+@extends('emails.base')
 @section('title', implementation_trans('fund_expires.title'))
 @section('html')
 {{ implementation_trans('dear_user_of_fund', ['fund_name' => $fund_name])}}

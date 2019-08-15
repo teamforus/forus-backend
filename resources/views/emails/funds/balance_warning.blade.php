@@ -1,4 +1,4 @@
-@extends('emails.base)
+@extends('emails.base')
 @section('title', implementation_trans('balance_warning.title'))
 @section('link', $link)
 @section('html')

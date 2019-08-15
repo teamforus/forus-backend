@@ -1,4 +1,4 @@
-@extends('emails.base)
+@extends('emails.base')
 
 @section('title', implementation_trans('voucher_sent.title'))
 @section('html')

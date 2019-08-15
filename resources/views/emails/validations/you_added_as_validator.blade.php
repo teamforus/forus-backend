@@ -1,4 +1,4 @@
-@extends('emails.base)
+@extends('emails.base')
 
 @section('title', implementation_trans('you_added_as_validator.title'))
 @section('html')
