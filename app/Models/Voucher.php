@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
  * @property float $amount_available
  * @property float $amount_available_cached
  * @property boolean $is_granted
+ * @property boolean $used
  * @property Fund $fund
  * @property Product|null $product
  * @property Voucher|null $parent
@@ -143,6 +144,16 @@ class Voucher extends Model
      */
     public function getExpiredAttribute() {
         return !!$this->expire_at->isPast();
+    }
+
+    /**
+     * The voucher is expired
+     *
+     * @return bool
+     */
+    public function getUsedAttribute() {
+        return $this->type == 'product' ? $this->transactions->count() > 0 :
+            $this->amount_available_cached == 0;
     }
 
     /**

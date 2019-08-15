@@ -4,7 +4,6 @@ namespace App\Http;
 
 use App\Http\Middleware\ApiAuthMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
-use App\Http\Middleware\Cors;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Http\Middleware\RecordApmTransactions;
@@ -13,6 +12,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyCsrfToken;
+use Barryvdh\Cors\HandleCors;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -30,7 +30,7 @@ class Kernel extends HttpKernel
         TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         TrustProxies::class,
-        Cors::class,
+        HandleCors::class,
         RecordApmTransactions::class,
     ];
 
@@ -72,7 +72,6 @@ class Kernel extends HttpKernel
         'guest' => RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'api.auth' => ApiAuthMiddleware::class,
-        'cors' => Cors::class,
         'locale' => LocaleMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,

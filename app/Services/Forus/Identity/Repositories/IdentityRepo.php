@@ -8,6 +8,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 {
     protected $model;
     protected $recordRepo;
+    protected $mailService;
 
     /**
      * How many time user have to exchange their exchange_token
@@ -31,6 +32,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     ) {
         $this->model = $model;
         $this->recordRepo = app('forus.services.record');
+        $this->mailService = app('forus.services.mail_notification');
     }
 
     /**
@@ -53,6 +55,30 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         $this->recordRepo->updateRecords($identity['address'], $records);
 
         return $identity['address'];
+    }
+
+    /**
+     * Make new identity by email
+     * @param string $primaryEmail
+     * @param array $records
+     * @param int $pinCode
+     * @return mixed
+     * @throws \Exception
+     */
+    public function makeByEmail(
+        string $primaryEmail,
+        array $records = [],
+        $pinCode = 1111
+    ) {
+        $identityAddress = $this->make($pinCode, array_merge([
+            'primary_email' => $primaryEmail
+        ], $records));
+
+
+        $this->recordRepo->categoryCreate($identityAddress, "Relaties");
+        $this->mailService->addEmailConnection($identityAddress, $primaryEmail);
+
+        return $identityAddress;
     }
 
     /**
