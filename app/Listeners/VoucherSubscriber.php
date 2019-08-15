@@ -94,7 +94,11 @@ class VoucherSubscriber
             );
         }
 
-        $voucher->sendToEmail();
+        $email = resolve('forus.services.record')->primaryEmailByAddress(
+            $voucher->identity_address
+        );
+
+        $voucher->sendToEmail($email);
     }
 
     /**
