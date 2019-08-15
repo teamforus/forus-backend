@@ -11,6 +11,6 @@
     {{ implementation_trans('product_sold_out.fill_or_remove') }}
     <br />
     <br />
-    {{ implementation_trans('product_sold_out.dashboard_button', ['link' => $link]) }}
+    {!! implementation_trans('product_sold_out.dashboard_button', ['link' => $link]) !!}
     <br/>
 @endsection

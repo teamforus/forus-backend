@@ -23,6 +23,6 @@
     <br />
     <br/>
     <br/>
-    {{ implementation_trans('provider_approved.log_in', ['link' => $provider_dashboard_link]) }}
+    {!! implementation_trans('provider_approved.log_in', ['link' => $provider_dashboard_link])  !!}
 @endsection
 

@@ -15,7 +15,7 @@
         'end_date_fund' => $end_date_fund
     ]) }}
     <br/>
-    {{ implementation_trans('fund_expires.see_budget_and_transactions', ['link' => $shop_implementation_url]) }}
+    {!! implementation_trans('fund_expires.see_budget_and_transactions', ['link' => $shop_implementation_url]) !!}
     <br/>
     {{ implementation_trans('fund_expires.next_log_in') }}
     <br/>
