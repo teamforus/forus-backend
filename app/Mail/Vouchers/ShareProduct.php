@@ -36,7 +36,7 @@ class ShareProduct extends ImplementationMail
             ->subject(implementation_trans('share_product.title', ['requester_email' => $this->requesterMail]))
             ->view('emails.vouchers.share_product', [
                 'requester_email' => $this->requesterMail,
-                'fund_product_name' => $this->productName,
+                'product_name' => $this->productName,
                 'qr_url' => $this->qrUrl,
                 'reason' => $this->reason
             ]);
