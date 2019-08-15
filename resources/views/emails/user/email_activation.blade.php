@@ -8,6 +8,6 @@
     {{ implementation_trans('email_activation.you_get_this_mail_because') }}
     <br/>
     <br/>
-    {!! implementation_trans('email_activation.confirmation_button') !!}
+    {!! implementation_trans('email_activation.confirmation_button', ['link' => $link]) !!}
     <br/>
 @endsection
