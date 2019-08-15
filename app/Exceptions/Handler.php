@@ -40,8 +40,10 @@ class Handler extends ExceptionHandler
     {
         parent::report($exception);
 
-        ElasticApm::captureThrowable($exception);
-        ElasticApm::send();
+        if ($exception->getCode() >= 500) {
+            ElasticApm::captureThrowable($exception);
+            ElasticApm::send();
+        }
     }
 
     /**
