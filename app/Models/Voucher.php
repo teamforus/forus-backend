@@ -3,12 +3,9 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
-use App\Services\Forus\Identity\Models\Identity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 
 /**
@@ -24,6 +21,7 @@ use Illuminate\Http\Request;
  * @property float $amount_available
  * @property float $amount_available_cached
  * @property boolean $is_granted
+ * @property boolean $used
  * @property Fund $fund
  * @property Product|null $product
  * @property Voucher|null $parent
@@ -148,6 +146,19 @@ class Voucher extends Model
         return !!$this->expire_at->isPast();
     }
 
+    /**
+     * The voucher is expired
+     *
+     * @return bool
+     */
+    public function getUsedAttribute() {
+        return $this->type == 'product' ? $this->transactions->count() > 0 :
+            $this->amount_available_cached == 0;
+    }
+
+    /**
+     * @param string|null $identity_address
+     */
     public function sendToEmail(
         ?string $email
     ) {
