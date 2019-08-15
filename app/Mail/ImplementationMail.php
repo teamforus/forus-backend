@@ -28,13 +28,4 @@ class ImplementationMail extends Mailable
         $this->email = $email;
         $this->identityId = $identityId;
     }
-
-    protected function getImplementation(): ?array
-    {
-        $implementation = Implementation::activeKey();
-
-        return flatten_by_key(
-            config("forus.mails.implementations.$implementation")
-        );
-    }
 }
