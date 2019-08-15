@@ -241,13 +241,16 @@ interface IRecordRepo {
 
     /**
      * Approve validation request
+     *
      * @param string $identityAddress
      * @param string $validationUuid
+     * @param int|null $organization_id
      * @return bool
      */
     public function approveValidationRequest(
         string $identityAddress,
-        string $validationUuid
+        string $validationUuid,
+        int $organization_id = null
     );
 
     /**
