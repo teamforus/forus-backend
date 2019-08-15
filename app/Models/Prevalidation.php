@@ -11,10 +11,12 @@ use Illuminate\Http\Request;
  * Class Prevalidation
  * @property int $id
  * @property int $fund_id
+ * @property int|null $organization_id
  * @property string $uid
  * @property string $identity_address
  * @property string $state
  * @property Fund $fund
+ * @property Organization $organization
  * @property Collection $records
  * @property boolean $exported
  * @property Carbon $created_at
@@ -34,7 +36,8 @@ class Prevalidation extends Model
      * @var array
      */
     protected $fillable = [
-        'uid', 'identity_address', 'state', 'fund_id', 'exported'
+        'uid', 'identity_address', 'state', 'fund_id', 'organization_id',
+        'exported',
     ];
 
     /**
@@ -52,6 +55,13 @@ class Prevalidation extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function organization() {
+        return $this->belongsTo(Organization::class);
+    }
+
+    /**
      * @param Request $request
      * @return \Illuminate\Database\Eloquent\Model
      */
@@ -62,6 +72,7 @@ class Prevalidation extends Model
 
         $q = $request->input('q', null);
         $fund_id =$request->input('fund_id', null);
+        $organization_id =$request->input('organization_id', null);
         $state = $request->input('state', null);
         $from = $request->input('from', null);
         $to = $request->input('to', null);
@@ -89,6 +100,10 @@ class Prevalidation extends Model
 
         if ($fund_id) {
             $prevalidations->where(compact('fund_id'));
+        }
+
+        if ($organization_id) {
+            $prevalidations->where(compact('organization_id'));
         }
 
         if ($state) {

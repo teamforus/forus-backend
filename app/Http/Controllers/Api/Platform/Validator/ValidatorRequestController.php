@@ -78,6 +78,7 @@ class ValidatorRequestController extends Controller
         $this->authorize('validate', $validatorRequest);
 
         $state = $request->input('state', false);
+        $organization_id = $request->input('organization_id', null);
 
         if (in_array($state, ['approved', 'declined'])) {
             $validationRequest = $this->recordRepo->makeValidationRequest(
@@ -88,10 +89,11 @@ class ValidatorRequestController extends Controller
             if ($state == 'approved') {
                 $this->recordRepo->approveValidationRequest(
                     auth()->user()->getAuthIdentifier(),
-                    $validationRequest['uuid']
+                    $validationRequest['uuid'],
+                    $organization_id
                 );
             } else {
-                $this->recordRepo->approveValidationRequest(
+                $this->recordRepo->declineValidationRequest(
                     auth()->user()->getAuthIdentifier(),
                     $validationRequest['uuid']
                 );
