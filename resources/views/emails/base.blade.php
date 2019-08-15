@@ -2,7 +2,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     </head>
-    <body style="width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; background: #f6f5f5; margin: 0; padding: 0;" bgcolor="#f6f5f5">
+    <body style="{{ implementation_config('base.body_style') }}" bgcolor="{{ implementation_config('base.body_bg_color') }}">
     <center>
         <table id="wrapperTable" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; max-width: 600px !important; line-height: 100% !important; background: #fff; margin: 0 auto; padding: 0;" bgcolor="#fff">
             <tr>
