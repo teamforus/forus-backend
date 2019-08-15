@@ -175,19 +175,25 @@ if (!function_exists('implementation_trans')) {
     ) {
         $implementation = Implementation::activeKey();
 
-        if(Lang::has('mails.implementations.' . $implementation . '.' . $key)) {
-            return Lang::get(
-                'mails.implementations.' . $implementation . '.' . $key,
-                $replace,
-                $locale
-            );
-        }
-        elseif(Lang::has('mails.implementations.general.' . $key)) {
-            return Lang::get(
-                'mails.implementations.general.' . $key,
-                $replace,
-                $locale
-            );
+        switch ($implementation) {
+            case (Lang::has('mails/implementations/' . $implementation . '/' . $key)):
+                return Lang::get(
+                    'mails/implementations/' . $implementation . '/' . $key,
+                    $replace,
+                    $locale
+                );
+            case (Lang::has('mails/implementations/general/' . $key)):
+                return Lang::get(
+                    'mails/implementations/general/' . $key,
+                    $replace,
+                    $locale
+                );
+            case (Lang::has('mails/implementations/general.' . $key)):
+                return Lang::get(
+                    'mails/implementations/general.' . $key,
+                    $replace,
+                    $locale
+                );
         }
 
         return trans($key, $replace, $locale);
