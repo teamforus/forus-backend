@@ -8,6 +8,7 @@ use App\Http\Resources\FundResource;
 use App\Http\Resources\FundProviderResource;
 use App\Models\Fund;
 use App\Models\FundProductCategory;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
@@ -18,37 +19,28 @@ class FundProviderController extends Controller
     /**
      * Display list funds available for apply as provider
      *
+     * @param Request $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function availableFunds(
+        Request $request,
         Organization $organization
     ) {
         $this->authorize('show', $organization);
         $this->authorize('indexProvider', [FundProvider::class, $organization]);
 
-        $requestedFundsIds = $organization->organization_funds()->pluck(
+        $query = Implementation::activeFundsQuery()->whereNotIn(
+            'id', $organization->organization_funds()->pluck(
             'fund_id'
-        )->toArray();
+        )->toArray());
 
-        $fundIds = FundProductCategory::query()->whereIn(
-            'product_category_id',
-            $organization->product_categories->pluck('id')->toArray()
-        )->whereNotIn(
-            'fund_id', $requestedFundsIds
-        )->select(
-            'fund_id'
-        )->distinct()->get()->pluck(
-            'fund_id'
-        )->unique()->toArray();
+        if ($request->has('fund_id')) {
+            $query->where('id', $request->get('fund_id'));
+        }
 
-        $funds = Fund::query()->whereNotIn(
-            'state', ['closed', 'waiting']
-        )->whereIn('id', $fundIds)->get();
-
-
-        return FundResource::collection($funds);
+        return FundResource::collection($query->get());
     }
 
     /**
