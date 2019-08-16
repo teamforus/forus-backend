@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'header_image' => 'https://media.forus.io/static/iphone_shield_594x594.png',
+    'header_image' => 'https://images-na.ssl-images-amazon.com/images/I/414gEURppLL.jpg',
     'body_style' => 'width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; margin: 0; padding: 0;',
     'body_bg_color' => '#e5e2dd',
     'h1_style' => 'margin: 0 auto; color: #90191a; font-size: 36px; line-height: 1.1; font-weight: bold;',
