@@ -11,7 +11,7 @@
                         <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; text-align: center; background: #fff; margin: 0px auto;" bgcolor="#fff">
                             <tr>
                                 <td style="border-collapse: collapse; padding: 24px 24px 32px;">
-                                    <h1 style="margin: 0 auto; color: #2e3238; font-size: 36px; line-height: 1.1; font-weight: bold;"> @yield('title')</h1>
+                                    <h1 style="{{ implementation_config('base.h1_style') }}"> @yield('title')</h1>
                                 </td>
                             </tr>
                             <tr>
@@ -36,8 +36,8 @@
                                 <td align="center" style="border-collapse: collapse;">
                                     <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 166px!important; text-align: center; margin: 0px auto;">
                                         <tr>
-                                            <td align="center" style="border-collapse: collapse; background: #315efd; border-radius: 3px;">
-                                                <a href="@yield('link')" target="_blank" style="display: block; width: 100%; text-align: center; color: #fff; font-size: 14px; font-weight: bold; letter-spacing: 2px; line-height: 46px; text-transform: uppercase; text-decoration: none;">@yield('button_text')</a>
+                                            <td align="center" style="{{ implementation_config('base.button_td') }}">
+                                                <a href="@yield('link')" target="_blank" style="{{ implementation_config('base.button') }}">@yield('button_text')</a>
                                             </td>
                                         </tr>
                                     </table>
