@@ -42,6 +42,7 @@ class VoucherSubscriber
 
             if ($product->sold_out) {
                 $this->mailService->productSoldOut(
+                    $product->organization->email,
                     $product->organization->emailServiceId(),
                     $product->name,
                     Implementation::active()['url_provider']
@@ -49,6 +50,7 @@ class VoucherSubscriber
             }
 
             $this->mailService->productReserved(
+                $product->organization->email,
                 $product->organization->emailServiceId(),
                 $product->name,
                 format_date_locale($product->expire_at)
@@ -92,7 +94,11 @@ class VoucherSubscriber
             );
         }
 
-        $voucher->sendToEmail();
+        $email = resolve('forus.services.record')->primaryEmailByAddress(
+            $voucher->identity_address
+        );
+
+        $voucher->sendToEmail($email);
     }
 
     /**

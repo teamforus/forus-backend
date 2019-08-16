@@ -60,8 +60,9 @@ class IdentityController extends Controller
             );
 
             $this->mailService->sendEmailConfirmationToken(
-                $identityAddress,
-                $confirmationLink
+                $request->input('records.primary_email'),
+                $confirmationLink,
+                $identityAddress
             );
         } else {
             $this->identityRepo->exchangeEmailConfirmationToken(
@@ -191,7 +192,12 @@ class IdentityController extends Controller
         }
 
         if (!empty($proxy)) {
-            $this->mailService->loginViaEmail($identityId, $link, $platform);
+            $this->mailService->loginViaEmail(
+                $email,
+                $identityId,
+                $link,
+                $platform
+            );
         }
 
         return [

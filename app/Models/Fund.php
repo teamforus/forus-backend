@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\BunqService\BunqService;
+use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
@@ -485,6 +486,7 @@ class Fund extends Model
                 /** @var Organization $organization */
                 foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
+                        $organization->email,
                         $organization->emailServiceId(),
                         $fund->name,
                         $fund->organization->name
@@ -542,6 +544,7 @@ class Fund extends Model
             /** @var Organization $organization */
             foreach ($organizations as $organization) {
                 resolve('forus.services.mail_notification')->newFundApplicable(
+                    $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
@@ -629,7 +632,12 @@ class Fund extends Model
                 $referrers->push($fund->organization->emailServiceId());
 
                 foreach ($referrers as $referrer) {
+                    $email = (new RecordRepo)->primaryEmailByAddress(
+                        $referrer->identity_address
+                    );
+
                     $mailService->fundNotifyReachedNotificationAmount(
+                        $email,
                         $referrer,
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,

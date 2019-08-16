@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Implementation;
 use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Support\Facades\Lang;
 
 if  (!function_exists('format_date')) {
     /**
@@ -133,5 +135,90 @@ if (!function_exists('implementation_key')) {
      */
     function implementation_key() {
         return request()->header('Client-Key', false);
+    }
+}
+
+if (!function_exists('flattenBy_key')) {
+    /**
+     * flattens a multi dimensional array into an associative array,
+     * having the in-depth indexes as keys
+     */
+    function flatten_by_key(array $array, string $prefix = ''): array {
+        $result = [];
+
+        foreach($array as $key => $value) {
+            if(is_array($value)) {
+                $result = $result + flatten_by_key($value, $prefix . $key . '.');
+            }
+            else {
+                $result[$prefix . $key] = $value;
+            }
+        }
+
+        return $result;
+    }
+}
+
+if (!function_exists('implementation_trans')) {
+    /**
+     * Returns translations based on the current implementation
+     *
+     * @param string $key
+     * @param array $replace
+     * @param string|null $locale
+     * @return string|array|null
+     */
+    function implementation_trans(
+        string $key,
+        array $replace = [],
+        string $locale = null
+    ) {
+        $implementation = Implementation::activeKey();
+
+        switch ($implementation) {
+            case (Lang::has('mails/implementations/' . $implementation . '/' . $key)):
+                return Lang::get(
+                    'mails/implementations/' . $implementation . '/' . $key,
+                    $replace,
+                    $locale
+                );
+            case (Lang::has('mails/implementations/general/' . $key)):
+                return Lang::get(
+                    'mails/implementations/general/' . $key,
+                    $replace,
+                    $locale
+                );
+            case (Lang::has('mails/implementations/general.' . $key)):
+                return Lang::get(
+                    'mails/implementations/general.' . $key,
+                    $replace,
+                    $locale
+                );
+        }
+
+        return trans($key, $replace, $locale);
+    }
+}
+
+if (!function_exists('implementation_config')) {
+    /**
+     * Returns translations based on the current implementation
+     *
+     * @param string $data
+     * @return string|array
+     */
+    function implementation_config(
+        string $data
+    ) {
+        $implementation = Implementation::activeKey();
+
+        if(config()->has('forus.mails.implementations.' . $implementation . '.' . $data)) {
+            return config()->get('forus.mails.implementations.' . $implementation . '.' . $data);
+        }
+        elseif(config()->has('forus.mails.implementations.general.' . $data)) {
+            return config()->get('forus.mails.implementations.general.' . $data);
+        }
+
+        return $data;
     }
 }

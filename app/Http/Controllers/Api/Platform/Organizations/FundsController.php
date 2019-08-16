@@ -304,7 +304,7 @@ class FundsController extends Controller
 
         return [
             'dates' => $dates,
-            'usage' => $dates->sum('value'),
+            'usage' => $dates->sum('value') - $this->calculateTransactionCosts($fund, $startDate, $endDate),
             'activations' => $fund->vouchers()->whereNull(
                 'parent_id'
             )->whereBetween('created_at', [
@@ -312,6 +312,25 @@ class FundsController extends Controller
             ])->count(),
             'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
         ];
+    }
+
+    private function calculateTransactionCosts(
+        Fund $fund,
+        Carbon $startDate,
+        Carbon $endDate
+    ): float {
+        $totalSubstraction = 0.0;
+
+        if (!$fund->fund_config()->subtract_transaction_costs) {
+            $transactions = $fund
+                ->voucher_transactions()->whereBetween('created_at', [
+                    $startDate, $endDate
+                ])->count();
+
+            $totalSubstraction += $transactions * 0.10;
+        }
+
+        return $totalSubstraction;
     }
 
     /**
