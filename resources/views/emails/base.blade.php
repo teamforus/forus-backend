@@ -4,10 +4,10 @@
     </head>
     <body style="{{ implementation_config('base.body_style') }}" bgcolor="{{ implementation_config('base.body_bg_color') }}">
     <center>
-        <table id="wrapperTable" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; max-width: 600px !important; line-height: 100% !important; background: #fff; margin: 0 auto; padding: 0;" bgcolor="#fff">
+        <table id="wrapperTable" cellpadding="0" cellspacing="0" border="0" style="{{ implementation_config('base.wrapper_table') }}" bgcolor="#fff">
             <tr>
                 <td valign="top" align="center" style="border-collapse: collapse;">
-                    <div id="wrapper" style="font-family: Helvetica, Arial, ArialMT, sans-serif; width: 100%; max-width: 600px; overflow: hidden; color: #2e3238; font-size: 0; background: #f6f5f5; margin: 0 auto;">
+                    <div id="wrapper" style="{{ implementation_config('base.wrapper') }}">
                         <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; text-align: center; background: #fff; margin: 0px auto;" bgcolor="#fff">
                             <tr>
                                 <td style="border-collapse: collapse; padding: 24px 24px 32px;">
