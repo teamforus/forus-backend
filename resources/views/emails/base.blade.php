@@ -8,7 +8,7 @@
             <tr>
                 <td valign="top" align="center" style="border-collapse: collapse;">
                     <div id="wrapper" style="{{ implementation_config('base.wrapper') }}">
-                        <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; text-align: center; background: #fff; margin: 0px auto;" bgcolor="#fff">
+                        <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; text-align: center; background: #fff; margin: 0px auto;" bgcolor="{{ implementation_config('base.body_bg_color') }}">
                             <tr>
                                 <td style="border-collapse: collapse; padding: 24px 24px 32px;">
                                     <h1 style="{{ implementation_config('base.h1_style') }}"> @yield('title')</h1>
