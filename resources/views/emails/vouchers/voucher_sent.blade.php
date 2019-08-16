@@ -1,6 +1,6 @@
 @extends('emails.base')
 
-@section('title', implementation_trans('voucher_sent.title'))
+@section('title', implementation_trans('voucher_sent.title', ['fund_name' => $fund_name]))
 @section('html')
     {{ implementation_trans('dear_user') }}
     <br/>

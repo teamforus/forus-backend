@@ -499,6 +499,7 @@ class MailService
      *
      * @param string $email
      * @param $identifier
+     * @param string $fund_name
      * @param string $fund_product_name
      * @param string $qr_url
      *
@@ -507,12 +508,14 @@ class MailService
     public function sendVoucher(
         string $email,
         $identifier,
+        string $fund_name,
         string $fund_product_name,
         string $qr_url
     ): bool {
 
         Mail::send(new Voucher(
             $email,
+            $fund_name,
             $fund_product_name,
             $qr_url,
             $identifier

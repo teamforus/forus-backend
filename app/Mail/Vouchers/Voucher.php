@@ -11,17 +11,20 @@ use Illuminate\Queue\SerializesModels;
 
 class Voucher extends ImplementationMail
 {
+    private $fundName;
     private $fund_product_name;
     private $qr_url;
 
     public function __construct(
         string $email,
+        string $fund_name,
         string $fund_product_name,
         string $qr_url,
         string $identifier
     ) {
         parent::__construct($email, $identifier);
 
+        $this->fundName = $fund_name;
         $this->fund_product_name = $fund_product_name;
         $this->qr_url = $qr_url;
     }
@@ -33,6 +36,7 @@ class Voucher extends ImplementationMail
             ->to($this->email)
             ->subject(implementation_trans('voucher_sent.title'))
             ->view('emails.vouchers.voucher_sent', [
+                'fund_name' => $fund_name,
                 'fund_product_name' => $this->fund_product_name,
                 'qr_url' => $this->qr_url
             ]);
