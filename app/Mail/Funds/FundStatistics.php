@@ -35,7 +35,7 @@ class FundStatistics extends ImplementationMail
     public function build(): ImplementationMail
     {
         return $this
-            ->from(config('forus.mail.from.no-reply'))
+            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
             ->subject(implementation_trans('fund_statistics.title', [
                     'sponsor_name' => $this->sponsorName,

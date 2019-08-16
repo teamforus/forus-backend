@@ -29,15 +29,15 @@ class ProviderApproved extends ImplementationMail
     public function build(): ImplementationMail
     {
         return $this
-        ->from(config('forus.mail.from.no-reply'))
-        ->to($this->email)
-        ->subject(implementation_trans('provider_approved.title'))
-        ->view('emails.funds.provider_approved', [
-            'fund_name'                 => $this->fundName,
-            'provider_name'             => $this->providerName,
-            'sponsor_name'              => $this->sponsorName,
-            'provider_dashboard_link'    => $this->providerName
-        ]);
+            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
+            ->to($this->email)
+            ->subject(implementation_trans('provider_approved.title'))
+            ->view('emails.funds.provider_approved', [
+                'fund_name'                 => $this->fundName,
+                'provider_name'             => $this->providerName,
+                'sponsor_name'              => $this->sponsorName,
+                'provider_dashboard_link'    => $this->providerName
+            ]);
     }
 
 }

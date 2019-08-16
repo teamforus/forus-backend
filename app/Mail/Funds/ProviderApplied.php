@@ -30,17 +30,17 @@ class ProviderApplied extends ImplementationMail
     public function build(): ImplementationMail
     {
         return $this
-        ->from(config('forus.mail.from.no-reply'))
-        ->to($this->email)
-        ->subject(implementation_trans('provider_applied.title', [
-            'provider_name' => $this->provider_name,
-            'fund_name' => $this->fund_name
-        ]))
-        ->view('emails.funds.provider_applied', [
-            'provider_name'             => $this->provider_name,
-            'sponsor_name'              => $this->sponsor_name,
-            'fund_name'                 => $this->fund_name,
-            'sponsor_dashboard_link'    => $this->sponsor_dashboard_link
-        ]);
+            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
+            ->to($this->email)
+            ->subject(implementation_trans('provider_applied.title', [
+                'provider_name' => $this->provider_name,
+                'fund_name' => $this->fund_name
+            ]))
+            ->view('emails.funds.provider_applied', [
+                'provider_name'             => $this->provider_name,
+                'sponsor_name'              => $this->sponsor_name,
+                'fund_name'                 => $this->fund_name,
+                'sponsor_dashboard_link'    => $this->sponsor_dashboard_link
+            ]);
     }
 }

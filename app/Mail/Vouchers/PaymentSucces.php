@@ -24,7 +24,7 @@ class PaymentSuccesss extends ImplementationMail
     public function build(): ImplementationMail
     {
         return $this
-            ->from(config('forus.mail.from.no-reply'))
+            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
             ->subject(implementation_trans('payment_success.title', ['fund_name' => $this->fundName]))
             ->view('emails.vouchers.payment_success', [

@@ -2,6 +2,7 @@
 
 return [
     'from' => [
-        'no-reply' => 'no-reply@forus.io'
+        'no-reply' => env('MAIL_FROM_ADDRESS', 'no-reply@forus.io'),
+        'name' => env('MAIL_FROM_NAME', 'Stichting Forus')
     ]
 ];
