@@ -7,5 +7,5 @@
     {{ implementation_trans('product_added.new_product') }}
     <br/>
     <br/>
-    {{ implementation_trans('product_added', ['fund_name' => $fund_name]) }}
+    {{ implementation_trans('product_added.check_webshop', ['fund_name' => $fund_name]) }}
 @endsection

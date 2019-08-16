@@ -24,7 +24,7 @@ class ProductAdded extends ImplementationMail
     public function build(): ImplementationMail
     {
         return $this
-            ->from(config('forus.mail.from.no-reply'))
+            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
             ->subject(implementation_trans('product_added.title'))
             ->view('emails.funds.product_added', [
