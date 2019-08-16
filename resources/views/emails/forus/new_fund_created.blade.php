@@ -5,5 +5,5 @@
     <br />
     <br />
     {{ implementation_trans('fund_created.new_fund_created', ['fund_name' => $fund_name]) }}
-    {{ implementation_trans('fund_created.by', ['organization_name' => $organiation_name]) }}
+    {{ implementation_trans('fund_created.by', ['organization_name' => $organization_name]) }}
 @endsection
