@@ -9,5 +9,5 @@ return [
     'wrapper' => 'font-family: Helvetica, Arial, ArialMT, sans-serif; width: 100%; max-width: 600px; overflow: hidden; color: #2e3238; font-size: 0; background: #e5e2dd; margin: 0 auto;',
     'button_td' => 'border-collapse: collapse; background:#90191a; border-radius: 3px;',
     'button' => 'display: block; width: 100%; text-align: center; color: #fff; font-size: 14px; font-weight: bold; letter-spacing: 2px; line-height: 46px; text-transform: uppercase; text-decoration: none;',
-    'container' => 'border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; text-align: center; background: #fff; margin: 0px auto;'
+    'container' => 'border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; text-align: center; background: #e5e2dd; margin: 0px auto;'
 ];
