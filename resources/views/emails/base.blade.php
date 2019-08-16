@@ -4,7 +4,7 @@
     </head>
     <body style="{{ implementation_config('base.body_style') }}" bgcolor="{{ implementation_config('base.body_bg_color') }}">
     <center>
-        <table id="wrapperTable" cellpadding="0" cellspacing="0" border="0" style="{{ implementation_config('base.wrapper_table') }}" bgcolor="#fff">
+        <table id="wrapperTable" cellpadding="0" cellspacing="0" border="0" style="{{ implementation_config('base.wrapper_table') }}" bgcolor="{{ implementation_config('base.body_bg_color') }}">
             <tr>
                 <td valign="top" align="center" style="border-collapse: collapse;">
                     <div id="wrapper" style="{{ implementation_config('base.wrapper') }}">
