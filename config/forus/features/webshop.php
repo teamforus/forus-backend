@@ -3,17 +3,17 @@
 return [
     "records" => [
         // view records list
-        "list"      => true,
+        "list"      => false,
 
         // create new record
-        "create"    => true,
+        "create"    => false,
 
         // validate record
-        "validate"  => true
+        "validate"  => false
     ],
     "funds" => [
         // list all funds
-        "list"      => true,
+        "list"      => false,
 
         // view fund details
         "show"      => false
@@ -26,7 +26,7 @@ return [
         "show"      => true
     ],
     "identity"      => [
-        "address"   => true
+        "address"   => false
     ],
     // enable newsletter
     "newsletter"    => false,
