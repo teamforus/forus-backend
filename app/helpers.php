@@ -5,7 +5,7 @@ use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
 
-if  (!function_exists('format_date')) {
+if (!function_exists('format_date')) {
     /**
      * @param $value
      * @param string $format
@@ -18,7 +18,7 @@ if  (!function_exists('format_date')) {
     }
 }
 
-if  (!function_exists('format_datetime_locale')) {
+if (!function_exists('format_datetime_locale')) {
     /**
      * @param $value
      * @param string $format
@@ -31,7 +31,7 @@ if  (!function_exists('format_datetime_locale')) {
     }
 }
 
-if  (!function_exists('format_date_locale')) {
+if (!function_exists('format_date_locale')) {
     /**
      * @param $value
      * @param string $format
@@ -44,7 +44,7 @@ if  (!function_exists('format_date_locale')) {
     }
 }
 
-if  (!function_exists('currency_format')) {
+if (!function_exists('currency_format')) {
     /**
      * @param $number
      * @param int $decimals
@@ -57,7 +57,7 @@ if  (!function_exists('currency_format')) {
     }
 }
 
-if  (!function_exists('currency_format_locale')) {
+if (!function_exists('currency_format_locale')) {
     /**
      * @param $number
      * @return string
@@ -68,7 +68,7 @@ if  (!function_exists('currency_format_locale')) {
 }
 
 
-if  (!function_exists('rule_number_format')) {
+if (!function_exists('rule_number_format')) {
     /**
      * @param $number
      * @param int $decimals
@@ -92,7 +92,7 @@ if  (!function_exists('rule_number_format')) {
 }
 
 
-if  (!function_exists('authorize')) {
+if (!function_exists('authorize')) {
     /**
      * @param $ability
      * @param array $arguments
@@ -138,28 +138,7 @@ if (!function_exists('implementation_key')) {
     }
 }
 
-if (!function_exists('flattenBy_key')) {
-    /**
-     * flattens a multi dimensional array into an associative array,
-     * having the in-depth indexes as keys
-     */
-    function flatten_by_key(array $array, string $prefix = ''): array {
-        $result = [];
-
-        foreach($array as $key => $value) {
-            if(is_array($value)) {
-                $result = $result + flatten_by_key($value, $prefix . $key . '.');
-            }
-            else {
-                $result[$prefix . $key] = $value;
-            }
-        }
-
-        return $result;
-    }
-}
-
-if (!function_exists('implementation_trans')) {
+if (!function_exists('mail_trans')) {
     /**
      * Returns translations based on the current implementation
      *
@@ -168,7 +147,7 @@ if (!function_exists('implementation_trans')) {
      * @param string|null $locale
      * @return string|array|null
      */
-    function implementation_trans(
+    function mail_trans(
         string $key,
         array $replace = [],
         string $locale = null
@@ -200,25 +179,29 @@ if (!function_exists('implementation_trans')) {
     }
 }
 
-if (!function_exists('implementation_config')) {
+if (!function_exists('mail_config')) {
     /**
-     * Returns translations based on the current implementation
+     * Returns mail configs based on the current implementation
      *
-     * @param string $data
-     * @return string|array
+     * @param string $key
+     * @param string|null $default
+     * @param string|null $implementation
+     * @return mixed|string
      */
-    function implementation_config(
-        string $data
+    function mail_config(
+        string $key,
+        string $default = null,
+        string $implementation = null
     ) {
-        $implementation = Implementation::activeKey();
+        $implementation = $implementation ?: Implementation::activeKey();
+        $configKey = "forus.mails.implementations.%s.$key";
 
-        if(config()->has('forus.mails.implementations.' . $implementation . '.' . $data)) {
-            return config()->get('forus.mails.implementations.' . $implementation . '.' . $data);
-        }
-        elseif(config()->has('forus.mails.implementations.general.' . $data)) {
-            return config()->get('forus.mails.implementations.general.' . $data);
+        if (config()->has(sprintf($configKey, $implementation))) {
+            return config()->get(sprintf($configKey, $implementation));
+        } elseif (config()->has(sprintf($configKey, 'general'))) {
+            return config()->get(sprintf($configKey, 'general'));
         }
 
-        return $data;
+        return $default ?: $key;
     }
 }
