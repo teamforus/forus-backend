@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Platform\Validator;
 
 use App\Http\Requests\Api\Platform\Validator\ValidatorRequest\ValidateValidatorRequestRequest;
 use App\Http\Resources\Validator\ValidatorRequestResource;
-use App\Models\Validator;
 use App\Models\ValidatorRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -32,11 +31,9 @@ class ValidatorRequestController extends Controller
     ) {
         $this->authorize('index', ValidatorRequest::class);
 
-        return ValidatorRequestResource::collection(ValidatorRequest::search(
-            $request
-        )->paginate(
-            $request->input('per_page', 20)
-        ));
+        return ValidatorRequestResource::collection(
+            ValidatorRequest::searchPaginate($request)
+        );
     }
 
     /**

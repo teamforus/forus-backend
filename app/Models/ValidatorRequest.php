@@ -7,6 +7,7 @@ use App\Services\Forus\Record\Models\Record;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Class ValidatorRequest
@@ -87,5 +88,37 @@ class ValidatorRequest extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * @param Request $request
+     * @param array $with
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator|LengthAwarePaginator
+     */
+    public static function searchPaginate(Request $request, $with = []) {
+        $query = static::search($request);
+        $per_page = $request->input('per_page', 10);
+
+        if (!$group = $request->input('group', false)) {
+            return $query->with($with)->paginate($per_page);
+        }
+
+        $addresses = array_pluck(
+            $query
+                ->groupBy('identity_address')
+                ->orderBy('created_at')->with($with)
+                ->paginate($per_page)->items(),
+            'identity_address'
+        );
+
+        $data = static::search($request)
+            ->whereIn('identity_address', $addresses)
+            ->orderBy('id')->with($with)->get();
+
+        return new LengthAwarePaginator(
+            $data->groupBy('identity_address')->values(),
+            static::search($request)->distinct()->count('identity_address'),
+            $per_page
+        );
     }
 }
