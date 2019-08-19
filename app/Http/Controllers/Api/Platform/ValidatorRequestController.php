@@ -44,8 +44,12 @@ class ValidatorRequestController extends Controller
             'validator_id' => $request->input('validator_id'),
             'state' => 'pending'
         ]);
+        $email = resolve('forus.services.record')->primaryEmailByAddress(
+            auth()->user()->getAuthIdentifier()
+        );
 
         resolve('forus.services.mail_notification')->newValidationRequest(
+            $email,
             $validatorRequest->validator->identity_address,
             config('forus.front_ends.panel-validator')
         );

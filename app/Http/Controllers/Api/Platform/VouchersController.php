@@ -7,13 +7,23 @@ use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
 use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Http\Resources\VoucherResource;
+use App\Models\Implementation;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\Identity\Repositories\IdentityRepo;
+use App\Services\Forus\Record\Repositories\RecordRepo;
 
 class VouchersController extends Controller
 {
+    private $recordRepo;
+
+    public function __construct(RecordRepo $recordRepo)
+    {
+        $this->recordRepo = $recordRepo;
+    }
+
     /**
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
@@ -110,7 +120,13 @@ class VouchersController extends Controller
     ) {
         $this->authorize('show', $voucherToken->voucher);
 
-        $voucherToken->voucher->sendToEmail();
+        $voucher = $voucherToken->voucher;
+
+        $email = $this->recordRepo->primaryEmailByAddress(
+            $voucher->identity_address
+        );
+
+        $voucher->sendToEmail($email);
     }
 
     /**

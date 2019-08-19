@@ -41,42 +41,34 @@ class PrevalidationController extends Controller
     ) {
         $this->authorize('store', Prevalidation::class);
 
+        $recordRepo = resolve('forus.services.record');
+
+        $fund = Fund::find($request->input('fund_id'));
         $data = $request->input('data');
 
-        /** @var Fund $fund */
-        $fund = $request->input('fund_id', false);
-        $primaryKeyValues = collect();
+        $fundPrevalidationPrimaryKey = $recordRepo->getTypeIdByKey(
+            $fund->fund_config->csv_primary_key
+        );
 
-        if ($fund) {
-            $fund = Fund::query()->find($fund);
-            $fundPrevalidationPrimaryKey = resolve('forus.services.record')->getTypeIdByKey(
-                $fund->fund_config->csv_primary_key
-            );
+        $existingPrevalidations = Prevalidation::where([
+            'identity_address' => auth()->id(),
+            'fund_id' => $fund->id
+        ])->pluck('id');
 
-            $existingPrevalidations = Prevalidation::query()->where([
-                'identity_address' => auth()->id(),
-                'fund_id' => $fund->id
-            ])->pluck('id');
-
-            $primaryKeyValues = PrevalidationRecord::query()->whereIn(
-                'prevalidation_id', $existingPrevalidations
-            )->where([
-                'record_type_id' => $fundPrevalidationPrimaryKey,
-            ])->pluck('value');
-        }
-
+        $primaryKeyValues = PrevalidationRecord::whereIn(
+            'prevalidation_id', $existingPrevalidations
+        )->where([
+            'record_type_id' => $fundPrevalidationPrimaryKey,
+        ])->pluck('value');
 
         $data = collect($data)->map(function($record) use (
             $primaryKeyValues, $fund
         ) {
             $record = collect($record);
 
-            if ($fund) {
-                if ($primaryKeyValues->search(
-                    $record[$fund->fund_config->csv_primary_key]
-                    ) !== false) {
-                    return [];
-                }
+            if ($primaryKeyValues->search(
+                $record[$fund->fund_config->csv_primary_key]) !== false) {
+                return [];
             }
 
             return $record->map(function($value, $key) {
@@ -98,7 +90,7 @@ class PrevalidationController extends Controller
             })->values();
         })->filter(function($records) {
             return collect($records)->count();
-        })->map(function($records) use ($request) {
+        })->map(function($records) use ($request, $fund) {
             do {
                 $uid = app()->make('token_generator')->generate(4, 2);
             } while(Prevalidation::query()->where(
@@ -108,7 +100,8 @@ class PrevalidationController extends Controller
             $prevalidation = Prevalidation::create([
                 'uid' => $uid,
                 'state' => 'pending',
-                'fund_id' => $request->input('fund_id', null),
+                'organization_id' => $fund->organization_id,
+                'fund_id' => $fund->id,
                 'identity_address' => auth()->user()->getAuthIdentifier()
             ]);
 
@@ -212,7 +205,8 @@ class PrevalidationController extends Controller
 
             $this->recordRepo->approveValidationRequest(
                 $prevalidation->identity_address,
-                $validationRequest['uuid']
+                $validationRequest['uuid'],
+                $prevalidation->organization_id
             );
         }
 
