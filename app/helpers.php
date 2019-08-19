@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\Implementation;
 use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Support\Facades\Lang;
 
-if  (!function_exists('format_date')) {
+if (!function_exists('format_date')) {
     /**
      * @param $value
      * @param string $format
@@ -16,7 +18,7 @@ if  (!function_exists('format_date')) {
     }
 }
 
-if  (!function_exists('format_datetime_locale')) {
+if (!function_exists('format_datetime_locale')) {
     /**
      * @param $value
      * @param string $format
@@ -29,7 +31,7 @@ if  (!function_exists('format_datetime_locale')) {
     }
 }
 
-if  (!function_exists('format_date_locale')) {
+if (!function_exists('format_date_locale')) {
     /**
      * @param $value
      * @param string $format
@@ -42,7 +44,7 @@ if  (!function_exists('format_date_locale')) {
     }
 }
 
-if  (!function_exists('currency_format')) {
+if (!function_exists('currency_format')) {
     /**
      * @param $number
      * @param int $decimals
@@ -55,7 +57,7 @@ if  (!function_exists('currency_format')) {
     }
 }
 
-if  (!function_exists('currency_format_locale')) {
+if (!function_exists('currency_format_locale')) {
     /**
      * @param $number
      * @return string
@@ -66,7 +68,7 @@ if  (!function_exists('currency_format_locale')) {
 }
 
 
-if  (!function_exists('rule_number_format')) {
+if (!function_exists('rule_number_format')) {
     /**
      * @param $number
      * @param int $decimals
@@ -90,7 +92,7 @@ if  (!function_exists('rule_number_format')) {
 }
 
 
-if  (!function_exists('authorize')) {
+if (!function_exists('authorize')) {
     /**
      * @param $ability
      * @param array $arguments
@@ -133,5 +135,73 @@ if (!function_exists('implementation_key')) {
      */
     function implementation_key() {
         return request()->header('Client-Key', false);
+    }
+}
+
+if (!function_exists('mail_trans')) {
+    /**
+     * Returns translations based on the current implementation
+     *
+     * @param string $key
+     * @param array $replace
+     * @param string|null $locale
+     * @return string|array|null
+     */
+    function mail_trans(
+        string $key,
+        array $replace = [],
+        string $locale = null
+    ) {
+        $implementation = Implementation::activeKey();
+
+        switch ($implementation) {
+            case (Lang::has('mails/implementations/' . $implementation . '/' . $key)):
+                return Lang::get(
+                    'mails/implementations/' . $implementation . '/' . $key,
+                    $replace,
+                    $locale
+                );
+            case (Lang::has('mails/implementations/general/' . $key)):
+                return Lang::get(
+                    'mails/implementations/general/' . $key,
+                    $replace,
+                    $locale
+                );
+            case (Lang::has('mails/implementations/general.' . $key)):
+                return Lang::get(
+                    'mails/implementations/general.' . $key,
+                    $replace,
+                    $locale
+                );
+        }
+
+        return trans($key, $replace, $locale);
+    }
+}
+
+if (!function_exists('mail_config')) {
+    /**
+     * Returns mail configs based on the current implementation
+     *
+     * @param string $key
+     * @param string|null $default
+     * @param string|null $implementation
+     * @return mixed|string
+     */
+    function mail_config(
+        string $key,
+        string $default = null,
+        string $implementation = null
+    ) {
+        $implementation = $implementation ?: Implementation::activeKey();
+        $configKey = "forus.mails.implementations.%s.$key";
+
+        if (config()->has(sprintf($configKey, $implementation))) {
+            return config()->get(sprintf($configKey, $implementation));
+        } elseif (config()->has(sprintf($configKey, 'general'))) {
+            return config()->get(sprintf($configKey, 'general'));
+        }
+
+        return $default ?: $key;
     }
 }

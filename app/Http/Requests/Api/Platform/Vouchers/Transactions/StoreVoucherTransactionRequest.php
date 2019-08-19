@@ -27,6 +27,7 @@ class StoreVoucherTransactionRequest extends FormRequest
     public function rules()
     {
         $product = false;
+
         /**
          * shopkeeper identity and organizations
          */
@@ -59,7 +60,7 @@ class StoreVoucherTransactionRequest extends FormRequest
         /**
          * Products approved by funds
          */
-        $validProductsIds = Organization::getModel()->whereIn(
+        $validProductsIds = Organization::query()->whereIn(
             'id', $validOrganizations
         )->get()->pluck('products')->flatten()->filter(function($product) use ($validCategories) {
             /** @var Product $product */

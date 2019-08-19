@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\Identity;
 
+use App\Http\Requests\Api\Identity\ApproveRecordValidationRequest;
 use App\Http\Requests\Api\RecordValidations\RecordValidationStoreRequest;
+use App\Models\Organization;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -52,6 +54,13 @@ class RecordValidationController extends Controller
             $recordUuid
         );
 
+        $request['organizations_available'] =
+            Organization::queryByIdentityPermissions(
+            auth()->id(), 'validate_records'
+        )->select(['id', 'name'])->get()->map(function(Organization $organization) {
+            return $organization->only(['id', 'name']);
+        });
+
         if (!$request) {
             abort(404, "Not found");
         }
@@ -61,15 +70,19 @@ class RecordValidationController extends Controller
 
     /**
      * Approve validation request
+     *
+     * @param ApproveRecordValidationRequest $request
      * @param string $recordUuid
-     * @return mixed
+     * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
      */
     public function approve(
+        ApproveRecordValidationRequest $request,
         string $recordUuid
     ) {
         $success = $this->recordRepo->approveValidationRequest(
             auth()->user()->getAuthIdentifier(),
-            $recordUuid
+            $recordUuid,
+            $request->post('organization_id')
         );
 
         if (!$success) {

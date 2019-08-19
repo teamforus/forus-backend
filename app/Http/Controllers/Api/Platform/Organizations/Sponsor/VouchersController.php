@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
@@ -46,7 +47,7 @@ class VouchersController extends Controller
      *
      * @param StoreVoucherRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherResource|array
+     * @return SponsorVoucherResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
@@ -54,16 +55,38 @@ class VouchersController extends Controller
         Organization $organization
     ) {
         $fund = Fund::find($request->post('fund_id'));
-        $expire_date = $request->post('expire_date');
 
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        return new SponsorVoucherResource($fund->makeVoucher(
-            null,
-            $request->post('amount'),
-            $expire_date ? Carbon::parse($expire_date) : null,
-            $request->post('note')));
+        $identityRepo = resolve('forus.services.identity');
+        $recordRepo = resolve('forus.services.record');
+
+        $batch = $request->has('vouchers');
+        $vouchers = $batch ? $request->post('vouchers') : [$request->only([
+            'expires_at', 'note', 'amount', 'note'
+        ])];
+
+        $vouchers = collect($vouchers)->map(function(
+            $voucher
+        ) use ($fund, $identityRepo,$recordRepo) {
+            $note       = $voucher['note'] ?? null;
+            $email      = $voucher['email'] ?? false;
+            $amount     = $voucher['amount'] ?? 0;
+            $identity   = $email ? (
+                $recordRepo->identityIdByEmail($email) ?: $identityRepo->makeByEmail($email)
+            ) : null;
+            $expires_at = $voucher['expires_at'] ?? false;
+            $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
+
+            return $fund->makeVoucher($identity, $amount, $expires_at, $note);
+        });
+
+        if ($batch) {
+            return SponsorVoucherResource::collection($vouchers);
+        }
+
+        return new SponsorVoucherResource($vouchers->first());
     }
 
     /**
@@ -101,9 +124,11 @@ class VouchersController extends Controller
         $this->authorize('assignSponsor', [$voucher, $organization]);
 
         $email = $request->post('email');
+        $identityRepo = resolve('forus.services.identity');
         $recordRepo = resolve('forus.services.record');
 
-        $voucher->assignToIdentity($recordRepo->identityIdByEmail($email));
+        $voucher->assignToIdentity($recordRepo->identityIdByEmail($email) ?:
+            $identityRepo->makeByEmail($email));
 
         return new SponsorVoucherResource($voucher);
     }
@@ -125,9 +150,8 @@ class VouchersController extends Controller
         $this->authorize('sendByEmailSponsor', [$voucher, $organization]);
 
         $email = $request->post('email');
-        $recordRepo = resolve('forus.services.record');
 
-        $voucher->sendToEmail($recordRepo->identityIdByEmail($email));
+        $voucher->sendToEmail($email);
 
         return new SponsorVoucherResource($voucher);
     }

@@ -100,6 +100,7 @@ class FundProviderController extends Controller
 
         if ($state == 'approved') {
             $mailService->providerApproved(
+                $organizationFund->organization->email,
                 $organizationFund->organization->emailServiceId(),
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
@@ -119,10 +120,12 @@ class FundProviderController extends Controller
             );
         } elseif ($state == 'declined') {
             $mailService->providerRejected(
+                $organizationFund->organization->email,
                 $organizationFund->organization->identity_address,
                 $organizationFund->fund->name,
                 $organizationFund->organization->name,
-                $organizationFund->fund->organization->name
+                $organizationFund->fund->organization->name,
+                $organizationFund->fund->organization->phone
             );
         }
 

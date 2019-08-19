@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Identity\Models;
 
+use App\Models\Traits\EloquentModel;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class IdentityProxy extends Model
 {
+    use EloquentModel;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -45,5 +48,13 @@ class IdentityProxy extends Model
      */
     public function getExchangeTimeExpiredAttribute() {
         return $this->created_at->addSeconds($this->expires_in)->isPast();
+    }
+
+    /**
+     * @param string $access_token
+     * @return IdentityProxy|null
+     */
+    public static function findByAccessToken($access_token) {
+        return self::where(compact('access_token'))->first();
     }
 }

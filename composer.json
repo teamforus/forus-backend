@@ -5,10 +5,11 @@
     "license": "MIT",
     "type": "project",
     "require": {
-        "php": ">=7.0.0",
+        "php": ">=7.1.0",
         "ext-json": "*",
         "ext-openssl": "*",
         "aws/aws-sdk-php": "^3.107",
+        "barryvdh/laravel-cors": "^0.11.3",
         "barryvdh/laravel-ide-helper": "^2.4",
         "bunq/sdk_php": "^1.10.16",
         "dimsav/laravel-translatable": "8.*",
@@ -22,6 +23,8 @@
         "laravelcollective/html": "^5.5.0",
         "league/flysystem-aws-s3-v3": "^1.0",
         "maatwebsite/excel": "^3.1",
+        "philkra/elastic-apm-laravel": "^5.8",
+        "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "^2.0"
     },
     "require-dev": {

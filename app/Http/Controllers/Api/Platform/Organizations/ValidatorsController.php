@@ -47,6 +47,7 @@ class ValidatorsController extends Controller
         )->identityIdByEmail($request->input('email'));
 
         resolve('forus.services.mail_notification')->youAddedAsValidator(
+            $request->input('email'),
             $identity_address,
             $organization->name
         );

@@ -17,7 +17,7 @@ class ValidatorRequestResource extends Resource
     {
         $resource = $this->resource;
         $recordRepo = app()->make('forus.services.record');
-        $recordTypes = RecordType::getModel()->get()->keyBy('id');
+        $recordTypes = RecordType::query()->get()->keyBy('id');
 
         $bsn = collect(
             $recordRepo->recordsList($resource->identity_address, 'bsn')

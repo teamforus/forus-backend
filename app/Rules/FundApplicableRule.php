@@ -33,21 +33,6 @@ class FundApplicableRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        $fundIds = FundProductCategory::getModel()->whereIn(
-            'product_category_id',
-            $this->organization->product_categories->pluck('id')->toArray()
-        )->select('fund_id')->distinct()->get()->pluck(
-            'fund_id'
-        );
-
-        if ($fundIds->search($value) === false) {
-            $this->message = trans(
-                'validation.organization_fund.wrong_categories'
-            );
-
-            return false;
-        }
-
         if (!empty($this->organization->organization_funds()->where(
             'fund_id', $value
         )->first())) {

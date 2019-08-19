@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\BunqService\BunqService;
+use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
@@ -167,16 +168,6 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function provider_organizations() {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        );
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function top_ups() {
@@ -256,6 +247,16 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        );
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function validators() {
@@ -314,10 +315,18 @@ class Fund extends Model
         ];
     }
 
+    /**
+     * @param Fund $fund
+     * @param string $identity_address
+     * @param string $recordType
+     * @param Organization|null $organization
+     * @return mixed
+     */
     public static function getTrustedRecordOfType(
         Fund $fund,
         string $identity_address,
-        string $recordType
+        string $recordType,
+        Organization $organization = null
     ) {
         $recordRepo = app()->make('forus.services.record');
 
@@ -327,17 +336,26 @@ class Fund extends Model
 
         /** @var FundCriterion $criterion */
         $recordsOfType = collect($recordRepo->recordsList(
-            $identity_address, $recordType
+            $identity_address, $recordType, null
         ));
 
         $validRecordsOfType = $recordsOfType->map(function($record) use (
-            $trustedIdentities
+            $trustedIdentities, $organization
         ) {
-            $record['validations'] = collect($record['validations'])->whereIn(
-                'identity_address', $trustedIdentities
-            )->sortByDesc('created_at');
+            $validations = collect($record['validations'])->whereIn(
+                'identity_address', $trustedIdentities);
 
-            return $record;
+            if ($organization) {
+                $validations = collect()->merge($validations->where(
+                    'organization_id', $organization->id
+                ))->merge($validations->where(
+                    'organization_id', null
+                ));
+            }
+
+            return array_merge($record, [
+                'validations' => $validations->sortByDesc('created_at')
+            ]);
         })->filter(function($record) {
             return count($record['validations']) > 0;
         })->sortByDesc(function($record) {
@@ -347,6 +365,11 @@ class Fund extends Model
         return collect($validRecordsOfType)->first();
     }
 
+    /**
+     * @param Fund $fund
+     * @param $identityAddress
+     * @return int|mixed
+     */
     public static function amountForIdentity(Fund $fund, $identityAddress)
     {
         if (!$fundFormula = $fund->fund_formulas) {
@@ -362,7 +385,8 @@ class Fund extends Model
                     $record = self::getTrustedRecordOfType(
                         $fund,
                         $identityAddress,
-                        $formula->record_type_key
+                        $formula->record_type_key,
+                        $fund->organization
                     );
 
                     return is_numeric(
@@ -462,6 +486,7 @@ class Fund extends Model
                 /** @var Organization $organization */
                 foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
+                        $organization->email,
                         $organization->emailServiceId(),
                         $fund->name,
                         $fund->organization->name
@@ -519,6 +544,7 @@ class Fund extends Model
             /** @var Organization $organization */
             foreach ($organizations as $organization) {
                 resolve('forus.services.mail_notification')->newFundApplicable(
+                    $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
@@ -606,7 +632,12 @@ class Fund extends Model
                 $referrers->push($fund->organization->emailServiceId());
 
                 foreach ($referrers as $referrer) {
+                    $email = (new RecordRepo)->primaryEmailByAddress(
+                        $referrer->identity_address
+                    );
+
                     $mailService->fundNotifyReachedNotificationAmount(
+                        $email,
                         $referrer,
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,

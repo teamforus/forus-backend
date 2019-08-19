@@ -53,7 +53,7 @@ class ProviderVoucherResource extends Resource
         ))->get();
 
         $allowedProductCategories = $voucher->fund->product_categories;
-        $allowedProducts = Product::getModel()->whereIn(
+        $allowedProducts = Product::query()->whereIn(
             'organization_id', $allowedOrganizations->pluck('id')
         )->where('sold_out', '=', false)->whereIn(
             'product_category_id', $allowedProductCategories->pluck('id')
@@ -89,7 +89,8 @@ class ProviderVoucherResource extends Resource
             'allowed_products' => collect($allowedProducts)->map(function($product) {
                 /** @var Product $product */
                 return collect($product)->only([
-                    'id', 'name', 'description', 'total_amount', 'sold_amount'
+                    'id', 'name', 'description', 'total_amount', 'sold_amount',
+                    'product_category_id', 'organization_id',
                 ])->merge([
                     'price' => currency_format($product->price),
                     'old_price' => currency_format($product->old_price),
@@ -99,6 +100,36 @@ class ProviderVoucherResource extends Resource
                     )
                 ]);
             }),
+            'product_vouchers' => $voucher->product_vouchers ? collect(
+                $voucher->product_vouchers
+            )->filter(function($product_voucher) {
+                return !$product_voucher->used;
+            })->map(function($product_voucher) {
+                /** @var Voucher $product_voucher */
+                return collect($product_voucher)->only([
+                    'identity_address', 'fund_id', 'created_at',
+                    'created_at_locale',
+                ])->merge([
+                    'address' => $product_voucher->tokens->where(
+                        'need_confirmation', 1)->first()->address,
+                    'amount' => currency_format(
+                        $product_voucher->type == 'regular' ?
+                            $product_voucher->amount_available_cached :
+                            $product_voucher->amount
+                    ),
+                    'date' => $product_voucher->created_at->format('M d, Y'),
+                    'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
+                    'timestamp' => $product_voucher->created_at->timestamp,
+                    'product' => collect($product_voucher->product)->only([
+                        'id', 'name', 'description', 'total_amount',
+                        'sold_amount', 'product_category_id', 'organization_id',
+                    ])->merge([
+                        'price' => currency_format($product_voucher->product->price),
+                        'old_price' => currency_format($product_voucher->product->old_price),
+                        'photo' => new MediaResource($product_voucher->product->photo),
+                    ])
+                ]);
+            }) : null,
         ])->toArray();
     }
 
@@ -127,7 +158,7 @@ class ProviderVoucherResource extends Resource
                 'organization' => new OrganizationBasicResource(
                     $voucher->product->organization
                 ),
-            ])->toArray()
+            ])->toArray(),
         ])->toArray();
     }
 }

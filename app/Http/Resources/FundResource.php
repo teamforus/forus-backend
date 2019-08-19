@@ -76,6 +76,9 @@ class FundResource extends Resource
             'criteria' => FundCriterionResource::collection(
                 $fund->criteria
             ),
+            'formulas' => FundFormulaResource::collection(
+                $fund->fund_formulas
+            ),
             'validators' => $validators->map(function($validator) {
                 return collect($validator)->only([
                     'identity_address'

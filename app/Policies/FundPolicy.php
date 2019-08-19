@@ -127,7 +127,7 @@ class FundPolicy
             $identity_address, $fund
         ) {
             $record = Fund::getTrustedRecordOfType(
-                $fund, auth()->id(), $criterion->record_type_key
+                $fund, auth()->id(), $criterion->record_type_key, $fund->organization
             );
 
             return (collect([$record])->where(
