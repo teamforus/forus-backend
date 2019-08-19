@@ -34,7 +34,7 @@ class Voucher extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(implementation_trans('voucher_sent.title'))
+            ->subject(mail_trans('voucher_sent.title', ['fund_name' => $this->fundName]))
             ->view('emails.vouchers.voucher_sent', [
                 'fund_name' => $this->fundName,
                 'fund_product_name' => $this->fund_product_name,

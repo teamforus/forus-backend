@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Totaal aantaal gebruikers :sponsor_name - :fund_name',
+    'title' => 'Totaal aantal gebruikers :sponsor_name - :fund_name',
     'sponsor' => 'Sponsor: :sponsor_name',
     'fund' => 'Fonds: :fund_name',
     'sponsor_count' => 'Aantal sponsors: :sponsor_count',
