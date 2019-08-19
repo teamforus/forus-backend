@@ -33,7 +33,7 @@ class UserLogin extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(implementation_trans('login_via_email.title', ['platform' => $this->platform]))
+            ->subject(mail_trans('login_via_email.title', ['platform' => $this->platform]))
             ->view('emails.login.login_via_email', [
                 'platform' => $this->platform,
                 'link' => $this->link

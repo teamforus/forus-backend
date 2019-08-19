@@ -28,7 +28,7 @@ class ProductSoldOut extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(implementation_trans('product_sold_out.title', ['product_name' => $this->productName]))
+            ->subject(mail_trans('product_sold_out.title', ['product_name' => $this->productName]))
             ->view('emails.funds.product_sold_out', [
                 'product_name' => $this->productName,
                 'link' => $this->link

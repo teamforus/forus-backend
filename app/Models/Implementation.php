@@ -92,11 +92,11 @@ class Implementation extends Model
     }
 
     /**
-     * @return Collection
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function activeFunds() {
+    public static function activeFundsQuery() {
         if (self::activeKey() == 'general') {
-            return Fund::query()->has('fund_config')->where('state', 'active')->get();
+            return Fund::query()->has('fund_config')->where('state', 'active');
         }
 
         return Fund::query()->whereIn('id', function(Builder $query) {
@@ -105,8 +105,14 @@ class Implementation extends Model
                     'key' => self::activeKey()
                 ])->first()->id
             ]);
-        })->where('state', 'active')
-            ->get();
+        })->where('state', 'active');
+    }
+
+    /**
+     * @return Collection
+     */
+    public static function activeFunds() {
+        return self::activeFundsQuery()->get();
     }
 
     /**

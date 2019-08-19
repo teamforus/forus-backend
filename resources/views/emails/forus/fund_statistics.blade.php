@@ -1,24 +1,24 @@
 @extends('emails.base')
 
-@section('title', implementation_trans('fund_statistics.title', [
+@section('title', mail_trans('fund_statistics.title', [
     'sponsor_name' => $sponsor_name,
     'fund_name' => $fund_name
 ]))
 @section('html')
-    {{ implementation_trans('fund_statistics.sponsor', ['sponsor_name' => $sponsor_name]) }}
+    {{ mail_trans('fund_statistics.sponsor', ['sponsor_name' => $sponsor_name]) }}
     <br />
     <br />
-    {{ implementation_trans('fund_statistics.fund', ['fund_name' => $fund_name]) }}
+    {{ mail_trans('fund_statistics.fund', ['fund_name' => $fund_name]) }}
     <br />
     <br />
-    {{ implementation_trans('fund_statistics.sponsor_count', ['sponsor_count' => $sponsor_amount]) }}
+    {{ mail_trans('fund_statistics.sponsor_count', ['sponsor_count' => $sponsor_amount]) }}
     <br />
-    {{ implementation_trans('fund_statistics.provider_count', ['provider_count' => $provider_amount]) }}
+    {{ mail_trans('fund_statistics.provider_count', ['provider_count' => $provider_amount]) }}
     <br />
-    {{ implementation_trans('fund_statistics.request_count', ['request_count' => $request_amount]) }}
+    {{ mail_trans('fund_statistics.request_count', ['request_count' => $request_amount]) }}
     <br />
     <hr>
-    {{ implementation_trans('fund_statistics.total_amount', ['total_count' => $total_amount]) }}
+    {{ mail_trans('fund_statistics.total_amount', ['total_count' => $total_amount]) }}
     <br />
 @endsection
 

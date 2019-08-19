@@ -32,7 +32,7 @@ class ProviderApplied extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(implementation_trans('provider_applied.title', [
+            ->subject(mail_trans('provider_applied.title', [
                 'provider_name' => $this->provider_name,
                 'fund_name' => $this->fund_name
             ]))

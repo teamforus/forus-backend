@@ -2,7 +2,7 @@
 
 return [
     // Sets whether the apm reporting should be active or not
-    'active'        => env('APM_ACTIVE', true),
+    'active'        => env('APM_ACTIVE', false),
 
     'app' => [
         // The app name that will identify your app in Kibana / Elastic APM
