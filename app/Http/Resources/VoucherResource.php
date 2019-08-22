@@ -146,7 +146,7 @@ class VoucherResource extends Resource
                         'old_price' => currency_format($product_voucher->product->old_price),
                     ])
                 ]);
-            }) : null,
+            })->values() : null,
             'transactions' => $transactions,
         ])->toArray();
     }
