@@ -317,7 +317,7 @@ class FundsController extends Controller
             'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
         ];
     }
-
+    
     /**
      * @param Organization $organization
      * @param Fund $fund

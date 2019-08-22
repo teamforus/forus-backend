@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
@@ -149,9 +150,8 @@ class VouchersController extends Controller
         $this->authorize('sendByEmailSponsor', [$voucher, $organization]);
 
         $email = $request->post('email');
-        $recordRepo = resolve('forus.services.record');
 
-        $voucher->sendToEmail($recordRepo->identityIdByEmail($email));
+        $voucher->sendToEmail($email);
 
         return new SponsorVoucherResource($voucher);
     }
