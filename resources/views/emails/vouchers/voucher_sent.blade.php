@@ -1,6 +1,8 @@
 @extends('emails.base')
 
 @section('title', mail_trans('voucher_sent.title', ['fund_name' => $fund_name]))
+@section('header_image', 'https://www.stickpng.com/assets/images/5841b969a6515b1e0ad75a93.png')
+
 @section('html')
     {{ mail_trans('dear_user') }}
     <br/>
