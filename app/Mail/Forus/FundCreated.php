@@ -25,7 +25,7 @@ class FundCreated extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(implementation_trans('fund_created.title'))
+            ->subject(mail_trans('fund_created.title'), ['fund_name' => $this->fundName])
             ->view('emails.forus.new_fund_created', [
                 'fund_name' => $this->fundName,
                 'organization_name' => $this->organizationName

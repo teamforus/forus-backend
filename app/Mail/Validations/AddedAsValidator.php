@@ -22,7 +22,7 @@ class AddedAsValidator extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(implementation_trans('you_added_as_validator.title'))
+            ->subject(mail_trans('you_added_as_validator.title'))
             ->view('emails.validations.you_added_as_validator', [
                 'sponsor_name' => $this->sponsorName
             ]);

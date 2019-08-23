@@ -31,7 +31,7 @@ class ProviderApproved extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(implementation_trans('provider_approved.title'))
+            ->subject(mail_trans('provider_approved.title'))
             ->view('emails.funds.provider_approved', [
                 'fund_name'                 => $this->fundName,
                 'provider_name'             => $this->providerName,

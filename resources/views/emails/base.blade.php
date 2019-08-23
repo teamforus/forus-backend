@@ -2,7 +2,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     </head>
-    <body style="{{ implementation_config('base.body_style') }}" bgcolor="{{ implementation_config('base.body_bg_color') }}">
+    <body style="{{ mail_config('base.body_style') }}" bgcolor="{{ mail_config('base.body_bg_color') }}">
     <center>
         <table id="wrapperTable" cellpadding="0" cellspacing="0" border="0" style="{{ implementation_config('base.wrapper_table') }}" bgcolor="{{ implementation_config('base.body_bg_color') }}">
             <tr>
