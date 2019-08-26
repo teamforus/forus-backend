@@ -17,7 +17,7 @@ return [
     'allowedOriginsPatterns' => [],
     'allowedHeaders' => [
         'Content-Type', 'Access-Control-Allow-Headers', 'Authorization',
-        'X-Requested-With', 'Locale', 'Client-Key', 'Client-Type'
+         'X-Requested-With', 'Locale', 'Client-Key', 'Client-Type', 'Accept',
     ],
     'allowedMethods' => ['*'],
     'exposedHeaders' => [],
