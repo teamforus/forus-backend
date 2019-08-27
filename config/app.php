@@ -201,6 +201,9 @@ return [
         App\Services\Forus\MailNotification\MailNotificationServiceProvider::class,
 
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
+
+        App\Services\Forus\EthereumWallet\EthereumWalletServiceProvider::class
+
     ],
 
     /*

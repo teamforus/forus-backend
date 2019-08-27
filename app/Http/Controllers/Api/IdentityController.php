@@ -23,10 +23,24 @@ class IdentityController extends Controller
         $this->recordRepo = app()->make('forus.services.record');
     }
 
+    /**
+     * @return array
+     * @throws \Exception
+     */
     public function getPublic()
     {
+        $wallet = $this->identityRepo->getEthereumWallet(auth()->id(), true);
+
+        $publicWallet = $wallet
+            ? $wallet->getPublic()
+            : [
+                'address' => '',
+                'balance' => ''
+            ];
+
         return [
-            'address' => auth()->id()
+            'address' => auth()->id(),
+            'wallet' => $publicWallet
         ];
     }
 

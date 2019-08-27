@@ -45,7 +45,7 @@ class ProviderVoucherTransactionResource extends Resource
             ]),
             "product" => new ProductResource($voucherTransaction->product),
             "fund" => collect($voucherTransaction->voucher->fund)->only([
-                "id", "name", "organization_id"
+                "id", "name", "organization_id", 'currency'
             ])->merge([
                 'logo' => new MediaResource($voucherTransaction->voucher->fund->logo),
             ]),

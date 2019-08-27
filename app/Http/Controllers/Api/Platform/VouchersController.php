@@ -68,7 +68,7 @@ class VouchersController extends Controller
             'parent_id'         => $voucher->id,
             'fund_id'           => $voucher->fund_id,
             'product_id'        => $product->id,
-            'amount'            => $product->price,
+            'amount'            => $product->getPriceByCurrency($voucher->fund->currency),
             'expire_at'         => $voucherExpireAt
         ]);
 

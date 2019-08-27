@@ -34,7 +34,7 @@ class SponsorVoucherResource extends Resource
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'fund' => $voucher->fund->only([
-                'id', 'name', 'organization_id', 'state',
+                'id', 'name', 'organization_id', 'state', 'currency'
             ]),
         ]);
     }

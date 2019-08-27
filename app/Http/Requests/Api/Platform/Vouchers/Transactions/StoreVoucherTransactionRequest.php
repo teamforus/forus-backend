@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers\Transactions;
 
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -27,6 +28,7 @@ class StoreVoucherTransactionRequest extends FormRequest
     public function rules()
     {
         $product = false;
+        $minAmount = 0.02;
 
         /**
          * shopkeeper identity and organizations
@@ -69,6 +71,10 @@ class StoreVoucherTransactionRequest extends FormRequest
 
         if ($voucher->product) {
             $product = $voucher->product;
+
+            if ($voucher->fund->currency == Fund::CURRENCY_ETHER) {
+                $minAmount = 0.0001;
+            }
         } else if (request()->has('product_id')) {
             $product = Product::query()->find(request()->input('product_id'));
         }
@@ -91,7 +97,7 @@ class StoreVoucherTransactionRequest extends FormRequest
                 'amount'            => [
                     'required_without:product_id',
                     'numeric',
-                    'min:.02',
+                    'min:' . $minAmount,
                     'max:' . $maxAmount,
                 ],
                 'product_id'        => [

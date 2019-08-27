@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\BunqService\BunqService;
+use App\Services\Forus\EthereumWallet\Traits\HasEthereumWallet;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property float $budget_used
  * @property float $budget_left
  * @property float $notification_amount
+ * @property string $currency
  * @property Media $logo
  * @property boolean $public
  * @property FundConfig $fund_config
@@ -54,6 +56,11 @@ class Fund extends Model
 {
     use HasMedia;
 
+    use HasEthereumWallet;
+
+    const CURRENCY_ETHER = 'eth';
+    const CURRENCY_EUR = 'eur';
+
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';
     const STATE_PAUSED = 'paused';
@@ -73,7 +80,7 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'start_date', 'end_date',
-        'notification_amount', 'fund_id', 'notified_at', 'public'
+        'notification_amount', 'fund_id', 'notified_at', 'public', 'currency'
     ];
 
     protected $hidden = [

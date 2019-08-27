@@ -32,7 +32,7 @@ class SponsorVoucherTransactionResource extends Resource
             ]),
             "product" => new ProductResource($voucherTransaction->product),
             "fund" => collect($voucherTransaction->voucher->fund)->only([
-                "id", "name", "organization_id"
+                "id", "name", "organization_id", 'currency'
             ]),
             'notes' => VoucherTransactionNoteResource::collection(
                 $voucherTransaction->notes->where('group', 'sponsor')->values()

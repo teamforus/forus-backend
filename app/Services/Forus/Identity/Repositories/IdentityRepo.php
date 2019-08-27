@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\Forus\Identity\Repositories;
 
+use App\Services\Forus\EthereumWallet\Models\EthereumWallet;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Identity\Models\IdentityProxy;
 
@@ -502,4 +503,29 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     private function makeAccessToken() {
         return $this->makeToken(200);
     }
+
+    /**
+     * @param $address
+     * @param bool $createIfNotExist
+     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|EthereumWallet|null
+     * @throws \Exception
+     */
+    public function getEthereumWallet($address, $createIfNotExist = false) {
+        /** @var Identity $identity */
+        $identity = $this->model->query()->where('address', $address)
+            ->first();
+
+        if ($identity) {
+            $wallet = $identity->ethereum_wallet()->first();
+
+            if (!$wallet) {
+                $wallet = (new EthereumWallet())->createWallet($identity);
+            }
+
+            return $wallet;
+        }
+
+        return null;
+    }
+
 }

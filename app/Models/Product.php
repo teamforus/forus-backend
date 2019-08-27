@@ -179,4 +179,17 @@ class Product extends Model
             'sold_out' => $totalProducts >= $this->total_amount
         ]);
     }
+
+    /**
+     * @param $currency
+     * @return float|int
+     */
+    public function getPriceByCurrency($currency)
+    {
+        if ($currency == Fund::CURRENCY_ETHER) {
+            return $this->price * env('ETHEREUM_EUR_CURRENCY_RATE', 0.006);
+        }
+
+        return $this->price;
+    }
 }

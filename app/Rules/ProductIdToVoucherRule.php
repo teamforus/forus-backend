@@ -57,7 +57,7 @@ class ProductIdToVoucherRule implements Rule
             $voucher->transactions->sum('amount')) -
             $voucher->product_vouchers()->sum('amount');
 
-        if ($product->price > $amountLeft) {
+        if ($product->getPriceByCurrency($voucher->fund->currency) > $amountLeft) {
             $this->message = trans(
                 'validation.product_voucher.not_enough_voucher_funds'
             );

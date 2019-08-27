@@ -3,6 +3,7 @@
 namespace App\Services\Forus\Identity\Models;
 
 use App\Models\Traits\EloquentModel;
+use App\Services\Forus\EthereumWallet\Traits\HasEthereumWallet;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
 class Identity extends Model
 {
     use EloquentModel;
+
+    use HasEthereumWallet;
 
     /**
      * The attributes that are mass assignable.

@@ -322,6 +322,9 @@ class BunqService
         return VoucherTransaction::query()->orderBy('updated_at', 'ASC')
             ->where('state', '=', 'pending')
             ->where('attempts', '<', 5)
+            ->whereHas('voucher.fund', function (Builder $query) {
+                $query->where('currency', Fund::CURRENCY_EUR);
+            })
             ->where(function($query) {
                 /** @var Builder $query */
                 $query

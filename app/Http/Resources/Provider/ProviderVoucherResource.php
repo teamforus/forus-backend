@@ -53,6 +53,8 @@ class ProviderVoucherResource extends Resource
         ))->get();
 
         $allowedProductCategories = $voucher->fund->product_categories;
+
+        /* TODO check if price of product can be in different currency here */
         $allowedProducts = Product::query()->whereIn(
             'organization_id', $allowedOrganizations->pluck('id')
         )->where('sold_out', '=', false)->whereIn(
@@ -67,7 +69,7 @@ class ProviderVoucherResource extends Resource
             'type' => 'regular',
             'amount' => currency_format($amountLeft),
             'fund' => collect($voucher->fund)->only([
-                'id', 'name', 'state'
+                'id', 'name', 'state', 'currency'
             ])->merge([
                 'organization' => new OrganizationBasicResource(
                     $voucher->fund->organization
@@ -86,7 +88,7 @@ class ProviderVoucherResource extends Resource
             'allowed_product_categories' => ProductCategoryResource::collection(
                 $allowedProductCategories
             ),
-            'allowed_products' => collect($allowedProducts)->map(function($product) {
+            'allowed_products' => collect($allowedProducts)->map(function($product) use ($voucher) {
                 /** @var Product $product */
                 return collect($product)->only([
                     'id', 'name', 'description', 'total_amount', 'sold_amount',
@@ -104,7 +106,7 @@ class ProviderVoucherResource extends Resource
                 $voucher->product_vouchers
             )->filter(function($product_voucher) {
                 return !$product_voucher->used;
-            })->map(function($product_voucher) {
+            })->map(function($product_voucher) use ($voucher) {
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
                     'identity_address', 'fund_id', 'created_at',

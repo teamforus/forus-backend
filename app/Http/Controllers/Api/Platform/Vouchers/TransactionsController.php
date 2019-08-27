@@ -63,7 +63,7 @@ class TransactionsController extends Controller
                 $amount = $request->input('amount');
                 $organizationId = $request->input('organization_id');
             } else {
-                $amount = $product->price;
+                $amount = $product->getPriceByCurrency($voucher->fund->currency);
                 $organizationId = $product->organization_id;
             }
 

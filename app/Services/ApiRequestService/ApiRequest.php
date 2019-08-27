@@ -10,29 +10,34 @@ class ApiRequest
     /**
      * @param $url
      * @param array $body
+     * @param array $headers
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function post($url, $body = [])
+    public function post($url, $body = [], $headers = [])
     {
         $httpClient = new GuzzleClient();
 
         return $httpClient->post($url, [
             'http_errors' => false,
-            RequestOptions::JSON => $body
+            RequestOptions::JSON => $body,
+            'headers' => $headers
         ]);
     }
 
     /**
      * @param $url
      * @param array $body
+     * @param array $headers
+     * @return \Psr\Http\Message\ResponseInterface
      */
-    public function get($url, $body = [])
+    public function get($url, $body = [], $headers = [])
     {
         $httpClient = new GuzzleClient();
 
-        $httpClient->get($url, [
+        return $httpClient->get($url, [
             'http_errors' => false,
-            RequestOptions::QUERY => $body
+            RequestOptions::QUERY => $body,
+            'headers' => $headers
         ]);
     }
 }

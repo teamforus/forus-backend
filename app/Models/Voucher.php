@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
+use App\Services\Forus\EthereumWallet\Traits\HasEthereumWallet;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,6 +38,8 @@ use Illuminate\Http\Request;
  */
 class Voucher extends Model
 {
+    use HasEthereumWallet;
+
     /**
      * The attributes that are mass assignable.
      *

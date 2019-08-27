@@ -167,4 +167,11 @@ interface IIdentityRepo {
     public function activateAuthorizationEmailProxy(
         string $token
     );
+
+    /**
+     * @param $address
+     * @param bool $createIfNotExist
+     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|object|null
+     */
+    public function getEthereumWallet($address, $createIfNotExist = false);
 }
