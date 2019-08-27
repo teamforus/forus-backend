@@ -12,14 +12,7 @@
 */
 
 Route::get('/', function () {
-    /** @var \App\Models\Fund $fund */
-    $fund = \App\Models\Fund::query()->first();
-    $fundTwo = \App\Models\Fund::query()->latest()->first();
-
-    //dd($fundTwo->topUpWallet(55));
-
-    dd($fund->getWalletBalance(), $fundTwo->getWalletBalance());
-    dd($fund->transferEtherToModel($fundTwo, 14));
+    return "";
 });
 
 Route::get('/test', function() {
