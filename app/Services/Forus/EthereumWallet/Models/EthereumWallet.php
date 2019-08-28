@@ -175,10 +175,6 @@ class EthereumWallet extends Model
     public static function processQueue(int $time) {
         $transactions = self::getTransactionsQueue();
 
-        if ($transactions->count() == 0) {
-            return null;
-        }
-
         /** @var VoucherTransaction $transaction */
         foreach($transactions as $transaction) {
             $voucher = $transaction->voucher;
@@ -224,10 +220,8 @@ class EthereumWallet extends Model
                 );
             }
         }
-
-        sleep(1);
-
-        if (time() - $time < 59) {
+        
+        if (sleep(1) === 0 && (time() - $time) < 59) {
             self::processQueue($time);
         }
     }
