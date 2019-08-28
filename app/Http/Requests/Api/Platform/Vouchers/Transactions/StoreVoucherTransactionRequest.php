@@ -28,7 +28,7 @@ class StoreVoucherTransactionRequest extends FormRequest
     public function rules()
     {
         $product = false;
-        $minAmount = 0.02;
+        $minAmount = '0.02';
 
         /**
          * shopkeeper identity and organizations
@@ -71,12 +71,12 @@ class StoreVoucherTransactionRequest extends FormRequest
 
         if ($voucher->product) {
             $product = $voucher->product;
-
-            if ($voucher->fund->currency == Fund::CURRENCY_ETHER) {
-                $minAmount = 0.0001;
-            }
         } else if (request()->has('product_id')) {
             $product = Product::query()->find(request()->input('product_id'));
+        }
+
+        if ($voucher->fund->currency == Fund::CURRENCY_ETHER) {
+            $minAmount = '0.0001';
         }
 
         /**
