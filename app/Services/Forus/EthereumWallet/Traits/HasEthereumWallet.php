@@ -68,7 +68,7 @@ trait HasEthereumWallet
      */
     public function getWallet()
     {
-        return $this->ethereum_wallet ?: $this->createWallet($this);
+        return $this->ethereum_wallet ?: $this->createWallet();
     }
 
     /**
@@ -77,7 +77,7 @@ trait HasEthereumWallet
      */
     public function createWallet()
     {
-        return $this->ethereum_wallet ? false :
+        return $this->ethereum_wallet ?:
             $this->createWalletInstance($this);
     }
 
