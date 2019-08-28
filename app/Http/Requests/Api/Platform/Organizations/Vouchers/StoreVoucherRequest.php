@@ -30,12 +30,17 @@ class StoreVoucherRequest extends FormRequest
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
 
+        $precision = $fund->currency == $fund::CURRENCY_ETHER ? 5 : 2;
+        $min = $precision == 5 ? '.001' : '.1';
+
+        $max = number_format($max, $precision,'.', '');
+
         logger()->debug(json_encode([$fund->budget_left, $max]));
 
         return [
             'fund_id'           => 'required|exists:funds,id',
             'note'              => 'nullable|string|max:280',
-            'amount'            => 'required_without:vouchers|numeric|between:.1,' . number_format($max, 10,'.', '1'),
+            'amount'            => 'required_without:vouchers|numeric|between:' . join(',', [$min, $max]),
             'expires_at'        => 'nullable|date_format:Y-m-d|after:' . $endDate,
             'email'             => 'nullable|email',
             'vouchers'          => [
@@ -43,7 +48,7 @@ class StoreVoucherRequest extends FormRequest
                 new VouchersUploadArrayRule($fund)
             ],
             'vouchers.*'            => 'required|array',
-            'vouchers.*.amount'     => 'required|numeric|between:.1,' . $max,
+            'vouchers.*.amount'     => 'required|numeric|between:' . join(',', [$min, $max]),
             'vouchers.*.expires_at' => 'nullable|date_format:Y-m-d|after:' . $endDate,
             'vouchers.*.note'       => 'nullable|string|max:280',
             'vouchers.*.email'      => 'nullable|email',
