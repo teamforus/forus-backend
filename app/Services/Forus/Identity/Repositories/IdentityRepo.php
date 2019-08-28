@@ -52,9 +52,10 @@ class IdentityRepo implements Interfaces\IIdentityRepo
             app('key_pair_generator')->make()
         )->merge([
             'pin_code' => app('hash')->make($pinCode)
-        ])->toArray())->toArray();
+        ])->toArray());
 
         $identity->createWallet();
+        $identity = $identity->toArray();
 
         $this->recordRepo->updateRecords($identity['address'], $records);
 
