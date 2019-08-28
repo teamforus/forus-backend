@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
 use App\Http\Resources\FundResource;
+use App\Http\Resources\TopUpEtherResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\FundTopUp;
@@ -70,7 +71,8 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create($request->only([
-            'name', 'state', 'start_date', 'end_date', 'notification_amount'
+            'name', 'state', 'start_date', 'end_date', 'notification_amount',
+            'currency',
         ]));
 
         $fund->product_categories()->sync(
@@ -326,6 +328,10 @@ class FundsController extends Controller
     ) {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
+
+        if ($fund->currency == Fund::CURRENCY_ETHER) {
+            return new TopUpEtherResource($fund);
+        }
 
         if ($fund->top_ups()->count() == 0) {
             $topUp = $fund->top_ups()->create([

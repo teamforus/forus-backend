@@ -2,17 +2,16 @@
 
 namespace App\Services\Forus\EthereumWallet\Traits;
 
-use App\Services\Forus\EthereumWallet\Models\EthereumWallet;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\Forus\EthereumWallet\Models\EthereumWallet;
 
 /**
- * Trait HasEthereumWallet
  * @property EthereumWallet $ethereum_wallet
+ * @uses \App\Models\Model
  * @package App\Models\Traits
  */
 trait HasEthereumWallet
 {
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\MorphOne
      */
@@ -22,22 +21,21 @@ trait HasEthereumWallet
     }
 
     /**
-     * @param Model $model
+     * @param Model|HasEthereumWallet $model
      * @param $amount
      * @return \App\Services\Forus\EthereumWallet\Models\EthereumWalletTransaction|bool
      * @throws \Exception
      */
     public function transferEtherToModel(Model $model, $amount)
     {
-        /** @var EthereumWallet $walletFrom */
-        $walletFrom = $this->ethereum_wallet()->first();
+        $walletFrom = $this->ethereum_wallet;
 
         if (!$walletFrom) {
             return false;
         }
 
         /** @var EthereumWallet $walletTo */
-        $walletTo = $model->ethereum_wallet()->first();
+        $walletTo = $model->ethereum_wallet;
 
         if (!$walletTo) {
             $walletTo = $this->createWalletInstance($model);
@@ -51,20 +49,26 @@ trait HasEthereumWallet
     }
 
     /**
-     * @param $walletTo
+     * @param $address
      * @param $amount
      * @return \App\Services\Forus\EthereumWallet\Models\EthereumWalletTransaction|bool
      */
-    public function transferEtherToWallet($walletTo, $amount)
+    public function transferEtherToAddress($address, $amount)
     {
-        /** @var EthereumWallet $walletFrom */
-        $walletFrom = $this->ethereum_wallet()->first();
-
-        if (!$walletFrom) {
-            return false;
+        if ($this->ethereum_wallet) {
+            return $this->ethereum_wallet->makeTransaction($address, $amount);
         }
 
-        return $walletFrom->makeTransaction($walletTo, $amount);
+        return false;
+    }
+
+    /**
+     * @return EthereumWallet|bool
+     * @throws \Exception
+     */
+    public function getWallet()
+    {
+        return $this->ethereum_wallet ?: $this->createWallet($this);
     }
 
     /**
@@ -73,32 +77,21 @@ trait HasEthereumWallet
      */
     public function createWallet()
     {
-        /** @var EthereumWallet $wallet */
-        $wallet = $this->ethereum_wallet()->first();
-
-        if (!$wallet) {
-            /** @var Model $model */
-            $model = $this;
-
-            return $this->createWalletInstance($model);
-        }
-
-        return $wallet;
+        return $this->ethereum_wallet ? false :
+            $this->createWalletInstance($this);
     }
 
     /**
-     * @return null|string
+     * @return float|null
      */
     public function getWalletBalance()
     {
-        /** @var EthereumWallet $wallet */
-        $wallet = $this->ethereum_wallet()->first();
-
-        return $wallet ? $wallet->getWalletBalance() : null;
+        return $this->ethereum_wallet ?
+            $this->ethereum_wallet->getWalletBalance() : null;
     }
 
     /**
-     * @param Model $model
+     * @param Model|HasEthereumWallet $model
      * @return EthereumWallet|bool
      * @throws \Exception
      */

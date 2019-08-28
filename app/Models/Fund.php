@@ -54,9 +54,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Fund extends Model
 {
-    use HasMedia;
-
-    use HasEthereumWallet;
+    use HasMedia, HasEthereumWallet;
 
     const CURRENCY_ETHER = 'eth';
     const CURRENCY_EUR = 'eur';
@@ -71,6 +69,11 @@ class Fund extends Model
         self::STATE_CLOSED,
         self::STATE_PAUSED,
         self::STATE_WAITING,
+    ];
+
+    const CURRENCIES = [
+        self::CURRENCY_EUR,
+        self::CURRENCY_ETHER,
     ];
 
     /**
@@ -196,9 +199,16 @@ class Fund extends Model
     }
 
     /**
-     * @return float
+     * @return float|mixed
+     * @throws \Exception
      */
     public function getBudgetTotalAttribute() {
+        // TODO: cache total balance through cron job, this is too slow but still
+        //   ok for the demo
+        if ($this->currency == self::CURRENCY_ETHER) {
+            return round($this->getWalletBalance(), 5);
+        };
+
         return round(array_sum([
             $this->top_up_transactions->sum('amount'),
             $this->bunq_me_tabs_paid->sum('amount')
@@ -216,7 +226,10 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetLeftAttribute() {
-        return round($this->budget_total - $this->budget_used, 2);
+        return round(
+            $this->budget_total - $this->budget_used,
+            $this->currency == self::CURRENCY_ETHER ? 5 : 2
+        );
     }
 
     public function getFundId() {

@@ -6,6 +6,7 @@ use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -43,6 +44,7 @@ class ProviderVoucherResource extends Resource
         string $identityAddress,
         Voucher $voucher
     ) {
+        $precision = $voucher->fund->currency == Fund::CURRENCY_ETHER ? 5 : 2;
         $amountLeft = $voucher->amount_available;
         $voucherOrganizations = $voucher->fund->provider_organizations_approved();
 
@@ -59,15 +61,26 @@ class ProviderVoucherResource extends Resource
             'organization_id', $allowedOrganizations->pluck('id')
         )->where('sold_out', '=', false)->whereIn(
             'product_category_id', $allowedProductCategories->pluck('id')
-        )->where('price', '<=', $amountLeft)->where(
+        )->where(
             'expire_at', '>', date('Y-m-d')
         )->get();
+
+        $allowedProducts = $allowedProducts->map(function(
+            Product $product
+        ) use ($amountLeft, $voucher, $precision) {
+            $product->setAttribute('price', $product->getPriceByCurrency($voucher->fund->currency));
+            return $product->setAttribute('old_price', $product->getOldPriceByCurrency($voucher->fund->currency));
+        })->filter(function(
+            Product $product
+        ) use ($amountLeft, $voucher) {
+            return $amountLeft >= $product->price;
+        });
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
             'type' => 'regular',
-            'amount' => currency_format($amountLeft),
+            'amount' => currency_format($amountLeft, $precision),
             'fund' => collect($voucher->fund)->only([
                 'id', 'name', 'state', 'currency'
             ])->merge([
@@ -88,14 +101,14 @@ class ProviderVoucherResource extends Resource
             'allowed_product_categories' => ProductCategoryResource::collection(
                 $allowedProductCategories
             ),
-            'allowed_products' => collect($allowedProducts)->map(function($product) use ($voucher) {
+            'allowed_products' => collect($allowedProducts)->map(function($product) use ($voucher, $precision) {
                 /** @var Product $product */
                 return collect($product)->only([
                     'id', 'name', 'description', 'total_amount', 'sold_amount',
                     'product_category_id', 'organization_id',
                 ])->merge([
-                    'price' => currency_format($product->price),
-                    'old_price' => currency_format($product->old_price),
+                    'price' => currency_format($product->price, $precision),
+                    'old_price' => currency_format($product->old_price, $precision),
                     'photo' => new MediaCompactResource($product->photo),
                     'product_category' => new ProductCategoryResource(
                         $product->product_category
@@ -106,7 +119,7 @@ class ProviderVoucherResource extends Resource
                 $voucher->product_vouchers
             )->filter(function($product_voucher) {
                 return !$product_voucher->used;
-            })->map(function($product_voucher) use ($voucher) {
+            })->map(function($product_voucher) use ($voucher, $precision) {
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
                     'identity_address', 'fund_id', 'created_at',
@@ -117,7 +130,7 @@ class ProviderVoucherResource extends Resource
                     'amount' => currency_format(
                         $product_voucher->type == 'regular' ?
                             $product_voucher->amount_available_cached :
-                            $product_voucher->amount
+                            $product_voucher->amount, $precision
                     ),
                     'date' => $product_voucher->created_at->format('M d, Y'),
                     'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
@@ -126,8 +139,8 @@ class ProviderVoucherResource extends Resource
                         'id', 'name', 'description', 'total_amount',
                         'sold_amount', 'product_category_id', 'organization_id',
                     ])->merge([
-                        'price' => currency_format($product_voucher->product->price),
-                        'old_price' => currency_format($product_voucher->product->old_price),
+                        'price' => currency_format($product_voucher->product->price, $precision),
+                        'old_price' => currency_format($product_voucher->product->old_price), $precision,
                         'photo' => new MediaResource($product_voucher->product->photo),
                     ])
                 ]);
@@ -144,6 +157,10 @@ class ProviderVoucherResource extends Resource
     private function productVoucher(
         Voucher $voucher
     ) {
+        $precision = $voucher->fund->currency == Fund::CURRENCY_ETHER ? 5 : 2;
+        $fund = $voucher->fund;
+        $product = $voucher->product;
+
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
         ])->merge([
@@ -152,8 +169,10 @@ class ProviderVoucherResource extends Resource
                 'id', 'name', 'description', 'total_amount', 'sold_amount',
                 'product_category_id', 'organization_id'
             ])->merge([
-                'price' => currency_format($voucher->product->price),
-                'old_price' => currency_format($voucher->product->old_price),
+                'price' => currency_format(
+                    $product->getPriceByCurrency($fund->currency), $precision),
+                'old_price' => currency_format(
+                    $product->getOldPriceByCurrency($fund->currency), $precision),
                 'photo' => new MediaResource(
                     $voucher->product->photo
                 ),

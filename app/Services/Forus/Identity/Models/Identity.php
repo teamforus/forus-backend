@@ -14,16 +14,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $pin_code
  * @property Collection $types
  * @property Collection $proxies
- * @property String $address
+ * @property string $address
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @package App\Models
  */
 class Identity extends Model
 {
-    use EloquentModel;
-
-    use HasEthereumWallet;
+    use EloquentModel, HasEthereumWallet;
 
     /**
      * The attributes that are mass assignable.
@@ -39,5 +37,13 @@ class Identity extends Model
      */
     public function proxies() {
         return $this->hasMany(IdentityProxy::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @param string $address
+     * @return self
+     */
+    public function findByAddress(string $address) {
+        return self::where(compact('address'))->first();
     }
 }

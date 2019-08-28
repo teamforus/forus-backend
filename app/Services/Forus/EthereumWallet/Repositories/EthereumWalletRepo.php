@@ -2,8 +2,8 @@
 
 namespace App\Services\Forus\EthereumWallet\Repositories;
 
-use App\Services\ApiRequestService\ApiRequest;
 use App\Services\Forus\EthereumWallet\Repositories\Interfaces\IEthereumWalletRepo;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class EthereumWalletRepo
@@ -12,16 +12,16 @@ use App\Services\Forus\EthereumWallet\Repositories\Interfaces\IEthereumWalletRep
 class EthereumWalletRepo implements IEthereumWalletRepo
 {
     private $serviceUrl;
-
-    /** @var ApiRequest $apiRequest  */
     private $apiRequest;
+
+    private $loggerTag = "Ethereum service: ";
 
     /**
      * EthereumWalletRepo constructor.
      */
     public function __construct() {
         $this->serviceUrl = config('forus.ethereum.url');
-        $this->apiRequest = app()->make('api_request');
+        $this->apiRequest = resolve('api_request');
     }
 
     /**
@@ -33,32 +33,22 @@ class EthereumWalletRepo implements IEthereumWalletRepo
         string $passphrase
     ) {
         $res = $this->apiRequest->post(
-            $this->serviceUrl . "accounts",
+            $this->getApiUrl("accounts"),
             ["passphrase" => $passphrase],
-            ['Api-Key' => config('forus.ethereum.api_key')]
+            $this->getAuthHeaders()
         );
 
-        if (!in_array($res->getStatusCode(), [200, 201])) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error create wallet %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
+        if ($res->getStatusCode() != 201) {
+            return $this->logError($res, "Error while creating wallet");
         }
 
-        $response = json_decode($res->getBody(), true);
+        $account = json_decode($res->getBody(), true)['account'];
 
-        if (isset($response['account'])) {
-            return [
-                'address' => $response['account']['address'],
-                'private_key' => $response['account']['privateKey'] ?? '',
-            ];
-        }
-
-        return false;
+        return array_merge(array_only($account, [
+            'address'
+        ]), [
+            'private_key' => $account['privateKey']
+        ]);
     }
 
     /**
@@ -76,38 +66,27 @@ class EthereumWalletRepo implements IEthereumWalletRepo
         string $amount
     ) {
         $res = $this->apiRequest->post(
-            $this->serviceUrl . "transactions",
+            $this->getApiUrl("transactions"),
             [
                 "transaction" => [
                     "from" => $fromAddress,
                     "to" => $targetAddress,
-                    "amount" => $amount
+                    "value" => $amount
                 ],
                 "private" => $secret
             ],
-            ['Api-Key' => config('forus.ethereum.api_key')]
+            $this->getAuthHeaders()
         );
 
-        if (!in_array($res->getStatusCode(), [200, 201])) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error transfer ether %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
+        if ($res->getStatusCode() != 200) {
+            return $this->logError($res, "Error while making transaction");
         }
 
-        $response = json_decode($res->getBody(), true);
-
-        return isset($response['account'])
-            ? $response['account']
-            : false;
+        return json_decode($res->getBody(), true)['account'] ?? false;
     }
 
     /**
-     * Create wallet
+     * Get address balance
      * @param string $address
      * @return float|null
      */
@@ -115,24 +94,54 @@ class EthereumWalletRepo implements IEthereumWalletRepo
         string $address
     ) {
         $res = $this->apiRequest->get(
-            $this->serviceUrl . "accounts/$address",
+            $this->getApiUrl("accounts/$address"),
             [],
-            ['Api-Key' => config('forus.ethereum.api_key')]
+            $this->getAuthHeaders()
         );
 
-        if (!in_array($res->getStatusCode(), [200, 201])) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error get wallet balance %s',
-                    $res->getBody()
-                )
-            );
-
-            return null;
+        if ($res->getStatusCode() != 200) {
+            return $this->logError($res, "Error while getting balance");
         }
 
-        $response = json_decode($res->getBody(), true);
+        return json_decode($res->getBody(), true)['balance'] ?? null;
+    }
 
-        return isset($response['balance']) ? $response['balance'] : null;
+    /**
+     * @param string $endpoint
+     * @return string
+     */
+    private function getApiUrl(string $endpoint = '') {
+        return $this->serviceUrl . $endpoint;
+    }
+
+    /**
+     * @return array
+     */
+    private function getAuthHeaders() {
+        return [
+            'Api-Key' => config('forus.ethereum.api_key')
+        ];
+    }
+
+    /**
+     * @param ResponseInterface $res
+     * @param string $message
+     * @param null $return
+     * @return mixed|null
+     */
+    private function logError(
+        ResponseInterface $res,
+        string $message,
+        $return = null
+    ) {
+        logger()->error(sprintf(
+            "%s: %s \nResponse code: %s\n Response body: %s",
+            $this->loggerTag,
+            $message,
+            $res->getStatusCode(),
+            json_encode(json_decode($res->getBody()), JSON_PRETTY_PRINT)
+        ));
+
+        return $return;
     }
 }

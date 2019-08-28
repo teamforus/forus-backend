@@ -30,10 +30,12 @@ class StoreVoucherRequest extends FormRequest
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
 
+        logger()->debug(json_encode([$fund->budget_left, $max]));
+
         return [
             'fund_id'           => 'required|exists:funds,id',
             'note'              => 'nullable|string|max:280',
-            'amount'            => 'required_without:vouchers|numeric|between:.1,' . $max,
+            'amount'            => 'required_without:vouchers|numeric|between:.1,' . number_format($max, 10,'.', '1'),
             'expires_at'        => 'nullable|date_format:Y-m-d|after:' . $endDate,
             'email'             => 'nullable|email',
             'vouchers'          => [

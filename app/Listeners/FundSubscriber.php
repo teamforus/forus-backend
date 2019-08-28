@@ -7,8 +7,15 @@ use Illuminate\Events\Dispatcher;
 
 class FundSubscriber
 {
+    /**
+     * @param FundCreated $fundCreated
+     */
     public function onFundCreated(FundCreated $fundCreated) {
         $fund = $fundCreated->getFund();
+
+        try {
+            $fund->createWallet();
+        } catch (\Exception $exception) {};
 
         $notificationService = resolve('forus.services.mail_notification');
 

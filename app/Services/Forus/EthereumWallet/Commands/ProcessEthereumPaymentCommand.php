@@ -37,7 +37,7 @@ class ProcessEthereumPaymentCommand extends Command
      */
     public function handle() {
         try {
-            EthereumWallet::processQueue();
+            EthereumWallet::processQueue(time());
         } catch (\Exception $e) {}
     }
 }

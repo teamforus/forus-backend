@@ -187,9 +187,21 @@ class Product extends Model
     public function getPriceByCurrency($currency)
     {
         if ($currency == Fund::CURRENCY_ETHER) {
-            return $this->price * env('ETHEREUM_EUR_CURRENCY_RATE', 0.006);
+            return round($this->price * env('ETHEREUM_EUR_CURRENCY_RATE', 0.006), 5);
         }
 
         return $this->price;
+    }
+    /**
+     * @param $currency
+     * @return float|int
+     */
+    public function getOldPriceByCurrency($currency)
+    {
+        if ($currency == Fund::CURRENCY_ETHER) {
+            return round($this->old_price * env('ETHEREUM_EUR_CURRENCY_RATE', 0.006), 5);
+        }
+
+        return $this->old_price;
     }
 }

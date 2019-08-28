@@ -68,6 +68,15 @@ class VoucherSubscriber
     public function onVoucherAssigned(VoucherAssigned $voucherCreated) {
         $voucher = $voucherCreated->getVoucher();
 
+        try {
+            $voucher->fund->getWallet()->makeTransaction(
+                $voucher->getWallet()->address,
+                $voucher->amount
+            );
+        } catch (\Exception $exception) {
+            logger()->debug($exception->getMessage());
+        }
+
         if ($product = $voucher->product) {
             $imp = Implementation::query()->where([
                 'key' => Implementation::activeKey('general')

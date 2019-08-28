@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Models\Fund;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFundRequest extends FormRequest
@@ -24,6 +25,7 @@ class StoreFundRequest extends FormRequest
     public function rules()
     {
         $start_after = now()->addDays(5)->format('Y-m-d');
+        $currencies = implode(',', Fund::CURRENCIES);
 
         return [
             'name'                  => 'required|between:2,200',
@@ -32,7 +34,8 @@ class StoreFundRequest extends FormRequest
             'end_date'              => 'required|date|after:start_date',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
-            'notification_amount'   => 'nullable|numeric'
+            'notification_amount'   => 'nullable|numeric',
+            'currency'              => 'required|in:' . $currencies,
         ];
     }
 }

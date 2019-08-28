@@ -108,12 +108,11 @@ class VouchersController extends Controller
     }
 
     /**
-     *
      * @param AssignVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
      * @return SponsorVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function assign(
         AssignVoucherRequest $request,

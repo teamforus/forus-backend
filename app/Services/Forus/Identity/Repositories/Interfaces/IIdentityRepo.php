@@ -1,6 +1,8 @@
 <?php
 namespace App\Services\Forus\Identity\Repositories\Interfaces;
 
+use App\Services\Forus\EthereumWallet\Models\EthereumWallet;
+
 interface IIdentityRepo {
     /**
      * Make new identity
@@ -169,9 +171,9 @@ interface IIdentityRepo {
     );
 
     /**
-     * @param $address
-     * @param bool $createIfNotExist
-     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|object|null
+     * @param string $address
+     * @return EthereumWallet|bool|\Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|object|null
+     * @throws \Exception
      */
-    public function getEthereumWallet($address, $createIfNotExist = false);
+    public function getEthereumWallet(string $address);
 }

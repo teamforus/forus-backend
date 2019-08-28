@@ -18,11 +18,11 @@ class UpdateCurrencyColumns extends Migration
         });
 
         Schema::table('voucher_transactions', function (Blueprint $table) {
-            $table->decimal('amount',10, 2)->change();
+            $table->decimal('amount',10, 5)->change();
         });
 
         Schema::table('vouchers', function (Blueprint $table) {
-            $table->decimal('amount',10, 2)->change();
+            $table->decimal('amount',10, 5)->change();
         });
 
         Schema::table('products', function (Blueprint $table) {

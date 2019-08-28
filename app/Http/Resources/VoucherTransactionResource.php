@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Fund;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -27,7 +28,10 @@ class VoucherTransactionResource extends Resource
             "updated_at", "address", "state", "payment_id",
             'created_at_locale', 'created_at_locale'
         ])->merge([
-            'amount' => currency_format($transaction->amount),
+            'amount' => currency_format(
+                $transaction->amount,
+                $transaction->voucher->fund->currency == Fund::CURRENCY_ETHER ? 5 : 2
+            ),
             'timestamp' => $transaction->created_at->timestamp,
             "organization" => collect($transaction->provider)->only([
                 "id", "name"

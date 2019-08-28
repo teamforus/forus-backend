@@ -29,18 +29,11 @@ class IdentityController extends Controller
      */
     public function getPublic()
     {
-        $wallet = $this->identityRepo->getEthereumWallet(auth()->id(), true);
-
-        $publicWallet = $wallet
-            ? $wallet->getPublic()
-            : [
-                'address' => '',
-                'balance' => ''
-            ];
+        $wallet = $this->identityRepo->getEthereumWallet(auth()->id());
 
         return [
             'address' => auth()->id(),
-            'wallet' => $publicWallet
+            'wallet' => $wallet->getPublic()
         ];
     }
 

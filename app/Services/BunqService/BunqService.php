@@ -9,9 +9,6 @@ use App\Services\BunqService\Models\BunqIdealIssuer;
 use bunq\Context\BunqContext;
 use bunq\Model\Generated\Endpoint\BunqMeTab;
 use bunq\Model\Generated\Endpoint\BunqMeTabEntry;
-use bunq\Model\Generated\Endpoint\BunqMeTabResultInquiry;
-use bunq\Model\Generated\Endpoint\BunqMeTabResultResponse;
-use bunq\Model\Generated\Endpoint\BunqResponseBunqMeTabResultResponse;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
 use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
 use bunq\Model\Generated\Endpoint\Payment;
@@ -20,10 +17,9 @@ use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use bunq\Context\ApiContext;
 use Carbon\Carbon;
-use Faker\Test\Provider\PaymentTest;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class BunqService
@@ -325,8 +321,7 @@ class BunqService
             ->whereHas('voucher.fund', function (Builder $query) {
                 $query->where('currency', Fund::CURRENCY_EUR);
             })
-            ->where(function($query) {
-                /** @var Builder $query */
+            ->where(function(Builder $query) {
                 $query
                     ->whereNull('last_attempt_at')
                     ->orWhere('last_attempt_at', '<', Carbon::now()->subHours(8));
@@ -458,7 +453,7 @@ class BunqService
      * Get bunq ideal issuers from db (local db cache)
      *
      * @param bool $sandbox
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection
+     * @return Collection
      */
     public static function getIdealIssuers($sandbox = false) {
         return BunqIdealIssuer::query()->where([

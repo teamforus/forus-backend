@@ -18,17 +18,17 @@ class CreateEthereumWalletTransactionsTable extends Migration
             $table->string('hash')->nullable();
             $table->string('block_hash')->nullable();
             $table->string('block_number')->nullable();
-            $table->decimal('amount');
+            $table->decimal('amount', 10, 5);
             $table->bigInteger('gas')->default(0);
 
-            $table->integer('wallet_from_id')->unsigned();
-            $table->integer('wallet_to_id')->unsigned();
+            $table->string('wallet_from_address', 64)->nullable();
+            $table->string('wallet_to_address', 64)->nullable();
 
-            $table->foreign('wallet_from_id'
-            )->references('id')->on('ethereum_wallets')->onDelete('cascade');
+            $table->foreign('wallet_from_address'
+            )->references('address')->on('ethereum_wallets')->onDelete('cascade');
 
-            $table->foreign('wallet_to_id'
-            )->references('id')->on('ethereum_wallets')->onDelete('cascade');
+            $table->foreign('wallet_to_address'
+            )->references('address')->on('ethereum_wallets')->onDelete('cascade');
 
             $table->timestamps();
         });

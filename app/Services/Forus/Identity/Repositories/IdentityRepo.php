@@ -47,11 +47,14 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         string $pinCode,
         array $records = []
     ) {
+        /** @var Identity $identity */
         $identity = $this->model->create(collect(
             app('key_pair_generator')->make()
         )->merge([
             'pin_code' => app('hash')->make($pinCode)
         ])->toArray())->toArray();
+
+        $identity->createWallet();
 
         $this->recordRepo->updateRecords($identity['address'], $records);
 
@@ -505,24 +508,13 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     }
 
     /**
-     * @param $address
-     * @param bool $createIfNotExist
-     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|EthereumWallet|null
+     * @param string $address
+     * @return EthereumWallet|bool|\Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\MorphOne|object|null
      * @throws \Exception
      */
-    public function getEthereumWallet($address, $createIfNotExist = false) {
-        /** @var Identity $identity */
-        $identity = $this->model->query()->where('address', $address)
-            ->first();
-
-        if ($identity) {
-            $wallet = $identity->ethereum_wallet()->first();
-
-            if (!$wallet) {
-                $wallet = (new EthereumWallet())->createWallet($identity);
-            }
-
-            return $wallet;
+    public function getEthereumWallet(string $address) {
+        if ($identity = $this->model->findByAddress($address)) {
+            return $identity->getWallet();
         }
 
         return null;

@@ -106,13 +106,15 @@ class Voucher extends Model
     public function getAmountAvailableAttribute() {
         return round($this->amount -
             $this->transactions()->sum('amount') -
-            $this->product_vouchers()->sum('amount'), 2);
+            $this->product_vouchers()->sum('amount'),
+            $this->fund->currency == $this->fund::CURRENCY_ETHER ? 5 : 2);
     }
 
     public function getAmountAvailableCachedAttribute() {
         return round($this->amount -
             $this->transactions->sum('amount') -
-            $this->product_vouchers->sum('amount'), 2);
+            $this->product_vouchers->sum('amount'),
+            $this->fund->currency == $this->fund::CURRENCY_ETHER ? 5 : 2);
     }
 
     /**
