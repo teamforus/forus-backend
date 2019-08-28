@@ -106,6 +106,7 @@ class EthereumWallet extends Model
                 'passphrase' => $passphrase,
                 'private_key' => $wallet['private_key']
             ]);
+            $walletable->load('ethereum_wallet');
 
             return $walletable->ethereum_wallet;
         }
