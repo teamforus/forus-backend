@@ -225,7 +225,7 @@ class EthereumWallet extends Model
             }
         }
 
-        if ((sleep(1) === 0) && time() - $time < 50) {
+        if ((sleep(1) === 0) && time() - $time < 59) {
             self::processQueue($time);
         }
     }
