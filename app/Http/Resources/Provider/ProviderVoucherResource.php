@@ -74,7 +74,7 @@ class ProviderVoucherResource extends Resource
             Product $product
         ) use ($amountLeft, $voucher) {
             return $amountLeft >= $product->price;
-        })->values()->toArray();
+        })->values();
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'address'
