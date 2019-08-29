@@ -25,6 +25,8 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         'email_code' => 60 * 60,
         // 1 month
         'confirmation_code' => 60 * 60 * 24 * 30,
+        // 1 week
+        'email_preferences_code' => 60 * 60 * 24 * 7
     ];
 
     public function __construct(
@@ -245,6 +247,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
                 case "email_code": $token = $this->makeToken(128); break;
                 case "short_token": $token = $this->makeToken(200); break;
                 case "confirmation_code": $token = $this->makeToken(200); break;
+                case "email_preferences_code": $token = $this->makeToken(300); break;
                 default: throw new \Exception(trans('identity-proxy.unknown_token_type')); break;
             }
         } while(IdentityProxy::query()->where([

@@ -415,4 +415,13 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         '/devices/delete-push',
         'Api\Platform\DevicesController@deletePush'
     );
+
+    $router->resource(
+        'notification-preferences',
+        'Api\Platform\NotificationsController', [
+            'only' => [
+                'show', 'store'
+            ]
+        ]
+    );
 });
