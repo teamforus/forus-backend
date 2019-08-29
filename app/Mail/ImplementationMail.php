@@ -17,12 +17,12 @@ class ImplementationMail extends Mailable
     /**
      * @var object|array|string $to
      */
-    protected $email = [];
+    public $email = [];
 
     /**
      * @var string|null $identityId
      */
-    private $identityId;
+    public $identityId;
 
     /**
      * @var IdentityRepo $identityRepo
@@ -32,12 +32,12 @@ class ImplementationMail extends Mailable
     /**
      * @var string $notYouLink
      */
-    protected $notYouLink;
+    public $notYouLink;
 
     /**
      * @var $emailPreferencesLink
      */
-    protected $emailPreferencesLink;
+    public $emailPreferencesLink;
 
     public function __construct($email, ?string $identityId)
     {
