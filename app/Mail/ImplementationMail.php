@@ -60,7 +60,7 @@ class ImplementationMail extends Mailable
     private function createNotYouLink(): string
     {
         $identityProxy = $this->identityRepo->makeProxy(
-            'email_preferences_code',
+            'email_pref_code',
             $this->identityId
         );
 
@@ -74,7 +74,7 @@ class ImplementationMail extends Mailable
     private function createEmailPreferencesLink(): string
     {
         $identityProxy = $this->identityRepo->makeProxy(
-            'email_preferences_code',
+            'email_pref_code',
             $this->identityId
         );
 

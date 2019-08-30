@@ -46,6 +46,19 @@ $router->group([], function() use ($router) {
         $router->group(['prefix' => '/record-types'], function() use ($router) {
             $router->get('/', 'Api\Identity\RecordTypeController@index');
         });
+
+        /**
+         * Notification preferences
+         */
+        $router->get(
+            'notification-preferences/{identity_address}/{exchange_token}',
+            'Api\Platform\NotificationsController@index'
+        );
+
+        $router->post(
+            'notification-preferences/{identity_address}/{exchange_token}/unsubscribe',
+            'Api\Platform\NotificationsController@unsubscribe'
+        );
     });
 });
 
