@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Platform\Validator;
 
 use App\Http\Requests\Api\Platform\Validator\ValidatorRequest\ValidateValidatorRequestRequest;
 use App\Http\Resources\Validator\ValidatorRequestResource;
-use App\Models\Validator;
 use App\Models\ValidatorRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -32,20 +31,9 @@ class ValidatorRequestController extends Controller
     ) {
         $this->authorize('index', ValidatorRequest::class);
 
-        $validatorIds = Validator::query()->where(
-            'identity_address',
-            auth()->user()->getAuthIdentifier()
-        )->pluck('id');
-
-        $validatorRequest = ValidatorRequest::query()->whereIn(
-            'validator_id', $validatorIds
+        return ValidatorRequestResource::collection(
+            ValidatorRequest::searchPaginate($request)
         );
-
-        if ($state = $request->get('state')) {
-            $validatorRequest->where('state', $state);
-        }
-
-        return ValidatorRequestResource::collection($validatorRequest->get());
     }
 
     /**
