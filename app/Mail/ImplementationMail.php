@@ -64,7 +64,7 @@ class ImplementationMail extends Mailable
             $this->identityId
         );
 
-        return sprintf('%s/email/unsubscribe/%s/%s',
+        return sprintf('%semail/unsubscribe/%s/%s',
             $this->getUrlForImplementation(),
             $this->identityId,
             $identityProxy['exchange_token']
@@ -78,7 +78,7 @@ class ImplementationMail extends Mailable
             $this->identityId
         );
 
-        return sprintf('%s/email/preferences/%s/%s',
+        return sprintf('%semail/preferences/%s/%s',
             $this->getUrlForImplementation(),
             $this->identityId,
             $identityProxy['exchange_token']

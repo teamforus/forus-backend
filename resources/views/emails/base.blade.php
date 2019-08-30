@@ -47,7 +47,7 @@
                         <table>
                             <tr>
                                 <td align="center" style="border-collapse: collapse; padding-bottom: 25px;">
-                                    {{ mail_trans('not_for_you', ['email' => $email, 'not_you_link' => $notYouLink, 'email_preferences_link' => $emailPreferencesLink]) }}
+                                    {!! mail_trans('not_for_you', ['email' => $email, 'not_you_link' => $notYouLink, 'email_preferences_link' => $emailPreferencesLink]) !!}
                                 </td>
                             </tr>
                         </table>
