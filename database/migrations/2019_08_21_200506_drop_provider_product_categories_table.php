@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddServiceColumnToProductCategoriesTable extends Migration
+class DropProviderProductCategoriesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,7 @@ class AddServiceColumnToProductCategoriesTable extends Migration
      */
     public function up()
     {
-        Schema::table('product_categories', function(Blueprint $table) {
-            $table->boolean('service')->default(false)->after('parent_id');
-        });
+        Schema::dropIfExists('provider_product_categories');
     }
 
     /**
@@ -25,8 +23,6 @@ class AddServiceColumnToProductCategoriesTable extends Migration
      */
     public function down()
     {
-        Schema::table('product_categories', function(Blueprint $table) {
-            $table->dropColumn('service');
-        });
+        (new CreateProviderProductCategoriesTable())->up();
     }
 }

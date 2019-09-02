@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Traits\EloquentModel;
 use Carbon\Carbon;
 use Dimsav\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 
 /**
  * Class ProductCategory
@@ -22,7 +25,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class ProductCategory extends Model
 {
-    use Translatable;
+    use Translatable, EloquentModel;
 
     /**
      * The attributes that are mass assignable.
@@ -83,5 +86,35 @@ class ProductCategory extends Model
             Fund::class,
             'fund_product_categories'
         );
+    }
+
+    /**
+     * @param $request
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function search(Request $request) {
+        $query =  self::query();
+
+        if ($parent_id = $request->input('parent_id', null)) {
+            $query->where([
+                'parent_id' => $parent_id == 'null' ? null : $parent_id
+            ]);
+        }
+
+        if ($q = $request->input('q', false)) {
+            $query->whereHas('translations', function(Builder $builder) use ($q) {
+                $builder->where('name', 'LIKE', "%$q%");
+            });
+        }
+
+        if ($request->has('service')) {
+            $query->where('service', '=', !!$request->input('service'));
+        }
+
+        if ($request->input('used', false)) {
+            $query->whereHas('products');
+        }
+
+        return $query;
     }
 }

@@ -23,17 +23,11 @@ class OrganizationBasicResource extends Resource
         $organization = $this->resource;
 
         return collect($organization)->only([
-            'name',
+            'id', 'name', 'business_type_id',
             $organization->email_public ? 'email': '',
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': ''
         ])->merge([
-            'categories' => $organization->product_categories->pluck(
-                'name'
-            )->implode(', '),
-            'product_categories' => ProductCategoryResource::collection(
-                $organization->product_categories
-            ),
             'logo' => new MediaCompactResource(
                 $organization->logo
             )

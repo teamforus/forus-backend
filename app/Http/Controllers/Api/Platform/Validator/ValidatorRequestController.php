@@ -34,7 +34,7 @@ class ValidatorRequestController extends Controller
 
         $validatorIds = Validator::query()->where(
             'identity_address',
-            auth()->user()->getAuthIdentifier()
+            auth_address()
         )->pluck('id');
 
         $validatorRequest = ValidatorRequest::query()->whereIn(
@@ -88,13 +88,13 @@ class ValidatorRequestController extends Controller
 
             if ($state == 'approved') {
                 $this->recordRepo->approveValidationRequest(
-                    auth()->user()->getAuthIdentifier(),
+                    auth_address(),
                     $validationRequest['uuid'],
                     $organization_id
                 );
             } else {
                 $this->recordRepo->declineValidationRequest(
-                    auth()->user()->getAuthIdentifier(),
+                    auth_address(),
                     $validationRequest['uuid']
                 );
             }

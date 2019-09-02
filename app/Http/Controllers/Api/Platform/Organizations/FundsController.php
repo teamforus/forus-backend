@@ -319,18 +319,18 @@ class FundsController extends Controller
         Carbon $startDate,
         Carbon $endDate
     ): float {
-        $totalSubstraction = 0.0;
+        $totalSubtraction = 0.0;
 
-        if (!$fund->fund_config()->subtract_transaction_costs) {
+        if (!$fund->fund_config->subtract_transaction_costs) {
             $transactions = $fund
-                ->voucher_transactions()->whereBetween('created_at', [
+                ->voucher_transactions()->whereBetween('voucher_transactions.created_at', [
                     $startDate, $endDate
                 ])->count();
 
-            $totalSubstraction += $transactions * 0.10;
+            $totalSubtraction += $transactions * 0.10;
         }
 
-        return $totalSubstraction;
+        return $totalSubtraction;
     }
 
     /**

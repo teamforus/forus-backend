@@ -22,35 +22,28 @@ class OrganizationResource extends Resource
     public function toArray($request)
     {
         $organization = $this->resource;
-
         $ownerData = [];
-        $website = [];
 
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = collect($organization)->only([
-                'iban', 'btw', 'phone', 'email', 'email_public',
+                'iban', 'btw', 'phone', 'email', 'website', 'email_public',
                 'phone_public', 'website_public'
-            ])->merge([
-                'website' => $organization->website ? : ''
             ])->toArray();
         }
 
-        if ($organization->website_public) {
-            $website = ['website' => $organization->website ? : ''];
-        }
-
-        return collect($organization)->only([
-            'id', 'identity_address', 'name', 'kvk',
+        return array_merge(collect($organization)->only([
+            'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             $organization->email_public ? 'email': '',
-            $organization->phone_public ? 'phone': ''
-        ])->merge([
+            $organization->phone_public ? 'phone': '',
+            $organization->website_public ? 'website': '',
+        ])->toArray(), $ownerData, [
+            'logo' => new MediaResource($organization->logo),
+            'business_type' => new BusinessTypeResource(
+                $organization->business_type
+            ),
             'permissions' => $organization->identityPermissions(
                 auth()->id()
             )->pluck('key'),
-            'logo' => new MediaResource($organization->logo),
-            'product_categories' => ProductCategoryResource::collection(
-                $organization->product_categories
-            )
-        ])->merge($website)->merge($ownerData)->toArray();
+        ]);
     }
 }

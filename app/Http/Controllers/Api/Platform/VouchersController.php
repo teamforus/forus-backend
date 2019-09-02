@@ -32,7 +32,7 @@ class VouchersController extends Controller
         $this->authorize('index', Voucher::class);
 
         return VoucherResource::collection(Voucher::query()->where([
-            'identity_address' => auth()->user()->getAuthIdentifier()
+            'identity_address' => auth_address()
         ])->get()->load(VoucherResource::$load));
     }
 
@@ -64,7 +64,7 @@ class VouchersController extends Controller
         ) ? $product->expire_at : $voucher->fund->end_date;
 
         $voucher = Voucher::create([
-            'identity_address'  => auth()->user()->getAuthIdentifier(),
+            'identity_address'  => auth_address(),
             'parent_id'         => $voucher->id,
             'fund_id'           => $voucher->fund_id,
             'product_id'        => $product->id,

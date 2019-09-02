@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Traits\EloquentModel;
 use App\Services\BunqService\BunqService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
@@ -52,7 +53,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Fund extends Model
 {
-    use HasMedia;
+    use HasMedia, EloquentModel;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';
@@ -458,10 +459,26 @@ class Fund extends Model
     }
 
     /**
+     * Change fund state
+     *
+     * @param string $state
+     * @return $this
+     */
+    public function changeState(string $state) {
+        if (in_array($state, self::STATES)) {
+            $this->update(compact('state'));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update fund state by the start and end dates
      */
     public static function checkStateQueue() {
+        /** @var Collection|Fund[] $funds */
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->whereDate('start_date', '<=', now())
@@ -472,33 +489,30 @@ class Fund extends Model
 
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
-                $fund->update([
-                    'state' => self::STATE_ACTIVE
-                ]);
+                $fund->changeState(self::STATE_ACTIVE);
 
-                $organizations = Organization::query()->whereIn(
+                /*$organizations = Organization::query()->whereIn(
                     'id', OrganizationProductCategory::query()->whereIn(
                     'product_category_id',
                     $fund->product_categories()->pluck('id')->all()
                 )->pluck('organization_id')->toArray()
-                )->get();
+                )->get();*/
 
                 /** @var Organization $organization */
-                foreach ($organizations as $organization) {
+                // TODO: Notify providers about new fund started
+                /*foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
                         $organization->email,
                         $organization->emailServiceId(),
                         $fund->name,
                         $fund->organization->name
                     );
-                }
+                }*/
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
-                $fund->update([
-                    'state' => self::STATE_CLOSED
-                ]);
+                $fund->changeState(self::STATE_CLOSED);
             }
         }
     }
@@ -509,7 +523,7 @@ class Fund extends Model
     public static function checkConfigStateQueue()
     {
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->where('state', 'waiting')
@@ -518,9 +532,7 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-            $fund->update([
-                'state' => 'paused'
-            ]);
+            $fund->changeState(self::STATE_PAUSED);
 
             $fund->criteria()->create([
                 'record_type_key' => $fund->fund_config->key . '_eligible',
@@ -534,22 +546,23 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
-            $organizations = Organization::query()->whereIn(
+            /*$organizations = Organization::query()->whereIn(
                 'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
                 $fund->product_categories()->pluck('id')->all()
             )->pluck('organization_id')->toArray()
-            )->get();
+            )->get();*/
 
             /** @var Organization $organization */
-            foreach ($organizations as $organization) {
+            // TODO: Notify providers about new fund applicable
+            /*foreach ($organizations as $organization) {
                 resolve('forus.services.mail_notification')->newFundApplicable(
                     $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
                 );
-            }
+            }*/
         }
     }
 
