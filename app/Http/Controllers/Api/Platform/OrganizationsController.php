@@ -22,7 +22,9 @@ class OrganizationsController extends Controller
         $this->authorize('index', Organization::class);
 
         return OrganizationResource::collection(
-            Organization::queryByIdentityPermissions(auth_address())->get()
+            Organization::queryByIdentityPermissions(auth_address())->with(
+                OrganizationResource::$load
+            )->get()
         );
     }
 

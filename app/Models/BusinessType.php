@@ -3,10 +3,24 @@
 namespace App\Models;
 
 use App\Models\Traits\EloquentModel;
+use Carbon\Carbon;
 use Dimsav\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
+/**
+ * Class BusinessType
+ * @property mixed $id
+ * @property string $key
+ * @property string $name
+ * @property integer $parent_id
+ * @property BusinessType $parent
+ * @property Collection $organizations
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @package App\Models
+ */
 class BusinessType extends Model
 {
     use EloquentModel, Translatable;
@@ -17,7 +31,7 @@ class BusinessType extends Model
      * @var array
      */
     protected $fillable = [
-        'key'
+        'key', 'parent_id'
     ];
 
     /**

@@ -30,6 +30,8 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
         self::seedFile('taxonomy-with-ids');
         self::seedFile('services-with-ids', true);
+
+        ProductCategory::fixTree();
     }
 
     private static function seedFile($file, bool $service = false) {

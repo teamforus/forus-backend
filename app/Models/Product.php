@@ -5,9 +5,11 @@ namespace App\Models;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\Request;
 
 /**
  * Class Product
@@ -178,5 +180,42 @@ class Product extends Model
         $this->update([
             'sold_out' => $totalProducts >= $this->total_amount
         ]);
+    }
+
+    /**
+     * @param Request $request
+     * @return Builder
+     */
+    public static function search(
+        Request $request
+    ) {
+        $funds = Implementation::activeFunds()->pluck('id');
+        $organizationIds = FundProvider::whereIn('fund_id', $funds)->where([
+            'state' => 'approved'
+        ])->pluck('organization_id');
+
+        $query = Product::query()->whereIn(
+            'organization_id', $organizationIds
+        )->where('sold_out', false)->where(
+            'expire_at', '>', date('Y-m-d')
+        )->orderBy('created_at', 'desc');
+
+        if ($request->has('product_category_id')) {
+            $productCategories =  ProductCategory::descendantsAndSelf(
+                $request->input('product_category_id')
+            )->pluck('id');
+
+            $query->whereIn('product_category_id', $productCategories);
+        }
+
+        if (!$request->has('q')) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $query) use ($request) {
+            return $query
+                ->where('name', 'LIKE', "%{$request->input('q')}%")
+                ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
+        });
     }
 }

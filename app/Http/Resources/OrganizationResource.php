@@ -13,6 +13,12 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class OrganizationResource extends Resource
 {
+    static $load = [
+        'employees',
+        'business_type.translations',
+        'logo'
+    ];
+
     /**
      * Transform the resource into an array.
      *

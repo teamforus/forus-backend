@@ -195,7 +195,7 @@ class Organization extends Model
      */
     public function identityPermissions($identityAddress) {
         if (strcmp($identityAddress, $this->identity_address) === 0) {
-            return Permission::all();
+            return Permission::allMemCached();
         }
 
         $roles = $this->identityRoles($identityAddress);
