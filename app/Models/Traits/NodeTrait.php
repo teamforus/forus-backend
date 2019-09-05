@@ -7,6 +7,7 @@ use Kalnoy\Nestedset\Collection;
 
 /**
  * Trait NodeTrait
+ * @property NodeTrait[]|\Illuminate\Database\Eloquent\Collection $descendants
  * @method static int fixTree(NodeTrait|Model $root = null)
  * @method static Collection descendantsAndSelf($id, array $columns = [ '*' ])
  * @package App\Models\Traits

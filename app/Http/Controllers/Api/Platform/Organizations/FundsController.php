@@ -12,6 +12,7 @@ use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Models\ProductCategory;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -222,15 +223,25 @@ class FundsController extends Controller
             exit();
         }
 
-        $dates = $dates->map(function (Carbon $date, $key) use ($fund, $dates, $product_category_id, $type) {
+        if ($product_category_id == -1) {
+            $categories = false;
+        } elseif ($product_category_id) {
+            $categories = ProductCategory::find($product_category_id)
+                ->descendants->pluck('id')->push($product_category_id);
+        } else {
+            $categories = null;
+        }
+
+        $dates = $dates->map(function (Carbon $date, $key) use (
+            $fund, $dates, $categories, $type
+        ) {
             $previousIntervalEntry = $date;
             if ($key === 0 && $type !== 'week') {
                 return [
                     "key" => null,
                     "value" => null
                 ];
-            }
-            elseif ($key > 0) {
+            } elseif ($key > 0) {
                 $previousIntervalEntry = $dates[$key - 1];
             }
 
@@ -241,14 +252,12 @@ class FundsController extends Controller
                 ]
             );
 
-            if ($product_category_id) {
-                if($product_category_id == -1){
-                    $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
-                }else {
-                    $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
-                        return $query->where('product_category_id', $product_category_id);
-                    });
-                }
+            if ($categories === false) {
+                $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
+            } else if ($categories) {
+                $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($categories) {
+                    return $query->whereIn('product_category_id', $categories->toArray());
+                });
             }
 
             switch ($type) {

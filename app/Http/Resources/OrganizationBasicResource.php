@@ -28,9 +28,10 @@ class OrganizationBasicResource extends Resource
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': ''
         ])->merge([
+            'business_type' => new BusinessTypeResource(
+                $organization->business_type),
             'logo' => new MediaCompactResource(
-                $organization->logo
-            )
+                $organization->logo)
         ]);
     }
 }
