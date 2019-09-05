@@ -59,6 +59,11 @@ $router->group([], function() use ($router) {
             'notification-preferences/{identity_address}/{exchange_token}/unsubscribe',
             'Api\Platform\NotificationsController@unsubscribe'
         );
+
+        $router->post(
+            'notification-preferences/{identity_address}/{exchange_token}',
+            'Api\Platform\NotificationsController@update'
+        );
     });
 });
 
