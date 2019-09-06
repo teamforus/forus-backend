@@ -39,7 +39,8 @@ class NotifyAboutVoucherExpireCommand extends Command
     public function handle()
     {
         try {
-            Voucher::checkVoucherExpireQueue();
+            Voucher::checkVoucherExpireQueue(4 * 7);
+            Voucher::checkVoucherExpireQueue(4 * 7 * 3);
         } catch (\Exception $e) {}
     }
 }
