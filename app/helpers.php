@@ -240,3 +240,28 @@ if (!function_exists('mail_config')) {
         return $default ?: $key;
     }
 }
+
+if (!function_exists('cache_optional')) {
+    /**
+     * Try to cache $callback response for $minutes
+     * in case of exception skip cache
+     *
+     * @param string $key
+     * @param callable $callback
+     * @param float $minutes
+     * @param string|null $driver
+     * @return mixed
+     */
+    function cache_optional(
+        string $key,
+        callable $callback,
+        float $minutes = 1,
+        string $driver = null
+    ) {
+        try {
+            return cache()->driver($driver)->remember($key, $minutes, $callback);
+        } catch (\Exception $exception) {
+            return $callback();
+        }
+    }
+}

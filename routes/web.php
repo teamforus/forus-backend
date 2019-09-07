@@ -12,5 +12,5 @@
 */
 
 Route::get('/', function () {
-    return "";
+    return view()->make('empty');
 });

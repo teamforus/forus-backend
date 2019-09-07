@@ -23,10 +23,12 @@ class ProductResource extends Resource
         'organization.offices.photo.sizes',
         'organization.offices.schedules',
         'organization.offices.organization',
+        'organization.offices.organization.business_type.translations',
         'organization.offices.organization.logo.sizes',
         // 'organization.offices.organization.product_categories.translations',
         'organization.supplied_funds_approved.logo',
         'organization.logo.sizes',
+        'organization.business_type.translations',
     ];
 
     /**

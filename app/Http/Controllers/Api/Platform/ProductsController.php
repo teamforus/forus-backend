@@ -7,8 +7,6 @@ use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
-use App\Models\ProductCategory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class ProductsController extends Controller
