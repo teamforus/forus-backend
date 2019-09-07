@@ -3,9 +3,12 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
-use bunq\Security\PrivateKey;
 
-class ShareProduct extends ImplementationMail
+/**
+ * Class ShareProductMail
+ * @package App\Mail\Vouchers
+ */
+class ShareProductMail extends ImplementationMail
 {
     private $requesterMail;
     private $productName;
@@ -16,7 +19,7 @@ class ShareProduct extends ImplementationMail
         string $email,
         string $requesterMail,
         string $productName,
-        string $qrurl,
+        string $qrUrl,
         string $reason,
         ?string $identityId)
     {
@@ -24,16 +27,16 @@ class ShareProduct extends ImplementationMail
 
         $this->requesterMail = $requesterMail;
         $this->productName = $productName;
-        $this->qrUrl = $qrurl;
+        $this->qrUrl = $qrUrl;
         $this->reason = $reason;
     }
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
-            ->subject(mail_trans('share_product.title', ['requester_email' => $this->requesterMail]))
+        return parent::build()
+            ->subject(mail_trans('share_product.title', [
+                'requester_email' => $this->requesterMail
+            ]))
             ->view('emails.vouchers.share_product', [
                 'requester_email' => $this->requesterMail,
                 'product_name' => $this->productName,
