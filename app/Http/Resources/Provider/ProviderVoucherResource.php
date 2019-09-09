@@ -144,7 +144,7 @@ class ProviderVoucherResource extends Resource
                         'photo' => new MediaResource($product_voucher->product->photo),
                     ])
                 ]);
-            }) : null,
+            })->values() : null,
         ])->toArray();
     }
 
