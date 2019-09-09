@@ -7,6 +7,7 @@ use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
+use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -24,33 +25,7 @@ class ProductsController extends Controller
     ) {
         $this->authorize('indexPublic', Product::class);
 
-        $organizationIds = FundProvider::query()->whereIn(
-            'fund_id', Implementation::activeFunds()->pluck('id')
-        )->where([
-            'state' => 'approved'
-        ])->pluck('organization_id');
-
-        $query = Product::query()->whereIn(
-            'organization_id', $organizationIds
-        )->where('sold_out', false)->where(
-            'expire_at', '>', date('Y-m-d')
-        )->orderBy('created_at', 'desc');
-
-        if ($request->has('product_category_id')) {
-            $query->where('product_category_id', $request->input(
-                'product_category_id'
-            ));
-        }
-
-        if ($request->has('q')) {
-            $query->where(function (Builder $query) use($request){
-                return $query->where('name', 'LIKE', "%{$request->input('q')}%")
-                    ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
-            });
-
-        }
-
-        return ProductResource::collection($query->with(
+        return ProductResource::collection(Product::search($request)->with(
             ProductResource::$load
         )->paginate(15));
     }

@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\EloquentModel;
+use App\Models\Traits\NodeTrait;
 use Carbon\Carbon;
 use Dimsav\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 
 /**
  * Class ProductCategory
@@ -22,7 +26,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class ProductCategory extends Model
 {
-    use Translatable;
+    use Translatable, EloquentModel, NodeTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -30,7 +34,7 @@ class ProductCategory extends Model
      * @var array
      */
     protected $fillable = [
-        'key', 'parent_id', 'service'
+        'key', 'parent_id', 'service',
     ];
 
     /**
@@ -52,17 +56,21 @@ class ProductCategory extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function parent() {
-        return $this->belongsTo(ProductCategory::class);
+    public function products() {
+        return $this->hasMany(Product::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function products() {
-        return $this->hasMany(Product::class);
+    public function descendants_with_products() {
+        return $this->hasMany(ProductCategory::class, 'parent_id')
+            ->where(function(Builder $builder) {
+                $builder->has('products');
+                $builder->orHas('descendants');
+            });
     }
 
     /**
@@ -83,5 +91,36 @@ class ProductCategory extends Model
             Fund::class,
             'fund_product_categories'
         );
+    }
+
+    /**
+     * @param $request
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function search(Request $request) {
+        $query =  self::query();
+
+        if ($parent_id = $request->input('parent_id', null)) {
+            $query->where([
+                'parent_id' => $parent_id == 'null' ? null : $parent_id
+            ]);
+        }
+
+        if ($q = $request->input('q', false)) {
+            $query->whereHas('translations', function(Builder $builder) use ($q) {
+                $builder->where('name', 'LIKE', "%$q%");
+            });
+        }
+
+        if ($request->has('service')) {
+            $query->where('service', '=', !!$request->input('service'));
+        }
+
+        if ($request->input('used', false)) {
+            $query->whereHas('products');
+            $query->orWhereHas('descendants.products');
+        }
+
+        return $query;
     }
 }

@@ -18,13 +18,14 @@ class ProductResource extends Resource
         'photo.sizes',
         'product_category.translations',
         'product_category.funds',
-        'organization.product_categories.translations',
+        'product_category.funds.logo',
+        // 'organization.product_categories.translations',
         'organization.offices.photo.sizes',
         'organization.offices.schedules',
         'organization.offices.organization',
         'organization.offices.organization.logo.sizes',
-        'organization.offices.organization.product_categories.translations',
-        'organization.supplied_funds_approved',
+        // 'organization.offices.organization.product_categories.translations',
+        'organization.supplied_funds_approved.logo',
         'organization.logo.sizes',
     ];
 
@@ -37,11 +38,14 @@ class ProductResource extends Resource
     public function toArray($request)
     {
         $product = $this->resource;
-        $suppliedFundIds = $product->organization->supplied_funds_approved;
 
+        // TODO: Product category restriction
+        /*$suppliedFundIds = $product->organization->supplied_funds_approved;
         $funds = $product->product_category->funds->whereIn(
             'id', $suppliedFundIds->pluck('id')
-        );
+        );*/
+
+        $funds = $product->organization->supplied_funds_approved;
 
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',

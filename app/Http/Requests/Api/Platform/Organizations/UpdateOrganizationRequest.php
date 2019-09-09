@@ -37,8 +37,7 @@ class UpdateOrganizationRequest extends FormRequest
             'btw'                   => [new BtwRule()],
             'website'               => 'nullable|max:200|url',
             'website_public'        => 'boolean',
-            'product_categories'    => 'present|array',
-            'product_categories.*'  => 'exists:product_categories,id',
+            'business_type_id'      => 'required|exists:business_types,id',
         ];
     }
 }
