@@ -1,0 +1,56 @@
+# Forus
+750000 - Huishouden, Gezin en Dier
+750001 - Huishouden, Gezin en Dier > Huishoudelijke hulp
+750002 - Huishouden, Gezin en Dier > Ongediertebestrijding
+750003 - Huishouden, Gezin en Dier > Oppas en Kinderopvang
+750004 - Huishouden, Gezin en Dier > Thuiszorg en Kraamhulp
+750005 - Huishouden, Gezin en Dier > Wasserettes en Stomerijen
+750006 - Huishouden, Gezin en Dier > Dieren
+
+751000 - Recreatie, culturele activiteiten
+751001 - Recreatie, culturele activiteiten > Kinderfeestjes
+751002 - Recreatie, culturele activiteiten > Groepsuitjes
+751003 - Recreatie, culturele activiteiten > Restaurants
+751004 - Recreatie, culturele activiteiten > Zwemmen
+751005 - Recreatie, culturele activiteiten > Theater
+751006 - Recreatie, culturele activiteiten > Film en Bioscoop
+751007 - Recreatie, culturele activiteiten > Podia en concerten
+
+752000 - Cursus, Workshop en Les
+752001 - Cursus, Workshop en Les > Kunst en schilderen
+752002 - Cursus, Workshop en Les > Muziek en Zang
+752003 - Cursus, Workshop en Les > Bijles en Taal
+752004 - Cursus, Workshop en Les > Coaching
+752005 - Cursus, Workshop en Les > Cursussen en Workshops
+752006 - Cursus, Workshop en Les > Rijscholen
+
+753000 - Sport en Welzijn
+753001 - Sport en Welzijn > Personal Trainer
+753002 - Sport en Welzijn > Zwemonderwijzing
+753003 - Sport en Welzijn > Aerobics
+753004 - Sport en Welzijn > Voedingsdeskundige, Diëtist
+753005 - Sport en Welzijn > Therapeuten
+753006 - Sport en Welzijn > Mindfulness
+753007 - Sport en Welzijn > Stoppen met roken
+753008 - Sport en Welzijn > Yoga
+
+754000 - Uiterlijk en Verzorging
+754001 - Uiterlijk en Verzorging > Alternatieve geneeskunde
+754002 - Uiterlijk en Verzorging > Masseurs en Massagesalons
+754003 - Uiterlijk en Verzorging > Uitvaartverzorging
+754004 - Uiterlijk en Verzorging > Kappers en Thuiskappers
+754005 - Uiterlijk en Verzorging > Kledingadvies en Stylisten
+754006 - Uiterlijk en Verzorging > Kleermakers en Kledingontwerpers
+754007 - Uiterlijk en Verzorging > Manicure
+754008 - Uiterlijk en Verzorging > Pedicure
+754009 - Uiterlijk en Verzorging > Schoonheidsspecialisten
+
+755000 - Goede doelen
+755001 - Goede doelen > Dieren
+755002 - Goede doelen > Gezondheid
+755003 - Goede doelen > Internationale hulp en mensenrechten
+755004 - Goede doelen > Kunst en cultuur
+755005 - Goede doelen > Natuur en mileu
+755006 - Goede doelen > Onderwijs
+755007 - Goede doelen > Religie en levensbeschouwing
+755008 - Goede doelen > Sport en Welzijn
