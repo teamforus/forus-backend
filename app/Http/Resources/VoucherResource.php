@@ -108,9 +108,8 @@ class VoucherResource extends Resource
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'created_at_locale',
-            'expire_at', 'expire_at_locale',
         ])->merge([
-            // 'expire_at' => $voucher->expire_at
+            'expire_at' => $voucher->expire_at,
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'amount' => currency_format($amount),
             'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
@@ -147,7 +146,7 @@ class VoucherResource extends Resource
                         'old_price' => currency_format($product_voucher->product->old_price),
                     ])
                 ]);
-            }) : null,
+            })->values() : null,
             'transactions' => $transactions,
         ])->toArray();
     }
