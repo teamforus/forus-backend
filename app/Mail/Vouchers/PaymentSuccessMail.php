@@ -4,7 +4,11 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 
-class PaymentSuccesss extends ImplementationMail
+/**
+ * Class PaymentSuccessMail
+ * @package App\Mail\Vouchers
+ */
+class PaymentSuccessMail extends ImplementationMail
 {
     private $fundName;
     private $currentBudget;
@@ -23,10 +27,10 @@ class PaymentSuccesss extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
-            ->subject(mail_trans('payment_success.title', ['fund_name' => $this->fundName]))
+        return parent::build()
+            ->subject(mail_trans('payment_success.title', [
+                'fund_name' => $this->fundName
+            ]))
             ->view('emails.vouchers.payment_success', [
                 'fund_name' => $this->fundName,
                 'current_budget' => $this->currentBudget

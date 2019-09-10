@@ -4,7 +4,11 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 
-class ProductAdded extends ImplementationMail
+/**
+ * Class ProductAddedMail
+ * @package App\Mail\Funds
+ */
+class ProductAddedMail extends ImplementationMail
 {
     private $sponsorName;
     private $fundName;
@@ -23,9 +27,7 @@ class ProductAdded extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('product_added.title'))
             ->view('emails.funds.product_added', [
                 'fund_name' => $this->fundName,

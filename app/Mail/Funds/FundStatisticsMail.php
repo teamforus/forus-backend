@@ -4,7 +4,11 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 
-class FundStatistics extends ImplementationMail
+/**
+ * Class FundStatisticsMail
+ * @package App\Mail\Vouchers
+ */
+class FundStatisticsMail extends ImplementationMail
 {
     private $fundName;
     private $sponsorName;
@@ -34,13 +38,11 @@ class FundStatistics extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('fund_statistics.title', [
-                    'sponsor_name' => $this->sponsorName,
-                    'fund_name' => $this->fundName
-                ]))
+                'sponsor_name' => $this->sponsorName,
+                'fund_name' => $this->fundName
+            ]))
             ->view('emails.forus.fund_statistics', [
                 'fund_name' => $this->fundName,
                 'sponsor_name' => $this->sponsorName,

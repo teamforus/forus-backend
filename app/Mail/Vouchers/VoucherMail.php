@@ -3,13 +3,13 @@
 
 namespace App\Mail\Vouchers;
 
-
 use App\Mail\ImplementationMail;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
 
-class Voucher extends ImplementationMail
+/**
+ * Class VoucherMail
+ * @package App\Mail\Vouchers
+ */
+class VoucherMail extends ImplementationMail
 {
     private $fundName;
     private $fund_product_name;
@@ -31,10 +31,10 @@ class Voucher extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
-            ->subject(mail_trans('voucher_sent.title', ['fund_name' => $this->fundName]))
+        return parent::build()
+            ->subject(mail_trans('voucher_sent.title', [
+                'fund_name' => $this->fundName
+            ]))
             ->view('emails.vouchers.voucher_sent', [
                 'fund_name' => $this->fundName,
                 'fund_product_name' => $this->fund_product_name,
