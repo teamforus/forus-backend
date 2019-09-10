@@ -56,6 +56,10 @@ class Organization extends Model
         'business_type_id'
     ];
 
+    protected $casts = [
+        'btw' => 'string'
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
