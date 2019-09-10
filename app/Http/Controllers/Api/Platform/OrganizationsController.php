@@ -45,9 +45,7 @@ class OrganizationsController extends Controller
         $media = false;
 
         if ($media_uid = $request->input('media_uid')) {
-            $mediaService = app()->make('media');
-            $media = $mediaService->findByUid($media_uid);
-
+            $media = resolve('media')->findByUid($media_uid);
             $this->authorize('destroy', $media);
         }
 
@@ -102,13 +100,10 @@ class OrganizationsController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
-
         $media = false;
 
         if ($media_uid = $request->input('media_uid')) {
-            $mediaService = app()->make('media');
-            $media = $mediaService->findByUid($media_uid);
-
+            $media = resolve('media')->findByUid($media_uid);
             $this->authorize('destroy', $media);
         }
 

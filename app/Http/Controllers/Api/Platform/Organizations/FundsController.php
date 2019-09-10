@@ -69,9 +69,11 @@ class FundsController extends Controller
         }
 
         /** @var Fund $fund */
-        $fund = $organization->funds()->create($request->only([
+        $fund = $organization->funds()->create(array_merge($request->only([
             'name', 'state', 'start_date', 'end_date', 'notification_amount'
-        ]));
+        ], [
+            'state' => Fund::STATE_WAITING
+        ])));
 
         $fund->product_categories()->sync(
             $request->input('product_categories', [])
@@ -131,11 +133,11 @@ class FundsController extends Controller
 
         if ($fund->state == Fund::STATE_WAITING) {
             $params = $request->only([
-                'name', 'state', 'start_date', 'end_date', 'notification_amount'
+                'name', 'start_date', 'end_date', 'notification_amount'
             ]);
         } else {
             $params = $request->only([
-                'name', 'state', 'notification_amount'
+                'name', 'notification_amount'
             ]);
         }
 

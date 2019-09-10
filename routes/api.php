@@ -119,6 +119,15 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    if (config('file.enabled', false)) {
+        $router->resource('files', 'Api\FileController', [
+            'only' => ['index', 'show', 'store'],
+            'parameters' => [
+                'files' => 'file_uid'
+            ]
+        ]);
+    }
+
     $router->get('/debug', 'TestController@test');
 });
 

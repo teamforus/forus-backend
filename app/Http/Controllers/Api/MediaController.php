@@ -53,15 +53,19 @@ class MediaController extends Controller
      * @param StoreMediaRequest $request
      * @return MediaResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function store(StoreMediaRequest $request)
     {
         $this->authorize('store', Media::class);
 
+        logger()->debug($request->file('file')->getMimeType());
+
         return new MediaResource($this->mediaService->uploadSingle(
             $request->file('file'),
             $request->input('type'),
-            auth()->user()->getAuthIdentifier()
+            auth()->user()->getAuthIdentifier(),
+            'jpg'
         ));
     }
 
