@@ -5,7 +5,7 @@
     {{ mail_trans('dear_sponsor', ['sponsor_name' => $sponsor_name]) }}
     <br />
     <br />
-    {{ mail_trans('balance_warning', ['fund_name' => $fund_name, 'notification_amount' => $notification_amount]) }}
+    {{ mail_trans('balance_warning.budget_reached', ['fund_name' => $fund_name, 'notification_amount' => $notification_amount]) }}
     <br />
     {{ mail_trans('balance_warning.you_can_login') }}
 @endsection
