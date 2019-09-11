@@ -35,7 +35,7 @@ class BalanceWarning extends ImplementationMail
         return $this
             ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
             ->to($this->email)
-            ->subject(mail_trans('balance_warning.title'), ['fund_name' => $this->fundName])
+            ->subject(mail_trans('balance_warning.title', ['fund_name' => $this->fundName]))
             ->view('emails.funds.balance_warning', [
                 'fund_name' => $this->fundName,
                 'sponsor_name' => $this->sponsorName,
