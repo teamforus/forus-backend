@@ -607,8 +607,10 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
+        /** @var MailService $mailService */
         $mailService = resolve('forus.services.mail_notification');
-
+        /** @var RecordRepo $recordRepo */
+        $recordRepo = resolve('forus.services.record');
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
@@ -628,17 +630,23 @@ class Fund extends Model
         foreach($funds as $fund) {
             if($fund->budget_left <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
-                $referrers = $referrers->pluck('identity_address');
-                $referrers->push($fund->organization->emailServiceId());
+                $referrers = $referrers->pluck('identity_address')->map(function ($identity) use ($recordRepo) {
+                    return [
+                        'identity' => $identity,
+                        'email' => $recordRepo->primaryEmailByAddress($identity),
+                    ];
+                });
+                /*
+                TODO: check if org mail is same as finance role; if so only send one mail
+                $referrers->push([
+                    'identity' => $fund->organization->emailServiceId(),
+                    'email' => $fund->organization->email
+                ]);*/
 
                 foreach ($referrers as $referrer) {
-                    $email = (new RecordRepo)->primaryEmailByAddress(
-                        $referrer->identity_address
-                    );
-
                     $mailService->fundNotifyReachedNotificationAmount(
-                        $email,
-                        $referrer,
+                        $referrer['email'],
+                        $referrer['identity'],
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
