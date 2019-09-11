@@ -26,7 +26,7 @@ class BalanceWarning extends ImplementationMail
         $this->fundName = $fund_name;
         $this->sponsorName = $sponsor_name;
         $this->notificationAmount = $notification_amount;
-        $this->$budgetLeft = $budget_left;
+        $this->budgetLeft = $budget_left;
         $this->link = $link;
     }
 
