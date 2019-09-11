@@ -96,7 +96,7 @@ class FundProviderController extends Controller
             $fundProvider->fund->organization->name,
             $fundProvider->fund->name,
             config('forus.front_ends.panel-sponsor'),
-            $fundProvider->fund->organization->emailServiceId(),
+            $fundProvider->fund->organization->emailServiceId()
         );
 
         return new FundProviderResource($fundProvider);
