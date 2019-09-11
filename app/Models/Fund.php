@@ -650,7 +650,8 @@ class Fund extends Model
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
-                        currency_format($fund->notification_amount)
+                        currency_format($fund->notification_amount),
+                        currency_format($fund->budget_left)
                     );
                 }
 
