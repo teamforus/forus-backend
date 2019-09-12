@@ -22,7 +22,6 @@ use App\Mail\Vouchers\ProductBoughtMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\ShareProductMail;
 use App\Mail\Vouchers\VoucherMail;
-use App\Services\ApiRequestService\ApiRequest;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -36,15 +35,13 @@ class MailService
     const TYPE_PUSH_IOS = 3;
 
     protected $serviceApiUrl;
-
-    /** @var ApiRequest $apiRequest  */
     protected $apiRequest;
 
     /**
      * MailService constructor.
      */
     public function __construct() {
-        $this->apiRequest = app()->make('api_request');
+        $this->apiRequest = resolve('api_request');
         $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
     }
 

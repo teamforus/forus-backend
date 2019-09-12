@@ -70,8 +70,9 @@ class FundProvider extends Model
                 return $query->where('name', 'like', "%{$q}%")
                     ->orWhere('kvk', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%")
-                    ->orWhereHas('product_categories', function (
+                    ->orWhere('phone', 'like', "%{$q}%");
+                    // TODO: Remove?
+                    /*->orWhereHas('product_categories', function (
                         Builder $query
                     ) use($q) {
                         return $query->whereHas('translations', function (
@@ -79,7 +80,7 @@ class FundProvider extends Model
                         ) use ($q) {
                             $query->where('name', 'LIKE', "%{$q}%");
                         });
-                    });
+                    });*/
             });
         }
 
@@ -106,10 +107,8 @@ class FundProvider extends Model
         $transKey = "export.providers";
 
         return $builder->with([
-            'organization', 'organization.product_categories'
-        ])->get()->map(function(
-            FundProvider $fundProvider
-        ) use ($transKey) {
+            'organization'
+        ])->get()->map(function(FundProvider $fundProvider) use ($transKey) {
             $organization = $fundProvider->organization;
 
             return [
@@ -118,10 +117,6 @@ class FundProvider extends Model
                     $organization->email : '',
                 trans("$transKey.phone") => $organization->phone ?
                     $organization->phone : '',
-                trans("$transKey.categories") =>
-                    $organization->product_categories->pluck(
-                        'name'
-                    )->implode(', '),
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
                 trans("$transKey.state") => trans(
                     "$transKey.state_values." . $fundProvider->state

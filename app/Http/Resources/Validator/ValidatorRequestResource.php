@@ -37,7 +37,7 @@ class ValidatorRequestResource extends Resource
             return collect(
                     $record['validations']
                 )->pluck('identity_address')->search(
-                    auth()->user()->getAuthIdentifier()
+                    auth_address()
                 ) !== FALSE;
         })->first();
 

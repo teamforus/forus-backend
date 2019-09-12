@@ -12,9 +12,5 @@
 */
 
 Route::get('/', function () {
-    return "";
-});
-
-Route::get('/test', function() {
-    \App\Services\BunqService\BunqService::processBunqMeTabQueue(\App\Models\Fund::query()->find(1));
+    return view()->make('empty');
 });
