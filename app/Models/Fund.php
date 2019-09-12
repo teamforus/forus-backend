@@ -668,11 +668,12 @@ class Fund extends Model
                         'email' => $recordRepo->primaryEmailByAddress($identity),
                     ];
                 });
-
+                /*
+                TODO: check if org mail is same as finance role; if so only send one mail
                 $referrers->push([
                     'identity' => $fund->organization->emailServiceId(),
                     'email' => $fund->organization->email
-                ]);
+                ]);*/
 
                 foreach ($referrers as $referrer) {
                     $mailService->fundNotifyReachedNotificationAmount(

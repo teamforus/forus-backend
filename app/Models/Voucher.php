@@ -176,7 +176,7 @@ class Voucher extends Model
         resolve('forus.services.mail_notification')->sendVoucher(
             $email,
             $this->identity_address,
-            $voucherToken->voucher->fund->name,
+            $fund_product_name,
             $fund_product_name,
             $voucherToken->getQrCodeUrl()
         );
