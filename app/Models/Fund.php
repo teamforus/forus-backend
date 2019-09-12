@@ -627,7 +627,7 @@ class Fund extends Model
         /** @var MailService $mailService */
         $mailService = resolve('forus.services.mail_notification');
         /** @var RecordRepo $recordRepo */
-        $recordRepo = resolve('forus.services.record');develop
+        $recordRepo = resolve('forus.services.record');
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
