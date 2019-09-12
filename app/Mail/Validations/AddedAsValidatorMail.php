@@ -4,7 +4,11 @@ namespace App\Mail\Validations;
 
 use App\Mail\ImplementationMail;
 
-class AddedAsValidator extends ImplementationMail
+/**
+ * Class AddedAsValidatorMail
+ * @package App\Mail\Validations
+ */
+class AddedAsValidatorMail extends ImplementationMail
 {
     private $sponsorName;
 
@@ -19,9 +23,7 @@ class AddedAsValidator extends ImplementationMail
     }
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('you_added_as_validator.title'))
             ->view('emails.validations.you_added_as_validator', [
                 'sponsor_name' => $this->sponsorName

@@ -4,7 +4,11 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 
-class FundExpired extends ImplementationMail
+/**
+ * Class FundExpiredMail
+ * @package App\Mail\Funds
+ */
+class FundExpiredMail extends ImplementationMail
 {
     private $fundName;
     private $sponsorName;
@@ -38,9 +42,7 @@ class FundExpired extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('fund_expires.title'))
             ->view('emails.funds.fund_expires', [
                 'fund_name' => $this->fundName,

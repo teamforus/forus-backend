@@ -4,7 +4,11 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 
-class BalanceWarning extends ImplementationMail
+/**
+ * Class BalanceWarningMail
+ * @package App\Mail\Funds
+ */
+class BalanceWarningMail extends ImplementationMail
 {
     private $fundName;
     private $sponsorName;
@@ -29,9 +33,7 @@ class BalanceWarning extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('balance_warning.title'))
             ->view('emails.funds.balance_warning', [
                 'fund_name' => $this->fundName,

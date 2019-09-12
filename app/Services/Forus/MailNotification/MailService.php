@@ -2,26 +2,26 @@
 
 namespace App\Services\Forus\MailNotification;
 
-use App\Mail\Auth\UserLogin;
-use App\Mail\Funds\BalanceWarning;
-use App\Mail\Funds\FundCreated;
-use App\Mail\Funds\FundExpired;
-use App\Mail\Funds\FundStarted;
-use App\Mail\Funds\NewFundApplicable;
-use App\Mail\Funds\ProductAdded;
-use App\Mail\Funds\ProviderApplied;
-use App\Mail\Funds\ProviderApproved;
-use App\Mail\Funds\ProviderRejected;
-use App\Mail\Funds\Forus\FundCreated as ForusFundCreated;
-use App\Mail\User\EmailActivation;
-use App\Mail\Validations\AddedAsValidator;
-use App\Mail\Validations\NewValidationRequest;
-use App\Mail\Vouchers\FundStatistics;
-use App\Mail\Vouchers\PaymentSuccesss;
-use App\Mail\Vouchers\ProductBought;
-use App\Mail\Vouchers\ProductSoldOut;
-use App\Mail\Vouchers\ShareProduct;
-use App\Mail\Vouchers\Voucher;
+use App\Mail\Auth\UserLoginMail;
+use App\Mail\Funds\BalanceWarningMail;
+use App\Mail\Funds\FundCreatedMail;
+use App\Mail\Funds\FundExpiredMail;
+use App\Mail\Funds\FundStartedMail;
+use App\Mail\Funds\NewFundApplicableMail;
+use App\Mail\Funds\ProductAddedMail;
+use App\Mail\Funds\ProviderAppliedMail;
+use App\Mail\Funds\ProviderApprovedMail;
+use App\Mail\Funds\ProviderRejectedMail;
+use App\Mail\Funds\Forus\FundCreatedMail as ForusFundCreated;
+use App\Mail\User\EmailActivationMail;
+use App\Mail\Validations\AddedAsValidatorMail;
+use App\Mail\Validations\NewValidationRequestMail;
+use App\Mail\Vouchers\FundStatisticsMail;
+use App\Mail\Vouchers\PaymentSuccessMail;
+use App\Mail\Vouchers\ProductBoughtMail;
+use App\Mail\Vouchers\ProductSoldOutMail;
+use App\Mail\Vouchers\ShareProductMail;
+use App\Mail\Vouchers\VoucherMail;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -220,7 +220,7 @@ class MailService
         string $fund_name,
         string $sponsor_dashboard_link
     ) {
-        Mail::send(new ProviderApplied(
+        Mail::send(new ProviderAppliedMail(
             $email,
             $identifier,
             $provider_name,
@@ -250,7 +250,7 @@ class MailService
         string $sponsor_name,
         string $provider_dashboard_link
     ) {
-        Mail::send(new ProviderApproved(
+        Mail::send(new ProviderApprovedMail(
             $email,
             $fund_name,
             $provider_name,
@@ -281,7 +281,7 @@ class MailService
         string $sponsor_name,
         string $phone_number
     ) {
-        Mail::send( new ProviderRejected(
+        Mail::send( new ProviderRejectedMail(
             $email,
             $fund_name,
             $provider_name,
@@ -304,7 +304,7 @@ class MailService
         $identifier,
         string $sponsor_name
     ){
-        Mail::send(new AddedAsValidator(
+        Mail::send(new AddedAsValidatorMail(
             $email,
             $sponsor_name,
             $identifier
@@ -326,7 +326,7 @@ class MailService
         $identifier,
         string $validator_dashboard_link
     ) {
-        Mail::send( new NewValidationRequest(
+        Mail::send( new NewValidationRequestMail(
             $email,
             $validator_dashboard_link,
             $identifier
@@ -351,7 +351,7 @@ class MailService
         string $fund_name,
         string $provider_dashboard_link
     ) {
-        Mail::send(new NewFundApplicable(
+        Mail::send(new NewFundApplicableMail(
             $email,
             $fund_name,
             $provider_dashboard_link,
@@ -376,7 +376,7 @@ class MailService
         string $fund_name,
         string $webshop_link
     ){
-        Mail::send(new FundCreated(
+        Mail::send(new FundCreatedMail(
             $email,
             $fund_name,
             $webshop_link,
@@ -402,7 +402,7 @@ class MailService
         string $fund_name,
         string $sponsor_name
     ) {
-        Mail::send(new FundStarted(
+        Mail::send(new FundStartedMail(
             $email,
             $fund_name,
             $sponsor_name,
@@ -453,7 +453,7 @@ class MailService
     ) {
         $email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io');
 
-        Mail::send(new FundStatistics(
+        Mail::send(new FundStatisticsMail(
             $email,
             $fund_name,
             $sponsor_name,
@@ -481,7 +481,7 @@ class MailService
         string $sponsor_name,
         string $fund_name
     ) {
-        Mail::send(new ProductAdded(
+        Mail::send(new ProductAddedMail(
             $email,
             $sponsor_name,
             $fund_name,
@@ -510,7 +510,7 @@ class MailService
         string $qr_url
     ): bool {
 
-        Mail::send(new Voucher(
+        Mail::send(new VoucherMail(
             $email,
             $fund_name,
             $fund_product_name,
@@ -541,7 +541,7 @@ class MailService
         string $qr_url,
         string $reason
     ) {
-        Mail::send(new ShareProduct(
+        Mail::send(new ShareProductMail(
             $email,
             $requester_email,
             $product_name,
@@ -567,7 +567,7 @@ class MailService
         string $link,
         string $platform
     ) {
-        Mail::send(new UserLogin(
+        Mail::send(new UserLoginMail(
             $email,
             $link,
             $platform,
@@ -590,7 +590,7 @@ class MailService
         string $fund_name,
         string $current_budget
     ) {
-        Mail::send(new PaymentSuccesss(
+        Mail::send(new PaymentSuccessMail(
             $email,
             $fund_name,
             $current_budget,
@@ -616,7 +616,7 @@ class MailService
         string $product_name,
         string $expiration_date
     ) {
-        Mail::send(new ProductBought(
+        Mail::send(new ProductBoughtMail(
             $email,
             $product_name,
             $expiration_date,
@@ -641,7 +641,7 @@ class MailService
         string $product_name,
         string $sponsor_dashboard_url
     ) {
-        Mail::send(new ProductSoldOut(
+        Mail::send(new ProductSoldOutMail(
             $email,
             $product_name,
             $sponsor_dashboard_url,
@@ -665,7 +665,7 @@ class MailService
     ) {
         $platform = env('APP_NAME');
 
-        Mail::send(new EmailActivation(
+        Mail::send(new EmailActivationMail(
             $email,
             $platform,
             $confirmationLink,
@@ -696,7 +696,7 @@ class MailService
         string $sponsor_email,
         string $webshopLink
     ){
-        Mail::send(new FundExpired(
+        Mail::send(new FundExpiredMail(
             $email,
             $fund_name,
             $sponsor_name,
@@ -719,7 +719,7 @@ class MailService
         string $fund_name,
         string $notification_amount
     ): bool {
-        Mail::send(new BalanceWarning(
+        Mail::send(new BalanceWarningMail(
             $email,
             $fund_name,
             $sponsor_name,

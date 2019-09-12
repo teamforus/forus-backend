@@ -4,7 +4,11 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 
-class ProductBought extends ImplementationMail
+/**
+ * Class ProductBoughtMail
+ * @package App\Mail\Vouchers
+ */
+class ProductBoughtMail extends ImplementationMail
 {
     private $productName;
     private $expirationDate;
@@ -23,10 +27,10 @@ class ProductBought extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
-            ->subject(mail_trans('product_bought.title', ['product_name' => $this->productName]))
+        return parent::build()
+            ->subject(mail_trans('product_bought.title', [
+                'product_name' => $this->productName
+            ]))
             ->view('emails.funds.product_bought', [
                 'product_name' => $this->productName,
                 'expiration_date' => $this->expirationDate

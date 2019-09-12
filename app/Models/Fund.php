@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\EloquentModel;
 use App\Services\BunqService\BunqService;
+use App\Services\Forus\MailNotification\MailService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -215,6 +216,22 @@ class Fund extends Model
 
     public function getFundId() {
         return $this->id;
+    }
+
+    public function getServiceCosts(): float
+    {
+        return $this->getTransactionCosts();
+    }
+
+    public function getTransactionCosts (): float
+    {
+        if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
+            return $this
+                    ->voucher_transactions()
+                    ->count() * 0.10;
+        }
+
+        return 0.0;
     }
 
     /**
@@ -620,7 +637,10 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
+        /** @var MailService $mailService */
         $mailService = resolve('forus.services.mail_notification');
+        /** @var RecordRepo $recordRepo */
+        $recordRepo = resolve('forus.services.record');
 
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
@@ -639,23 +659,29 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-            if($fund->budget_left <= $fund->notification_amount) {
+            $transactionCosts = $fund->getTransactionCosts();
+            if($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
-                $referrers = $referrers->pluck('identity_address');
-                $referrers->push($fund->organization->emailServiceId());
+                $referrers = $referrers->pluck('identity_address')->map(function ($identity) use ($recordRepo) {
+                    return [
+                        'identity' => $identity,
+                        'email' => $recordRepo->primaryEmailByAddress($identity),
+                    ];
+                });
+
+                $referrers->push([
+                    'identity' => $fund->organization->emailServiceId(),
+                    'email' => $fund->organization->email
+                ]);
 
                 foreach ($referrers as $referrer) {
-                    $email = (new RecordRepo)->primaryEmailByAddress(
-                        $referrer->identity_address
-                    );
-
                     $mailService->fundNotifyReachedNotificationAmount(
-                        $email,
-                        $referrer,
+                        $referrer['email'],
+                        $referrer['identity'],
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
-                        currency_format($fund->notification_amount)
+                        currency_format($fund->notification_amount - $transactionCosts)
                     );
                 }
 
