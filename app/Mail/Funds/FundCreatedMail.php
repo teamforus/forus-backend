@@ -4,7 +4,11 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 
-class FundCreated extends ImplementationMail
+/**
+ * Class FundCreatedMail
+ * @package App\Mail\Funds
+ */
+class FundCreatedMail extends ImplementationMail
 {
     private $fundName;
     private $link;
@@ -22,9 +26,7 @@ class FundCreated extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('new_fund_created.title'))
             ->view('emails.funds.new_fund_created', [
                 'fund_name' => $this->fundName,

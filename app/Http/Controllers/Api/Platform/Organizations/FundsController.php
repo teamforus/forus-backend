@@ -305,6 +305,10 @@ class FundsController extends Controller
         return [
             'dates' => $dates,
             'usage' => $dates->sum('value'),
+            'service_costs' => [
+                'total' => $fund->getServiceCosts(),
+                'transaction_costs' => $fund->getTransactionCosts()
+            ],
             'activations' => $fund->vouchers()->whereNull(
                 'parent_id'
             )->whereBetween('created_at', [

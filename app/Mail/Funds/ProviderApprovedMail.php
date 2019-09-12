@@ -4,7 +4,11 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 
-class ProviderApproved extends ImplementationMail
+/**
+ * Class ProviderApprovedMail
+ * @package App\Mail\Funds
+ */
+class ProviderApprovedMail extends ImplementationMail
 {
     private $fundName;
     private $providerName;
@@ -28,15 +32,13 @@ class ProviderApproved extends ImplementationMail
     }
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('provider_approved.title'))
             ->view('emails.funds.provider_approved', [
                 'fund_name'                 => $this->fundName,
                 'provider_name'             => $this->providerName,
                 'sponsor_name'              => $this->sponsorName,
-                'provider_dashboard_link'    => $this->providerName
+                'provider_dashboard_link'   => $this->providerName
             ]);
     }
 
