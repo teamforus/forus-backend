@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Mail\Auth;
+
+use App\Mail\ImplementationMail;
+
+/**
+ * Class UserLoginMail
+ * @package App\Mail\Auth
+ */
+class UserLoginMail extends ImplementationMail
+{
+    /**
+     * @var string $link
+     */
+    private $link;
+
+    /**
+     * @var string $platform
+     */
+    private $platform;
+
+    public function __construct(
+        string $link,
+        string $platform,
+        ?string $identityId
+    ) {
+        parent::__construct($identityId);
+
+        $this->link = $link;
+        $this->platform = $platform;
+    }
+
+    public function build(): ImplementationMail
+    {
+        return parent::build()
+            ->subject(mail_trans('login_via_email.title', [
+                'platform' => $this->platform
+            ]))
+            ->view('emails.login.login_via_email', [
+                'platform' => $this->platform,
+                'link' => $this->link
+            ]);
+    }
+}

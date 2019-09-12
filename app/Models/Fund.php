@@ -501,7 +501,7 @@ class Fund extends Model
 
                 /** @var Organization $organization */
                 foreach ($organizations as $organization) {
-                    resolve('forus.services.mail_notification')->newFundStarted(
+                    resolve('forus.services.notification')->newFundStarted(
                         $organization->email,
                         $organization->emailServiceId(),
                         $fund->name,
@@ -559,7 +559,7 @@ class Fund extends Model
 
             /** @var Organization $organization */
             foreach ($organizations as $organization) {
-                resolve('forus.services.mail_notification')->newFundApplicable(
+                resolve('forus.services.notification')->newFundApplicable(
                     $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
@@ -570,9 +570,11 @@ class Fund extends Model
     }
 
     /**
+     * Send funds user count statistic to email
+     * @param string $email
      * @return void
      */
-    public static function calculateUsersQueue()
+    public static function sendUserStatisticsReport(string $email)
     {
         /** @var Collection|Fund[] $funds */
         $funds = self::query()->whereHas('fund_config', function (
@@ -607,13 +609,13 @@ class Fund extends Model
                 $requesterCount = 0;
             }
 
-            resolve('forus.services.mail_notification')->calculateFundUsers(
+            resolve('forus.services.notification')->sendFundUserStatisticsReport(
+                $email,
                 $fund->name,
                 $organization->name,
                 $sponsorCount,
                 $providerCount,
-                $requesterCount,
-                ($sponsorCount + $providerCount + $requesterCount)
+                $requesterCount
             );
         }
     }
@@ -623,7 +625,7 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
-        $mailService = resolve('forus.services.mail_notification');
+        $mailService = resolve('forus.services.notification');
 
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
@@ -643,6 +645,7 @@ class Fund extends Model
         /** @var self $fund */
         foreach($funds as $fund) {
             $transactionCosts = $fund->getTransactionCosts();
+
             if($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
                 $referrers = $referrers->pluck('identity_address');
@@ -653,7 +656,7 @@ class Fund extends Model
                         $referrer->identity_address
                     );
 
-                    $mailService->fundNotifyReachedNotificationAmount(
+                    $mailService->fundBalanceWarning(
                         $email,
                         $referrer,
                         config('forus.front_ends.panel-sponsor'),

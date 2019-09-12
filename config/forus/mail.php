@@ -6,5 +6,5 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Stichting Forus')
     ],
     'email-preferences-link' => env('EMAIL_PREFERENCES_LINK'),
-    'email-not-you-link' => env('EMAIL_NOT_YOU_LINK')
+    'email-not-you-link' => env('EMAIL_NOT_YOU_LINK'),
 ];

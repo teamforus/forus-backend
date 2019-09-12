@@ -19,7 +19,7 @@ class CalculateFundUsersCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Calculate users connected to fund';
+    protected $description = 'Send users statistic report.';
 
     /**
      * Create a new command instance.
@@ -38,8 +38,12 @@ class CalculateFundUsersCommand extends Command
      */
     public function handle()
     {
+        if (!$email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io')) {
+            return;
+        }
+
         try {
-            Fund::calculateUsersQueue();
+            Fund::sendUserStatisticsReport($email);
         } catch (\Exception $e) {}
     }
 }

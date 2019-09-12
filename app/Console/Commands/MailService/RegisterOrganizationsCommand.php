@@ -38,7 +38,7 @@ class RegisterOrganizationsCommand extends Command
      */
     public function handle()
     {
-        $mailService = resolve('forus.services.mail_notification');
+        $mailService = resolve('forus.services.notification');
         $organizations = Organization::all();
         $message = sprintf(
             "You are about to register %s organization(s) " .
@@ -50,13 +50,6 @@ class RegisterOrganizationsCommand extends Command
             if (!$this->confirm($message)) {
                 return;
             }
-        }
-
-        foreach ($organizations as $organization) {
-            $mailService->addEmailConnection(
-                $organization->emailServiceId(),
-                $organization->email
-            );
         }
 
         $this->info('Done.');

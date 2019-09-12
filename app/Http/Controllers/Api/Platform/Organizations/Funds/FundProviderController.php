@@ -96,7 +96,7 @@ class FundProviderController extends Controller
         $state = $request->input('state');
 
         $organizationFund->update(compact('state'));
-        $mailService = resolve('forus.services.mail_notification');
+        $mailService = resolve('forus.services.notification');
 
         if ($state == 'approved') {
             $mailService->providerApproved(

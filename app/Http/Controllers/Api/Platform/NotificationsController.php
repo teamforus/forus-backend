@@ -3,77 +3,74 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platfrom\Notifications\UpdateNotificationPreferencesRequest;
+use App\Services\Forus\Notification\Interfaces\INotificationRepo;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
+/**
+ * Class NotificationsController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class NotificationsController extends Controller
 {
-    private $identityRepo;
-    private $notificationPreferencesRepo;
+    private $notificationRepo;
     private $recordRepo;
 
-    public function __construct()
-    {
-        $this->identityRepo = resolve('forus.services.identity');
-        $this->notificationPreferencesRepo = resolve('forus.services.notifications');
-        $this->recordRepo = resolve('forus.services.record');
+    /**
+     * NotificationsController constructor.
+     * @param INotificationRepo $notificationServiceRepo
+     * @param IRecordRepo $recordRepo
+     */
+    public function __construct(
+        INotificationRepo $notificationServiceRepo,
+        IRecordRepo $recordRepo
+    ) {
+        $this->notificationRepo = $notificationServiceRepo;
+        $this->recordRepo = $recordRepo;
     }
 
-    public function index(string $identity_address): JsonResponse
-    {
-        $preferences = $this->notificationPreferencesRepo->getNotificationPreferences(
-            $identity_address
-        );
-        $email = $this->recordRepo->primaryEmailByAddress($identity_address);
+    /**
+     * Get identity notification preferences
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function index(): JsonResponse {
+        $id = auth()->id();
+
+        $email = $this->recordRepo->primaryEmailByAddress($id);
+        $email_unsubscribed = $this->notificationRepo->isEmailUnsubscribed($email);
+        $preferences = $this->notificationRepo->getNotificationPreferences($id);
 
         return response()->json([
-            'email' => $email,
-            'preferences' => $preferences
+            'data' => compact('email_unsubscribed', 'preferences', 'email')
         ]);
     }
 
-    public function unsubscribe(
-        string $identity_address,
-        string $exchange_token
-    ): JsonResponse {
-
-        $proxy = $this->identityRepo->activateEmailPreferencesToken($exchange_token);
-
-        if ($proxy ->identity_address != $identity_address) {
-            return response()->json(['success' => false]);
-        }
-
-        $this->notificationPreferencesRepo->unsubscribeForIdentity($proxy->identity_address);
-
-        $email = $this->recordRepo->primaryEmailByAddress($proxy->identity_address);
-
-        return response()->json([
-            'email' => $email,
-            'success' => true
-        ]);
-    }
-
+    /**
+     * @param UpdateNotificationPreferencesRequest $request
+     * @return JsonResponse
+     */
     public function update(
-        Request $request,
-        string $identity_address,
-        string $exchange_token
+        UpdateNotificationPreferencesRequest $request
     ): JsonResponse {
-        $proxy = $this->identityRepo->activateEmailPreferencesToken($exchange_token);
+        $id = auth()->id();
+        $email = $this->recordRepo->primaryEmailByAddress($id);
 
-        if ($proxy ->identity_address != $identity_address) {
-            return response()->json(['success' => false]);
+        if ($request->input('email_unsubscribed')) {
+            $this->notificationRepo->unsubscribeEmail($email);
+        } else {
+            $this->notificationRepo->reSubscribeEmail($email);
         }
 
-        $this->notificationPreferencesRepo->updateForIdentity(
-            $proxy->identity_address,
-            $request->get('data')
+        $email_unsubscribed = $this->notificationRepo->isEmailUnsubscribed($email);
+        $preferences = $request->input('preferences', []);
+        $preferences = $this->notificationRepo->updateIdentityPreferences(
+            $id, array_pluck($preferences, 'subscribed', 'key')
         );
 
-        $email = $this->recordRepo->primaryEmailByAddress($proxy->identity_address);
-
         return response()->json([
-            'email' => $email,
-            'success' => true
+            'data' => compact('email_unsubscribed', 'preferences', 'email')
         ]);
     }
 }

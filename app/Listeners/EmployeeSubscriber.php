@@ -17,7 +17,7 @@ class EmployeeSubscriber
      */
     public function __construct()
     {
-        $this->mailService = resolve('forus.services.mail_notification');
+        $this->mailService = resolve('forus.services.notification');
     }
 
     /**

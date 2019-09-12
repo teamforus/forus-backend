@@ -11,10 +11,11 @@
 |
 */
 
+use App\Http\Controllers\NotificationsController;
+
 Route::get('/', function () {
     return "";
 });
 
-Route::get('/test', function() {
-    \App\Services\BunqService\BunqService::processBunqMeTabQueue(\App\Models\Fund::query()->find(1));
-});
+Route::get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
+Route::get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');

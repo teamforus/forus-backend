@@ -13,14 +13,14 @@ use Illuminate\Http\Request;
 
 class IdentityController extends Controller
 {
-    protected $mailService;
     protected $identityRepo;
+    protected $mailService;
     protected $recordRepo;
 
     public function __construct() {
-        $this->mailService = app()->make('forus.services.mail_notification');
-        $this->identityRepo = app()->make('forus.services.identity');
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->mailService = resolve('forus.services.notification');
+        $this->identityRepo = resolve('forus.services.identity');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     public function getPublic()
@@ -40,6 +40,8 @@ class IdentityController extends Controller
     public function store(
         IdentityStoreRequest $request
     ) {
+        $this->middleware('throttle', [10, 1 * 60]);
+
         $identityAddress = $this->identityRepo->makeByEmail(
             $request->input('records.primary_email'),
             $request->input('records')
@@ -59,7 +61,7 @@ class IdentityController extends Controller
                 ])->implode('/')
             );
 
-            $this->mailService->sendEmailConfirmationToken(
+            $this->mailService->sendEmailConfirmationLink(
                 $request->input('records.primary_email'),
                 $confirmationLink,
                 $identityAddress
@@ -166,10 +168,12 @@ class IdentityController extends Controller
     public function proxyAuthorizationEmailToken(
         IdentityAuthorizationEmailTokenRequest $request
     ) {
+        $this->middleware('throttle', [10, 1 * 60]);
+
         $email = $request->input('primary_email');
         $source = $request->input('source');
 
-        $identityId = $this->recordRepo->identityIdByEmail($email);
+        $identityId = $this->recordRepo->identityAddressByEmail($email);
         $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
 
         $link = url(sprintf(
@@ -292,7 +296,7 @@ class IdentityController extends Controller
         $redirectUrl = $sourceUrl . "identity-restore?token=" . $emailToken;
 
         if ($source == 'app-me_app') {
-            return view()->make('auth.deep_link', compact('redirectUrl'));
+            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
         };
 
         return redirect($redirectUrl);
@@ -317,6 +321,12 @@ class IdentityController extends Controller
         ];
     }
 
+    /**
+     * @param string $exchangeToken
+     * @param string $clientType
+     * @param string $implementationKey
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+     */
     public function emailConfirmationRedirect(
         string $exchangeToken,
         string $clientType = 'webshop',
@@ -340,7 +350,7 @@ class IdentityController extends Controller
                 $sourceUrl = config('forus.front_ends.app-me_app');
                 $redirectUrl = $sourceUrl . "identity-confirmation?token=" . $exchangeToken;
 
-                return view()->make('auth.deep_link', compact('redirectUrl'));
+                return view()->make('pages.auth.deep_link', compact('redirectUrl'));
             } break;
         }
 
