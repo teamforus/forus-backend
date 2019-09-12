@@ -15,6 +15,5 @@ class DatabaseSeeder extends Seeder
         $this->call(RecordTypesTableSeeder::class);
         $this->call(ProductCategoriesTableSeeder::class);
         $this->call(BunqIdealIssuersTableSeeder::class);
-        $this->call(NotificationTypesTableSeeder::class);
     }
 }

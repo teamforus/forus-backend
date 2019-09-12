@@ -38,7 +38,7 @@ class CalculateFundUsersCommand extends Command
      */
     public function handle()
     {
-        if (!$email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io')) {
+        if (!$email = env('EMAIL_FOR_FUND_CALC', false)) {
             return;
         }
 

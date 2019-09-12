@@ -16,12 +16,16 @@ class CreateNotificationPreferencesTable extends Migration
         Schema::create('notification_preferences', function (Blueprint $table) {
             $table->increments('id');
             $table->string('identity_address', 200);
-            $table->unsignedSmallInteger('notification_type_id');
+            $table->string('mail_key', 30);
             $table->boolean('subscribed')->default(true);
             $table->timestamps();
 
-            $table->foreign('identity_address')->references('address')->on('identities')->onDelete('cascade');
-            $table->foreign('notification_type_id')->references('id')->on('notification_types')->onDelete('cascade');
+            $table->index([
+                'identity_address', 'mail_key',
+            ]);
+
+            $table->foreign('identity_address')->references('address')
+                ->on('identities')->onDelete('cascade');
         });
     }
 

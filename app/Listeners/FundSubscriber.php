@@ -19,7 +19,7 @@ class FundSubscriber
             env('WEB_SHOP_GENERAL_URL')
         );
 
-        if ($email = env('EMAIL_FOR_FUND_CREATED', 'demo@forus.io')) {
+        if ($email = env('EMAIL_FOR_FUND_CREATED', false)) {
             $notificationService->newFundCreatedNotifyCompany(
                 $email,
                 $fund->name,

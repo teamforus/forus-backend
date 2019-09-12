@@ -2,11 +2,28 @@
 
 namespace App\Services\Forus\Notification\Repositories;
 
+use App\Mail\Auth\UserLoginMail;
+use App\Mail\Funds\FundBalanceWarningMail;
+use App\Mail\Funds\FundCreatedMail;
+use App\Mail\Funds\FundExpiredMail;
+use App\Mail\Funds\FundStartedMail;
+use App\Mail\Funds\NewFundApplicableMail;
+use App\Mail\Funds\ProductAddedMail;
+use App\Mail\Funds\ProviderAppliedMail;
+use App\Mail\Funds\ProviderApprovedMail;
+use App\Mail\Funds\ProviderRejectedMail;
+use App\Mail\User\EmailActivationMail;
+use App\Mail\Validations\AddedAsValidatorMail;
+use App\Mail\Validations\NewValidationRequestMail;
+use App\Mail\Vouchers\PaymentSuccessMail;
+use App\Mail\Vouchers\ProductReservedMail;
+use App\Mail\Vouchers\ProductSoldOutMail;
+use App\Mail\Vouchers\SendVoucherMail;
+use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Models\NotificationPreference;
 use App\Models\NotificationUnsubscription;
 use App\Models\NotificationUnsubscriptionToken;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
-use App\Services\Forus\Notification\Models\NotificationType;
 use Illuminate\Support\Collection;
 
 /**
@@ -15,25 +32,77 @@ use Illuminate\Support\Collection;
  */
 class NotificationRepo implements INotificationRepo
 {
-    protected $typeModel;
     protected $preferencesModel;
     protected $unsubscriptionModel;
     protected $unsubTokenModel;
 
     /**
+     * Map between type keys and Mail classes
+     * @var array
+     */
+    protected static $mailMap = [
+        // User generated emails
+        'vouchers.send_voucher' => SendVoucherMail::class,
+        'vouchers.share_voucher' => ShareProductVoucherMail::class,
+        'vouchers.payment_success' => PaymentSuccessMail::class,
+
+        // Validators
+        'validations.new_validation_request' => NewValidationRequestMail::class,
+        'validations.you_added_as_validator' => AddedAsValidatorMail::class,
+
+        // Mails for sponsors/providers
+        'funds.new_fund_started' => FundStartedMail::class,
+        'funds.new_fund_created' => FundCreatedMail::class,
+        'funds.new_fund_applicable' => NewFundApplicableMail::class,
+        'funds.provider_applied' => ProviderAppliedMail::class,
+        'funds.provider_approved' => ProviderApprovedMail::class,
+        'funds.provider_rejected' => ProviderRejectedMail::class,
+        'funds.product_sold_out' => ProductSoldOutMail::class,
+        'funds.product_reserved' => ProductReservedMail::class,
+        'funds.fund_expires' => FundExpiredMail::class,
+        'funds.product_added' => ProductAddedMail::class,
+        'funds.balance_warning' => FundBalanceWarningMail::class,
+
+        // Authorization emails
+        'auth.user_login' => UserLoginMail::class,
+        'auth.email_activation' => EmailActivationMail::class,
+    ];
+
+    /**
+     * Emails that you can't unsubscribe from
+     * @var array
+     */
+    protected static $mandatoryEmail = [
+        'auth.user_login', 'auth.email_activation', 'vouchers.share_voucher',
+    ];
+
+    /**
+     * @return array
+     */
+    public static function getMailMap(): array
+    {
+        return self::$mailMap;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getMandatoryMailKeys(): array
+    {
+        return self::$mandatoryEmail;
+    }
+
+    /**
      * NotificationServiceRepo constructor.
-     * @param NotificationType $typeModel
      * @param NotificationPreference $preferencesModel
      * @param NotificationUnsubscription $unsubscriptionModel
      * @param NotificationUnsubscriptionToken $unsubscriptionTokenModel
      */
     public function __construct(
-        NotificationType $typeModel,
         NotificationPreference $preferencesModel,
         NotificationUnsubscription $unsubscriptionModel,
         NotificationUnsubscriptionToken $unsubscriptionTokenModel
     ) {
-        $this->typeModel = $typeModel;
         $this->preferencesModel = $preferencesModel;
         $this->unsubscriptionModel = $unsubscriptionModel;
         $this->unsubTokenModel = $unsubscriptionTokenModel;
@@ -55,14 +124,13 @@ class NotificationRepo implements INotificationRepo
      * @return bool
      */
     public function isMailUnsubscribable(string $emailClass): bool {
-        $keys = array_flip($this->typeModel::getMailMap());
-        $key = $keys[$emailClass];
+        $keys = array_flip(self::getMailMap());
 
         if (!isset($keys[$emailClass])) {
             return false;
         }
 
-        return !in_array($key, $this->typeModel::getMandatoryMailKeys());
+        return !in_array($keys[$emailClass], self::getMandatoryMailKeys());
     }
 
     /**
@@ -80,15 +148,11 @@ class NotificationRepo implements INotificationRepo
             return false;
         }
 
-        $notificationType = $this->typeModel->newQuery()->where([
-            'key' => array_flip($this->typeModel::getMailMap())[$emailClass]
-        ])->first();
-
-        $notification_type_id = $notificationType->getKey();
+        $mail_key = array_flip(self::getMailMap())[$emailClass];
         $subscribed = false;
 
         return $this->preferencesModel->newQuery()->where(compact(
-            'identity_address', 'notification_type_id', 'subscribed'
+            'identity_address', 'mail_key', 'subscribed'
             ))->count() > 0;
     }
 
@@ -175,19 +239,16 @@ class NotificationRepo implements INotificationRepo
     ): Collection {
         $subscribed = false;
         $identity_address = $identityAddress;
-        $keys = $this->typeModel->newQuery()->whereNotIn(
-            'key',
-            $this->typeModel::getMandatoryMailKeys()
-        )->pluck('id', 'key');
+        $keys = collect(self::mailTypeKeys());
 
         $unsubscribedKeys = $this->preferencesModel->where(compact(
             'identity_address', 'subscribed'
-        ))->pluck('notification_type_id')->values();
+        ))->pluck('mail_key')->values();
 
-        return $keys->map(function($id, $key) use ($unsubscribedKeys) {
+        return $keys->map(function($key) use ($unsubscribedKeys) {
             return [
                 'key' => $key,
-                'subscribed' => $unsubscribedKeys->search($id) === false
+                'subscribed' => $unsubscribedKeys->search($key) === false
             ];
         })->values();
     }
@@ -201,22 +262,13 @@ class NotificationRepo implements INotificationRepo
         string $identityAddress,
         array $data
     ): Collection {
-        /** @var NotificationType[]|Collection $types */
-        $types = NotificationType::query()
-            ->whereIn('key', array_keys($data))
-            ->select('id', 'key')
-            ->get();
+        $keys = array_intersect(self::mailTypeKeys(), array_keys($data));
 
-        foreach ($types as $type) {
-            logger()->debug(json_encode([
-                'identity_address' => $identityAddress,
-                'notification_type_id' => $type->id,
-                'subscribed' => $data[$type->key]
-            ], JSON_PRETTY_PRINT));
+        foreach ($keys as $key) {
             $this->preferencesModel->newQuery()->updateOrCreate([
-                'identity_address' => $identityAddress,
-                'notification_type_id' => $type->id,
-                'subscribed' => $data[$type->key]
+                'identity_address'  => $identityAddress,
+                'mail_key'          => $key,
+                'subscribed'        => $data[$key]
             ]);
         }
 
@@ -229,8 +281,8 @@ class NotificationRepo implements INotificationRepo
     public function mailTypeKeys(): array
     {
         return array_values(array_diff(
-            array_keys($this->typeModel::getMailMap()),
-            $this->typeModel::getMandatoryMailKeys()
+            array_keys(self::getMailMap()),
+            self::getMandatoryMailKeys()
         ));
     }
 }

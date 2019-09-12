@@ -306,7 +306,7 @@ class NotificationService
         string $email,
         $identifier,
         string $sponsor_name
-    ){
+    ) {
         return $this->sendMail($email, new AddedAsValidatorMail(
             $sponsor_name,
             $identifier
