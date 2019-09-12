@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\SearchProductCategoriesRequest;
 use App\Http\Resources\ProductCategoryResource;
-use App\Models\Implementation;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
-use Illuminate\Http\Request;
 
 /**
  * Class ProductCategoryController
@@ -17,16 +16,30 @@ class ProductCategoryController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
+     * @param SearchProductCategoriesRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(
-        Request $request
+        SearchProductCategoriesRequest $request
     ) {
+        $query = ProductCategory::search($request);
+
         return ProductCategoryResource::collection(
-            $request->input('all', false) ?
-            ProductCategory::all():
-            Implementation::activeProductCategories()
+            $query->with(ProductCategoryResource::$load)->orderBy('id')->paginate(
+                $request->get('per_page', 200)
+            )
         );
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @param ProductCategory $productCategory
+     * @return ProductCategoryResource
+     */
+    public function show(
+        ProductCategory $productCategory
+    ) {
+        return new ProductCategoryResource($productCategory);
     }
 }

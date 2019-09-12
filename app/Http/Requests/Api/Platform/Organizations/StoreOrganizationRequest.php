@@ -34,11 +34,10 @@ class StoreOrganizationRequest extends FormRequest
             'phone'                 => 'required|digits_between:6,20',
             'phone_public'          => 'boolean',
             'kvk'                   => ['required','unique:organizations,kvk', new KvkRule()],
-            'btw'                   => [new BtwRule()],
+            'btw'                   => ['nullable', 'string', new BtwRule()],
             'website'               => 'nullable|max:200|url',
             'website_public'        => 'boolean',
-            'product_categories'    => 'present|array',
-            'product_categories.*'  => 'exists:product_categories,id',
+            'business_type_id'      => 'required|exists:business_types,id',
         ];
     }
 }

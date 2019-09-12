@@ -12,6 +12,10 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class ProductCategoryResource extends Resource
 {
+    public static $load = [
+        'translations'
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -20,8 +24,8 @@ class ProductCategoryResource extends Resource
      */
     public function toArray($request)
     {
-        return collect($this->resource)->only([
-            'id', 'key', 'name', 'service'
-        ])->toArray();
+        return $this->resource->only([
+            'id', 'key', 'name', 'service', 'parent_id',
+        ]);
     }
 }

@@ -76,13 +76,13 @@ class ValidatorRequestController extends Controller
 
             if ($state == 'approved') {
                 $this->recordRepo->approveValidationRequest(
-                    auth()->user()->getAuthIdentifier(),
+                    auth_address(),
                     $validationRequest['uuid'],
                     $organization_id
                 );
             } else {
                 $this->recordRepo->declineValidationRequest(
-                    auth()->user()->getAuthIdentifier(),
+                    auth_address(),
                     $validationRequest['uuid']
                 );
             }
