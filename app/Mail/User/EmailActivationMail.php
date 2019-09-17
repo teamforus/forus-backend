@@ -4,7 +4,11 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 
-class EmailActivation extends ImplementationMail
+/**
+ * Class EmailActivationMail
+ * @package App\Mail\User
+ */
+class EmailActivationMail extends ImplementationMail
 {
     private $platform;
     private $link;
@@ -23,9 +27,7 @@ class EmailActivation extends ImplementationMail
 
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('email_activation.title'))
             ->view('emails.user.email_activation', [
                 'link' => $this->link

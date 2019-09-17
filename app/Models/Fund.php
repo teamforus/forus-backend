@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\EloquentModel;
 use App\Services\BunqService\BunqService;
-use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
@@ -475,10 +474,26 @@ class Fund extends Model
     }
 
     /**
+     * Change fund state
+     *
+     * @param string $state
+     * @return $this
+     */
+    public function changeState(string $state) {
+        if (in_array($state, self::STATES)) {
+            $this->update(compact('state'));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update fund state by the start and end dates
      */
     public static function checkStateQueue() {
+        /** @var Collection|Fund[] $funds */
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->whereDate('start_date', '<=', now())
@@ -490,21 +505,23 @@ class Fund extends Model
                 $fund->state == self::STATE_PAUSED) {
                 $fund->changeState(self::STATE_ACTIVE);
 
-                $organizations = OrganizationProductCategory::whereIn(
+                /*$organizations = Organization::query()->whereIn(
+                    'id', OrganizationProductCategory::query()->whereIn(
                     'product_category_id',
                     $fund->product_categories()->pluck('id')->all()
-                )->pluck('organization_id')->toArray();
-                $organizations = Organization::whereIn('id', $organizations)->get();
+                )->pluck('organization_id')->toArray()
+                )->get();*/
 
                 /** @var Organization $organization */
-                foreach ($organizations as $organization) {
+                // TODO: Notify providers about new fund started
+                /*foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
                         $organization->email,
                         $organization->emailServiceId(),
                         $fund->name,
                         $fund->organization->name
                     );
-                }
+                }*/
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
@@ -529,7 +546,7 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-            $fund->changeState(Fund::STATE_PAUSED);
+            $fund->changeState(self::STATE_PAUSED);
 
             $fund->criteria()->create([
                 'record_type_key' => $fund->fund_config->key . '_eligible',
@@ -543,21 +560,23 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
-            $organizations = OrganizationProductCategory::query()->whereIn(
+            /*$organizations = Organization::query()->whereIn(
+                'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
                 $fund->product_categories()->pluck('id')->all()
-            )->pluck('organization_id')->toArray();
-            $organizations = Organization::query()->whereIn('id', $organizations)->get();
+            )->pluck('organization_id')->toArray()
+            )->get();*/
 
             /** @var Organization $organization */
-            foreach ($organizations as $organization) {
+            // TODO: Notify providers about new fund applicable
+            /*foreach ($organizations as $organization) {
                 resolve('forus.services.mail_notification')->newFundApplicable(
                     $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
                 );
-            }
+            }*/
         }
     }
 
@@ -616,6 +635,7 @@ class Fund extends Model
     public static function notifyAboutReachedNotificationAmount()
     {
         $mailService = resolve('forus.services.mail_notification');
+        $recordRepo = resolve('forus.services.record');
 
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
@@ -637,17 +657,22 @@ class Fund extends Model
             $transactionCosts = $fund->getTransactionCosts();
             if($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
-                $referrers = $referrers->pluck('identity_address');
-                $referrers->push($fund->organization->emailServiceId());
+                $referrers = $referrers->pluck('identity_address')->map(function ($identity) use ($recordRepo) {
+                    return [
+                        'identity' => $identity,
+                        'email' => $recordRepo->primaryEmailByAddress($identity),
+                    ];
+                });
+
+                $referrers->push([
+                    'identity' => $fund->organization->emailServiceId(),
+                    'email' => $fund->organization->email
+                ]);
 
                 foreach ($referrers as $referrer) {
-                    $email = (new RecordRepo)->primaryEmailByAddress(
-                        $referrer->identity_address
-                    );
-
                     $mailService->fundNotifyReachedNotificationAmount(
-                        $email,
-                        $referrer,
+                        $referrer['email'],
+                        $referrer['identity'],
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
@@ -701,18 +726,6 @@ class Fund extends Model
             'share_url'                 => $tabRequest->getShareUrl(),
             'issuer_authentication_url' => $issuer_auth_url
         ]);
-    }
-
-    /**
-     * @param string $state
-     * @return bool
-     */
-    public function changeState(string $state) {
-        if (in_array($state, self::STATES)) {
-            return $this->update(compact('state'));
-        }
-
-        return false;
     }
 
     /**

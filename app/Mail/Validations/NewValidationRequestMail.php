@@ -4,7 +4,11 @@ namespace App\Mail\Validations;
 
 use App\Mail\ImplementationMail;
 
-class NewValidationRequest extends ImplementationMail
+/**
+ * Class NewValidationRequestMail
+ * @package App\Mail\Validations
+ */
+class NewValidationRequestMail extends ImplementationMail
 {
     private $link;
 
@@ -19,9 +23,7 @@ class NewValidationRequest extends ImplementationMail
     }
     public function build(): ImplementationMail
     {
-        return $this
-            ->from(config('forus.mail.from.no-reply'), config('forus.mail.from.name'))
-            ->to($this->email)
+        return parent::build()
             ->subject(mail_trans('new_validation_request.title'))
             ->view('emails.validations.new_validation_request', [
                 'validator_dashboard_link' => $this->link

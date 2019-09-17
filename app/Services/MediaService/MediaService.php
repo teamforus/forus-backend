@@ -332,7 +332,7 @@ class MediaService
      * @param string $uid
      * @return Media
      */
-    public function findByUid(string $uid) {
+    public function findByUid(string $uid = null) {
         /** @var Media $media */
         $media = $this->model->where('uid', $uid)->first();
 

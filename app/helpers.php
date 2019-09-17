@@ -5,6 +5,41 @@ use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
 
+
+if (!function_exists('auth_user')) {
+    /**
+     * Get the available user instance.
+     *
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    function auth_user()
+    {
+        return auth()->user();
+    }
+}
+
+if (!function_exists('auth_address')) {
+    /**
+     * Get the available user instance.
+     *
+     * @return string|null
+     */
+    function auth_address()
+    {
+        return auth()->user() ? auth()->user()->getAuthIdentifier() : null;
+    }
+}
+
+if (!function_exists('media')) {
+    /**
+     * @return \App\Services\MediaService\MediaService|mixed
+     */
+    function media()
+    {
+        return resolve('media');
+    }
+}
+
 if (!function_exists('format_date')) {
     /**
      * @param $value
@@ -233,5 +268,30 @@ if (!function_exists('str_terminal_color')) {
         $color = isset($colors[$color]) ? $colors[$color] : $colors['white'];
 
         return "\033[{$color}m{$text}\033[0m";
+    }
+}
+
+if (!function_exists('cache_optional')) {
+    /**
+     * Try to cache $callback response for $minutes
+     * in case of exception skip cache
+     *
+     * @param string $key
+     * @param callable $callback
+     * @param float $minutes
+     * @param string|null $driver
+     * @return mixed
+     */
+    function cache_optional(
+        string $key,
+        callable $callback,
+        float $minutes = 1,
+        string $driver = null
+    ) {
+        try {
+            return cache()->driver($driver)->remember($key, $minutes, $callback);
+        } catch (\Exception $exception) {
+            return $callback();
+        }
     }
 }

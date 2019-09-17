@@ -18,7 +18,7 @@ class FundProviderResource extends Resource
         'fund.top_up_transactions',
         'fund.provider_organizations_approved.employees',
         'organization.logo.sizes',
-        'organization.product_categories.translations',
+        'organization.business_type.translations',
     ];
 
     /**

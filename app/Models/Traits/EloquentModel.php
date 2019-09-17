@@ -15,10 +15,13 @@ use Illuminate\Database\Eloquent\Collection;
  * @method static static findOrNew($id, $columns = array())
  * @method static static firstOrNew($id, $columns = array())
  * @method static static firstOrCreate($columns = array())
- * @method static Collection pluck($column, $key = null)
+ * @method static Collection|static[] get($columns = ['*'])
+ * @method static Collection|static[] all($columns = ['*'])
+ * @method static int count($columns = '*')
  * @method static Builder whereIn($column, $values, $boolean = 'and', $not = false)
  * @method static Builder where($column, $operator = null, $value = null, $boolean = 'and')
  * @method static Builder whereKey($id)
+ * @method static \Illuminate\Support\Collection pluck($column, $key = null)
  * @package App\Models\Traits
  */
 trait EloquentModel

@@ -3,7 +3,6 @@
 namespace App\Rules;
 
 use App\Models\Product;
-use App\Models\Voucher;
 use App\Models\VoucherToken;
 use Illuminate\Contracts\Validation\Rule;
 
@@ -32,20 +31,14 @@ class ProductIdToVoucherRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        /**
-         * @var Product $product
-         * @var Voucher $voucher
-         */
-        $product = Product::query()->find($value);
+        $product = Product::find($value);
 
         /** @var VoucherToken $voucherToken */
         $voucherToken = VoucherToken::query()->where([
                 'address' => $this->voucherAddress
             ])->first() ?? abort(404);
 
-        $voucher = $voucherToken->voucher ?? abort(404);
-
-        if (!$voucher) {
+        if (!$voucherToken->voucher) {
             $this->message = trans(
                 'validation.product_voucher.voucher_id_required'
             );
@@ -53,9 +46,9 @@ class ProductIdToVoucherRule implements Rule
             return false;
         }
 
-        $amountLeft = $voucher->amount - (
-            $voucher->transactions->sum('amount')) -
-            $voucher->product_vouchers()->sum('amount');
+        $amountLeft = $voucherToken->voucher->amount - (
+            $voucherToken->voucher->transactions->sum('amount')) -
+            $voucherToken->voucher->product_vouchers()->sum('amount');
 
         if ($product->price > $amountLeft) {
             $this->message = trans(
@@ -67,11 +60,14 @@ class ProductIdToVoucherRule implements Rule
 
         $suppliedFundIds = $product->organization->supplied_funds_approved;
 
-        $funds = $product->product_category->funds()->whereIn(
+        // TODO: Product category restriction
+        /*$funds = $product->product_category->funds()->whereIn(
             'funds.id', $suppliedFundIds->pluck('id')
-        )->pluck('funds.id');
+        )->pluck('funds.id');*/
 
-        if ($funds->search($voucher->fund_id) === false) {
+        $funds = $suppliedFundIds->pluck('id');
+
+        if ($funds->search($voucherToken->voucher->fund_id) === false) {
             $this->message = trans(
                 'validation.product_voucher.product_not_applicable_by_voucher'
             );

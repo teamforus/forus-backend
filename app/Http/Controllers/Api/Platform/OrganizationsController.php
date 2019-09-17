@@ -21,11 +21,9 @@ class OrganizationsController extends Controller
     public function index() {
         $this->authorize('index', Organization::class);
 
-        $identityAddress = auth()->user()->getAuthIdentifier();
-
         return OrganizationResource::collection(
-            Organization::queryByIdentityPermissions(
-                $identityAddress
+            Organization::queryByIdentityPermissions(auth_address())->with(
+                OrganizationResource::$load
             )->get()
         );
     }
@@ -42,28 +40,23 @@ class OrganizationsController extends Controller
     ) {
         $this->authorize('store', Organization::class);
 
-        $media = false;
-
-        if ($media_uid = $request->input('media_uid')) {
-            $media = resolve('media')->findByUid($media_uid);
+        if ($media = media()->findByUid($request->post('media_uid'))) {
             $this->authorize('destroy', $media);
         }
 
         $organization = Organization::create(
             collect($request->only([
-                'name', 'email', 'phone', 'kvk', 'btw', 'website',
-                'email_public', 'phone_public', 'website_public'
+                'name', 'email', 'phone', 'kvk', 'website',
+                'email_public', 'phone_public', 'website_public',
+                'business_type_id',
             ]))->merge([
+                'btw' => (string) $request->get('btw', ''),
                 'iban' => strtoupper($request->get('iban')),
-                'identity_address' => auth()->user()->getAuthIdentifier(),
+                'identity_address' => auth_address(),
             ])->toArray()
         );
 
-        $organization->product_categories()->sync(
-            $request->input('product_categories', [])
-        );
-
-        if ($media && $media->type == 'organization_logo') {
+        if (isset($media) && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
 
@@ -100,27 +93,20 @@ class OrganizationsController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
-        $media = false;
 
-        if ($media_uid = $request->input('media_uid')) {
-            $media = resolve('media')->findByUid($media_uid);
+        if ($media = media()->findByUid($request->post('media_uid'))) {
             $this->authorize('destroy', $media);
         }
 
-        $organization->update(
-            collect($request->only([
-                'name', 'email', 'phone', 'kvk', 'btw', 'website',
-                'email_public', 'phone_public', 'website_public'
-            ]))->merge([
-                'iban' => strtoupper($request->get('iban'))
-            ])->toArray()
-        );
+        $organization->update(collect($request->only([
+            'name', 'email', 'phone', 'kvk', 'btw', 'website',
+            'email_public', 'phone_public', 'website_public',
+            'business_type_id',
+        ]))->merge([
+            'iban' => strtoupper($request->get('iban'))
+        ])->toArray());
 
-        $organization->product_categories()->sync(
-            $request->input('product_categories', [])
-        );
-
-        if ($media && $media->type == 'organization_logo') {
+        if (isset($media) && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
 
