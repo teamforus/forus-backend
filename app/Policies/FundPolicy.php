@@ -113,12 +113,13 @@ class FundPolicy
             $this->deny(trans('fund.no_formula'));
         }
 
+        // TODO: disabled for the demo
         // The same identity can't apply twice to the same fund
-        if ($fund->vouchers()->where(
+        /*if ($fund->vouchers()->where(
             'identity_address', $identity_address
         )->count()) {
             $this->deny(trans('fund.already_received'));
-        }
+        }*/
 
         // Check criteria
         $invalidCriteria = $fund->criteria->filter(function(

@@ -98,7 +98,10 @@ class VoucherSubscriber
             $voucher->identity_address
         );
 
-        $voucher->sendToEmail($email);
+
+        if ($voucher->product) {
+            $voucher->sendToEmail($email);
+        }
     }
 
     /**

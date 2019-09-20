@@ -57,6 +57,7 @@ class FundsController extends Controller
         StoreFundRequest $request,
         Organization $organization
     ) {
+
         $this->authorize('show', $organization);
         $this->authorize('store', [Fund::class, $organization]);
 
@@ -83,6 +84,10 @@ class FundsController extends Controller
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }
+
+        $fund->criteria()->createMany(
+            $request->input('criteria')
+        );
 
         FundCreated::dispatch($fund);
 
@@ -150,6 +155,12 @@ class FundsController extends Controller
 
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
+        }
+
+        foreach ($request->input('criteria') as $criterion) {
+            $fund->criteria()->where([
+                'id' => $criterion['id']
+            ])->update($criterion);
         }
 
         return new FundResource($fund);

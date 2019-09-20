@@ -44,7 +44,7 @@ class LoremDbSeeder extends Seeder
      */
     public function run()
     {
-        $countProviders = env('DB_SEED_PROVIDERS', 20);
+        $countProviders = env('DB_SEED_PROVIDERS', 10);
 
         $this->info("Making base identity!");
         $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
@@ -101,7 +101,8 @@ class LoremDbSeeder extends Seeder
         $organizations = [
             $this->makeOrganization('Zuidhorn', $identity_address),
             $this->makeOrganization('Nijmegen', $identity_address),
-            $this->makeOrganization('Westerkwartier', $identity_address)
+            $this->makeOrganization('Westerkwartier', $identity_address),
+            $this->makeOrganization('Barneveld', $identity_address)
         ];
 
         foreach ($organizations as $organization) {
@@ -112,8 +113,8 @@ class LoremDbSeeder extends Seeder
             ]));
 
             $implementation = $this->makeImplementation(
-                str_slug($fund->name),
-                $fund->name . ' ' . date('Y')
+                str_slug($organization->name),
+                $organization->name . ' ' . date('Y')
             );
 
             $this->fundConfigure(
@@ -145,7 +146,7 @@ class LoremDbSeeder extends Seeder
         /** @var Organization $organization */
         foreach (collect($organizations)->random(ceil(count($organizations) / 2)) as $organization) {
             /** @var Fund[] $funds */
-            $funds = Fund::get()->random(3);
+            $funds = Fund::get();
 
             foreach ($funds as $fund) {
                 $fund->providers()->create([
@@ -162,7 +163,7 @@ class LoremDbSeeder extends Seeder
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, rand(1, 2));
-            $this->makeProducts($organization, rand(2, 4));
+            $this->makeProducts($organization, rand(5, 10));
         }
     }
 
@@ -270,6 +271,7 @@ class LoremDbSeeder extends Seeder
         string $identity_address,
         array $fields = []
     ) {
+        /** @var Organization $organization */
         $organization = Organization::create(
             collect(collect([
                 'kvk' => '69599068',
@@ -363,12 +365,10 @@ class LoremDbSeeder extends Seeder
         /** @var Fund $fund */
         $fund = $organization->funds()->create(
             collect([
-                'name'          => $fundName,
+                'state'         => Fund::STATE_ACTIVE,
                 'start_date'    => Carbon::now()->startOfDay()->format('Y-m-d'),
                 'end_date'      => Carbon::now()->addDays(60)->endOfDay()->format('Y-m-d')
-            ])->merge($fields)->only([
-                'name', 'start_date', 'end_date', 'notification_amount'
-            ])->toArray()
+            ])->merge($fields)->toArray()
         );
 
         $fund->product_categories()->sync(
@@ -387,7 +387,8 @@ class LoremDbSeeder extends Seeder
         string $key,
         string $name
     ) {
-        return Implementation::create([
+        /** @var Implementation $implementation */
+        $implementation = Implementation::create([
             'key' => $key,
             'name' => $name,
             'url_webshop'   => "https://dev.$key.forus.io/#!/",
@@ -396,6 +397,8 @@ class LoremDbSeeder extends Seeder
             'url_validator' => "https://dev.$key.forus.io/validator/#!/",
             'url_app'       => "https://dev.$key.forus.io/me/#!/",
         ]);
+
+        return $implementation;
     }
 
     /**
@@ -469,6 +472,7 @@ class LoremDbSeeder extends Seeder
                 'uid', $uid
             )->count() > 0);
 
+            /** @var Prevalidation $prevalidation */
             $prevalidation = Prevalidation::create([
                 'uid' => $uid,
                 'state' => 'pending',
@@ -573,7 +577,7 @@ class LoremDbSeeder extends Seeder
     public function info(
         string $msg
     ) {
-        echo "\e[0;34m{$msg}\e[0m\n";;
+        echo str_terminal_color($msg . "\n", 'blue');
     }
 
     /**
@@ -582,7 +586,7 @@ class LoremDbSeeder extends Seeder
     public function success(
         string $msg
     ) {
-        echo "\e[0;32m{$msg}\e[0m\n";;
+        echo str_terminal_color($msg . "\n", 'green');
     }
 
     /**
@@ -591,6 +595,6 @@ class LoremDbSeeder extends Seeder
     public function error(
         string $msg
     ) {
-        echo "\e[0;31m{$msg}\e[0m\n";;
+        echo str_terminal_color($msg . "\n", 'red');
     }
 }

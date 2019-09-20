@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\Products\RequestProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
+use App\Models\ProductRequest;
+use App\Models\ValidatorRequest;
+use App\Services\FileService\Models\File;
 use Illuminate\Http\Request;
 
 class ProductsController extends Controller
@@ -80,5 +85,46 @@ class ProductsController extends Controller
         $this->authorize('showPublic', $product);
 
         return new ProductResource($product->load(ProductResource::$load));
+    }
+
+    /**
+     * @param RequestProductRequest $request
+     * @param Product $product
+     * @return array
+     */
+    public function request(RequestProductRequest $request, Product $product)
+    {
+        // $this->authorize('request', ValidatorRequest::class);
+
+        // $validator_id = $request->input('validator_id');
+        $fund_id = $request->input('fund_id');
+        $records = $request->input('records');
+
+        /** @var Fund $fund */
+        $fund = Fund::find($fund_id);
+
+        /** @var ProductRequest $productRequest */
+        $productRequest = ProductRequest::create([
+            'product_id' => $product->id,
+            'fund_id' => $fund->id,
+        ]);
+
+        foreach ($records as $record) {
+            /** @var ValidatorRequest $validatorRequest */
+            $validatorRequest = $productRequest->validator_requests()->create([
+                'record_id' => $record['record_id'],
+                'identity_address' => auth_address(),
+                'validator_id' => $fund->validators[0]->id,
+                'state' => 'pending'
+            ]);
+
+            foreach ($record['files'] ?? [] as $uid) {
+                $validatorRequest->attachFile(File::findByUid($uid));
+            }
+        }
+
+        return [
+            'data' => $productRequest
+        ];
     }
 }

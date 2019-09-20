@@ -46,9 +46,10 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         string $pinCode,
         array $records = []
     ) {
-        $identity = $this->model->create(collect(
-            app('key_pair_generator')->make()
-        )->merge([
+        $identity = $this->model->create(collect([
+            'address' => app('token_generator')->address(),
+            'passphrase' => app('token_generator')->generate(32),
+        ])->merge([
             'pin_code' => app('hash')->make($pinCode)
         ])->toArray())->toArray();
 
@@ -91,7 +92,8 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function makeIdentityPoxy(
         $identity
     ) {
-        return $this->makeProxy('confirmation_code', $identity);
+        // TODO: fro the demo, confirmation token should not be active by default
+        return $this->makeProxy('confirmation_code', $identity, 'active');
     }
 
     /**

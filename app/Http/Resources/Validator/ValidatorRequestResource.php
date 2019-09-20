@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Validator;
 
+use App\Http\Resources\FileResource;
 use App\Models\ValidatorRequest;
 use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Http\Resources\Json\Resource;
@@ -52,7 +53,8 @@ class ValidatorRequestResource extends Resource
             ])->merge([
                 'name' => $recordTypes[$this->resource->record->record_type_id]->name,
                 'key' => $recordTypes[$this->resource->record->record_type_id]->key
-            ])
+            ]),
+            'files' => FileResource::collection($this->resource->files)
         ])->toArray();
     }
 }

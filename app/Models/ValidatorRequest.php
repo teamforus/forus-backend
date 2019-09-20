@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\FileService\Traits\HasFiles;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Record\Models\Record;
 use Carbon\Carbon;
@@ -18,12 +19,15 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * @property string $identity_address
  * @property Identity $identity
  * @property Record $record
+ * @property ProductRequest $product_request
  * @property Validator $validator
  * @property Carbon $validated_at
  * @package App\Models
  */
 class ValidatorRequest extends Model
 {
+    use HasFiles;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -52,6 +56,13 @@ class ValidatorRequest extends Model
      */
     public function record() {
         return $this->belongsTo(Record::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\belongsTo
+     */
+    public function product_request() {
+        return $this->belongsTo(ProductRequest::class);
     }
 
     /**

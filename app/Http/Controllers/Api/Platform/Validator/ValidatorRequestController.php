@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api\Platform\Validator;
 
+use App\Events\Vouchers\VoucherCreated;
 use App\Http\Requests\Api\Platform\Validator\ValidatorRequest\ValidateValidatorRequestRequest;
 use App\Http\Resources\Validator\ValidatorRequestResource;
+use App\Models\ProductRequest;
 use App\Models\ValidatorRequest;
+use App\Models\Voucher;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -91,6 +94,31 @@ class ValidatorRequestController extends Controller
                 'state' => $state,
                 'record_validation_uid' => $validationRequest['uuid']
             ]);
+
+            if ($state == 'approved' && $validatorRequest->product_request &&
+                $validatorRequest->product_request->fund) {
+                $productRequest = $validatorRequest->product_request;
+
+                if (!$productRequest->resolved_at &&
+                    $productRequest->validator_requests()->where('state', '!=', 'approved')->count() == 0) {
+                    /** @var Voucher $regularVoucher */
+                    $regularVoucher = $productRequest->fund->makeVoucher($validatorRequest->identity_address);
+                    $voucherExpireAt = $regularVoucher->fund->end_date->gt(
+                        $regularVoucher->expire_at
+                    ) ? $productRequest->product->expire_at : $regularVoucher->fund->end_date;
+
+                    $voucher = Voucher::create([
+                        'identity_address'  => $regularVoucher->identity_address,
+                        'parent_id'         => $regularVoucher->id,
+                        'fund_id'           => $regularVoucher->fund_id,
+                        'product_id'        => $productRequest->product->id,
+                        'amount'            => $productRequest->product->price,
+                        'expire_at'         => $voucherExpireAt
+                    ]);
+
+                    VoucherCreated::dispatch($voucher);
+                }
+            }
         }
 
         return new ValidatorRequestResource($validatorRequest);

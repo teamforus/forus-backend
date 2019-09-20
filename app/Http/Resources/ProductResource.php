@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Fund;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -27,6 +28,8 @@ class ProductResource extends Resource
         'organization.offices.organization.logo.sizes',
         // 'organization.offices.organization.product_categories.translations',
         'organization.supplied_funds_approved.logo',
+        'organization.supplied_funds_approved.criteria',
+        'organization.supplied_funds_approved.validators',
         'organization.logo.sizes',
         'organization.business_type.translations',
     ];
@@ -70,11 +73,22 @@ class ProductResource extends Resource
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
             'deleted_at_locale' => $product->deleted_at ? format_date_locale($product->deleted_at) : null,
             'deleted' => !is_null($product->deleted_at),
-            'funds' => $funds->map(function($fund) {
+            'funds' => $funds->map(function(Fund $fund) {
                 return [
                     'logo' => new MediaResource($fund->logo),
                     'id' => $fund->id,
-                    'name' => $fund->name
+                    'name' => $fund->name,
+                    'criteria' => FundCriterionResource::collection(
+                        $fund->criteria
+                    ),
+                    'validators' => $fund->validators->map(function($validator) {
+                        return collect($validator)->only([
+                            'identity_address'
+                        ]);
+                    }),
+                    /*'formulas' => FundFormulaResource::collection(
+                        $fund->fund_formulas
+                    ),*/
                 ];
             })->values(),
             'offices' => OfficeResource::collection(

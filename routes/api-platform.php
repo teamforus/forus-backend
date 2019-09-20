@@ -48,8 +48,7 @@ $router->group([], function() use ($router) {
 
     $router->get(
         'products/sample',
-        "Api\Platform\ProductsController@sample"
-    );
+        "Api\Platform\ProductsController@sample");
 
     $router->resource(
         'products',
@@ -59,15 +58,17 @@ $router->group([], function() use ($router) {
         ]
     ]);
 
+    $router->post(
+        'products/{product}/request',
+        "Api\Platform\ProductsController@request");
+
     $router->get(
         'products/{product_with_trashed}',
-        "Api\Platform\ProductsController@show"
-    );
+        "Api\Platform\ProductsController@show");
 
     $router->get(
         'config/{platform_config}',
-        'Api\Platform\ConfigController@getConfig'
-    );
+        'Api\Platform\ConfigController@getConfig');
 });
 
 // TODO TEMP added throttle 20 per minutes - must be secured

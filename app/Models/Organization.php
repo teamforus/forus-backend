@@ -30,10 +30,10 @@ use Illuminate\Database\Query\Builder;
  * @property Collection $vouchers
  * @property Collection $products
  * @property Collection $validators
- * @property Collection $supplied_funds
- * @property Collection $supplied_funds_approved
- * @property Collection $organization_funds
- * @property Collection $voucher_transactions
+ * @property Collection|Fund[] $supplied_funds
+ * @property Collection|Fund[] $supplied_funds_approved
+ * @property Collection|Fund[] $organization_funds
+ * @property Collection|VoucherTransaction[] $voucher_transactions
  * @property Collection $funds_voucher_transactions
  * @property Collection $offices
  * @property Collection $employees

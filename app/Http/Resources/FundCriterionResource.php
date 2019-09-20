@@ -21,7 +21,7 @@ class FundCriterionResource extends Resource
     public function toArray($request)
     {
         return collect($this->resource)->only([
-            'record_type_key', 'operator', 'value'
+            'id', 'record_type_key', 'operator', 'value'
         ])->toArray();
     }
 }

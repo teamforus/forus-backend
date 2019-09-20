@@ -7,6 +7,7 @@ use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
+use App\Console\Commands\RegenerateDemoCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -19,10 +20,11 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         CheckFundStateCommand::class,
+        RegenerateDemoCommand::class,
         CheckFundConfigCommand::class,
         CalculateFundUsersCommand::class,
         NotifyAboutVoucherExpireCommand::class,
-        NotifyAboutReachedNotificationFundAmount::class
+        NotifyAboutReachedNotificationFundAmount::class,
     ];
 
     /**

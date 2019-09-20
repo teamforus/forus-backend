@@ -32,8 +32,11 @@ class VouchersController extends Controller
         $this->authorize('index', Voucher::class);
 
         return VoucherResource::collection(Voucher::query()->where([
-            'identity_address' => auth_address()
-        ])->get()->load(VoucherResource::$load));
+            'identity_address' => auth_address(),
+        ])
+            // TODO: for the demo
+            ->whereNotNull('parent_id')
+            ->get()->load(VoucherResource::$load));
     }
 
     /**
