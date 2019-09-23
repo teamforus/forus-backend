@@ -717,13 +717,15 @@ class MailService
         string $link,
         string $sponsor_name,
         string $fund_name,
-        string $notification_amount
+        string $notification_amount,
+        string $budget_left
     ): bool {
         Mail::send(new BalanceWarningMail(
             $email,
             $fund_name,
             $sponsor_name,
             $notification_amount,
+            $budget_left,
             $link,
             $identifier
         ));

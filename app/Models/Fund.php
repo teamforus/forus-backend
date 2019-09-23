@@ -641,7 +641,6 @@ class Fund extends Model
         $mailService = resolve('forus.services.mail_notification');
         /** @var RecordRepo $recordRepo */
         $recordRepo = resolve('forus.services.record');
-
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
@@ -668,8 +667,7 @@ class Fund extends Model
                         'email' => $recordRepo->primaryEmailByAddress($identity),
                     ];
                 });
-                /*
-                TODO: check if org mail is same as finance role; if so only send one mail
+                /*TODO: check if org mail is same as finance role; if so only send one mail
                 $referrers->push([
                     'identity' => $fund->organization->emailServiceId(),
                     'email' => $fund->organization->email
@@ -682,7 +680,8 @@ class Fund extends Model
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
-                        currency_format($fund->notification_amount - $transactionCosts)
+                        currency_format($fund->notification_amount - $transactionCosts),
+                        currency_format($fund->budget_left)
                     );
                 }
 
