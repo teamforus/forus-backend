@@ -319,6 +319,7 @@ class LoremDbSeederDemo extends Seeder
      * @param Organization $organization
      * @param array $fields
      * @return Product
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function makeProduct(
         Organization $organization,
@@ -345,6 +346,25 @@ class LoremDbSeederDemo extends Seeder
                 'expire_at'
             ]))->toArray()
         );
+
+        $mediaService = resolve('media');
+        $fileName = 'lorem';
+        $categoryName = 'lorem';
+
+        try {
+            if (env('DB_SEED_IMAGES', true)) {
+                $product->attachMedia($mediaService->uploadSingle(
+                    new \Illuminate\Http\UploadedFile(
+                        database_path(
+                            '/seeds/resources/products/' . str_slug($categoryName) . '/' . str_slug($fileName) . '.jpg'
+                        ), $fileName
+                    ), 'product_photo',
+                    $organization->identity_address
+                ));
+            }
+        } catch (Exception $exception) {
+            $this->success($exception);
+        };
 
         return $product;
     }
