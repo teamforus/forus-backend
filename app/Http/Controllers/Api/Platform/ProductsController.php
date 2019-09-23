@@ -123,6 +123,12 @@ class ProductsController extends Controller
             }
         }
 
+        resolve('forus.services.mail_notification')->newValidationRequest(
+            resolve('forus.services.record')->primaryEmailByAddress(auth_address()),
+            auth_address(),
+            config('forus.front_ends.panel-validator')
+        );
+
         return [
             'data' => $productRequest
         ];
