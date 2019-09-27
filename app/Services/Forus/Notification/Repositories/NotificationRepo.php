@@ -265,9 +265,10 @@ class NotificationRepo implements INotificationRepo
         $keys = array_intersect(self::mailTypeKeys(), array_keys($data));
 
         foreach ($keys as $key) {
-            $this->preferencesModel->newQuery()->updateOrCreate([
+            $this->preferencesModel->newQuery()->firstOrCreate([
                 'identity_address'  => $identityAddress,
                 'mail_key'          => $key,
+            ])->update([
                 'subscribed'        => $data[$key]
             ]);
         }

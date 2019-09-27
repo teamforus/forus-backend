@@ -65,6 +65,9 @@ class NotificationsController extends Controller
 
         $email_unsubscribed = $this->notificationRepo->isEmailUnsubscribed($email);
         $preferences = $request->input('preferences', []);
+        logger()->debug(json_encode([
+            $id, array_pluck($preferences, 'subscribed', 'key')
+        ], JSON_PRETTY_PRINT));
         $preferences = $this->notificationRepo->updateIdentityPreferences(
             $id, array_pluck($preferences, 'subscribed', 'key')
         );
