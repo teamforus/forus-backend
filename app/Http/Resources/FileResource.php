@@ -22,7 +22,7 @@ class FileResource extends Resource
         return collect($this->resource)->only([
             'identity_address', 'original_name', 'type', 'ext', 'uid'
         ])->merge([
-            'url' => $this->resource->urlPublic()
+            'size' => pretty_file_size($this->resource->size)
         ]);
     }
 }

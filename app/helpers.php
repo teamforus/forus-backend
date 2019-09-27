@@ -295,3 +295,23 @@ if (!function_exists('cache_optional')) {
         }
     }
 }
+
+if (!function_exists('pretty_file_size')) {
+    /**
+     * Human readable file size
+     * @param $bytes
+     * @param int $precision
+     * @return string
+     */
+    function pretty_file_size(
+        $bytes,
+        $precision = 2
+    ) {
+        for ($i = 0; ($bytes / 1024) > 0.9; $i++) {
+            $bytes /= 1024;
+        }
+
+        return round($bytes, $precision) .
+            ['','k','M','G','T','P','E','Z','Y'][$i] . 'B';
+    }
+}

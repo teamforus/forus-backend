@@ -2,7 +2,7 @@
 
 return [
     'enabled'           => env('FILES_SERVICE_ENABLED', false),
-    'filesystem_driver' => env('FILES_STORAGE_DRIVER', 'public'),
+    'filesystem_driver' => env('FILES_STORAGE_DRIVER', 'local'),
     'storage_path'      => env('FILES_STORAGE_PATH', 'files'),
 
     // max file size in kB

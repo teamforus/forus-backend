@@ -62,4 +62,15 @@ class FileController extends Controller
     {
         return new FileResource($file);
     }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param File $file
+     * @return FileResource
+     */
+    public function download(File $file)
+    {
+        return file_get_contents($file->urlPublic());
+    }
 }

@@ -126,6 +126,8 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
                 'files' => 'file_uid'
             ]
         ]);
+
+        $router->get('files/{file_uid}/download', 'Api\FileController@download');
     }
 
     $router->get('/debug', 'TestController@test');

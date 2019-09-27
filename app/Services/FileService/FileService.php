@@ -194,23 +194,26 @@ class FileService
         $storage = $this->storage();
 
         do {
-            $uid = resolve('token_generator')->generate('64');
+            $uid = resolve('token_generator')->generate('255');
         } while($model->where(compact('uid'))->count() > 0);
 
         $uniqueName = $this->makeUniqueFileName($this->storagePath, $ext);
         $filePath = str_start($uniqueName . '.' . $ext, '/');
         $filePath = str_start($this->storagePath . $filePath, '/');
 
-        $storage->put($filePath, file_get_contents($path), 'public');
+        $storage->put($filePath, file_get_contents($path), 'private');
         $original_name = $name;
         $fileable_type = NULL;
         $fileable_id = NULL;
         $path = $filePath;
 
-        return File::create(compact(
+        /** @var File $file */
+        $file = File::create(compact(
             'uid', 'identity_address', 'original_name', 'path', 'size',
             'fileable_id', 'fileable_type', 'ext'
         ));
+
+        return $file;
     }
 
     /**
