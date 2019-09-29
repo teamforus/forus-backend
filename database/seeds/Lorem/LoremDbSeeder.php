@@ -33,7 +33,6 @@ class LoremDbSeeder extends Seeder
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
         $this->mailService = resolve('forus.services.mail_notification');
-        $this->productCategories = ProductCategory::all();
         $this->primaryEmail = env('DB_SEED_BASE_EMAIL', 'example@example.com');
     }
 
@@ -46,6 +45,7 @@ class LoremDbSeeder extends Seeder
     {
         $countProviders = env('DB_SEED_PROVIDERS', 20);
 
+        $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
         $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
         $this->success("Identity created!");

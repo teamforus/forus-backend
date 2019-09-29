@@ -250,18 +250,37 @@ if (!function_exists('cache_optional')) {
      * @param callable $callback
      * @param float $minutes
      * @param string|null $driver
+     * @param bool $reset
      * @return mixed
      */
     function cache_optional(
         string $key,
         callable $callback,
         float $minutes = 1,
-        string $driver = null
+        string $driver = null,
+        bool $reset = false
     ) {
         try {
+            $reset && cache()->driver()->delete($key);
             return cache()->driver($driver)->remember($key, $minutes, $callback);
         } catch (\Exception $exception) {
             return $callback();
         }
+    }
+}
+
+if (!function_exists('record_types')) {
+    /**
+     * @param float $minutes
+     * @param bool $reset
+     * @return mixed
+     */
+    function record_types_cached(
+        float $minutes = 1,
+        bool $reset = false
+    ) {
+        return cache_optional('record_types', function() {
+            return resolve('forus.services.record')->getRecordTypes();
+        }, $minutes, null, $reset);
     }
 }
