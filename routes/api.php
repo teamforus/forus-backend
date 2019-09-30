@@ -118,6 +118,19 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'medias' => 'media_uid'
         ]
     ]);
+
+    if (config('file.enabled', false)) {
+        $router->resource('files', 'Api\FileController', [
+            'only' => ['index', 'show', 'store'],
+            'parameters' => [
+                'files' => 'file_uid'
+            ]
+        ]);
+
+        $router->get('files/{file_uid}/download', 'Api\FileController@download');
+    }
+
+    $router->get('/debug', 'TestController@test');
 });
 
 if (env('APP_DEBUG', false) == true && env('APP_ENV') == 'dev') {

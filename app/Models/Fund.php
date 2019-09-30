@@ -5,8 +5,6 @@ namespace App\Models;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\EloquentModel;
 use App\Services\BunqService\BunqService;
-use App\Services\Forus\MailNotification\MailService;
-use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
@@ -503,7 +501,6 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
                 $fund->changeState(self::STATE_ACTIVE);
@@ -543,7 +540,7 @@ class Fund extends Model
             ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
-            ->where('state', 'waiting')
+            ->where('state', Fund::STATE_WAITING)
             ->whereDate('start_date', '>', now())
             ->get();
 
@@ -637,9 +634,7 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
-        /** @var MailService $mailService */
         $mailService = resolve('forus.services.mail_notification');
-        /** @var RecordRepo $recordRepo */
         $recordRepo = resolve('forus.services.record');
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
