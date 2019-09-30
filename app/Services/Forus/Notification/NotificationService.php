@@ -63,7 +63,6 @@ class NotificationService
         $this->apiRequest = $apiRequest;
         $this->recordRepo = $recordRepo;
         $this->notificationRepo = $notificationRepo;
-        $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
     }
 
     /**

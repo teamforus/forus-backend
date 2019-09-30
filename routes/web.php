@@ -11,7 +11,7 @@
 |
 */
 
-use App\Http\Controllers\NotificationsController;
+use \Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return "";

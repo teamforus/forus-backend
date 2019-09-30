@@ -503,7 +503,6 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
                 $fund->changeState(self::STATE_ACTIVE);
@@ -548,7 +547,7 @@ class Fund extends Model
             ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
-            ->where('state', 'waiting')
+            ->where('state', Fund::STATE_WAITING)
             ->whereDate('start_date', '>', now())
             ->get();
 
@@ -649,7 +648,7 @@ class Fund extends Model
 
         /** @var RecordRepo $recordRepo */
         $recordRepo = resolve('forus.services.record');
-        
+
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);

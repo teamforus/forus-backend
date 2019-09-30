@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Media;
+namespace App\Http\Requests\Api\File;
 
-use App\Rules\MediaTypeRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreMediaRequest extends FormRequest
+class StoreFileRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +24,12 @@ class StoreMediaRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => 'required|file|image|mimes:jpg,jpeg,png|max:4096',
-            'type' => ['required', new MediaTypeRule()],
+            'file' => [
+                'required',
+                'file',
+                'mimes:' . join(',', config('file.allowed_types', [])),
+                'max:' . config('file.max_file_size', 2000)
+            ]
         ];
     }
 }
