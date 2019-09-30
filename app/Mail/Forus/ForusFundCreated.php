@@ -8,17 +8,16 @@ use App\Mail\ImplementationMail;
  * Class FundCreatedMail
  * @package App\Mail\Funds\Forus
  */
-class FundCreatedMail extends ImplementationMail
+class ForusFundCreated extends ImplementationMail
 {
     private $fundName;
     private $organizationName;
 
     public function __construct(
-        string $email,
         string $fundName,
         string $organizationName
     ) {
-        parent::__construct($email, null);
+        parent::__construct(null);
 
         $this->fundName = $fundName;
         $this->organizationName = $organizationName;

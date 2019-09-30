@@ -90,7 +90,7 @@ class FundProviderController extends Controller
             'fund_id'
         ]));
 
-        resolve('forus.services.mail_notification')->providerApplied(
+        resolve('forus.services.notification')->providerApplied(
             $fundProvider->fund->organization->email,
             $fundProvider->organization->name,
             $fundProvider->fund->organization->name,

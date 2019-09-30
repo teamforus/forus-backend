@@ -21,12 +21,11 @@ class UserLoginMail extends ImplementationMail
     private $platform;
 
     public function __construct(
-        string $email,
         string $link,
         string $platform,
         ?string $identityId
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->link = $link;
         $this->platform = $platform;

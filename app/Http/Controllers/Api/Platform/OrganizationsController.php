@@ -44,6 +44,7 @@ class OrganizationsController extends Controller
             $this->authorize('destroy', $media);
         }
 
+        /** @var Organization $organization */
         $organization = Organization::create(
             collect($request->only([
                 'name', 'email', 'phone', 'kvk', 'website',
@@ -56,7 +57,7 @@ class OrganizationsController extends Controller
             ])->toArray()
         );
 
-        if ($media && $media->type == 'organization_logo') {
+        if (isset($media) && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
 
@@ -106,7 +107,7 @@ class OrganizationsController extends Controller
             'iban' => strtoupper($request->get('iban'))
         ])->toArray());
 
-        if ($media && $media->type == 'organization_logo') {
+        if (isset($media) && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
 

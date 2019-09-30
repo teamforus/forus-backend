@@ -13,11 +13,10 @@ class NewValidationRequestMail extends ImplementationMail
     private $link;
 
     public function __construct(
-        string $email,
         string $link,
         ?string $identityId
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->link = $link;
     }

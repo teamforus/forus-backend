@@ -34,10 +34,18 @@ class MediaSize extends Model
     }
 
     public function unlink() {
-        return app()->make('media')->deleteFile($this->path);
+        return resolve('media')->deleteFile($this->path);
     }
 
     public function urlPublic() {
-        return app()->make('media')->publicUrl($this->path);
+        return resolve('media')->urlPublic($this->path);
+    }
+
+    public function storagePath() {
+        return resolve('media')->path($this->path);
+    }
+
+    public function fileExists() {
+        resolve('media')->storageFileExists($this->path);
     }
 }

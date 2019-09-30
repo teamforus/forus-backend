@@ -32,7 +32,7 @@ class LoremDbSeeder extends Seeder
     {
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
-        $this->mailService = resolve('forus.services.mail_notification');
+        $this->mailService = resolve('forus.services.notification');
         $this->productCategories = ProductCategory::all();
         $this->primaryEmail = env('DB_SEED_BASE_EMAIL', 'example@example.com');
     }
@@ -82,11 +82,6 @@ class LoremDbSeeder extends Seeder
         );
 
         $this->info("Base identity access token \"{$proxy['access_token']}\"");
-
-        $this->mailService->addEmailConnection(
-            $identityAddress,
-            $primaryEmail
-        );
 
         return $identityAddress;
     }

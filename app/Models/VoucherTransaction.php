@@ -84,7 +84,7 @@ class VoucherTransaction extends Model
      * @return void
      */
     public function sendPushNotificationTransaction() {
-        $mailService = resolve('forus.services.mail_notification');
+        $mailService = resolve('forus.services.notification');
 
         if (!$this->voucher->product) {
             $transData = [
@@ -112,7 +112,7 @@ class VoucherTransaction extends Model
      * @return void
      */
     public function sendPushBunqTransactionSuccess() {
-        $mailService = resolve('forus.services.mail_notification');
+        $mailService = resolve('forus.services.notification');
         $transData = [
             "amount" => currency_format_locale($this->amount)
         ];

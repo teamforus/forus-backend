@@ -16,7 +16,7 @@ class KvkApiServiceProvider extends ServiceProvider
     {
         $this->app->singleton('kvk_api', function () {
             return new KvkApi(
-                env("KVK_API_DEBUG"),
+                env("KVK_API_DEBUG", false),
                 env("KVK_API_KEY")
             );
         });

@@ -16,20 +16,20 @@ class ProviderApprovedMail extends ImplementationMail
     private $link;
 
     public function __construct(
-        string $email,
         string $fundName,
         string $providerName,
         string $sponsorName,
         string $link,
         ?string $identityId
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->fundName = $fundName;
         $this->providerName = $providerName;
         $this->sponsorName = $sponsorName;
         $this->link = $link;
     }
+
     public function build(): ImplementationMail
     {
         return parent::build()
@@ -38,7 +38,7 @@ class ProviderApprovedMail extends ImplementationMail
                 'fund_name'                 => $this->fundName,
                 'provider_name'             => $this->providerName,
                 'sponsor_name'              => $this->sponsorName,
-                'provider_dashboard_link'   => $this->providerName
+                'provider_dashboard_link'    => $this->link
             ]);
     }
 

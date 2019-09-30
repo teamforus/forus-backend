@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\Forus\MailNotification;
+namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
-use App\Mail\Funds\BalanceWarningMail;
+use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
@@ -12,37 +12,57 @@ use App\Mail\Funds\ProductAddedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
-use App\Mail\Funds\Forus\FundCreatedMail as ForusFundCreated;
+use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\Validations\AddedAsValidatorMail;
 use App\Mail\Validations\NewValidationRequestMail;
 use App\Mail\Vouchers\FundStatisticsMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
-use App\Mail\Vouchers\ProductBoughtMail;
+use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
-use App\Mail\Vouchers\ShareProductMail;
-use App\Mail\Vouchers\VoucherMail;
-use Illuminate\Support\Facades\Mail;
+use App\Mail\Vouchers\ShareProductVoucherMail;
+use App\Mail\Vouchers\SendVoucherMail;
+use App\Models\Implementation;
+use App\Services\ApiRequestService\ApiRequest;
+use App\Services\Forus\Notification\Interfaces\INotificationRepo;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Contracts\Mail\Mailer;
+use Illuminate\Mail\Mailable;
 
 /**
  * Class MailService
  * @package App\Services\Forus\MailNotification
  */
-class MailService
+class NotificationService
 {
     const TYPE_EMAIL = 1;
     const TYPE_PUSH_ANDROID = 2;
     const TYPE_PUSH_IOS = 3;
 
+    protected $notificationRepo;
     protected $serviceApiUrl;
+    protected $recordRepo;
     protected $apiRequest;
+    protected $mailer;
 
     /**
-     * MailService constructor.
+     * NotificationService constructor.
+     *
+     * @param Mailer $mailer
+     * @param ApiRequest $apiRequest
+     * @param IRecordRepo $recordRepo
+     * @param INotificationRepo $notificationRepo
      */
-    public function __construct() {
-        $this->apiRequest = resolve('api_request');
-        $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
+    public function __construct(
+        Mailer $mailer,
+        ApiRequest $apiRequest,
+        IRecordRepo $recordRepo,
+        INotificationRepo $notificationRepo
+    ) {
+        $this->mailer = $mailer;
+        $this->apiRequest = $apiRequest;
+        $this->recordRepo = $recordRepo;
+        $this->notificationRepo = $notificationRepo;
     }
 
     /**
@@ -111,19 +131,6 @@ class MailService
         }
 
         return true;
-    }
-
-    /**
-     * Register new email connection for given identifier
-     *
-     * @param $identifier
-     * @param string $email_address
-     */
-    public function addEmailConnection(
-        $identifier,
-        string $email_address
-    ) {
-        $this->addConnection($identifier,self::TYPE_EMAIL, $email_address);
     }
 
     /**
@@ -204,13 +211,14 @@ class MailService
     /**
      * Notify sponsor that new provider applied to his fund
      *
-     * @param $email
+     * @param string $email
      * @param $identifier
      * @param string $provider_name
      * @param string $sponsor_name
      * @param string $fund_name
      * @param string $sponsor_dashboard_link
      * @return bool
+     * @throws \Exception
      */
     public function providerApplied(
         string $email,
@@ -220,15 +228,13 @@ class MailService
         string $fund_name,
         string $sponsor_dashboard_link
     ) {
-        Mail::send(new ProviderAppliedMail(
-            $email,
+        return $this->sendMail($email, new ProviderAppliedMail(
             $identifier,
             $provider_name,
             $sponsor_name,
             $fund_name,
             $sponsor_dashboard_link
         ));
-        return $this->checkFailure('ProviderApplied');
     }
 
     /**
@@ -250,16 +256,13 @@ class MailService
         string $sponsor_name,
         string $provider_dashboard_link
     ) {
-        Mail::send(new ProviderApprovedMail(
-            $email,
+        return $this->sendMail($email, new ProviderApprovedMail(
             $fund_name,
             $provider_name,
             $sponsor_name,
             $provider_dashboard_link,
             $identifier
         ));
-
-        return $this->checkFailure('ProviderApproved');
     }
 
     /**
@@ -271,7 +274,7 @@ class MailService
      * @param string $provider_name
      * @param string $sponsor_name
      * @param string $phone_number
-     * @return void
+     * @return bool
      */
     public function providerRejected(
         string $email,
@@ -281,8 +284,7 @@ class MailService
         string $sponsor_name,
         string $phone_number
     ) {
-        Mail::send( new ProviderRejectedMail(
-            $email,
+        return $this->sendMail($email, new ProviderRejectedMail(
             $fund_name,
             $provider_name,
             $sponsor_name,
@@ -303,14 +305,11 @@ class MailService
         string $email,
         $identifier,
         string $sponsor_name
-    ){
-        Mail::send(new AddedAsValidatorMail(
-            $email,
+    ) {
+        return $this->sendMail($email, new AddedAsValidatorMail(
             $sponsor_name,
             $identifier
         ));
-
-        return $this->checkFailure('AddedAsValidator');
     }
 
     /**
@@ -326,13 +325,10 @@ class MailService
         $identifier,
         string $validator_dashboard_link
     ) {
-        Mail::send( new NewValidationRequestMail(
-            $email,
+        return $this->sendMail($email, new NewValidationRequestMail(
             $validator_dashboard_link,
             $identifier
         ));
-
-        return $this->checkFailure('NewValidationRequest');
     }
 
 
@@ -351,14 +347,11 @@ class MailService
         string $fund_name,
         string $provider_dashboard_link
     ) {
-        Mail::send(new NewFundApplicableMail(
-            $email,
+        return $this->sendMail($email, new NewFundApplicableMail(
             $fund_name,
             $provider_dashboard_link,
             $identifier
         ));
-
-        return $this->checkFailure(('NewFundApplicable'));
     }
 
     /**
@@ -375,17 +368,13 @@ class MailService
         $identifier,
         string $fund_name,
         string $webshop_link
-    ){
-        Mail::send(new FundCreatedMail(
-            $email,
+    ) {
+        return $this->sendMail($email, new FundCreatedMail(
             $fund_name,
             $webshop_link,
             $identifier
         ));
-
-        return $this->checkFailure('FundCreated');
     }
-
 
     /**
      * Notify providers that new fund was started
@@ -402,78 +391,69 @@ class MailService
         string $fund_name,
         string $sponsor_name
     ) {
-        Mail::send(new FundStartedMail(
-            $email,
+        return $this->sendMail($email, new FundStartedMail(
             $fund_name,
             $sponsor_name,
             $identifier
         ));
-
-        return $this->checkFailure('FundStarted');
     }
 
     /**
      * Notify company that new fund was created
      *
+     * @param string $email
      * @param string $fund_name
      * @param string $organization_name
      * @return bool
      */
     public function newFundCreatedNotifyCompany(
+        string $email,
         string $fund_name,
         string $organization_name
     ) {
-        $email = env('EMAIL_FOR_FUND_CREATED', 'demo@forus.io');
-
-        Mail::send(new ForusFundCreated(
-            $email,
+        return $this->sendMail($email, new ForusFundCreated(
             $fund_name,
             $organization_name
         ));
-
-        return $this->checkFailure('Forus/FundCreated');
     }
 
     /**
+     * Send number of fund users
+     *
+     * @param string $email
      * @param string $fund_name
      * @param string $sponsor_name
      * @param int $sponsor_amount
      * @param int $provider_amount
      * @param int $requester_amount
-     * @param int $total_amount
      * @return bool
      */
-    public function calculateFundUsers(
+    public function sendFundUserStatisticsReport(
+        string $email,
         string $fund_name,
         string $sponsor_name,
         int $sponsor_amount,
         int $provider_amount,
-        int $requester_amount,
-        int $total_amount
+        int $requester_amount
     ) {
-        $email = env('EMAIL_FOR_FUND_CALC', 'demo@forus.io');
-
-        Mail::send(new FundStatisticsMail(
-            $email,
+        return $this->sendMail($email, new FundStatisticsMail(
             $fund_name,
             $sponsor_name,
             $sponsor_amount,
             $provider_amount,
             $requester_amount,
-            $total_amount
+            $sponsor_amount + $provider_amount + $requester_amount
         ));
-
-        return $this->checkFailure('FundStatistics');
     }
 
     /**
-     * Notify sponsor that new product added by provider
+     * Notify sponsor that new product added by approved provider
      *
      * @param string $email
      * @param $identifier
      * @param string $sponsor_name
      * @param string $fund_name
-     * @return void
+     * @return bool
      */
     public function newProductAdded(
         string $email,
@@ -481,14 +461,11 @@ class MailService
         string $sponsor_name,
         string $fund_name
     ) {
-        Mail::send(new ProductAddedMail(
-            $email,
+        return $this->sendMail($email, new ProductAddedMail(
             $sponsor_name,
             $fund_name,
             $identifier
         ));
-
-        $this->checkFailure('ProductAdded');
     }
 
     /**
@@ -509,18 +486,13 @@ class MailService
         string $fund_product_name,
         string $qr_url
     ): bool {
-
-        Mail::send(new VoucherMail(
-            $email,
+        return $this->sendMail($email, new SendVoucherMail(
             $fund_name,
             $fund_product_name,
             $qr_url,
             $identifier
         ));
-
-        return $this->checkFailure('Voucher');
     }
-
 
     /**
      * Send voucher by email
@@ -531,9 +503,9 @@ class MailService
      * @param string $product_name
      * @param string $qr_url
      * @param string $reason
-     * @return void
+     * @return bool
      */
-    public function shareVoucher(
+    public function shareProductVoucher(
         string $email,
         $identifier,
         string $requester_email,
@@ -541,8 +513,7 @@ class MailService
         string $qr_url,
         string $reason
     ) {
-        Mail::send(new ShareProductMail(
-            $email,
+        return $this->sendMail($email, new ShareProductVoucherMail(
             $requester_email,
             $product_name,
             $qr_url,
@@ -558,7 +529,6 @@ class MailService
      * @param $identifier
      * @param string $link
      * @param string $platform
-     *
      * @return bool
      */
     public function loginViaEmail(
@@ -567,37 +537,33 @@ class MailService
         string $link,
         string $platform
     ) {
-        Mail::send(new UserLoginMail(
-            $email,
+        return $this->sendMail($email, new UserLoginMail(
             $link,
             $platform,
             $identifier
         ));
-
-        return $this->checkFailure('UserLogin');
     }
 
     /**
+     * New transaction was made send current voucher balance
+     *
      * @param string $email
      * @param $identifier
      * @param string $fund_name
      * @param string $current_budget
      * @return bool
      */
-    public function transactionAvailableAmount(
+    public function sendVoucherAmountLeftEmail(
         string $email,
         $identifier,
         string $fund_name,
         string $current_budget
     ) {
-        Mail::send(new PaymentSuccessMail(
-            $email,
+        return $this->sendMail($email, new PaymentSuccessMail(
             $fund_name,
             $current_budget,
             $identifier
         ));
-
-        return $this->checkFailure('PaymentSuccess');
     }
 
     /**
@@ -616,14 +582,11 @@ class MailService
         string $product_name,
         string $expiration_date
     ) {
-        Mail::send(new ProductBoughtMail(
-            $email,
+        return $this->sendMail($email, new ProductReservedMail(
             $product_name,
             $expiration_date,
             $identifier
         ));
-
-        return $this->checkFailure('ProductBought');
     }
 
     /**
@@ -641,41 +604,36 @@ class MailService
         string $product_name,
         string $sponsor_dashboard_url
     ) {
-        Mail::send(new ProductSoldOutMail(
-            $email,
+        return $this->sendMail($email, new ProductSoldOutMail(
             $product_name,
             $sponsor_dashboard_url,
             $identifier
         ));
-
-        return $this->checkFailure('ProductSoldOut');
     }
 
     /**
-     * Send email confirmation link by identity address
+     * Send email confirmation link
+     *
      * @param string $email
      * @param $identifier
      * @param string $confirmationLink
      * @return bool
      */
-    public function sendEmailConfirmationToken(
+    public function sendEmailConfirmationLink(
         string $email,
         string $confirmationLink,
         $identifier
     ) {
-        $platform = env('APP_NAME');
-
-        Mail::send(new EmailActivationMail(
-            $email,
-            $platform,
+        return $this->sendMail($email, new EmailActivationMail(
+            config('app.name'),
             $confirmationLink,
             $identifier
         ));
-
-        return $this->checkFailure('EmailActivation');
     }
 
     /**
+     * Notify user that voucher is about to expire
+     *
      * @param string $email
      * @param string $fund_name
      * @param string $sponsor_name
@@ -686,7 +644,7 @@ class MailService
      * @param string $webshopLink
      * @return bool
      */
-    public function voucherExpire(
+    public function voucherExpireSoon(
         string $email,
         string $fund_name,
         string $sponsor_name,
@@ -695,9 +653,8 @@ class MailService
         string $sponsor_phone,
         string $sponsor_email,
         string $webshopLink
-    ){
-        Mail::send(new FundExpiredMail(
-            $email,
+    ) {
+        return $this->sendMail($email, new FundExpiredMail(
             $fund_name,
             $sponsor_name,
             $start_date,
@@ -707,11 +664,21 @@ class MailService
             $sponsor_email,
             $webshopLink
         ));
-
-        return $this->checkFailure('FundExpired');
     }
 
-    public function fundNotifyReachedNotificationAmount(
+    /**
+     * Fund balance reached the threshold set in preferences
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $link
+     * @param string $sponsor_name
+     * @param string $fund_name
+     * @param string $notification_amount
+     * @param string $budget_left
+     * @return bool|null
+     */
+    public function fundBalanceWarning(
         string $email,
         $identifier,
         string $link,
@@ -720,8 +687,7 @@ class MailService
         string $notification_amount,
         string $budget_left
     ): bool {
-        Mail::send(new BalanceWarningMail(
-            $email,
+        return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
             $sponsor_name,
             $notification_amount,
@@ -729,23 +695,85 @@ class MailService
             $link,
             $identifier
         ));
-
-        return $this->checkFailure('BalanceWarning');
     }
 
-    private function checkFailure(string $mailName): bool
-    {
-        if (Mail::failures()) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `%s`',
-                    $mailName
-                )
-            );
+    /**
+     * Send the mail and check for failure
+     *
+     * @param $email
+     * @param Mailable $mailable
+     * @return bool|null
+     */
+    private function sendMail($email, Mailable $mailable) {
+        try {
+            if ($this->isUnsubscribed($email, $mailable)) {
+                return null;
+            }
 
+            $unsubscribeLink = $this->notificationRepo->makeUnsubLink($email);
+            $notificationPreferencesLink = sprintf(
+                '%s/%s',
+                rtrim(Implementation::active()['url_sponsor'], '/'),
+                'email/preferences');
+
+            $this->mailer->send($mailable->to($email)->with(compact(
+                'email', 'unsubscribeLink', 'notificationPreferencesLink'
+            )));
+
+            return $this->checkFailure(get_class($mailable));
+        } catch (\Exception $exception) {
+            $this->logFailure($exception);
             return false;
         }
+    }
 
-        return true;
+    /**
+     * Check if email is unsubscribed from all message or current email type
+     * @param string $email
+     * @param Mailable $mailable
+     * @return bool
+     * @throws \Exception
+     */
+    protected function isUnsubscribed(string $email, Mailable $mailable) {
+        $mailClass = get_class($mailable);
+
+        return $this->notificationRepo->isMailUnsubscribable($mailClass) && (
+            $this->notificationRepo->isEmailUnsubscribed($email) ||
+            $this->notificationRepo->isEmailTypeUnsubscribed(
+                $this->recordRepo->identityAddressByEmail($email),
+                $mailClass
+            )
+        );
+    }
+
+    /**
+     * Check for failure and log in case of error
+     *
+     * @param string $mailName
+     * @return bool
+     */
+    private function checkFailure(string $mailName): bool
+    {
+        if (!$this->mailer->failures()) {
+            return true;
+        }
+
+        $this->logFailure($mailName);
+
+        return false;
+    }
+
+    /**
+     * Log failure
+     *
+     * @param string|null $message
+     * @return void
+     */
+    private function logFailure(?string $message)
+    {
+        logger()->error(sprintf(
+            'Error sending notification: `%s`',
+            $message
+        ));
     }
 }
