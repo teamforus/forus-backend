@@ -12,7 +12,7 @@ class OrganizationSubscriber
 
     public function __construct()
     {
-        $this->mailService = resolve('forus.services.mail_notification');
+        $this->mailService = resolve('forus.services.notification');
     }
 
     public function onOrganizationCreated(OrganizationCreated $organizationCreated) {

@@ -16,17 +16,17 @@ class ImplementationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $email = [];
-    private $identityId;
+    private $identityRepo;
+    public $identityId;
 
     /**
      * ImplementationMail constructor.
-     * @param $email
      * @param string|null $identityId
      */
-    public function __construct($email, ?string $identityId)
-    {
-        $this->email = $email;
+    public function __construct(
+        ?string $identityId
+    ) {
+        $this->identityRepo = resolve('forus.services.identity');
         $this->identityId = $identityId;
     }
 
@@ -35,9 +35,7 @@ class ImplementationMail extends Mailable
      */
     public function build(): ImplementationMail
     {
-        return $this->to(
-            $this->email
-        )->from(
+        return $this->from(
             config('mail.from.address'),
             config('mail.from.name')
         );

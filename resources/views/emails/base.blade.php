@@ -1,3 +1,6 @@
+<?php
+    $footerStyle = "border-collapse: collapse; padding-bottom: 25px; font-size: 13px; line-height: 18px; padding-top: 20px;";
+?>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -43,8 +46,11 @@
                                     </table>
                                 </td>
                             </tr>
+                        </table>
+                        <table>
                             <tr>
-                                <td align="center" style="border-collapse: collapse; padding-bottom: 25px;">
+                                <td align="center" style="{{ $footerStyle }}">
+                                    {!! mail_trans('not_for_you', ['email' => $email, 'unsubscribeLink' => $unsubscribeLink, 'email_preferences_link' => $notificationPreferencesLink]) !!}
                                 </td>
                             </tr>
                         </table>

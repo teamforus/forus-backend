@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Forus'),
 
     /*
     |--------------------------------------------------------------------------
@@ -199,7 +199,7 @@ return [
         App\Services\GeocodeService\GeocodeServiceProvider::class,
 
         App\Services\BunqService\BunqServiceProvider::class,
-        App\Services\Forus\MailNotification\MailNotificationServiceProvider::class,
+        App\Services\Forus\Notification\NotificationServiceProvider::class,
 
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
     ],
@@ -254,9 +254,10 @@ return [
         /*
          * Forus services
          */
-        'MailService' => \App\Services\Mailer\Facades\MailerService::class,
+        // 'MailService' => \App\Services\Mailer\Facades\MailerService::class,
         'IdentityService' => \App\Services\Forus\Identity\Facades\IdentityService::class,
         'RecordService' => \App\Services\Forus\Record\Facades\RecordService::class,
+        'NotificationService' => \App\Services\Forus\Notification\Facades\Notification::class
 
     ],
 

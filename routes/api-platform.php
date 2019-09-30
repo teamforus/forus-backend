@@ -426,4 +426,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         '/devices/delete-push',
         'Api\Platform\DevicesController@deletePush'
     );
+
+    $router->get('notifications', 'Api\Platform\NotificationsController@index');
+    $router->patch('notifications', 'Api\Platform\NotificationsController@update');
 });

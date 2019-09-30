@@ -11,6 +11,11 @@
 |
 */
 
+use \Illuminate\Support\Facades\Route;
+
 Route::get('/', function () {
-    return view()->make('empty');
+    return "";
 });
+
+Route::get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
+Route::get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');

@@ -9,20 +9,19 @@ use App\Mail\ImplementationMail;
  * Class VoucherMail
  * @package App\Mail\Vouchers
  */
-class VoucherMail extends ImplementationMail
+class SendVoucherMail extends ImplementationMail
 {
     private $fundName;
     private $fund_product_name;
     private $qr_url;
 
     public function __construct(
-        string $email,
         string $fund_name,
         string $fund_product_name,
         string $qr_url,
         string $identifier
     ) {
-        parent::__construct($email, $identifier);
+        parent::__construct($identifier);
 
         $this->fundName = $fund_name;
         $this->fund_product_name = $fund_product_name;

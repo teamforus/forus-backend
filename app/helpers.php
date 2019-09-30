@@ -5,7 +5,6 @@ use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
 
-
 if (!function_exists('auth_user')) {
     /**
      * Get the available user instance.

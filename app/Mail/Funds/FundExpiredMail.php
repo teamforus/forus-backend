@@ -19,7 +19,6 @@ class FundExpiredMail extends ImplementationMail
     private $shopImplementationUrl;
 
     public function __construct(
-        string $email,
         string $fundName,
         string $sponsorName,
         string $startDateFund,
@@ -29,7 +28,7 @@ class FundExpiredMail extends ImplementationMail
         string $shopImplementationUrl,
         ?string $identityId
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->fundName = $fundName;
         $this->sponsorName = $sponsorName;

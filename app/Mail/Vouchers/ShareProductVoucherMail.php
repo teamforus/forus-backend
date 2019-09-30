@@ -8,7 +8,7 @@ use App\Mail\ImplementationMail;
  * Class ShareProductMail
  * @package App\Mail\Vouchers
  */
-class ShareProductMail extends ImplementationMail
+class ShareProductVoucherMail extends ImplementationMail
 {
     private $requesterMail;
     private $productName;
@@ -16,14 +16,13 @@ class ShareProductMail extends ImplementationMail
     private $reason;
 
     public function __construct(
-        string $email,
         string $requesterMail,
         string $productName,
         string $qrUrl,
         string $reason,
         ?string $identityId)
     {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->requesterMail = $requesterMail;
         $this->productName = $productName;

@@ -44,6 +44,7 @@ class OrganizationsController extends Controller
             $this->authorize('destroy', $media);
         }
 
+        /** @var Organization $organization */
         $organization = Organization::create(
             collect($request->only([
                 'name', 'email', 'phone', 'kvk', 'website',

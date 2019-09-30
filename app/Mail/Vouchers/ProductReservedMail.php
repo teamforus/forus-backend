@@ -8,18 +8,17 @@ use App\Mail\ImplementationMail;
  * Class ProductBoughtMail
  * @package App\Mail\Vouchers
  */
-class ProductBoughtMail extends ImplementationMail
+class ProductReservedMail extends ImplementationMail
 {
     private $productName;
     private $expirationDate;
 
     public function __construct(
-        string $email,
         string $productName,
         string $expirationDate,
         ?string $identityId
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->productName = $productName;
         $this->expirationDate = $expirationDate;

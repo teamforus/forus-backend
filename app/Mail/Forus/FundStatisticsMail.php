@@ -18,7 +18,6 @@ class FundStatisticsMail extends ImplementationMail
     private $totalAmount;
 
     public function __construct(
-        string $email,
         string $fundName,
         string $sponsorName,
         string $sponsorAmount,
@@ -26,7 +25,7 @@ class FundStatisticsMail extends ImplementationMail
         string $requestAmount,
         string $totalAmount
     ) {
-        parent::__construct($email, null);
+        parent::__construct(null);
 
         $this->fundName = $fundName;
         $this->sponsorName = $sponsorName;
