@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Traits\EloquentModel;
 use App\Services\BunqService\BunqService;
+use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -52,7 +54,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Fund extends Model
 {
-    use HasMedia;
+    use HasMedia, EloquentModel;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';
@@ -474,10 +476,26 @@ class Fund extends Model
     }
 
     /**
+     * Change fund state
+     *
+     * @param string $state
+     * @return $this
+     */
+    public function changeState(string $state) {
+        if (in_array($state, self::STATES)) {
+            $this->update(compact('state'));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update fund state by the start and end dates
      */
     public static function checkStateQueue() {
+        /** @var Collection|Fund[] $funds */
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->whereDate('start_date', '<=', now())
@@ -488,33 +506,35 @@ class Fund extends Model
 
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
-                $fund->update([
-                    'state' => self::STATE_ACTIVE
-                ]);
+                $fund->changeState(self::STATE_ACTIVE);
 
+                /*
                 $organizations = Organization::query()->whereIn(
                     'id', OrganizationProductCategory::query()->whereIn(
                     'product_category_id',
                     $fund->product_categories()->pluck('id')->all()
                 )->pluck('organization_id')->toArray()
                 )->get();
+                */
 
                 /** @var Organization $organization */
+                // TODO: Notify providers about new fund started
+                
+                /*
                 foreach ($organizations as $organization) {
-                    resolve('forus.services.notification')->newFundStarted(
+                    resolve('forus.services.mail_notification')->newFundStarted(
                         $organization->email,
                         $organization->emailServiceId(),
                         $fund->name,
                         $fund->organization->name
                     );
                 }
+                */
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
-                $fund->update([
-                    'state' => self::STATE_CLOSED
-                ]);
+                $fund->changeState(self::STATE_CLOSED);
             }
         }
     }
@@ -525,7 +545,7 @@ class Fund extends Model
     public static function checkConfigStateQueue()
     {
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->where('state', 'waiting')
@@ -534,9 +554,7 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-            $fund->update([
-                'state' => 'paused'
-            ]);
+            $fund->changeState(self::STATE_PAUSED);
 
             $fund->criteria()->create([
                 'record_type_key' => $fund->fund_config->key . '_eligible',
@@ -550,22 +568,23 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
-            $organizations = Organization::query()->whereIn(
+            /*$organizations = Organization::query()->whereIn(
                 'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
                 $fund->product_categories()->pluck('id')->all()
             )->pluck('organization_id')->toArray()
-            )->get();
+            )->get();*/
 
             /** @var Organization $organization */
-            foreach ($organizations as $organization) {
-                resolve('forus.services.notification')->newFundApplicable(
+            // TODO: Notify providers about new fund applicable
+            /*foreach ($organizations as $organization) {
+                resolve('forus.services.mail_notification')->newFundApplicable(
                     $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
                 );
-            }
+            }*/
         }
     }
 
@@ -625,8 +644,12 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
-        $mailService = resolve('forus.services.notification');
+        /** @var NotificationService $mailService */
+        $mailService = resolve('forus.services.mail_notification');
 
+        /** @var RecordRepo $recordRepo */
+        $recordRepo = resolve('forus.services.record');
+        
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
@@ -648,21 +671,27 @@ class Fund extends Model
 
             if($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
-                $referrers = $referrers->pluck('identity_address');
-                $referrers->push($fund->organization->emailServiceId());
+                $referrers = $referrers->pluck('identity_address')->map(function ($identity) use ($recordRepo) {
+                    return [
+                        'identity' => $identity,
+                        'email' => $recordRepo->primaryEmailByAddress($identity),
+                    ];
+                });
+                /*TODO: check if org mail is same as finance role; if so only send one mail
+                $referrers->push([
+                    'identity' => $fund->organization->emailServiceId(),
+                    'email' => $fund->organization->email
+                ]);*/
 
                 foreach ($referrers as $referrer) {
-                    $email = (new RecordRepo)->primaryEmailByAddress(
-                        $referrer->identity_address
-                    );
-
                     $mailService->fundBalanceWarning(
-                        $email,
-                        $referrer,
+                        $referrer['email'],
+                        $referrer['identity'],
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
-                        currency_format($fund->notification_amount - $transactionCosts)
+                        currency_format($fund->notification_amount - $transactionCosts),
+                        currency_format($fund->budget_left)
                     );
                 }
 

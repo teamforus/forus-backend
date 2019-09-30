@@ -14,10 +14,21 @@
 $router = app()->make('router');
 
 $router->group([], function() use ($router) {
-    $router->get(
-        '/product-categories',
-        "Api\Platform\ProductCategoryController@index"
-    );
+    $router->resource(
+        'product-categories',
+        "Api\Platform\ProductCategoryController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+
+    $router->resource(
+        'business-types',
+        "Api\Platform\BusinessTypeController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
 
     $router->resource(
         'funds',

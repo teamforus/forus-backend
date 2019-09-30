@@ -676,6 +676,7 @@ class NotificationService
      * @param string $sponsor_name
      * @param string $fund_name
      * @param string $notification_amount
+     * @param string $budget_left
      * @return bool|null
      */
     public function fundBalanceWarning(
@@ -684,12 +685,14 @@ class NotificationService
         string $link,
         string $sponsor_name,
         string $fund_name,
-        string $notification_amount
+        string $notification_amount,
+        string $budget_left
     ): bool {
         return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
             $sponsor_name,
             $notification_amount,
+            $budget_left,
             $link,
             $identifier
         ));

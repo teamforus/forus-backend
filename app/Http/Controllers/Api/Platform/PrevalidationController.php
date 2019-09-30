@@ -102,7 +102,7 @@ class PrevalidationController extends Controller
                 'state' => 'pending',
                 'organization_id' => $fund->organization_id,
                 'fund_id' => $fund->id,
-                'identity_address' => auth()->user()->getAuthIdentifier()
+                'identity_address' => auth_address()
             ]);
 
             foreach ($records as $record) {
@@ -193,13 +193,13 @@ class PrevalidationController extends Controller
         foreach($prevalidation->records as $record) {
             /** @var $record PrevalidationRecord */
             $record = $this->recordRepo->recordCreate(
-                auth()->user()->getAuthIdentifier(),
+                auth_address(),
                 $record->record_type->key,
                 $record->value
             );
 
             $validationRequest = $this->recordRepo->makeValidationRequest(
-                auth()->user()->getAuthIdentifier(),
+                auth_address(),
                 $record['id']
             );
 

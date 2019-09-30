@@ -63,6 +63,10 @@ class Implementation extends Model
         return self::byKey(self::activeKey());
     }
 
+    /**
+     * @param $key
+     * @return \Illuminate\Support\Collection
+     */
     public static function byKey($key) {
         if ($key == 'general') {
             return collect(self::general_urls());

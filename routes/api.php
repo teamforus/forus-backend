@@ -136,11 +136,13 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'medias' => 'media_uid'
         ]
     ]);
-
-    $router->get('/debug', 'TestController@test');
 });
 
 if (env('APP_DEBUG', false) == true && env('APP_ENV') == 'dev') {
+    $router->group(['middleware' => ['api.auth']], function() use ($router) {
+        $router->get('/debug', 'TestController@test');
+    });
+
     $router->get('/debug/{implementation}/{frontend}/proxy', 'TestController@proxy');
     $router->get('/debug/{implementation}/{frontend}/assets/{all}', 'TestController@asset')->where(['all' => '.*']);
 }

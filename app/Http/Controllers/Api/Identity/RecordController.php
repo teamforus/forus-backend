@@ -26,7 +26,7 @@ class RecordController extends Controller
     public function index(Request $request)
     {
         return $this->recordRepo->recordsList(
-            auth()->user()->getAuthIdentifier(),
+            auth_address(),
             $request->get('type', null),
             $request->get('record_category_id', null)
         );
@@ -41,7 +41,7 @@ class RecordController extends Controller
     public function store(RecordStoreRequest $request)
     {
         return $this->recordRepo->recordCreate(
-            auth()->user()->getAuthIdentifier(),
+            auth_address(),
             $request->get('type'),
             $request->get('value'),
             $request->get('record_category_id', null),
@@ -57,7 +57,7 @@ class RecordController extends Controller
     public function show(
         int $recordId
     ) {
-        $identity = auth()->user()->getAuthIdentifier();
+        $identity = auth_address();
 
         if (empty($this->recordRepo->recordGet(
             $identity, $recordId
@@ -66,7 +66,7 @@ class RecordController extends Controller
         }
 
         return $this->recordRepo->recordGet(
-            auth()->user()->getAuthIdentifier(),
+            auth_address(),
             $recordId
         );
     }
@@ -82,7 +82,7 @@ class RecordController extends Controller
         RecordUpdateRequest $request,
         int $recordId
     ) {
-        $identity = auth()->user()->getAuthIdentifier();
+        $identity = auth_address();
 
         if (empty($this->recordRepo->recordGet(
             $identity, $recordId
@@ -91,7 +91,7 @@ class RecordController extends Controller
         }
 
         $success = $this->recordRepo->recordUpdate(
-            auth()->user()->getAuthIdentifier(),
+            auth_address(),
             $recordId,
             $request->input('record_category_id', null),
             $request->input('order', null)
@@ -109,7 +109,7 @@ class RecordController extends Controller
     public function destroy(
         int $recordId
     ) {
-        $identity = auth()->user()->getAuthIdentifier();
+        $identity = auth_address();
 
         if (empty($this->recordRepo->recordGet(
             $identity, $recordId
@@ -118,7 +118,7 @@ class RecordController extends Controller
         }
 
         $success = $this->recordRepo->recordDelete(
-            auth()->user()->getAuthIdentifier(),
+            auth_address(),
             $recordId
         );
 
@@ -134,7 +134,7 @@ class RecordController extends Controller
         Request $request
     ) {
         $this->recordRepo->recordsSort(
-            auth()->user()->getAuthIdentifier(),
+            auth_address(),
             collect($request->get('records', []))->toArray()
         );
 

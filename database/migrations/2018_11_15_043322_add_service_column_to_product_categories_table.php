@@ -14,7 +14,7 @@ class AddServiceColumnToProductCategoriesTable extends Migration
     public function up()
     {
         Schema::table('product_categories', function(Blueprint $table) {
-            $table->boolean('service')->default(false);
+            $table->boolean('service')->default(false)->after('parent_id');
         });
     }
 
