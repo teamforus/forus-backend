@@ -5,8 +5,10 @@ namespace App\Models;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Http\Request;
 
 /**
  * Class Office
@@ -45,6 +47,36 @@ class Office extends Model
     protected $with = [
         'schedules'
     ];
+
+    public static function search(Request $request)
+    {
+        $query = self::query();
+
+        if ($request->has('q') && $q = $request->input('q')) {
+            $like = '%' . $q . '%';
+
+            $query->where(
+                'address','LIKE', $like
+            )->orWhereHas('organization.business_type.translations', function(
+                Builder $builder
+            ) use ($like) {
+                $builder->where('business_type_translations.name', 'LIKE', $like);
+            })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                $builder->where('organizations.name', 'LIKE', $like);
+            })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                $builder->where('organizations.email_public', 1);
+                $builder->where('organizations.email', 'LIKE', $like);
+            })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                $builder->where('organizations.phone_public', 1);
+                $builder->where('organizations.phone', 'LIKE', $like);
+            })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                $builder->where('organizations.website_public', 1);
+                $builder->where('organizations.website', 'LIKE', $like);
+            });
+        }
+
+        return $query;
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
