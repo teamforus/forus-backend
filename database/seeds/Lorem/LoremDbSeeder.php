@@ -382,15 +382,33 @@ class LoremDbSeeder extends Seeder
         string $key,
         string $name
     ) {
-        return Implementation::create([
+        /** @var Implementation $implementation */
+        $implementation = Implementation::create([
             'key' => $key,
             'name' => $name,
-            'url_webshop'   => "https://dev.$key.forus.io/#!/",
-            'url_sponsor'   => "https://dev.$key.forus.io/sponsor/#!/",
-            'url_provider'  => "https://dev.$key.forus.io/provider/#!/",
-            'url_validator' => "https://dev.$key.forus.io/validator/#!/",
-            'url_app'       => "https://dev.$key.forus.io/me/#!/",
+            'url_webshop' => env(
+                'DB_SEED_URL_WEBSHOP',
+                "https://dev.$key.forus.io/#!/"
+            ),
+            'url_sponsor' => env(
+                'DB_SEED_URL_SPONSOR',
+                "https://dev.$key.forus.io/sponsor/#!/"
+            ),
+            'url_provider' => env(
+                'DB_SEED_URL_PROVIDER',
+                "https://dev.$key.forus.io/provider/#!/"
+            ),
+            'url_validator' => env(
+                'DB_SEED_URL_VALIDATOR',
+                "https://dev.$key.forus.io/validator/#!/"
+            ),
+            'url_app' => env(
+                'DB_SEED_URL_APP',
+                "https://dev.$key.forus.io/me/#!/"
+            ),
         ]);
+
+        return $implementation;
     }
 
     /**
