@@ -52,26 +52,36 @@ class Office extends Model
     {
         $query = self::query();
 
+        if ($approved = $request->input('approved', false)) {
+            $query->whereIn('organization_id', FundProvider::whereIn(
+                'fund_id', Implementation::activeFundsQuery()->pluck('id')
+            )->where([
+                'state' => FundProvider::STATE_APPROVED
+            ])->pluck('organization_id')->unique()->values()->toArray());
+        }
+
         if ($request->has('q') && $q = $request->input('q')) {
             $like = '%' . $q . '%';
 
-            $query->where(
-                'address','LIKE', $like
-            )->orWhereHas('organization.business_type.translations', function(
-                Builder $builder
-            ) use ($like) {
-                $builder->where('business_type_translations.name', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.name', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.email_public', 1);
-                $builder->where('organizations.email', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.phone_public', 1);
-                $builder->where('organizations.phone', 'LIKE', $like);
-            })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                $builder->where('organizations.website_public', 1);
-                $builder->where('organizations.website', 'LIKE', $like);
+            $query->where(function(Builder $query) use ($like) {
+                $query->where(
+                    'address','LIKE', $like
+                )->orWhereHas('organization.business_type.translations', function(
+                    Builder $builder
+                ) use ($like) {
+                    $builder->where('business_type_translations.name', 'LIKE', $like);
+                })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                    $builder->where('organizations.name', 'LIKE', $like);
+                })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                    $builder->where('organizations.email_public', true);
+                    $builder->where('organizations.email', 'LIKE', $like);
+                })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                    $builder->where('organizations.phone_public', true);
+                    $builder->where('organizations.phone', 'LIKE', $like);
+                })->orWhereHas('organization', function(Builder $builder) use ($like) {
+                    $builder->where('organizations.website_public', true);
+                    $builder->where('organizations.website', 'LIKE', $like);
+                });
             });
         }
 

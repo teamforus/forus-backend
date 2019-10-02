@@ -22,6 +22,16 @@ use DB;
  */
 class FundProvider extends Model
 {
+    const STATE_PENDING = 'pending';
+    const STATE_APPROVED = 'approved';
+    const STATE_DECLINED = 'declined';
+
+    const STATES = [
+        self::STATE_PENDING,
+        self::STATE_APPROVED,
+        self::STATE_DECLINED,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *

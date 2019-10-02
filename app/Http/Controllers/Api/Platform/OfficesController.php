@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Resources\OfficeResource;
 use App\Http\Controllers\Controller;
-use App\Models\Implementation;
 use App\Models\Office;
-use Illuminate\Database\Query\Builder;
 use App\Http\Requests\Api\Platform\SearchOfficesRequest;
 
 class OfficesController extends Controller
@@ -20,17 +18,8 @@ class OfficesController extends Controller
     public function index(
         SearchOfficesRequest $request
     ) {
-        return OfficeResource::collection(Office::search($request)->whereIn(
-            'organization_id',
-            function (Builder $query) {
-                $query->from('fund_providers')->select([
-                    'organization_id'
-                ])->where([
-                    'state' => 'approved'
-                ])->whereIn(
-                    'fund_id', Implementation::activeFunds()->pluck('id')
-                );
-            }
+        return OfficeResource::collection(Office::search($request)->with(
+            OfficeResource::$load
         )->get());
     }
 

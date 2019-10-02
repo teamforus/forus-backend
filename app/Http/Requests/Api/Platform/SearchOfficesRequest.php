@@ -25,6 +25,7 @@ class SearchOfficesRequest extends FormRequest
     {
         return [
             'q' => 'nullable|string',
+            'approved' => 'nullable|boolean',
         ];
     }
 }
