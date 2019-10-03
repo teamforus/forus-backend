@@ -144,7 +144,7 @@
 143 - Bank
 144 - Banketbakker
 145 - Baptistenkerk
-146 - Bar \u0026 Grill
+146 - Bar & Grill
 147 - Bar
 148 - Barbeque restaurant
 149 - Barbier
@@ -155,7 +155,7 @@
 154 - Basketbalveld
 155 - Baskisch restaurant
 156 - Bazaar
-157 - Bed \u0026 Breakfast
+157 - Bed & Breakfast
 158 - Beddengoedwinkel
 159 - Beddenwinkel
 160 - Bedevaartplaats
@@ -537,7 +537,7 @@
 536 - Financiële planner
 537 - Fins restaurant
 538 - Fiscaal jurist
-539 - Fish \u0026 chips-restaurant
+539 - Fish & chips-restaurant
 540 - Fitnessprogramma
 541 - Fitnesswinkel
 542 - Flat

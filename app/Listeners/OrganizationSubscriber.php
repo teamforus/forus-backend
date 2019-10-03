@@ -22,11 +22,6 @@ class OrganizationSubscriber
             'identity_address' => $organization->identity_address
         ]);
 
-        $this->mailService->addEmailConnection(
-            $organization->emailServiceId(),
-            $organization->email
-        );
-
         try {
             $offices = resolve('kvk_api')->getOffices($organization->kvk);
 
