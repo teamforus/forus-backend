@@ -36,8 +36,8 @@ interface INotificationRepo
      * @throws \Exception
      */
     public function isEmailTypeUnsubscribed(
-        string $identity_address,
-        string $emailClass
+        $identity_address,
+        $emailClass
     ): bool;
 
     /**
