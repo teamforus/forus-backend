@@ -155,7 +155,7 @@
 154 - Basketball court
 155 - Basque restaurant
 156 - Bazaar
-157 - Bed \ u0026 Breakfast
+157 - Bed & Breakfast
 158 - Bedding shop
 159 - Bedstore
 160 - Pilgrimage site
@@ -537,7 +537,7 @@
 536 - Financial planner
 537 - Finnish restaurant
 538 - Tax lawyer
-539 - Fish \ u0026 chips restaurant
+539 - Fish & chips restaurant
 540 - Fitness program
 541 - Fitness shop
 542 - Flat
