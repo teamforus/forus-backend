@@ -155,7 +155,7 @@
 154 - Basketball court
 155 - Basque restaurant
 156 - Bazaar
-157 - Bed \ u0026 Breakfast
+157 - Bed & Breakfast
 158 - Bedding shop
 159 - Bedstore
 160 - Pilgrimage site
@@ -537,7 +537,7 @@
 536 - Financial planner
 537 - Finnish restaurant
 538 - Tax lawyer
-539 - Fish \ u0026 chips restaurant
+539 - Fish & chips restaurant
 540 - Fitness program
 541 - Fitness shop
 542 - Flat
@@ -600,7 +600,7 @@
 599 - healthcare
 600 - Guitar teacher
 601 - Guitar Store
-602 - Stained glass
+602 - Stained glass&
 603 - Glass and mirror shop
 604 - Glass trade
 605 - Glass repair service
@@ -619,10 +619,10 @@
 618 - Magic shop
 619 - Curtain shop
 620 - Gold trader
-621 - Graphic design
-622 - Grand Cafe
-623 - Lawn mower shop
-624 - Free clinic
+621 - Graphic design&
+622 - Grand Cafe&
+623 - Lawn mower shop&
+624 - Free clinic&
 625 - Engraver
 626 - Border post
 627 - Greek restaurant
