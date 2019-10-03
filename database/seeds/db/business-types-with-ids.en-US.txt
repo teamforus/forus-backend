@@ -600,7 +600,7 @@
 599 - healthcare
 600 - Guitar teacher
 601 - Guitar Store
-602 - Stained glass&
+602 - Stained glass
 603 - Glass and mirror shop
 604 - Glass trade
 605 - Glass repair service
@@ -619,9 +619,9 @@
 618 - Magic shop
 619 - Curtain shop
 620 - Gold trader
-621 - Graphic design&
-622 - Grand Cafe&
-623 - Lawn mower shop&
+621 - Graphic design
+622 - Grand Cafe
+623 - Lawn mower shop
 624 - Free clinic&
 625 - Engraver
 626 - Border post
