@@ -20,7 +20,7 @@ class ProviderRejectedMail extends ImplementationMail
         string $provider_name,
         string $sponsor_name,
         string $phone_number,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 

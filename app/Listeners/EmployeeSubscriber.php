@@ -11,6 +11,7 @@ use Illuminate\Events\Dispatcher;
 class EmployeeSubscriber
 {
     private $mailService;
+    private $recordService;
 
     /**
      * EmployeeSubscriber constructor.
@@ -18,6 +19,7 @@ class EmployeeSubscriber
     public function __construct()
     {
         $this->mailService = resolve('forus.services.notification');
+        $this->recordService = resolve('forus.services.record');
     }
 
     /**
@@ -78,21 +80,27 @@ class EmployeeSubscriber
      * @throws \Exception
      */
     private function updateValidatorEmployee(Employee $employee) {
-        if (
-            $employee->organization->identity_address ==
-            $employee->identity_address
-        ) {
+        $organization = $employee->organization;
+        $query = $employee->only('identity_address');
+
+        if ($organization->identity_address == $employee->identity_address) {
             return;
         }
 
-        if ($employee->hasRole('validation')) {
-            $employee->organization->validators()->firstOrCreate([
-                'identity_address' => $employee->identity_address
-            ]);
-        } else {
-            $employee->organization->validators()->where([
+        if (!$employee->hasRole('validation')) {
+            $organization->validators()->where([
                 'identity_address' => $employee->identity_address
             ])->delete();
+        } elseif ($organization->validators()->where($query)->count() == 0) {
+            $organization->validators()->create($query);
+
+            /*$this->mailService->youAddedAsValidator(
+                $this->recordService->primaryEmailByAddress(
+                    $employee->identity_address
+                ),
+                $employee->identity_address,
+                $organization->name
+            );*/
         }
     }
 

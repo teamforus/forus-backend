@@ -157,10 +157,10 @@ class Voucher extends Model
     }
 
     /**
-     * @param string|null $identity_address
+     * @param string|null $email
      */
     public function sendToEmail(
-        ?string $email
+        string $email = null
     ) {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
@@ -258,11 +258,11 @@ class Voucher extends Model
 
         /** @var self $voucher */
         foreach ($vouchers as $voucher) {
-
-            if($voucher->amount_available_cached > 0){
-
+            if ($voucher->amount_available_cached > 0) {
                 $recordRepo = resolve('forus.services.record');
-                $primaryEmail = $recordRepo->primaryEmailByAddress($voucher->identity_address);
+                $primaryEmail = $recordRepo->primaryEmailByAddress(
+                    $voucher->identity_address
+                );
 
                 $fund_name = $voucher->fund->name;
                 $sponsor_name = $voucher->fund->organization->name;

@@ -21,7 +21,7 @@ class ProviderAppliedMail extends ImplementationMail
         string $sponsor_name,
         string $fund_name,
         string $sponsor_dashboard_link,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
         $this->provider_name            = $provider_name;
