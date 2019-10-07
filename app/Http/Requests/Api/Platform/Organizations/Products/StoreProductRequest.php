@@ -31,7 +31,7 @@ class StoreProductRequest extends FormRequest
             'price'                 => 'required|numeric|min:.2',
             'old_price'             => 'nullable|numeric|min:' . $price,
             'total_amount'          => 'required|numeric|min:1',
-            'expire_at'             => 'required|date|after:today',
+            'expire_at'             => 'required|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
         ];
     }

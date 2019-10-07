@@ -88,7 +88,7 @@ class ProductsController extends Controller
                     $fund->organization->identity_address
                 );
 
-                resolve('forus.services.mail_notification')->newProductAdded(
+                resolve('forus.services.notification')->newProductAdded(
                     $fund->organization->email,
                     $fund->organization->emailServiceId(),
                     $fund->organization->name,

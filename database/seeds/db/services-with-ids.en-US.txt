@@ -1,0 +1,56 @@
+# Forus
+750000 - Household, Family and Animal
+750001 - Household, Family and Animal > Domestic help
+750002 - Household, Family and Animal > Pest control
+750003 - Household, Family and Animal > Babysitter and Childcare
+750004 - Household, Family and Animal > Home care and maternity care
+750005 - Household, Family and Animal > Laundries and dry cleaners
+750006 - Household, Family and Animal > Animals
+
+751000 - Recreation, cultural activities
+751001 - Recreation, cultural activities > Children's parties
+751002 - Recreation, cultural activities > Group outings
+751003 - Recreation, cultural activities > Restaurants
+751004 - Recreation, cultural activities > Swimming
+751005 - Recreation, cultural activities > Theater
+751006 - Recreation, cultural activities > Film and Cinema
+751007 - Recreation, cultural activities > Stages and concerts
+
+752000 - Course, Workshop and Lesson
+752001 - Course, Workshop and Lesson > Art and painting
+752002 - Course, Workshop and Lesson > Music and song
+752003 - Course, Workshop and Lesson > Tutoring and Language
+752004 - Course, Workshop and Lesson > Coaching
+752005 - Course, Workshop and Lesson > Courses and Workshops
+752006 - Course, Workshop and Lesson > Driving schools
+
+753000 - Sport and wellness
+753001 - Sport and wellness > Personal Trainer
+753002 - Sport and wellness > Swimming instruction
+753003 - Sport and wellness > Aerobics
+753004 - Sport and wellness > Nutritionist, Dietitian
+753005 - Sport and wellness > Therapists
+753006 - Sport and wellness > Mindfulness
+753007 - Sport and wellness > Quit smoking
+753008 - Sport and wellness > Yoga
+
+754000 - Appearance and Care
+754001 - Appearance and Care > Alternative medicine
+754002 - Appearance and Care > Masseurs and Massage salons
+754003 - Appearance and Care > Funeral care
+754004 - Appearance and Care > Hairdressers and home hairdressers
+754005 - Appearance and Care > Clothing Advice and Stylists
+754006 - Appearance and Care > Tailors and Clothing Designers
+754007 - Appearance and Care > Manicure
+754008 - Appearance and Care > Pedicure
+754009 - Appearance and Care > Beauticians
+
+755000 - Charities
+755001 - Charities > Animals
+755002 - Charities > Health
+755003 - Charities > International aid and human rights
+755004 - Charities > Art and culture
+755005 - Charities > Nature and environment
+755006 - Charities > Education
+755007 - Charities > Religion and philosophy of life
+755008 - Charities > Sport and wellness

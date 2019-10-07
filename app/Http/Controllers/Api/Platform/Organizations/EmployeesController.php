@@ -47,7 +47,7 @@ class EmployeesController extends Controller
 
         $identity_address = resolve(
             'forus.services.record'
-        )->identityIdByEmail($request->input('email'));
+        )->identityAddressByEmail($request->input('email'));
 
         if ($organization->employees()->where([
                 'identity_address' => $identity_address

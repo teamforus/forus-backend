@@ -12,7 +12,7 @@ class OrganizationSubscriber
 
     public function __construct()
     {
-        $this->mailService = resolve('forus.services.mail_notification');
+        $this->mailService = resolve('forus.services.notification');
     }
 
     public function onOrganizationCreated(OrganizationCreated $organizationCreated) {
@@ -21,11 +21,6 @@ class OrganizationSubscriber
         $organization->validators()->create([
             'identity_address' => $organization->identity_address
         ]);
-
-        $this->mailService->addEmailConnection(
-            $organization->emailServiceId(),
-            $organization->email
-        );
 
         try {
             $offices = resolve('kvk_api')->getOffices($organization->kvk);
@@ -40,14 +35,7 @@ class OrganizationSubscriber
         } catch (\Exception $e) { }
     }
 
-    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated) {
-        $organization = $organizationUpdated->getOrganization();
-
-        $this->mailService->addEmailConnection(
-            $organization->emailServiceId(),
-            $organization->email
-        );
-    }
+    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated) {}
 
     /**
      * The events dispatcher

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * Class IdentityProxy
  * @property mixed $id
  * @property integer $identity_id
+ * @property string $identity_address
  * @property string $access_token
  * @property string $exchange_token
  * @property string $state

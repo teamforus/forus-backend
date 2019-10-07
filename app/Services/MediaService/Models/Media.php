@@ -2,6 +2,8 @@
 
 namespace App\Services\MediaService\Models;
 
+use App\Services\FileService\Models\File;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -16,8 +18,12 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string $type
  * @property string $ext
  * @property string $uid
- * @property Collection $sizes
+ * @property MediaSize[]|Collection $sizes
+ * @property MediaSize $size_original
  * @property Model $mediable
+ * @method static static create($attributes = array())
+ * @method static static find($id, $columns = ['*'])
+ * @method static Builder where($column, $operator = null, $value = null, $boolean = 'and')
  * @package App\Services\MediaService\Models
  */
 class Media extends Model
@@ -27,6 +33,15 @@ class Media extends Model
      */
     public function sizes() {
         return $this->hasMany(MediaSize::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function size_original() {
+        return $this->hasOne(MediaSize::class)->where([
+            'key' => 'original'
+        ]);
     }
 
     /**
@@ -45,4 +60,32 @@ class Media extends Model
         'identity_address', 'original_name', 'mediable_id', 'mediable_type',
         'type', 'ext', 'uid'
     ];
+
+    /**
+     * @param string $key
+     * @return MediaSize|null
+     */
+    public function findSize(string $key) {
+        return $this->sizes->where('key', $key)->first();
+    }
+
+    /**
+     * @param $uid
+     * @return self|Builder|Model|object|null
+     */
+    public static function findByUid($uid) {
+        return self::where(compact('uid'))->first();
+    }
+
+    /**
+     * @param string $key
+     * @return string|null
+     */
+    public function urlPublic(string $key) {
+        if ($size = $this->findSize($key)) {
+            return $size->urlPublic();
+        }
+
+        return null;
+    }
 }

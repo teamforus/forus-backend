@@ -22,8 +22,10 @@ use Illuminate\Database\Query\Builder;
  * @property string $kvk
  * @property string $btw
  * @property string $website
+ * @property int $business_type_id
  * @property bool $website_public
  * @property Media $logo
+ * @property BusinessType $business_type
  * @property Collection $funds
  * @property Collection $vouchers
  * @property Collection $products
@@ -31,7 +33,6 @@ use Illuminate\Database\Query\Builder;
  * @property Collection $supplied_funds
  * @property Collection $supplied_funds_approved
  * @property Collection $organization_funds
- * @property Collection $product_categories
  * @property Collection $voucher_transactions
  * @property Collection $funds_voucher_transactions
  * @property Collection $offices
@@ -51,7 +52,12 @@ class Organization extends Model
      */
     protected $fillable = [
         'identity_address', 'name', 'iban', 'email', 'email_public',
-        'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public'
+        'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
+        'business_type_id'
+    ];
+
+    protected $casts = [
+        'btw' => 'string'
     ];
 
     /**
@@ -76,6 +82,13 @@ class Organization extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function business_type() {
+        return $this->belongsTo(BusinessType::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function voucher_transactions() {
@@ -87,16 +100,6 @@ class Organization extends Model
      */
     public function funds_voucher_transactions() {
         return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function product_categories() {
-        return $this->belongsToMany(
-            ProductCategory::class,
-            'organization_product_categories'
-        );
     }
 
     /**
@@ -196,7 +199,7 @@ class Organization extends Model
      */
     public function identityPermissions($identityAddress) {
         if (strcmp($identityAddress, $this->identity_address) === 0) {
-            return Permission::all();
+            return Permission::allMemCached();
         }
 
         $roles = $this->identityRoles($identityAddress);

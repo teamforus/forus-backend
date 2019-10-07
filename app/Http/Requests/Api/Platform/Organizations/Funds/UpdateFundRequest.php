@@ -2,8 +2,14 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Models\Fund;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Class UpdateFundRequest
+ * @property null|Fund $fund
+ * @package App\Http\Requests\Api\Platform\Organizations\Funds
+ */
 class UpdateFundRequest extends FormRequest
 {
     /**
@@ -23,16 +29,22 @@ class UpdateFundRequest extends FormRequest
      */
     public function rules()
     {
-        $start_after = request()->fund->created_at->addDays(5)->format('Y-m-d');
-
-        return [
+        return array_merge([
             'name'                  => 'required|between:2,200',
-            'state'                 => 'required|in:waiting,active,paused,closed',
-            'start_date'            => 'required|date|after:' . $start_after,
-            'end_date'              => 'required|date|after:start_date',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
             'notification_amount'   => 'nullable|numeric'
-        ];
+        ], ($this->fund && $this->fund->state == Fund::STATE_WAITING) ? [
+            'start_date' => [
+                'required',
+                'date_format:Y-m-d',
+                'after:' . $this->fund->created_at->addDays(5)->format('Y-m-d')
+            ],
+            'end_date' => [
+                'required',
+                'date_format:Y-m-d',
+                'after:start_date'
+            ],
+        ] : []);
     }
 }

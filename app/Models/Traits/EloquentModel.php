@@ -4,6 +4,7 @@
 namespace App\Models\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Trait EloquentModel
@@ -14,9 +15,13 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static static findOrNew($id, $columns = array())
  * @method static static firstOrNew($id, $columns = array())
  * @method static static firstOrCreate($columns = array())
+ * @method static Collection|static[] get($columns = ['*'])
+ * @method static Collection|static[] all($columns = ['*'])
+ * @method static int count($columns = '*')
  * @method static Builder whereIn($column, $values, $boolean = 'and', $not = false)
- * @method static Builder where($id)
+ * @method static Builder where($column, $operator = null, $value = null, $boolean = 'and')
  * @method static Builder whereKey($id)
+ * @method static \Illuminate\Support\Collection pluck($column, $key = null)
  * @package App\Models\Traits
  */
 trait EloquentModel
