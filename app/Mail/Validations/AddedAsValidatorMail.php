@@ -14,7 +14,7 @@ class AddedAsValidatorMail extends ImplementationMail
 
     public function __construct(
         string $sponsor_name,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 

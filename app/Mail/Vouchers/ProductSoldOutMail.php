@@ -17,7 +17,7 @@ class ProductSoldOutMail extends ImplementationMail
     public function __construct(
         string $productName,
         string $link,
-        ?string $identityId
+        string $identityId = null
     ){
         parent::__construct($identityId);
 

@@ -644,7 +644,7 @@ class Fund extends Model
     public static function notifyAboutReachedNotificationAmount()
     {
         /** @var NotificationService $mailService */
-        $mailService = resolve('forus.services.mail_notification');
+        $mailService = resolve('forus.services.notification');
 
         /** @var RecordRepo $recordRepo */
         $recordRepo = resolve('forus.services.record');
@@ -661,26 +661,28 @@ class Fund extends Model
             })
             ->where('state', 'active')
             ->where('notification_amount', '>', 0)
+            ->whereNotNull('notification_amount')
             ->with('organization')
             ->get();
 
         /** @var self $fund */
-        foreach($funds as $fund) {
+        foreach ($funds as $fund) {
             $transactionCosts = $fund->getTransactionCosts();
 
-            if($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
+            if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
-                $referrers = $referrers->pluck('identity_address')->map(function ($identity) use ($recordRepo) {
+                $referrers = $referrers->pluck('identity_address');
+                $referrers = $referrers->push(
+                    $fund->organization->identity_address
+                )->map(function ($identity) use ($recordRepo) {
                     return [
                         'identity' => $identity,
                         'email' => $recordRepo->primaryEmailByAddress($identity),
                     ];
-                });
-                /*TODO: check if org mail is same as finance role; if so only send one mail
-                $referrers->push([
-                    'identity' => $fund->organization->emailServiceId(),
+                })->push([
+                    'identity' => null,
                     'email' => $fund->organization->email
-                ]);*/
+                ])->unique('email');
 
                 foreach ($referrers as $referrer) {
                     $mailService->fundBalanceWarning(

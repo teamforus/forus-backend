@@ -20,8 +20,8 @@ class ShareProductVoucherMail extends ImplementationMail
         string $productName,
         string $qrUrl,
         string $reason,
-        ?string $identityId)
-    {
+        string $identityId = null
+    ) {
         parent::__construct($identityId);
 
         $this->requesterMail = $requesterMail;

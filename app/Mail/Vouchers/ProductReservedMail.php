@@ -16,7 +16,7 @@ class ProductReservedMail extends ImplementationMail
     public function __construct(
         string $productName,
         string $expirationDate,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 

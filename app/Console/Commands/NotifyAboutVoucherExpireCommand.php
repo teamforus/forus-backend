@@ -34,12 +34,12 @@ class NotifyAboutVoucherExpireCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
     public function handle()
     {
         try {
             Voucher::checkVoucherExpireQueue();
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {};
     }
 }

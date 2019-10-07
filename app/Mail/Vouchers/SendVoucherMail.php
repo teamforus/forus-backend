@@ -19,7 +19,7 @@ class SendVoucherMail extends ImplementationMail
         string $fund_name,
         string $fund_product_name,
         string $qr_url,
-        string $identifier
+        string $identifier = null
     ) {
         parent::__construct($identifier);
 
