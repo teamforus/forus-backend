@@ -10,8 +10,10 @@
     <br/>
     <br/>
     {{ mail_trans('login_via_email.login_on_platform', ['platform' => $platform]) }}.
-    <br/>
+    <br />
     {!! mail_trans('login_via_email.login_button', ['link' => $link]) !!}
     <br/>
+    <br/>
+    {{ mail_trans('login_via_email.login_expire', ['time' => strftime('%e %B %H:%M', strtotime("+1 hours"))]) }}
 @endsection
 

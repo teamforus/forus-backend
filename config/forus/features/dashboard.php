@@ -2,7 +2,7 @@
 
 return [
     'add_money' => false,
-    'validationRequests' => true,
+    'validationRequests' => false,
     'organizations' => [
         'list' => true,
         'show' => true,

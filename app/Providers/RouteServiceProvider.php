@@ -52,12 +52,6 @@ class RouteServiceProvider extends ServiceProvider
                 ])->first() ?? null;
         });
 
-        $router->bind('media_uid', function ($value) {
-            return Media::query()->where([
-                    'uid' => $value
-                ])->first() ?? abort(404);
-        });
-
         $router->bind('fund_id', function ($value) {
             return Fund::query()->where([
                     'id' => $value

@@ -29,9 +29,8 @@ class StoreFundRequest extends FormRequest
 
         return [
             'name'                  => 'required|between:2,200',
-            'state'                 => 'required|in:waiting,active,paused,closed',
-            'start_date'            => 'required|date|after:' . $start_after,
-            'end_date'              => 'required|date|after:start_date',
+            'start_date'            => 'required|date_format:Y-m-d|after:' . $start_after,
+            'end_date'              => 'required|date_format:Y-m-d|after:start_date',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
             'notification_amount'   => 'nullable|numeric',

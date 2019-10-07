@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Media;
 
+use App\Rules\MediaTypeRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMediaRequest extends FormRequest
@@ -24,8 +25,8 @@ class StoreMediaRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => 'required|file|image|max:4096',
-            'type' => 'required|in:' . implode(',', array_keys(config('media.sizes')))
+            'file' => 'required|file|image|mimes:jpg,jpeg,png|max:4096',
+            'type' => ['required', new MediaTypeRule()],
         ];
     }
 }

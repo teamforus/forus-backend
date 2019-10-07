@@ -74,7 +74,7 @@ class VouchersController extends Controller
             $email      = $voucher['email'] ?? false;
             $amount     = $voucher['amount'] ?? 0;
             $identity   = $email ? (
-                $recordRepo->identityIdByEmail($email) ?: $identityRepo->makeByEmail($email)
+                $recordRepo->identityAddressByEmail($email) ?: $identityRepo->makeByEmail($email)
             ) : null;
             $expires_at = $voucher['expires_at'] ?? false;
             $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
@@ -126,7 +126,7 @@ class VouchersController extends Controller
         $identityRepo = resolve('forus.services.identity');
         $recordRepo = resolve('forus.services.record');
 
-        $voucher->assignToIdentity($recordRepo->identityIdByEmail($email) ?:
+        $voucher->assignToIdentity($recordRepo->identityAddressByEmail($email) ?:
             $identityRepo->makeByEmail($email));
 
         return new SponsorVoucherResource($voucher);

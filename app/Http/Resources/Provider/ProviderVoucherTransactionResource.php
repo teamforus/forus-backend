@@ -8,11 +8,16 @@ use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class ProviderVoucherTransactionResource
+ * @property VoucherTransaction $resource
+ * @package App\Http\Resources\Provider
+ */
 class ProviderVoucherTransactionResource extends Resource
 {
     public static $load = [
         'provider',
-        'provider.product_categories.translations',
+        'provider.business_type.translations',
         'provider.logo.sizes',
         'voucher.fund',
         'voucher.fund.logo.sizes',
@@ -28,7 +33,6 @@ class ProviderVoucherTransactionResource extends Resource
      */
     public function toArray($request)
     {
-        /** @var VoucherTransaction $voucherTransaction */
         $voucherTransaction = $this->resource;
 
         return collect($voucherTransaction)->only([

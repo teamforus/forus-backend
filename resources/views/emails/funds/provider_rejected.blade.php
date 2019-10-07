@@ -1,6 +1,6 @@
 @extends('emails.base')
 
-@section('title', mail_trans('provider_rejected.title', ['provider_rejected' => ]))
+@section('title', mail_trans('provider_rejected.title', ['provider_rejected' => $provider_name]))
 @section('html')
     {{ mail_trans('dear_provider', ['provider_name' => $provider_name]) }},
     <br/>

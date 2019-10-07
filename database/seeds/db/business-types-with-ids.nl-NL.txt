@@ -1,0 +1,2053 @@
+# Business types
+1 - APK-garage
+2 - Aannemer airconditioning
+3 - Aannemer voor basketbalvelden
+4 - Aannemer voor bestrating
+5 - Aannemer voor boren
+6 - Aannemer voor dakramen
+7 - Aannemer voor fonteinen
+8 - Aannemer voor gazonsproeisystemen
+9 - Aannemer voor gevelbeplating
+10 - Aannemer voor gipsplaten
+11 - Aannemer voor golfbanen
+12 - Aannemer voor graafwerkzaamheden
+13 - Aannemer voor hekken
+14 - Aannemer voor het boren van waterputten
+15 - Aannemer voor isolatie
+16 - Aannemer voor marmer
+17 - Aannemer voor mechanische systemen
+18 - Aannemer voor metaalplaten
+19 - Aannemer voor nutsbedrijf
+20 - Aannemer voor serres
+21 - Aannemer voor spoorwegbouw
+22 - Aannemer voor vijvers
+23 - Aannemer voor zwembad
+24 - Aannemer
+25 - Aanrechtwinkel
+26 - Abortuskliniek
+27 - Abundant Life Church
+28 - Accountant
+29 - Achtbaan
+30 - Acupunctuur
+31 - Acupunctuurkliniek
+32 - Acura-dealer
+33 - Adviseur brandveiligheid
+34 - Adviseur internationale handel
+35 - Advocaat voor ouderen
+36 - Advocaat
+37 - Afdeling stadsplanning
+38 - Afgeschermd wooncomplex
+39 - Afghaans restaurant
+40 - Afhaalpizza
+41 - Afhaalrestaurant
+42 - Afkickkliniek
+43 - Afrikaans restaurant
+44 - Afrikaanse winkel
+45 - Afvalbeheerbedrijf
+46 - Aikido
+47 - Aikidoschool
+48 - Airbrushservice
+49 - Akoestisch adviseur
+50 - Algemeen advocaat
+51 - Allergoloog
+52 - Alliance Church
+53 - Alsace-restaurant
+54 - Alternatieve genezer
+55 - Ambassade
+56 - Ambulancedienst
+57 - Amerikaans restaurant
+58 - Amfitheater
+59 - Amusement
+60 - Amusementscentrum
+61 - Amusementspark
+62 - Anago-restaurant
+63 - Andalusisch restaurant
+64 - Anesthesist
+65 - Anglicaanse kerk
+66 - Antieke meubelwinkel
+67 - Antiekwinkel
+68 - Apostolische kerk
+69 - Apotheek
+70 - Apparatuur voor gehoorapparaten
+71 - Appartementencomplex
+72 - Aquarium
+73 - Arbeidsbureau
+74 - Arbeidsrechtadvocaat
+75 - Arbo-arts
+76 - Arboretum
+77 - Archiefopslagbedrijf
+78 - Architect
+79 - Architectuurschool
+80 - Argentijns restaurant
+81 - Armeens restaurant
+82 - Armeense kerk
+83 - Aromatherapie
+84 - Arrondissementsrechtbank
+85 - Arts infectieziekten
+86 - Arts
+87 - Asbestonderzoek
+88 - Asfaltaannemer
+89 - Asturisch restaurant
+90 - Atletiekbaan
+91 - Atletiekvereniging
+92 - Attractie
+93 - Audi-dealer
+94 - Audicien
+95 - Audiovisuele adviseur
+96 - Auditorium
+97 - Australisch restaurant
+98 - Authentiek Japans restaurant
+99 - Auto-accuverkoper
+100 - Autobedrijf/Garage
+101 - Autocircuit
+102 - Autodealer
+103 - Autodeellocatie
+104 - Autofabriek
+105 - Autoleasebedrijf
+106 - Automakelaar
+107 - Automaterialen winkel
+108 - Autoramenwerkplaats
+109 - Autoregistratiebedrijf
+110 - Autoreparatie en -onderhoud
+111 - Autorestauratie
+112 - Autoschadebedrijf
+113 - Autoschoonmaakdienst
+114 - Autoservice
+115 - Autosloper
+116 - Autosloperij
+117 - Autosnelweg
+118 - Autostoffeerder
+119 - Autoveiling
+120 - Autoverhuur
+121 - Autoverzekering
+122 - Autowasserette
+123 - Autowerkplaats
+124 - Avondwinkel
+125 - Aziatisch fusion-restaurant
+126 - Aziatisch restaurant
+127 - Aziatische kruidenierswinkel
+128 - BMW-dealer
+129 - Babykledingwinkel
+130 - Babywinkel
+131 - Badkamerinstallateur
+132 - Badmintonveld
+133 - Badmintonvereniging
+134 - Badmodewinkel
+135 - Bagelwinkel
+136 - Bahá’í Huis van Aanbidding
+137 - Bakkerij voor bruidstaarten
+138 - Bakkerij
+139 - Balletschool
+140 - Ballonwinkel
+141 - Bandenwinkel
+142 - Bank of pinautomaat
+143 - Bank
+144 - Banketbakker
+145 - Baptistenkerk
+146 - Bar & Grill
+147 - Bar
+148 - Barbeque restaurant
+149 - Barbier
+150 - Basisonderwijs
+151 - Basisschool
+152 - Basketbal
+153 - Basketbalclub
+154 - Basketbalveld
+155 - Baskisch restaurant
+156 - Bazaar
+157 - Bed & Breakfast
+158 - Beddengoedwinkel
+159 - Beddenwinkel
+160 - Bedevaartplaats
+161 - Bedrijf
+162 - Bedrijfscampus
+163 - Bedrijfscentrum
+164 - Bedrijfseconomische opleiding
+165 - Bedrijvenpark
+166 - Beeldhouwwerk
+167 - Begraafplaats
+168 - Behandelingsprogramma voor alcoholisme
+169 - Behangwinkel
+170 - Beheermaatschappij
+171 - Bejaardentehuis
+172 - Belastingaangifte
+173 - Belastingadvies
+174 - Belastingadviseur
+175 - Belastingdienst
+176 - Belastingkantoor
+177 - Belastingvrije winkel
+178 - Beleggingsadvies
+179 - Belgisch restaurant
+180 - Bemiddelingsdienst voor kamergenoten
+181 - Bengaals restaurant
+182 - Beoefenaar van holistische geneeskunde
+183 - Berghut
+184 - Bergingsbedrijf
+185 - Beroepsonderwijs
+186 - Berry-restaurant
+187 - Bestekwinkel
+188 - Betaalservice
+189 - Betoncentrale
+190 - Beveiligingsbedrijf
+191 - Beveiligingsservice
+192 - Bezienswaardigheid
+193 - Bezoekerscentrum
+194 - Bibliotheek
+195 - Biergroothandel
+196 - Bierwinkel
+197 - Bijles
+198 - Bingozaal
+199 - Binnenhuisarchitect
+200 - Binnenstad
+201 - Biofeedbacktherapeut
+202 - Biologisch restaurant
+203 - Bioscoop
+204 - Birmees restaurant
+205 - Bistro
+206 - Bladmuziekwinkel
+207 - Blauwdrukken
+208 - Blijf-van-mijn-lijfhuis
+209 - Bloedbank
+210 - Bloemengroothandel
+211 - Bloemist
+212 - Bluesclub
+213 - Bocce-baan
+214 - Bodemonderzoek
+215 - Bodyart
+216 - Bodypiercingzaak
+217 - Boeddhistische tempel
+218 - Boekbinder
+219 - Boekhouder
+220 - Boekhouding
+221 - Boekwinkel
+222 - Boerderij
+223 - Boerderijvakantie
+224 - Boerenmarkt
+225 - Boetiek
+226 - Boetiekhotel
+227 - Boksschool
+228 - Boogschietbaan
+229 - Boomgaard
+230 - Boomkwekerij
+231 - Boomverzorging
+232 - Bootreparatie
+233 - Borduurapplicatieservice
+234 - Borduurwinkel
+235 - Borgservice
+236 - Borgstellingsservice
+237 - Botanische tuin
+238 - Botenbouwers
+239 - Botenclub
+240 - Botenhandelaar
+241 - Botenstalling
+242 - Botenverhuurbedrijf
+243 - Bouwbedrijf voor tennisbanen
+244 - Bouwbedrijf
+245 - Bouwer van aanlegsteigers
+246 - Bouwer van boomstammenwoning
+247 - Bouwer van grafmonumenten
+248 - Bouwer van huizen op maat
+249 - Bouwer van modulaire woningen
+250 - Bouwer van priëlen
+251 - Bouwer van schuurtjes
+252 - Bouwer van veranda’s
+253 - Bouwkundig ingenieur
+254 - Bouwmarkt
+255 - Bowlingbaan
+256 - Brandweerkazerne
+257 - Brasserie
+258 - Braziliaans restaurant
+259 - Breiwinkel
+260 - Bridgeclub
+261 - Brits restaurant
+262 - Bron
+263 - Broodjeswinkel
+264 - Brouwerij café
+265 - Brouwerij
+266 - Brug
+267 - Bruidswinkel
+268 - Brunchrestaurant
+269 - Bubbelthee
+270 - Budgethotel
+271 - Buffetrestaurant
+272 - Buick-dealer
+273 - Buitenlands consulaat
+274 - Bulgaars restaurant
+275 - Bureau voor huwelijksvergunningen
+276 - Bureau voor kiezersregistratie
+277 - Bureau voor rechtshulp
+278 - Burgerlijke stand
+279 - Burrito-restaurant
+280 - Bushalte
+281 - Business to Business-service
+282 - Busmaatschappij
+283 - Busreisorganisatie
+284 - Busstation
+285 - Busverhuurbedrijf
+286 - Buurthuis
+287 - Buurtsuper
+288 - CBR/RDW
+289 - CV-service
+290 - Cadeauwinkel
+291 - Cadillac-dealer
+292 - Cafetaria
+293 - Café
+294 - Cajunrestaurant
+295 - Californisch restaurant
+296 - Callcenter
+297 - Calvary Chapel-kerk
+298 - Cambodjaans restaurant
+299 - Camerareparatie
+300 - Camerawinkel
+301 - Camperdealer
+302 - Camperplaats
+303 - Camperreparatie
+304 - Camperstalling
+305 - Camperverhuurbedrijf
+306 - Camperwinkel
+307 - Camping
+308 - Canadees restaurant
+309 - Cantabrisch restaurant
+310 - Caravandealer
+311 - Caravanfabrikant
+312 - Caravanreparatie
+313 - Caravanverhuurbedrijf
+314 - Cardioloog
+315 - Caribisch restaurant
+316 - Carpoolen
+317 - Cartografische service
+318 - Casino
+319 - Castiliaans restaurant
+320 - Catalaans restaurant
+321 - Cateraar
+322 - Catering
+323 - Cd-winkel
+324 - Cement
+325 - Centrum voor diagnostische beeldvorming
+326 - Centrum voor geboortebeperking
+327 - Centrum voor gewichtsbeheersing
+328 - Centrum voor haarverwijdering
+329 - Centrum voor tatoeageverwijdering
+330 - Centrum voor vaderschapsonderzoek
+331 - Centrum voor zwangerschapsbegeleiding
+332 - Chanko-restaurant
+333 - Charter School (bijzondere school)
+334 - Cheesesteakrestaurant
+335 - Chemische fabriek
+336 - Chemische industrie
+337 - Chesapeake-restaurant
+338 - Chevrolet-dealer
+339 - Chileens restaurant
+340 - Chinees restaurant
+341 - Chiropractor
+342 - Chirurg
+343 - Chocolaterie
+344 - Christelijke kerk
+345 - Chrysler-dealer
+346 - Circuit voor terreinvoertuigen
+347 - Circus
+348 - Club
+349 - Coach
+350 - Cocktailbar
+351 - Coffeeshop
+352 - Colombiaans restaurant
+353 - Comedyclub
+354 - Commerciële drukkerij
+355 - Communicatieadviesbureau
+356 - Computerbeveiligingsservice
+357 - Computerondersteuning en -services
+358 - Computeronderwijs
+359 - Computerreparatie
+360 - Computerwinkel
+361 - Concertzaal
+362 - Conciërgediensten
+363 - Conferentiecentrum
+364 - Conferentiehotel
+365 - Congrescentrum
+366 - Conservatieve synagoge
+367 - Conservenfabriek
+368 - Consignatieverkoopwinkel
+369 - Consultant voor elektriciteitsopwekking
+370 - Consultant
+371 - Continentaal-Europees restaurant
+372 - Copyshop
+373 - Cosmetica
+374 - Cosmeticawinkel
+375 - Cosmetische tandarts
+376 - Costa Ricaans restaurant
+377 - Cottage
+378 - Countryclub
+379 - Coöperatie
+380 - Crematorium
+381 - Creools restaurant
+382 - Cricketveld
+383 - Cruiseorganisator
+384 - Cubaans restaurant
+385 - Cultureel centrum
+386 - Cultuur
+387 - DTP-service
+388 - Dagopvang voor honden
+389 - Dagspa
+390 - Dagverblijf voor ouderen
+391 - Dakdekker
+392 - Dakgotenreinigingsservice
+393 - Damesmode
+394 - Dansgezelschap
+395 - Dansschool
+396 - Danswinkel
+397 - Danszaal
+398 - Dartswinkel
+399 - Dealer van aanhangwagens
+400 - Dealer van raceauto’s
+401 - Dealer van tweedehands auto’s
+402 - Dealer van tweedehands motorfietsen
+403 - Dealer van tweedehands vrachtwagens
+404 - Deens restaurant
+405 - Delicatessenwinkel
+406 - Dermatoloog
+407 - Dessert restaurant
+408 - Dessertrestaurant
+409 - Deurwaarder
+410 - Diabetoloog
+411 - Diagnosecentrum
+412 - Diamanthandelaar
+413 - Diamantopkoper
+414 - Dienst Openbare orde en veiligheid
+415 - Dienst Openbare werken
+416 - Dienst die verwijst naar advocaten
+417 - Dienst die verwijst naar artsen
+418 - Dieren
+419 - Dierenambulance
+420 - Dierenarts voor noodgevallen
+421 - Dierenarts
+422 - Dierenartsen
+423 - Dierenasiel
+424 - Dierenbeheer
+425 - Dierenbescherming
+426 - Dierenkliniek
+427 - Dierenopvang
+428 - Dierenpension
+429 - Dierentrimmer
+430 - Dierentuin
+431 - Dierenverzorging
+432 - Dierenwelzijnsorganisatie
+433 - Dierenwinkel
+434 - Digitale drukker
+435 - Dim sum restaurant
+436 - Dinertheater
+437 - Discotheek
+438 - Discountsupermarkt
+439 - Distributieservice
+440 - District
+441 - Districtsraadkantoor
+442 - Districtsrechtbank
+443 - Diëtist
+444 - Dj
+445 - Dodge-dealer
+446 - Doe het zelf
+447 - Dojo-restaurant
+448 - Dominicaans restaurant
+449 - Doner Kebap
+450 - Donutwinkel
+451 - Doopsgezinde kerk
+452 - Douane-expediteur
+453 - Douchedeurwinkel
+454 - Dovenkerk
+455 - Dovenschool
+456 - Dranken
+457 - Drinkwaterbedrijf
+458 - Drive-inbioscoop
+459 - Drogist
+460 - Droogbloemenwinkel
+461 - Drugstore
+462 - Drukkerij voor uitnodigingen
+463 - Drumwinkel
+464 - Duikvereniging
+465 - Duikwinkel
+466 - Duits restaurant
+467 - Dumplingrestaurant
+468 - Dumpwinkel
+469 - Dvd-winkel
+470 - E-commerceservice
+471 - EHBO-post
+472 - Echtscheidingsadvocaat
+473 - Echtscheidingswinkel
+474 - Eclectisch restaurant
+475 - Ecuadoriaans restaurant
+476 - Eetcafé
+477 - Eethuisje
+478 - Eetzaal
+479 - Effectenmakelaar
+480 - Egyptisch restaurant
+481 - Eigendomsrechtkantoor
+482 - Electricien
+483 - Elektriciteitsbedrijf
+484 - Elektrische apparatuur
+485 - Elektrische services voor auto’s
+486 - Elektrogroothandel
+487 - Elektromotorenreparatie
+488 - Elektronica winkel
+489 - Elektronica
+490 - Elektronicafabrikant
+491 - Elektronicareparatiewerkplaats
+492 - Elektrotechnisch ingenieur
+493 - Endocrinoloog
+494 - Endodontist
+495 - Energiecentrale
+496 - Engels restaurant
+497 - Entertainer
+498 - Episcopal Church
+499 - Erfrechtadvocaat
+500 - Ergotherapeut
+501 - Eritrees restaurant
+502 - Erotische massage
+503 - Escortservice
+504 - Espressobar
+505 - Ethiopisch restaurant
+506 - Etnisch restaurant
+507 - Europees restaurant
+508 - Eurowinkel
+509 - Evangelische kerk
+510 - Evenementenbureau
+511 - Evenementenhal
+512 - Evenementenlocatie
+513 - Evenementenmanagementbedrijf
+514 - Expediteur
+515 - Fabrikant van spanten
+516 - Fabrikant
+517 - Faillissementsadvocaat
+518 - Faillissementsservice
+519 - Falafelrestaurant
+520 - Familierechtadvocaat
+521 - Familierestaurant
+522 - Farmaceutisch bedrijf
+523 - Faxservice
+524 - Federaal gerechtshof
+525 - Feestwinkel
+526 - Festival
+527 - Fietsenmaker
+528 - Fietsenrek
+529 - Fietsenstalling
+530 - Fietsenwinkel
+531 - Fietsverhuur
+532 - Filippijns restaurant
+533 - Filmverhuur
+534 - Financieel adviseur
+535 - Financiële instelling
+536 - Financiële planner
+537 - Fins restaurant
+538 - Fiscaal jurist
+539 - Fish & chips-restaurant
+540 - Fitnessprogramma
+541 - Fitnesswinkel
+542 - Flat
+543 - Florida-restaurant
+544 - Fondue restaurant
+545 - Foodcourt
+546 - Ford-dealer
+547 - Fotograaf
+548 - Fotolaboratorium
+549 - Fotostudio
+550 - Fotowinkel
+551 - Fourniturenwinkel
+552 - Fourniturenzaak
+553 - Foursquare Church
+554 - Frans haute cuisine-restaurant
+555 - Frans restaurant
+556 - Frans steakhouse restaurant
+557 - Friends Church (quakers)
+558 - Frisbeegolfbaan
+559 - Fruit- en groentewinkel
+560 - Fugu-restaurant
+561 - Futonwinkel
+562 - Fysiotherapeut
+563 - Fysiotherapiepraktijk
+564 - GGD
+565 - GGZ-kliniek
+566 - GMC-dealer
+567 - Galakledingwinkel
+568 - Galicisch restaurant
+569 - Garagebouwer
+570 - Gasbedrijf
+571 - Gastenverblijf
+572 - Gastro-enteroloog
+573 - Gastropub
+574 - Gazonverzorging
+575 - Gebied voor terreinvoertuigen
+576 - Gebitsprothesecentrum
+577 - Gebouw
+578 - Gecertificeerd accountant
+579 - Gedeelde werkplek
+580 - Geestelijke gezondheidszorg
+581 - Gegevensherstelservice
+582 - Geiser
+583 - Geldwisselkantoor
+584 - Gemeenschapsbank
+585 - Gemeente
+586 - Gemeentesecretarie
+587 - Gemeubileerd appartementencomplex
+588 - Genealoog
+589 - Geneeskundeopleiding
+590 - Georgisch restaurant
+591 - Gereedschapreparatie
+592 - Gereedschapverhuurbedrijf
+593 - Gereedschapwinkel
+594 - Gevangenis
+595 - Gezichtsbehandelingsspa
+596 - Gezinstherapeut
+597 - Gezondheidsclub
+598 - Gezondheidsconsulent
+599 - Gezondheidszorg
+600 - Gitaarleraar
+601 - Gitaarwinkel
+602 - Glas in lood
+603 - Glas- en spiegelwinkel
+604 - Glashandel
+605 - Glasreparatieservice
+606 - Glaszetter
+607 - Glazenwasser
+608 - Glutenvrij restaurant
+609 - Goedkope winkel
+610 - Goktrainer
+611 - Golf
+612 - Golfafslagbaan
+613 - Golfbaan
+614 - Golfclub
+615 - Golfinstructeur
+616 - Golfresort
+617 - Golfwinkel
+618 - Goochelwinkel
+619 - Gordijnenwinkel
+620 - Goudhandelaar
+621 - Grafisch ontwerp
+622 - Grand Café
+623 - Grasmaaierwinkel
+624 - Gratis kliniek
+625 - Graveur
+626 - Grenspost
+627 - Grieks restaurant
+628 - Grieks-orthodoxe kerk
+629 - Grillwinkel
+630 - Groenteboer
+631 - Groentewinkel
+632 - Groepsaccommodatie
+633 - Grondverzet
+634 - Groothandel in groente en fruit
+635 - Groothandel in juwelen
+636 - Groothandel in kralen
+637 - Groothandel in levensmiddelen
+638 - Groothandel in planten
+639 - Groothandel in stoffen
+640 - Groothandel in vis en zeevruchten
+641 - Groothandelaar in lederwaren
+642 - Groothandelaar
+643 - Groothandelsbakkerij
+644 - Groothandelswinkel
+645 - Guatemalaans restaurant
+646 - Gurdwara
+647 - Gyrosrestaurant
+648 - HVAC-installateur
+649 - Haarverzorging
+650 - Hal
+651 - Hamburger restaurant
+652 - Hammenwinkel
+653 - Handbalveld
+654 - Handboogwinkel
+655 - Handchirurg
+656 - Handwerkwinkel
+657 - Hardloopwinkel
+658 - Harley-Davidson-dealer
+659 - Haute-cuisinerestaurant
+660 - Haven voor watervliegtuigen
+661 - Haven
+662 - Hawaiiaanse winkel
+663 - Hawaïaans restaurant
+664 - Haïtiaans restaurant
+665 - Head Start Center (educatieve peuterspeelzaal)
+666 - Health Food-restaurant
+667 - Heiligdom
+668 - Heiwerk
+669 - Heliport
+670 - Hematoloog
+671 - Hengelsport
+672 - Hengelvisrestaurant
+673 - Herberg
+674 - Herdenkingspark
+675 - Herenhuiscomplex
+676 - Herenmode
+677 - Herstelbedrijf brandschade
+678 - Herstelbedrijf waterschade
+679 - Hervormde kerk
+680 - Hifi-reparatieservice
+681 - Hifi-winkel
+682 - Hindoeïstische tempel
+683 - Historisch genootschap
+684 - Historisch herkenningspunt
+685 - Historische plaats
+686 - Hoagie-restaurant
+687 - Hobbywinkel
+688 - Hockey
+689 - Hockeyclub
+690 - Hoedenwinkel
+691 - Hogedrukreiniging
+692 - Hoger onderwijs
+693 - Hogeschool
+694 - Homobar
+695 - Honda-dealer
+696 - Hondenpark
+697 - Hondenschool
+698 - Hondentrainer
+699 - Hondentrimsalon
+700 - Hondenuitlaatservice
+701 - Hondurees restaurant
+702 - Hongaars restaurant
+703 - Honkbal
+704 - Honkbalclub
+705 - Honkbalveld
+706 - Hoofdkantoor
+707 - Hoofdkwartier van indianenstam
+708 - Horecagroothandel
+709 - Horlogerie
+710 - Hospice
+711 - Hotdogrestaurant
+712 - Hotel restaurant
+713 - Hotel voor langdurig verblijf
+714 - Hotel
+715 - Hotelschool
+716 - Hout/parket/laminaat
+717 - Houthakkersbedrijf
+718 - Houthandel
+719 - Houtkachelwinkel
+720 - Houtzagerij
+721 - Huidverzorgingskliniek
+722 - Huisarts
+723 - Huisdierentrainer
+724 - Huishoudelijke services
+725 - Huisoppas
+726 - Huisvestingsautoriteit
+727 - Huizenbouwer
+728 - Hulpdienst bij geringe vorderingen
+729 - Hulpdiensten
+730 - Hulpprogramma’s
+731 - Hulpverleningstraining
+732 - Human Resources
+733 - Hunan-restaurant
+734 - Huurwoningen
+735 - Huwelijksconsulent
+736 - Huwelijksservice
+737 - Hypermarkt
+738 - Hypnotherapie
+739 - Hypotheek
+740 - Hypotheekbank
+741 - Hypotheekmakelaar
+742 - Hyundai-dealer
+743 - IJshockeybaan
+744 - IJslands restaurant
+745 - IJssalon
+746 - IMAX-bioscoop
+747 - IT-consultancy
+748 - Iers restaurant
+749 - Ierse pub
+750 - Ierse winkel
+751 - Immigratieadvocaat
+752 - Impresariaat
+753 - Impresario
+754 - Inbraakalarmverkoper
+755 - Incassobureau
+756 - Indiaans restaurant
+757 - Indiaanse winkel
+758 - Indiaas restaurant
+759 - Indiase kruidenierswinkel
+760 - Indonesisch restaurant
+761 - Indoorovernachtingsmogelijkheid
+762 - Industrieel gebouw
+763 - Industriegebied
+764 - Infiniti-dealer
+765 - Ingenieur
+766 - Ingenieursbureau
+767 - Inspecteur commercieel vastgoed
+768 - Installateur van leuningen
+769 - Installateur van trappen
+770 - Installatiebedrijf
+771 - Interieurinrichting
+772 - Internationaal vliegveld
+773 - Internationale school
+774 - Internetcafé
+775 - Internetmarketing
+776 - Internetprovider
+777 - Internist
+778 - Investeringsmaatschappij
+779 - Israëlisch restaurant
+780 - Isuzu-dealer
+781 - Italiaans restaurant
+782 - Italiaanse kruidenierswinkel
+783 - Izakaya-restaurant
+784 - Jachtenmakelaar
+785 - Jachthaven
+786 - Jaguar-dealer
+787 - Jamaicaans restaurant
+788 - Japans curry restaurant
+789 - Japans restaurant
+790 - Japans steakhouse
+791 - Japanse banketbakkerij
+792 - Japanse kruidenierswinkel
+793 - Jazzclub
+794 - Jaïn-tempel
+795 - Jeep-dealer
+796 - Jemenitisch restaurant
+797 - Jeugdherberg/hostel
+798 - Jeugdorganisatie
+799 - Jeugdzorg
+800 - Jiujitsuschool
+801 - Joods restaurant
+802 - Judo/JiuJitsuvereniging
+803 - Judoschool
+804 - Juridisch assistent
+805 - Juridische dienstverlening
+806 - Juridische opleiding
+807 - Jurist
+808 - Jurkenboetiek
+809 - Juwelenhandelaar
+810 - Juwelier
+811 - KNO-arts
+812 - Kaakchirurg
+813 - Kaapverdisch restaurant
+814 - Kaarsenwinkel
+815 - Kaartenwinkel
+816 - Kaartverkoper voor evenementen
+817 - Kaaswinkel
+818 - Kabelbaanstation
+819 - Kabelmaatschappij
+820 - Kaiseki-restaurant
+821 - Kamer van Koophandel
+822 - Kampeerboerderij
+823 - Kampeerwinkel
+824 - Kankerkliniek
+825 - Kano- en kajakwinkel
+826 - Kantonees restaurant
+827 - Kantoor van lokale/provinciale overheid
+828 - Kantoor voor gemeentelijke belastingen
+829 - Kantoor voor sociale zekerheid
+830 - Kantoor
+831 - Kantoorboekhandel
+832 - Kantoormanagement
+833 - Kantoorvastgoedbedrijf
+834 - Kapper
+835 - Kapsalon
+836 - Karaokebar
+837 - Karateschool
+838 - Karatevereniging
+839 - Kartbaan
+840 - Kasteel
+841 - Kastenmaker
+842 - Kastenwinkel
+843 - Kathedraal
+844 - Katholieke kerk
+845 - Katholieke school
+846 - Katoenfabriek
+847 - Kazachstaans restaurant
+848 - Kennel
+849 - Kerk van Christus
+850 - Kerk van Jezus Christus van de Heiligen der Laatste Dagen (Mormonen)
+851 - Kerk van de Disciples of Christ
+852 - Kerk
+853 - Kermisterrein
+854 - Kerncentrale
+855 - Kerstmarkt
+856 - Kerstwinkel
+857 - Keukenvernieuwer
+858 - Keukenwinkel
+859 - Keuringsarts
+860 - Kia-dealer
+861 - Kickboksschool
+862 - Kinderarts
+863 - Kinderboerderij
+864 - Kindercardioloog
+865 - Kinderdagopvang
+866 - Kinderkleding
+867 - Kindermeubelwinkel
+868 - Kinderoogarts
+869 - Kinderopvangbureau
+870 - Kinderpsycholoog
+871 - Kindertandarts
+872 - Kindertehuis
+873 - Kinderziekenhuis
+874 - Kiprestaurant
+875 - Kledingreparatie
+876 - Kledingverhuur
+877 - Kledingwinkel
+878 - Kleermaker
+879 - Kleiduivenschietbaan
+880 - Kleuterschool
+881 - Klimcentrum
+882 - Kliniek voor pijnbestrijding
+883 - Klooster
+884 - Kluizenwinkel
+885 - Klusbedrijf
+886 - Knutselwinkel
+887 - Koekjeswinkel
+888 - Koelkastreparatieservice
+889 - Koelkastwinkel
+890 - Koeriersbedrijf
+891 - Koffiebar
+892 - Koffiegroothandel
+893 - Koffiewinkel
+894 - Koninkrijkszaal van Jehovah’s Getuigen
+895 - Kookwinkel
+896 - Koosjer restaurant
+897 - Koosjere kruidenierswinkel
+898 - Kopieerwinkel
+899 - Koreaans barbecue restaurant
+900 - Koreaans restaurant
+901 - Koreaanse kerk
+902 - Koreaanse kruidenierswinkel
+903 - Kostuumwinkel
+904 - Kozijnen
+905 - Kraamkledingwinkel
+906 - Krab restaurant
+907 - Kralenwinkel
+908 - Krantenuitgever
+909 - Kredietadvies
+910 - Kredietvereniging
+911 - Kringloopwinkel
+912 - Kroatisch restaurant
+913 - Kruidenier
+914 - Kruidenierszaak
+915 - Kruidenwinkel
+916 - Kungfuschool
+917 - Kunstacademie
+918 - Kunstcentrum
+919 - Kunstenaar
+920 - Kunstgalerie
+921 - Kunstmuseum
+922 - Kunstorganisatie
+923 - Kunstrestauratie
+924 - Kunststofproductiebedrijf
+925 - Kushiyaki-restaurant
+926 - Kuuroord
+927 - Kwekerij
+928 - LASIK-oogchirurg
+929 - Laadstation voor elektrische voertuigen
+930 - Laarzenreparatie
+931 - Laarzenwinkel
+932 - Lamineerservice
+933 - Lampenwinkel
+934 - Land Rover-dealer
+935 - Land
+936 - Landbouw
+937 - Landbouwkundige Dienst
+938 - Landingsbaan
+939 - Landmeter
+940 - Landschapsarchitect
+941 - Laotiaans restaurant
+942 - Lasergamecentrum
+943 - Lasser
+944 - Lastechniekwinkel
+945 - Latijns-Amerikaans restaurant
+946 - Lederreinigingsbedrijf
+947 - Lederwarenwinkel
+948 - Leningbureau
+949 - Letselschadeadvocaat
+950 - Leugendetectorservice
+951 - Leverancier van apparatuur voor diabetes
+952 - Leverancier van apparatuur voor videovergaderingen
+953 - Leverancier van apparatuur voor zonne-energie
+954 - Leverancier van audiovisuele apparatuur
+955 - Leverancier van autoalarmen
+956 - Leverancier van beveiligingssystemen
+957 - Leverancier van binnenplanten
+958 - Leverancier van bouwmachines
+959 - Leverancier van bouwmaterialen
+960 - Leverancier van carrosserieonderdelen
+961 - Leverancier van contactlenzen
+962 - Leverancier van elektronische onderdelen
+963 - Leverancier van garagedeuren
+964 - Leverancier van graniet
+965 - Leverancier van industriële apparatuur
+966 - Leverancier van kantoormeubilair
+967 - Leverancier van laboratoriumbenodigdheden
+968 - Leverancier van landbouwmachines
+969 - Leverancier van machines voor oliewinning
+970 - Leverancier van onderdelen voor huishoudelijke apparaten
+971 - Leverancier van pijpen
+972 - Leverancier van propaan
+973 - Leverancier van rubberproducten
+974 - Leverancier van vijvervissen
+975 - Leverancier van voorgemengd beton
+976 - Leverancier van wateronthardingsapparatuur
+977 - Leverancier van wieldoppen
+978 - Lexus-dealer
+979 - Libanees restaurant
+980 - Liberale synagoge
+981 - Licentie- en registratiebureau
+982 - Liefdadigheidsorganisatie
+983 - Liftenservice
+984 - Lijkenhuis
+985 - Limousineservice
+986 - Lincoln Mercury-dealer
+987 - Lingeriewinkel
+988 - Litouws restaurant
+989 - Little League-honkbalveld
+990 - Locatie voor live muziek
+991 - Locatie voor recyclecontainers
+992 - Locatie voor sportactiviteiten
+993 - Logistiek
+994 - Logopedist
+995 - Lokaal overheidskantoor
+996 - Lommerd
+997 - Longarts
+998 - Loodgieter
+999 - Looierij
+1000 - Loonbedrijf
+1001 - Loterijwinkel
+1002 - Lounge
+1003 - Luchtfoto
+1004 - Luchthaven
+1005 - Luchtvaart
+1006 - Luchtvaartadviseur
+1007 - Lunchpakkettenservice
+1008 - Lutherse kerk
+1009 - Luxehotel
+1010 - Maaltijdbezorging
+1011 - Maatschappelijk werker
+1012 - Machinefabrikant
+1013 - Machinewerkplaats
+1014 - Macrobiotisch restaurant
+1015 - Madrileens restaurant
+1016 - Magazijn
+1017 - Makelaardij
+1018 - Makelaars
+1019 - Makelaarsopleiding
+1020 - Maleisisch restaurant
+1021 - Maltees restaurant
+1022 - Management-consultant
+1023 - Mandarijns restaurant
+1024 - Manege
+1025 - Marche-restaurant
+1026 - Marine- en legerdump
+1027 - Marketingconsultant
+1028 - Markt
+1029 - Markthal
+1030 - Marktonderzoeker
+1031 - Marokkaans restaurant
+1032 - Massagesalon
+1033 - Massagetherapeut
+1034 - Matrassenwinkel
+1035 - Mazda-dealer
+1036 - Mediabedrijf
+1037 - Medisch centrum
+1038 - Medisch kuuroord
+1039 - Medisch laboratorium
+1040 - Medische factureerservice
+1041 - Medische kliniek
+1042 - Medische transcriptieservice
+1043 - Meditatiecentrum
+1044 - Mediterraans restaurant
+1045 - Meelfabriek
+1046 - Mercedes-Benz-dealer
+1047 - Messiaanse synagoge
+1048 - Metaalafwerkingsbedrijf
+1049 - Metaalbedrijf
+1050 - Metaalbewerking
+1051 - Methodistenkerk
+1052 - Metrostation
+1053 - Metselaar
+1054 - Meubelgroothandel
+1055 - Meubelmakerij
+1056 - Meubelreparatie
+1057 - Meubelverhuurbedrijf
+1058 - Meubelwinkel
+1059 - Mexicaans restaurant
+1060 - Mexicaanse kruidenierswinkel
+1061 - Mexicaanse winkel
+1062 - Mid-Atlantic-restaurant (VS)
+1063 - Middelbare school
+1064 - Midden-Amerikaans restaurant
+1065 - Midden-Oosters restaurant
+1066 - Middenschool
+1067 - Midgetgolfbaan
+1068 - Mijn
+1069 - Mijnbouwbedrijf
+1070 - Milieuadviseur
+1071 - Milieuorganisatie
+1072 - Milieutechnicus
+1073 - Militair rekruteringskantoor
+1074 - Militaire basis
+1075 - Miniaturenwinkel
+1076 - Minicamping
+1077 - Ministerie van Openbare orde
+1078 - Ministerie van Sociale zaken
+1079 - Ministerie van Verkeer
+1080 - Ministerie van Veteranenzaken
+1081 - Missiehuis
+1082 - Mitsubishi-dealer
+1083 - Mobiele-telefoonwinkel
+1084 - Modelbouw
+1085 - Modelbouwwinkel
+1086 - Modellenbureau
+1087 - Modeltreinwinkel
+1088 - Modern Louisiana-restaurant
+1089 - Modern-Brits restaurant
+1090 - Modern-Europees restaurant
+1091 - Modern-Frans restaurant
+1092 - Molen
+1093 - Mongools barbecuerestaurant
+1094 - Monorailstation
+1095 - Montessorischool
+1096 - Monteur
+1097 - Monument
+1098 - Moravische kerk
+1099 - Mortuarium
+1100 - Moskee
+1101 - Motel
+1102 - Motorenrevisie
+1103 - Motorfietsreparatie
+1104 - Motorfietsverhuurbedrijf
+1105 - Motorsportwinkel
+1106 - Motorwinkel
+1107 - Motorzaak
+1108 - Muay Thai-boksschool
+1109 - Multifunctionele ruimte
+1110 - Muntenhandelaar
+1111 - Museum voor moderne kunst
+1112 - Muziekinstrumentenreparatie
+1113 - Muziekinstrumentenwinkel
+1114 - Muziekleraar
+1115 - Muziekles
+1116 - Muziekschool
+1117 - Muziekvereniging
+1118 - Muziekwinkel
+1119 - Naaister
+1120 - Nachtclub
+1121 - Nagelstudio
+1122 - Napolitaans restaurant
+1123 - Naschoolse opvang
+1124 - Nationaal bos
+1125 - Nationaal park
+1126 - Naturopaat
+1127 - Natuurreservaat
+1128 - Natuursteenhandel
+1129 - Natuurvoedingswinkel
+1130 - Navarraans restaurant
+1131 - Nederlands restaurant
+1132 - Nefroloog
+1133 - Neonataloog
+1134 - Nepalees restaurant
+1135 - Neuroloog
+1136 - New Age-kerk
+1137 - New England-restaurant
+1138 - Nicaraguaans restaurant
+1139 - Niet-confessionele kerk
+1140 - Niet-overheidsorganisatie
+1141 - Nieuw-Amerikaans restaurant
+1142 - Nieuw-Zeelands restaurant
+1143 - Nieuwskiosk
+1144 - Nissan-dealer
+1145 - Noedelwinkel
+1146 - Non-profitorganisatie
+1147 - Noord-Afrikaans restaurant
+1148 - Noord-Italiaans restaurant
+1149 - Noors restaurant
+1150 - Notaris
+1151 - Notenwinkel
+1152 - Nuevo Latino-restaurant
+1153 - Obanzai-restaurant
+1154 - Observatieplatform
+1155 - Octrooigemachtigde
+1156 - Oden-restaurant
+1157 - Oefenlocatie voor honkbal
+1158 - Oekraïens restaurant
+1159 - Oesterbar
+1160 - Oezbeeks restaurant
+1161 - Officier van justitie
+1162 - Okonomiyaki-restaurant
+1163 - Oldsmobile-dealer
+1164 - Olieraffinaderij
+1165 - Olieverversingsservice
+1166 - Oncoloog
+1167 - Onderdelen voor raceauto’s
+1168 - Onderstation
+1169 - Onderwijs
+1170 - Onderwijsadviseur
+1171 - Onderzoeksinstituut
+1172 - Ongediertebestrijding
+1173 - Ontbijtrestaurant
+1174 - Ontharing met elektrolyse
+1175 - Ontharing met laser
+1176 - Ontharingsservice
+1177 - Ontwerper buitenverlichting
+1178 - Oogarts
+1179 - Oogheelkundig centrum
+1180 - Oorarts
+1181 - Oorlogsmonument
+1182 - Oost-Afrikaans restaurant
+1183 - Oost-Europees restaurant
+1184 - Oostenrijks restaurant
+1185 - Oosters-orthodoxe kerk
+1186 - Oosterse winkel
+1187 - Openbaar cursuscentrum
+1188 - Openbaar damestoilet
+1189 - Openbaar herentoilet
+1190 - Openbaar medisch centrum
+1191 - Openbaar rolstoeltoilet
+1192 - Openbaar telefoonkantoor
+1193 - Openbaar toilet
+1194 - Openbaar zwembad
+1195 - Openbare bibliotheek
+1196 - Openbare diensten
+1197 - Openbare golfbanen
+1198 - Openbare school
+1199 - Openbare universiteit
+1200 - Operabedrijf
+1201 - Operazaal
+1202 - Opleiding voor schoonheidsspecialiste
+1203 - Opleiding
+1204 - Opleidingscentrum
+1205 - Opnamestudio
+1206 - Opslagbedrijf met zelfbediening
+1207 - Opslagbedrijf
+1208 - Opticien
+1209 - Opvanghuis voor dak- en thuislozen
+1210 - Organisatie voor maatschappelijk werk
+1211 - Organisator scubaduiken
+1212 - Organisator van ballonvaarten
+1213 - Organisator van helikoptervluchten
+1214 - Organisator van kano-/kajaktochten
+1215 - Organisator van sightseeingtours
+1216 - Orthodontist
+1217 - Orthodoxe kerk
+1218 - Orthodoxe synagoge
+1219 - Orthopedisch chirurg
+1220 - Orthopedische schoenenwinkel
+1221 - Osteopaat
+1222 - Outlet-winkelcentrum
+1223 - Outletwinkel
+1224 - Overdekt zwembad
+1225 - Overdekte golfbaan
+1226 - Overheid
+1227 - Overheidsinstelling
+1228 - PR-firma
+1229 - Paardenhandel
+1230 - Paardenstal
+1231 - Paardenverhuurbedrijf
+1232 - Paardrijschool/manege
+1233 - Paardrijservice
+1234 - Pachinko-hal
+1235 - Pacific Northwest-restaurant (Canada)
+1236 - Pacific Northwest-restaurant (VS)
+1237 - Pacific Rim-restaurant
+1238 - Pagode
+1239 - Paintballcentrum
+1240 - Pakistaans restaurant
+1241 - Paleis
+1242 - Pan-Aziatisch restaurant
+1243 - Pan-Latijns-Amerikaans restaurant
+1244 - Pannenkoekenrestaurant
+1245 - Panoramisch uitzicht
+1246 - Paraguayaans restaurant
+1247 - Paranormaal medium
+1248 - Parfumerie
+1249 - Park
+1250 - Parkeergarage
+1251 - Parkeerplaats voor motorfietsen
+1252 - Parkeerplaats
+1253 - Parochieschool
+1254 - Parodontoloog voor implantaten
+1255 - Parodontoloog
+1256 - Particulier ziekenhuis
+1257 - Particuliere golfbaan
+1258 - Particuliere universiteit
+1259 - Party service
+1260 - Partycentrum
+1261 - Partyplanner
+1262 - Paspoortfotoverwerker
+1263 - Paspoortkantoor
+1264 - Pastawinkel
+1265 - Pasteiwinkel
+1266 - Patholoog
+1267 - Patisserie
+1268 - Paviljoen
+1269 - Pedicure
+1270 - Pendeldienst naar luchthaven
+1271 - Pennenwinkel
+1272 - Pennsylvania Dutch-restaurant
+1273 - Pension
+1274 - Persbureau
+1275 - Personal trainer
+1276 - Personeelsadvies
+1277 - Peruviaans restaurant
+1278 - Perzisch restaurant
+1279 - Peuterspeelzalen
+1280 - Pho-restaurant
+1281 - Pianobar
+1282 - Pianoleraar
+1283 - Pianostemmer
+1284 - Pianoverhuisservice
+1285 - Pianowinkel
+1286 - Pier
+1287 - Pijnbestrijdingsarts
+1288 - Pilatesstudio
+1289 - Pinautomaatlocatie
+1290 - Pinksterkerk
+1291 - Piramide
+1292 - Pizza aan huis
+1293 - Pizzeria
+1294 - Planetarium
+1295 - Plastisch chirurg
+1296 - Platenwinkel
+1297 - Pluimveehouderij
+1298 - Podotherapie
+1299 - Poedercoatingbedrijf
+1300 - Poelier
+1301 - Politie
+1302 - Politiebureau
+1303 - Politieke partij
+1304 - Politierechtbank
+1305 - Polynesisch restaurant
+1306 - Pompoenboerderij
+1307 - Pontiac-dealer
+1308 - Poolcentrum
+1309 - Pools restaurant
+1310 - Popcornwinkel
+1311 - Poppenwinkel
+1312 - Porsche-dealer
+1313 - Porseleinwinkel
+1314 - Porto Ricaans restaurant
+1315 - Portretstudio
+1316 - Portugees restaurant
+1317 - Post-bacheloropleiding
+1318 - Postbedrijf
+1319 - Postbusaanbieder
+1320 - Postbusverhuurbedrijf
+1321 - Postcode
+1322 - Posterwinkel
+1323 - Postkantoor
+1324 - Postwisselservice
+1325 - Postzegelhandel
+1326 - Po’ boys-restaurant
+1327 - Preegservice
+1328 - Presbyteriaanse kerk
+1329 - Pretzelwinkel
+1330 - Prijsvechter
+1331 - Privéschool
+1332 - Proctoloog
+1333 - Producent van modulaire gebouwen
+1334 - Protestantse kerk
+1335 - Provençaals restaurant
+1336 - Pruikenwinkel
+1337 - Psychiater
+1338 - Psychiatrisch ziekenhuis
+1339 - Psycholoog
+1340 - Psychotherapeut
+1341 - Quad-dealer
+1342 - Quad-garage
+1343 - Quaker-kerk
+1344 - Quiltwinkel
+1345 - Québécois restaurant
+1346 - Raad
+1347 - Radiateurwinkel
+1348 - Radio-omroep
+1349 - Radioloog
+1350 - Radiotoren
+1351 - Ramen-noedelrestaurant
+1352 - Rauw voedsel-restaurant
+1353 - Rechtbank
+1354 - Rechtbankadvocaat
+1355 - Rechtbankstenograaf
+1356 - Reclamebureau
+1357 - Recreatiecentrum
+1358 - Recreatiepark
+1359 - Recruiter
+1360 - Recycling
+1361 - Reddingsorganisatie voor wilde dieren
+1362 - Reflexoloog
+1363 - Regionaal vliegveld
+1364 - Reiki-therapeut
+1365 - Reinigingsbedrijf voor meubelbekleding
+1366 - Reisartikelenwinkel
+1367 - Reisbureau
+1368 - Reisservices
+1369 - Reisvaccinatiekliniek
+1370 - Reizen
+1371 - Relatiebureau
+1372 - Religieuze bestemming
+1373 - Religieuze instelling
+1374 - Religieuze organisatie
+1375 - Religieuze school
+1376 - Renbaan
+1377 - Reparatie van kleine huishoudelijke apparaten
+1378 - Reparatie van kleine motoren
+1379 - Reparatie van verwarmingsinstallaties
+1380 - Reparaties
+1381 - Reparatieservice voor airco’s
+1382 - Reparatieservice voor audiovisuele apparatuur
+1383 - Reparatieservice voor autoradiateurs
+1384 - Reparatieservice voor bubbelbaden
+1385 - Reparatieservice voor compressors
+1386 - Reparatieservice voor dieselmotoren
+1387 - Reparatieservice voor elektrische apparatuur
+1388 - Reparatieservice voor gehoorapparaten
+1389 - Reparatieservice voor glasvezel
+1390 - Reparatieservice voor grasmaaiers
+1391 - Reparatieservice voor horloges
+1392 - Reparatieservice voor hydraulische systemen
+1393 - Reparatieservice voor klokken
+1394 - Reparatieservice voor kopieerapparaten
+1395 - Reparatieservice voor lampen
+1396 - Reparatieservice voor landbouwmachines
+1397 - Reparatieservice voor lederwaren
+1398 - Reparatieservice voor magnetrons
+1399 - Reparatieservice voor naaimachines
+1400 - Reparatieservice voor piano’s
+1401 - Reparatieservice voor printers
+1402 - Reparatieservice voor radiateurs
+1403 - Reparatieservice voor rolstoelen
+1404 - Reparatieservice voor sieraden
+1405 - Reparatieservice voor tassen en koffers
+1406 - Reparatieservice voor typemachines
+1407 - Reparatieservice voor videoapparatuur
+1408 - Reparatieservice voor videocamera’s
+1409 - Reparatieservice voor videorecorders
+1410 - Reparatieservice voor wasmachines en drogers
+1411 - Reparatieservice voor waterbedden
+1412 - Reparatieservice voor weegschalen
+1413 - Reparatieservice voor zwembaden
+1414 - Reptielenwinkel
+1415 - Restaurant met kleine porties
+1416 - Restaurant of café
+1417 - Restaurant
+1418 - Restaurateur van poppen
+1419 - Restauratie van antieke meubelen
+1420 - Restauratie van gebouwen
+1421 - Retraitehuis
+1422 - Reumatoloog
+1423 - Revalidatiearts
+1424 - Revalidatiecentrum
+1425 - Rijbewijsbureau
+1426 - Rijschool
+1427 - Rioolwaterverwerking
+1428 - Rioolwaterzuiveringsinstallatie
+1429 - Rit in pretpark
+1430 - Rodeo
+1431 - Roeivereniging
+1432 - Roemeens restaurant
+1433 - Rolschaatsbaan
+1434 - Rolstoelenwinkel
+1435 - Romeins restaurant
+1436 - Rondvaartbedrijf
+1437 - Route
+1438 - Rugby
+1439 - Rugbyveld
+1440 - Rugbyvereniging
+1441 - Ruitersportcentrum
+1442 - Ruitersportwinkel
+1443 - Russisch restaurant
+1444 - Russisch-orthodoxe kerk
+1445 - Rustieke meubelzaak
+1446 - Ruïne
+1447 - Röntgenlaboratorium
+1448 - SEH-arts
+1449 - Saab-dealer
+1450 - Saladewinkel
+1451 - Salsaschool
+1452 - Salvadoraans restaurant
+1453 - Sanitairwinkel
+1454 - Saturn-dealer
+1455 - Sauna
+1456 - Scandinavisch restaurant
+1457 - Schaatsbaan
+1458 - Schaatsclub
+1459 - Schaatsenslijperij
+1460 - Scheepswerf
+1461 - Schermschool
+1462 - Schietbaan
+1463 - Schietvereniging
+1464 - Schilder
+1465 - Schilderij
+1466 - Schoenenwinkel
+1467 - Schoenmaker
+1468 - Schoenpoetsservice
+1469 - School voor accounting
+1470 - School voor speciaal onderwijs
+1471 - School
+1472 - Schoolartikelen
+1473 - Schooldistrict
+1474 - Schoonheid
+1475 - Schoonheidssalon
+1476 - Schoonmaak van zwembaden
+1477 - Schoonmaakbedrijf
+1478 - Schoonmaakservice voor luchtkanalen
+1479 - Schoonmakers
+1480 - Schuur
+1481 - Scooterreparatie
+1482 - Scooterverhuurbedrijf
+1483 - Scooterwinkel
+1484 - Scrapbookwinkel
+1485 - Scuba-instructeur
+1486 - Sculptuurmuseum
+1487 - Service voor septic tanks
+1488 - Service voor verzilveren van cheques
+1489 - Serviceaccommodatie
+1490 - Servicestation
+1491 - Servisch restaurant
+1492 - Sexclub
+1493 - Sexshop
+1494 - Seychels restaurant
+1495 - Shanghai-restaurant
+1496 - Sheriff’s Department (politiebureau)
+1497 - Shinto-altaar
+1498 - Shoarma
+1499 - Sichuan-restaurant
+1500 - Siciliaans restaurant
+1501 - Sieradengraveur
+1502 - Sieradenontwerper
+1503 - Sieradentaxateur
+1504 - Sigarenwinkel
+1505 - Singaporees restaurant
+1506 - Skateboardpark
+1507 - Skateboardwinkel
+1508 - Skibaan
+1509 - Skiclub
+1510 - Skioord
+1511 - Skiwinkel
+1512 - Skydivecentrum
+1513 - Slachtofferhulp
+1514 - Slagerij
+1515 - Sleutelkopieerservice
+1516 - Sleutelmaker
+1517 - Slijperij
+1518 - Slijterij
+1519 - Sloopaannemer
+1520 - Sloperij
+1521 - Smartshop
+1522 - Smid
+1523 - Smogmeetstation
+1524 - Smokingwinkel
+1525 - Smoothiewinkel
+1526 - Snackbar
+1527 - Sneeuwruimservice
+1528 - Sneeuwscooterverhuurbedrijf
+1529 - Snoepwinkel
+1530 - Snowboardwinkel
+1531 - Sobanoedelwinkel
+1532 - Sociale voorzieningen
+1533 - Sociale woningbouw
+1534 - Soep restaurant
+1535 - Soeprestaurant
+1536 - Softbalveld
+1537 - Softwarebedrijf
+1538 - Softwarewinkel
+1539 - Soul Food-restaurant (Afrikaans-Amerikaans)
+1540 - Southern-restaurant (VS)
+1541 - Southwestern-restaurant (VS)
+1542 - Souvenirwinkel
+1543 - Spa- en gezondheidsclub
+1544 - Spaans restaurant
+1545 - Spaanse kerk
+1546 - Spaarbank
+1547 - Spandoekenwinkel
+1548 - Speelgoedwinkel
+1549 - Speelhal
+1550 - Speeltuin
+1551 - Spellenwinkel
+1552 - Spirituele winkel
+1553 - Spoedeisende Eerste Hulp
+1554 - Spoedeisende hulp
+1555 - Spookhuis
+1556 - Spookstad
+1557 - Spoorwegmaatschappij
+1558 - Sportartikelenwinkel
+1559 - Sportarts
+1560 - Sportcafé
+1561 - Sportcentrum
+1562 - Sportclub
+1563 - Sportcomplex
+1564 - Sportkledingwinkel
+1565 - Sportklimmen
+1566 - Sportmasseur
+1567 - Sportmedisch centrum
+1568 - Sportplaatjeswinkel
+1569 - Sportprijzenwinkel
+1570 - Sportschool
+1571 - Sportwinkel
+1572 - Squashbaan
+1573 - Sri Lankaans restaurant
+1574 - Staatspark
+1575 - Staatsslijterij
+1576 - Stacaravanpark
+1577 - Stadhuis
+1578 - Stadion
+1579 - Stadscentrum
+1580 - Stadskantoor
+1581 - Stal
+1582 - Stalling voor deelfietsen
+1583 - Steak- en karbonaderestaurant
+1584 - Steakhouse
+1585 - Stedelijk gebied
+1586 - Stedelijke rechtbank
+1587 - Steengroeve
+1588 - Stellingenwinkel
+1589 - Stembureau
+1590 - Stenenwinkel
+1591 - Stichting voor onderzoek
+1592 - Stichting
+1593 - Stijldansinstructeur
+1594 - Stoffenwinkel
+1595 - Stofferingszaak
+1596 - Stofzuigerreparatie
+1597 - Stofzuigerwinkel
+1598 - Stomerij
+1599 - Strafrechtadvocaat
+1600 - Strandresort
+1601 - Strandtent
+1602 - Stripboekwinkel
+1603 - Studentenhuis
+1604 - Studentenhuisvesting
+1605 - Stukadoorsbedrijf
+1606 - Subaru-dealer
+1607 - Sukiyaki- en shabu shabu-restaurant
+1608 - Superfund-locatie
+1609 - Supermarkt
+1610 - Surfwinkel
+1611 - Surinaams restaurant
+1612 - Sushirestaurant
+1613 - Suzuki-dealer
+1614 - Synagoge
+1615 - Syrisch restaurant
+1616 - T-shirtwinkel
+1617 - Taalopleiding Engels
+1618 - Taartenwinkel
+1619 - Tabakswinkel
+1620 - Tacorestaurant
+1621 - Taekwondoschool
+1622 - Tafeltennisaccommodatie
+1623 - Tafeltenniswinkel
+1624 - Tai Chi-school
+1625 - Taiwanees restaurant
+1626 - Taleninstituut
+1627 - Tamale-restaurant
+1628 - Tandarts voor noodgevallen
+1629 - Tandarts
+1630 - Tandartspraktijk
+1631 - Tandheelkundige opleiding
+1632 - Tandtechnisch lab
+1633 - Tankstation voor alternatieve brandstof
+1634 - Tankstation
+1635 - Tapas restaurant
+1636 - Tapasbar
+1637 - Tapijtenwinkel
+1638 - Tapijthandel
+1639 - Tapijtreinigingsbedrijf
+1640 - Tapijtwinkel
+1641 - Tatoeagezaak
+1642 - Taxateur onroerend goed
+1643 - Taxateur
+1644 - Taxi’s
+1645 - Taxibedrijf
+1646 - Taxidermist
+1647 - Taxistandplaats
+1648 - Technische school
+1649 - Tegelwinkel
+1650 - Tegelzetter
+1651 - Telecom-installateur
+1652 - Telecommunicatie
+1653 - Telefoonbeantwoording
+1654 - Telefooncel
+1655 - Telefooncentrale
+1656 - Telefoonmaatschappij
+1657 - Telemarketingservice
+1658 - Telescoopwinkel
+1659 - Televisietoren
+1660 - Televisiezender
+1661 - Tempura-restaurant
+1662 - Tennisbaan
+1663 - Tennisleraar
+1664 - Tennisvereniging
+1665 - Tenniswinkel
+1666 - Tentoongesteld stuk
+1667 - Tentverhuurbedrijf
+1668 - Teppanyaki-restaurant
+1669 - Tex mex restaurant
+1670 - Textiel
+1671 - Thais restaurant
+1672 - Thaise massage
+1673 - Theater
+1674 - Theatergezelschap
+1675 - Theaterschool
+1676 - Theehuis
+1677 - Theewinkel
+1678 - Themapark
+1679 - Therapeuten
+1680 - Thuisbioscoopwinkel
+1681 - Thuisbrouwwinkel
+1682 - Thuiszorg
+1683 - Tijdschriftenwinkel
+1684 - Timmerbedrijf
+1685 - Timmerman
+1686 - Tingieterij
+1687 - Tinten van ramen
+1688 - Toeristische attractie
+1689 - Toeristische informatie
+1690 - Toko
+1691 - Tolhuisje
+1692 - Toneelvereniging
+1693 - Tong restaurant
+1694 - Tonkatsu-restaurant
+1695 - Toren
+1696 - Toscaans restaurant
+1697 - Touroperator
+1698 - Tours
+1699 - Toyota-dealer
+1700 - Tractorreparatie
+1701 - Traditioneel Amerikaans restaurant
+1702 - Traditioneel-Amerikaans restaurant
+1703 - Trailerhelling
+1704 - Trainingscentrum
+1705 - Tramhalte
+1706 - Transcriptieservice
+1707 - Transmissiewinkel
+1708 - Transportbedrijf
+1709 - Transportinfrastructuur
+1710 - Treinstation
+1711 - Trouwfotograaf
+1712 - Trouwkapel
+1713 - Trouwlocatie
+1714 - Trouwplanner
+1715 - Trouwwinkel
+1716 - Tsjechisch restaurant
+1717 - Tuin- en landschapsarchitect
+1718 - Tuin
+1719 - Tuincentrum
+1720 - Tuinieren
+1721 - Tuinmeubelwinkel
+1722 - Tunesisch restaurant
+1723 - Tuningservice voor auto’s
+1724 - Tunnel
+1725 - Turkmeens restaurant
+1726 - Turks restaurant
+1727 - Turncentrum
+1728 - Tussenpersoon voor huurdersverzekering
+1729 - Tussenpersoon voor levensverzekeringen
+1730 - Tussenpersoon voor motorverzekeringen
+1731 - Tussenpersoon voor tandartsverzekering
+1732 - Tussenpersoon voor woningverzekering
+1733 - Tv-reparatieservice
+1734 - Tweedehandswinkel
+1735 - Typeservice
+1736 - Uitdeukservice
+1737 - Uitgever
+1738 - Uitkijkpost
+1739 - Uitzendbureau
+1740 - Uitzichtpunt
+1741 - Unagi-restaurant
+1742 - Unitarian Universalist Church
+1743 - United Church of Christ
+1744 - Unity Church
+1745 - Universitair medisch centrum
+1746 - Universiteit
+1747 - Uroloog
+1748 - Uruguayaans restaurant
+1749 - Vaatchirurg
+1750 - Vakantieappartement
+1751 - Vakantieboerderij
+1752 - Vakantieoord
+1753 - Vakantiepark
+1754 - Vakantiewoningverhuur
+1755 - Vakbond
+1756 - Vakopleiding
+1757 - Valenciaans restaurant
+1758 - Varkenshouderij
+1759 - Vastafvaltechnicus
+1760 - Vastgoedadviseur
+1761 - Vastgoedbeheerbedrijf
+1762 - Vastgoedontwikkelaar
+1763 - Vastgoedtaxateur
+1764 - Vastgoedverhuur
+1765 - Vechtsporten
+1766 - Vechtsportschool
+1767 - Vechtsportwinkel
+1768 - Veefokker
+1769 - Veehouderij
+1770 - Veemarkt
+1771 - Veerdienst
+1772 - Veerhaven
+1773 - Veevoerwinkel
+1774 - Veganistisch restaurant
+1775 - Vegetarisch restaurant
+1776 - Veilinghuis
+1777 - Veld voor American football
+1778 - Velgenshop
+1779 - Venetiaans restaurant
+1780 - Venezolaans restaurant
+1781 - Vensterbehandelingszaak
+1782 - Vensterinstallateur
+1783 - Vereffenaar vastgoed
+1784 - Vereniging of organisatie
+1785 - Verfwinkel
+1786 - Vergaderzaal
+1787 - Verhuizer
+1788 - Verhuizing en opslag
+1789 - Verhuurbedrijf voor apparatuur
+1790 - Verhuurbedrijf voor busjes en kleine vrachtwagens
+1791 - Verhuurbedrijf voor executive suites
+1792 - Verhuurbedrijf voor feestapparatuur
+1793 - Verhuurbedrijf voor kantoormeubilair
+1794 - Verhuurbedrijf voor kantoorruimte
+1795 - Verhuurbedrijf voor koopflats
+1796 - Verhuurbedrijf voor rijtuigen
+1797 - Verhuurbedrijf voor stacaravans
+1798 - Verhuurbedrijf voor vakantiehuizen
+1799 - Verhuurbedrijf voor vastgoed
+1800 - Verkeerstoren
+1801 - Verkoop en reparatie van autoremmen
+1802 - Verkoop van buskaartjes
+1803 - Verkoper van boottrailers
+1804 - Verkoper van paardentrailers
+1805 - Verloskundige/gynaecoloog
+1806 - Verloskundige
+1807 - Verpleegkundeopleiding
+1808 - Verpleging en verzorging
+1809 - Verslavingskliniek
+1810 - Vertaler
+1811 - Vervoer van kant-en-klare woningen
+1812 - Vervoer
+1813 - Vervoersbegeleiding
+1814 - Verwarmingsinstallateur
+1815 - Verzamelaarswinkel
+1816 - Verzamelplaatjeswinkel
+1817 - Verzekeringsadvocaat
+1818 - Verzekeringsmaatschappij
+1819 - Verzendservice
+1820 - Verzorgingshuis
+1821 - Vesting
+1822 - Videobewerkingsservice
+1823 - Videogamewinkel
+1824 - Videoproductieservice
+1825 - Videowinkel
+1826 - Vietnamees restaurant
+1827 - Vineyard Church
+1828 - Vioolwinkel
+1829 - Visbootverhuur
+1830 - Vismarkt
+1831 - Visrestaurant
+1832 - Vissen
+1833 - Viswinkel
+1834 - Vitamine- en supplementenwinkel
+1835 - Vlaggenwinkel
+1836 - Vlechtwerkwinkel
+1837 - Vleesgroothandel
+1838 - Vleesinpakker
+1839 - Vliegerwinkel
+1840 - Vliegmaatschappij
+1841 - Vliegtuig
+1842 - Vliegveldhotel
+1843 - Vloerenlegger
+1844 - Vloerenwinkel
+1845 - Vloerverwarming
+1846 - Vlooienmarkt
+1847 - Vluchtelingenkamp
+1848 - Voedingsdeskundige
+1849 - Voedselbank
+1850 - Voetbal
+1851 - Voetbalclub
+1852 - Voetbalveld
+1853 - Voetbalwinkel
+1854 - Vogelbeheer
+1855 - Vogelkijkplaats
+1856 - Vogelwinkel
+1857 - Volksuniversiteit
+1858 - Volkswagen-dealer
+1859 - Volle Evangelie Gemeente
+1860 - Volleybalveld
+1861 - Volvo-dealer
+1862 - Volwassenenonderwijs
+1863 - Voorbereidingsschool
+1864 - Voorruitreparatieservice
+1865 - Vrachtwagenaccessoires
+1866 - Vrachtwagendealer
+1867 - Vrachtwagenreparatie
+1868 - Vrachtwagenverhuurbedrijf
+1869 - Vrije school
+1870 - Vrijwilligersorganisatie
+1871 - Vrouwenkliniek
+1872 - Vruchtbaarheidsarts
+1873 - Vruchtbaarheidskliniek
+1874 - Vuilnisophaaldienst
+1875 - Vuilstortplaats
+1876 - Vuurtoren
+1877 - Vuurwapenwinkel
+1878 - Vuurwerkwinkel
+1879 - Walvisexcursiebedrijf
+1880 - Wandelroutes
+1881 - Warenhuis
+1882 - Warmwaterbron
+1883 - Wasserette
+1884 - Wasserij
+1885 - Waterpark
+1886 - Waterpijpcafé
+1887 - Waterskiwinkel
+1888 - Waterstraalsnijservice
+1889 - Waterval
+1890 - Waterzuiveringsinstallatie
+1891 - Webdesign
+1892 - Webhostingbedrijf
+1893 - Weegstation
+1894 - Weerstation
+1895 - Weg- en waterbouwkundige
+1896 - Weg
+1897 - Wegenbouwbedrijf
+1898 - Wegrestaurant
+1899 - Wellness-programma
+1900 - Wellnesscentrum
+1901 - Wels restaurant
+1902 - Wenskaartenwinkel
+1903 - Werktuigkundig ingenieur
+1904 - Wesleyan Church
+1905 - West-Afrikaans restaurant
+1906 - Westernrestaurant
+1907 - Wielrichtservice
+1908 - Wifi-spot
+1909 - Wijnbar
+1910 - Wijngaard
+1911 - Wijngroothandel en -importeur
+1912 - Wijnhandel
+1913 - Wijnmakerij
+1914 - Wijnmakerijbenodigdheden
+1915 - Windsurfwinkel
+1916 - Winkel huishoudelijke apparatuur
+1917 - Winkel in aardewerk
+1918 - Winkel in modeaccessoires
+1919 - Winkel in religieuze artikelen
+1920 - Winkel in zitbanken
+1921 - Winkel voor Amish-meubelen
+1922 - Winkel voor airbrushmaterialen
+1923 - Winkel voor airsoftbenodigdheden
+1924 - Winkel voor antieke bouwmaterialen
+1925 - Winkel voor aromatherapieartikelen
+1926 - Winkel voor autoschokbrekers
+1927 - Winkel voor autoschuifdaken
+1928 - Winkel voor autostereoapparatuur
+1929 - Winkel voor bakkerijbenodigdheden
+1930 - Winkel voor bijzondere boeken
+1931 - Winkel voor biljartbenodigdheden
+1932 - Winkel voor bouwmateriaal
+1933 - Winkel voor bowlingbenodigdheden
+1934 - Winkel voor bubbelbaden
+1935 - Winkel voor buitenboordmotoren
+1936 - Winkel voor buitensport
+1937 - Winkel voor cadeaumanden
+1938 - Winkel voor cadeauverpakkingen
+1939 - Winkel voor caravanbenodigdheden
+1940 - Winkel voor chirurgische artikelen
+1941 - Winkel voor cowboykleding
+1942 - Winkel voor dakdekkersbenodigdheden
+1943 - Winkel voor dj-benodigdheden
+1944 - Winkel voor elektrische apparatuur
+1945 - Winkel voor elektromotoren
+1946 - Winkel voor fotolijsten
+1947 - Winkel voor gipsplaatbenodigdheden
+1948 - Winkel voor hekwerkbenodigdheden
+1949 - Winkel voor horren en hordeuren
+1950 - Winkel voor houtbewerkingsmaterialen
+1951 - Winkel voor hoveniersbenodigdheden
+1952 - Winkel voor ijshockeybenodigdheden
+1953 - Winkel voor industriële verbrandingsinstallaties
+1954 - Winkel voor kantoorbenodigdheden
+1955 - Winkel voor kantoormeubilair
+1956 - Winkel voor kappersbenodigdheden
+1957 - Winkel voor kerkbenodigdheden
+1958 - Winkel voor knaldempers
+1959 - Winkel voor kunstenaarsbenodigdheden
+1960 - Winkel voor massagebenodigdheden
+1961 - Winkel voor medische benodigdheden
+1962 - Winkel voor metselbenodigdheden
+1963 - Winkel voor motorfietsonderdelen
+1964 - Winkel voor muziekdozen
+1965 - Winkel voor naam-/gevelborden
+1966 - Winkel voor neonborden
+1967 - Winkel voor noviteiten
+1968 - Winkel voor onafgewerkte meubels
+1969 - Winkel voor onderwijsbenodigdheden
+1970 - Winkel voor oosterse tapijten
+1971 - Winkel voor open haarden/kachels
+1972 - Winkel voor politiebenodigdheden
+1973 - Winkel voor propellers
+1974 - Winkel voor restaurantbenodigdheden
+1975 - Winkel voor rubberstempels
+1976 - Winkel voor scheepvaartbenodigdheden
+1977 - Winkel voor stacaravanbenodigdheden
+1978 - Winkel voor strandamusement
+1979 - Winkel voor tandheelkundige benodigdheden
+1980 - Winkel voor tropische vissen
+1981 - Winkel voor tweedehands auto-onderdelen
+1982 - Winkel voor tweedehands banden
+1983 - Winkel voor tweedehands boeken
+1984 - Winkel voor tweedehands cd’s
+1985 - Winkel voor tweedehands computers
+1986 - Winkel voor tweedehands fietsen
+1987 - Winkel voor tweedehands huishoudelijke apparaten
+1988 - Winkel voor tweedehands kantoormeubilair
+1989 - Winkel voor tweedehands kleding
+1990 - Winkel voor tweedehands meubels
+1991 - Winkel voor tweedehands muziekinstrumenten
+1992 - Winkel voor uniformen
+1993 - Winkel voor verhuisbenodigdheden
+1994 - Winkel voor vervoer- en verpakkingsbenodigdheden
+1995 - Winkel voor vintage kleding
+1996 - Winkel voor visaas en hengelsportartikelen
+1997 - Winkel voor visbenodigdheden
+1998 - Winkel voor vliegtuigbenodigdheden
+1999 - Winkel voor wasmachines en wasdrogers
+2000 - Winkel voor waterbedden
+2001 - Winkel voor werkkleding
+2002 - Winkel voor zeefdrukbenodigdheden
+2003 - Winkel voor zelfontworpen T-shirts
+2004 - Winkel voor zijden planten
+2005 - Winkel
+2006 - Winkelcentrum
+2007 - Wokrestaurant
+2008 - Woningbouwproject
+2009 - Woningbouwvereniging
+2010 - Woninginspecteur
+2011 - Woonboot
+2012 - Woongemeenschap voor gepensioneerden
+2013 - Woonwagenverkoper
+2014 - Woonwijk
+2015 - Woonwinkel
+2016 - Woonzorgcomplex
+2017 - Yakiniku-restaurant
+2018 - Yakitori-restaurant
+2019 - Yogastudio
+2020 - Yoghurtijssalon
+2021 - Zaadleverancier
+2022 - Zaagslijperij
+2023 - Zaalvoetbalveld
+2024 - Zakenwijk
+2025 - Zandstraalbedrijf
+2026 - Zeefdrukkerij
+2027 - Zeehaven
+2028 - Zeilmaker
+2029 - Zelfcateringaccommodatie
+2030 - Zelfverdedigingstraining
+2031 - Zendmast
+2032 - Zevende-dags Adventisten
+2033 - Ziekenhuis
+2034 - Ziektekostenverzekeraar
+2035 - Zingend telegram
+2036 - Zonnebrillenwinkel
+2037 - Zonnestudio
+2038 - Zonwering
+2039 - Zuid-Afrikaans restaurant
+2040 - Zuid-Amerikaans restaurant
+2041 - Zuid-Aziatisch restaurant
+2042 - Zuid-Italiaans restaurant
+2043 - Zuidoost-Aziatisch restaurant
+2044 - Zuidwest-Frans restaurant
+2045 - Zuivelhandel
+2046 - Zweeds restaurant
+2047 - Zwembad
+2048 - Zwembadenwinkel
+2049 - Zwemleraar
+2050 - Zwemsport
+2051 - Zwemvereniging
+2052 - Zwitsers restaurant

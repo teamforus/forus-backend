@@ -17,7 +17,7 @@ class DevicesController extends Controller
     public function __construct()
     {
         $this->mailNotification = resolve(
-            'forus.services.mail_notification'
+            'forus.services.notification'
         );
     }
 
