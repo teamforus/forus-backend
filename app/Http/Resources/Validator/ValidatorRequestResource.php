@@ -2,20 +2,32 @@
 
 namespace App\Http\Resources\Validator;
 
+use App\Models\ValidatorRequest;
 use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Database\Eloquent\Collection;
 
+/**
+ * Class ValidatorRequestResource
+ * @property ValidatorRequest|array $resource
+ * @package App\Http\Resources\Validator
+ */
 class ValidatorRequestResource extends Resource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @param \Illuminate\Http\Request $request
+     * @return array|\Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function toArray($request)
     {
         $resource = $this->resource;
+
+        if ($resource instanceof Collection) {
+            return self::collection($resource)->toArray($request);
+        }
+
         $recordRepo = app()->make('forus.services.record');
         $recordTypes = RecordType::query()->get()->keyBy('id');
 

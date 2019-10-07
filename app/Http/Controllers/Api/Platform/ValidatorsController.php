@@ -27,16 +27,16 @@ class ValidatorsController extends Controller
     public function index() {
         $this->authorize(Validator::class, 'index');
 
-        $bsnValidations = collect($this->recordRepo->recordsList(
+        $uidValidations = collect($this->recordRepo->recordsList(
             auth()->user()->getAuthIdentifier()
         ))->filter(function($record) {
-            return !empty($record['validations']) && $record['key'] == 'bsn';
+            return !empty($record['validations']) && $record['key'] == 'uid';
         })->pluck('validations.*.identity_address')->flatten();
 
-        $bsnValidations = $bsnValidations->unique();
+        $uidValidations = $uidValidations->unique();
 
         return ValidatorResource::collection(Validator::query()->whereIn(
-            'identity_address', $bsnValidations
+            'identity_address', $uidValidations
         )->get());
     }
 }
