@@ -22,7 +22,7 @@ class FundBalanceWarningMail extends ImplementationMail
         string $notification_amount,
         string $budget_left,
         string $link,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 

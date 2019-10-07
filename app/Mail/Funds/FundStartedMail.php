@@ -16,7 +16,7 @@ class FundStartedMail extends ImplementationMail
     public function __construct(
         string $fund_name,
         string $sponsor_name,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 

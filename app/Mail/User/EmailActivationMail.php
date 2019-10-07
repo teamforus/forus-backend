@@ -16,7 +16,7 @@ class EmailActivationMail extends ImplementationMail
     public function __construct(
         string $platform,
         string $link,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 

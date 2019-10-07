@@ -35,14 +35,7 @@ class OrganizationSubscriber
         } catch (\Exception $e) { }
     }
 
-    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated) {
-        $organization = $organizationUpdated->getOrganization();
-
-        $this->mailService->addEmailConnection(
-            $organization->emailServiceId(),
-            $organization->email
-        );
-    }
+    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated) {}
 
     /**
      * The events dispatcher

@@ -24,7 +24,7 @@ class ImplementationMail extends Mailable
      * @param string|null $identityId
      */
     public function __construct(
-        ?string $identityId
+        string $identityId = null
     ) {
         $this->identityRepo = resolve('forus.services.identity');
         $this->identityId = $identityId;

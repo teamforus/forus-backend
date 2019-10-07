@@ -1,5 +1,5 @@
 @extends('emails.base')
-@section('title', mail_trans('fund_expires.title'))
+@section('title', mail_trans('fund_expires.title', ['fund_name' => $fund_name]  ))
 @section('html')
 {{ mail_trans('dear_user_of_fund', ['fund_name' => $fund_name])}}
 <br/>
@@ -21,9 +21,9 @@
     <br/>
     {{ mail_trans('fund_expires.get_in_contact') }}
     <br/>
-    {{ $phonenumber_sponsor }}
+    {{ $phone_number_sponsor }}
     <br/>
-    {{ $emailaddress_sponsor }}
+    {{ $email_address_sponsor }}
     <br/>
     {{ mail_trans('hopefully_informed_enough') }}
     <br/>

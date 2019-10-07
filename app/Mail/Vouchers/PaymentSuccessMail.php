@@ -16,7 +16,7 @@ class PaymentSuccessMail extends ImplementationMail
     public function __construct(
         string $fundName,
         string $currentBudget,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 

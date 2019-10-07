@@ -20,7 +20,7 @@ class ProviderApprovedMail extends ImplementationMail
         string $providerName,
         string $sponsorName,
         string $link,
-        ?string $identityId
+        string $identityId = null
     ) {
         parent::__construct($identityId);
 
