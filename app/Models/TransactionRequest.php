@@ -2,26 +2,41 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class TransactionRequest
- * @property mixed $id
- * @property integer $token_id
- * @property integer $from_wallet_id
- * @property integer $to_wallet_id
- * @property integer $transaction_id
- * @property integer $amount
+ * App\Models\TransactionRequest
+ *
+ * @property int $id
+ * @property int $token_id
+ * @property int $from_wallet_id
+ * @property int $to_wallet_id
+ * @property int $transaction_id
+ * @property int $amount
+ * @property string $type
  * @property string $state
  * @property string $token_string
- * @property string $type
- * @property Token $token
- * @property Wallet $from_wallet
- * @property Wallet $to_wallet
- * @property Transaction $transaction
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Wallet $from_wallet
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Wallet $to_wallet
+ * @property-read \App\Models\Token $token
+ * @property-read \App\Models\Transaction $transaction
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereFromWalletId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereToWalletId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereTokenId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereTokenString($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TransactionRequest whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class TransactionRequest extends Model
 {

@@ -2,16 +2,23 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class Wallet
- * @property mixed $id
- * @property integer $identity_id
- * @property Identity $identity
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * App\Models\Wallet
+ *
+ * @property int $id
+ * @property int $identity_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Wallet newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Wallet newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Wallet query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Wallet whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Wallet whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Wallet whereIdentityId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Wallet whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Wallet extends Model
 {
@@ -23,11 +30,4 @@ class Wallet extends Model
     protected $fillable = [
         'identity_id'
     ];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function identity() {
-        return $this->belongsTo(Identity::class);
-    }
 }

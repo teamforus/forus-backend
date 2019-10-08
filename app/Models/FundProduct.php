@@ -2,18 +2,27 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class FundProduct
- * @property mixed $id
- * @property integer $fund_id
- * @property integer $product_id
- * @property Fund $fund
- * @property Product $product
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * App\Models\FundProduct
+ *
+ * @property int $id
+ * @property int $fund_id
+ * @property int $product_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund $fund
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Product $product
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class FundProduct extends Model
 {
