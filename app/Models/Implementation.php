@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\Traits\EloquentModel;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 
 /**
- * Class Implementation
- * @property mixed $id
+ * App\Models\Implementation
+ *
+ * @property int $id
  * @property string $key
  * @property string $name
  * @property string $url_webshop
@@ -18,17 +17,30 @@ use Illuminate\Database\Query\Builder;
  * @property string $url_provider
  * @property string $url_validator
  * @property string $url_app
- * @property string $lon
- * @property string $lat
- * @property Collection $funds
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property float|null $lon
+ * @property float|null $lat
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlApp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlProvider($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlSponsor($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
+ * @mixin \Eloquent
  */
 class Implementation extends Model
 {
-    use EloquentModel;
-
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator', 'lon', 'lat'

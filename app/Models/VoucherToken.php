@@ -2,26 +2,32 @@
 
 namespace App\Models;
 
-use App\Models\Traits\EloquentModel;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 /**
- * Class VoucherToken
- * @property mixed $id
- * @property mixed $voucher_id
+ * App\Models\VoucherToken
+ *
+ * @property int $id
+ * @property int $voucher_id
  * @property string $address
- * @property boolean $need_confirmation
- * @property Voucher $voucher
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $need_confirmation
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Voucher $voucher
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken whereNeedConfirmation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherToken whereVoucherId($value)
+ * @mixin \Eloquent
  */
 class VoucherToken extends Model
 {
-    use EloquentModel;
-
     /**
      * The attributes that are mass assignable.
      *

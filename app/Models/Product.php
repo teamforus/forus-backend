@@ -4,40 +4,62 @@ namespace App\Models;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
-use Symfony\Component\Debug\Tests\Fixtures\LoggerThatSetAnErrorHandler;
 
 /**
- * Class Product
- * @property mixed $id
+ * App\Models\Product
+ *
+ * @property int $id
+ * @property int $organization_id
+ * @property int $product_category_id
  * @property string $name
  * @property string $description
- * @property integer $organization_id
- * @property integer $product_category_id
- * @property integer $price
- * @property integer $old_price
- * @property integer $total_amount
- * @property integer $stock_amount
- * @property bool $is_offer
+ * @property float $price
+ * @property float|null $old_price
+ * @property int $total_amount
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Support\Carbon $expire_at
  * @property bool $sold_out
- * @property bool $expired
- * @property bool $service
- * @property Collection $vouchers_reserved
- * @property Collection $voucher_transactions
- * @property Organization $organization
- * @property ProductCategory $product_category
- * @property Media $photo
- * @property Collection $funds
- * @property Carbon $expire_at
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property Carbon $deleted_at
- * @package App\Models
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read string|null $created_at_locale
+ * @property-read bool $expired
+ * @property-read bool $is_offer
+ * @property-read int $stock_amount
+ * @property-read string|null $updated_at_locale
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read \App\Models\Organization $organization
+ * @property-read \App\Services\MediaService\Models\Media $photo
+ * @property-read \App\Models\ProductCategory $product_category
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers_reserved
+ * @method static bool|null forceDelete()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newQuery()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Product onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product query()
+ * @method static bool|null restore()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereExpireAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOldPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereProductCategoryId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereSoldOut($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereTotalAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
+ * @mixin \Eloquent
  */
 class Product extends Model
 {

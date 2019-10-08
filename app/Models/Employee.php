@@ -2,18 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Employee
- * @property mixed $id
+ * App\Models\Employee
+ *
+ * @property int $id
  * @property string $identity_address
- * @property mixed $role_id
- * @property mixed $organization_id
- * @property Organization $organization
- * @property Collection $roles
- * @package App\Models
+ * @property int $organization_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Employee extends Model
 {

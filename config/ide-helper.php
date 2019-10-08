@@ -66,6 +66,12 @@ return array(
 
     'model_locations' => array(
         'app/Models',
+        'app/Services/BunqService/Models',
+        'app/Services/FileService/Models',
+        'app/Services/MediaService/Models',
+        'app/Services/Forus/Identity/Models',
+        'app/Services/Forus/Notification/Models',
+        'app/Services/Forus/Record/Models',
     ),
 
 

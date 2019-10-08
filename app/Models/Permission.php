@@ -5,11 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Permission
- * @property mixed $id
+ * App\Models\Permission
+ *
+ * @property int $id
  * @property string $key
  * @property string $name
- * @package App\Models
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission whereName($value)
+ * @mixin \Eloquent
  */
 class Permission extends Model
 {
