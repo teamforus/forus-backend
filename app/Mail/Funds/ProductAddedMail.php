@@ -14,12 +14,11 @@ class ProductAddedMail extends ImplementationMail
     private $fundName;
 
     public function __construct(
-        string $email,
         string $sponsorName,
         string $fundName,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->sponsorName = $sponsorName;
         $this->fundName = $fundName;

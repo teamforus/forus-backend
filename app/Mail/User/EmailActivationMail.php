@@ -14,12 +14,11 @@ class EmailActivationMail extends ImplementationMail
     private $link;
 
     public function __construct(
-        string $email,
         string $platform,
         string $link,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->platform = $platform;
         $this->link = $link;

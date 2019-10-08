@@ -14,12 +14,12 @@ class FundStartedMail extends ImplementationMail
     private $sponsor_name;
 
     public function __construct(
-        string $email,
         string $fund_name,
         string $sponsor_name,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
+
         $this->fund_name     = $fund_name;
         $this->sponsor_name  = $sponsor_name;
     }

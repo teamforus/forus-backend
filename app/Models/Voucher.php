@@ -157,10 +157,10 @@ class Voucher extends Model
     }
 
     /**
-     * @param string|null $identity_address
+     * @param string|null $email
      */
     public function sendToEmail(
-        ?string $email
+        string $email = null
     ) {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
@@ -173,7 +173,7 @@ class Voucher extends Model
             $fund_product_name = $voucherToken->voucher->fund->name;
         }
 
-        resolve('forus.services.mail_notification')->sendVoucher(
+        resolve('forus.services.notification')->sendVoucher(
             $email,
             $this->identity_address,
             $fund_product_name,
@@ -187,6 +187,8 @@ class Voucher extends Model
      * @param bool $sendCopyToUser
      */
     public function shareVoucherEmail(string $reason, $sendCopyToUser = false) {
+        $notificationService = resolve('forus.services.notification');
+
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -199,7 +201,7 @@ class Voucher extends Model
 
             $product_name = $voucherToken->voucher->product->name;
 
-            resolve('forus.services.mail_notification')->shareVoucher(
+            $notificationService->shareProductVoucher(
                 $voucherToken->voucher->product->organization->email,
                 $voucherToken->voucher->product->organization->emailServiceId(),
                 $primaryEmail,
@@ -209,7 +211,7 @@ class Voucher extends Model
             );
 
             if ($sendCopyToUser) {
-                resolve('forus.services.mail_notification')->shareVoucher(
+                $notificationService->shareProductVoucher(
                     $primaryEmail,
                     auth()->id(),
                     $primaryEmail,
@@ -232,7 +234,7 @@ class Voucher extends Model
             $this->identity_address
         );
 
-        resolve('forus.services.mail_notification')->transactionAvailableAmount(
+        resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
             $email,
             $this->identity_address,
             $fund_name,
@@ -245,6 +247,8 @@ class Voucher extends Model
      */
     public static function checkVoucherExpireQueue()
     {
+        $notificationService = resolve('forus.services.notification');
+
         $date = now()->addDays(4*7)->startOfDay();
         $vouchers = self::query()
             ->whereNull('product_id')
@@ -254,11 +258,11 @@ class Voucher extends Model
 
         /** @var self $voucher */
         foreach ($vouchers as $voucher) {
-
-            if($voucher->amount_available_cached > 0){
-
+            if ($voucher->amount_available_cached > 0) {
                 $recordRepo = resolve('forus.services.record');
-                $primaryEmail = $recordRepo->primaryEmailByAddress($voucher->identity_address);
+                $primaryEmail = $recordRepo->primaryEmailByAddress(
+                    $voucher->identity_address
+                );
 
                 $fund_name = $voucher->fund->name;
                 $sponsor_name = $voucher->fund->organization->name;
@@ -268,7 +272,7 @@ class Voucher extends Model
                 $email = $voucher->fund->organization->email;
                 $webshopLink = env('WEB_SHOP_GENERAL_URL');
 
-                resolve('forus.services.mail_notification')->voucherExpire(
+                $notificationService->voucherExpireSoon(
                     $primaryEmail,
                     $fund_name,
                     $sponsor_name,

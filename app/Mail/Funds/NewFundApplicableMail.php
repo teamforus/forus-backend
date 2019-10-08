@@ -14,12 +14,11 @@ class NewFundApplicableMail extends ImplementationMail
     private $link;
 
     public function __construct(
-        string $email,
         string $fundName,
         string $link,
-        ?string $identityId)
-    {
-        parent::__construct($email, $identityId);
+        string $identityId = null
+    ) {
+        parent::__construct($identityId);
         $this->fundName = $fundName;
         $this->link = $link;
     }

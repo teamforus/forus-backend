@@ -14,12 +14,11 @@ class PaymentSuccessMail extends ImplementationMail
     private $currentBudget;
 
     public function __construct(
-        string $email,
         string $fundName,
         string $currentBudget,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->fundName = $fundName;
         $this->currentBudget = $currentBudget;

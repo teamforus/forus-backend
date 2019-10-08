@@ -19,7 +19,6 @@ class FundExpiredMail extends ImplementationMail
     private $shopImplementationUrl;
 
     public function __construct(
-        string $email,
         string $fundName,
         string $sponsorName,
         string $startDateFund,
@@ -27,9 +26,9 @@ class FundExpiredMail extends ImplementationMail
         string $phoneNumberSponsor,
         string $emailAddressSponsor,
         string $shopImplementationUrl,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->fundName = $fundName;
         $this->sponsorName = $sponsorName;
@@ -42,16 +41,18 @@ class FundExpiredMail extends ImplementationMail
 
     public function build(): ImplementationMail
     {
+        $data = [
+            'fund_name' => $this->fundName,
+            'sponsor_name' => $this->sponsorName,
+            'start_date_fund' => $this->startDateFund,
+            'end_date_fund' => $this->endDateFund,
+            'phone_number_sponsor' => $this->phoneNumberSponsor,
+            'email_address_sponsor' => $this->emailAddressSponsor,
+            'shop_implementation_url' => $this->shopImplementationUrl
+        ];
+
         return parent::build()
-            ->subject(mail_trans('fund_expires.title'))
-            ->view('emails.funds.fund_expires', [
-                'fund_name' => $this->fundName,
-                'sponsor_name' => $this->sponsorName,
-                'start_date_fund' => $this->startDateFund,
-                'end_date_fund' => $this->endDateFund,
-                'phone_number_sponsor' => $this->phoneNumberSponsor,
-                'email_address_sponsor' => $this->emailAddressSponsor,
-                'shop_implementation_url' => $this->shopImplementationUrl
-            ]);
+            ->subject(mail_trans('fund_expires.title', $data))
+            ->view('emails.funds.fund_expires', $data);
     }
 }

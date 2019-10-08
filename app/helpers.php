@@ -5,7 +5,6 @@ use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
 
-
 if (!function_exists('auth_user')) {
     /**
      * Get the available user instance.
@@ -241,6 +240,36 @@ if (!function_exists('mail_config')) {
     }
 }
 
+if (!function_exists('str_terminal_color')) {
+    function str_terminal_color(
+        string $text,
+        string $color = 'green'
+    ) {
+        $colors = [
+            'black' => '30',
+            'blue' => '34',
+            'green' => '32',
+            'cyan' => '36',
+            'red' => '31',
+            'purple' => '35',
+            'brown' => '33',
+            'light_gray' => '37',
+            'dark_gray' => '30',
+            'light_blue' => '34',
+            'light_green' => '32',
+            'light_cyan' => '36',
+            'light_red' => '31',
+            'light_purple' => '35',
+            'yellow' => '33',
+            'white' => '37',
+        ];
+
+        $color = isset($colors[$color]) ? $colors[$color] : $colors['white'];
+
+        return "\033[{$color}m{$text}\033[0m";
+    }
+}
+
 if (!function_exists('cache_optional')) {
     /**
      * Try to cache $callback response for $minutes
@@ -282,5 +311,24 @@ if (!function_exists('record_types')) {
         return cache_optional('record_types', function() {
             return resolve('forus.services.record')->getRecordTypes();
         }, $minutes, null, $reset);
+    }
+}
+if (!function_exists('pretty_file_size')) {
+    /**
+     * Human readable file size
+     * @param $bytes
+     * @param int $precision
+     * @return string
+     */
+    function pretty_file_size(
+        $bytes,
+        $precision = 2
+    ) {
+        for ($i = 0; ($bytes / 1024) > 0.9; $i++) {
+            $bytes /= 1024;
+        }
+
+        return round($bytes, $precision) .
+            ['','k','M','G','T','P','E','Z','Y'][$i] . 'B';
     }
 }

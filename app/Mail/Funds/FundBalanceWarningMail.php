@@ -8,7 +8,7 @@ use App\Mail\ImplementationMail;
  * Class BalanceWarningMail
  * @package App\Mail\Funds
  */
-class BalanceWarningMail extends ImplementationMail
+class FundBalanceWarningMail extends ImplementationMail
 {
     private $fundName;
     private $sponsorName;
@@ -17,15 +17,14 @@ class BalanceWarningMail extends ImplementationMail
     private $link;
 
     public function __construct(
-        string $email,
         string $fund_name,
         string $sponsor_name,
         string $notification_amount,
         string $budget_left,
         string $link,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->fundName = $fund_name;
         $this->sponsorName = $sponsor_name;

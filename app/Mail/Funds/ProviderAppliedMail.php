@@ -17,14 +17,13 @@ class ProviderAppliedMail extends ImplementationMail
     private $sponsor_dashboard_link;
 
     public function __construct(
-        string $email,
         string $provider_name,
         string $sponsor_name,
         string $fund_name,
         string $sponsor_dashboard_link,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
         $this->provider_name            = $provider_name;
         $this->sponsor_name             = $sponsor_name;
         $this->fund_name                = $fund_name;

@@ -16,14 +16,13 @@ class ProviderRejectedMail extends ImplementationMail
     private $phoneNumber;
 
     public function __construct(
-        string $email,
         string $fund_name,
         string $provider_name,
         string $sponsor_name,
         string $phone_number,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->fundName                = $fund_name;
         $this->providerName            = $provider_name;

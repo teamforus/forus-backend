@@ -13,11 +13,10 @@ class AddedAsValidatorMail extends ImplementationMail
     private $sponsorName;
 
     public function __construct(
-        string $email,
         string $sponsor_name,
-        ?string $identityId
+        string $identityId = null
     ) {
-        parent::__construct($email, $identityId);
+        parent::__construct($identityId);
 
         $this->sponsorName = $sponsor_name;
     }
