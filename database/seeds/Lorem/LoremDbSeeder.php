@@ -46,6 +46,7 @@ class LoremDbSeeder extends Seeder
     {
         $countProviders = env('DB_SEED_PROVIDERS', 20);
 
+        $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
         $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
         $this->success("Identity created!");
