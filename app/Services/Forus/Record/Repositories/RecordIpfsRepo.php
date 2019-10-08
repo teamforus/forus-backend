@@ -94,7 +94,7 @@ class RecordIpfsRepo implements IRecordRepo
      * @param string $email
      * @return mixed|null
      */
-    public function identityIdByEmail(
+    public function identityAddressByEmail(
         string $email
     ) {
         $response = $this->apiRequest->post(

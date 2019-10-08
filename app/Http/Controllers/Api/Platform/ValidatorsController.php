@@ -28,15 +28,13 @@ class ValidatorsController extends Controller
         $this->authorize(Validator::class, 'index');
 
         $uidValidations = collect($this->recordRepo->recordsList(
-            auth()->user()->getAuthIdentifier()
+            auth_address()
         ))->filter(function($record) {
             return !empty($record['validations']) && $record['key'] == 'uid';
         })->pluck('validations.*.identity_address')->flatten();
 
-        $uidValidations = $uidValidations->unique();
-
         return ValidatorResource::collection(Validator::query()->whereIn(
-            'identity_address', $uidValidations
+            'identity_address', $uidValidations->unique()
         )->get());
     }
 }

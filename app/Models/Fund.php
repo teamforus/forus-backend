@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Traits\EloquentModel;
 use App\Services\BunqService\BunqService;
+use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -52,7 +54,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Fund extends Model
 {
-    use HasMedia;
+    use HasMedia, EloquentModel;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';
@@ -474,10 +476,26 @@ class Fund extends Model
     }
 
     /**
+     * Change fund state
+     *
+     * @param string $state
+     * @return $this
+     */
+    public function changeState(string $state) {
+        if (in_array($state, self::STATES)) {
+            $this->update(compact('state'));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update fund state by the start and end dates
      */
     public static function checkStateQueue() {
+        /** @var Collection|Fund[] $funds */
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->whereDate('start_date', '<=', now())
@@ -485,21 +503,23 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
-                $fund->update([
-                    'state' => self::STATE_ACTIVE
-                ]);
+                $fund->changeState(self::STATE_ACTIVE);
 
+                /*
                 $organizations = Organization::query()->whereIn(
                     'id', OrganizationProductCategory::query()->whereIn(
                     'product_category_id',
                     $fund->product_categories()->pluck('id')->all()
                 )->pluck('organization_id')->toArray()
                 )->get();
+                */
 
                 /** @var Organization $organization */
+                // TODO: Notify providers about new fund started
+                
+                /*
                 foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
                         $organization->email,
@@ -508,13 +528,12 @@ class Fund extends Model
                         $fund->organization->name
                     );
                 }
+                */
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
-                $fund->update([
-                    'state' => self::STATE_CLOSED
-                ]);
+                $fund->changeState(self::STATE_CLOSED);
             }
         }
     }
@@ -525,18 +544,16 @@ class Fund extends Model
     public static function checkConfigStateQueue()
     {
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
-            ->where('state', 'waiting')
+            ->where('state', Fund::STATE_WAITING)
             ->whereDate('start_date', '>', now())
             ->get();
 
         /** @var self $fund */
         foreach($funds as $fund) {
-            $fund->update([
-                'state' => 'paused'
-            ]);
+            $fund->changeState(self::STATE_PAUSED);
 
             $fund->criteria()->create([
                 'record_type_key' => $fund->fund_config->key . '_eligible',
@@ -550,29 +567,32 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
-            $organizations = Organization::query()->whereIn(
+            /*$organizations = Organization::query()->whereIn(
                 'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
                 $fund->product_categories()->pluck('id')->all()
             )->pluck('organization_id')->toArray()
-            )->get();
+            )->get();*/
 
             /** @var Organization $organization */
-            foreach ($organizations as $organization) {
+            // TODO: Notify providers about new fund applicable
+            /*foreach ($organizations as $organization) {
                 resolve('forus.services.mail_notification')->newFundApplicable(
                     $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
                 );
-            }
+            }*/
         }
     }
 
     /**
+     * Send funds user count statistic to email
+     * @param string $email
      * @return void
      */
-    public static function calculateUsersQueue()
+    public static function sendUserStatisticsReport(string $email)
     {
         /** @var Collection|Fund[] $funds */
         $funds = self::query()->whereHas('fund_config', function (
@@ -607,13 +627,13 @@ class Fund extends Model
                 $requesterCount = 0;
             }
 
-            resolve('forus.services.mail_notification')->calculateFundUsers(
+            resolve('forus.services.notification')->sendFundUserStatisticsReport(
+                $email,
                 $fund->name,
                 $organization->name,
                 $sponsorCount,
                 $providerCount,
-                $requesterCount,
-                ($sponsorCount + $providerCount + $requesterCount)
+                $requesterCount
             );
         }
     }
@@ -623,7 +643,11 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
-        $mailService = resolve('forus.services.mail_notification');
+        /** @var NotificationService $mailService */
+        $mailService = resolve('forus.services.notification');
+
+        /** @var RecordRepo $recordRepo */
+        $recordRepo = resolve('forus.services.record');
 
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
@@ -637,29 +661,38 @@ class Fund extends Model
             })
             ->where('state', 'active')
             ->where('notification_amount', '>', 0)
+            ->whereNotNull('notification_amount')
             ->with('organization')
             ->get();
 
         /** @var self $fund */
-        foreach($funds as $fund) {
+        foreach ($funds as $fund) {
             $transactionCosts = $fund->getTransactionCosts();
-            if($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
+
+            if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
                 $referrers = $referrers->pluck('identity_address');
-                $referrers->push($fund->organization->emailServiceId());
+                $referrers = $referrers->push(
+                    $fund->organization->identity_address
+                )->map(function ($identity) use ($recordRepo) {
+                    return [
+                        'identity' => $identity,
+                        'email' => $recordRepo->primaryEmailByAddress($identity),
+                    ];
+                })->push([
+                    'identity' => null,
+                    'email' => $fund->organization->email
+                ])->unique('email');
 
                 foreach ($referrers as $referrer) {
-                    $email = (new RecordRepo)->primaryEmailByAddress(
-                        $referrer->identity_address
-                    );
-
-                    $mailService->fundNotifyReachedNotificationAmount(
-                        $email,
-                        $referrer,
+                    $mailService->fundBalanceWarning(
+                        $referrer['email'],
+                        $referrer['identity'],
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
-                        currency_format($fund->notification_amount - $transactionCosts)
+                        currency_format($fund->notification_amount - $transactionCosts),
+                        currency_format($fund->budget_left)
                     );
                 }
 

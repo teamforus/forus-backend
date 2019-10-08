@@ -5,7 +5,9 @@ namespace App\Services\MediaService;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Services\FileService\Models\File;
 use App\Services\Forus\Record\Models\RecordCategory;
+use App\Services\MediaService\Models\Media;
 use Illuminate\Support\ServiceProvider;
 
 class MediaServiceProvider extends ServiceProvider
@@ -25,6 +27,10 @@ class MediaServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadMigrationsFrom(__DIR__ . '/migrations');
+
+        resolve('router')->bind('media_uid', function ($value) {
+            return Media::findByUid($value) ?? abort(404);
+        });
     }
 
     /**
