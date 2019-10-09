@@ -2,29 +2,38 @@
 
 namespace App\Services\Forus\Identity\Models;
 
-use App\Models\Traits\EloquentModel;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class IdentityProxy
- * @property mixed $id
- * @property integer $identity_id
- * @property string $identity_address
- * @property string $access_token
+ * App\Services\Forus\Identity\Models\IdentityProxy
+ *
+ * @property int $id
+ * @property string $type
+ * @property string|null $identity_address
+ * @property string|null $access_token
  * @property string $exchange_token
  * @property string $state
- * @property integer $expires_in
- * @property Identity $identity
- * @property bool $exchange_time_expired
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $expires_in
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read bool $exchange_time_expired
+ * @property-read \App\Services\Forus\Identity\Models\Identity|null $identity
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereAccessToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereExchangeToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereExpiresIn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class IdentityProxy extends Model
 {
-    use EloquentModel;
-
     /**
      * The attributes that are mass assignable.
      *

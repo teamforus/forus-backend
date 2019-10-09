@@ -2,23 +2,34 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use \Illuminate\Database\Eloquent\Builder;
 use DB;
 
 /**
- * Class FundProvider
- * @property mixed $id
- * @property string $state
- * @property int $fund_id
+ * App\Models\FundProvider
+ *
+ * @property int $id
  * @property int $organization_id
- * @property Fund $fund
- * @property Organization $organization
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $fund_id
+ * @property string $state
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund $fund
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Organization $organization
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class FundProvider extends Model
 {

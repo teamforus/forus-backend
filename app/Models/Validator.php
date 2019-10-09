@@ -2,19 +2,26 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class Validator
- * @property mixed $id
- * @property mixed $organization_id
+ * App\Models\Validator
+ *
+ * @property int $id
+ * @property int $organization_id
  * @property string $identity_address
- * @property string $key
- * @property string $name
- * @property Organization $organization
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Organization $organization
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Validator whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Validator extends Model
 {

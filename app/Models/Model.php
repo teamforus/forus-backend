@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
-use App\Models\Traits\EloquentModel;
-
 /**
- * Class Model
- * @property string $created_at_locale
- * @property string $updated_at_locale
- * @package App\Models
+ * App\Models\Model
+ *
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model query()
+ * @mixin \Eloquent
  */
 class Model extends \Illuminate\Database\Eloquent\Model
 {
-    use EloquentModel;
-
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);

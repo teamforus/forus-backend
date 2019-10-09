@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
-use App\Models\Traits\EloquentModel;
 use App\Services\BunqService\BunqService;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
@@ -15,46 +14,65 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
- * Class Fund
- * @property mixed $id
- * @property integer $organization_id
- * @property integer|null $fund_id
- * @property string $state
+ * App\Models\Fund
+ *
+ * @property int $id
+ * @property int $organization_id
  * @property string $name
- * @property float $budget_total
- * @property float $budget_validated
- * @property float $budget_used
- * @property float $budget_left
- * @property float $notification_amount
- * @property Media $logo
- * @property boolean $public
- * @property FundConfig $fund_config
- * @property Organization $organization
- * @property Collection|BunqMeTab[] $bunq_me_tabs_paid
- * @property Collection|BunqMeTab[] $bunq_me_tabs
- * @property Collection|FundTopUpTransaction[] $top_up_transactions
- * @property Collection|FundFormula[] $fund_formulas
- * @property Collection|FundMeta[] $metas
- * @property Collection|Product[] $products
- * @property Collection|ProductCategory[] $product_categories
- * @property Collection|FundCriterion[] $criteria
- * @property Collection|Voucher[] $vouchers
- * @property Collection|VoucherTransaction[] $voucher_transactions
- * @property Collection|FundProvider[] $providers
- * @property Collection|Validator[] $validators
- * @property Collection|Organization[] $provider_organizations
- * @property Collection|Organization[] $provider_organizations_approved
- * @property Collection|Organization[] $provider_organizations_declined
- * @property Collection|Organization[] $provider_organizations_pending
- * @property Carbon $start_date
- * @property Carbon $end_date
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string $state
+ * @property bool $public
+ * @property float|null $notification_amount
+ * @property \Illuminate\Support\Carbon|null $notified_at
+ * @property \Illuminate\Support\Carbon|null $start_date
+ * @property \Illuminate\Support\Carbon $end_date
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
+ * @property-read \App\Models\FundConfig $fund_config
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
+ * @property-read float $budget_left
+ * @property-read float $budget_total
+ * @property-read float $budget_used
+ * @property-read float $budget_validated
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundMeta[] $metas
+ * @property-read \App\Models\Organization $organization
+ * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $product_categories
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_declined
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_pending
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotificationAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund wherePublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Fund extends Model
 {
-    use HasMedia, EloquentModel;
+    use HasMedia;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';

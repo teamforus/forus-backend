@@ -2,31 +2,58 @@
 
 namespace App\Models;
 
-use App\Models\Traits\EloquentModel;
 use App\Models\Traits\NodeTrait;
-use Carbon\Carbon;
 use Dimsav\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
- * Class ProductCategory
- * @property mixed $id
+ * App\Models\ProductCategory
+ *
+ * @property int $id
  * @property string $key
- * @property string $name
- * @property integer $parent_id
- * @property ProductCategory $parent
- * @property Collection $funds
- * @property Collection $products
- * @property Collection $organizations
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int|null $parent_id
+ * @property int $_lft
+ * @property int $_rgt
+ * @property int $service
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $children
+ * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $descendants_with_products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
+ * @property-read \App\Models\ProductCategory|null $parent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductCategoryTranslation[] $translations
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory d()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory listsTranslations($translationField)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newModelQuery()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory notTranslatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslation($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslationLike($key, $value, $locale = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translated()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereLft($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereParentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereRgt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereService($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslation($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory withTranslation()
+ * @mixin \Eloquent
  */
 class ProductCategory extends Model
 {
-    use Translatable, EloquentModel, NodeTrait;
+    use Translatable, NodeTrait;
 
     /**
      * The attributes that are mass assignable.

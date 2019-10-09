@@ -3,18 +3,30 @@
 namespace App\Models;
 
 use App\Services\Forus\Record\Models\RecordType;
-use Carbon\Carbon;
 
 /**
- * Class PrevalidationRecord
+ * App\Models\PrevalidationRecord
+ *
  * @property int $id
  * @property int $record_type_id
+ * @property int $prevalidation_id
  * @property string $value
- * @property RecordType $record_type
- * @property Prevalidation $prevalidation
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Prevalidation $prevalidation
+ * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord wherePrevalidationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereValue($value)
+ * @mixin \Eloquent
  */
 class PrevalidationRecord extends Model
 {

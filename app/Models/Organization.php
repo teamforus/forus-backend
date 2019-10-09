@@ -4,42 +4,63 @@ namespace App\Models;
 
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Query\Builder;
 
 /**
- * Class Organization
- * @property mixed $id
- * @property string $identity_address
+ * App\Models\Organization
+ *
+ * @property int $id
+ * @property string|null $identity_address
  * @property string $name
  * @property string $iban
  * @property string $email
- * @property bool $email_public
+ * @property int $email_public
  * @property string $phone
- * @property bool $phone_public
+ * @property int $phone_public
  * @property string $kvk
  * @property string $btw
  * @property string $website
- * @property int $business_type_id
- * @property bool $website_public
- * @property Media $logo
- * @property BusinessType $business_type
- * @property Collection $funds
- * @property Collection $vouchers
- * @property Collection $products
- * @property Collection $validators
- * @property Collection $supplied_funds
- * @property Collection $supplied_funds_approved
- * @property Collection $organization_funds
- * @property Collection $voucher_transactions
- * @property Collection $funds_voucher_transactions
- * @property Collection $offices
- * @property Collection $employees
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $website_public
+ * @property int|null $business_type_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Office[] $offices
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $organization_funds
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereBtw($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereBusinessTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereEmailPublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIban($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereKvk($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization wherePhonePublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
+ * @mixin \Eloquent
  */
 class Organization extends Model
 {
