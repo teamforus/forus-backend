@@ -32,7 +32,7 @@ class FundPolicy
     ) {
         return $organization->identityCan(
             $identity_address, [
-                'manage_funds', 'view_finances'
+                'manage_funds', 'view_finances', 'view_funds',
             ], false
         );
     }
@@ -69,7 +69,7 @@ class FundPolicy
 
         return $fund->public || $fund->organization->identityCan(
             $identity_address,
-            ['manage_funds', 'view_finances'],
+            ['manage_funds', 'view_finances', 'view_funds'],
             false
         );
     }

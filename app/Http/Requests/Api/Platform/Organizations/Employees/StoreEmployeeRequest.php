@@ -31,7 +31,6 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'email'     => [
                 'required',
-                new IdentityRecordsExistsRule('primary_email'),
                 new NotIn([$primaryEmail]),
             ],
             'roles'     => 'present|array',

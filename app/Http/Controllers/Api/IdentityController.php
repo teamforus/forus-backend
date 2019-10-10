@@ -325,7 +325,7 @@ class IdentityController extends Controller
      * @param string $exchangeToken
      * @param string $clientType
      * @param string $implementationKey
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+     * @return \Illuminate\Contracts\View\View
      */
     public function emailConfirmationRedirect(
         string $exchangeToken,
@@ -337,14 +337,16 @@ class IdentityController extends Controller
         }
 
         switch ($clientType) {
-            case 'webshop': {
-                $webshopUrl = Implementation::byKey(
-                    $implementationKey
-                )['url_webshop'];
+            case 'webshop':
+            case 'sponsor':
+                case 'provider':
+            case 'validator': {
+                $webShopUrl = Implementation::byKey($implementationKey);
+                $webShopUrl = $webShopUrl['url_' . $clientType];
 
-                return redirect(
-                    "{$webshopUrl}confirmation/email/{$exchangeToken}"
-                );
+                exit(redirect(
+                    "{$webShopUrl}confirmation/email/{$exchangeToken}"
+                ));
             } break;
             case 'app-me_app': {
                 $sourceUrl = config('forus.front_ends.app-me_app');
@@ -354,7 +356,7 @@ class IdentityController extends Controller
             } break;
         }
 
-        return abort(404);
+        abort(404);
     }
 
     /**
