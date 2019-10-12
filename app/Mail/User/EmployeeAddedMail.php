@@ -38,7 +38,7 @@ class EmployeeAddedMail extends ImplementationMail
     public function build(): ImplementationMail
     {
         return parent::build()
-            ->subject(mail_trans('employee_added.title'))
+            ->subject(mail_trans('email_employee.title'))
             ->view('emails.user.employee_added', [
                 'confirmationLink' => $this->confirmationLink,
                 'orgName' => '',
