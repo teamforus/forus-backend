@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'title'          => 'Invitation to join the Forus platform',
-    'invitation_for' => 'U bent uitgenodigd om deel te nemen aan de organisatie :orgName op het Forus platform',
-    'create_account' => 'Om deze uitnodiging te accepteren heeft u een account nodig. Een account kunt u aanmaken via deze link: '.
-        '<a style="color: #315efd; text-decoration: underline;" href=":confirmationLink" target="blank">Sign me up</a>',
-    'create_profile' => 'U kunt ook een profiel aan maken door Me te downloaden. Doe dit door op uw smartphone naar '.
-        '<a style="color: #315efd; text-decoration: underline;" href=":link" target="blank">link</a> te gaan',
+    'title'          => 'Uitnodiging van :orgName als medewerker',
+    'invitation_for' => 'U bent uitgenodigd om deel te nemen aan de organisatie :orgName',
+    'create_account' => 'Deze uitnodiging kunt u accepteren door in te loggen: '.
+        '<a style="color: #315efd; text-decoration: underline;" href=":confirmationLink" target="blank">Ga naar het dashboard</a>',
+    'create_profile' => 'Wilt u ook QR-codes kunnen scannen? Download dan de Me-app van Forus. Doe dit door op uw smartphone naar '.
+        '<a style="color: #315efd; text-decoration: underline;" href=":link" target="blank">https://forus.io/DL</a> te gaan.',
 ];
