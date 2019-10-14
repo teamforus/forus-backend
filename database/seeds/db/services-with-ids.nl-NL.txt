@@ -8,10 +8,10 @@
 750006 - Huishouden, Gezin en Dier > Dieren
 
 751000 - Recreatie
-751001 - Recreatie, culturele activiteiten > Kinderfeestjes
-751002 - Recreatie, culturele activiteiten > Groepsuitjes
-751003 - Recreatie, culturele activiteiten > Restaurants
-751004 - Recreatie, culturele activiteiten > Zwemmen
+751001 - Recreatie > Kinderfeestjes
+751002 - Recreatie > Groepsuitjes
+751003 - Recreatie > Restaurants
+751004 - Recreatie > Zwemmen
 
 752000 - Culturele activiteiten
 752001 - Culturele activiteiten > Theater
