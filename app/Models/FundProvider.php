@@ -2,26 +2,47 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use \Illuminate\Database\Eloquent\Builder;
 use DB;
 
 /**
- * Class FundProvider
- * @property mixed $id
- * @property string $state
- * @property int $fund_id
+ * App\Models\FundProvider
+ *
+ * @property int $id
  * @property int $organization_id
- * @property Fund $fund
- * @property Organization $organization
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $fund_id
+ * @property string $state
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund $fund
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Organization $organization
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class FundProvider extends Model
 {
+    const STATE_PENDING = 'pending';
+    const STATE_APPROVED = 'approved';
+    const STATE_DECLINED = 'declined';
+
+    const STATES = [
+        self::STATE_PENDING,
+        self::STATE_APPROVED,
+        self::STATE_DECLINED,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -70,8 +91,9 @@ class FundProvider extends Model
                 return $query->where('name', 'like', "%{$q}%")
                     ->orWhere('kvk', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%")
-                    ->orWhereHas('product_categories', function (
+                    ->orWhere('phone', 'like', "%{$q}%");
+                    // TODO: Remove?
+                    /*->orWhereHas('product_categories', function (
                         Builder $query
                     ) use($q) {
                         return $query->whereHas('translations', function (
@@ -79,7 +101,7 @@ class FundProvider extends Model
                         ) use ($q) {
                             $query->where('name', 'LIKE', "%{$q}%");
                         });
-                    });
+                    });*/
             });
         }
 
@@ -106,10 +128,8 @@ class FundProvider extends Model
         $transKey = "export.providers";
 
         return $builder->with([
-            'organization', 'organization.product_categories'
-        ])->get()->map(function(
-            FundProvider $fundProvider
-        ) use ($transKey) {
+            'organization'
+        ])->get()->map(function(FundProvider $fundProvider) use ($transKey) {
             $organization = $fundProvider->organization;
 
             return [
@@ -118,10 +138,6 @@ class FundProvider extends Model
                     $organization->email : '',
                 trans("$transKey.phone") => $organization->phone ?
                     $organization->phone : '',
-                trans("$transKey.categories") =>
-                    $organization->product_categories->pluck(
-                        'name'
-                    )->implode(', '),
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
                 trans("$transKey.state") => trans(
                     "$transKey.state_values." . $fundProvider->state

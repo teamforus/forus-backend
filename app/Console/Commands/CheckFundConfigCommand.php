@@ -19,7 +19,7 @@ class CheckFundConfigCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Bekijk of fonds is configureerd.';
+    protected $description = 'Check if fund is configured.';
 
     /**
      * Create a new command instance.

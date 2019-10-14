@@ -5,7 +5,7 @@
     {{ mail_trans('dear_citizen') }}
     <br/>
     <br/>
-    {{ mail_trans('new_fund_created.new_fund_created') }}
+    {{ mail_trans('new_fund_created.new_fund_created', ['fund_name' => $fund_name]) }}
     <br/>
     <br/>
     {!! mail_trans('new_fund_created.webshop_button', ['link' => 'webshop_link', 'fund_name' => $fund_name]) !!}

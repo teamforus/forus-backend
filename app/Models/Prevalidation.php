@@ -4,24 +4,38 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
- * Class Prevalidation
+ * App\Models\Prevalidation
+ *
  * @property int $id
- * @property int $fund_id
- * @property int|null $organization_id
- * @property string $uid
+ * @property string|null $uid
  * @property string $identity_address
+ * @property int|null $fund_id
+ * @property int|null $organization_id
  * @property string $state
- * @property Fund $fund
- * @property Organization $organization
- * @property Collection $records
- * @property boolean $exported
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $exported
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund|null $fund
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Organization|null $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereExported($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Prevalidation extends Model
 {

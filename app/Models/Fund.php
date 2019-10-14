@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\BunqService\BunqService;
+use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -13,42 +14,61 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
- * Class Fund
- * @property mixed $id
- * @property integer $organization_id
- * @property integer|null $fund_id
- * @property string $state
+ * App\Models\Fund
+ *
+ * @property int $id
+ * @property int $organization_id
  * @property string $name
- * @property float $budget_total
- * @property float $budget_validated
- * @property float $budget_used
- * @property float $budget_left
- * @property float $notification_amount
- * @property Media $logo
- * @property boolean $public
- * @property FundConfig $fund_config
- * @property Organization $organization
- * @property Collection|BunqMeTab[] $bunq_me_tabs_paid
- * @property Collection|BunqMeTab[] $bunq_me_tabs
- * @property Collection|FundTopUpTransaction[] $top_up_transactions
- * @property Collection|FundFormula[] $fund_formulas
- * @property Collection|FundMeta[] $metas
- * @property Collection|Product[] $products
- * @property Collection|ProductCategory[] $product_categories
- * @property Collection|FundCriterion[] $criteria
- * @property Collection|Voucher[] $vouchers
- * @property Collection|VoucherTransaction[] $voucher_transactions
- * @property Collection|FundProvider[] $providers
- * @property Collection|Validator[] $validators
- * @property Collection|Organization[] $provider_organizations
- * @property Collection|Organization[] $provider_organizations_approved
- * @property Collection|Organization[] $provider_organizations_declined
- * @property Collection|Organization[] $provider_organizations_pending
- * @property Carbon $start_date
- * @property Carbon $end_date
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string $state
+ * @property bool $public
+ * @property float|null $notification_amount
+ * @property \Illuminate\Support\Carbon|null $notified_at
+ * @property \Illuminate\Support\Carbon|null $start_date
+ * @property \Illuminate\Support\Carbon $end_date
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
+ * @property-read \App\Models\FundConfig $fund_config
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
+ * @property-read float $budget_left
+ * @property-read float $budget_total
+ * @property-read float $budget_used
+ * @property-read float $budget_validated
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundMeta[] $metas
+ * @property-read \App\Models\Organization $organization
+ * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $product_categories
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_declined
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_pending
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotificationAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund wherePublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Fund extends Model
 {
@@ -214,6 +234,22 @@ class Fund extends Model
 
     public function getFundId() {
         return $this->id;
+    }
+
+    public function getServiceCosts(): float
+    {
+        return $this->getTransactionCosts();
+    }
+
+    public function getTransactionCosts (): float
+    {
+        if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
+            return $this
+                    ->voucher_transactions()
+                    ->count() * 0.10;
+        }
+
+        return 0.0;
     }
 
     /**
@@ -458,10 +494,26 @@ class Fund extends Model
     }
 
     /**
+     * Change fund state
+     *
+     * @param string $state
+     * @return $this
+     */
+    public function changeState(string $state) {
+        if (in_array($state, self::STATES)) {
+            $this->update(compact('state'));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update fund state by the start and end dates
      */
     public static function checkStateQueue() {
+        /** @var Collection|Fund[] $funds */
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->whereDate('start_date', '<=', now())
@@ -469,21 +521,23 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach($funds as $fund) {
-
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
-                $fund->update([
-                    'state' => self::STATE_ACTIVE
-                ]);
+                $fund->changeState(self::STATE_ACTIVE);
 
+                /*
                 $organizations = Organization::query()->whereIn(
                     'id', OrganizationProductCategory::query()->whereIn(
                     'product_category_id',
                     $fund->product_categories()->pluck('id')->all()
                 )->pluck('organization_id')->toArray()
                 )->get();
+                */
 
                 /** @var Organization $organization */
+                // TODO: Notify providers about new fund started
+                
+                /*
                 foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
                         $organization->email,
@@ -492,13 +546,12 @@ class Fund extends Model
                         $fund->organization->name
                     );
                 }
+                */
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
-                $fund->update([
-                    'state' => self::STATE_CLOSED
-                ]);
+                $fund->changeState(self::STATE_CLOSED);
             }
         }
     }
@@ -509,18 +562,16 @@ class Fund extends Model
     public static function checkConfigStateQueue()
     {
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', function (Builder $query) {
                 return $query->where('is_configured', true);
             })
-            ->where('state', 'waiting')
+            ->where('state', Fund::STATE_WAITING)
             ->whereDate('start_date', '>', now())
             ->get();
 
         /** @var self $fund */
         foreach($funds as $fund) {
-            $fund->update([
-                'state' => 'paused'
-            ]);
+            $fund->changeState(self::STATE_PAUSED);
 
             $fund->criteria()->create([
                 'record_type_key' => $fund->fund_config->key . '_eligible',
@@ -534,29 +585,32 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
-            $organizations = Organization::query()->whereIn(
+            /*$organizations = Organization::query()->whereIn(
                 'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
                 $fund->product_categories()->pluck('id')->all()
             )->pluck('organization_id')->toArray()
-            )->get();
+            )->get();*/
 
             /** @var Organization $organization */
-            foreach ($organizations as $organization) {
+            // TODO: Notify providers about new fund applicable
+            /*foreach ($organizations as $organization) {
                 resolve('forus.services.mail_notification')->newFundApplicable(
                     $organization->email,
                     $organization->emailServiceId(),
                     $fund->name,
                     config('forus.front_ends.panel-provider')
                 );
-            }
+            }*/
         }
     }
 
     /**
+     * Send funds user count statistic to email
+     * @param string $email
      * @return void
      */
-    public static function calculateUsersQueue()
+    public static function sendUserStatisticsReport(string $email)
     {
         /** @var Collection|Fund[] $funds */
         $funds = self::query()->whereHas('fund_config', function (
@@ -591,13 +645,13 @@ class Fund extends Model
                 $requesterCount = 0;
             }
 
-            resolve('forus.services.mail_notification')->calculateFundUsers(
+            resolve('forus.services.notification')->sendFundUserStatisticsReport(
+                $email,
                 $fund->name,
                 $organization->name,
                 $sponsorCount,
                 $providerCount,
-                $requesterCount,
-                ($sponsorCount + $providerCount + $requesterCount)
+                $requesterCount
             );
         }
     }
@@ -607,10 +661,12 @@ class Fund extends Model
      */
     public static function notifyAboutReachedNotificationAmount()
     {
-        /** @var MailService $mailService */
-        $mailService = resolve('forus.services.mail_notification');
+        /** @var NotificationService $mailService */
+        $mailService = resolve('forus.services.notification');
+
         /** @var RecordRepo $recordRepo */
         $recordRepo = resolve('forus.services.record');
+
         $funds = self::query()
             ->whereHas('fund_config', function (Builder $query){
                 return $query->where('is_configured', true);
@@ -623,34 +679,38 @@ class Fund extends Model
             })
             ->where('state', 'active')
             ->where('notification_amount', '>', 0)
+            ->whereNotNull('notification_amount')
             ->with('organization')
             ->get();
 
         /** @var self $fund */
-        foreach($funds as $fund) {
-            if($fund->budget_left <= $fund->notification_amount) {
+        foreach ($funds as $fund) {
+            $transactionCosts = $fund->getTransactionCosts();
+
+            if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
                 $referrers = $fund->organization->employeesOfRole('finance');
-                $referrers = $referrers->pluck('identity_address')->map(function ($identity) use ($recordRepo) {
+                $referrers = $referrers->pluck('identity_address');
+                $referrers = $referrers->push(
+                    $fund->organization->identity_address
+                )->map(function ($identity) use ($recordRepo) {
                     return [
                         'identity' => $identity,
                         'email' => $recordRepo->primaryEmailByAddress($identity),
                     ];
-                });
-                /*
-                TODO: check if org mail is same as finance role; if so only send one mail
-                $referrers->push([
-                    'identity' => $fund->organization->emailServiceId(),
+                })->push([
+                    'identity' => null,
                     'email' => $fund->organization->email
-                ]);*/
+                ])->unique('email');
 
                 foreach ($referrers as $referrer) {
-                    $mailService->fundNotifyReachedNotificationAmount(
+                    $mailService->fundBalanceWarning(
                         $referrer['email'],
                         $referrer['identity'],
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
-                        currency_format($fund->notification_amount)
+                        currency_format($fund->notification_amount - $transactionCosts),
+                        currency_format($fund->budget_left)
                     );
                 }
 

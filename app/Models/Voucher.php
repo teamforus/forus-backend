@@ -5,35 +5,51 @@ namespace App\Models;
 use App\Events\Vouchers\VoucherAssigned;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
- * Class Voucher
- * @property mixed $id
- * @property integer $fund_id
- * @property integer|null $product_id
- * @property integer|null $parent_id
- * @property integer $identity_address
- * @property string $amount
- * @property string $type
+ * App\Models\Voucher
+ *
+ * @property int $id
+ * @property int $fund_id
+ * @property string|null $identity_address
+ * @property float $amount
  * @property string|null $note
- * @property float $amount_available
- * @property float $amount_available_cached
- * @property boolean $is_granted
- * @property boolean $used
- * @property Fund $fund
- * @property Product|null $product
- * @property Voucher|null $parent
- * @property VoucherToken $token_without_confirmation
- * @property VoucherToken $token_with_confirmation
- * @property Collection $tokens
- * @property Collection $transactions
- * @property Collection $product_vouchers
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property Carbon $expire_at
- * @package App\Models
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $product_id
+ * @property int|null $parent_id
+ * @property \Illuminate\Support\Carbon|null $expire_at
+ * @property-read \App\Models\Fund $fund
+ * @property-read mixed $amount_available
+ * @property-read mixed $amount_available_cached
+ * @property-read string|null $created_at_locale
+ * @property-read bool $expired
+ * @property-read bool $is_granted
+ * @property-read string $type
+ * @property-read string|null $updated_at_locale
+ * @property-read bool $used
+ * @property-read \App\Models\Voucher|null $parent
+ * @property-read \App\Models\Product|null $product
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read \App\Models\VoucherToken $token_with_confirmation
+ * @property-read \App\Models\VoucherToken $token_without_confirmation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherToken[] $tokens
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $transactions
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereExpireAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereParentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Voucher extends Model
 {
@@ -157,10 +173,10 @@ class Voucher extends Model
     }
 
     /**
-     * @param string|null $identity_address
+     * @param string|null $email
      */
     public function sendToEmail(
-        ?string $email
+        string $email = null
     ) {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
@@ -173,7 +189,7 @@ class Voucher extends Model
             $fund_product_name = $voucherToken->voucher->fund->name;
         }
 
-        resolve('forus.services.mail_notification')->sendVoucher(
+        resolve('forus.services.notification')->sendVoucher(
             $email,
             $this->identity_address,
             $fund_product_name,
@@ -187,6 +203,8 @@ class Voucher extends Model
      * @param bool $sendCopyToUser
      */
     public function shareVoucherEmail(string $reason, $sendCopyToUser = false) {
+        $notificationService = resolve('forus.services.notification');
+
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -199,7 +217,7 @@ class Voucher extends Model
 
             $product_name = $voucherToken->voucher->product->name;
 
-            resolve('forus.services.mail_notification')->shareVoucher(
+            $notificationService->shareProductVoucher(
                 $voucherToken->voucher->product->organization->email,
                 $voucherToken->voucher->product->organization->emailServiceId(),
                 $primaryEmail,
@@ -209,7 +227,7 @@ class Voucher extends Model
             );
 
             if ($sendCopyToUser) {
-                resolve('forus.services.mail_notification')->shareVoucher(
+                $notificationService->shareProductVoucher(
                     $primaryEmail,
                     auth()->id(),
                     $primaryEmail,
@@ -232,7 +250,7 @@ class Voucher extends Model
             $this->identity_address
         );
 
-        resolve('forus.services.mail_notification')->transactionAvailableAmount(
+        resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
             $email,
             $this->identity_address,
             $fund_name,
@@ -245,6 +263,8 @@ class Voucher extends Model
      */
     public static function checkVoucherExpireQueue()
     {
+        $notificationService = resolve('forus.services.notification');
+
         $date = now()->addDays(4*7)->startOfDay();
         $vouchers = self::query()
             ->whereNull('product_id')
@@ -254,11 +274,11 @@ class Voucher extends Model
 
         /** @var self $voucher */
         foreach ($vouchers as $voucher) {
-
-            if($voucher->amount_available_cached > 0){
-
+            if ($voucher->amount_available_cached > 0) {
                 $recordRepo = resolve('forus.services.record');
-                $primaryEmail = $recordRepo->primaryEmailByAddress($voucher->identity_address);
+                $primaryEmail = $recordRepo->primaryEmailByAddress(
+                    $voucher->identity_address
+                );
 
                 $fund_name = $voucher->fund->name;
                 $sponsor_name = $voucher->fund->organization->name;
@@ -268,7 +288,7 @@ class Voucher extends Model
                 $email = $voucher->fund->organization->email;
                 $webshopLink = env('WEB_SHOP_GENERAL_URL');
 
-                resolve('forus.services.mail_notification')->voucherExpire(
+                $notificationService->voucherExpireSoon(
                     $primaryEmail,
                     $fund_name,
                     $sponsor_name,

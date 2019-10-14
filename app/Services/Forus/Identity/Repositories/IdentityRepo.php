@@ -1,14 +1,15 @@
 <?php
+
 namespace App\Services\Forus\Identity\Repositories;
 
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Identity\Models\IdentityProxy;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
 class IdentityRepo implements Interfaces\IIdentityRepo
 {
     protected $model;
     protected $recordRepo;
-    protected $mailService;
 
     /**
      * How many time user have to exchange their exchange_token
@@ -27,12 +28,17 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         'confirmation_code' => 60 * 60 * 24 * 30,
     ];
 
+    /**
+     * IdentityRepo constructor.
+     * @param Identity $model
+     * @param IRecordRepo $recordRepo
+     */
     public function __construct(
-        Identity $model
+        Identity $model,
+        IRecordRepo $recordRepo
     ) {
         $this->model = $model;
-        $this->recordRepo = app('forus.services.record');
-        $this->mailService = app('forus.services.mail_notification');
+        $this->recordRepo = $recordRepo;
     }
 
     /**
@@ -74,9 +80,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
             'primary_email' => $primaryEmail
         ], $records));
 
-
         $this->recordRepo->categoryCreate($identityAddress, "Relaties");
-        $this->mailService->addEmailConnection($identityAddress, $primaryEmail);
 
         return $identityAddress;
     }
@@ -243,8 +247,9 @@ class IdentityRepo implements Interfaces\IIdentityRepo
                 case "qr_code": $token = $this->makeToken(64); break;
                 case "pin_code": $token = random_int(111111, 999999); break;
                 case "email_code": $token = $this->makeToken(128); break;
-                case "short_token": $token = $this->makeToken(200); break;
-                case "confirmation_code": $token = $this->makeToken(200); break;
+                case "short_token":
+                case "confirmation_code":
+                    $token = $this->makeToken(200); break;
                 default: throw new \Exception(trans('identity-proxy.unknown_token_type')); break;
             }
         } while(IdentityProxy::query()->where([
@@ -261,16 +266,23 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      * @param string $type
      * @param string|null $identityAddress
      * @param string $state
-     * @return array
-     * @throws \Exception
+     * @return array|bool
      */
     public function makeProxy(
         string $type,
         string $identityAddress = null,
         string $state = 'pending'
     ) {
+        try {
+            $exchangeToken = $this->uniqExchangeToken($type);
+        } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
+            abort('400');
+            return false;
+        };
+
         return $this->createProxy(
-            $this->uniqExchangeToken($type),
+            $exchangeToken,
             $type,
             $this->expirationTimes[$type],
             $identityAddress,
@@ -495,10 +507,17 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         return $proxy;
     }
 
+    /**
+     * @param $size
+     * @return string
+     */
     private function makeToken($size) {
         return app('token_generator')->generate($size);
     }
 
+    /**
+     * @return string
+     */
     private function makeAccessToken() {
         return $this->makeToken(200);
     }

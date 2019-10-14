@@ -2,27 +2,58 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use App\Models\Traits\NodeTrait;
 use Dimsav\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 
 /**
- * Class ProductCategory
- * @property mixed $id
+ * App\Models\ProductCategory
+ *
+ * @property int $id
  * @property string $key
- * @property string $name
- * @property integer $parent_id
- * @property ProductCategory $parent
- * @property Collection $funds
- * @property Collection $products
- * @property Collection $organizations
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int|null $parent_id
+ * @property int $_lft
+ * @property int $_rgt
+ * @property int $service
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $children
+ * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $descendants_with_products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
+ * @property-read \App\Models\ProductCategory|null $parent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductCategoryTranslation[] $translations
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory d()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory listsTranslations($translationField)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newModelQuery()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory notTranslatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslation($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslationLike($key, $value, $locale = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translated()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereLft($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereParentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereRgt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereService($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslation($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory withTranslation()
+ * @mixin \Eloquent
  */
 class ProductCategory extends Model
 {
-    use Translatable;
+    use Translatable, NodeTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -30,7 +61,7 @@ class ProductCategory extends Model
      * @var array
      */
     protected $fillable = [
-        'key', 'parent_id', 'service'
+        'key', 'parent_id', 'service',
     ];
 
     /**
@@ -38,9 +69,7 @@ class ProductCategory extends Model
      *
      * @var array
      */
-    protected $with = [
-        'translations'
-    ];
+    protected $with = [];
 
     /**
      * The attributes that are translatable.
@@ -52,17 +81,21 @@ class ProductCategory extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function parent() {
-        return $this->belongsTo(ProductCategory::class);
+    public function products() {
+        return $this->hasMany(Product::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function products() {
-        return $this->hasMany(Product::class);
+    public function descendants_with_products() {
+        return $this->hasMany(ProductCategory::class, 'parent_id')
+            ->where(function(Builder $builder) {
+                $builder->has('products');
+                $builder->orHas('descendants');
+            });
     }
 
     /**
@@ -83,5 +116,75 @@ class ProductCategory extends Model
             Fund::class,
             'fund_product_categories'
         );
+    }
+
+    /**
+     * @param $request
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function search(Request $request) {
+        $query = self::query();
+        $parent_id = $request->input('parent_id', false);
+        $onlyUsed = $request->input('used', false);
+
+        $disabledCategories = config(
+            'forus.product_categories.disabled_top_categories', []
+        );
+
+        if ($parent_id) {
+            $query->where([
+                'parent_id' => $parent_id == 'null' ? null : $parent_id
+            ]);
+        }
+
+        if ($q = $request->input('q', false)) {
+            $query->whereHas('translations', function(
+                Builder $builder
+            ) use ($q) {
+                $builder->where('name', 'LIKE', "%$q%");
+            });
+        }
+
+        if ($request->has('service')) {
+            $query->where('service', '=', !!$request->input('service'));
+        }
+
+        if (count($disabledCategories) > 0) {
+            $query->whereNotIn('id', $disabledCategories);
+        }
+
+        if (!$onlyUsed) {
+            return $query;
+        }
+
+        // List all used product categories used by active products for
+        // current implementation
+        $products = Product::searchQuery()->distinct();
+        $products = $products->pluck('product_category_id');
+
+        $query->select([
+            'id', (new self)->getLftName(), (new self)->getRgtName(),
+        ])->with(['descendants_min']);
+
+        $queryHash = hash('md5', $sql_with_bindings = str_replace_array(
+            '?', $query->getBindings(), $query->toSql()
+        ));
+
+        /** @var ProductCategory[]|Collection $categories */
+        $categories = cache_optional($queryHash, function() use ($query) {
+            return $query->get();
+        }, 120);
+
+        // Only categories with products
+        $categories = $categories->filter(function(
+            ProductCategory $productCategory
+        ) use ($products) {
+            $ids = $productCategory->descendants_min->pluck('id');
+            $ids->push($productCategory->id);
+
+            return $products->intersect($ids)->count() > 0;
+        })->pluck('id');
+
+        return self::whereIn('id', $categories);
     }
 }

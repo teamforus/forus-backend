@@ -1,6 +1,8 @@
 <?php
 namespace App\Services\Forus\Identity\Repositories\Interfaces;
 
+use App\Services\Forus\Identity\Models\IdentityProxy;
+
 interface IIdentityRepo {
     /**
      * Make new identity
@@ -115,6 +117,21 @@ interface IIdentityRepo {
     );
 
     /**
+     * Create new proxy of type
+     *
+     * @param string $type
+     * @param string|null $identityAddress
+     * @param string $state
+     * @return array
+     * @throws \Exception
+     */
+    public function makeProxy(
+        string $type,
+        string $identityAddress = null,
+        string $state = 'pending'
+    );
+
+    /**
      * Make code authorization proxy identity
      * @return array
      */
@@ -125,6 +142,14 @@ interface IIdentityRepo {
      * @return array
      */
     public function makeAuthorizationTokenProxy();
+
+    /**
+     * Make token authorization proxy identity
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public function makeAuthorizationShortTokenProxy();
 
     /**
      * Make email token authorization proxy identity
@@ -160,11 +185,53 @@ interface IIdentityRepo {
     );
 
     /**
+     * Authorize proxy identity by token
+     *
+     * @param string $identityAddress
+     * @param string $token
+     * @return bool|mixed
+     */
+    public function activateAuthorizationShortTokenProxy(
+        string $identityAddress,
+        string $token
+    );
+
+    /**
+     * Authorize proxy identity by token
+     *
+     * @param string $token
+     * @return bool|mixed
+     */
+    public function exchangeAuthorizationShortTokenProxy(
+        string $token
+    );
+
+    /**
      * Authorize proxy identity by email token
      * @param string $token
      * @return string
      */
     public function activateAuthorizationEmailProxy(
+        string $token
+    );
+
+    /**
+     * Authorize proxy identity by email token
+     *
+     * @param string $token
+     * @return string
+     */
+    public function exchangeEmailConfirmationToken(
+        string $token
+    );
+
+    /**
+     * Authorize proxy identity by email token
+     *
+     * @param string $token
+     * @return string
+     */
+    public function exchangeQrCodeToken(
         string $token
     );
 }

@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\BusinessType;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
-use Illuminate\Database\Query\Builder;
 use App\Models\Organization;
 use App\Models\ProductCategory;
 use App\Models\Office;
@@ -32,7 +32,7 @@ class LoremDbSeeder extends Seeder
     {
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
-        $this->mailService = resolve('forus.services.mail_notification');
+        $this->mailService = resolve('forus.services.notification');
         $this->productCategories = ProductCategory::all();
         $this->primaryEmail = env('DB_SEED_BASE_EMAIL', 'example@example.com');
     }
@@ -46,6 +46,7 @@ class LoremDbSeeder extends Seeder
     {
         $countProviders = env('DB_SEED_PROVIDERS', 20);
 
+        $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
         $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
         $this->success("Identity created!");
@@ -58,9 +59,7 @@ class LoremDbSeeder extends Seeder
         $this->makeProviders($this->baseIdentity, $countProviders);
         $this->success("Providers created!");
 
-        $this->applyFunds(
-            $this->baseIdentity
-        );
+        $this->applyFunds($this->baseIdentity);
     }
 
     /**
@@ -73,8 +72,8 @@ class LoremDbSeeder extends Seeder
     ) {
         $identityAddress = $this->identityRepo->make('1111', [
             'primary_email' => $primaryEmail,
-            'given_name' => 'Lorem',
-            'family_name' => 'User'
+            'given_name' => 'John',
+            'family_name' => 'Doe'
         ]);
 
         $proxy = $this->identityRepo->makeProxy(
@@ -84,11 +83,6 @@ class LoremDbSeeder extends Seeder
         );
 
         $this->info("Base identity access token \"{$proxy['access_token']}\"");
-
-        $this->mailService->addEmailConnection(
-            $identityAddress,
-            $primaryEmail
-        );
 
         return $identityAddress;
     }
@@ -108,9 +102,7 @@ class LoremDbSeeder extends Seeder
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
 
-            $fund = $this->makeFund($organization, [
-                'name' => $organization->name
-            ]);
+            $fund = $this->makeFund($organization);
 
             $implementation = $this->makeImplementation(
                 str_slug($fund->name),
@@ -120,7 +112,9 @@ class LoremDbSeeder extends Seeder
             $this->fundConfigure(
                 $fund,
                 $implementation,
-                $implementation->key . '_' . date('Y')
+                $implementation->key . '_' . date('Y'), [
+                    'bunq_key' => env('DB_SEED_BUNQ_KEY', ''),
+                ]
             );
 
             $this->makePrevalidations(
@@ -141,17 +135,10 @@ class LoremDbSeeder extends Seeder
     ) {
         $organizations = $this->makeOrganizations($identity_address,  $count);
 
-        /** @var Organization $organization */
         foreach (collect($organizations)->random(ceil(count($organizations) / 2)) as $organization) {
-            $funds = Fund::query()->whereHas('product_categories', function ($query) use ($organization) {
-                /** @var Builder $query */
-                $query->whereIn(
-                    'fund_product_categories.product_category_id',
-                    $organization->product_categories->pluck('id')->toArray()
-                );
-            })->get();
+            /** @var Fund[] $funds */
+            $funds = Fund::get()->random(3);
 
-            /** @var Fund $fund */
             foreach ($funds as $fund) {
                 $fund->providers()->create([
                     'organization_id'   => $organization->id,
@@ -171,6 +158,9 @@ class LoremDbSeeder extends Seeder
         }
     }
 
+    /**
+     * @param string $identity_address
+     */
     public function applyFunds(
         string $identity_address
     ) {
@@ -240,14 +230,12 @@ class LoremDbSeeder extends Seeder
      * @param string $identity_address
      * @param int $count
      * @param array $fields
-     * @param array|null $productCategories
      * @return array
      */
     public function makeOrganizations(
         string $identity_address,
         int $count = 1,
-        array $fields = [],
-        array $productCategories = null
+        array $fields = []
     ) {
         $out = [];
         $nth= 1;
@@ -256,8 +244,7 @@ class LoremDbSeeder extends Seeder
             array_push($out, $this->makeOrganization(
                 'Provider #' . $nth++,
                 $identity_address,
-                $fields,
-                $productCategories
+                $fields
             ));
         }
 
@@ -268,14 +255,12 @@ class LoremDbSeeder extends Seeder
      * @param string $name
      * @param string $identity_address
      * @param array $fields
-     * @param array|null $productCategories
      * @return Organization|\Illuminate\Database\Eloquent\Model
      */
     public function makeOrganization(
         string $name,
         string $identity_address,
-        array $fields = [],
-        array $productCategories = null
+        array $fields = []
     ) {
         $organization = Organization::create(
             collect(collect([
@@ -285,17 +270,14 @@ class LoremDbSeeder extends Seeder
                 'email' => $this->primaryEmail,
                 'phone_public' => true,
                 'email_public' => true,
+                'business_type_id' => BusinessType::pluck('id')->random(),
             ])->merge($fields)->merge(
                 compact('name', 'identity_address')
             )->only([
                 'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
                 'email_public', 'phone_public', 'website_public',
-                'identity_address'
+                'identity_address', 'business_type_id'
             ]))->toArray()
-        );
-
-        $organization->product_categories()->sync(
-            $productCategories ?: $this->productCategories->pluck('id')->toArray()
         );
 
         $organization->validators()->create(compact('identity_address'));
@@ -332,18 +314,14 @@ class LoremDbSeeder extends Seeder
         Organization $organization,
         array $fields = []
     ) {
-        /** @var Office $office */
-        $office = $organization->offices()->create(
-            collect([
-                'address'   => 'Osloweg 131, 9723BK, Groningen',
-                'phone'     => '0123456789',
-                'lon'       => 6.606065989043237 + (rand(-1000, 1000) / 10000),
-                'lat'       => 53.21694230132835 + (rand(-1000, 1000) / 10000),
-                'parsed'    => true
-            ])->merge($fields)->only([
-                'address', 'phone', 'lon', 'lat', 'parsed'
-            ])->toArray()
-        );
+        $office = Office::create(array_merge([
+            'organization_id'   => $organization->id,
+            'address'           => 'Osloweg 131, 9723BK, Groningen',
+            'phone'             => '0123456789',
+            'lon'               => 6.606065989043237 + (rand(-1000, 1000) / 10000),
+            'lat'               => 53.21694230132835 + (rand(-1000, 1000) / 10000),
+            'parsed'            => true
+        ], $fields));
 
         $start_time = '08:00';
         $end_time = '08:00';
@@ -360,49 +338,25 @@ class LoremDbSeeder extends Seeder
     /**
      * @param Organization $organization
      * @param array $fields
-     * @param int $count
-     * @return array
-     */
-    public function makeFunds(
-        Organization $organization,
-        array $fields = [],
-        int $count = 1
-    ) {
-        $out = [];
-
-        while ($count-- > 0) {
-            array_push($out, $this->makeFUnd($organization, $fields));
-        }
-
-        return $out;
-    }
-
-    /**
-     * @param Organization $organization
-     * @param array $fields
      * @return Fund
      */
     public function makeFund(
         Organization $organization,
-        array $fields
+        array $fields = []
     ) {
         do {
             $fundName = 'Fund #' . rand(100000, 999999);
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
-        /** @var Fund $fund */
-        $fund = $organization->funds()->create(
-            collect([
-                'name'          => $fundName,
-                'start_date'    => Carbon::now()->startOfDay()->format('Y-m-d'),
-                'end_date'      => Carbon::now()->addDays(60)->endOfDay()->format('Y-m-d')
-            ])->merge($fields)->only([
-                'name', 'start_date', 'end_date', 'notification_amount'
-            ])->toArray()
-        );
+        $fund = Fund::create(array_merge([
+            'organization_id'   => $organization->id,
+            'name'              => $fundName,
+            'start_date'        => Carbon::now()->startOfDay()->format('Y-m-d'),
+            'end_date'          => Carbon::now()->addDays(60)->endOfDay()->format('Y-m-d')
+        ], $fields));
 
         $fund->product_categories()->sync(
-            $this->productCategories->pluck('id')->toArray()
+            $this->productCategories->pluck('id')->random(6)->toArray()
         );
 
         return $fund;
@@ -420,11 +374,26 @@ class LoremDbSeeder extends Seeder
         return Implementation::create([
             'key' => $key,
             'name' => $name,
-            'url_webshop'   => "https://dev.$key.forus.io/#!/",
-            'url_sponsor'   => "https://dev.$key.forus.io/sponsor/#!/",
-            'url_provider'  => "https://dev.$key.forus.io/provider/#!/",
-            'url_validator' => "https://dev.$key.forus.io/validator/#!/",
-            'url_app'       => "https://dev.$key.forus.io/me/#!/",
+            'url_webshop' => env(
+                'DB_SEED_URL_WEBSHOP',
+                "https://dev.$key.forus.io/#!/"
+            ),
+            'url_sponsor' => env(
+                'DB_SEED_URL_SPONSOR',
+                "https://dev.$key.forus.io/sponsor/#!/"
+            ),
+            'url_provider' => env(
+                'DB_SEED_URL_PROVIDER',
+                "https://dev.$key.forus.io/provider/#!/"
+            ),
+            'url_validator' => env(
+                'DB_SEED_URL_VALIDATOR',
+                "https://dev.$key.forus.io/validator/#!/"
+            ),
+            'url_app' => env(
+                'DB_SEED_URL_APP',
+                "https://dev.$key.forus.io/me/#!/"
+            ),
         ]);
     }
 
@@ -583,18 +552,17 @@ class LoremDbSeeder extends Seeder
         $expire_at = Carbon::now()->addDays(rand(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
 
-        /** @var Product $product */
-        $product = $organization->products()->create(
-            collect(compact(
+        return $product = Product::create(
+            collect(array_merge(compact(
                 'name', 'price', 'old_price', 'total_amount', 'sold_out',
                 'expire_at', 'product_category_id'
-            ))->merge(collect($fields)->only([
+            ), [
+                'organization_id' => $organization->id
+            ]))->merge(collect($fields)->only([
                 'name', 'price', 'old_price', 'total_amount', 'sold_out',
                 'expire_at'
             ]))->toArray()
         );
-
-        return $product;
     }
 
     /**

@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class FundProductCategory
- * @property mixed $id
- * @property integer $organization_id
- * @property integer $product_category_id
- * @property Fund $fund
- * @property Organization $organization
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * App\Models\OrganizationProductCategory
+ *
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Organization $organization
+ * @property-read \App\Models\ProductCategory $product
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationProductCategory newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationProductCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationProductCategory query()
+ * @mixin \Eloquent
  */
 class OrganizationProductCategory extends Model
 {

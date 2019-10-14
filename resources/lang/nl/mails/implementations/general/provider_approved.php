@@ -3,7 +3,7 @@
 return [
     'title' => 'Aanmelding als aanbieder is goedgekeurd',
     'application_approved' => 'Uw aanmelding is geaccepteerd!',
-    'applied_for' => 'Kort geledeneeft u zich aangemeld voor \':fund_name\'.',
+    'applied_for' => 'Kort geleden heeft u zich aangemeld voor \':fund_name\'.',
     'sponsor_application_approved' => ':sponsor_name heeft uw aanmelding geaccepteerd.',
     'this_means_that' => 'Dit betekent dat u vanaf nu uw aanbiedingen kan leveren aan klanten die recht hebben op :fund_name.',
     'team_fund' => 'Team :fund_name',

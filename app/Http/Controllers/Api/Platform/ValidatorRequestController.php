@@ -20,7 +20,7 @@ class ValidatorRequestController extends Controller
         $this->authorize('index', ValidatorRequest::class);
 
         $validatorRequest = ValidatorRequest::query()->where([
-            'identity_address' => auth()->user()->getAuthIdentifier()
+            'identity_address' => auth_address()
         ])->get();
 
         return ValidatorRequestResource::collection($validatorRequest);
@@ -40,15 +40,15 @@ class ValidatorRequestController extends Controller
 
         $validatorRequest = ValidatorRequest::create([
             'record_id' => $request->input('record_id'),
-            'identity_address' => auth()->user()->getAuthIdentifier(),
+            'identity_address' => auth_address(),
             'validator_id' => $request->input('validator_id'),
             'state' => 'pending'
         ]);
         $email = resolve('forus.services.record')->primaryEmailByAddress(
-            auth()->user()->getAuthIdentifier()
+            auth_address()
         );
 
-        resolve('forus.services.mail_notification')->newValidationRequest(
+        resolve('forus.services.notification')->newValidationRequest(
             $email,
             $validatorRequest->validator->identity_address,
             config('forus.front_ends.panel-validator')

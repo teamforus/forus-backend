@@ -28,17 +28,17 @@ class VoucherResource extends Resource
         'product.organization.offices.schedules',
         'product.organization.offices.photo.sizes',
         'product.organization.offices.organization.logo.sizes',
-        'product.organization.offices.organization.product_categories.translations',
-        'product.organization.product_categories.translations',
+        // 'product.organization.offices.organization.product_categories.translations',
+        // 'product.organization.product_categories.translations',
         'fund.fund_config.implementation',
         'fund.product_categories.translations',
         'fund.provider_organizations_approved.offices.schedules',
         'fund.provider_organizations_approved.offices.photo.sizes',
         'fund.provider_organizations_approved.offices.organization.logo.sizes',
-        'fund.provider_organizations_approved.offices.organization.product_categories.translations',
+        // 'fund.provider_organizations_approved.offices.organization.product_categories.translations',
         'fund.logo.sizes',
         'fund.organization.logo.sizes',
-        'fund.organization.product_categories.translations',
+        // 'fund.organization.product_categories.translations',
     ];
 
     /**
@@ -146,7 +146,7 @@ class VoucherResource extends Resource
                         'old_price' => currency_format($product_voucher->product->old_price),
                     ])
                 ]);
-            }) : null,
+            })->values() : null,
             'transactions' => $transactions,
         ])->toArray();
     }

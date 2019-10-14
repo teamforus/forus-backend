@@ -7,8 +7,8 @@ use App\Services\MediaService\Models\MediaSize;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Intervention\Image\Constraint;
 
 class MediaService
 {
@@ -16,7 +16,6 @@ class MediaService
      * @var Media $model
      */
     protected $model;
-    protected $mediable_models;
 
     /**
      * Filesystem driver to use for storage
@@ -31,16 +30,13 @@ class MediaService
     protected $storagePath;
 
     /**
-     * Constructor
+     * MediaService constructor.
      *
-     * @param array $mediable_models
      */
-    public function __construct(
-        array $mediable_models = []
-    ) {
+    public function __construct() {
         $this->model = Media::query();
-        $this->mediable_models = collect($mediable_models);
-        $this->storageDriver = config('media.filesystem_driver');
+        $this->storagePath = str_start(config('media.storage_path'), '/');
+        $this->storageDriver = config('media.filesystem_driver', 'local');
     }
 
     /**
@@ -175,7 +171,7 @@ class MediaService
      * @return string
      */
     protected function makeUniqueFileNme($path, $ext) {
-        $tokenGenerator = app()->make('token_generator');
+        $tokenGenerator = resolve('token_generator');
         $storage = $this->storage();
 
         do {
@@ -185,16 +181,24 @@ class MediaService
         return $name;
     }
 
+    /**
+     * @param UploadedFile $file
+     * @param $type
+     * @param $identity
+     * @param $extension
+     * @return Media|bool
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
     public function uploadSingle(
         UploadedFile $file,
         $type,
-        $identity
+        $identity,
+        $extension = false
     ) {
-
         // file info
         $path   = (string) $file;
         $name   = $file->getClientOriginalName();
-        $ext    = $file->getClientOriginalExtension();
+        $ext    = $extension ?: $file->getClientOriginalExtension();
 
         // get clear name
         $name   = rtrim($name, '.' . $ext);
@@ -203,66 +207,122 @@ class MediaService
         return $this->doUpload($path, $name, $ext, $type, $identity);
     }
 
-    protected function doUpload($path, $name, $ext, $type, $identity) {
+    /**
+     * @param $type
+     * @param Media $media
+     * @param $identity
+     * @return Media|bool
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function cloneMedia(
+        $type,
+        Media $media,
+        $identity
+    ) {
+        if ($media->size_original && $media->size_original->fileExists()) {
+            return $this->doUpload(
+                $media->size_original->storagePath(),
+                $media->original_name,
+                $media->ext,
+                $type,
+                $identity
+            );
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $path
+     * @param string $original_name
+     * @param string $ext
+     * @param string $type
+     * @param string $identity_address
+     * @return Media|bool
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    protected function doUpload(
+        string $path,
+        string $original_name,
+        string $ext,
+        string $type,
+        string $identity_address
+    ) {
         $mediaConfig = config('media.sizes.' . $type);
         $mediaSizes = $mediaConfig['size'];
+        $mediaQuery = Media::query();
+        $mediable_type = null;
+        $mediable_id = null;
 
-        /** @var Model $model */
-        $model = Media::query();
+        if (!in_array($ext, ['jpg', 'png'])) {
+            $ext = 'jpg';
+        }
 
         do {
-            $uid = app()->make('token_generator')->generate('64');
-        } while($model->where(compact('uid'))->count() > 0);
+            $uid = resolve('token_generator')->generate('64');
+        } while($mediaQuery->where(compact('uid'))->count() > 0);
 
-        // media row
-        $fields = [
-            'uid'               => $uid,
-            'identity_address'  => $identity,
-            'original_name'     => $name,
-            'mediable_id'       => NULL,
-            'mediable_type'     => NULL,
-            'type'              => $type,
-            'ext'               => $ext,
-        ];
+        if (!$media = Media::create(compact(
+            'uid', 'identity_address', 'original_name', 'type', 'ext',
+            'mediable_id', 'mediable_type'
+        ))) {
+            return false;
+        }
 
         $storage = $this->storage();
 
-        // media row create
-        /** @var mixed $media */
-        if (!$media = Media::create($fields)) {
-            return false;
-        }
         foreach ($mediaSizes as $mediaSizeKey => $mediaSize) {
             $uniqueName = $this->makeUniqueFileNme($this->storagePath, $ext);
-
-            $filePath = $this->storagePath . $uniqueName . '.' . $ext;
-
+            $filePath = str_start($uniqueName . '.' . $ext, '/');
+            $filePath = str_start($this->storagePath . $filePath, '/');
             $storage->put($filePath, file_get_contents($path));
 
             $mediaSize = [
                 'x' => $mediaSize[0],
-                'y' => $mediaSize[1]
+                'y' => $mediaSize[1],
+                'keepRatio' => isset($mediaSize[2]) ? $mediaSize[2] : true,
+                'quality' => isset($mediaSize[3]) ? $mediaSize[3] : 75,
             ];
 
-            // resize and save image
-            $image = app()->make('image')->make(
-            /** @var mixed $storage */
+            $image = \Image::make(
                 $storage->get($filePath)
-            );
+            )->backup();
 
-
-            if ($mediaSize) {
-                $image = $image->fit($mediaSize['x'], $mediaSize['y']);
+            if ($mediaSize['keepRatio']) {
+                $image = $image->resize(
+                    $mediaSize['x'],
+                    $mediaSize['y'], function (
+                    Constraint $constraint
+                ) {
+                    $constraint->aspectRatio();
+                });
+            } else {
+                $image = $image->fit(
+                    $mediaSize['x'],
+                    $mediaSize['y']
+                );
             }
 
+            if ($ext == 'jpg') {
+                $image = \Image::canvas(
+                    $image->width(),
+                    $image->height(),
+                    '#ffffff'
+                )->insert($image)->backup();
+            }
 
-            $storage->put($filePath, $image->encode()->encoded, 'public');
+            $storage->put(
+                $filePath,
+                $image->encode($ext, $mediaSize['quality'])->encoded,
+                'public'
+            );
 
             // media size row create
             $media->sizes()->create([
                 'key'   => $mediaSizeKey,
                 'path'  => $filePath
             ]);
+            $image->reset();
         }
 
         return $media;
@@ -272,7 +332,7 @@ class MediaService
      * @param string $uid
      * @return Media
      */
-    public function findByUid(string $uid) {
+    public function findByUid(string $uid = null) {
         /** @var Media $media */
         $media = $this->model->where('uid', $uid)->first();
 
@@ -284,15 +344,23 @@ class MediaService
      * @return \Storage
      */
     private function storage() {
-        return app()->make('filesystem')->disk($this->storageDriver);
+        return resolve('filesystem')->disk($this->storageDriver);
     }
 
     /**
      * @param string $path
      * @return mixed
      */
-    public function publicUrl(string $path) {
-        return $this->storage()->url($path);
+    public function urlPublic(string $path) {
+        return $this->storage()->url(ltrim($path, '/'));
+    }
+
+    /**
+     * @param string $path
+     * @return mixed
+     */
+    public function path(string $path) {
+        return $this->storage()->path($path);
     }
 
     /**

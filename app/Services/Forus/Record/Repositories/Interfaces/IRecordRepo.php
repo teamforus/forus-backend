@@ -55,7 +55,7 @@ interface IRecordRepo {
      * @param string $email
      * @return mixed|null
      */
-    public function identityIdByEmail(
+    public function identityAddressByEmail(
         string $email
     );
 
@@ -63,7 +63,7 @@ interface IRecordRepo {
     /**
      * Get identity id by email record
      * @param string $identityAddress
-     * @return mixed|null
+     * @return string|null
      */
     public function primaryEmailByAddress(
         string $identityAddress
