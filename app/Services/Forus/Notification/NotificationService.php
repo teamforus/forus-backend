@@ -633,17 +633,20 @@ class NotificationService
     }
 
     /**
+     * @param string $orgName
      * @param string $email
      * @param string $confirmationLink
      * @param $identifier
      * @return bool|null
      */
     public function sendEmailEmployeeAdded(
+        string $orgName,
         string $email,
         string $confirmationLink,
         $identifier
     ) {
         return $this->sendMail($email, new EmployeeAddedMail(
+            $orgName,
             config('app.name'),
             $confirmationLink,
             $identifier

@@ -6,6 +6,7 @@ use App\Mail\ImplementationMail;
 
 class EmployeeAddedMail extends ImplementationMail
 {
+    private $orgName;
     private $platform;
     private $confirmationLink;
     private $link;
@@ -14,17 +15,20 @@ class EmployeeAddedMail extends ImplementationMail
      * Create a new message instance.
      *
      * EmployeeAddedMail constructor.
+     * @param string $orgName
      * @param string $platform
      * @param string $confirmationLink
      * @param string $identityId
      */
     public function __construct(
+        string $orgName,
         string $platform,
         string $confirmationLink,
         ?string $identityId
     ) {
         parent::__construct($identityId);
 
+        $this->orgName = $orgName;
         $this->platform = $platform;
         $this->confirmationLink = $confirmationLink;
         $this->link = 'https://www.forus.io/DL';
@@ -38,10 +42,10 @@ class EmployeeAddedMail extends ImplementationMail
     public function build(): ImplementationMail
     {
         return parent::build()
-            ->subject(mail_trans('employee_added.title'))
+            ->subject(mail_trans('email_employee.title'))
             ->view('emails.user.employee_added', [
                 'confirmationLink' => $this->confirmationLink,
-                'orgName' => '',
+                'orgName' => $this->orgName,
                 'link'    => $this->link,
             ]);
     }

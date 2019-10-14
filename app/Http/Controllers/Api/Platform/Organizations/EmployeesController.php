@@ -91,6 +91,7 @@ class EmployeesController extends Controller
             );
 
             $this->notificationRepo->sendEmailEmployeeAdded(
+                $organization->name,
                 $email,
                 $confirmationLink,
                 $identity_address
