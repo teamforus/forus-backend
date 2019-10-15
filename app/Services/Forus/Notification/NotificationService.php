@@ -14,6 +14,7 @@ use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
+use App\Mail\User\EmployeeAddedMail;
 use App\Mail\Validations\AddedAsValidatorMail;
 use App\Mail\Validations\NewValidationRequestMail;
 use App\Mail\Vouchers\FundStatisticsMail;
@@ -625,6 +626,27 @@ class NotificationService
         $identifier
     ) {
         return $this->sendMail($email, new EmailActivationMail(
+            config('app.name'),
+            $confirmationLink,
+            $identifier
+        ));
+    }
+
+    /**
+     * @param string $orgName
+     * @param string $email
+     * @param string $confirmationLink
+     * @param $identifier
+     * @return bool|null
+     */
+    public function sendEmailEmployeeAdded(
+        string $orgName,
+        string $email,
+        string $confirmationLink,
+        $identifier
+    ) {
+        return $this->sendMail($email, new EmployeeAddedMail(
+            $orgName,
             config('app.name'),
             $confirmationLink,
             $identifier
