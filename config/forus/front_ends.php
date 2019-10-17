@@ -11,7 +11,7 @@ return [
 
     'landing-app'           => env('LANDING_APP_URL', false),
 
-    'app-me_app'            => env('ME_APP_URL', false),
+    'app-me_app'            => env('ME_APP_URL', 'meapp://'),
 
     "map" => [
         "lon"               => env('WEB_SHOP_GENERAL_MAP_LON'),
