@@ -402,3 +402,17 @@ if (!function_exists('api_dependency_requested')) {
         return $default;
     }
 }
+
+if (!function_exists('validate_data')) {
+    /**
+     * @param array $data
+     * @param array $rules
+     * @return \Illuminate\Validation\Validator
+     */
+    function validate_data(
+        $data = [],
+        $rules = []
+    ) {
+        return \Illuminate\Support\Facades\Validator::make($data, $rules);
+    }
+}

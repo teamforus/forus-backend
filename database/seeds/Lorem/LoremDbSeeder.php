@@ -351,8 +351,11 @@ class LoremDbSeeder extends Seeder
         bool $active = false,
         array $fields = []
     ) {
+        $flag = false;
+
         do {
-            $fundName = 'Fund #' . rand(100000, 999999);
+            $fundName = $organization->name . ($flag ? (' - ' . rand(0, 999)) : '');
+            $flag = true;
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
         $fund = $organization->createFund(array_merge([
@@ -426,11 +429,19 @@ class LoremDbSeeder extends Seeder
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured'
         ]))->toArray());
 
-        $fund->criteria()->create([
+        $fund->criteria()->createMany([[
             'record_type_key'   => 'children_nth',
             'operator'          => '>',
-            'value'             => 0
-        ]);
+            'value'             => 2,
+        ], [
+            'record_type_key'   => 'net_worth',
+            'operator'          => '<',
+            'value'             => 100,
+        ], [
+            'record_type_key'   => 'gender',
+            'operator'          => '=',
+            'value'             => 'Female',
+        ]]);
 
         $fund->fund_formulas()->create([
             'type'      => 'fixed',

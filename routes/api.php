@@ -19,6 +19,7 @@ $router = app()->make('router');
 $router->group([], function() use ($router) {
     $router->group(['prefix' => '/identity'], function() use ($router) {
         $router->post('/', 'Api\IdentityController@store');
+        $router->post('/validate/email', 'Api\IdentityController@storeValidateEmail');
 
         $router->group(['prefix' => '/proxy'], function() use ($router) {
             $router->post('/code', 'Api\IdentityController@proxyAuthorizationCode');

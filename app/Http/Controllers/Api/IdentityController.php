@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Identity\IdentityAuthorizeCodeRequest;
 use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
+use App\Http\Requests\Api\IdentityAuthorizationEmailRedirectRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
+use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
+use App\Rules\IdentityRecordsUniqueRule;
 use Illuminate\Http\Request;
 
 class IdentityController extends Controller
@@ -49,17 +52,15 @@ class IdentityController extends Controller
 
         $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);
         $clientType = $request->headers->get('Client-Type', 'general');
-        $implementationKey = Implementation::activeKey();
 
         if (collect(['webshop', 'app-me_app'])->search($clientType) !== false) {
-            $confirmationLink = url(
-                '/api/v1/identity/proxy/confirmation/redirect/' .
-                collect([
-                    $identityProxy['exchange_token'],
-                    $clientType,
-                    $implementationKey
-                ])->implode('/')
-            );
+            $confirmationLink = url(sprintf(
+                '/api/v1/identity/proxy/confirmation/redirect/%s/%s/%s?target=%s',
+                $identityProxy['exchange_token'],
+                $clientType,
+                Implementation::activeKey(),
+                $request->input('target', '')
+            ));
 
             $this->mailService->sendEmailConfirmationLink(
                 $request->input('records.primary_email'),
@@ -73,6 +74,26 @@ class IdentityController extends Controller
         }
 
         return collect($identityProxy)->only('access_token');
+    }
+
+    /**
+     * @param IdentityStoreValidateEmailRequest $request
+     * @return array
+     * @throws \Exception
+     */
+    public function storeValidateEmail(IdentityStoreValidateEmailRequest $request) {
+        $this->middleware('throttle', [10, 1 * 60]);
+        $ruleUnique = new IdentityRecordsUniqueRule('primary_email');
+        $email = (string) $request->input('email', '');
+
+        return [
+            'email' => [
+                'unique' => $ruleUnique->passes('email', $email),
+                'valid' => validate_data(compact('email'), [
+                    'email' => 'required|email'
+                ])->passes(),
+            ]
+        ];
     }
 
     /**
@@ -177,8 +198,10 @@ class IdentityController extends Controller
         $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
 
         $link = url(sprintf(
-            '/api/v1/identity/proxy/redirect/email/%s/%s',
-            $source, $proxy['exchange_token']
+            '/api/v1/identity/proxy/redirect/email/%s/%s?target=%s',
+            $source,
+            $proxy['exchange_token'],
+            $request->input('target', '')
         ));
 
         $platform = '';
@@ -269,11 +292,14 @@ class IdentityController extends Controller
 
     /**
      * Redirect email token
+     *
+     * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $source
      * @param string $emailToken
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function proxyRedirectEmail(
+        IdentityAuthorizationEmailRedirectRequest $request,
         string $source,
         string $emailToken
     ) {
@@ -293,7 +319,12 @@ class IdentityController extends Controller
             ])->first()['url_' . $frontend];
         }
 
-        $redirectUrl = $sourceUrl . "identity-restore?token=" . $emailToken;
+        $redirectUrl = sprintf(
+             "%s/identity-restore?token=%s&target=%s",
+            rtrim($sourceUrl, '/'),
+            $emailToken,
+            $request->input('target', '')
+        );
 
         if ($source == 'app-me_app') {
             return view()->make('pages.auth.deep_link', compact('redirectUrl'));
@@ -322,12 +353,14 @@ class IdentityController extends Controller
     }
 
     /**
+     * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
      * @param string $clientType
      * @param string $implementationKey
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\Contracts\View\View|void
      */
     public function emailConfirmationRedirect(
+        IdentityAuthorizationEmailRedirectRequest $request,
         string $exchangeToken,
         string $clientType = 'webshop',
         string $implementationKey = 'general'
@@ -345,18 +378,24 @@ class IdentityController extends Controller
                 $webShopUrl = $webShopUrl['url_' . $clientType];
 
                 exit(redirect(
-                    "{$webShopUrl}confirmation/email/{$exchangeToken}"
+                    $redirectUrl = sprintf("%s/confirmation/email/%s?target=%s",
+                        rtrim($webShopUrl, '/'),
+                        $exchangeToken,
+                    $request->input('target', ''))
                 ));
             } break;
             case 'app-me_app': {
                 $sourceUrl = config('forus.front_ends.app-me_app');
-                $redirectUrl = $sourceUrl . "identity-confirmation?token=" . $exchangeToken;
+                $redirectUrl = sprintf("%s/identity-confirmation?token=%s",
+                    rtrim($sourceUrl, '/'),
+                    $exchangeToken
+                );
 
                 return view()->make('pages.auth.deep_link', compact('redirectUrl'));
             } break;
         }
 
-        abort(404);
+        return abort(404);
     }
 
     /**
