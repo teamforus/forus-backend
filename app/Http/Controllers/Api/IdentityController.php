@@ -53,13 +53,15 @@ class IdentityController extends Controller
         $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);
         $clientType = $request->headers->get('Client-Type', 'general');
 
-        if (collect(['webshop', 'app-me_app'])->search($clientType) !== false) {
+        if (in_array($clientType, ['webshop', 'app-me_app'])) {
             $confirmationLink = url(sprintf(
-                '/api/v1/identity/proxy/confirmation/redirect/%s/%s/%s?target=%s',
+                '/api/v1/identity/proxy/confirmation/redirect/%s/%s/%s%s',
                 $identityProxy['exchange_token'],
                 $clientType,
                 Implementation::activeKey(),
-                $request->input('target', '')
+                $clientType != 'app-me_app' ? (
+                    '?' . http_build_query($request->only('target'))
+                ) : ''
             ));
 
             $this->mailService->sendEmailConfirmationLink(
@@ -320,10 +322,13 @@ class IdentityController extends Controller
         }
 
         $redirectUrl = sprintf(
-             "%s/identity-restore?token=%s&target=%s",
-            rtrim($sourceUrl, '/'),
-            $emailToken,
-            $request->input('target', '')
+            $sourceUrl . "identity-restore?%s",
+            http_build_query(array_filter([
+                'token' => $emailToken,
+                'target' => $request->input('target', null)
+            ], function($var) {
+                return !empty($var);
+            }))
         );
 
         if ($source == 'app-me_app') {
@@ -365,34 +370,32 @@ class IdentityController extends Controller
         string $clientType = 'webshop',
         string $implementationKey = 'general'
     ) {
+        $token = $exchangeToken;
+        $target = $request->input('target', '');
+
         if (!Implementation::isValidKey($implementationKey)) {
             abort(404, "Invalid implementation key.");
         }
 
-        switch ($clientType) {
-            case 'webshop':
-            case 'sponsor':
-                case 'provider':
-            case 'validator': {
-                $webShopUrl = Implementation::byKey($implementationKey);
-                $webShopUrl = $webShopUrl['url_' . $clientType];
+        if (in_array($clientType, [
+            'webshop', 'sponsor', 'provider', 'validator'
+        ])) {
+            $webShopUrl = Implementation::byKey($implementationKey);
+            $webShopUrl = $webShopUrl['url_' . $clientType];
 
-                exit(redirect(
-                    $redirectUrl = sprintf("%s/confirmation/email/%s?target=%s",
-                        rtrim($webShopUrl, '/'),
-                        $exchangeToken,
-                    $request->input('target', ''))
-                ));
-            } break;
-            case 'app-me_app': {
-                $sourceUrl = config('forus.front_ends.app-me_app');
-                $redirectUrl = sprintf("%s/identity-confirmation?token=%s",
-                    rtrim($sourceUrl, '/'),
-                    $exchangeToken
-                );
+            exit(redirect($redirectUrl = sprintf(
+                $webShopUrl . "confirmation/email/%s?%s",
+                $exchangeToken,
+                http_build_query(compact('target'))
+            )));
+        } elseif ($clientType == 'app-me_app') {
+            $sourceUrl = config('forus.front_ends.app-me_app');
+            $redirectUrl = sprintf(
+                $sourceUrl . "identity-confirmation?%s",
+                http_build_query(compact('token'))
+            );
 
-                return view()->make('pages.auth.deep_link', compact('redirectUrl'));
-            } break;
+            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
         }
 
         return abort(404);
