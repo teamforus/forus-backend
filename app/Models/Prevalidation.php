@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
  * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
+ * @property-read int|null $records_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation query()

@@ -106,10 +106,12 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         $router->group(['prefix' => '/records'], function() use ($router) {
             $router->get('/', 'Api\Identity\RecordController@index');
             $router->post('/', 'Api\Identity\RecordController@store');
+            $router->post('/validate', 'Api\Identity\RecordController@storeValidate');
             $router->get('/types', 'Api\Identity\RecordController@typeKeys');
             $router->patch('/sort', 'Api\Identity\RecordController@sort');
             $router->get('/{recordId}', 'Api\Identity\RecordController@show');
             $router->patch('/{recordId}', 'Api\Identity\RecordController@update');
+            $router->patch('/{recordId}/validate', 'Api\Identity\RecordController@updateValidate');
             $router->delete('/{recordId}', 'Api\Identity\RecordController@destroy');
         });
 
@@ -146,6 +148,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]);
 
         $router->get('files/{file_uid}/download', 'Api\FileController@download');
+        $router->post('files/validate', 'Api\FileController@storeValidate');
     }
 
     $router->get('/debug', 'TestController@test');

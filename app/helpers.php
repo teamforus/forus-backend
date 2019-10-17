@@ -298,7 +298,7 @@ if (!function_exists('cache_optional')) {
     }
 }
 
-if (!function_exists('record_types')) {
+if (!function_exists('record_types_cached')) {
     /**
      * @param float $minutes
      * @param bool $reset
@@ -309,10 +309,11 @@ if (!function_exists('record_types')) {
         bool $reset = false
     ) {
         return cache_optional('record_types', function() {
-            return resolve('forus.services.record')->getRecordTypes();
+            return (array) resolve('forus.services.record')->getRecordTypes();
         }, $minutes, null, $reset);
     }
 }
+
 if (!function_exists('pretty_file_size')) {
     /**
      * Human readable file size
@@ -330,5 +331,74 @@ if (!function_exists('pretty_file_size')) {
 
         return round($bytes, $precision) .
             ['','k','M','G','T','P','E','Z','Y'][$i] . 'B';
+    }
+}
+
+
+if (!function_exists('service_identity')) {
+    /**
+     * Get identity service instance
+     * @return \App\Services\Forus\Record\Repositories\RecordRepo|mixed
+     */
+    function service_identity() {
+        return resolve('forus.services.identity');
+    }
+}
+
+if (!function_exists('service_record')) {
+    /**
+     * Get record service instance
+     * @return \App\Services\Forus\Record\Repositories\RecordRepo|mixed
+     */
+    function service_record() {
+        return resolve('forus.services.record');
+    }
+}
+
+if (!function_exists('json_encode_pretty')) {
+    /**
+     * @param $value
+     * @param int $options
+     * @param int $depth
+     * @return false|string
+     */
+    function json_encode_pretty($value, $options = 0, $depth = 512) {
+        return json_encode($value, $options + JSON_PRETTY_PRINT, $depth);
+    }
+}
+
+if (!function_exists('log_debug')) {
+    /**
+     * @param $message
+     * @param array $context
+     */
+    function log_debug($message, array $context = []) {
+        logger()->debug(
+            is_string($message) ? $message: json_encode_pretty($message),
+            $context
+        );
+    }
+}
+
+if (!function_exists('api_dependency_requested')) {
+    /**
+     * @param string $key
+     * @param \Illuminate\Http\Request|null $request
+     * @param bool $default
+     * @return bool
+     */
+    function api_dependency_requested(
+        string $key,
+        \Illuminate\Http\Request $request = null,
+        bool $default = true
+    ) {
+        $request = $request ?? request();
+        $dependency = $request->input('dependency', null);
+
+        if (is_array($dependency)) {
+            return in_array($key, $dependency);
+        }
+
+        return $default;
     }
 }

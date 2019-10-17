@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\BunqService\BunqService;
+use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
@@ -12,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+
 
 /**
  * App\Models\Fund
@@ -28,10 +30,20 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
+ * @property-read int|null $bunq_me_tabs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
+ * @property-read int|null $bunq_me_tabs_paid_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
+ * @property-read int|null $criteria_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read int|null $employees_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees_validators
+ * @property-read int|null $employees_validators_count
  * @property-read \App\Models\FundConfig $fund_config
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
+ * @property-read int|null $fund_formulas_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
+ * @property-read int|null $fund_requests_count
  * @property-read float $budget_left
  * @property-read float $budget_total
  * @property-read float $budget_used
@@ -40,20 +52,34 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property-read string|null $updated_at_locale
  * @property-read \App\Services\MediaService\Models\Media $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundMeta[] $metas
+ * @property-read int|null $metas_count
  * @property-read \App\Models\Organization $organization
  * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $product_categories
+ * @property-read int|null $product_categories_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations
+ * @property-read int|null $provider_organizations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved
+ * @property-read int|null $provider_organizations_approved_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_declined
+ * @property-read int|null $provider_organizations_declined_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_pending
+ * @property-read int|null $provider_organizations_pending_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers
+ * @property-read int|null $providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
+ * @property-read int|null $top_up_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
+ * @property-read int|null $top_ups_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
+ * @property-read int|null $validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read int|null $vouchers_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
@@ -202,6 +228,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_requests() {
+        return $this->hasMany(FundRequest::class);
+    }
+
+    /**
      * @return float
      */
     public function getBudgetValidatedAttribute() {
@@ -307,6 +340,36 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function employees() {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function employees_validators() {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles', function(Builder $builder) {
+            $builder->where('key', 'validation');
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function fund_config() {
@@ -366,9 +429,7 @@ class Fund extends Model
     ) {
         $recordRepo = app()->make('forus.services.record');
 
-        $trustedIdentities = $fund->validators->pluck(
-            'identity_address'
-        );
+        $trustedIdentities = $fund->validatorIdentities();
 
         /** @var FundCriterion $criterion */
         $recordsOfType = collect($recordRepo->recordsList(
@@ -763,11 +824,11 @@ class Fund extends Model
     }
 
     /**
-     * @param string $identity_address
+     * @param string|null $identity_address
      * @param float|null $amount
      * @param Carbon|null $expire_at
      * @param string|null $note
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return Voucher|\Illuminate\Database\Eloquent\Model
      */
     public function makeVoucher(
         string $identity_address = null,
@@ -777,13 +838,58 @@ class Fund extends Model
     ) {
         $amount = $amount ?: self::amountForIdentity($this, $identity_address);
         $expire_at = $expire_at ?: $this->end_date;
+        $fund_id = $this->id;
 
-        $voucher = $this->vouchers()->create(compact(
-            'identity_address', 'amount', 'expire_at', 'note'
+        $voucher = Voucher::create(compact(
+            'identity_address', 'amount', 'expire_at', 'note', 'fund_id'
         ));
 
         VoucherCreated::dispatch($voucher);
 
         return $voucher;
+    }
+
+    /**
+     * @param bool $force_fetch
+     * @return array
+     */
+    public function validatorIdentities(bool $force_fetch = true) {
+        return (
+            $force_fetch ? $this->validators() : $this->validators
+        )->pluck('validators.identity_address')->toArray();
+    }
+
+    /**
+     * @param bool $force_fetch
+     * @return array
+     */
+    public function validatorEmployees(bool $force_fetch = true) {
+        return ($force_fetch ? $this->employees_validators() :
+            $this->employees_validators)
+            ->pluck('employees.identity_address')->toArray();
+    }
+
+    /**
+     * @param string $identity_address
+     * @param array $records
+     * @return FundRequest
+     */
+    public function makeFundRequest(string $identity_address, array $records)
+    {
+        /** @var FundRequest $fundRequest */
+        $fundRequest = $this->fund_requests()->create(compact(
+            'identity_address'
+        ));
+
+        foreach ($records as $record) {
+            /** @var FundRequestRecord $requestRecord */
+            $requestRecord = $fundRequest->records()->create($record);
+
+            foreach ($record['files'] ?? [] as $fileUid) {
+                $requestRecord->attachFile(File::findByUid($fileUid));
+            }
+        }
+
+        return $fundRequest;
     }
 }

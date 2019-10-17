@@ -9,6 +9,7 @@ namespace App\Models;
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundSponsorInvestment[] $investments
+ * @property-read int|null $investments_count
  * @property-read \App\Models\Organization $sponsor
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundSponsor newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundSponsor newQuery()

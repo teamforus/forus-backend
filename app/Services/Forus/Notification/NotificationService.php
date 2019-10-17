@@ -14,7 +14,6 @@ use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
-use App\Mail\User\EmployeeAddedMail;
 use App\Mail\Validations\AddedAsValidatorMail;
 use App\Mail\Validations\NewValidationRequestMail;
 use App\Mail\Vouchers\FundStatisticsMail;
@@ -633,27 +632,6 @@ class NotificationService
     }
 
     /**
-     * @param string $orgName
-     * @param string $email
-     * @param string $confirmationLink
-     * @param $identifier
-     * @return bool|null
-     */
-    public function sendEmailEmployeeAdded(
-        string $orgName,
-        string $email,
-        string $confirmationLink,
-        $identifier
-    ) {
-        return $this->sendMail($email, new EmployeeAddedMail(
-            $orgName,
-            config('app.name'),
-            $confirmationLink,
-            $identifier
-        ));
-    }
-
-    /**
      * Notify user that voucher is about to expire
      *
      * @param string $email
@@ -727,6 +705,10 @@ class NotificationService
      * @return bool|null
      */
     private function sendMail($email, Mailable $mailable) {
+        if (config()->get('mail.disable', false)) {
+            return true;
+        }
+
         try {
             if ($this->isUnsubscribed($email, $mailable)) {
                 return null;

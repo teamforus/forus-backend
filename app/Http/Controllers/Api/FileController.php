@@ -53,6 +53,16 @@ class FileController extends Controller
     }
 
     /**
+     * Validate file store request
+     * @param StoreFileRequest $request
+     * @return string
+     */
+    public function storeValidate(StoreFileRequest $request)
+    {
+        return '';
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param File $file

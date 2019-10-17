@@ -8,26 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * Class Media
+ * App\Services\FileService\Models\File
  *
- * @property mixed $id
- * @property string $identity_address
- * @property string $original_name
- * @property int $fileable_id
- * @property int $fileable_type
- * @property int $size
- * @property string $type
+ * @property int $id
+ * @property string|null $uid
+ * @property string|null $original_name
  * @property string $ext
- * @property string $uid
  * @property string $path
- * @property Collection $sizes
- * @property Model $fileable
- * @method static static create($attributes = array())
- * @method static static find($id, $columns = ['*'])
- * @method static Builder where($column, $operator = null, $value = null, $boolean = 'and')
- * @package App\Services\FileService\Models
+ * @property string $size
+ * @property string $identity_address
+ * @property int|null $fileable_id
+ * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Services\FileService\Models\File|null $fileable
  * @property-read mixed $url_public
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newQuery()

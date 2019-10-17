@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\Organizations\OrganizationCreated;
 use App\Models\BusinessType;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
@@ -9,15 +10,14 @@ use App\Models\Office;
 use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Prevalidation;
-use App\Models\PrevalidationRecord;
 use App\Models\Implementation;
-use App\Models\Voucher;
 
 /**
  * Class LoremDbSeeder
  */
 class LoremDbSeeder extends Seeder
 {
+    private $tokenGenerator;
     private $identityRepo;
     private $recordRepo;
     private $mailService;
@@ -30,11 +30,21 @@ class LoremDbSeeder extends Seeder
      */
     public function __construct()
     {
+        $this->tokenGenerator = resolve('token_generator');
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
         $this->mailService = resolve('forus.services.notification');
+
         $this->productCategories = ProductCategory::all();
         $this->primaryEmail = env('DB_SEED_BASE_EMAIL', 'example@example.com');
+    }
+
+    private function disableEmails() {
+        config()->set('mail.disable', true);
+    }
+
+    private function enableEmails() {
+        config()->set('mail.disable', false);
     }
 
     /**
@@ -44,6 +54,7 @@ class LoremDbSeeder extends Seeder
      */
     public function run()
     {
+        $this->disableEmails();
         $countProviders = env('DB_SEED_PROVIDERS', 20);
 
         $this->productCategories = ProductCategory::all();
@@ -60,6 +71,8 @@ class LoremDbSeeder extends Seeder
         $this->success("Providers created!");
 
         $this->applyFunds($this->baseIdentity);
+
+        $this->enableEmails();
     }
 
     /**
@@ -102,7 +115,7 @@ class LoremDbSeeder extends Seeder
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
 
-            $fund = $this->makeFund($organization);
+            $fund = $this->makeFund($organization, true);
 
             $implementation = $this->makeImplementation(
                 str_slug($fund->name),
@@ -164,6 +177,7 @@ class LoremDbSeeder extends Seeder
     public function applyFunds(
         string $identity_address
     ) {
+        /** @var Prevalidation[] $prevalidations */
         $prevalidations = Prevalidation::query()->where([
             'state' => 'pending',
             'identity_address' => $identity_address
@@ -171,10 +185,8 @@ class LoremDbSeeder extends Seeder
             return $arr->first();
         });
 
-        /** @var Prevalidation $prevalidation */
         foreach ($prevalidations as $prevalidation) {
             foreach($prevalidation->records as $record) {
-                /** @var $record PrevalidationRecord */
                 $record = $this->recordRepo->recordCreate(
                     $identity_address,
                     $record->record_type->key,
@@ -198,20 +210,13 @@ class LoremDbSeeder extends Seeder
 
             $fund = $prevalidation->fund;
 
-            /** @var Voucher $voucher */
-            $voucher = $fund->vouchers()->create([
-                'amount' => Fund::amountForIdentity($fund, $identity_address),
-                'identity_address' => $identity_address,
-                'expire_at' => $fund->end_date
-            ]);
-
+            $voucher = $fund->makeVoucher($identity_address);
             $voucher->tokens()->create([
-                'address'           => app()->make('token_generator')->address(),
+                'address'           => $this->tokenGenerator->address(),
                 'need_confirmation' => true,
             ]);
-
             $voucher->tokens()->create([
-                'address'           => app()->make('token_generator')->address(),
+                'address'           => $this->tokenGenerator->address(),
                 'need_confirmation' => false,
             ]);
 
@@ -219,7 +224,7 @@ class LoremDbSeeder extends Seeder
                 $voucher->transactions()->create([
                     'amount' => rand(5, 50),
                     'product_id' => null,
-                    'address' => app()->make('token_generator')->address(),
+                    'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
                 ]);
             }
@@ -280,7 +285,7 @@ class LoremDbSeeder extends Seeder
             ]))->toArray()
         );
 
-        $organization->validators()->create(compact('identity_address'));
+        OrganizationCreated::dispatch($organization);
 
         return $organization;
     }
@@ -337,22 +342,24 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param Organization $organization
+     * @param bool $active
      * @param array $fields
-     * @return Fund
+     * @return Fund|\Illuminate\Database\Eloquent\Model
      */
     public function makeFund(
         Organization $organization,
+        bool $active = false,
         array $fields = []
     ) {
         do {
             $fundName = 'Fund #' . rand(100000, 999999);
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
-        $fund = Fund::create(array_merge([
-            'organization_id'   => $organization->id,
-            'name'              => $fundName,
-            'start_date'        => Carbon::now()->startOfDay()->format('Y-m-d'),
-            'end_date'          => Carbon::now()->addDays(60)->endOfDay()->format('Y-m-d')
+        $fund = $organization->createFund(array_merge([
+            'name'          => $fundName,
+            'start_date'    => Carbon::now()->format('Y-m-d'),
+            'end_date'      => Carbon::now()->addDays(60)->format('Y-m-d'),
+            'state'         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING
         ], $fields));
 
         $fund->product_categories()->sync(
@@ -463,7 +470,7 @@ class LoremDbSeeder extends Seeder
             return collect($records)->count();
         })->map(function($records) use ($fund, $identity_address) {
             do {
-                $uid = app()->make('token_generator')->generate(4, 2);
+                $uid = $this->tokenGenerator->generate(4, 2);
             } while(Prevalidation::query()->where(
                 'uid', $uid
             )->count() > 0);
