@@ -13,6 +13,7 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 class VouchersController extends Controller
 {
@@ -154,5 +155,33 @@ class VouchersController extends Controller
         $voucher->sendToEmail($email);
 
         return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function exportUnassigned(Organization $organization) {
+        /** @var Collection|Voucher[] $unassigned_vouchers */
+
+        if ($unassigned_vouchers = $organization->vouchers()->whereNull(
+            'identity_address'
+        )->get()) {
+            $zip = new \ZipArchive();
+            $zip_name = "qr_codes.zip";
+            $zip->open($zip_name, \ZipArchive::CREATE);
+
+            foreach ($unassigned_vouchers as $voucher) {
+                foreach ($voucher->tokens as $token) {
+                    $full_path = $token->getQrLocalPath();
+
+                    $zip->addFile($full_path, basename($full_path));
+                }
+            }
+
+            $zip->close();
+
+            return response()->download(public_path($zip_name));
+        }
     }
 }

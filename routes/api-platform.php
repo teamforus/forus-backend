@@ -350,6 +350,11 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         "Api\Platform\Organizations\Sponsor\VouchersController@sendByEmail"
     );
 
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/export-unassigned',
+        "Api\Platform\Organizations\Sponsor\VouchersController@exportUnassigned"
+    );
+
     $router->patch(
         'organizations/{organization}/sponsor/vouchers/{voucher_id}/assign',
         "Api\Platform\Organizations\Sponsor\VouchersController@assign"
