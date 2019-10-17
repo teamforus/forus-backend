@@ -20,7 +20,7 @@ class CreateFundRequestsTable extends Migration
             $table->string('identity_address', 200);
             $table->string('note', 2000)->default('');
             $table->enum('state', [
-                'pending', 'approved', 'declined',
+                'pending', 'approved', 'declined', 'approved_partly',
             ])->default('pending');
             $table->timestamps();
         });

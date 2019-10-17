@@ -23,6 +23,9 @@ class CreateFundRequestRecordsTable extends Migration
                 'pending', 'approved', 'declined',
             ])->default('pending');
             $table->timestamps();
+
+            $table->foreign('fund_request_id'
+            )->references('id')->on('fund_requests')->onDelete('cascade');
         });
     }
 

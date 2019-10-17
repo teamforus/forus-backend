@@ -52,11 +52,13 @@ class FundRequest extends Model
     const STATE_PENDING = 'pending';
     const STATE_APPROVED = 'approved';
     const STATE_DECLINED = 'declined';
+    const STATE_APPROVED_PARTLY = 'approved_partly';
 
     const STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
+        self::STATE_APPROVED_PARTLY,
     ];
 
     protected $fillable = [
@@ -183,9 +185,8 @@ class FundRequest extends Model
             $record->decline();
         }
 
-        return $this->updateModel([
+        return $this->updateStateByRecords()->updateModel([
             'note' => $note,
-            'state' => self::STATE_DECLINED
         ]);
     }
 
@@ -205,9 +206,7 @@ class FundRequest extends Model
             );
         }
 
-        return $this->updateModel([
-            'state' => self::STATE_APPROVED
-        ]);
+        return $this->updateStateByRecords();
     }
 
     /**
@@ -228,6 +227,19 @@ class FundRequest extends Model
         }
 
         return $this;
+    }
+
+    public function updateStateByRecords() {
+        $countAll = $this->records()->count();
+        $countApproved = $this->records_approved()->count();
+        $allApproved = $countAll == $countApproved;
+        $hasApproved = $countApproved > 0;
+
+        return $this->updateModel([
+            'state' => $allApproved ? self::STATE_APPROVED : (
+            $hasApproved ? self::STATE_APPROVED_PARTLY: self::STATE_DECLINED
+            )
+        ]);
     }
 
     /**

@@ -23,6 +23,9 @@ class CreateFundRequestClarificationsTable extends Migration
             ])->default('pending');
             $table->timestamp('answered_at')->nullable();
             $table->timestamps();
+
+            $table->foreign('fund_request_record_id'
+            )->references('id')->on('fund_request_records')->onDelete('cascade');
         });
     }
 
