@@ -2,10 +2,19 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
+use App\Models\Fund;
+use App\Rules\FundRequestRecordRecordTypeKeyRule;
+use App\Rules\FundRequestRecordValueRule;
 use App\Rules\RecordTypeKeyExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class StoreFundRequestsRequest extends FormRequest
+/**
+ * Class StoreFundRequestRequest
+ * @property Fund|null $fund
+ * @package App\Http\Requests\Api\Platform\Funds\Requests
+ */
+class StoreFundRequestRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -14,7 +23,7 @@ class StoreFundRequestsRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        return $this->fund->state == Fund::STATE_ACTIVE;
     }
 
     /**
@@ -24,6 +33,9 @@ class StoreFundRequestsRequest extends FormRequest
      */
     public function rules()
     {
+        $fund = $this->fund;
+        $criteria = $fund ? $fund->criteria()->pluck('id')->toArray() : [];
+
         return [
             'records' => [
                 'present',
@@ -31,12 +43,18 @@ class StoreFundRequestsRequest extends FormRequest
                 'min:1',
             ],
             'records.*.value' => [
-                'required'
+                'required',
+                $fund ? new FundRequestRecordValueRule($this, $fund) : '',
+            ],
+            'records.*.fund_criterion_id' => [
+                'required',
+                Rule::in($criteria),
             ],
             'records.*.record_type_key' => [
                 'required',
                 'not_in:primary_email',
-                new RecordTypeKeyExistsRule()
+                new RecordTypeKeyExistsRule(),
+                $fund ? new FundRequestRecordRecordTypeKeyRule($this, $fund) : ''
             ],
             'records.*.files' => [
                 'nullable', 'array'

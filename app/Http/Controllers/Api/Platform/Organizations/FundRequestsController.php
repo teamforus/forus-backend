@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\UpdateFundRequestsRequest;
 use App\Http\Resources\FundRequestResource;
 use App\Models\Employee;

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Funds;
 
 use App\Events\FundRequests\FundRequestCreated;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Http\Resources\FundRequestResource;
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -36,12 +36,12 @@ class FundRequestsController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreFundRequestsRequest $request
+     * @param StoreFundRequestRequest $request
      * @param Fund $fund
      * @return FundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(StoreFundRequestsRequest $request, Fund $fund)
+    public function store(StoreFundRequestRequest $request, Fund $fund)
     {
         $this->authorize('create', [
             FundRequest::class, $fund
@@ -56,6 +56,12 @@ class FundRequestsController extends Controller
 
         return new FundRequestResource($fundRequest);
     }
+
+    /**
+     * @param StoreFundRequestRequest $request
+     * @param Fund $fund
+     */
+    public function storeValidate(StoreFundRequestRequest $request, Fund $fund) {}
 
     /**
      * Display the specified resource.

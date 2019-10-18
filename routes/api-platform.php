@@ -49,6 +49,8 @@ $router->group([], function() use ($router) {
         ]
     ]);
 
+    $router->post('funds/{fund}/requests/validate',"Api\Platform\Funds\FundRequestsController@storeValidate");
+
     $router->resource(
         'funds/{fund}/requests/{fund_request}/records',
         "Api\Platform\Funds\Requests\FundRequestRecordsController", [
