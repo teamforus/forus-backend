@@ -74,6 +74,6 @@ class File extends Model
      * @return mixed
      */
     public function urlPublic() {
-        return resolve('file')->urlPublic($this->path);
+        return resolve('file')->urlPublic(ltrim($this->path, '/'));
     }
 }
