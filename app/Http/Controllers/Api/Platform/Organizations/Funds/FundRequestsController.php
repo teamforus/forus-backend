@@ -51,7 +51,7 @@ class FundRequestsController extends Controller
         Fund $fund,
         FundRequest $fundRequest
     ) {
-        $this->authorize('viewRequester', [
+        $this->authorize('viewValidator', [
             $fundRequest, $fund, $organization
         ]);
 
