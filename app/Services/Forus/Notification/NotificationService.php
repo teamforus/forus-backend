@@ -3,6 +3,10 @@
 namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
+use App\Mail\FundRequests\FundRequestCreatedMail;
+use App\Mail\FundRequests\FundRequestClarificationRequestedMail;
+use App\Mail\FundRequests\FundRequestRecordDeclinedMail;
+use App\Mail\FundRequests\FundRequestResolvedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
@@ -372,6 +376,106 @@ class NotificationService
         return $this->sendMail($email, new FundCreatedMail(
             $fund_name,
             $webshop_link,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify user that new fund request was created
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $fund_name
+     * @param string $webshop_link
+     * @return bool
+     */
+    public function newFundRequestCreated(
+        string $email,
+        $identifier,
+        string $fund_name,
+        string $webshop_link
+    ) {
+        return $this->sendMail($email, new FundRequestCreatedMail(
+            $fund_name,
+            $webshop_link,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify user that fund request resolved
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $requestStatus
+     * @param string $fundName
+     * @param string $webshopLink
+     * @return bool|null
+     */
+    public function fundRequestResolved(
+        string $email,
+        $identifier,
+        string $requestStatus,
+        string $fundName,
+        string $webshopLink
+    ) {
+        return $this->sendMail($email, new FundRequestResolvedMail(
+            $requestStatus,
+            $fundName,
+            $webshopLink,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify user that fund request record declined
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $rejectionNote
+     * @param string $fundName
+     * @param string $webshopLink
+     * @return bool|null
+     */
+    public function fundRequestRecordDeclined(
+        string $email,
+        $identifier,
+        ?string $rejectionNote,
+        string $fundName,
+        string $webshopLink
+    ) {
+        return $this->sendMail($email, new FundRequestRecordDeclinedMail(
+            $fundName,
+            $rejectionNote,
+            $webshopLink,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify user that new fund request clarification requested
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $fundName
+     * @param string $question
+     * @param string $webshopClarificationLink
+     * @param string $webshopLink
+     * @return bool|null
+     */
+    public function sendFundRequestClarificationToRequester(
+        string $email,
+        $identifier,
+        string $fundName,
+        string $question,
+        string $webshopClarificationLink,
+        string $webshopLink
+    ) {
+        return $this->sendMail($email, new FundRequestClarificationRequestedMail(
+            $fundName,
+            $question,
+            $webshopClarificationLink,
+            $webshopLink,
             $identifier
         ));
     }

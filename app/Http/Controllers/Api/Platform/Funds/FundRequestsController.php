@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Funds;
 
+use App\Events\FundRequests\FundRequestCreated;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestsRequest;
 use App\Http\Resources\FundRequestResource;
@@ -46,10 +47,14 @@ class FundRequestsController extends Controller
             FundRequest::class, $fund
         ]);
 
-        return new FundRequestResource($fund->makeFundRequest(
+        $fundRequest = $fund->makeFundRequest(
             auth_address(),
             $request->input('records')
-        ));
+        );
+
+        FundRequestCreated::dispatch($fundRequest);
+
+        return new FundRequestResource($fundRequest);
     }
 
     /**

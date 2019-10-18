@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds\Requests;
 
+use App\Events\FundRequestRecords\FundRequestRecordDeclined;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\IndexFundRequestRecordsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\UpdateFundRequestRecordRequest;
 use App\Http\Resources\FundRequestRecordResource;
@@ -88,8 +89,9 @@ class FundRequestRecordsController extends Controller
 
         if ($request->input('state') === FundRequestRecord::STATE_DECLINED) {
             $fundRequestRecord->decline($request->input('note'));
+            FundRequestRecordDeclined::dispatch($fundRequestRecord);
         } elseif ($request->input('state') === FundRequestRecord::STATE_APPROVED) {
-            $fundRequestRecord->approve(auth_address(), $organization);
+            $fundRequestRecord->approve();
         }
 
         return new FundRequestRecordResource($fundRequestRecord);

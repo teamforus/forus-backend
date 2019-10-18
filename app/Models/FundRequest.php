@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\FundRequests\FundRequestResolved;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -156,7 +157,7 @@ class FundRequest extends Model
      */
     public function clarifications_pending()
     {
-        return $this->clarifications()->where([
+        return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_clarifications.state' => FundRequestClarification::STATE_PENDING
         ]);
     }
@@ -166,7 +167,7 @@ class FundRequest extends Model
      */
     public function clarifications_answered()
     {
-        return $this->clarifications()->where([
+        return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_clarifications.state' => FundRequestClarification::STATE_ANSWERED
         ]);
     }
@@ -182,7 +183,7 @@ class FundRequest extends Model
         }
 
         foreach ($this->records_pending as $record) {
-            $record->decline();
+            $record->decline($note, false);
         }
 
         $this->records_approved()->each(function(FundRequestRecord $record) {
@@ -204,7 +205,7 @@ class FundRequest extends Model
         }
 
         $this->records_pending()->each(function(FundRequestRecord $record) {
-            $record->approve();
+            $record->approve(false);
         });
 
         $this->records_approved()->each(function(FundRequestRecord $record) {
@@ -239,12 +240,19 @@ class FundRequest extends Model
         $countApproved = $this->records_approved()->count();
         $allApproved = $countAll == $countApproved;
         $hasApproved = $countApproved > 0;
+        $oldState = $this->state;
 
-        return $this->updateModel([
+        $this->update([
             'state' => $allApproved ? self::STATE_APPROVED : (
-            $hasApproved ? self::STATE_APPROVED_PARTLY: self::STATE_DECLINED
+                $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED
             )
         ]);
+
+        if (($oldState !== $this->state) && ($this->state != 'pending')) {
+            FundRequestResolved::dispatch($this);
+        }
+
+        return $this;
     }
 
     /**

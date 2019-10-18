@@ -51,7 +51,7 @@ class FundRequestRecord extends Model
 
     protected $fillable = [
         'value', 'record_type_key', 'fund_request_id', 'record_type_id',
-        'identity_address', 'state',
+        'identity_address', 'state', 'note',
     ];
 
     /**
@@ -80,13 +80,15 @@ class FundRequestRecord extends Model
     }
 
     /**
+     * @param bool $resolveRequest
      * @return $this
      * @throws \Exception
      */
-    public function approve() {
+    public function approve($resolveRequest = true) {
         $this->setState(self::STATE_APPROVED);
 
-        if ($this->fund_request->records_pending()->count() === 0) {
+        if ($resolveRequest && (
+            $this->fund_request->records_pending()->count() === 0)) {
             $this->fund_request->approve();
         }
 
@@ -121,16 +123,18 @@ class FundRequestRecord extends Model
 
     /**
      * @param string|null $note
+     * @param bool $resolveRequest
      * @return $this
      * @throws \Exception
      */
-    public function decline(string $note = null) {
+    public function decline(string $note = null, $resolveRequest = true) {
         $this->update([
             'note' => $note,
             'state' => self::STATE_DECLINED,
         ]);
 
-        if ($this->fund_request->records_pending()->count() == 0) {
+        if ($resolveRequest && (
+            $this->fund_request->records_pending()->count() == 0)) {
             $this->fund_request->decline();
         }
 

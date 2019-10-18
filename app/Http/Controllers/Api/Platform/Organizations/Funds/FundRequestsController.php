@@ -38,30 +38,6 @@ class FundRequestsController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param StoreFundRequestsRequest $request
-     * @param Organization $organization
-     * @param Fund $fund
-     * @return FundRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function store(
-        StoreFundRequestsRequest $request,
-        Organization $organization,
-        Fund $fund
-    ) {
-        $this->authorize('create', [
-            FundRequest::class, $fund, $organization
-        ]);
-
-        return new FundRequestResource($fund->makeFundRequest(
-            auth_address(),
-            $request->input('records')
-        ));
-    }
-
-    /**
      * Display the specified resource.
      *
      * @param Organization $organization
