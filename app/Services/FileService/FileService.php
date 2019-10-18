@@ -229,7 +229,7 @@ class FileService
      * @return mixed
      */
     public function urlPublic(string $path) {
-        return $this->storage()->url($path);
+        return $this->storage()->url(ltrim($path, '/'));
     }
 
     /**
