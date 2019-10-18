@@ -383,11 +383,11 @@ class IdentityController extends Controller
             $webShopUrl = Implementation::byKey($implementationKey);
             $webShopUrl = $webShopUrl['url_' . $clientType];
 
-            exit(redirect($redirectUrl = sprintf(
+            return redirect($redirectUrl = sprintf(
                 $webShopUrl . "confirmation/email/%s?%s",
                 $exchangeToken,
                 http_build_query(compact('target'))
-            )));
+            ));
         } elseif ($clientType == 'app-me_app') {
             $sourceUrl = config('forus.front_ends.app-me_app');
             $redirectUrl = sprintf(
