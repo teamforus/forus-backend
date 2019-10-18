@@ -892,4 +892,49 @@ class Fund extends Model
 
         return $fundRequest;
     }
+
+    /**
+     * Store criteria for newly created fund
+     * @param array $criteria
+     * @return $this
+     */
+    public function makeCriteria(array $criteria)
+    {
+        $this->criteria()->createMany(array_map(function($criterion) {
+            return array_only($criterion, [
+                'record_type_key', 'operator', 'value'
+            ]);
+        }, $criteria));
+
+        return $this;
+    }
+
+    /**
+     * Update criteria for existing fund
+     * @param array $criteria
+     * @return $this
+     */
+    public function updateCriteria(array $criteria)
+    {
+        $this->criteria()->whereNotIn('id', array_filter(
+            array_pluck($criteria, 'id'), function($id) {
+            return !empty($id);
+        }
+        ))->delete();
+
+        foreach ($criteria as $criterion) {
+            /** @var FundCriterion|null $db_criteria */
+            $data_criteria = array_only($criterion, [
+                'record_type_key', 'operator', 'value'
+            ]);
+
+            if ($db_criteria = $this->criteria()->find($criterion['id'] ?? null)) {
+                $db_criteria->update($data_criteria);
+            } else {
+                $this->criteria()->create($data_criteria);
+            }
+        }
+
+        return $this;
+    }
 }
