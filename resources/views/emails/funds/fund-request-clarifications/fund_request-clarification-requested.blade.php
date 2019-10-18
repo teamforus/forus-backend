@@ -14,7 +14,7 @@
     <br/>
     {{ mail_trans('fund_request_clarification_requested.message', ['question' => $question, 'fund_name' => $fund_name]) }}
     <br />
-    {{ mail_trans('fund_request_clarification_requested.question', ['question' => $question])}
+    {{ mail_trans('fund_request_clarification_requested.question', ['question' => $question]) }}
     <br />
     <a href="{{ $webshop_link_clarification }}">{{ $webshop_link_clarification }}</a>
     <br/>
