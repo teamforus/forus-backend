@@ -7,15 +7,15 @@
 ?>
 @extends('emails.base')
 
-@section('title', mail_trans('fund_request_clarification_requested.title', $viewData))
+@section('title', mail_trans('fund_request_clarification_requested.title', ['fund_name' => $fund_name]))
 @section('html')
-    {{ mail_trans('dear_citizen', $viewData) }}
+    {{ mail_trans('dear_user') }}
     <br/>
     <br/>
-    {{ mail_trans('fund_request_clarification_requested.message', $viewData) }}
+    {{ mail_trans('fund_request_clarification_requested.message', ['question' => $question, 'fund_name' => $fund_name]) }}
     {{ json_encode_pretty($viewData) }}
-    <a href="{{ $webshop_link_clarification }}">Clarification link</a>
+    <a href="{{ $webshop_link_clarification }}">{{ $webshop_link_clarification }}</a>
     <br/>
     <br/>
-    {!! mail_trans('fund_request_clarification_requested.webshop_button', $viewData) !!}
+    {!! mail_trans('fund_request_clarification_requested.webshop_button', ['link' => $webshop_link]) !!}
 @endsection
