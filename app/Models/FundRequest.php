@@ -185,6 +185,10 @@ class FundRequest extends Model
             $record->decline();
         }
 
+        $this->records_approved()->each(function(FundRequestRecord $record) {
+            $record->makeValidation();
+        });
+
         return $this->updateStateByRecords()->updateModel([
             'note' => $note,
         ]);
@@ -199,12 +203,13 @@ class FundRequest extends Model
             throw new \Exception("No employee assigned.", 403);
         }
 
-        foreach ($this->records_pending as $record) {
-            $record->approve(
-                $this->employee->identity_address,
-                $this->fund->organization
-            );
-        }
+        $this->records_pending()->each(function(FundRequestRecord $record) {
+            $record->approve();
+        });
+
+        $this->records_approved()->each(function(FundRequestRecord $record) {
+            $record->makeValidation();
+        });
 
         return $this->updateStateByRecords();
     }

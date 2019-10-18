@@ -80,15 +80,23 @@ class FundRequestRecord extends Model
     }
 
     /**
-     * @param string $identity_address
-     * @param Organization|null $organization
      * @return $this
      * @throws \Exception
      */
-    public function approve(
-        string $identity_address,
-        Organization $organization = null
-    ) {
+    public function approve() {
+        $this->setState(self::STATE_APPROVED);
+
+        if ($this->fund_request->records_pending()->count() === 0) {
+            $this->fund_request->approve();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function makeValidation() {
         $recordService = service_record();
 
         $record = $recordService->recordCreate(
@@ -103,17 +111,10 @@ class FundRequestRecord extends Model
         );
 
         $recordService->approveValidationRequest(
-            $identity_address,
+            $this->fund_request->employee->identity_address,
             $validationRequest['uuid'],
-            $organization ? $organization->id : false
+            $this->fund_request->fund->organization_id
         );
-
-        $this->setState(self::STATE_APPROVED);
-
-        if ($this->fund_request->records_approved()->count() ===
-            $this->fund_request->records()->count()) {
-            $this->fund_request->approve();
-        }
 
         return $this;
     }
