@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Http\Controllers\Controller;
+use App\Services\FileService\Models\File;
 
 class FundRequestClarificationsController extends Controller
 {
@@ -85,6 +86,10 @@ class FundRequestClarificationsController extends Controller
             'answered_at' => now(),
             'state' => FundRequestClarification::STATE_ANSWERED,
         ]));
+
+        foreach ($request->input('files', []) as $fileUid) {
+            $fundRequestClarification->attachFile(File::findByUid($fileUid));
+        }
 
         return new FundRequestClarificationResource($fundRequestClarification);
     }

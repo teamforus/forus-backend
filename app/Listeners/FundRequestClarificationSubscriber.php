@@ -26,7 +26,8 @@ class FundRequestClarificationSubscriber
         $fundRequest = $clarification->fund_request_record->fund_request;
         $identity_address = $fundRequest->identity_address;
 
-        $webshopUrl = env('WEB_SHOP_GENERAL_URL');
+        $webshopUrl = $fundRequest->fund->fund_config->
+            implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL');
 
         $this->notificationService->sendFundRequestClarificationToRequester(
             $this->recordService->primaryEmailByAddress($identity_address),

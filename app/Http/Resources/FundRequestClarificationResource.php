@@ -21,7 +21,7 @@ class FundRequestClarificationResource extends Resource
     public function toArray($request)
     {
         return array_merge(array_only($this->resource->toArray(), [
-            'id', 'question', 'answer', 'fund_request_record_id',
+            'id', 'question', 'answer', 'fund_request_record_id', 'state',
             'answered_at', 'created_at', 'updated_at',
         ]), [
             'answered_at_locale' => format_datetime_locale(
