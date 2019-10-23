@@ -114,7 +114,7 @@ class FundProvider extends Model
         }
 
         $providers = $providers->orderBy(
-            DB::raw('FIELD(state, "pending", "approved", "declined")')
+            DB::raw('FIELD(state, "pending", "approved", "declined"), id')
         );
 
         return $providers;
