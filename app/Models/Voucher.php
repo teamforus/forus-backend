@@ -392,4 +392,27 @@ class Voucher extends Model
 
         return $this;
     }
+
+    /**
+     * @param Organization $organization
+     * @param $fromDate
+     * @param $toDate
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public static function getUnassignedVouchers(
+        Organization $organization, $fromDate, $toDate
+    ) {
+        $vouchers = $organization->vouchers()->whereNull(
+            'identity_address'
+        );
+
+        if ($fromDate) {
+            $vouchers->where('vouchers.created_at', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $vouchers->where('vouchers.created_at', '<=', $toDate);
+        }
+
+        return $vouchers->get();
+    }
 }
