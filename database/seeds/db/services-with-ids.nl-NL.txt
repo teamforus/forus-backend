@@ -7,50 +7,52 @@
 750005 - Huishouden, Gezin en Dier > Wasserettes en Stomerijen
 750006 - Huishouden, Gezin en Dier > Dieren
 
-751000 - Recreatie, culturele activiteiten
-751001 - Recreatie, culturele activiteiten > Kinderfeestjes
-751002 - Recreatie, culturele activiteiten > Groepsuitjes
-751003 - Recreatie, culturele activiteiten > Restaurants
-751004 - Recreatie, culturele activiteiten > Zwemmen
-751005 - Recreatie, culturele activiteiten > Theater
-751006 - Recreatie, culturele activiteiten > Film en Bioscoop
-751007 - Recreatie, culturele activiteiten > Podia en concerten
+751000 - Recreatie
+751001 - Recreatie > Kinderfeestjes
+751002 - Recreatie > Groepsuitjes
+751003 - Recreatie > Restaurants
+751004 - Recreatie > Zwemmen
 
-752000 - Cursus, Workshop en Les
-752001 - Cursus, Workshop en Les > Kunst en schilderen
-752002 - Cursus, Workshop en Les > Muziek en Zang
-752003 - Cursus, Workshop en Les > Bijles en Taal
-752004 - Cursus, Workshop en Les > Coaching
-752005 - Cursus, Workshop en Les > Cursussen en Workshops
-752006 - Cursus, Workshop en Les > Rijscholen
+752000 - Culturele activiteiten
+752001 - Culturele activiteiten > Theater
+752002 - Culturele activiteiten > Film en Bioscoop
+752003 - Culturele activiteiten > Podia en concerten
 
-753000 - Sport en Welzijn
-753001 - Sport en Welzijn > Personal Trainer
-753002 - Sport en Welzijn > Zwemonderwijzing
-753003 - Sport en Welzijn > Aerobics
-753004 - Sport en Welzijn > Voedingsdeskundige, Diëtist
-753005 - Sport en Welzijn > Therapeuten
-753006 - Sport en Welzijn > Mindfulness
-753007 - Sport en Welzijn > Stoppen met roken
-753008 - Sport en Welzijn > Yoga
+753000 - Cursus, Workshop en Les
+753001 - Cursus, Workshop en Les > Kunst en schilderen
+753002 - Cursus, Workshop en Les > Muziek en Zang
+753003 - Cursus, Workshop en Les > Bijles en Taal
+753004 - Cursus, Workshop en Les > Coaching
+753005 - Cursus, Workshop en Les > Cursussen en Workshops
+753006 - Cursus, Workshop en Les > Rijscholen
 
-754000 - Uiterlijk en Verzorging
-754001 - Uiterlijk en Verzorging > Alternatieve geneeskunde
-754002 - Uiterlijk en Verzorging > Masseurs en Massagesalons
-754003 - Uiterlijk en Verzorging > Uitvaartverzorging
-754004 - Uiterlijk en Verzorging > Kappers en Thuiskappers
-754005 - Uiterlijk en Verzorging > Kledingadvies en Stylisten
-754006 - Uiterlijk en Verzorging > Kleermakers en Kledingontwerpers
-754007 - Uiterlijk en Verzorging > Manicure
-754008 - Uiterlijk en Verzorging > Pedicure
-754009 - Uiterlijk en Verzorging > Schoonheidsspecialisten
+754000 - Sport en Welzijn
+754001 - Sport en Welzijn > Personal Trainer
+754002 - Sport en Welzijn > Zwemonderwijzing
+754003 - Sport en Welzijn > Aerobics
+754004 - Sport en Welzijn > Voedingsdeskundige, Diëtist
+754005 - Sport en Welzijn > Therapeuten
+754006 - Sport en Welzijn > Mindfulness
+754007 - Sport en Welzijn > Stoppen met roken
+754008 - Sport en Welzijn > Yoga
 
-755000 - Goede doelen
-755001 - Goede doelen > Dieren
-755002 - Goede doelen > Gezondheid
-755003 - Goede doelen > Internationale hulp en mensenrechten
-755004 - Goede doelen > Kunst en cultuur
-755005 - Goede doelen > Natuur en mileu
-755006 - Goede doelen > Onderwijs
-755007 - Goede doelen > Religie en levensbeschouwing
-755008 - Goede doelen > Sport en Welzijn
+755000 - Uiterlijk en Verzorging
+755001 - Uiterlijk en Verzorging > Alternatieve geneeskunde
+755002 - Uiterlijk en Verzorging > Masseurs en Massagesalons
+755003 - Uiterlijk en Verzorging > Uitvaartverzorging
+755004 - Uiterlijk en Verzorging > Kappers en Thuiskappers
+755005 - Uiterlijk en Verzorging > Kledingadvies en Stylisten
+755006 - Uiterlijk en Verzorging > Kleermakers en Kledingontwerpers
+755007 - Uiterlijk en Verzorging > Manicure
+755008 - Uiterlijk en Verzorging > Pedicure
+755009 - Uiterlijk en Verzorging > Schoonheidsspecialisten
+
+756000 - Goede doelen
+756001 - Goede doelen > Dieren
+756002 - Goede doelen > Gezondheid
+756003 - Goede doelen > Internationale hulp en mensenrechten
+756004 - Goede doelen > Kunst en cultuur
+756005 - Goede doelen > Natuur en mileu
+756006 - Goede doelen > Onderwijs
+756007 - Goede doelen > Religie en levensbeschouwing
+756008 - Goede doelen > Sport en Welzijn
