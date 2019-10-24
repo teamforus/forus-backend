@@ -35,7 +35,7 @@ class StoreOrganizationRequest extends FormRequest
             'phone_public'          => 'boolean',
             'kvk'                   => ['required','unique:organizations,kvk', new KvkRule()],
             'btw'                   => ['nullable', 'string', new BtwRule()],
-            'website'               => 'nullable|max:200|url',
+            'website'               => 'required|max:200|url',
             'website_public'        => 'boolean',
             'business_type_id'      => 'required|exists:business_types,id',
         ];
