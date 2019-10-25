@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereName($value)
  * @mixin \Eloquent
+ * @property-read int|null $permissions_count
+ * @property-read int|null $role_permissions_count
  */
 class Role extends Model
 {

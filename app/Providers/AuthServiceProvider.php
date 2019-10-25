@@ -17,6 +17,7 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Policies\BunqMeTabPolicy;
 use App\Policies\EmployeePolicy;
+use App\Policies\FilePolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
@@ -31,6 +32,7 @@ use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
+use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\Gate;
@@ -50,6 +52,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
+        File::class                     => FilePolicy::class,
         Fund::class                     => FundPolicy::class,
         Media::class                    => MediaPolicy::class,
         Office::class                   => OfficePolicy::class,

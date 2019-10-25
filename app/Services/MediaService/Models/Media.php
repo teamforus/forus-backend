@@ -41,6 +41,16 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Media extends Model
 {
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'identity_address', 'original_name', 'mediable_id', 'mediable_type',
+        'type', 'ext', 'uid'
+    ];
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function sizes() {
@@ -62,16 +72,6 @@ class Media extends Model
     public function mediable() {
         return $this->morphTo();
     }
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'identity_address', 'original_name', 'mediable_id', 'mediable_type',
-        'type', 'ext', 'uid'
-    ];
 
     /**
      * @param string $key

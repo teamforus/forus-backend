@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $id
  * @property string|null $uid
  * @property string|null $original_name
+ * @property string $type
  * @property string $ext
  * @property string $path
  * @property string $size
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereExt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereFileableId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereFileableType($value)
@@ -55,7 +57,7 @@ class File extends Model
      */
     protected $fillable = [
         'identity_address', 'original_name', 'fileable_id',
-        'fileable_type', 'ext', 'uid', 'path', 'size'
+        'fileable_type', 'ext', 'uid', 'path', 'size', 'type',
     ];
 
     public function getUrlPublicAttribute() {
@@ -75,5 +77,12 @@ class File extends Model
      */
     public function urlPublic() {
         return resolve('file')->urlPublic(ltrim($this->path, '/'));
+    }
+
+    /**
+     * @return mixed
+     */
+    public function download() {
+        return resolve('file')->download(ltrim($this->path, '/'));
     }
 }

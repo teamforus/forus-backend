@@ -48,6 +48,7 @@ class FileController extends Controller
     {
         return new FileResource($this->fileService->uploadSingle(
             $request->file('file'),
+            $request->input('type'),
             auth()->user()->getAuthIdentifier()
         ));
     }
@@ -67,9 +68,12 @@ class FileController extends Controller
      *
      * @param File $file
      * @return FileResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(File $file)
     {
+        $this->authorize('show', $file);
+
         return new FileResource($file);
     }
 
@@ -77,10 +81,13 @@ class FileController extends Controller
      * Display the specified resource.
      *
      * @param File $file
-     * @return FileResource
+     * @return mixed
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function download(File $file)
     {
-        return file_get_contents($file->urlPublic());
+        $this->authorize('download', $file);
+
+        return $file->download();
     }
 }
