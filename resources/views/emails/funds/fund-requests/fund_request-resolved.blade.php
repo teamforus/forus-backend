@@ -2,18 +2,16 @@
     /** @var string $request_status */
     /** @var string $fund_name */
     /** @var string $webshop_link Link to webshop */
-    $viewData = compact('fund_name', 'request_status', 'webshop_link');
 ?>
 @extends('emails.base')
 
-@section('title', mail_trans('fund_request_resolved.title', $viewData))
+@section('title', mail_trans('fund_request_resolved.title', ['fund_name' => $fund_name]))
 @section('html')
-    {{ mail_trans('dear_citizen', $viewData) }}
+    {{ mail_trans('dear_citizen') }}
     <br/>
     <br/>
-    {{ mail_trans('fund_request_resolved.message', $viewData) }}
-    {{ json_encode_pretty($viewData) }}
+    {{ mail_trans('fund_request_resolved.message', ['status' => $request_status]) }}
     <br/>
     <br/>
-    {!! mail_trans('fund_request_resolved.webshop_button', $viewData) !!}
+    {!! mail_trans('fund_request_resolved.webshop_button', ['link' => $webshop_link]) !!}
 @endsection

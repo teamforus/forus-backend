@@ -6,14 +6,14 @@
 ?>
 @extends('emails.base')
 
-@section('title', mail_trans('fund_request_record_declined.title', $viewData))
+@section('title', mail_trans('fund_request_record_declined.title', ['fund_name' => $fund_name]))
 @section('html')
-    {{ mail_trans('dear_citizen', $viewData) }}
+    {{ mail_trans('dear_citizen') }}
+    <br/>
+    {{ mail_trans('fund_request_record_declined.message', ['fund_name' => $fund_name]) }}
+    <br/>
+    {{ mail_trans('fund_request_record_declined.reason', ['reason' => $rejection_note]) }}
     <br/>
     <br/>
-    {{ mail_trans('fund_request_record_declined.message', $viewData) }}
-    {{ json_encode_pretty($viewData) }}
-    <br/>
-    <br/>
-    {!! mail_trans('fund_request_record_declined.webshop_button', $viewData) !!}
+    {!! mail_trans('fund_request_record_declined.webshop_button', $webshop_link) !!}
 @endsection

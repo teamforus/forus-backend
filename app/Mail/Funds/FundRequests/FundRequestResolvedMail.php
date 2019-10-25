@@ -29,7 +29,7 @@ class FundRequestResolvedMail extends ImplementationMail
     public function build(): ImplementationMail
     {
         return parent::build()
-            ->subject(mail_trans('fund_request_resolved.title'))
+            ->subject(mail_trans('fund_request_resolved.title', ['fund_name' => $this->fundName]))
             ->view('emails.funds.fund-requests.fund_request-resolved', [
                 'fund_name' => $this->fundName,
                 'webshop_link' => $this->link,

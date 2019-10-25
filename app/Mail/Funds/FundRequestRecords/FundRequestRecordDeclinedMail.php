@@ -29,7 +29,7 @@ class FundRequestRecordDeclinedMail extends ImplementationMail
     public function build(): ImplementationMail
     {
         return parent::build()
-            ->subject(mail_trans('fund_request_record_declined.title'))
+            ->subject(mail_trans('fund_request_record_declined.title', ['fund_name' => $this->fundName]))
             ->view('emails.funds.fund-request-records.fund_request-declined', [
                 'fund_name' => $this->fundName,
                 'webshop_link' => $this->link,
