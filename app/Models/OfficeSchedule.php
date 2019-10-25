@@ -35,7 +35,8 @@ class OfficeSchedule extends Model
      * @var array
      */
     protected $fillable = [
-        'office_id', 'week_day', 'start_time', 'end_time'
+        'office_id', 'week_day', 'start_time', 'end_time',
+        'break_start_time', 'break_end_time'
     ];
 
     /**
