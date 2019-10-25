@@ -10,6 +10,8 @@ namespace App\Models;
  * @property int $week_day
  * @property string|null $start_time
  * @property string|null $end_time
+ * @property string|null $break_start_time
+ * @property string|null $break_end_time
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string|null $created_at_locale
