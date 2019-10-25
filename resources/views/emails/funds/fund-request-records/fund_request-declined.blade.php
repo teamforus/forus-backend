@@ -12,8 +12,8 @@
     <br/>
     {{ mail_trans('fund_request_record_declined.message', ['fund_name' => $fund_name]) }}
     <br/>
-    {{ mail_trans('fund_request_record_declined.reason', ['reason' => $rejection_note]) }}
+    {!! mail_trans('fund_request_record_declined.reason', ['reason' => $rejection_note]) !!}
     <br/>
     <br/>
-    {!! mail_trans('fund_request_record_declined.webshop_button', $webshop_link) !!}
+    {!! mail_trans('fund_request_record_declined.webshop_button', ['link' => $webshop_link]) !!}
 @endsection
