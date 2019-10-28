@@ -425,6 +425,21 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     );
 
     $router->post(
+        'organizations/{organization}/sponsor/vouchers/validate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeValidate"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/batch',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeBatch"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/batch/validate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeBatchValidate"
+    );
+
+    $router->post(
         'organizations/{organization}/sponsor/vouchers/{voucher_id}/send',
         "Api\Platform\Organizations\Sponsor\VouchersController@sendByEmail"
     );
