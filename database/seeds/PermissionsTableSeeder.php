@@ -25,6 +25,7 @@ class PermissionsTableSeeder extends Seeder
             'view_finances'         => "See financial overview",
             'validate_records'      => "Validate records",
             'scan_vouchers'         => "Scan vouchers",
+            'view_funds'            => "See funds overview",
         ];
 
         collect($permissions)->each(function($name, $key) {

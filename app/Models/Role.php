@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $key
  * @property string $name
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[] $permissions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RolePermission[] $role_permissions
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role query()
@@ -31,5 +32,9 @@ class Role extends Model
         return $this->belongsToMany(Permission::class, (
             new RolePermission
         )->getTable());
+    }
+
+    public function role_permissions() {
+        return $this->hasMany(RolePermission::class);
     }
 }
