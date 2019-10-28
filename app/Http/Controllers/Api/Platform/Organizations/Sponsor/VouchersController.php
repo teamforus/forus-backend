@@ -13,6 +13,8 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 
 class VouchersController extends Controller
 {
@@ -154,5 +156,52 @@ class VouchersController extends Controller
         $voucher->sendToEmail($email);
 
         return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function exportUnassigned(Organization $organization, Request $request) {
+        /** @var Collection|Voucher[] $unassigned_vouchers */
+        $unassigned_vouchers = Voucher::getUnassignedVouchers(
+            $organization,
+            $request->get('fromDate'),
+            $request->get('toDate')
+        );
+
+        if (count($unassigned_vouchers)) {
+            if (!file_exists('storage/qr-codes')) {
+                mkdir('storage/qr-codes');
+            }
+
+            $zip = new \ZipArchive();
+            $zip_name = 'storage/qr-codes/qr_codes.zip';
+            $csv_name = 'qr_codes.csv';
+
+            $fp = fopen($csv_name, 'w');
+            $zip->open($zip_name, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+            $zip->addEmptyDir('images');
+
+            foreach ($unassigned_vouchers as $voucher) {
+                foreach ($voucher->tokens as $token) {
+                    $full_path = $token->getQrLocalPath();
+
+                    $name = resolve('token_generator')->generate(
+                        6, 2
+                    );
+                    $zip->addFile($full_path, 'images/'.$name);
+
+                    fputcsv($fp, [$name]);
+                }
+            }
+
+            $zip->addFile($csv_name);
+            $zip->close();
+            unlink($csv_name);
+
+            return response()->download(public_path($zip_name));
+        }
     }
 }
