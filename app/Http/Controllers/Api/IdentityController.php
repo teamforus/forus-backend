@@ -322,43 +322,44 @@ class IdentityController extends Controller
     }
 
     /**
+     * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
      * @param string $clientType
      * @param string $implementationKey
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\Contracts\View\View|void
      */
     public function emailConfirmationRedirect(
+        IdentityAuthorizationEmailRedirectRequest $request,
         string $exchangeToken,
         string $clientType = 'webshop',
         string $implementationKey = 'general'
     ) {
+        $token = $exchangeToken;
+        $target = $request->input('target', '');
         if (!Implementation::isValidKey($implementationKey)) {
             abort(404, "Invalid implementation key.");
         }
-
-        switch ($clientType) {
-            case 'webshop':
-            case 'sponsor':
-                case 'provider':
-            case 'validator': {
-                $webShopUrl = Implementation::byKey($implementationKey);
-                $webShopUrl = $webShopUrl['url_' . $clientType];
-
-                exit(redirect(
-                    "{$webShopUrl}confirmation/email/{$exchangeToken}"
-                ));
-            } break;
-            case 'app-me_app': {
-                $sourceUrl = config('forus.front_ends.app-me_app');
-                $redirectUrl = $sourceUrl . "identity-confirmation?token=" . $exchangeToken;
-
-                return view()->make('pages.auth.deep_link', compact('redirectUrl'));
-            } break;
+        if (in_array($clientType, [
+            'webshop', 'sponsor', 'provider', 'validator'
+        ])) {
+            $webShopUrl = Implementation::byKey($implementationKey);
+            $webShopUrl = $webShopUrl['url_' . $clientType];
+            return redirect($redirectUrl = sprintf(
+                $webShopUrl . "confirmation/email/%s?%s",
+                $exchangeToken,
+                http_build_query(compact('target'))
+            ));
+        } elseif ($clientType == 'app-me_app') {
+            $sourceUrl = config('forus.front_ends.app-me_app');
+            $redirectUrl = sprintf(
+                $sourceUrl . "identity-confirmation?%s",
+                http_build_query(compact('token'))
+            );
+            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
         }
-
-        abort(404);
+        return abort(404);
     }
-
+    
     /**
      * @param $exchangeToken
      * @return array
