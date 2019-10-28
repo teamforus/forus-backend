@@ -26,6 +26,9 @@ class EmployeeResource extends Resource
         return collect($employee)->only([
             'id', 'identity_address', 'organization_id'
         ])->merge([
+            'organization' => $this->resource->organization->only([
+                'id', 'name'
+            ]),
             'roles' => RoleResource::collection($employee->roles),
             'email' => $recordRepo->primaryEmailByAddress(
                 $employee->identity_address

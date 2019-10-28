@@ -17,6 +17,7 @@ use Dimsav\Translatable\Translatable;
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\TokenTranslation[] $translations
+ * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token listsTranslations($translationField)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token newQuery()

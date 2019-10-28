@@ -2,7 +2,6 @@
 
 namespace App\Rules;
 
-use App\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Contracts\Validation\Rule;
 
 class RecordTypeKeyExistsRule implements Rule

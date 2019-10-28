@@ -59,8 +59,6 @@ class MediaController extends Controller
     {
         $this->authorize('store', Media::class);
 
-        logger()->debug($request->file('file')->getMimeType());
-
         return new MediaResource($this->mediaService->uploadSingle(
             $request->file('file'),
             $request->input('type'),

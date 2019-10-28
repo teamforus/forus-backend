@@ -28,20 +28,34 @@ use Illuminate\Database\Query\Builder;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read int|null $employees_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
+ * @property-read int|null $fund_requests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read int|null $funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
+ * @property-read int|null $funds_voucher_transactions_count
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \App\Services\MediaService\Models\Media $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Office[] $offices
+ * @property-read int|null $offices_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $organization_funds
+ * @property-read int|null $organization_funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds
+ * @property-read int|null $supplied_funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved
+ * @property-read int|null $supplied_funds_approved_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
+ * @property-read int|null $validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read int|null $vouchers_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization query()
@@ -124,6 +138,13 @@ class Organization extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function fund_requests() {
+        return $this->hasManyThrough(FundRequest::class, Fund::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function supplied_funds() {
@@ -189,7 +210,7 @@ class Organization extends Model
         return $this->employees()->whereHas('roles', function(
             \Illuminate\Database\Eloquent\Builder $query
         ) use ($role) {
-            $query->where('key', 'finance');
+            $query->where('key', $role);
         })->get();
     }
 
@@ -269,6 +290,28 @@ class Organization extends Model
 
     /**
      * @param $identityAddress string
+     * @param $roles
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function queryByIdentityRole (
+        string $identityAddress,
+        $roles = false
+    ) {
+        $roles = (array) $roles;
+
+        return Organization::query()->whereIn('id', function(Builder $query) use ($identityAddress, $roles) {
+            $query->select(['organization_id'])->from((new Employee)->getTable())->where([
+                'identity_address' => $identityAddress
+            ])->whereIn('id', function (Builder $query) use ($roles) {
+                $query->select('employee_id')->from((new EmployeeRole)->getTable())->whereIn('role_id', function (Builder $query) use ($roles) {
+                    $query->select(['id'])->from((new Role)->getTable())->whereIn('key', $roles)->get();
+                });
+            });
+        })->orWhere('identity_address', $identityAddress);
+    }
+
+    /**
+     * @param $identityAddress string
      * @param $permissions
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -307,5 +350,15 @@ class Organization extends Model
                 });
             });
         })->orWhere('identity_address', $identityAddress);
+    }
+
+    /**
+     * @param $attributes
+     * @return Fund|\Illuminate\Database\Eloquent\Model
+     */
+    public function createFund($attributes) {
+        return Fund::create(array_merge([
+            'organization_id' => $this->id,
+        ], $attributes));
     }
 }

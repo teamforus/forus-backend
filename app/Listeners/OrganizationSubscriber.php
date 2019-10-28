@@ -2,8 +2,11 @@
 
 namespace App\Listeners;
 
+use App\Events\Employees\EmployeeCreated;
 use App\Events\Organizations\OrganizationCreated;
 use App\Events\Organizations\OrganizationUpdated;
+use App\Models\Employee;
+use App\Models\Role;
 use Illuminate\Events\Dispatcher;
 
 class OrganizationSubscriber
@@ -21,6 +24,13 @@ class OrganizationSubscriber
         $organization->validators()->create([
             'identity_address' => $organization->identity_address
         ]);
+
+        /** @var Employee $employee */
+        $employee = $organization->employees()->firstOrCreate([
+            'identity_address' => $organization->identity_address
+        ]);
+
+        $employee->roles()->sync(Role::pluck('id'));
 
         try {
             $offices = resolve('kvk_api')->getOffices($organization->kvk);

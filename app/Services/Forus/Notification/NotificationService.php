@@ -3,6 +3,10 @@
 namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
+use App\Mail\FundRequests\FundRequestCreatedMail;
+use App\Mail\FundRequests\FundRequestClarificationRequestedMail;
+use App\Mail\FundRequests\FundRequestRecordDeclinedMail;
+use App\Mail\FundRequests\FundRequestResolvedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
@@ -14,7 +18,6 @@ use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
-use App\Mail\User\EmployeeAddedMail;
 use App\Mail\Validations\AddedAsValidatorMail;
 use App\Mail\Validations\NewValidationRequestMail;
 use App\Mail\Vouchers\FundStatisticsMail;
@@ -378,6 +381,106 @@ class NotificationService
     }
 
     /**
+     * Notify user that new fund request was created
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $fund_name
+     * @param string $webshop_link
+     * @return bool
+     */
+    public function newFundRequestCreated(
+        string $email,
+        $identifier,
+        string $fund_name,
+        string $webshop_link
+    ) {
+        return $this->sendMail($email, new FundRequestCreatedMail(
+            $fund_name,
+            $webshop_link,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify user that fund request resolved
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $requestStatus
+     * @param string $fundName
+     * @param string $webshopLink
+     * @return bool|null
+     */
+    public function fundRequestResolved(
+        string $email,
+        $identifier,
+        string $requestStatus,
+        string $fundName,
+        string $webshopLink
+    ) {
+        return $this->sendMail($email, new FundRequestResolvedMail(
+            $requestStatus,
+            $fundName,
+            $webshopLink,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify user that fund request record declined
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $rejectionNote
+     * @param string $fundName
+     * @param string $webshopLink
+     * @return bool|null
+     */
+    public function fundRequestRecordDeclined(
+        string $email,
+        $identifier,
+        ?string $rejectionNote,
+        string $fundName,
+        string $webshopLink
+    ) {
+        return $this->sendMail($email, new FundRequestRecordDeclinedMail(
+            $fundName,
+            $rejectionNote,
+            $webshopLink,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify user that new fund request clarification requested
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $fundName
+     * @param string $question
+     * @param string $webshopClarificationLink
+     * @param string $webshopLink
+     * @return bool|null
+     */
+    public function sendFundRequestClarificationToRequester(
+        string $email,
+        $identifier,
+        string $fundName,
+        string $question,
+        string $webshopClarificationLink,
+        string $webshopLink
+    ) {
+        return $this->sendMail($email, new FundRequestClarificationRequestedMail(
+            $fundName,
+            $question,
+            $webshopClarificationLink,
+            $webshopLink,
+            $identifier
+        ));
+    }
+
+    /**
      * Notify providers that new fund was started
      *
      * @param string $email
@@ -633,27 +736,6 @@ class NotificationService
     }
 
     /**
-     * @param string $orgName
-     * @param string $email
-     * @param string $confirmationLink
-     * @param $identifier
-     * @return bool|null
-     */
-    public function sendEmailEmployeeAdded(
-        string $orgName,
-        string $email,
-        string $confirmationLink,
-        $identifier
-    ) {
-        return $this->sendMail($email, new EmployeeAddedMail(
-            $orgName,
-            config('app.name'),
-            $confirmationLink,
-            $identifier
-        ));
-    }
-
-    /**
      * Notify user that voucher is about to expire
      *
      * @param string $email
@@ -727,6 +809,10 @@ class NotificationService
      * @return bool|null
      */
     private function sendMail($email, Mailable $mailable) {
+        if (config()->get('mail.disable', false)) {
+            return true;
+        }
+
         try {
             if ($this->isUnsubscribed($email, $mailable)) {
                 return null;

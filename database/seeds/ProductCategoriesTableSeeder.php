@@ -94,7 +94,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
     public static function migrateProducts($list) {
         foreach ($list as $oldId => $newId) {
-            Product::where('product_category_id', $oldId)->update([
+            Product::withTrashed()->where('product_category_id', $oldId)->update([
                 'product_category_id' => $newId
             ]);
         }

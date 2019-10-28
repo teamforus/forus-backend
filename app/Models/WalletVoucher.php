@@ -20,7 +20,9 @@ namespace App\Models;
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\Token $token
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\WalletVoucherToken[] $voucher_tokens
+ * @property-read int|null $voucher_tokens_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\WalletVoucherTransaction[] $voucher_transactions
+ * @property-read int|null $voucher_transactions_count
  * @property-read \App\Models\Wallet $wallet
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher newQuery()

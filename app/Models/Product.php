@@ -26,18 +26,23 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon $expire_at
  * @property bool $sold_out
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read int|null $funds_count
  * @property-read string|null $created_at_locale
  * @property-read bool $expired
  * @property-read bool $is_offer
  * @property-read int $stock_amount
  * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
  * @property-read \App\Services\MediaService\Models\Media $photo
  * @property-read \App\Models\ProductCategory $product_category
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read int|null $vouchers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers_reserved
+ * @property-read int|null $vouchers_reserved_count
  * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newQuery()
