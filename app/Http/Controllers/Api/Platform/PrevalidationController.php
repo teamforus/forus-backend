@@ -182,9 +182,10 @@ class PrevalidationController extends Controller
         Request $request,
         Prevalidation $prevalidation = null
     ) {
-        if ($this->hasTooManyLoginAttempts($request)) {
-            abort(429, 'To many attempts.');
-        }
+//        if ($this->hasTooManyLoginAttempts($request)) {
+//            abort(429, 'To many attempts.');
+//        }
+        $this->middleware('throttle', [10, 1 * 60]);
 
         $this->incrementLoginAttempts($request);
         $this->authorize('redeem', $prevalidation);

@@ -50,6 +50,7 @@ $router->group([], function() use ($router) {
     ]);
 
     $router->post('funds/{fund}/requests/validate',"Api\Platform\Funds\FundRequestsController@storeValidate");
+    $router->post('funds/{fund}/requests/activation-code',"Api\Platform\Funds\FundRequestsController@getActivationCode");
 
     $router->resource(
         'funds/{fund}/requests/{fund_request}/records',

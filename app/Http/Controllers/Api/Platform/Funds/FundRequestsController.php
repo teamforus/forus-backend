@@ -9,6 +9,9 @@ use App\Http\Resources\FundRequestResource;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Http\Controllers\Controller;
+use App\Models\Prevalidation;
+use App\Services\Forus\Record\Models\RecordType;
+use Illuminate\Database\Eloquent\Builder;
 
 class FundRequestsController extends Controller
 {
@@ -76,5 +79,21 @@ class FundRequestsController extends Controller
         $this->authorize('viewRequester', [$fundRequest, $fund]);
 
         return new FundRequestResource($fundRequest);
+    }
+
+    /**
+     * @return array
+     */
+    public function getActivationCode() {
+        return [
+            'code' => Prevalidation::where([
+                'state' => 'pending'
+            ])->whereHas('records', function(Builder $query) {
+                $query->where([
+                    'record_type_id' => RecordType::where('key', 'uid')->first()->id,
+                    'value' => request()->get('bsn')
+                ]);
+            })->first()->uid ?? false
+        ];
     }
 }
