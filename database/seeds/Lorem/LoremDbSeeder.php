@@ -436,7 +436,7 @@ class LoremDbSeeder extends Seeder
         ], [
             'record_type_key'   => 'net_worth',
             'operator'          => '<',
-            'value'             => 100,
+            'value'             => 1000,
         ], [
             'record_type_key'   => 'gender',
             'operator'          => '=',

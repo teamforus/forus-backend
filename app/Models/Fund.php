@@ -937,4 +937,13 @@ class Fund extends Model
 
         return $this;
     }
+
+    /**
+     * @return mixed
+     */
+    public function urlWebshop()
+    {
+        return $this->fund_config->implementation->url_webshop ??
+            env('WEB_SHOP_GENERAL_URL');
+    }
 }
