@@ -15,7 +15,7 @@ class AddFundCriteriaSettings extends Migration
     {
         Schema::table('fund_criteria', function(Blueprint $table) {
             $table->boolean('show_attachment')->default(true)
-                ->after('operator');
+                ->after('value');
             $table->text('description')
                 ->after('show_attachment');
         });
