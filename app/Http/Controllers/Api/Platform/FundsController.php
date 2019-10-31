@@ -51,7 +51,9 @@ class FundsController extends Controller
     ) {
         $this->authorize('apply', $fund);
 
-        return new VoucherResource($fund->makeVoucher(auth()->id()));
+        return new VoucherResource(
+            $fund->makeVoucher(auth()->id())
+        );
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
+use App\Events\Vouchers\VoucherCreated;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -417,5 +418,29 @@ class Voucher extends Model
         }
 
         return $vouchers->get();
+    }
+
+    /**
+     * @param Product $product
+     * @param bool $price
+     * @return Voucher|\Illuminate\Database\Eloquent\Model
+     */
+    public function buyProductVoucher(Product $product, $price = false) {
+        $voucherExpireAt = $this->fund->end_date->gt(
+            $product->expire_at
+        ) ? $product->expire_at : $this->fund->end_date;
+
+        $voucher = Voucher::create([
+            'identity_address'  => auth_address(),
+            'parent_id'         => $this->id,
+            'fund_id'           => $this->fund_id,
+            'product_id'        => $product->id,
+            'amount'            => $price ?? $product->price,
+            'expire_at'         => $voucherExpireAt
+        ]);
+
+        VoucherCreated::dispatch($voucher);
+
+        return $voucher;
     }
 }

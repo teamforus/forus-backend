@@ -95,6 +95,10 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $formula_products
+ * @property-read int|null $formula_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
+ * @property-read int|null $fund_formula_products_count
  */
 class Fund extends Model
 {
@@ -386,6 +390,25 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function fund_formula_products() {
+        return $this->hasMany(FundFormulaProduct::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function formula_products() {
+        return $this->hasManyThrough(
+            Product::class,
+            FundFormulaProduct::class,
+            'fund_id',
+            'id'
+        );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function bunq_me_tabs() {
         return $this->hasMany(BunqMeTab::class);
     }
@@ -469,11 +492,12 @@ class Fund extends Model
      */
     public static function amountForIdentity(Fund $fund, $identityAddress)
     {
-        if (!$fundFormula = $fund->fund_formulas) {
+        if ($fund->fund_formulas->count() == 0 &&
+            $fund->fund_formula_products->pluck('price')->sum() == 0) {
             return 0;
         }
 
-        return $fundFormula->map(function(FundFormula $formula) use (
+        return $fund->fund_formulas->map(function(FundFormula $formula) use (
             $fund, $identityAddress
         ) {
             switch ($formula->type) {
@@ -492,7 +516,7 @@ class Fund extends Model
                 } break;
                 default: return 0; break;
             }
-        })->sum();
+        })->sum() + $fund->fund_formula_products->pluck('price')->sum();
     }
 
     /**
@@ -825,18 +849,22 @@ class Fund extends Model
 
     /**
      * @param string|null $identity_address
-     * @param float|null $amount
+     * @param float|null $voucherAmount
      * @param Carbon|null $expire_at
      * @param string|null $note
      * @return Voucher|\Illuminate\Database\Eloquent\Model
      */
     public function makeVoucher(
         string $identity_address = null,
-        float $amount = null,
+        float $voucherAmount = null,
         Carbon $expire_at = null,
         string $note = null
     ) {
-        $amount = $amount ?: self::amountForIdentity($this, $identity_address);
+        $amount = $voucherAmount ?: self::amountForIdentity(
+            $this,
+            $identity_address
+        );
+
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
 
@@ -845,6 +873,15 @@ class Fund extends Model
         ));
 
         VoucherCreated::dispatch($voucher);
+
+        if ($voucherAmount === null) {
+            foreach ($this->fund_formula_products as $fund_formula_product) {
+                $voucher->buyProductVoucher(
+                    $fund_formula_product->product,
+                    $fund_formula_product->amount
+                );
+            }
+        }
 
         return $voucher;
     }
@@ -932,6 +969,34 @@ class Fund extends Model
                 $db_criteria->update($data_criteria);
             } else {
                 $this->criteria()->create($data_criteria);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $productIds
+     * @return $this
+     */
+    public function updateFormulaProducts(array $productIds)
+    {
+        /** @var Collection|Product[] $products */
+        $products = Product::whereIn('id', $productIds)->get();
+        $this->fund_formula_products()->whereNotIn(
+            'product_id',
+            $products->pluck('id')
+        )->delete();
+
+        foreach ($products as $product) {
+            $where = [
+                'product_id' => $product->id
+            ];
+
+            if (!$this->fund_formula_products()->where($where)->exists()) {
+                $this->fund_formula_products()->create($where)->update([
+                    'price' => $product->price
+                ]);
             }
         }
 
