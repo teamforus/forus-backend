@@ -124,9 +124,12 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     public function proxyIdByAccessToken(
         string $access_token = null
     ) {
-        $proxyIdentity = IdentityProxy::findByAccessToken($access_token);
+        if (!empty($access_token) && $proxyIdentity =
+                IdentityProxy::findByAccessToken($access_token)) {
+            return $proxyIdentity->id;
+        }
 
-        return $proxyIdentity ? $proxyIdentity->id : null;
+        return false;
     }
 
     /**
