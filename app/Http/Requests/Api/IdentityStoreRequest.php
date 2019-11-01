@@ -34,7 +34,11 @@ class IdentityStoreRequest extends FormRequest
             'records'                   => ['required', 'array', new IdentityRecordsRule()],
             'records.primary_email'     => ['required', 'email', new IdentityRecordsUniqueRule('primary_email')],
             'records.address'           => [new IdentityRecordsAddressRule()],
-            'records.*'                 => ['required']
+            'records.*'                 => ['required'],
+            'target' => [
+                'nullable',
+                'alpha_dash',
+            ]
         ];
     }
 }
