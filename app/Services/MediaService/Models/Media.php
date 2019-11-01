@@ -19,9 +19,10 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $mediable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $mediable
+ * @property-read \App\Services\MediaService\Models\Media|null $mediable
  * @property-read \App\Services\MediaService\Models\MediaSize $size_original
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaSize[] $sizes
+ * @property-read int|null $sizes_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media query()
@@ -39,6 +40,16 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Media extends Model
 {
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'identity_address', 'original_name', 'mediable_id', 'mediable_type',
+        'type', 'ext', 'uid'
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -61,16 +72,6 @@ class Media extends Model
     public function mediable() {
         return $this->morphTo();
     }
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'identity_address', 'original_name', 'mediable_id', 'mediable_type',
-        'type', 'ext', 'uid'
-    ];
 
     /**
      * @param string $key

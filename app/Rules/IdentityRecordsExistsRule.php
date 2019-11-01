@@ -32,7 +32,8 @@ class IdentityRecordsExistsRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        return $this->recordRepo->isRecordExists($this->recordType, $value);
+        return is_string($value) &&
+            $this->recordRepo->isRecordExists($this->recordType, $value);
     }
 
     /**

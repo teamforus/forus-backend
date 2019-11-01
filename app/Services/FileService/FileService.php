@@ -160,13 +160,15 @@ class FileService
 
     /**
      * @param UploadedFile $file
+     * @param string $type
      * @param $identity_address
      * @param string|null $file_name
      * @param string|null $extension
-     * @return bool|mixed
+     * @return File
      */
     public function uploadSingle(
         UploadedFile $file,
+        string $type,
         $identity_address,
         string $file_name = null,
         string $extension = null
@@ -178,18 +180,19 @@ class FileService
         $size   = $file->getSize();
 
         // do upload
-        return $this->doUpload($path, $name, $ext, $size, $identity_address);
+        return $this->doUpload($path, $name, $ext, $type, $size, $identity_address);
     }
 
     /**
      * @param $path
      * @param $name
      * @param $ext
+     * @param $type
      * @param $size
      * @param $identity_address
      * @return File
      */
-    protected function doUpload($path, $name, $ext, $size, $identity_address) {
+    protected function doUpload($path, $name, $ext, $type, $size, $identity_address) {
         $model = $this->model->newQuery();
         $storage = $this->storage();
 
@@ -210,7 +213,7 @@ class FileService
         /** @var File $file */
         $file = File::create(compact(
             'uid', 'identity_address', 'original_name', 'path', 'size',
-            'fileable_id', 'fileable_type', 'ext'
+            'fileable_id', 'fileable_type', 'ext', 'type'
         ));
 
         return $file;
@@ -229,7 +232,15 @@ class FileService
      * @return mixed
      */
     public function urlPublic(string $path) {
-        return $this->storage()->url($path);
+        return $this->storage()->url(ltrim($path, '/'));
+    }
+
+    /**
+     * @param string $path
+     * @return mixed
+     */
+    public function download(string $path) {
+        return $this->storage()->download(ltrim($path, '/'));
     }
 
     /**

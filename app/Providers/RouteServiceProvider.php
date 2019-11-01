@@ -5,7 +5,11 @@ namespace App\Providers;
 use App\Models\BunqMeTab;
 use App\Models\Fund;
 use App\Models\Employee;
+use App\Models\FundRequest;
+use App\Models\FundRequestClarification;
+use App\Models\FundRequestRecord;
 use App\Models\Implementation;
+use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -52,13 +56,15 @@ class RouteServiceProvider extends ServiceProvider
                 ])->first() ?? null;
         });
 
-        $router->bind('fund_id', function ($value) {
-            return Fund::query()->where([
-                    'id' => $value
-                ])->first() ?? abort(404);
+        $router->bind('organization', function ($id) {
+            return Organization::find($id) ?? abort(404);
         });
 
-        $router->bind('configured_fund_id', function ($value) {
+        $router->bind('fund', function ($id) {
+            return Fund::find($id) ?? abort(404);
+        });
+
+        $router->bind('configured_fund', function ($value) {
             return Fund::query()->where([
                     'id' => $value
                 ])->has('fund_config')->first() ?? abort(404);
@@ -92,6 +98,18 @@ class RouteServiceProvider extends ServiceProvider
             return Product::query()->where([
                     'id' => $value
                 ])->withTrashed()->first() ?? abort(404);
+        });
+
+        $router->bind('fund_request', function ($id) {
+            return FundRequest::find($id) ?? abort(404);
+        });
+
+        $router->bind('fund_request_record', function ($id) {
+            return FundRequestRecord::find($id) ?? abort(404);
+        });
+
+        $router->bind('fund_request_clarification', function ($id) {
+            return FundRequestClarification::find($id) ?? abort(404);
         });
 
         $router->bind('platform_config', function ($value) {

@@ -4,6 +4,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Disable emails
+    |--------------------------------------------------------------------------
+    |
+    | Not part of the framework.
+    |
+    | Meant to be used as on-fly flag disable emails sent using
+    | ImplementationEmail class. Introduced to disable emails sending
+    | from Seeder Classes.
+    */
+
+    'disable' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Mail Driver
     |--------------------------------------------------------------------------
     |

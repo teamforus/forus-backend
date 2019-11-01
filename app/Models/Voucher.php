@@ -32,10 +32,13 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Voucher|null $parent
  * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read int|null $product_vouchers_count
  * @property-read \App\Models\VoucherToken $token_with_confirmation
  * @property-read \App\Models\VoucherToken $token_without_confirmation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherToken[] $tokens
+ * @property-read int|null $tokens_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $transactions
+ * @property-read int|null $transactions_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
