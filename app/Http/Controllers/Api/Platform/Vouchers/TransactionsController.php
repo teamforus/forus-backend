@@ -143,4 +143,16 @@ class TransactionsController extends Controller
 
         return new VoucherTransactionResource($voucherTransaction);
     }
+
+    /**
+     * @param VoucherToken $voucherToken
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function simulate(
+        VoucherToken $voucherToken
+    ) {
+        return response()->json([
+            'message' => trans('push.transactions.test_voucher.success'),
+        ], 200);
+    }
 }

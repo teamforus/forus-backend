@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\BunqMeTab;
+use App\Models\DemoTransaction;
 use App\Models\Fund;
 use App\Models\Employee;
 use App\Models\FundRequest;
@@ -91,6 +92,12 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('employee_id', function ($value) {
             return Employee::query()->where([
                 'id' => $value
+                ])->first() ?? abort(404);
+        });
+
+        $router->bind('demo_token', function ($value) {
+            return DemoTransaction::query()->where([
+                    'token' => $value
                 ])->first() ?? abort(404);
         });
 
