@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests\Api;
 
-use App\Models\Implementation;
-use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class IdentityAuthorizationEmailTokenRequest extends FormRequest
+class IdentityAuthorizationEmailRedirectRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,15 +24,6 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
     public function rules()
     {
         return [
-            'primary_email' => [
-                'required',
-                'email',
-                new IdentityRecordsExistsRule('primary_email')
-            ],
-            'source' => [
-                'required',
-                'in:' . Implementation::keysAvailable()->implode(',')
-            ],
             'target' => [
                 'nullable',
                 'alpha_dash',
