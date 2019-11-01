@@ -902,7 +902,7 @@ class Fund extends Model
     {
         $this->criteria()->createMany(array_map(function($criterion) {
             return array_only($criterion, [
-                'record_type_key', 'operator', 'value', 'show_attachment', 'description'
+                'record_type_key', 'operator', 'value'
             ]);
         }, $criteria));
 
@@ -925,7 +925,7 @@ class Fund extends Model
         foreach ($criteria as $criterion) {
             /** @var FundCriterion|null $db_criteria */
             $data_criteria = array_only($criterion, [
-                'record_type_key', 'operator', 'value', 'show_attachment', 'description'
+                'record_type_key', 'operator', 'value'
             ]);
 
             if ($db_criteria = $this->criteria()->find($criterion['id'] ?? null)) {
