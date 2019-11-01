@@ -28,11 +28,16 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
         return [
             'primary_email' => [
                 'required',
+                'email',
                 new IdentityRecordsExistsRule('primary_email')
             ],
             'source' => [
                 'required',
                 'in:' . Implementation::keysAvailable()->implode(',')
+            ],
+            'target' => [
+                'nullable',
+                'alpha_dash',
             ]
         ];
     }

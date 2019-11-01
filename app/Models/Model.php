@@ -19,8 +19,11 @@ class Model extends \Illuminate\Database\Eloquent\Model
         parent::__construct($attributes);
 
         // Append created_at/updated_at human readable attributes
-        if ($this->timestamps) {
+        if ($this->created_at) {
             $this->append('updated_at_locale');
+        }
+
+        if ($this->updated_at) {
             $this->append('created_at_locale');
         }
     }
@@ -40,7 +43,6 @@ class Model extends \Illuminate\Database\Eloquent\Model
         return format_datetime_locale($value, 'short_date_time_locale');
     }
 
-
     /**
      * Create localized version version of updated_at attribute
      *
@@ -54,5 +56,15 @@ class Model extends \Illuminate\Database\Eloquent\Model
         }
 
         return format_datetime_locale($value, 'short_date_time_locale');
+    }
+
+    /**
+     * @param array $attributes
+     * @param array $options
+     * @return $this
+     */
+    public function updateModel(array $attributes = [], array $options = [])
+    {
+        return tap($this)->update($attributes, $options);
     }
 }

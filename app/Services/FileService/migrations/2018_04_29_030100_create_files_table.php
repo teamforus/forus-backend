@@ -17,6 +17,8 @@ class CreateFilesTable extends Migration
             $table->increments('id');
             $table->string('uid', 255)->nullable();
             $table->string('original_name', 200)->nullable();
+
+            $table->string('type',60);
             $table->string('ext', 10);
 
             $table->string('path',1024);

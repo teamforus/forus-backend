@@ -84,6 +84,10 @@ class FundsController extends Controller
             $fund->attachMedia($media);
         }
 
+        if (config('forus.features.dashboard.organizations.funds.criteria')) {
+            $fund->makeCriteria($request->input('criteria'));
+        }
+
         FundCreated::dispatch($fund);
 
         return new FundResource($fund);
@@ -150,6 +154,10 @@ class FundsController extends Controller
 
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
+        }
+
+        if (config('forus.features.dashboard.organizations.funds.criteria')) {
+            $fund->updateCriteria($request->input('criteria'));
         }
 
         return new FundResource($fund);

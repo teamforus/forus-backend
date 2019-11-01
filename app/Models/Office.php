@@ -23,9 +23,11 @@ use Illuminate\Http\Request;
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
  * @property-read \App\Services\MediaService\Models\Media $photo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OfficeSchedule[] $schedules
+ * @property-read int|null $schedules_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office query()

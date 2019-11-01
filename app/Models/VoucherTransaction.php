@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
  * @property-read mixed $transaction_details
  * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
+ * @property-read int|null $notes_count
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\Organization $provider
  * @property-read \App\Models\Voucher $voucher

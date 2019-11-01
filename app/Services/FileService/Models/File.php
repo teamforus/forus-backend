@@ -8,31 +8,27 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * Class Media
+ * App\Services\FileService\Models\File
  *
- * @property mixed $id
- * @property string $identity_address
- * @property string $original_name
- * @property int $fileable_id
- * @property int $fileable_type
- * @property int $size
+ * @property int $id
+ * @property string|null $uid
+ * @property string|null $original_name
  * @property string $type
  * @property string $ext
- * @property string $uid
  * @property string $path
- * @property Collection $sizes
- * @property Model $fileable
- * @method static static create($attributes = array())
- * @method static static find($id, $columns = ['*'])
- * @method static Builder where($column, $operator = null, $value = null, $boolean = 'and')
- * @package App\Services\FileService\Models
+ * @property string $size
+ * @property string $identity_address
+ * @property int|null $fileable_id
+ * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Services\FileService\Models\File|null $fileable
  * @property-read mixed $url_public
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereExt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereFileableId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereFileableType($value)
@@ -61,7 +57,7 @@ class File extends Model
      */
     protected $fillable = [
         'identity_address', 'original_name', 'fileable_id',
-        'fileable_type', 'ext', 'uid', 'path', 'size'
+        'fileable_type', 'ext', 'uid', 'path', 'size', 'type',
     ];
 
     public function getUrlPublicAttribute() {
@@ -80,6 +76,13 @@ class File extends Model
      * @return mixed
      */
     public function urlPublic() {
-        return resolve('file')->urlPublic($this->path);
+        return resolve('file')->urlPublic(ltrim($this->path, '/'));
+    }
+
+    /**
+     * @return mixed
+     */
+    public function download() {
+        return resolve('file')->download(ltrim($this->path, '/'));
     }
 }

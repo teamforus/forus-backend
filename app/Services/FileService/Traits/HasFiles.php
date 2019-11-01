@@ -2,38 +2,28 @@
 
 namespace App\Services\FileService\Traits;
 
-use App\Services\MediaService\Models\Media;
+use App\Services\FileService\Models\File;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Trait HasMedia
- * @property Collection $medias
+ * @property Collection|File[] $files
  * @package App\Services\MediaService\Traits
  */
 trait HasFiles
 {
     /**
-     * @param Media|null $media
+     * @param File|null $file
      * @return bool
      */
-    public function attachMedia(Media $media = null) {
-        if (empty($media)) {
+    public function attachFile(File $file = null) {
+        if (empty($file)) {
             return false;
         }
 
-        $single = config('media.sizes.' . $media->type . '.type') == 'single';
-
-        if ($single) {
-            $this->medias()->where([
-                'type' => $media->type
-            ])->where('id', '!=', $media->id)->each(function($media) {
-                app()->make('media')->unlink($media);
-            });
-        }
-
-        return $media->update([
-            'mediable_type' => static::class,
-            'mediable_id' => $this->id,
+        return $file->update([
+            'fileable_type' => static::class,
+            'fileable_id' => $this->id,
         ]);
     }
 
@@ -42,8 +32,8 @@ trait HasFiles
      *
      * @return mixed
      */
-    public function medias()
+    public function files()
     {
-        return $this->morphMany(Media::class, 'mediable');
+        return $this->morphMany(File::class, 'fileable');
     }
 }

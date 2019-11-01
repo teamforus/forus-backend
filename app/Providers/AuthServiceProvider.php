@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Models\BunqMeTab;
 use App\Models\Employee;
+use App\Models\FundRequest;
+use App\Models\FundRequestClarification;
+use App\Models\FundRequestRecord;
 use App\Models\Office;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
@@ -14,6 +17,10 @@ use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Policies\BunqMeTabPolicy;
 use App\Policies\EmployeePolicy;
+use App\Policies\FilePolicy;
+use App\Policies\FundRequestClarificationPolicy;
+use App\Policies\FundRequestPolicy;
+use App\Policies\FundRequestRecordPolicy;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
 use App\Policies\ValidatorPolicy;
@@ -25,6 +32,7 @@ use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
+use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\Gate;
@@ -44,6 +52,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
+        File::class                     => FilePolicy::class,
         Fund::class                     => FundPolicy::class,
         Media::class                    => MediaPolicy::class,
         Office::class                   => OfficePolicy::class,
@@ -52,11 +61,14 @@ class AuthServiceProvider extends ServiceProvider
         Employee::class                 => EmployeePolicy::class,
         BunqMeTab::class                => BunqMeTabPolicy::class,
         Validator::class                => ValidatorPolicy::class,
+        FundRequest::class              => FundRequestPolicy::class,
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         ValidatorRequest::class         => ValidatorRequestPolicy::class,
+        FundRequestRecord::class        => FundRequestRecordPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
+        FundRequestClarification::class => FundRequestClarificationPolicy::class,
     ];
 
     /**

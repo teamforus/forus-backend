@@ -17,6 +17,7 @@ use App\Services\MediaService\Models\Media;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\MediaService\Models\Media $icon
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\Record[] $records
+ * @property-read int|null $records_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory query()

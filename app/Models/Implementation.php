@@ -22,6 +22,7 @@ use Illuminate\Database\Query\Builder;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read int|null $funds_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation query()

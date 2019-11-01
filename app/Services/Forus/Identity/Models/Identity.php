@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityProxy[] $proxies
+ * @property-read int|null $proxies_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity query()

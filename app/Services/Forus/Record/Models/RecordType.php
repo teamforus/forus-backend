@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordTypeTranslation[] $translations
+ * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType listsTranslations($translationField)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType newQuery()

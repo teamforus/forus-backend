@@ -14,6 +14,7 @@ namespace App\Models;
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $transactions
+ * @property-read int|null $transactions_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp query()
