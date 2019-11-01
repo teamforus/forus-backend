@@ -332,3 +332,17 @@ if (!function_exists('pretty_file_size')) {
             ['','k','M','G','T','P','E','Z','Y'][$i] . 'B';
     }
 }
+
+if (!function_exists('validate_data')) {
+    /**
+     * @param array $data
+     * @param array $rules
+     * @return \Illuminate\Validation\Validator
+     */
+    function validate_data(
+        $data = [],
+        $rules = []
+    ) {
+        return \Illuminate\Support\Facades\Validator::make($data, $rules);
+    }
+}
