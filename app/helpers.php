@@ -334,7 +334,6 @@ if (!function_exists('pretty_file_size')) {
     }
 }
 
-
 if (!function_exists('service_identity')) {
     /**
      * Get identity service instance
