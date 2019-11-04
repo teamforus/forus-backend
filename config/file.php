@@ -12,6 +12,7 @@ return [
         'jpg', 'jpeg', 'png', 'pdf'
     ],
     'allowed_types' => [
-        'fund_request_record_proof'
+        'fund_request_record_proof',
+        'fund_request_clarification_proof',
     ],
 ];

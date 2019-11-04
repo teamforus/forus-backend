@@ -130,11 +130,21 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      * @param string $access_token
      * @return mixed
      */
+<<<<<<< HEAD
     public function proxyIdByAccessToken(string $access_token = null)
     {
         $proxyIdentity = IdentityProxy::findByAccessToken($access_token);
+=======
+    public function proxyIdByAccessToken(
+        string $access_token = null
+    ) {
+        if (!empty($access_token) && $proxyIdentity =
+                IdentityProxy::findByAccessToken($access_token)) {
+            return $proxyIdentity->id;
+        }
+>>>>>>> origin/release-v0.4.0
 
-        return $proxyIdentity ? $proxyIdentity->id : null;
+        return false;
     }
 
     /**
