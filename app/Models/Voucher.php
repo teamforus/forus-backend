@@ -253,12 +253,14 @@ class Voucher extends Model
             $this->identity_address
         );
 
-        resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
-            $email,
-            $this->identity_address,
-            $fund_name,
-            $amount
-        );
+        if ($email) {
+            resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
+                $email,
+                $this->identity_address,
+                $fund_name,
+                $amount
+            );
+        }
     }
 
     /**

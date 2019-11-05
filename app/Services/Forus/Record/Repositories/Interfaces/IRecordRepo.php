@@ -66,7 +66,7 @@ interface IRecordRepo {
      * @return string|null
      */
     public function primaryEmailByAddress(
-        string $identityAddress
+        string $identityAddress = null
     );
 
     /**
