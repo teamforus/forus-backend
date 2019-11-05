@@ -1,7 +1,8 @@
 <?php
-
 return [
-    'on_date_have_received' => 'Dit jaar heeft u zich aangemeld voor de :fund_name van de gemeente Nijmegen.<br />Hiervan kunt u bij een aantal organisaties een cursus of activiteit doen. De :fund_name is geldig tot en met :end_date_fund.',
+    'title' => ':fund_name verloopt binnenkort',
+    'on_date_have_received' => 'Dit jaar heeft u zich aangemeld voor de :fund_name van de gemeente Nijmegen. Met de vergoeding van € 150,00 kunt u een cursus of activiteit doen.',
+     'voucher_due_to' => 'U kunt uw vergoeding tot en met :end_date_fund gebruiken. Vanaf 1 januari 2020 is het budget niet meer geldig.',
     'get_in_contact' => 'Heeft u vragen of heeft u hulp nodig? Neem dan contact op met de gemeente Nijmegen.',
-    'voucher_due_to' => 'Mocht u nog budget beschikbaar hebben, dan heeft u tot :end_date_fund de tijd om dit budget uit te geven. Vanaf :not_legit_anymore_date is het budget niet meer geldig.'
+    'see_budget_and_transactions' => 'U kunt uw huidige budget en transacties inzien via: :link.',
 ];
