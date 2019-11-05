@@ -230,6 +230,17 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'demo/transactions',
+        "Api\Platform\Vouchers\DemoTransactionController", [
+        'only' => [
+            'store', 'show', 'update'
+        ],
+        'parameters' => [
+            'transactions' => 'demo_token',
+        ]
+    ]);
+
     $router->get(
         'organizations/{organization}/funds/{fund}/finances',
         "Api\Platform\Organizations\FundsController@finances");
