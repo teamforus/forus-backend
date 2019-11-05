@@ -92,7 +92,9 @@ class ProductsController extends Controller
                     $fund->organization->email,
                     $fund->organization->emailServiceId(),
                     $fund->organization->name,
-                    $fund->name
+                    $fund->name,
+                    $fund->fund_config->implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL')
+
                 );
             }
         }
