@@ -38,8 +38,9 @@ class ProviderVoucherTransactionResource extends Resource
         return collect($voucherTransaction)->only([
             "id", "organization_id", "product_id", "created_at",
             "updated_at", "address", "state", "payment_id",
-            'created_at_locale', 'created_at_locale'
         ])->merge([
+            'created_at_locale' => $voucherTransaction->created_at_locale,
+            'updated_at_locale' => $voucherTransaction->updated_at_locale,
             'amount' => currency_format($voucherTransaction->amount),
             'timestamp' => $voucherTransaction->created_at->timestamp,
             "organization" => collect($voucherTransaction->provider)->only([
