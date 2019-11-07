@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read \App\Services\Forus\Record\Models\RecordCategory|null $record_category
  * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordValidation[] $validations
+ * @property-read int|null $validations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record query()

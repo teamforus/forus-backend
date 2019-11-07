@@ -78,4 +78,22 @@ class VoucherToken extends Model
             "vouchers/qr-codes/%s.png",
             hash('sha256', $this->address));
     }
+
+    /**
+     * @return string
+     */
+    public function getQrLocalPath () {
+        /** @var \Storage $storage */
+        $storage = app()->make('filesystem')->disk(
+            'public'
+        );
+
+        $path = $this->qrCodeFilePath();
+
+        if (!$storage->exists($path)) {
+            $this->storeQrCodeFile();
+        }
+
+        return $storage->path($path);
+    }
 }

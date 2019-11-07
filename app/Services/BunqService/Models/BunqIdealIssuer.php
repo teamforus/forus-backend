@@ -6,15 +6,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class IdealIssuer
+ * App\Services\BunqService\Models\BunqIdealIssuer
  *
  * @property int $id
  * @property string $name
  * @property string $bic
- * @property boolean $sandbox
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property bool $sandbox
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\BunqService\Models\BunqIdealIssuer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\BunqService\Models\BunqIdealIssuer newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\BunqService\Models\BunqIdealIssuer query()

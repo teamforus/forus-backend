@@ -39,6 +39,41 @@ $router->group([], function() use ($router) {
     ]);
 
     $router->resource(
+        'funds/{fund}/requests',
+        "Api\Platform\Funds\FundRequestsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'requests' => 'fund_request',
+        ]
+    ]);
+
+    $router->post('funds/{fund}/requests/validate',"Api\Platform\Funds\FundRequestsController@storeValidate");
+
+    $router->resource(
+        'funds/{fund}/requests/{fund_request}/records',
+        "Api\Platform\Funds\Requests\FundRequestRecordsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'records' => 'fund_request_record',
+        ]
+    ]);
+
+    $router->resource(
+        'funds/{fund}/requests/{fund_request}/clarifications',
+        "Api\Platform\Funds\Requests\FundRequestClarificationsController", [
+        'only' => [
+            'index', 'show', 'update'
+        ],
+        'parameters' => [
+            'clarifications' => 'fund_request_clarification',
+        ]
+    ]);
+
+    $router->resource(
         'offices',
         "Api\Platform\OfficesController", [
         'only' => [
@@ -123,12 +158,12 @@ $router->resource(
 ]);
 
 $router->get(
-    'funds/{configured_fund_id}/ideal/issuers',
+    'funds/{configured_fund}/ideal/issuers',
     "Api\Platform\FundsController@idealIssuers"
 );
 
 $router->post(
-    'funds/{fund_id}/ideal/requests',
+    'funds/{fund}/ideal/requests',
     "Api\Platform\FundsController@idealMakeRequest"
 );
 
@@ -153,7 +188,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     ]);
 
     $router->post(
-        'funds/{fund_id}/apply',
+        'funds/{fund}/apply',
         "Api\Platform\FundsController@apply"
     );
 
@@ -208,6 +243,50 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         "Api\Platform\Organizations\FundsController", [
         'only' => [
             'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations/{organization}/funds/{fund}/requests',
+        "Api\Platform\Organizations\Funds\FundRequestsController", [
+        'only' => [
+            'index', 'show', 'update'
+        ],
+        'parameters' => [
+            'requests' => 'fund_request',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations/{organization}/funds/{fund}/requests/{fund_request}/records',
+        "Api\Platform\Organizations\Funds\Requests\FundRequestRecordsController", [
+        'only' => [
+            'index', 'show', 'update'
+        ],
+        'parameters' => [
+            'records' => 'fund_request_record',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations/{organization}/funds/{fund}/requests/{fund_request}/clarifications',
+        "Api\Platform\Organizations\Funds\Requests\FundRequestClarificationsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'clarifications' => 'fund_request_clarification',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations/{organization}/requests',
+        "Api\Platform\Organizations\FundRequestsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'requests' => 'fund_request',
         ]
     ]);
 
@@ -350,6 +429,11 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         "Api\Platform\Organizations\Sponsor\VouchersController@sendByEmail"
     );
 
+    $router->get(
+        'organizations/{organization}/sponsor/vouchers/export-unassigned',
+        "Api\Platform\Organizations\Sponsor\VouchersController@exportUnassigned"
+    );
+
     $router->patch(
         'organizations/{organization}/sponsor/vouchers/{voucher_id}/assign',
         "Api\Platform\Organizations\Sponsor\VouchersController@assign"
@@ -396,6 +480,14 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->resource(
         'validators',
         "Api\Platform\ValidatorsController", [
+        'only' => [
+            'index'
+        ]
+    ]);
+
+    $router->resource(
+        'employees',
+        "Api\Platform\EmployeesController", [
         'only' => [
             'index'
         ]

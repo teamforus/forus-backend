@@ -32,10 +32,13 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Voucher|null $parent
  * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read int|null $product_vouchers_count
  * @property-read \App\Models\VoucherToken $token_with_confirmation
  * @property-read \App\Models\VoucherToken $token_without_confirmation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherToken[] $tokens
+ * @property-read int|null $tokens_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $transactions
+ * @property-read int|null $transactions_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
@@ -391,5 +394,28 @@ class Voucher extends Model
         VoucherAssigned::dispatch($this);
 
         return $this;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param $fromDate
+     * @param $toDate
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public static function getUnassignedVouchers(
+        Organization $organization, $fromDate, $toDate
+    ) {
+        $vouchers = $organization->vouchers()->whereNull(
+            'identity_address'
+        );
+
+        if ($fromDate) {
+            $vouchers->where('vouchers.created_at', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $vouchers->where('vouchers.created_at', '<=', $toDate);
+        }
+
+        return $vouchers->get();
     }
 }

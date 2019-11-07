@@ -50,6 +50,12 @@ class RecordController extends Controller
     }
 
     /**
+     * Validate records store request
+     * @param RecordStoreRequest $request
+     */
+    public function storeValidate(RecordStoreRequest $request) {}
+
+    /**
      * Get record
      * @param int $recordId
      * @return array
@@ -99,6 +105,12 @@ class RecordController extends Controller
 
         return compact('success');
     }
+
+    /**
+     * Validate records update request
+     * @param RecordUpdateRequest $request
+     */
+    public function updateValidate(RecordUpdateRequest $request) {}
 
     /**
      * Delete record

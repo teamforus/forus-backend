@@ -16,7 +16,9 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
+ * @property-read int|null $organizations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BusinessTypeTranslation[] $translations
+ * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType listsTranslations($translationField)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType newQuery()

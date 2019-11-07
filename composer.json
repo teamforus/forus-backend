@@ -8,6 +8,7 @@
         "php": ">=7.1.0",
         "ext-json": "*",
         "ext-openssl": "*",
+        "ext-zip": "*",
         "barryvdh/laravel-cors": "^0.11.3",
         "barryvdh/laravel-ide-helper": "^2.4",
         "bunq/sdk_php": "^1.10.16",
@@ -25,7 +26,8 @@
         "maatwebsite/excel": "^3.1",
         "philkra/elastic-apm-laravel": "^5.8",
         "ralouphie/getallheaders": "2.0.5",
-        "simplesoftwareio/simple-qrcode": "^2.0"
+        "simplesoftwareio/simple-qrcode": "^2.0",
+        "staudenmeir/eloquent-has-many-deep": "^1.7"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.2",
@@ -71,8 +73,8 @@
         ],
         "post-update-cmd": [
             "Illuminate\\Foundation\\ComposerScripts::postUpdate",
-            "php artisan ide-helper:generate",
-            "php artisan ide-helper:meta"
+            "@php artisan ide-helper:generate",
+            "@php artisan ide-helper:meta"
         ]
     },
     "config": {
