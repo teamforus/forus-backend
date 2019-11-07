@@ -40,7 +40,7 @@ class FundProviderController extends Controller
             $query->where('id', $request->get('fund_id'));
         }
 
-        return FundResource::collection($query->get());
+        return FundResource::collection($query->latest()->get());
     }
 
     /**

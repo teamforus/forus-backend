@@ -50,11 +50,15 @@ class ProductIdToVoucherRule implements Rule
             $voucherToken->voucher->transactions->sum('amount')) -
             $voucherToken->voucher->product_vouchers()->sum('amount');
 
+        if ($product->sold_out) {
+            $this->message = trans(
+                'validation.product_voucher.product_sold_out');
+            return false;
+        }
+
         if ($product->price > $amountLeft) {
             $this->message = trans(
-                'validation.product_voucher.not_enough_voucher_funds'
-            );
-
+                'validation.product_voucher.not_enough_voucher_funds');
             return false;
         }
 
