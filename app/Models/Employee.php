@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $organization_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $deleted_at
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
  * @property-read int|null $roles_count
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereOrganizationId($value)

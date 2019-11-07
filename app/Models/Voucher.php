@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
  * @property string|null $identity_address
  * @property float $amount
  * @property string|null $note
+ * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $product_id
@@ -44,6 +45,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereId($value)

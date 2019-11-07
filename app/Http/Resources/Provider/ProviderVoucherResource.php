@@ -90,7 +90,7 @@ class ProviderVoucherResource extends Resource
                 /** @var Product $product */
                 return collect($product)->only([
                     'id', 'name', 'description', 'total_amount', 'sold_amount',
-                    'product_category_id', 'organization_id',
+                    'product_category_id', 'organization_id', 'unlimited_stock',
                 ])->merge([
                     'price' => currency_format($product->price),
                     'old_price' => currency_format($product->old_price),

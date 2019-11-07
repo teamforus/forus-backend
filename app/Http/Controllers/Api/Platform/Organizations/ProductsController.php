@@ -13,6 +13,16 @@ use App\Models\Voucher;
 
 class ProductsController extends Controller
 {
+    private $mediaService;
+
+    /**
+     * ProductsController constructor.
+     */
+    public function __construct()
+    {
+        $this->mediaService = resolve('media');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -45,21 +55,23 @@ class ProductsController extends Controller
         $this->authorize('store', [Product::class, $organization]);
 
         $media = false;
+        $unlimited_stock = $request->input('unlimited_stock', false);
+        $total_amount = $request->input('total_amount');
 
         if ($media_uid = $request->input('media_uid')) {
-            $mediaService = app()->make('media');
-            $media = $mediaService->findByUid($media_uid);
+            $media = $this->mediaService->findByUid($media_uid);
 
             $this->authorize('destroy', $media);
         }
 
         /** @var Product $product */
-        $product = $organization->products()->create(
-            $request->only([
-                'name', 'description', 'price', 'old_price', 'total_amount',
-                'product_category_id', 'expire_at'
-            ])
-        );
+        $product = $organization->products()->create(array_merge($request->only([
+            'name', 'description', 'price', 'old_price', 'product_category_id',
+            'expire_at'
+        ]), [
+            'total_amount' => $unlimited_stock ? 0 : $total_amount,
+            'unlimited_stock' => $unlimited_stock
+        ]));
 
         if ($media && $media->type == 'product_photo') {
             $product->attachMedia($media);
@@ -136,17 +148,20 @@ class ProductsController extends Controller
         $this->authorize('update', [$product, $organization]);
 
         $media = false;
+        $unlimited_stock = $product->unlimited_stock;
+        $total_amount = $request->input('total_amount');
 
         if ($media_uid = $request->input('media_uid')) {
-            $mediaService = app()->make('media');
-            $media = $mediaService->findByUid($media_uid);
+            $media = $this->mediaService->findByUid($media_uid);
 
             $this->authorize('destroy', $media);
         }
 
-        $product->update($request->only([
-            'name', 'description', 'price', 'old_price', 'total_amount',
-            'sold_amount', 'product_category_id', 'expire_at'
+        $product->update(array_merge($request->only([
+            'name', 'description', 'price', 'old_price', 'sold_amount',
+            'product_category_id', 'expire_at'
+        ]), [
+            'total_amount' => $unlimited_stock ? 0 : $total_amount
         ]));
 
         $product->updateSoldOutState();
