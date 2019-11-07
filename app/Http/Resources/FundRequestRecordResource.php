@@ -27,12 +27,8 @@ class FundRequestRecordResource extends Resource
             'id', 'value', 'state', 'record_type_key', 'fund_request_id',
             'created_at', 'updated_at',
         ]), [
-            'created_at_locale' => format_datetime_locale(
-                $this->resource->created_at
-            ),
-            'updated_at_locale' => format_datetime_locale(
-                $this->resource->updated_at
-            ),
+            'created_at_locale' => format_datetime_locale($this->resource->created_at),
+            'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'record_type' => $recordTypes[$this->resource->record_type_key],
             'files' => FileResource::collection($this->resource->files),
             'clarifications' => FundRequestClarificationResource::collection(
