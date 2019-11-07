@@ -262,17 +262,17 @@ class Voucher extends Model
     }
 
     /**
-     *
+     * @param int $days
      */
-    public static function checkVoucherExpireQueue()
+    public static function checkVoucherExpireQueue(int $days = 4 * 7)
     {
         $notificationService = resolve('forus.services.notification');
+        $date = now()->addDays($days)->startOfDay()->format('Y-m-d');
 
-        $date = now()->addDays(4*7)->startOfDay();
         $vouchers = self::query()
             ->whereNull('product_id')
             ->with(['fund', 'fund.organization'])
-            ->whereDate('expire_at', $date)
+            ->whereDate('expire_at', '=', $date)
             ->get();
 
         /** @var self $voucher */
@@ -286,7 +286,7 @@ class Voucher extends Model
                 $fund_name = $voucher->fund->name;
                 $sponsor_name = $voucher->fund->organization->name;
                 $start_date = $voucher->fund->start_date->format('Y');
-                $end_date = $voucher->fund->end_date->format('d/m/Y');
+                $end_date = $voucher->fund->end_date->format('l, d F Y');
                 $phone = $voucher->fund->organization->phone;
                 $email = $voucher->fund->organization->email;
                 $webshopLink = env('WEB_SHOP_GENERAL_URL');
