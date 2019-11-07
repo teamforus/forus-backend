@@ -248,13 +248,12 @@ class Voucher extends Model
     public static function checkVoucherExpireQueue(int $days = 4 * 7)
     {
         $notificationService = resolve('forus.services.notification');
+        $date = now()->addDays($days)->startOfDay()->format('Y-m-d');
 
-        $date = now()->addDays($days)->startOfDay();
         $vouchers = self::query()
             ->whereNull('product_id')
             ->with(['fund', 'fund.organization'])
-            ->whereDate('expire_at', $date)
-            ->where('start_date', '<=', now()->subDays($days)->startOfDay())
+            ->whereDate('expire_at','=',  $date)
             ->get();
 
         /** @var self $voucher */
