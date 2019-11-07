@@ -1,8 +1,6 @@
 <?php
 namespace App\Services\Forus\Identity\Repositories\Interfaces;
 
-use App\Services\Forus\Identity\Models\IdentityProxy;
-
 interface IIdentityRepo {
     /**
      * Make new identity
@@ -28,50 +26,46 @@ interface IIdentityRepo {
         array $records = [],
         $pinCode = 1111
     );
+    /**
+     * @param $email
+     * @return mixed|null
+     * @throws \Exception
+     */
+    public function getOrMakeByEmail($email);
 
     /**
      * Create new proxy for given identity
      * @param string $identity
      * @return array
      */
-    public function makeIdentityPoxy(
-        $identity
-    );
+    public function makeIdentityPoxy($identity);
 
     /**
      * @param $proxyIdentityId
      * @throws \Exception
      */
-    public function getProxyAccessToken(
-        $proxyIdentityId
-    );
+    public function getProxyAccessToken($proxyIdentityId);
 
     /**
      * Get proxy identity by access token
      * @param string $access_token
      * @return mixed|void
      */
-    public function proxyIdByAccessToken(
-        string $access_token = null
-    );
+    public function proxyIdByAccessToken(string $access_token = null);
 
     /**
      * Get proxy identity by access token
      * @param mixed $proxyIdentityId
      * @return string
      */
-    public function identityAddressByProxyId(
-        $proxyIdentityId = null
-    );
+    public function identityAddressByProxyId($proxyIdentityId = null);
 
     /**
      * Get proxy identity state by id
      * @param mixed $proxyIdentityId
      * @return mixed
      */
-    public function proxyStateById(
-        $proxyIdentityId = null
-    );
+    public function proxyStateById($proxyIdentityId = null);
 
     /**
      * Destroy proxy identity by id
@@ -79,18 +73,14 @@ interface IIdentityRepo {
      * @return mixed|void
      * @throws \Exception
      */
-    public function destroyProxyIdentity(
-        $proxyIdentityId
-    );
+    public function destroyProxyIdentity($proxyIdentityId);
 
     /**
      * @param $proxyIdentityId
      * @return bool
      * @throws \Exception
      */
-    public function hasPinCode(
-        $proxyIdentityId
-    );
+    public function hasPinCode($proxyIdentityId);
 
     /**
      * @param mixed $proxyIdentityId
@@ -98,10 +88,7 @@ interface IIdentityRepo {
      * @return bool
      * @throws \Exception
      */
-    public function cmpPinCode(
-        $proxyIdentityId,
-        $pinCode
-    );
+    public function cmpPinCode($proxyIdentityId, $pinCode);
 
     /**
      * @param $proxyIdentityId
@@ -156,9 +143,7 @@ interface IIdentityRepo {
      * @param string $identityAddress
      * @return array
      */
-    function makeAuthorizationEmailProxy(
-        string $identityAddress
-    );
+    function makeAuthorizationEmailProxy(string $identityAddress);
 
     /**
      * Authorize proxy identity by code
@@ -202,18 +187,14 @@ interface IIdentityRepo {
      * @param string $token
      * @return bool|mixed
      */
-    public function exchangeAuthorizationShortTokenProxy(
-        string $token
-    );
+    public function exchangeAuthorizationShortTokenProxy(string $token);
 
     /**
      * Authorize proxy identity by email token
      * @param string $token
      * @return string
      */
-    public function activateAuthorizationEmailProxy(
-        string $token
-    );
+    public function activateAuthorizationEmailProxy(string $token);
 
     /**
      * Authorize proxy identity by email token
@@ -221,9 +202,7 @@ interface IIdentityRepo {
      * @param string $token
      * @return string
      */
-    public function exchangeEmailConfirmationToken(
-        string $token
-    );
+    public function exchangeEmailConfirmationToken(string $token);
 
     /**
      * Authorize proxy identity by email token
@@ -231,7 +210,5 @@ interface IIdentityRepo {
      * @param string $token
      * @return string
      */
-    public function exchangeQrCodeToken(
-        string $token
-    );
+    public function exchangeQrCodeToken(string $token);
 }

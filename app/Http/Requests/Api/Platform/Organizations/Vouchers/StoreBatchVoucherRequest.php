@@ -3,12 +3,12 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
-use App\Rules\ValidPrevalidationCodeRule;
+use App\Rules\VouchersUploadArrayRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Query\Builder;
 
-class StoreVoucherRequest extends FormRequest
+class StoreBatchVoucherRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -42,21 +42,23 @@ class StoreVoucherRequest extends FormRequest
 
         return [
             'fund_id'   => 'required|exists:funds,id',
-            'email'     => 'nullable|email',
-            'note'      => 'nullable|string|max:280',
-            'amount'    => [
-                'required_without_all:product_id', 'numeric',
-                'between:.1,' . $max
+            'vouchers' => [
+                'required_without_all:amount,product_id',
+                new VouchersUploadArrayRule($fund),
             ],
-            'expires_at' => [
-                'nullable', 'date_format:Y-m-d', 'after:' . $endDate
+            'vouchers.*' => 'required|array',
+            'vouchers.*.amount' => [
+                'required_without:vouchers.*.product_id', 'numeric',
+                'between:.1,' . $max,
             ],
-            'activation_code' => [
-                'nullable', new ValidPrevalidationCodeRule($fund),
+            'vouchers.*.product_id' => [
+                'required_without:vouchers.*.amount', $productIdRule,
             ],
-            'product_id' => [
-                'required_without_all:amount', $productIdRule,
+            'vouchers.*.expires_at' => [
+                'nullable', 'date_format:Y-m-d', 'after:' . $endDate,
             ],
+            'vouchers.*.note'       => 'nullable|string|max:280',
+            'vouchers.*.email'      => 'nullable|email',
         ];
     }
 }

@@ -243,6 +243,16 @@ class Product extends Model
             $query->whereIn('product_category_id', $productCategories);
         }
 
+        if ($fund_id = $request->input('fund_id', null)) {
+            if ($fund = Fund::find($fund_id)) {
+                $providers = $fund->provider_organizations_approved();
+                $query->whereIn(
+                    'organization_id',
+                    $providers->pluck('organizations.id')->toArray()
+                );
+            }
+        }
+
         if (!$request->has('q')) {
             return $query;
         }

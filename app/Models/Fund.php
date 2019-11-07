@@ -850,6 +850,33 @@ class Fund extends Model
     }
 
     /**
+     * @param string|null $identity_address
+     * @param int|null $product_id
+     * @param Carbon|null $expire_at
+     * @param string|null $note
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function makeProductVoucher(
+        string $identity_address = null,
+        int $product_id = null,
+        Carbon $expire_at = null,
+        string $note = null
+    ) {
+        $amount = 0;
+        $expire_at = $expire_at ?: $this->end_date;
+        $fund_id = $this->id;
+
+        $voucher = Voucher::create(compact(
+            'identity_address', 'amount', 'expire_at', 'note', 'product_id', 
+            'fund_id'
+        ));
+
+        VoucherCreated::dispatch($voucher);
+
+        return $voucher;
+    }
+
+    /**
      * @param bool $force_fetch
      * @return array
      */
@@ -936,5 +963,14 @@ class Fund extends Model
         }
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function urlWebshop()
+    {
+        return $this->fund_config->implementation->url_webshop ??
+            env('WEB_SHOP_GENERAL_URL');
     }
 }

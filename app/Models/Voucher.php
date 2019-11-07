@@ -63,7 +63,7 @@ class Voucher extends Model
      */
     protected $fillable = [
         'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
-        'expire_at', 'note',
+        'expire_at', 'note', 'employee_id',
     ];
 
     /**
@@ -358,15 +358,21 @@ class Voucher extends Model
     ) {
         $query = self::search($request);
 
-        $query->whereNull('parent_id')->whereHas('fund', function(
-            Builder $query
-        ) use ($organization, $fund) {
+        $query->whereNotNull('employee_id');
+        $query->whereHas('fund', function(Builder $query) use (
+            $organization, $fund
+        ) {
             $query->where('organization_id', $organization->id);
 
             if ($fund) {
                 $query->where('id', $fund->id);
             }
         });
+
+        switch ($request->input('type', null)) {
+            case 'fund_voucher': $query->whereNull('product_id'); break;
+            case 'product_voucher': $query->whereNotNull('product_id'); break;
+        }
 
         if ($request->has('q') && $q = $request->input('q')) {
             $query->where('note', 'LIKE', "%{$q}%");

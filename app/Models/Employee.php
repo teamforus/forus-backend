@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\Employee
@@ -27,6 +28,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Employee extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'identity_address', 'organization_id'
     ];
@@ -44,5 +47,13 @@ class Employee extends Model
 
     public function hasRole(string $role) {
         return $this->roles()->where('key', '=', $role)->count() > 0;
+    }
+
+    /**
+     * @param $identity_address
+     * @return bool|self|\Illuminate\Database\Eloquent\Builder|Model|object|null
+     */
+    public static function getEmployee($identity_address) {
+        return self::where(compact('identity_address'))->first() ?? false;
     }
 }
