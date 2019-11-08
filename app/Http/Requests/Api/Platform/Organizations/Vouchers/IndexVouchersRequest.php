@@ -31,6 +31,7 @@ class IndexVouchersRequest extends FormRequest
             'amount_max'    => 'nullable|numeric',
             'from'          => 'nullable|date_format:Y-m-d',
             'to'            => 'nullable|date_format:Y-m-d',
+            'type'          => 'required|in:fund_voucher,product_voucher'
         ];
     }
 }

@@ -28,7 +28,7 @@ class FundRequestSubscriber
             $this->recordService->primaryEmailByAddress($identity_address),
             $fundRequest->identity_address,
             $fundRequest->fund->name,
-            env('WEB_SHOP_GENERAL_URL')
+            $fundRequest->fund->urlWebshop()
         );
     }
 
@@ -41,7 +41,7 @@ class FundRequestSubscriber
             $identity_address,
             $fundRequest->state,
             $fundRequest->fund->name,
-            env('WEB_SHOP_GENERAL_URL')
+            $fundRequest->fund->urlWebshop()
         );
     }
 

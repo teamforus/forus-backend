@@ -10,7 +10,7 @@ namespace App\Models;
  * @property string $record_type_key
  * @property string $operator
  * @property string $value
- * @property int $show_attachment
+ * @property boolean $show_attachment
  * @property string $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

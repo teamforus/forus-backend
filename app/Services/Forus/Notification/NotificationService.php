@@ -558,17 +558,20 @@ class NotificationService
      * @param $identifier
      * @param string $sponsor_name
      * @param string $fund_name
+     * @param string $webshop_link
      * @return bool
      */
     public function newProductAdded(
         string $email,
         $identifier,
         string $sponsor_name,
-        string $fund_name
+        string $fund_name,
+        string $webshop_link
     ) {
         return $this->sendMail($email, new ProductAddedMail(
             $sponsor_name,
             $fund_name,
+            $webshop_link,
             $identifier
         ));
     }

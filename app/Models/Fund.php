@@ -498,25 +498,25 @@ class Fund extends Model
         }
 
         return $fund->fund_formulas->map(function(FundFormula $formula) use (
-            $fund, $identityAddress
-        ) {
-            switch ($formula->type) {
-                case 'fixed': return $formula->amount; break;
-                case 'multiply': {
-                    $record = self::getTrustedRecordOfType(
-                        $fund,
-                        $identityAddress,
-                        $formula->record_type_key,
-                        $fund->organization
-                    );
+                $fund, $identityAddress
+            ) {
+                switch ($formula->type) {
+                    case 'fixed': return $formula->amount; break;
+                    case 'multiply': {
+                        $record = self::getTrustedRecordOfType(
+                            $fund,
+                            $identityAddress,
+                            $formula->record_type_key,
+                            $fund->organization
+                        );
 
-                    return is_numeric(
-                        $record['value']
-                    ) ? $formula->amount * $record['value'] : 0;
-                } break;
-                default: return 0; break;
-            }
-        })->sum() + $fund->fund_formula_products->pluck('price')->sum();
+                        return is_numeric(
+                            $record['value']
+                        ) ? $formula->amount * $record['value'] : 0;
+                    } break;
+                    default: return 0; break;
+                }
+            })->sum() + $fund->fund_formula_products->pluck('price')->sum();
     }
 
     /**
@@ -621,7 +621,7 @@ class Fund extends Model
 
                 /** @var Organization $organization */
                 // TODO: Notify providers about new fund started
-                
+
                 /*
                 foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
@@ -890,12 +890,39 @@ class Fund extends Model
     }
 
     /**
+     * @param string|null $identity_address
+     * @param int|null $product_id
+     * @param Carbon|null $expire_at
+     * @param string|null $note
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function makeProductVoucher(
+        string $identity_address = null,
+        int $product_id = null,
+        Carbon $expire_at = null,
+        string $note = null
+    ) {
+        $amount = 0;
+        $expire_at = $expire_at ?: $this->end_date;
+        $fund_id = $this->id;
+
+        $voucher = Voucher::create(compact(
+            'identity_address', 'amount', 'expire_at', 'note', 'product_id',
+            'fund_id'
+        ));
+
+        VoucherCreated::dispatch($voucher);
+
+        return $voucher;
+    }
+
+    /**
      * @param bool $force_fetch
      * @return array
      */
     public function validatorIdentities(bool $force_fetch = true) {
         return (
-            $force_fetch ? $this->validators() : $this->validators
+        $force_fetch ? $this->validators() : $this->validators
         )->pluck('validators.identity_address')->toArray();
     }
 
@@ -987,6 +1014,7 @@ class Fund extends Model
     {
         /** @var Collection|Product[] $products */
         $products = Product::whereIn('id', $productIds)->get();
+
         $this->fund_formula_products()->whereNotIn(
             'product_id',
             $products->pluck('id')
@@ -1005,5 +1033,14 @@ class Fund extends Model
         }
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function urlWebshop()
+    {
+        return $this->fund_config->implementation->url_webshop ??
+            env('WEB_SHOP_GENERAL_URL');
     }
 }

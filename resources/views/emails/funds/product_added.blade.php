@@ -8,4 +8,7 @@
     <br/>
     <br/>
     {{ mail_trans('product_added.check_webshop', ['fund_name' => $fund_name]) }}
+    <br/>
+    <br/>
+    {!! mail_trans('product_added.webshop_button', ['link' => $webshop_link]) !!}
 @endsection

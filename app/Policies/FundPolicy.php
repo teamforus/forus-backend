@@ -105,7 +105,9 @@ class FundPolicy
         $identity_address,
         Fund $fund
     ) {
-        if (empty($identity_address) && $fund->state != Fund::STATE_ACTIVE) {
+        if (empty($identity_address) &&
+            !in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED])
+        ) {
             return false;
         }
 

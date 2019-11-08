@@ -79,7 +79,8 @@ class Product extends Model
      */
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
-        'price', 'old_price', 'total_amount', 'expire_at', 'sold_out'
+        'price', 'old_price', 'total_amount', 'expire_at', 'sold_out',
+        'unlimited_stock'
     ];
 
     /**
@@ -205,11 +206,13 @@ class Product extends Model
      * Update sold out state for the product
      */
     public function updateSoldOutState() {
-        $totalProducts = $this->countReserved() + $this->countSold();
+        if (!$this->unlimited_stock) {
+            $totalProducts = $this->countReserved() + $this->countSold();
 
-        $this->update([
-            'sold_out' => $totalProducts >= $this->total_amount
-        ]);
+            $this->update([
+                'sold_out' => $totalProducts >= $this->total_amount
+            ]);
+        }
     }
 
     /**
@@ -243,6 +246,16 @@ class Product extends Model
             )->pluck('id');
 
             $query->whereIn('product_category_id', $productCategories);
+        }
+
+        if ($fund_id = $request->input('fund_id', null)) {
+            if ($fund = Fund::find($fund_id)) {
+                $providers = $fund->provider_organizations_approved();
+                $query->whereIn(
+                    'organization_id',
+                    $providers->pluck('organizations.id')->toArray()
+                );
+            }
         }
 
         if (!$request->has('q')) {
