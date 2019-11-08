@@ -112,10 +112,18 @@ class Implementation extends Model
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function activeFundsQuery() {
+        return self::queryFundsByState('active');
+    }
+
+    /**
+     * @param $states
+     * @return Fund|\Illuminate\Database\Eloquent\Builder|Builder
+     */
+    public static function queryFundsByState($states) {
+        $states = (array) $states;
+
         if (self::activeKey() == 'general') {
-            return Fund::query()->has('fund_config')->whereIn(
-                'state', ['active', 'paused']
-            );
+            return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
         return Fund::query()->whereIn('id', function(Builder $query) {
@@ -124,7 +132,7 @@ class Implementation extends Model
                     'key' => self::activeKey()
                 ])->first()->id
             ]);
-        })->whereIn('state', ['active', 'paused']);
+        })->whereIn('state', $states);
     }
 
     /**
