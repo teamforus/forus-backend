@@ -144,7 +144,7 @@ class RecordRepo implements IRecordRepo
      * @return string|null
      */
     public function primaryEmailByAddress(
-        string $identityAddress = null
+        string $identityAddress
     ) {
         $record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('primary_email'),

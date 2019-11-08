@@ -247,20 +247,22 @@ class Voucher extends Model
      */
     public function sendEmailAvailableAmount()
     {
+        if (!$this->identity_address) {
+            return;
+        }
+
         $amount = $this->parent ? $this->parent->amount_available : $this->amount_available;
         $fund_name = $this->fund->name;
         $email = resolve('forus.services.record')->primaryEmailByAddress(
             $this->identity_address
         );
 
-        if ($email) {
-            resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
-                $email,
-                $this->identity_address,
-                $fund_name,
-                $amount
-            );
-        }
+        resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
+            $email,
+            $this->identity_address,
+            $fund_name,
+            $amount
+        );
     }
 
     /**
