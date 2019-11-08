@@ -1,7 +1,7 @@
 @extends('emails.base')
 @section('title', mail_trans('fund_expires.title', ['fund_name' => $fund_name]  ))
 @section('html')
-{{ mail_trans('dear_user_of_fund', ['fund_name' => $fund_name])}}
+{{ mail_trans('dear_user_of_fund', ['fund_name' => $fund_name])}}<br/>
 <br/>
     {{ mail_trans('fund_expires.on_date_have_recieved', [
         'start_date_fund' => $start_date_fund,
