@@ -15,6 +15,7 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
+use App\Models\DemoTransaction;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
@@ -85,6 +86,12 @@ class RouteServiceProvider extends ServiceProvider
         $router->bind('voucher_id', function ($value) {
             return Voucher::query()->where([
                     'id' => $value
+                ])->first() ?? abort(404);
+        });
+
+        $router->bind('demo_token', function ($value) {
+            return DemoTransaction::query()->where([
+                    'token' => $value
                 ])->first() ?? abort(404);
         });
 

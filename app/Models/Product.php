@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
  * @property float $price
  * @property float|null $old_price
  * @property int $total_amount
+ * @property int $unlimited_stock
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -61,6 +62,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereProductCategoryId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereSoldOut($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereTotalAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereUnlimitedStock($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereUpdatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
@@ -77,7 +79,8 @@ class Product extends Model
      */
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
-        'price', 'old_price', 'total_amount', 'expire_at', 'sold_out'
+        'price', 'old_price', 'total_amount', 'expire_at', 'sold_out',
+        'unlimited_stock'
     ];
 
     /**
@@ -203,11 +206,13 @@ class Product extends Model
      * Update sold out state for the product
      */
     public function updateSoldOutState() {
-        $totalProducts = $this->countReserved() + $this->countSold();
+        if (!$this->unlimited_stock) {
+            $totalProducts = $this->countReserved() + $this->countSold();
 
-        $this->update([
-            'sold_out' => $totalProducts >= $this->total_amount
-        ]);
+            $this->update([
+                'sold_out' => $totalProducts >= $this->total_amount
+            ]);
+        }
     }
 
     /**
@@ -241,6 +246,16 @@ class Product extends Model
             )->pluck('id');
 
             $query->whereIn('product_category_id', $productCategories);
+        }
+
+        if ($fund_id = $request->input('fund_id', null)) {
+            if ($fund = Fund::find($fund_id)) {
+                $providers = $fund->provider_organizations_approved();
+                $query->whereIn(
+                    'organization_id',
+                    $providers->pluck('organizations.id')->toArray()
+                );
+            }
         }
 
         if (!$request->has('q')) {

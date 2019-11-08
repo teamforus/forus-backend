@@ -32,7 +32,7 @@ class FundsController extends Controller
      */
     public function show(Fund $fund)
     {
-        if ($fund->state != Fund::STATE_ACTIVE) {
+        if (!in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED])) {
             return abort(404);
         }
 

@@ -887,6 +887,33 @@ class Fund extends Model
     }
 
     /**
+     * @param string|null $identity_address
+     * @param int|null $product_id
+     * @param Carbon|null $expire_at
+     * @param string|null $note
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function makeProductVoucher(
+        string $identity_address = null,
+        int $product_id = null,
+        Carbon $expire_at = null,
+        string $note = null
+    ) {
+        $amount = 0;
+        $expire_at = $expire_at ?: $this->end_date;
+        $fund_id = $this->id;
+
+        $voucher = Voucher::create(compact(
+            'identity_address', 'amount', 'expire_at', 'note', 'product_id', 
+            'fund_id'
+        ));
+
+        VoucherCreated::dispatch($voucher);
+
+        return $voucher;
+    }
+
+    /**
      * @param bool $force_fetch
      * @return array
      */
@@ -939,7 +966,7 @@ class Fund extends Model
     {
         $this->criteria()->createMany(array_map(function($criterion) {
             return array_only($criterion, [
-                'record_type_key', 'operator', 'value'
+                'record_type_key', 'operator', 'value', 'show_attachment', 'description'
             ]);
         }, $criteria));
 
@@ -962,7 +989,7 @@ class Fund extends Model
         foreach ($criteria as $criterion) {
             /** @var FundCriterion|null $db_criteria */
             $data_criteria = array_only($criterion, [
-                'record_type_key', 'operator', 'value'
+                'record_type_key', 'operator', 'value', 'show_attachment', 'description'
             ]);
 
             if ($db_criteria = $this->criteria()->find($criterion['id'] ?? null)) {
@@ -983,6 +1010,7 @@ class Fund extends Model
     {
         /** @var Collection|Product[] $products */
         $products = Product::whereIn('id', $productIds)->get();
+        
         $this->fund_formula_products()->whereNotIn(
             'product_id',
             $products->pluck('id')
@@ -1001,5 +1029,14 @@ class Fund extends Model
         }
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function urlWebshop()
+    {
+        return $this->fund_config->implementation->url_webshop ??
+            env('WEB_SHOP_GENERAL_URL');
     }
 }

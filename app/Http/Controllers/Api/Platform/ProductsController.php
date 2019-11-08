@@ -19,6 +19,7 @@ class ProductsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        // TODO: create SearchProductRequest
         Request $request
     ) {
         $this->authorize('indexPublic', Product::class);

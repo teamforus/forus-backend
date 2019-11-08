@@ -90,7 +90,7 @@ class ProviderVoucherResource extends Resource
                 /** @var Product $product */
                 return collect($product)->only([
                     'id', 'name', 'description', 'total_amount', 'sold_amount',
-                    'product_category_id', 'organization_id',
+                    'product_category_id', 'organization_id', 'unlimited_stock',
                 ])->merge([
                     'price' => currency_format($product->price),
                     'old_price' => currency_format($product->old_price),
@@ -108,8 +108,8 @@ class ProviderVoucherResource extends Resource
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
                     'identity_address', 'fund_id', 'created_at',
-                    'created_at_locale',
                 ])->merge([
+                    'created_at_locale' => $product_voucher->created_at_locale,
                     'address' => $product_voucher->tokens->where(
                         'need_confirmation', 1)->first()->address,
                     'amount' => currency_format(

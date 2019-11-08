@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
  * @property string|null $identity_address
  * @property float $amount
  * @property string|null $note
+ * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $product_id
@@ -45,6 +46,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereId($value)
@@ -64,7 +66,7 @@ class Voucher extends Model
      */
     protected $fillable = [
         'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
-        'expire_at', 'note',
+        'expire_at', 'note', 'employee_id',
     ];
 
     /**
@@ -248,6 +250,10 @@ class Voucher extends Model
      */
     public function sendEmailAvailableAmount()
     {
+        if (!$this->identity_address) {
+            return;
+        }
+
         $amount = $this->parent ? $this->parent->amount_available : $this->amount_available;
         $fund_name = $this->fund->name;
         $email = resolve('forus.services.record')->primaryEmailByAddress(
@@ -263,17 +269,17 @@ class Voucher extends Model
     }
 
     /**
-     *
+     * @param int $days
      */
-    public static function checkVoucherExpireQueue()
+    public static function checkVoucherExpireQueue(int $days = 4 * 7)
     {
         $notificationService = resolve('forus.services.notification');
+        $date = now()->addDays($days)->startOfDay()->format('Y-m-d');
 
-        $date = now()->addDays(4*7)->startOfDay();
         $vouchers = self::query()
             ->whereNull('product_id')
             ->with(['fund', 'fund.organization'])
-            ->whereDate('expire_at', $date)
+            ->whereDate('expire_at', '=', $date)
             ->get();
 
         /** @var self $voucher */
@@ -287,7 +293,7 @@ class Voucher extends Model
                 $fund_name = $voucher->fund->name;
                 $sponsor_name = $voucher->fund->organization->name;
                 $start_date = $voucher->fund->start_date->format('Y');
-                $end_date = $voucher->fund->end_date->format('d/m/Y');
+                $end_date = $voucher->fund->end_date->format('l, d F Y');
                 $phone = $voucher->fund->organization->phone;
                 $email = $voucher->fund->organization->email;
                 $webshopLink = env('WEB_SHOP_GENERAL_URL');
@@ -359,15 +365,21 @@ class Voucher extends Model
     ) {
         $query = self::search($request);
 
-        $query->whereNull('parent_id')->whereHas('fund', function(
-            Builder $query
-        ) use ($organization, $fund) {
+        $query->whereNotNull('employee_id');
+        $query->whereHas('fund', function(Builder $query) use (
+            $organization, $fund
+        ) {
             $query->where('organization_id', $organization->id);
 
             if ($fund) {
                 $query->where('id', $fund->id);
             }
         });
+
+        switch ($request->input('type', null)) {
+            case 'fund_voucher': $query->whereNull('product_id'); break;
+            case 'product_voucher': $query->whereNotNull('product_id'); break;
+        }
 
         if ($request->has('q') && $q = $request->input('q')) {
             $query->where('note', 'LIKE', "%{$q}%");

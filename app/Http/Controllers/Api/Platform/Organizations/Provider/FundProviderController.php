@@ -31,7 +31,9 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('indexProvider', [FundProvider::class, $organization]);
 
-        $query = Implementation::activeFundsQuery()->whereNotIn(
+        $query = Implementation::queryFundsByState([
+            Fund::STATE_ACTIVE, Fund::STATE_PAUSED
+        ])->whereNotIn(
             'id', $organization->organization_funds()->pluck(
             'fund_id'
         )->toArray());
@@ -40,7 +42,7 @@ class FundProviderController extends Controller
             $query->where('id', $request->get('fund_id'));
         }
 
-        return FundResource::collection($query->get());
+        return FundResource::collection($query->latest()->get());
     }
 
     /**
