@@ -21,7 +21,7 @@ use Illuminate\Database\Query\Builder;
  * @property int $phone_public
  * @property string $kvk
  * @property string $btw
- * @property string $website
+ * @property string|null $website
  * @property int $website_public
  * @property int|null $business_type_id
  * @property \Illuminate\Support\Carbon|null $created_at

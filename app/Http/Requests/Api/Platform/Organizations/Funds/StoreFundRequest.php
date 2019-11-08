@@ -24,7 +24,10 @@ class StoreFundRequest extends FormRequest
     public function rules()
     {
         $start_after = now()->addDays(5)->format('Y-m-d');
-        $criteriaEditable = config('forus.features.dashboard.organizations.funds.criteria');
+        $criteriaEditable = config(
+            'forus.features.dashboard.organizations.funds.criteria');
+        $formulaProductsEditable = config(
+            'forus.features.dashboard.organizations.funds.formula_products');
 
         return array_merge([
             'name'                          => 'required|between:2,200',
@@ -38,6 +41,11 @@ class StoreFundRequest extends FormRequest
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
             'criteria.*.value'              => 'required|string|between:1,10',
+            'criteria.*.show_attachment'    => 'nullable|boolean',
+            'criteria.*.description'        => 'nullable|string|max:4000',
+        ] : [], $formulaProductsEditable ? [
+            'formula_products'              => 'nullable|array',
+            'formula_products.*'            => 'required|exists:products,id',
         ] : []);
     }
 

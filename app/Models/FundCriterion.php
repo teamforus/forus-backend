@@ -21,10 +21,12 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereOperator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereShowAttachment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereValue($value)
  * @mixin \Eloquent
@@ -37,7 +39,12 @@ class FundCriterion extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment', 'description'
+        'fund_id', 'record_type_key', 'operator', 'value',
+        'show_attachment', 'description'
+    ];
+
+    protected $casts = [
+        'show_attachment' => 'boolean'
     ];
 
     /**
