@@ -24,7 +24,7 @@ return [
             /**
              * Sponsor may set/edit fund formula products from dashboard
              */
-            'products' => env('FUND_FORMULA_PRODUCTS_EDITABLE_BY_USER', false),
+            'formula_products' => env('FUND_FORMULA_PRODUCTS_EDITABLE_BY_USER', false),
         ],
         "products" => [
             // list all funds

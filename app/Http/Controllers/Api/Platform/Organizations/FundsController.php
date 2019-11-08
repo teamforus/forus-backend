@@ -89,8 +89,10 @@ class FundsController extends Controller
             $fund->makeCriteria($request->input('criteria'));
         }
 
-        if (config('forus.features.dashboard.organizations.funds.products')) {
-            $fund->updateFormulaProducts($request->input('formula_products'));
+        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
+            if ($request->has('formula_products')) {
+                $fund->updateFormulaProducts($request->input('formula_products', []));
+            }
         }
 
         FundCreated::dispatch($fund);
@@ -165,8 +167,10 @@ class FundsController extends Controller
             $fund->updateCriteria($request->input('criteria'));
         }
 
-        if (config('forus.features.dashboard.organizations.funds.products')) {
-            $fund->updateFormulaProducts($request->input('formula_products'));
+        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
+            if ($request->has('formula_products')) {
+                $fund->updateFormulaProducts($request->input('formula_products', []));
+            }
         }
 
         return new FundResource($fund);
@@ -402,6 +406,7 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$fund, $organization]);
 
+        $fund->fund_formula_products()->delete();
         $fund->delete();
 
         return compact('success');

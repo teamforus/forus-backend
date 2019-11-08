@@ -213,7 +213,8 @@ class VoucherPolicy
     ) {
         return $this->show($identity_address, $voucher) &&
             $voucher->parent_id != null &&
-            $voucher->transactions->count() == 0;
+            $voucher->transactions->count() == 0 &&
+            $voucher->returnable;
     }
 
     /**

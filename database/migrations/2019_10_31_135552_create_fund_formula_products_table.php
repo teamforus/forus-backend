@@ -15,16 +15,16 @@ class CreateFundFormulaProductsTable extends Migration
     {
         Schema::create('fund_formula_products', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('fund_id')->nullable();
-            $table->unsignedInteger('product_id')->nullable();
+            $table->unsignedInteger('fund_id');
+            $table->unsignedInteger('product_id');
             $table->decimal('price', 8, 2)->unsigned();
             $table->timestamps();
 
             $table->foreign('fund_id'
-            )->references('id')->on('funds')->onDelete('set null');
+            )->references('id')->on('funds')->onDelete('restrict');
 
             $table->foreign('product_id'
-            )->references('id')->on('products')->onDelete('set null');
+            )->references('id')->on('products')->onDelete('restrict');
         });
     }
 
