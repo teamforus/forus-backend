@@ -8,6 +8,7 @@
         "php": ">=7.1.0",
         "ext-json": "*",
         "ext-openssl": "*",
+        "ext-zip": "*",
         "barryvdh/laravel-cors": "^0.11.3",
         "barryvdh/laravel-ide-helper": "^2.4",
         "bunq/sdk_php": "^1.10.16",
