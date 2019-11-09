@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreFundRequest extends FormRequest
 {
@@ -45,7 +46,10 @@ class StoreFundRequest extends FormRequest
             'criteria.*.description'        => 'nullable|string|max:4000',
         ] : [], $formulaProductsEditable ? [
             'formula_products'              => 'nullable|array',
-            'formula_products.*'            => 'required|exists:products,id',
+            'formula_products.*'            => [
+                'required',
+                Rule::exists('products', 'id')->where('unlimited_stock', true)
+            ],
         ] : []);
     }
 
