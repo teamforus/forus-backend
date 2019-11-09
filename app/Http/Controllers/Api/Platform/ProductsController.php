@@ -2,30 +2,29 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\SearchProductsRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\FundProvider;
 use App\Models\Implementation;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class ProductsController extends Controller
 {
     /**
      * Display a listing of the resource
      *
-     * @param Request $request
+     * @param SearchProductsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        Request $request
-    ) {
+    public function index(SearchProductsRequest $request)
+    {
         $this->authorize('indexPublic', Product::class);
 
         return ProductResource::collection(Product::search($request)->with(
             ProductResource::$load
-        )->paginate(15));
+        )->paginate($request->input('per_page', 15)));
     }
 
     /**

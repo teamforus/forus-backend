@@ -21,8 +21,10 @@ class VoucherTransactionNoteResource extends Resource
     public function toArray($request)
     {
         return collect($this->resource)->only([
-            'id', 'message', 'icon', 'group', 'created_at', 'created_at',
-            'created_at_locale', 'created_at_locale'
+            'id', 'message', 'icon', 'group', 'created_at', 'created_at'
+        ])->merge([
+            'created_at_locale' => $this->resource->created_at_locale,
+            'updated_at_locale' => $this->resource->updated_at_locale,
         ]);
     }
 }

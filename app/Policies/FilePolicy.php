@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -53,6 +54,15 @@ class FilePolicy
             return ($file->fileable instanceof FundRequestRecord) && in_array(
                 $identity_address,
                 $file->fileable->fund_request->fund->validatorEmployees());
+        }
+
+        // is fund request proof
+        if (strcmp($file->type, 'fund_request_clarification_proof')  === 0) {
+            // is fund validator
+            return ($file->fileable instanceof FundRequestClarification) && in_array(
+                $identity_address,
+                $file->fileable->fund_request_record
+                    ->fund_request->fund->validatorEmployees());
         }
 
         return false;

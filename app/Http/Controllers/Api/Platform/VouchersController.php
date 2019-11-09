@@ -59,22 +59,9 @@ class VouchersController extends Controller
 
         $this->authorize('reserve', $product);
 
-        $voucherExpireAt = $voucher->fund->end_date->gt(
-            $product->expire_at
-        ) ? $product->expire_at : $voucher->fund->end_date;
-
-        $voucher = Voucher::create([
-            'identity_address'  => auth_address(),
-            'parent_id'         => $voucher->id,
-            'fund_id'           => $voucher->fund_id,
-            'product_id'        => $product->id,
-            'amount'            => $product->price,
-            'expire_at'         => $voucherExpireAt
-        ]);
-
-        VoucherCreated::dispatch($voucher);
-
-        return new VoucherResource($voucher->load(VoucherResource::$load));
+        return new VoucherResource($voucher->buyProductVoucher(
+            $product
+        )->load(VoucherResource::$load));
     }
 
     /**
