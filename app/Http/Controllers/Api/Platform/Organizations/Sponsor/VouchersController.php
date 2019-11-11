@@ -5,19 +5,34 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
+use App\Models\Employee;
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 class VouchersController extends Controller
 {
+    protected $identityRepo;
+    protected $recordRepo;
+
+    public function __construct(
+        IIdentityRepo $identityRepo,
+        IRecordRepo $recordRepo
+    ) {
+        $this->identityRepo = $identityRepo;
+        $this->recordRepo = $recordRepo;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -49,8 +64,8 @@ class VouchersController extends Controller
      *
      * @param StoreVoucherRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorVoucherResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreVoucherRequest $request,
@@ -61,35 +76,97 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        $identityRepo = resolve('forus.services.identity');
-        $recordRepo = resolve('forus.services.record');
+        $note       = $request->input('note', null);
+        $email      = $request->input('email', false);
+        $amount     = $request->input('amount', 0);
+        $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
+        $expires_at = $request->input('expires_at', false);
+        $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
 
-        $batch = $request->has('vouchers');
-        $vouchers = $batch ? $request->post('vouchers') : [$request->only([
-            'expires_at', 'note', 'amount', 'note'
-        ])];
+        if ($product_id = $request->input('product_id', false)) {
+            $voucher = $fund->makeProductVoucher(
+                $identity, $product_id, $expires_at, $note);
+        } else {
+            $voucher = $fund->makeVoucher(
+                $identity, $amount, $expires_at, $note);
+        }
 
-        $vouchers = collect($vouchers)->map(function(
-            $voucher
-        ) use ($fund, $identityRepo,$recordRepo) {
+        if ($activation_code = $request->input('activation_code', false)) {
+            Prevalidation::deactivateByUid($activation_code);
+        }
+
+        return new SponsorVoucherResource($voucher->updateModel([
+            'employee_id' => Employee::getEmployee(auth_address())->id
+        ]));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param StoreBatchVoucherRequest $request
+     * @param Organization $organization
+     * @return SponsorVoucherResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function storeBatch(
+        StoreBatchVoucherRequest $request,
+        Organization $organization
+    ) {
+        $fund = Fund::find($request->post('fund_id'));
+
+        $this->authorize('show', $organization);
+        $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
+
+        $employee_id = Employee::getEmployee(auth_address())->id;
+
+        return SponsorVoucherResource::collection(collect(
+            $request->post('vouchers')
+        )->map(function($voucher) use ($fund, $employee_id) {
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $voucher['amount'] ?? 0;
-            $identity   = $email ? (
-                $recordRepo->identityAddressByEmail($email) ?: $identityRepo->makeByEmail($email)
-            ) : null;
+            $product_id = $voucher['product_id'] ?? false;
+            $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
             $expires_at = $voucher['expires_at'] ?? false;
             $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
 
-            return $fund->makeVoucher($identity, $amount, $expires_at, $note);
-        });
+            log_debug(json_encode_pretty([
+                $identity, $amount, $expires_at, $note
+            ]));
 
-        if ($batch) {
-            return SponsorVoucherResource::collection($vouchers);
-        }
+            if (!$product_id) {
+                $voucher = $fund->makeVoucher(
+                    $identity, $amount, $expires_at, $note);
+            } else {
+                $voucher = $fund->makeProductVoucher(
+                    $identity, $product_id, $expires_at, $note);
+            }
 
-        return new SponsorVoucherResource($vouchers->first());
+            return $voucher->updateModel(compact('employee_id'));
+        }));
     }
+
+    /**
+     * Validate store a newly created resource in storage.
+     *
+     * @param StoreVoucherRequest $request
+     * @param Organization $organization
+     */
+    public function storeValidate(
+        StoreVoucherRequest $request,
+        Organization $organization
+    ) {}
+
+    /**
+     * Validate store a newly created resource in storage.
+     *
+     * @param StoreBatchVoucherRequest $request
+     * @param Organization $organization
+     */
+    public function storeBatchValidate(
+        StoreBatchVoucherRequest $request,
+        Organization $organization
+    ) {}
 
     /**
      * Display the specified resource.
@@ -110,12 +187,11 @@ class VouchersController extends Controller
     }
 
     /**
-     *
      * @param AssignVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
      * @return SponsorVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function assign(
         AssignVoucherRequest $request,
@@ -125,14 +201,9 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('assignSponsor', [$voucher, $organization]);
 
-        $email = $request->post('email');
-        $identityRepo = resolve('forus.services.identity');
-        $recordRepo = resolve('forus.services.record');
-
-        $voucher->assignToIdentity($recordRepo->identityAddressByEmail($email) ?:
-            $identityRepo->makeByEmail($email));
-
-        return new SponsorVoucherResource($voucher);
+        return new SponsorVoucherResource($voucher->assignToIdentity(
+            $this->identityRepo->getOrMakeByEmail($request->post('email'))
+        ));
     }
 
     /**
@@ -159,16 +230,23 @@ class VouchersController extends Controller
     }
 
     /**
+     * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function exportUnassigned(Organization $organization, Request $request) {
+    public function exportUnassigned(
+        IndexVouchersRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('indexSponsor', [Voucher::class, $organization]);
+
         /** @var Collection|Voucher[] $unassigned_vouchers */
         $unassigned_vouchers = Voucher::getUnassignedVouchers(
             $organization,
-            $request->get('fromDate'),
-            $request->get('toDate')
+            $request->get('from'),
+            $request->get('to')
         );
 
         if (count($unassigned_vouchers)) {

@@ -79,6 +79,9 @@ class FundResource extends Resource
             'formulas' => FundFormulaResource::collection(
                 $fund->fund_formulas
             ),
+            'formula_products' => $fund->fund_formula_products->pluck(
+                'product_id'
+            ),
             'validators' => $validators->map(function($validator) {
                 return collect($validator)->only([
                     'identity_address'

@@ -12,6 +12,7 @@ use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -88,6 +89,12 @@ class FundsController extends Controller
             $fund->makeCriteria($request->input('criteria'));
         }
 
+        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
+            if ($request->has('formula_products')) {
+                $fund->updateFormulaProducts($request->input('formula_products', []));
+            }
+        }
+
         FundCreated::dispatch($fund);
 
         return new FundResource($fund);
@@ -158,6 +165,12 @@ class FundsController extends Controller
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->updateCriteria($request->input('criteria'));
+        }
+
+        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
+            if ($request->has('formula_products')) {
+                $fund->updateFormulaProducts($request->input('formula_products', []));
+            }
         }
 
         return new FundResource($fund);
@@ -393,6 +406,7 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$fund, $organization]);
 
+        $fund->fund_formula_products()->delete();
         $fund->delete();
 
         return compact('success');

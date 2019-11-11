@@ -40,6 +40,14 @@ use Illuminate\Http\Request;
  */
 class Prevalidation extends Model
 {
+    const STATE_PENDING = 'pending';
+    const STATE_USED = 'used';
+
+    const STATES = [
+        self::STATE_PENDING,
+        self::STATE_USED
+    ];
+
     /**
      * The number of models to return for pagination.
      *
@@ -166,5 +174,14 @@ class Prevalidation extends Model
                 'value', 'record_type.name'
             ))->toArray();
         })->values();
+    }
+
+    /**
+     * @param $uid
+     */
+    public static function deactivateByUid($uid) {
+        Prevalidation::where(compact('uid'))->update([
+            'state' => Prevalidation::STATE_USED
+        ]);
     }
 }
