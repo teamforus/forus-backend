@@ -230,16 +230,23 @@ class VouchersController extends Controller
     }
 
     /**
+     * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function exportUnassigned(Organization $organization, Request $request) {
+    public function exportUnassigned(
+        IndexVouchersRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('indexSponsor', [Voucher::class, $organization]);
+
         /** @var Collection|Voucher[] $unassigned_vouchers */
         $unassigned_vouchers = Voucher::getUnassignedVouchers(
             $organization,
-            $request->get('fromDate'),
-            $request->get('toDate')
+            $request->get('from'),
+            $request->get('to')
         );
 
         if (count($unassigned_vouchers)) {

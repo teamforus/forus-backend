@@ -23,7 +23,8 @@ class FundCriterionResource extends Resource
         $recordTypes = array_pluck(record_types_cached(), 'name', 'key');
 
         return collect($this->resource)->only([
-            'id', 'record_type_key', 'operator', 'value', 'show_attachment', 'description'
+            'id', 'record_type_key', 'operator', 'value', 'show_attachment',
+            'description'
         ])->merge([
             'record_type_name' => $recordTypes[$this->resource->record_type_key],
             'show_attachment'  => $this->resource->show_attachment ? true : false,

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
+use App\Events\Vouchers\VoucherCreated;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
  * @property int $fund_id
  * @property string|null $identity_address
  * @property float $amount
+ * @property int $returnable
  * @property string|null $note
  * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -53,6 +55,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereParentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereReturnable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -65,7 +68,7 @@ class Voucher extends Model
      */
     protected $fillable = [
         'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
-        'expire_at', 'note', 'employee_id',
+        'expire_at', 'note', 'employee_id', 'returnable',
     ];
 
     /**
@@ -75,6 +78,10 @@ class Voucher extends Model
      */
     protected $dates = [
         'expire_at'
+    ];
+
+    protected $casts = [
+        'returnable' => 'boolean'
     ];
 
     /**
@@ -249,6 +256,10 @@ class Voucher extends Model
      */
     public function sendEmailAvailableAmount()
     {
+        if (!$this->identity_address) {
+            return;
+        }
+
         $amount = $this->parent ? $this->parent->amount_available : $this->amount_available;
         $fund_name = $this->fund->name;
         $email = resolve('forus.services.record')->primaryEmailByAddress(
@@ -425,5 +436,35 @@ class Voucher extends Model
         }
 
         return $vouchers->get();
+    }
+
+    /**
+     * @param Product $product
+     * @param bool $price
+     * @param bool $returnable
+     * @return Voucher|\Illuminate\Database\Eloquent\Model
+     */
+    public function buyProductVoucher(
+        Product $product,
+        $price = false,
+        $returnable = true
+    ) {
+        $voucherExpireAt = $this->fund->end_date->gt(
+            $product->expire_at
+        ) ? $product->expire_at : $this->fund->end_date;
+
+        $voucher = Voucher::create([
+            'identity_address'  => auth_address(),
+            'parent_id'         => $this->id,
+            'fund_id'           => $this->fund_id,
+            'product_id'        => $product->id,
+            'amount'            => $price ?? $product->price,
+            'returnable'        => $returnable,
+            'expire_at'         => $voucherExpireAt
+        ]);
+
+        VoucherCreated::dispatch($voucher);
+
+        return $voucher;
     }
 }

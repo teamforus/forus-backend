@@ -27,6 +27,11 @@ return [
              * api endpoints when disabled
              */
             'fund_requests' => env('ENABLE_FUND_REQUESTS_PANEL', false),
+            
+            /**
+             * Sponsor may set/edit fund formula products from dashboard
+             */
+            'formula_products' => env('FUND_FORMULA_PRODUCTS_EDITABLE_BY_USER', false),
         ],
         "products" => [
             // list all funds

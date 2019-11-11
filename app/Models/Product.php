@@ -92,6 +92,10 @@ class Product extends Model
         'expire_at', 'deleted_at'
     ];
 
+    protected $casts = [
+        'unlimited_stock' => 'boolean'
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -235,9 +239,7 @@ class Product extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function search(
-        Request $request
-    ) {
+    public static function search(Request $request) {
         $query = self::searchQuery();
 
         if ($request->has('product_category_id')) {
@@ -256,6 +258,12 @@ class Product extends Model
                     $providers->pluck('organizations.id')->toArray()
                 );
             }
+        }
+
+        if ($request->has('unlimited_stock')) {
+            $query->where([
+                'unlimited_stock' => !!$request->input('unlimited_stock')
+            ]);
         }
 
         if (!$request->has('q')) {
