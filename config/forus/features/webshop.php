@@ -13,10 +13,17 @@ return [
     ],
     "funds" => [
         // list all funds
-        "list"      => false,
+        "list"      => TRUE,
 
         // view fund details
-        "show"      => false
+        "show"      => false,
+
+        /**
+         * Allow users to submit make fund requests
+         * Hides elements from webshop and disable responsible api endpoints
+         * when disabled
+         */
+        'fund_requests' => env('ENABLE_FUND_REQUESTS_WEBSHOP', false),
     ],
     "products" => [
         // list all funds

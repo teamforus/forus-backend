@@ -523,7 +523,9 @@ class LoremDbSeeder extends Seeder
 
             array_push($out, collect($records)->merge([
                 $primaryKey     => $primaryKeyValue,
-                'children_nth'  => rand(0, 3)
+                'children_nth'  => rand(3, 5),
+                'gender'        => 'Female',
+                'net_worth'     => rand(3, 6) * 100,
             ])->toArray());
         };
 
