@@ -155,12 +155,8 @@ class LoremDbSeeder extends Seeder
             foreach ($funds as $fund) {
                 $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'state'             => [
-                        0 => 'pending',
-                        1 => 'approved',
-                        2 => 'approved',
-                        3 => 'declined',
-                    ][rand(0, 3)]
+                    'allow_budget'      => !![rand(0, 2)],
+                    'allow_products'    => !![rand(0, 2)]
                 ]);
             }
         }
@@ -169,14 +165,24 @@ class LoremDbSeeder extends Seeder
             $this->makeOffices($organization, rand(1, 2));
             $this->makeProducts($organization, rand(2, 4));
         }
+
+        foreach (Fund::get() as $fund) {
+            $providers = Organization::with('products')->pluck('id');
+
+            if ($fund->provider_organizations_approved()->count() == 0) {
+                $fund->provider_organizations_approved()->create([
+                    'organization_id'   => $providers->random(),
+                    'state'             => 'approved',
+                ]);
+            }
+        }
     }
 
     /**
      * @param string $identity_address
      */
-    public function applyFunds(
-        string $identity_address
-    ) {
+    public function applyFunds(string $identity_address)
+    {
         /** @var Prevalidation[] $prevalidations */
         $prevalidations = Prevalidation::query()->where([
             'state' => 'pending',

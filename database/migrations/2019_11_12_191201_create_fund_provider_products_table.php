@@ -15,6 +15,10 @@ class CreateFundProviderProductsTable extends Migration
     {
         Schema::create('fund_provider_products', function (Blueprint $table) {
             $table->increments('id');
+            $table->unsignedInteger('fund_provider_id');
+            $table->unsignedInteger('product_id');
+            // $table->unsignedInteger('organization_id');
+            // $table->unsignedInteger('fund_id');
             $table->timestamps();
         });
     }

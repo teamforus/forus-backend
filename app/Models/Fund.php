@@ -296,7 +296,7 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'approved');
+        )->where('allow_budget', true)->orWhere('allow_products', true);
     }
 
     /**
@@ -306,7 +306,9 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'declined');
+        )->where([
+            'dismissed' => true,
+        ]);
     }
 
     /**
@@ -316,7 +318,10 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'pending');
+        )->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+        ]);
     }
 
     /**

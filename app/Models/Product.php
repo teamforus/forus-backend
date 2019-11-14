@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
  * @property float $price
  * @property float|null $old_price
  * @property int $total_amount
- * @property int $unlimited_stock
+ * @property bool $unlimited_stock
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -223,16 +223,16 @@ class Product extends Model
      * @return Builder
      */
     public static function searchQuery() {
-        $funds = Implementation::activeFunds()->pluck('id');
-        $organizationIds = FundProvider::whereIn('fund_id', $funds)->where([
-            'state' => 'approved'
-        ])->pluck('organization_id');
+        $activeFunds = Implementation::activeFunds()->pluck('id');
 
-        return Product::query()->whereIn(
-            'organization_id', $organizationIds
-        )->where('sold_out', false)->where(
+        return Product::query()->whereHas('organization.organization_funds', function(
+            Builder $builder
+        ) use ($activeFunds) {
+            $builder->whereIn('fund_id', $activeFunds->toArray());
+            FundProvider::whereActiveQueryBuilder($builder);
+        })->where('sold_out', false)->where(
             'expire_at', '>', date('Y-m-d')
-        )->orderBy('created_at', 'desc');
+        );
     }
 
     /**
@@ -240,7 +240,7 @@ class Product extends Model
      * @return Builder
      */
     public static function search(Request $request) {
-        $query = self::searchQuery();
+        $query = self::searchQuery()->orderBy('created_at', 'desc');
 
         if ($request->has('product_category_id')) {
             $productCategories = ProductCategory::descendantsAndSelf(
@@ -259,6 +259,30 @@ class Product extends Model
                 );
             }
         }
+
+        if ($request->has('unlimited_stock')) {
+            $query->where([
+                'unlimited_stock' => !!$request->input('unlimited_stock')
+            ]);
+        }
+
+        if (!$request->has('q')) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $query) use ($request) {
+            return $query
+                ->where('name', 'LIKE', "%{$request->input('q')}%")
+                ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
+        });
+    }
+
+    /**
+     * @param Request $request
+     * @return Builder
+     */
+    public static function searchAny(Request $request) {
+        $query = self::query()->orderBy('created_at', 'desc');
 
         if ($request->has('unlimited_stock')) {
             $query->where([

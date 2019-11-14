@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreProductRequest extends FormRequest
+class IndexProductRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,22 +23,9 @@ class StoreProductRequest extends FormRequest
      */
     public function rules()
     {
-        $price = rule_number_format($this->input('price', 0));
-        $unlimited_stock = $this->input('unlimited_stock', false);
-
         return [
-            'name'                  => 'required|between:2,200',
-            'description'           => 'required|between:5,1000',
-            'price'                 => 'required|numeric|min:.2',
-            'unlimited_stock'       => 'boolean',
-            'old_price'             => 'nullable|numeric|min:' . $price,
-            'total_amount'          => [
-                $unlimited_stock ? '' : 'required',
-                'numeric',
-                'min:1'
-            ],
-            'expire_at'             => 'required|date_format:Y-m-d|after:today',
-            'product_category_id'   => 'required|exists:product_categories,id',
+            'q' => 'nullable|string',
+            'per_page' => 'nullable|numeric|max:100',
         ];
     }
 }

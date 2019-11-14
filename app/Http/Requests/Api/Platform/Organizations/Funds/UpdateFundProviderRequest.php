@@ -24,7 +24,9 @@ class UpdateFundProviderRequest extends FormRequest
     public function rules()
     {
         return [
-            'state' => 'required|in:pending,approved,declined'
+            'allow_products' => 'nullable|boolean',
+            'allow_budget' => 'nullable|boolean',
+            'dismissed' => 'nullable|boolean',
         ];
     }
 }

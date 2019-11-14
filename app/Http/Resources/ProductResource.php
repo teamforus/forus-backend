@@ -40,13 +40,6 @@ class ProductResource extends Resource
     public function toArray($request)
     {
         $product = $this->resource;
-
-        // TODO: Product category restriction
-        /*$suppliedFundIds = $product->organization->supplied_funds_approved;
-        $funds = $product->product_category->funds->whereIn(
-            'id', $suppliedFundIds->pluck('id')
-        );*/
-
         $funds = $product->organization->supplied_funds_approved;
 
         return collect($product)->only([
@@ -82,9 +75,7 @@ class ProductResource extends Resource
             'offices' => OfficeResource::collection(
                 $product->organization->offices
             ),
-            'photo' => new MediaResource(
-                $product->photo
-            ),
+            'photo' => new MediaResource($product->photo),
             'product_category' => new ProductCategoryResource(
                 $product->product_category
             )
