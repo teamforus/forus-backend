@@ -458,7 +458,7 @@ class Voucher extends Model
             'parent_id'         => $this->id,
             'fund_id'           => $this->fund_id,
             'product_id'        => $product->id,
-            'amount'            => $price ?? $product->price,
+            'amount'            => $price ?: $product->price,
             'returnable'        => $returnable,
             'expire_at'         => $voucherExpireAt
         ]);

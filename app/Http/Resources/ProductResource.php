@@ -40,7 +40,9 @@ class ProductResource extends Resource
     public function toArray($request)
     {
         $product = $this->resource;
-        $funds = $product->organization->supplied_funds_approved;
+
+        // Load list fund where this fund is available
+        $funds = $product->getFundsWhereIsAvailable()->with('logo.sizes')->get();
 
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',

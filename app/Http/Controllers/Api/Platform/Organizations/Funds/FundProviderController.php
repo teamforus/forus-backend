@@ -93,8 +93,8 @@ class FundProviderController extends Controller
             $fundProvider, $organization, $fund
         ]);
 
-        $enable_products = $request->has('enable_products', null);
-        $disable_products = $request->has('disable_products', null);
+        $enable_products = $request->input('enable_products', null);
+        $disable_products = $request->input('disable_products', null);
 
         $fundProvider->update($request->only([
             'dismissed', 'allow_products', 'allow_budget',

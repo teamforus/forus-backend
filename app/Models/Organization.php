@@ -168,6 +168,30 @@ class Organization extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_budget() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_budget', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_products() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function organization_funds() {

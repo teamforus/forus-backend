@@ -62,16 +62,8 @@ class ProductIdToVoucherRule implements Rule
             return false;
         }
 
-        $suppliedFundIds = $product->organization->supplied_funds_approved;
-
-        // TODO: Product category restriction
-        /*$funds = $product->product_category->funds()->whereIn(
-            'funds.id', $suppliedFundIds->pluck('id')
-        )->pluck('funds.id');*/
-
-        $funds = $suppliedFundIds->pluck('id');
-
-        if ($funds->search($voucherToken->voucher->fund_id) === false) {
+        if ($product->getFundsWhereIsAvailable()->pluck('id')->search(
+            $voucherToken->voucher->fund_id) === FALSE) {
             $this->message = trans(
                 'validation.product_voucher.product_not_applicable_by_voucher'
             );

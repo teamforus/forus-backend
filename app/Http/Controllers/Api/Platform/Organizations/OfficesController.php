@@ -30,8 +30,7 @@ class OfficesController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('index', [Office::class, $organization]);
+        $this->authorize('indexPublic', [Office::class, $organization]);
 
         return OfficeResource::collection($organization->offices);
     }

@@ -172,14 +172,43 @@ class VoucherPolicy
             $this->deny('fund_not_active');
         }
 
-        $providersApproved = $fund->provider_organizations_approved()
-            ->pluck($id);
-        $providersDeclined = $fund->provider_organizations_declined()
-            ->pluck($id);
-        $providersPending = $fund->provider_organizations_pending()
-            ->pluck($id);
-        $providersApplied = $fund->provider_organizations()
-            ->pluck($id);
+        if ($voucher->type == 'regular') {
+            $providersApproved = $fund->providers()->where([
+                'allow_budget' => true,
+            ])->pluck('organization_id');
+
+            $providersDeclined = $fund->providers()->where([
+                'allow_budget' => false,
+                'dismissed' => true,
+            ])->pluck('organization_id');
+
+            $providersPending = $fund->providers()->where([
+                'allow_budget' => false,
+                'dismissed' => false,
+            ])->pluck('organization_id');
+        } else {
+            $providersApproved = $fund->providers()->where([
+                'allow_products' => true,
+            ])->orWhereHas('fund_provider_products', function(
+                Builder $builder
+            ) use ($voucher) {
+                $builder->where([
+                    'product_id' => $voucher->product_id
+                ]);
+            })->pluck('organization_id');
+
+            $providersDeclined = $fund->providers()->where([
+                'allow_products' => false,
+                'dismissed' => true,
+            ])->pluck('organization_id');
+
+            $providersPending = $fund->providers()->where([
+                'allow_products' => false,
+                'dismissed' => false,
+            ])->pluck('organization_id');
+        }
+
+        $providersApplied = $fund->provider_organizations()->pluck($id);
 
         $providers = Organization::queryByIdentityPermissions(
             $identity_address, 'scan_vouchers'

@@ -90,7 +90,6 @@ class VouchersController extends Controller
         VoucherToken $voucherToken
     ) {
         $this->authorize('useAsProvider', $voucherToken->voucher);
-
         $voucherToken->voucher->setAttribute('address', $voucherToken->address);
 
         return new ProviderVoucherResource($voucherToken->voucher);

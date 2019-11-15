@@ -36,8 +36,7 @@ class ProductsController extends Controller
         IndexProductRequest $request,
         Organization $organization
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('index', [Product::class, $organization]);
+        $this->authorize('indexPublic', [Product::class, $organization]);
 
         return ProductResource::collection(Product::searchAny($request)->where([
             'organization_id' => $organization->id
