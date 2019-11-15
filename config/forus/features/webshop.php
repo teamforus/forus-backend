@@ -13,7 +13,7 @@ return [
     ],
     "funds" => [
         // list all funds
-        "list"      => TRUE,
+        "list"      => false,
 
         // view fund details
         "show"      => false,
