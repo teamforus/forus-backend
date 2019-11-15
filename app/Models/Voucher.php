@@ -440,15 +440,17 @@ class Voucher extends Model
 
     /**
      * @param Product $product
-     * @param bool $price
+     * @param float|null $price
      * @param bool $returnable
      * @return Voucher|\Illuminate\Database\Eloquent\Model
      */
     public function buyProductVoucher(
         Product $product,
-        $price = false,
+        ?float $price = null,
         $returnable = true
     ) {
+        $price = !$price && ($price !== 0) ? $product->price : $price;
+
         $voucherExpireAt = $this->fund->end_date->gt(
             $product->expire_at
         ) ? $product->expire_at : $this->fund->end_date;
@@ -458,7 +460,7 @@ class Voucher extends Model
             'parent_id'         => $this->id,
             'fund_id'           => $this->fund_id,
             'product_id'        => $product->id,
-            'amount'            => $price ?? $product->price,
+            'amount'            => $price,
             'returnable'        => $returnable,
             'expire_at'         => $voucherExpireAt
         ]);
