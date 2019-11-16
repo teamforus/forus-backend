@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property \Illuminate\Support\Carbon $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property FundLabel $label
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
  * @property-read int|null $bunq_me_tabs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
@@ -141,6 +142,10 @@ class Fund extends Model
         'notified_at',
     ];
 
+    protected $with = [
+        'label'
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -173,6 +178,13 @@ class Fund extends Model
             ProductCategory::class,
             'fund_product_categories'
         );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function label() {
+        return $this->belongsTo(FundLabel::class, 'fund_label_id');
     }
 
     /**
