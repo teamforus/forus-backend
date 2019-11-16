@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property mixed $id
  * @property string $name
+ * @property string $key
  * @property Collection|Fund[] $funds
  * @package App\Models
  */
@@ -21,7 +22,7 @@ class FundLabel extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'name'
+        'name', 'key'
     ];
 
     /**\

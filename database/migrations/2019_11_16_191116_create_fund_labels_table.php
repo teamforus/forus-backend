@@ -16,6 +16,7 @@ class CreateFundLabelsTable extends Migration
         Schema::create('fund_labels', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', 50);
+            $table->string('key', 50);
         });
     }
 
