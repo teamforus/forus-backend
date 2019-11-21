@@ -36,11 +36,9 @@ class FundProviderController extends Controller
             'fund_id'
         )->toArray());
 
-        if ($request->has('fund_id')) {
-            $query->where('id', $request->get('fund_id'));
-        }
-
-        return FundResource::collection($query->latest()->get());
+        return FundResource::collection(Fund::search(
+            $request, $query
+        )->latest()->get());
     }
 
     /**

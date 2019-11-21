@@ -11,17 +11,22 @@ use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Services\BunqService\BunqService;
+use Illuminate\Http\Request;
 
 class FundsController extends Controller
 {
     /**
      * Display a listing of all active funds.
      *
+     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index()
+    public function index(Request $request)
     {
-        return FundResource::collection(Implementation::activeFunds());
+        return FundResource::collection(Fund::search(
+            $request,
+            Implementation::activeFundsQuery()
+        ));
     }
 
     /**

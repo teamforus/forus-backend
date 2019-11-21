@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateFundLabelsTable extends Migration
+class CreateTagsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateFundLabelsTable extends Migration
      */
     public function up()
     {
-        Schema::create('fund_labels', function (Blueprint $table) {
+        Schema::create('tags', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', 50);
             $table->string('key', 50);
@@ -27,6 +27,6 @@ class CreateFundLabelsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('fund_labels');
+        Schema::dropIfExists('tags');
     }
 }

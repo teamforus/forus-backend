@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Traits\Taggables;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -13,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Http\Request;
 
 
 /**
@@ -29,7 +31,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property \Illuminate\Support\Carbon $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property FundLabel $label
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
  * @property-read int|null $bunq_me_tabs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
@@ -99,7 +100,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Fund extends Model
 {
-    use HasMedia;
+    use HasMedia, Taggables;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';
@@ -142,10 +143,6 @@ class Fund extends Model
         'notified_at',
     ];
 
-    protected $with = [
-        'label'
-    ];
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -178,13 +175,6 @@ class Fund extends Model
             ProductCategory::class,
             'fund_product_categories'
         );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function label() {
-        return $this->belongsTo(FundLabel::class, 'fund_label_id');
     }
 
     /**
@@ -505,6 +495,34 @@ class Fund extends Model
                 default: return 0; break;
             }
         })->sum();
+    }
+
+    /**
+     * @param Request $request
+     * @param Builder|null $query
+     * @return Builder
+     */
+    public static function search(
+        Request $request,
+        Builder $query = null
+    ) {
+        $query = $query ?: self::query();
+
+        if ($request->has('tag')) {
+            $query->whereHas('tags', function(Builder $query) use ($request) {
+                return $query->where('key', $request->get('tag'));
+            });
+        }
+
+        if ($request->has('organization_id')) {
+            $query->where('organization_id', $request->get('organization_id'));
+        }
+
+        if ($request->has('fund_id')) {
+            $query->where('id', $request->get('fund_id'));
+        }
+
+        return $query;
     }
 
     /**
