@@ -75,6 +75,14 @@ class OfficesController extends Controller
                 $schedule['end_time'] = null;
             }
 
+            if ($schedule['break_start_time'] == 'null') {
+                $schedule['break_start_time'] = null;
+            }
+
+            if ($schedule['break_end_time'] == 'null') {
+                $schedule['break_end_time'] = null;
+            }
+
             return $schedule;
         });
 
@@ -156,6 +164,14 @@ class OfficesController extends Controller
 
             if ($schedule['end_time'] == 'null') {
                 $schedule['end_time'] = null;
+            }
+
+            if ($schedule['break_start_time'] == 'null') {
+                $schedule['break_start_time'] = null;
+            }
+
+            if ($schedule['break_end_time'] == 'null') {
+                $schedule['break_end_time'] = null;
             }
 
             return $schedule;
