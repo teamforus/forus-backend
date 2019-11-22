@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\BunqMeTab;
 use App\Models\Fund;
 use App\Models\Employee;
+use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
@@ -63,6 +64,9 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('fund', function ($id) {
             return Fund::find($id) ?? abort(404);
+        });
+        $router->bind('fund_provider', function ($id) {
+            return FundProvider::find($id) ?? abort(404);
         });
 
         $router->bind('configured_fund', function ($value) {

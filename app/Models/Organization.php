@@ -161,7 +161,34 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where('fund_providers.state', 'approved');
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+            $builder->orWhereHas('products');
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_budget() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_budget', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_products() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+        });
     }
 
     /**

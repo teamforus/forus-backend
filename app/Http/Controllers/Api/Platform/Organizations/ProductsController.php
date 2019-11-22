@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
@@ -26,17 +27,20 @@ class ProductsController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param IndexProductRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        IndexProductRequest $request,
         Organization $organization
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('index', [Product::class, $organization]);
+        $this->authorize('indexPublic', [Product::class, $organization]);
 
-        return ProductResource::collection($organization->products);
+        return ProductResource::collection(Product::searchAny($request)->where([
+            'organization_id' => $organization->id
+        ])->paginate($request->input('per_page', 15)));
     }
 
     /**

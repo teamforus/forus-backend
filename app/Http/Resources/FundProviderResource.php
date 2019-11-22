@@ -30,12 +30,14 @@ class FundProviderResource extends Resource
     public function toArray($request)
     {
         return collect($this->resource)->only([
-            'id', 'organization_id', 'fund_id', 'state'
+            'id', 'organization_id', 'fund_id', 'dismissed',
+            'allow_products', 'allow_budget'
         ])->merge([
-            'fund' => new FundResource(
-                $this->resource->fund
-            ),
-            'organization' => new OrganizationResource(
+            'products' => $this->resource->fund_provider_products()
+                ->pluck('product_id'),
+            'products_count_all'    => $this->resource->organization->products()->count(),
+            'fund'                  => new FundResource($this->resource->fund),
+            'organization'          => new OrganizationResource(
                 $this->resource->organization
             ),
         ])->toArray();

@@ -220,6 +220,24 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function providers_allowed_products() {
+        return $this->hasMany(FundProvider::class)->where([
+            'allow_products' => true
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function providers_declined_products() {
+        return $this->hasMany(FundProvider::class)->where([
+            'allow_products' => false
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function top_ups() {
         return $this->hasMany(FundTopUp::class);
     }
@@ -296,7 +314,35 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'approved');
+        )->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhereHas('products');
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_approved_budget() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_approved_products() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where(function(Builder $builder) {
+            $builder->orWhere('allow_products', true);
+        });
     }
 
     /**
@@ -306,7 +352,11 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'declined');
+        )->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+            'dismissed' => true,
+        ]);
     }
 
     /**
@@ -316,7 +366,10 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'pending');
+        )->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+        ]);
     }
 
     /**
@@ -724,9 +777,9 @@ class Fund extends Model
             $organization = $fund->organization;
             $sponsorCount = $organization->employees->count() + 1;
 
-            $providers = $fund->providers()->where([
-                'state' => 'approved'
-            ])->get();
+            $providers = FundProvider::whereActiveQueryBuilder(
+                $fund->providers()
+            )->get();
 
             $providerCount = $providers->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */

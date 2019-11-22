@@ -39,13 +39,13 @@ class FundProviderController extends Controller
             FundProvider::class, $organization, $fund
         ]);
 
-        $organization_funds = $fund->providers();
+        $providers = $fund->providers()->getQuery();
 
-        if ($state = $request->input('state', false)) {
-            $organization_funds->where('state', $state);
+        if ($request->input('state', false)) {
+            $providers = FundProvider::whereActiveQueryBuilder($providers);
         }
 
-        return FundProviderResource::collection($organization_funds->paginate(
+        return FundProviderResource::collection($providers->paginate(
             $request->input('per_page', null)
         ));
     }
@@ -77,7 +77,7 @@ class FundProviderController extends Controller
      * @param UpdateFundProviderRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @param FundProvider $organizationFund
+     * @param FundProvider $fundProvider
      * @return FundProviderResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
@@ -85,51 +85,72 @@ class FundProviderController extends Controller
         UpdateFundProviderRequest $request,
         Organization $organization,
         Fund $fund,
-        FundProvider $organizationFund
+        FundProvider $fundProvider
     ) {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('updateSponsor', [
-            $organizationFund, $organization, $fund
+            $fundProvider, $organization, $fund
         ]);
 
-        $state = $request->input('state');
+        $enable_products = $request->input('enable_products', null);
+        $disable_products = $request->input('disable_products', null);
 
-        $organizationFund->update(compact('state'));
+        $fundProvider->update($request->only([
+            'dismissed', 'allow_products', 'allow_budget',
+        ]));
+
+        if ($fundProvider->allow_budget ||
+            $fundProvider->allow_products) {
+            $fundProvider->update([
+                'dismissed' => false
+            ]);
+        }
+
+        if ($enable_products !== null) {
+            $fundProvider->products()->attach($enable_products);
+        }
+
+        if ($disable_products !== null) {
+            $fundProvider->products()->detach($disable_products);
+        }
+
         $mailService = resolve('forus.services.notification');
 
-        if ($state == 'approved') {
+        if ($request->has('allow_budget') &&
+            $request->input('allow_budget')) {
             $mailService->providerApproved(
-                $organizationFund->organization->email,
-                $organizationFund->organization->emailServiceId(),
-                $organizationFund->fund->name,
-                $organizationFund->organization->name,
-                $organizationFund->fund->organization->name,
+                $fundProvider->organization->email,
+                $fundProvider->organization->emailServiceId(),
+                $fundProvider->fund->name,
+                $fundProvider->organization->name,
+                $fundProvider->fund->organization->name,
                 Implementation::active()['url_provider']
             );
 
             $transData =  [
-                "fund_name" => $organizationFund->fund->name,
-                "sponsor_phone" => $organizationFund->organization->phone
+                "fund_name" => $fundProvider->fund->name,
+                "sponsor_phone" => $fundProvider->organization->phone
             ];
 
             $mailService->sendPushNotification(
-                $organizationFund->organization->identity_address,
+                $fundProvider->organization->identity_address,
                 trans('push.providers.accepted.title', $transData),
                 trans('push.providers.accepted.body', $transData)
             );
-        } elseif ($state == 'declined') {
+        } elseif ($request->has('allow_budget') &&
+            !$request->input('allow_budget')) {
             $mailService->providerRejected(
-                $organizationFund->organization->email,
-                $organizationFund->organization->identity_address,
-                $organizationFund->fund->name,
-                $organizationFund->organization->name,
-                $organizationFund->fund->organization->name,
-                $organizationFund->fund->organization->phone
+                $fundProvider->organization->email,
+                $fundProvider->organization->identity_address,
+                $fundProvider->fund->name,
+                $fundProvider->organization->name,
+                $fundProvider->fund->organization->name,
+                $fundProvider->fund->organization->phone
             );
         }
 
-        return new FundProviderResource($organizationFund);
+        return new FundProviderResource($fundProvider);
     }
 
     /**

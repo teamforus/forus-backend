@@ -69,11 +69,14 @@ class Office extends Model
         $query = self::query();
 
         if ($approved = $request->input('approved', false)) {
-            $query->whereIn('organization_id', FundProvider::whereIn(
-                'fund_id', Implementation::activeFundsQuery()->pluck('id')
-            )->where([
-                'state' => FundProvider::STATE_APPROVED
-            ])->pluck('organization_id')->unique()->values()->toArray());
+            $activeFunds = Implementation::activeFundsQuery()->pluck('id');
+
+            $query->whereHas('organization.organization_funds', function(
+                Builder $builder
+            ) use ($activeFunds) {
+                $builder->whereIn('fund_id', $activeFunds->toArray());
+                FundProvider::whereActiveQueryBuilder($builder);
+            });
         }
 
         if ($request->has('q') && $q = $request->input('q')) {

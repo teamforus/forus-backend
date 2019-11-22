@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
  * @property int $fund_id
  * @property string|null $identity_address
  * @property float $amount
- * @property int $returnable
+ * @property bool $returnable
  * @property string|null $note
  * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
