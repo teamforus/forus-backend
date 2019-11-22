@@ -723,6 +723,15 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
+            foreach ($fund->provider_organizations_approved as $organization) {
+                resolve('forus.services.notification')->newFundStarted(
+                    $organization->email,
+                    $organization->emailServiceId(),
+                    $fund->name,
+                    $fund->organization->name
+                );
+            }
+
             /*$organizations = Organization::query()->whereIn(
                 'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
