@@ -426,6 +426,8 @@ class Voucher extends Model
     ) {
         $vouchers = $organization->vouchers()->whereNull(
             'identity_address'
+        )->where(
+            'need_confirmation', 0
         );
 
         if ($fromDate) {
