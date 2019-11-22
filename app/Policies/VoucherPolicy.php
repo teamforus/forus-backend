@@ -24,6 +24,19 @@ class VoucherPolicy
     }
 
     /**
+     * @param Organization $organization
+     * @return bool
+     */
+    public function checkFundPermission(Organization $organization) {
+        $organization_fund_ids = $organization->funds->pluck('id')->toArray();
+
+        return array_diff(
+            $organization_fund_ids,
+            config('forus.funds.disable_voucher_requests_for_funds')
+        ) == $organization_fund_ids;
+    }
+
+    /**
      * @param string $identity_address
      * @return bool
      */
@@ -42,9 +55,10 @@ class VoucherPolicy
         string $identity_address,
         Organization $organization
     ) {
-        return $organization->identityCan($identity_address, [
-            'manage_vouchers'
-        ]);
+        return $this->checkFundPermission($organization) &&
+            $organization->identityCan($identity_address, [
+                'manage_vouchers'
+            ]);
     }
 
     /**
@@ -60,7 +74,8 @@ class VoucherPolicy
         Fund $fund
     ) {
         if (!($this->indexSponsor($identity_address, $organization) &&
-            $fund->organization_id == $organization->id)) {
+            $fund->organization_id == $organization->id) &&
+            $this->checkFundPermission($organization)) {
             $this->deny('no_permission_to_make_vouchers');
         }
 
@@ -94,7 +109,8 @@ class VoucherPolicy
         return is_null($voucher->parent_id) && $organization->identityCan(
             $identity_address, [
             'manage_vouchers'
-        ]) && ($voucher->fund->organization_id == $organization->id);
+        ]) && ($voucher->fund->organization_id == $organization->id) &&
+            !$voucher->is_granted && $this->checkFundPermission($organization);
     }
 
     /**
@@ -112,7 +128,7 @@ class VoucherPolicy
             'manage_vouchers'
         ]) && (
             $voucher->fund->organization_id == $organization->id
-        ) && !$voucher->is_granted;
+        ) && !$voucher->is_granted && $this->checkFundPermission($organization);
     }
 
     /**
@@ -126,7 +142,9 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ) {
-        return $this->assignSponsor($identity_address, $voucher, $organization);
+        return $this->assignSponsor(
+            $identity_address, $voucher, $organization
+        ) && $this->checkFundPermission($organization);
     }
 
     /**
