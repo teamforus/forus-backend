@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
-use App\Models\Traits\Taggables;
+use App\Models\Traits\HasTags;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -100,7 +100,7 @@ use Illuminate\Http\Request;
  */
 class Fund extends Model
 {
-    use HasMedia, Taggables;
+    use HasMedia, HasTags;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';

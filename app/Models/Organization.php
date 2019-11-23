@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Traits\Taggables;
+use App\Models\Traits\HasTags;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
@@ -79,7 +79,7 @@ use Illuminate\Database\Query\Builder;
  */
 class Organization extends Model
 {
-    use HasMedia, Taggables;
+    use HasMedia, HasTags;
 
     /**
      * The attributes that are mass assignable.
