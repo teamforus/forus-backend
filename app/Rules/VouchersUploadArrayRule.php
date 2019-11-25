@@ -17,7 +17,7 @@ class VouchersUploadArrayRule implements Rule
      * @param Fund $fund
      */
     public function __construct(
-        Fund $fund
+        Fund $fund = null
     ) {
         $this->fund = $fund;
     }
@@ -31,6 +31,10 @@ class VouchersUploadArrayRule implements Rule
      */
     public function passes($attribute, $value)
     {
+        if (!$this->fund) {
+            return false;
+        }
+
         if (!is_array($value)) {
             return trans('validation.array');
         }

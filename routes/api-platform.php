@@ -38,40 +38,45 @@ $router->group([], function() use ($router) {
         ]
     ]);
 
-    $router->resource(
-        'funds/{fund}/requests',
-        "Api\Platform\Funds\FundRequestsController", [
-        'only' => [
-            'index', 'show', 'store'
-        ],
-        'parameters' => [
-            'requests' => 'fund_request',
-        ]
-    ]);
+    if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
+        $router->resource(
+            'funds/{fund}/requests',
+            "Api\Platform\Funds\FundRequestsController", [
+            'only' => [
+                'index', 'show', 'store'
+            ],
+            'parameters' => [
+                'requests' => 'fund_request',
+            ]
+        ]);
 
-    $router->post('funds/{fund}/requests/validate',"Api\Platform\Funds\FundRequestsController@storeValidate");
+        $router->post(
+            'funds/{fund}/requests/validate',
+            "Api\Platform\Funds\FundRequestsController@storeValidate"
+        );
 
-    $router->resource(
-        'funds/{fund}/requests/{fund_request}/records',
-        "Api\Platform\Funds\Requests\FundRequestRecordsController", [
-        'only' => [
-            'index', 'show'
-        ],
-        'parameters' => [
-            'records' => 'fund_request_record',
-        ]
-    ]);
+        $router->resource(
+            'funds/{fund}/requests/{fund_request}/records',
+            "Api\Platform\Funds\Requests\FundRequestRecordsController", [
+            'only' => [
+                'index', 'show'
+            ],
+            'parameters' => [
+                'records' => 'fund_request_record',
+            ]
+        ]);
 
-    $router->resource(
-        'funds/{fund}/requests/{fund_request}/clarifications',
-        "Api\Platform\Funds\Requests\FundRequestClarificationsController", [
-        'only' => [
-            'index', 'show', 'update'
-        ],
-        'parameters' => [
-            'clarifications' => 'fund_request_clarification',
-        ]
-    ]);
+        $router->resource(
+            'funds/{fund}/requests/{fund_request}/clarifications',
+            "Api\Platform\Funds\Requests\FundRequestClarificationsController", [
+            'only' => [
+                'index', 'show', 'update'
+            ],
+            'parameters' => [
+                'clarifications' => 'fund_request_clarification',
+            ]
+        ]);
+    }
 
     $router->resource(
         'offices',
@@ -230,6 +235,17 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
+    $router->resource(
+        'demo/transactions',
+        "Api\Platform\Vouchers\DemoTransactionController", [
+        'only' => [
+            'store', 'show', 'update'
+        ],
+        'parameters' => [
+            'transactions' => 'demo_token',
+        ]
+    ]);
+
     $router->get(
         'organizations/{organization}/funds/{fund}/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -246,49 +262,53 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
-    $router->resource(
-        'organizations/{organization}/funds/{fund}/requests',
-        "Api\Platform\Organizations\Funds\FundRequestsController", [
-        'only' => [
-            'index', 'show', 'update'
-        ],
-        'parameters' => [
-            'requests' => 'fund_request',
-        ]
-    ]);
 
-    $router->resource(
-        'organizations/{organization}/funds/{fund}/requests/{fund_request}/records',
-        "Api\Platform\Organizations\Funds\Requests\FundRequestRecordsController", [
-        'only' => [
-            'index', 'show', 'update'
-        ],
-        'parameters' => [
-            'records' => 'fund_request_record',
-        ]
-    ]);
 
-    $router->resource(
-        'organizations/{organization}/funds/{fund}/requests/{fund_request}/clarifications',
-        "Api\Platform\Organizations\Funds\Requests\FundRequestClarificationsController", [
-        'only' => [
-            'index', 'show', 'store'
-        ],
-        'parameters' => [
-            'clarifications' => 'fund_request_clarification',
-        ]
-    ]);
+    if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
+        $router->resource(
+            'organizations/{organization}/funds/{fund}/requests',
+            "Api\Platform\Organizations\Funds\FundRequestsController", [
+            'only' => [
+                'index', 'show', 'update'
+            ],
+            'parameters' => [
+                'requests' => 'fund_request',
+            ]
+        ]);
 
-    $router->resource(
-        'organizations/{organization}/requests',
-        "Api\Platform\Organizations\FundRequestsController", [
-        'only' => [
-            'index', 'show'
-        ],
-        'parameters' => [
-            'requests' => 'fund_request',
-        ]
-    ]);
+        $router->resource(
+            'organizations/{organization}/funds/{fund}/requests/{fund_request}/records',
+            "Api\Platform\Organizations\Funds\Requests\FundRequestRecordsController", [
+            'only' => [
+                'index', 'show', 'update'
+            ],
+            'parameters' => [
+                'records' => 'fund_request_record',
+            ]
+        ]);
+
+        $router->resource(
+            'organizations/{organization}/funds/{fund}/requests/{fund_request}/clarifications',
+            "Api\Platform\Organizations\Funds\Requests\FundRequestClarificationsController", [
+            'only' => [
+                'index', 'show', 'store'
+            ],
+            'parameters' => [
+                'clarifications' => 'fund_request_clarification',
+            ]
+        ]);
+
+        $router->resource(
+            'organizations/{organization}/requests',
+            "Api\Platform\Organizations\FundRequestsController", [
+            'only' => [
+                'index', 'show'
+            ],
+            'parameters' => [
+                'requests' => 'fund_request',
+            ]
+        ]);
+    }
 
     $router->get(
         'organizations/{organization}/providers/export',
@@ -422,6 +442,21 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
                 'transactions' => 'transaction_address',
             ]
         ]
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/validate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeValidate"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/batch',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeBatch"
+    );
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/batch/validate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@storeBatchValidate"
     );
 
     $router->post(

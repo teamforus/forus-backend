@@ -60,7 +60,9 @@ class ProductResource extends Resource
                 $product->organization
             ),
             'total_amount' => $product->total_amount,
+            'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
+            'sold_amount' => $product->countSold(),
             'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
             'old_price' => currency_format($product->old_price),

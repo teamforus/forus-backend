@@ -107,7 +107,7 @@ class VoucherResource extends Resource
         );
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at'
+            'identity_address', 'fund_id', 'created_at', 'returnable'
         ])->merge([
             'expire_at' => $voucher->expire_at,
             'expire_at_locale' => format_date_locale($voucher->expire_at),
@@ -128,7 +128,7 @@ class VoucherResource extends Resource
             )->map(function($product_voucher) {
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at',
+                    'identity_address', 'fund_id', 'created_at', 'returnable',
                 ])->merge([
                     'created_at_locale' => $product_voucher->created_at_locale,
                     'address' => $product_voucher->tokens->where(

@@ -19,9 +19,9 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $clarifications
  * @property-read int|null $clarifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $clarifications_answered
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $clarifications_answered
  * @property-read int|null $clarifications_answered_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $clarifications_pending
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $clarifications_pending
  * @property-read int|null $clarifications_pending_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
