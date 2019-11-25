@@ -270,7 +270,7 @@ class VouchersController extends Controller
                         $name = resolve('token_generator')->generate(
                             6, 2
                         );
-                        $zip->addFile($full_path, 'images/'.$name);
+                        $zip->addFile($full_path, 'images/'.$name.'.png');
 
                         fputcsv($fp, [$name]);
                     }
