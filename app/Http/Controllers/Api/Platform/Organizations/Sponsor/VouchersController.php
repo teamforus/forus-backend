@@ -264,14 +264,16 @@ class VouchersController extends Controller
 
             foreach ($unassigned_vouchers as $voucher) {
                 foreach ($voucher->tokens as $token) {
-                    $full_path = $token->getQrLocalPath();
+                    if (!$token->need_confirmation) {
+                        $full_path = $token->getQrLocalPath();
 
-                    $name = resolve('token_generator')->generate(
-                        6, 2
-                    );
-                    $zip->addFile($full_path, 'images/'.$name);
+                        $name = resolve('token_generator')->generate(
+                            6, 2
+                        );
+                        $zip->addFile($full_path, 'images/'.$name.'.png');
 
-                    fputcsv($fp, [$name]);
+                        fputcsv($fp, [$name]);
+                    }
                 }
             }
 
