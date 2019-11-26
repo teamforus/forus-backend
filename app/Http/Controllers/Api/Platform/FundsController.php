@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\StoreIdealBunqMeRequestRequest;
 use App\Http\Resources\BunqIdealIssuerResource;
 use App\Http\Resources\BunqMeIdealRequestResource;
@@ -17,11 +18,15 @@ class FundsController extends Controller
     /**
      * Display a listing of all active funds.
      *
+     * @param IndexFundsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index()
+    public function index(IndexFundsRequest $request)
     {
-        return FundResource::collection(Implementation::activeFunds());
+        return FundResource::collection(Fund::search(
+            $request,
+            Implementation::activeFundsQuery()
+        ));
     }
 
     /**
