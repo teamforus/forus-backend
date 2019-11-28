@@ -26,7 +26,7 @@ class FundsController extends Controller
         return FundResource::collection(Fund::search(
             $request,
             Implementation::activeFundsQuery()
-        ));
+        )->get());
     }
 
     /**
