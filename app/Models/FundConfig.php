@@ -44,7 +44,7 @@ class FundConfig extends Model
     protected $hidden = [
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
         'formula_multiplier', 'is_configured', 'csv_primary_key', 
-        'subtract_transaction_costs'
+        'subtract_transaction_costs', 'implementation_id', 'implementation'
     ];
 
     /**
@@ -53,6 +53,7 @@ class FundConfig extends Model
     protected $casts = [
         'is_configured' => 'boolean'
     ];
+
 
     public function getBunqAllowedIpAttribute($value) {
         return collect(explode(',', $value))->filter()->toArray();

@@ -27,7 +27,8 @@
         "philkra/elastic-apm-laravel": "^5.8",
         "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "^2.0",
-        "staudenmeir/eloquent-has-many-deep": "^1.7"
+        "staudenmeir/eloquent-has-many-deep": "^1.7",
+      "ext-curl": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.2",

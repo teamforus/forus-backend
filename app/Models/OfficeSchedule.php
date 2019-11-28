@@ -28,6 +28,8 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereWeekDay($value)
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereBreakEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereBreakStartTime($value)
  */
 class OfficeSchedule extends Model
 {

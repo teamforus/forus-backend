@@ -391,7 +391,6 @@ class BunqService
 
                     $transaction->sendPushBunqTransactionSuccess();
                 }
-
             } catch (\Exception $e) {
                 app('log')->error(
                     'BunqService->processQueue: ' .

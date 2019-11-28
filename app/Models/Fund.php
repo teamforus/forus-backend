@@ -99,6 +99,14 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_budget
+ * @property-read int|null $provider_organizations_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_products
+ * @property-read int|null $provider_organizations_approved_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_allowed_products
+ * @property-read int|null $providers_allowed_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
+ * @property-read int|null $providers_declined_products_count
  */
 class Fund extends Model
 {
@@ -1098,11 +1106,14 @@ class Fund extends Model
     }
 
     /**
-     * @return mixed
+     * @param string $uri
+     * @return mixed|string
      */
-    public function urlWebshop()
+    public function urlWebshop(string $uri = "/")
     {
-        return $this->fund_config->implementation->url_webshop ??
-            env('WEB_SHOP_GENERAL_URL');
+        $url = rtrim($this->fund_config->implementation->url_webshop ??
+            env('WEB_SHOP_GENERAL_URL'), '/');
+
+        return url(sprintf('%s/%s', $url, ltrim($uri, '/')));
     }
 }

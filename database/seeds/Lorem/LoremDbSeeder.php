@@ -133,7 +133,7 @@ class LoremDbSeeder extends Seeder
             $this->makePrevalidations(
                 $fund->organization->identity_address,
                 $fund,
-                $this->generatePrevalidationData('uid', 10)
+                $this->generatePrevalidationData('bsn', 10)
             );
         }
     }
@@ -192,7 +192,7 @@ class LoremDbSeeder extends Seeder
         });
 
         foreach ($prevalidations as $prevalidation) {
-            foreach($prevalidation->records as $record) {
+            foreach($prevalidation->prevalidation_records as $record) {
                 $record = $this->recordRepo->recordCreate(
                     $identity_address,
                     $record->record_type->key,
@@ -410,6 +410,10 @@ class LoremDbSeeder extends Seeder
                 'DB_SEED_URL_APP',
                 "https://dev.$key.forus.io/me/#!/"
             ),
+            'digid_enabled' => !empty(env('DB_SEED_DIGID_SHARED_SECRET', null)),
+            'digid_app_id' => env('DB_SEED_DIGID_APP_ID', null),
+            'digid_shared_secret' => env('DB_SEED_DIGID_SHARED_SECRET', null),
+            'digid_a_select_server' => env('DB_SEED_DIGID_A_SELECT_SERVER', null),
         ]);
     }
 
@@ -500,7 +504,7 @@ class LoremDbSeeder extends Seeder
             ]);
 
             foreach ($records as $record) {
-                $prevalidation->records()->create($record);
+                $prevalidation->prevalidation_records()->create($record);
             }
 
             return $prevalidation;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\DigIdService\Repositories\DigIdRepo;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
@@ -39,12 +40,31 @@ use Illuminate\Database\Query\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
+ * @property string|null $digid_app_id
+ * @property string|null $digid_shared_secret
+ * @property string|null $digid_a_select_server
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidSharedSecret($value)
+ * @property bool $digid_enabled
+ * @property string $digid_env
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnv($value)
  */
 class Implementation extends Model
 {
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator', 'lon', 'lat'
+    ];
+
+    protected $hidden = [
+        'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
+        'digid_a_select_server'
+    ];
+
+    protected $casts = [
+        'digid_enabled' => 'boolean'
     ];
 
     /**
@@ -179,5 +199,28 @@ class Implementation extends Model
         })->flatten()->merge([
             'app-me_app'
         ])->values();
+    }
+
+    /**
+     * @return bool
+     */
+    public function digidEnabled() {
+        return $this->digid_enabled && !empty($this->digid_app_id) && !empty(
+            $this->digid_shared_secret
+            ) && !empty($this->digid_a_select_server);
+    }
+
+    /**
+     * @return DigIdRepo
+     * @throws \Exception
+     */
+    public function getDigid()
+    {
+        return new DigIdRepo(
+            $this->digid_env,
+            $this->digid_app_id,
+            $this->digid_shared_secret,
+            $this->digid_a_select_server
+        );
     }
 }

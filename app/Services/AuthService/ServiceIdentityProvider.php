@@ -30,7 +30,6 @@ class ServiceIdentityProvider implements UserProvider
         }
 
         $bearerToken = $credentials['bearer_token'];
-
         $identityService = app()->make('forus.services.identity');
 
         $proxyIdentityId = $identityService->proxyIdByAccessToken($bearerToken);

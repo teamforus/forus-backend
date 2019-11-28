@@ -556,4 +556,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
 
     $router->get('notifications', 'Api\Platform\NotificationsController@index');
     $router->patch('notifications', 'Api\Platform\NotificationsController@update');
+
+    $router->post('/digid', 'DigIdController@start');
+    $router->post('/digid/resolve', 'DigIdController@resolve');
 });

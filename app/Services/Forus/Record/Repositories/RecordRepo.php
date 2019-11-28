@@ -137,7 +137,6 @@ class RecordRepo implements IRecordRepo
         return $record ? $record->identity_address : null;
     }
 
-
     /**
      * Get identity id by email record
      * @param string $identityAddress
@@ -154,11 +153,26 @@ class RecordRepo implements IRecordRepo
         return $record ? $record->value : null;
     }
 
+    /**
+     * Get bsn by identity_address
+     * @param string $identityAddress
+     * @return string|null
+     */
+    public function bsnByAddress(
+        string $identityAddress
+    ) {
+        $record = Record::query()->where([
+            'record_type_id' => $this->getTypeIdByKey('bsn'),
+            'identity_address' => $identityAddress,
+        ])->first();
+
+        return $record ? $record->value : null;
+    }
 
     /**
      * Get type id by key
      * @param string $key
-     * @return int|null
+     * @return int|nullove
      */
     public function getTypeIdByKey(
         string $key

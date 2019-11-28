@@ -28,8 +28,11 @@ class IdentityController extends Controller
 
     public function getPublic()
     {
+        $bsn_is_known = !empty($this->recordRepo->bsnByAddress(auth()->id()));
+
         return [
-            'address' => auth()->id()
+            'address' => auth()->id(),
+            'bsn' => $bsn_is_known
         ];
     }
 

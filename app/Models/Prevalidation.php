@@ -22,8 +22,8 @@ use Illuminate\Http\Request;
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization|null $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
- * @property-read int|null $records_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $prevalidation_records
+ * @property-read int|null $prevalidation_records_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation query()
@@ -66,7 +66,7 @@ class Prevalidation extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records() {
+    public function prevalidation_records() {
         return $this->hasMany(PrevalidationRecord::class);
     }
 
@@ -164,11 +164,11 @@ class Prevalidation extends Model
         ]);
 
         return $query->with([
-            'records.record_type.translations'
+            'prevalidation_records.record_type.translations'
         ])->get()->map(function(Prevalidation $prevalidation) {
             return collect([
                 'code' => $prevalidation->uid
-            ])->merge($prevalidation->records->filter(function($record) {
+            ])->merge($prevalidation->prevalidation_records->filter(function($record) {
                 return strpos($record->record_type->key, '_eligible') === false;
             })->pluck(
                 'value', 'record_type.name'
@@ -182,6 +182,44 @@ class Prevalidation extends Model
     public static function deactivateByUid($uid) {
         Prevalidation::where(compact('uid'))->update([
             'state' => Prevalidation::STATE_USED
+        ]);
+    }
+
+    /**
+     * @param $identity_address
+     * @return Prevalidation
+     */
+    public function assignToIdentity($identity_address) {
+        $recordRepo = resolve('forus.services.record');
+        $bsn = $recordRepo->bsnByAddress($identity_address);
+        $bsnTypeId = $recordRepo->getTypeIdByKey('bsn');
+
+        foreach($this->prevalidation_records as $record) {
+            if ($record->record_type_id === $bsnTypeId) {
+                continue;
+            }
+
+            /** @var $record PrevalidationRecord */
+            $record = $recordRepo->recordCreate(
+                $identity_address,
+                $record->record_type->key,
+                $record->value
+            );
+
+            $validationRequest = $recordRepo->makeValidationRequest(
+                auth_address(),
+                $record['id']
+            );
+
+            $recordRepo->approveValidationRequest(
+                $this->identity_address,
+                $validationRequest['uuid'],
+                $this->organization_id
+            );
+        }
+
+        return $this->updateModel([
+            'state' => 'used'
         ]);
     }
 }
