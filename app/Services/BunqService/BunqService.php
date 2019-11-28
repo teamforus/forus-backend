@@ -9,9 +9,6 @@ use App\Services\BunqService\Models\BunqIdealIssuer;
 use bunq\Context\BunqContext;
 use bunq\Model\Generated\Endpoint\BunqMeTab;
 use bunq\Model\Generated\Endpoint\BunqMeTabEntry;
-use bunq\Model\Generated\Endpoint\BunqMeTabResultInquiry;
-use bunq\Model\Generated\Endpoint\BunqMeTabResultResponse;
-use bunq\Model\Generated\Endpoint\BunqResponseBunqMeTabResultResponse;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
 use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
 use bunq\Model\Generated\Endpoint\Payment;
@@ -20,7 +17,6 @@ use bunq\Model\Generated\Object\Pointer;
 use bunq\Util\BunqEnumApiEnvironmentType;
 use bunq\Context\ApiContext;
 use Carbon\Carbon;
-use Faker\Test\Provider\PaymentTest;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder;
@@ -314,11 +310,11 @@ class BunqService
     }
 
     /**
-     * Get list pending transactions.
+     * Get next pending transaction
      *
-     * @return Collection
+     * @return VoucherTransaction|null
      */
-    public static function getTransactionsQueue() {
+    public static function getNextInTransactionsQueue() {
         return VoucherTransaction::query()->orderBy('updated_at', 'ASC')
             ->where('state', '=', 'pending')
             ->where('attempts', '<', 5)
@@ -327,7 +323,7 @@ class BunqService
                 $query
                     ->whereNull('last_attempt_at')
                     ->orWhere('last_attempt_at', '<', Carbon::now()->subHours(8));
-            })->get();
+            })->first();
     }
 
     /**
@@ -336,14 +332,7 @@ class BunqService
      * @return void
      */
     public static function processQueue() {
-        $transactions = self::getTransactionsQueue();
-
-        if ($transactions->count() == 0) {
-            return null;
-        }
-
-        /** @var VoucherTransaction $transaction */
-        foreach($transactions as $transaction) {
+        while($transaction = self::getNextInTransactionsQueue()) {
             $voucher = $transaction->voucher;
 
             if ($voucher->fund->budget_left < $transaction->amount) {
