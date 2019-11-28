@@ -24,6 +24,7 @@ use Illuminate\Http\Request;
  * @property int $organization_id
  * @property string $name
  * @property string $state
+ * @property string $description
  * @property bool $public
  * @property float|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
@@ -124,8 +125,8 @@ class Fund extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'state', 'name', 'start_date', 'end_date',
-        'notification_amount', 'fund_id', 'notified_at', 'public'
+        'organization_id', 'state', 'name', 'description', 'start_date',
+        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public'
     ];
 
     protected $hidden = [
