@@ -259,6 +259,7 @@ class VouchersController extends Controller
             $csv_name = 'qr_codes.csv';
 
             $fp = fopen($csv_name, 'w');
+            fputcsv($fp, ['code', 'amount', 'expire_at', 'note', 'created_at']);
             $zip->open($zip_name, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
             $zip->addEmptyDir('images');
 
@@ -272,7 +273,13 @@ class VouchersController extends Controller
                         );
                         $zip->addFile($full_path, 'images/'.$name.'.png');
 
-                        fputcsv($fp, [$name]);
+                        fputcsv($fp, [
+                            $name,
+                            $voucher->amount,
+                            $voucher->expire_at->toFormattedDateString(),
+                            $voucher->note,
+                            $voucher->created_at->toFormattedDateString()
+                        ]);
                     }
                 }
             }
