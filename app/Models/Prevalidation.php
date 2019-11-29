@@ -71,6 +71,13 @@ class Prevalidation extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function records() {
+        return $this->hasMany(PrevalidationRecord::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function fund() {

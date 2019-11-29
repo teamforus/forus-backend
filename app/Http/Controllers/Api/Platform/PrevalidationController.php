@@ -97,6 +97,7 @@ class PrevalidationController extends Controller
                 'uid', $uid
             )->count() > 0);
 
+            /** @var Prevalidation $prevalidation */
             $prevalidation = Prevalidation::create([
                 'uid' => $uid,
                 'state' => 'pending',
@@ -106,7 +107,7 @@ class PrevalidationController extends Controller
             ]);
 
             foreach ($records as $record) {
-                $prevalidation->records()->create($record);
+                $prevalidation->prevalidation_records()->create($record);
             }
 
             $prevalidation->load('prevalidation_records');
