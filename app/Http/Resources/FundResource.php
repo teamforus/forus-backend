@@ -61,7 +61,7 @@ class FundResource extends Resource
         }
 
         $data = array_merge($fund->only([
-            'id', 'name', 'organization_id', 'state', 'notification_amount', 'tags'
+            'id', 'name', 'description', 'organization_id', 'state', 'notification_amount', 'tags'
         ]), [
             'key' => $fund->fund_config->key ?? '',
             'logo' => new MediaResource($fund->logo),
