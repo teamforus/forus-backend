@@ -77,7 +77,7 @@ class Implementation extends Model
             'implementation_id',
             'id',
             'id',
-            'id'
+            'fund_id'
         );
     }
 
