@@ -94,6 +94,7 @@ class Implementation extends Model
             'url_sponsor'   => config('forus.front_ends.panel-sponsor'),
             'url_provider'  => config('forus.front_ends.panel-provider'),
             'url_validator' => config('forus.front_ends.panel-validator'),
+            'url_website'   => config('forus.front_ends.website-general'),
             'url_app'       => config('forus.front_ends.landing-app'),
             'lon'           => config('forus.front_ends.map.lon'),
             'lat'           => config('forus.front_ends.map.lat')
@@ -175,6 +176,7 @@ class Implementation extends Model
                 $key . '_sponsor',
                 $key . '_provider',
                 $key . '_validator',
+                $key . '_website',
             ];
         })->flatten()->merge([
             'app-me_app'
