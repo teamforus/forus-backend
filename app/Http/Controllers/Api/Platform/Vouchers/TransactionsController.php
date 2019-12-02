@@ -50,8 +50,8 @@ class TransactionsController extends Controller
 
         $this->authorize('useAsProvider', $voucher);
 
-        $trashold = env('VOUCHER_TRANSACTION_TRASHOLD');
-        $trashold_delay = env('VOUCHER_TRANSACTION_TRASHOLD_DELAY');
+        $trashold = env('VOUCHER_TRANSACTION_TRASHOLD', 5);
+        $trashold_delay = env('VOUCHER_TRANSACTION_TRASHOLD_DELAY', 5);
 
         if ($voucher->transactions()->where(
             'created_at', '>=', now()->subSeconds($trashold)
