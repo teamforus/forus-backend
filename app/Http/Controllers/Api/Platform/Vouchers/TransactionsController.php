@@ -57,7 +57,7 @@ class TransactionsController extends Controller
             'created_at', '>=', now()->subSeconds($trashold)
         )->exists()) {
             sleep($trashold_delay);
-            
+
             return response()->json([
                 'message' => sprintf(
                     "'You have to wait at least %s seconds before making next transaction'",
