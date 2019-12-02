@@ -136,7 +136,8 @@ class FundProviderController extends Controller
             $mailService->sendPushNotification(
                 $fundProvider->organization->identity_address,
                 trans('push.providers.accepted.title', $transData),
-                trans('push.providers.accepted.body', $transData)
+                trans('push.providers.accepted.body', $transData),
+                'funds.provider_approved'
             );
         } elseif ($request->has('allow_budget') &&
             !$request->input('allow_budget')) {
