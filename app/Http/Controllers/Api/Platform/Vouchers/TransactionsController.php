@@ -50,6 +50,22 @@ class TransactionsController extends Controller
 
         $this->authorize('useAsProvider', $voucher);
 
+        $trashold = env('VOUCHER_TRANSACTION_TRASHOLD');
+        $trashold_delay = env('VOUCHER_TRANSACTION_TRASHOLD_DELAY');
+
+        if ($voucher->transactions()->where(
+            'created_at', '>=', now()->subSeconds($trashold)
+        )->exists()) {
+            sleep($trashold_delay);
+            
+            return response()->json([
+                'message' => sprintf(
+                    "'You have to wait at least %s seconds before making next transaction'",
+                    $trashold_delay
+                ),
+            ], 422);
+        }
+
         /** @var Product|null $product */
         if ($voucher->type == 'product') {
             $product = $voucher->product;
