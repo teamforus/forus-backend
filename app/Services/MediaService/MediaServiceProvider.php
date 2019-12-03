@@ -5,6 +5,10 @@ namespace App\Services\MediaService;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\Employee;
+use App\Models\Office;
+use App\Models\ProductCategory;
+use App\Models\Voucher;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Record\Models\RecordCategory;
 use App\Services\MediaService\Models\Media;
@@ -18,11 +22,15 @@ class MediaServiceProvider extends ServiceProvider
      *
      * @var array
      */
-    protected $mediable_models = [
-        Fund::class,
-        Product::class,
-        Organization::class,
-        RecordCategory::class,
+    protected $mediable_map = [
+        'fund'              => Fund::class,
+        'office'            => Office::class,
+        'voucher'           => Voucher::class,
+        'product'           => Product::class,
+        'employees'         => Employee::class,
+        'organization'      => Organization::class,
+        'product_category'  => ProductCategory::class,
+        'record_category'   => RecordCategory::class,
     ];
 
     public function boot()
@@ -46,7 +54,7 @@ class MediaServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('media', function () {
-            return new MediaService($this->mediable_models);
+            return new MediaService($this->mediable_map);
         });
     }
 }

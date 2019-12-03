@@ -29,14 +29,18 @@ class MediaService
      */
     protected $storagePath;
 
+    public static $mediable_map;
+
     /**
      * MediaService constructor.
-     *
+     * @param $mediable_map
      */
-    public function __construct() {
+    public function __construct($mediable_map = []) {
         $this->model = Media::query();
         $this->storagePath = str_start(config('media.storage_path'), '/');
         $this->storageDriver = config('media.filesystem_driver', 'local');
+
+        self::$mediable_map = $mediable_map;
     }
 
     /**
