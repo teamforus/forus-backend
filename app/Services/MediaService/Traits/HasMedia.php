@@ -2,8 +2,6 @@
 
 namespace App\Services\MediaService\Traits;
 
-
-
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -25,8 +23,8 @@ trait HasMedia
         }
 
         $media->update([
-            'mediable_type' => static::class,
-            'mediable_id' => $this->id,
+            'mediable_type' => $this->getMorphClass(),
+            'mediable_id'   => $this->id,
         ]);
     }
 
