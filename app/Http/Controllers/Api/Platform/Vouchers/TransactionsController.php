@@ -39,7 +39,7 @@ class TransactionsController extends Controller
      *
      * @param StoreVoucherTransactionRequest $request
      * @param VoucherToken $voucherToken
-     * @return VoucherTransactionResource
+     * @return VoucherTransactionResource|\Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
@@ -91,13 +91,22 @@ class TransactionsController extends Controller
             }
         }
 
+        // TODO: cleanup
+        $threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD');
+        $needsReview = $voucher->transactions()->where(
+            'created_at', '>=', now()->subSeconds($threshold)
+        )->exists();
+
         /** @var VoucherTransaction $transaction */
-        $transaction = $voucher->transactions()->create([
+        $transaction = $voucher->transactions()->create(array_merge([
             'amount' => $amount,
             'product_id' => $product ? $product->id : null,
             'address' => app()->make('token_generator')->address(),
             'organization_id' => $organizationId,
-        ]);
+        ], $needsReview ? [
+            'attempts' => 50,
+            'last_attempt_at' => now()
+        ] : []));
 
         $transaction->sendPushNotificationTransaction();
 
