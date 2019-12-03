@@ -92,7 +92,7 @@ class TransactionsController extends Controller
         }
 
         // TODO: cleanup
-        $threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD');
+        $threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5);
         $needsReview = $voucher->transactions()->where(
             'created_at', '>=', now()->subSeconds($threshold)
         )->exists();
