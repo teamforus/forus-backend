@@ -22,8 +22,8 @@ trait HasFiles
         }
 
         return $file->update([
-            'fileable_type' => static::class,
-            'fileable_id' => $this->id,
+            'fileable_type' => $this->getMorphClass(),
+            'fileable_id'   => $this->id,
         ]);
     }
 

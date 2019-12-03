@@ -2,9 +2,6 @@
 
 namespace App\Services\MediaService\Traits;
 
-
-
-use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -25,11 +22,8 @@ trait HasMedia
             });
         }
 
-        $map_element_search = array_search(static::class, MediaService::$mediable_map);
-
         $media->update([
-            'mediable_type' => $map_element_search !== false ?
-                $map_element_search : static::class,
+            'mediable_type' => $this->getMorphClass(),
             'mediable_id'   => $this->id,
         ]);
     }
