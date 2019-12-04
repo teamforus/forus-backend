@@ -7,25 +7,25 @@ use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequ
 use App\Http\Resources\FundResource;
 use App\Http\Resources\FundProviderResource;
 use App\Models\Fund;
-use App\Models\FundProductCategory;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use Illuminate\Http\Request;
+use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 
 class FundProviderController extends Controller
 {
     /**
      * Display list funds available for apply as provider
      *
-     * @param Request $request
+     * @param IndexFundsRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function availableFunds(
-        Request $request,
+        IndexFundsRequest $request,
         Organization $organization
     ) {
         $this->authorize('show', $organization);
@@ -38,11 +38,9 @@ class FundProviderController extends Controller
             'fund_id'
         )->toArray());
 
-        if ($request->has('fund_id')) {
-            $query->where('id', $request->get('fund_id'));
-        }
-
-        return FundResource::collection($query->latest()->get());
+        return FundResource::collection(Fund::search(
+            $request, $query
+        )->latest()->get());
     }
 
     /**

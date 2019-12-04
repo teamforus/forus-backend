@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Traits\HasTags;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -13,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Http\Request;
 
 
 /**
@@ -102,7 +104,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Fund extends Model
 {
-    use HasMedia;
+    use HasMedia, HasTags;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';
@@ -517,6 +519,34 @@ class Fund extends Model
                     default: return 0; break;
                 }
             })->sum() + $fund->fund_formula_products->pluck('price')->sum();
+    }
+
+    /**
+     * @param Request $request
+     * @param Builder|null $query
+     * @return Builder
+     */
+    public static function search(
+        Request $request,
+        Builder $query = null
+    ) {
+        $query = $query ?: self::query();
+
+        if ($request->has('tag')) {
+            $query->whereHas('tags', function(Builder $query) use ($request) {
+                return $query->where('key', $request->get('tag'));
+            });
+        }
+
+        if ($request->has('organization_id')) {
+            $query->where('organization_id', $request->get('organization_id'));
+        }
+
+        if ($request->has('fund_id')) {
+            $query->where('id', $request->get('fund_id'));
+        }
+
+        return $query;
     }
 
     /**

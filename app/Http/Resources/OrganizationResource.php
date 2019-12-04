@@ -64,7 +64,7 @@ class OrganizationResource extends Resource
         // exit(json_encode_pretty(compact('logoDep', 'fundsDep', 'fundsCountDep', 'businessType', 'permissionsCountDep')));
 
         return array_filter(array_merge(collect($organization)->only([
-            'id', 'identity_address', 'name', 'kvk', 'business_type_id',
+            'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
             $organization->email_public ? 'email': '',
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': '',
