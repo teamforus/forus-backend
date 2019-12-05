@@ -165,11 +165,11 @@ class VoucherPolicy
         $id = 'organizations.id';
 
         if ($voucher->expire_at->isPast()) {
-            $this->deny('voucher_expired');
+            $this->deny(trans('validation.voucher.expired'));
         }
 
         if ($voucher->fund->state != Fund::STATE_ACTIVE) {
-            $this->deny('fund_not_active');
+            $this->deny(trans('validation.voucher.fund_not_active'));
         }
 
         if ($voucher->type == 'regular') {

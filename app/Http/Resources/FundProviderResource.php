@@ -29,17 +29,20 @@ class FundProviderResource extends Resource
      */
     public function toArray($request)
     {
-        return collect($this->resource)->only([
+        $fundProvider = $this->resource;
+
+        return collect($fundProvider)->only([
             'id', 'organization_id', 'fund_id', 'dismissed',
             'allow_products', 'allow_budget'
         ])->merge([
-            'products' => $this->resource->fund_provider_products()
+            'products' => $fundProvider->fund_provider_products()
                 ->pluck('product_id'),
-            'products_count_all'    => $this->resource->organization->products()->count(),
-            'fund'                  => new FundResource($this->resource->fund),
+            'products_count_all'    => $fundProvider->organization->products()->count(),
+            'fund'                  => new FundResource($fundProvider->fund),
             'organization'          => new OrganizationResource(
-                $this->resource->organization
+                $fundProvider->organization
             ),
+            'validators' => ValidatorResource::collection($fundProvider->organization->validators)
         ])->toArray();
     }
 }

@@ -32,15 +32,4 @@ return [
         // view fund details
         "show"      => true
     ],
-    "identity"      => [
-        "address"   => false
-    ],
-    // enable newsletter
-    "newsletter"    => false,
-
-    // enable contact form
-    "contactForm"   => false,
-
-    // enable blog
-    "blog"          => false
 ];
