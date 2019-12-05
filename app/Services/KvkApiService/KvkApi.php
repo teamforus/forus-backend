@@ -60,7 +60,7 @@ class KvkApi
                 $kvk_number
             ));
 
-            if (is_object($response)) {
+            if (is_object($response) && count($response->data->items)) {
                 return $response;
             }
         } catch (\Exception $e) {}
