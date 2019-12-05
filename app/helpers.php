@@ -425,3 +425,21 @@ if (!function_exists('filter_bool')) {
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 }
+
+if (!function_exists('url_extend_get_params')) {
+    /**
+     * @param string $url
+     * @param array $params
+     * @return string
+     */
+    function url_extend_get_params(string $url, array $params = []) {
+        $url = explode('?', rtrim($url, '/'));
+
+        $urlParams = [];
+        parse_str($url[1] ?? "", $urlParams);
+
+        return sprintf("%s?%s", rtrim($url[0], '/'), http_build_query(array_merge(
+            $params, $urlParams
+        )));
+    }
+}

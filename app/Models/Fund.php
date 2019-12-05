@@ -1111,9 +1111,33 @@ class Fund extends Model
      */
     public function urlWebshop(string $uri = "/")
     {
-        $url = rtrim($this->fund_config->implementation->url_webshop ??
-            env('WEB_SHOP_GENERAL_URL'), '/');
+        return $this->fund_config->implementation->urlWebshop($uri);
+    }
 
-        return url(sprintf('%s/%s', $url, ltrim($uri, '/')));
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlSponsorDashboard(string $uri = "/")
+    {
+        return $this->fund_config->implementation->urlSponsorDashboard($uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlProviderDashboard(string $uri = "/")
+    {
+        return $this->fund_config->implementation->urlProviderDashboard($uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlValidatorDashboard(string $uri = "/")
+    {
+        return $this->fund_config->implementation->urlValidatorDashboard($uri);
     }
 }

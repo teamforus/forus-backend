@@ -7,8 +7,9 @@ use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Prevalidation;
+use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class DigIdController extends Controller
 {
@@ -26,88 +27,110 @@ class DigIdController extends Controller
 
     /**
      * @param StartDigIdRequest $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
-     * @throws \Exception
+     * @return array|void
      */
-    public function start(
-        StartDigIdRequest $request
-    ) {
-        $fund = Fund::find($request->input('fund_id'));
+    public function start(StartDigIdRequest $request)
+    {
+        $digidSession = DigIdSession::createSession(
+            auth_address(),
+            Implementation::activeModel(),
+            self::makeFinalRedirectUrl($request)
+        );
 
-        /** @var Implementation $implementation */
-        $implementation = Implementation::where([
-            'key' => Implementation::activeKey()
-        ])->first();
+        $digidSession->startAuthSession(url(sprintf(
+            '/api/v1/platform/digid/%s/resolve',
+            $digidSession->session_uid
+        )));
 
-        if (!empty($this->recordRepo->bsnByAddress(auth_address()))) {
-            return abort(403, 'BSN is already known.');
+        if ($digidSession->state == DigIdSession::STATE_PENDING_AUTH) {
+            return $digidSession->only('session_uid');
         }
 
-        if (!$implementation || !$implementation->digidEnabled()) {
-            return abort(501, 'Invalid implementation or no DigId support.');
-        }
+        return abort(503, 'Unable to handle the request at the moment.');
+    }
 
-        if (!$fund->fund_config && $implementation->id !=
-            $fund->fund_config->implementation_id) {
-            return abort(501, 'Target fund is not part of current implementation.');
-        }
-
-        $digId = $implementation->getDigid();
-        $goBackUrl = $implementation->funds[0]->urlWebshop(sprintf(
-            '/fund/%s/request', $request->input('fund_id')
-        )) . '?digid=true';
-
-        if ($redirectUrl = $digId->makeAuthRequestUrl($goBackUrl)) {
-            return compact('redirectUrl');
-        }
-
-        return abort(501);
+    /**
+     * @param DigIdSession $session
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function redirect(DigIdSession $session) {
+        return redirect($session->digid_auth_redirect_url);
     }
 
     /**
      * @param ResolveDigIdRequest $request
-     * @return array|void
-     * @throws \Exception
+     * @param DigIdSession $session
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
      */
     public function resolve(
-        ResolveDigIdRequest $request
+        ResolveDigIdRequest $request,
+        DigIdSession $session
     ) {
-        /** @var Implementation $implementation */
-        $implementation = Implementation::where([
-            'key' => Implementation::activeKey()
-        ])->first();
-
-        if (!empty($this->recordRepo->bsnByAddress(auth_address()))) {
-            return abort(403, 'BSN is already known.');
+        if ($request->get('session_secret') !== $session->session_secret) {
+            return redirect(url_extend_get_params($session->session_final_url, [
+                'digid_error' => "unknown_error",
+            ]));
         }
 
-        if (!$implementation || !$implementation->digidEnabled()) {
-            return abort(501, 'Invalid implementation or no DigId support.');
-        }
-
-        $bsn = $implementation->getDigid()->getBsnFromResponse(
-            $request->input('rid'),
-            $request->input('aselect_credentials')
+        $session->requestBsn(
+            $request->get('rid', ''),
+            $request->get('a-select-server', ''),
+            $request->get('aselect_credentials', '')
         );
 
-        $this->recordRepo->recordCreate(auth_address(), 'bsn', $bsn);
-        $record_type_id = $this->recordRepo->getTypeIdByKey('bsn');
+        if ($session->state !== DigIdSession::STATE_AUTHORIZED) {
+            return redirect(url_extend_get_params($session->session_final_url, [
+                'digid_error' => $session->digid_error_code ?
+                    "error_" . $session->digid_error_code : "error"
+            ]));
+        }
 
-        Prevalidation::where([
-            'state' => 'pending'
-        ])->whereHas('prevalidation_records', function(
-            Builder $builder
-        ) use ($record_type_id, $bsn) {
-            $builder->where([
-                'record_type_id' => $record_type_id,
-                'value' => $bsn,
-            ]);
-        })->get()->each(function(Prevalidation $prevalidation) {
-            $prevalidation->assignToIdentity(auth_address());
-        });
+        $bsn = $session->digid_uid;
+        $identity = $session->identity_address;
+        $identity_bsn = $this->recordRepo->bsnByAddress($identity);
+        $bsn_identity = $this->recordRepo->identityAddressByBsn($bsn);
 
-        return [
-            'success' => true
-        ];
+        if ($identity_bsn && $identity_bsn !== $bsn_identity) {
+            return redirect(url_extend_get_params($session->session_final_url, [
+                'digid_error' => "uid_dont_match",
+            ]));
+        } elseif ($bsn_identity && $bsn_identity !== $identity) {
+            return redirect(url_extend_get_params($session->session_final_url, [
+                'digid_error' => "uid_used",
+            ]));
+        } else if (!$identity_bsn && !$bsn_identity) {
+            $this->recordRepo->recordCreate(
+                $session->identity_address, 'bsn', $session->digid_uid);
+            Prevalidation::assignAvailableToIdentityByBsn($session->identity_address);
+
+            return redirect(url_extend_get_params($session->session_final_url, [
+                'digid_success' => 'signed_up'
+            ]));
+        }
+
+        return redirect(url_extend_get_params($session->session_final_url, [
+            'digid_success' => 'signed_in'
+        ]));
+    }
+
+    /**
+     * @param Request $request
+     * @return bool|mixed|string
+     */
+    private static function makeFinalRedirectUrl(Request $request) {
+        if ($request->input('redirect_type') == 'fund_request') {
+            $fund = Fund::find($request->input('fund_id'));
+            return $fund->urlWebshop(sprintf('/fund/%s/request', $fund->id));
+        } else if ($request->input('redirect_type') == 'auth_webshop') {
+            Implementation::activeModel()->urlWebshop();
+        } else if ($request->input('redirect_type') == 'auth_sponsor') {
+            Implementation::activeModel()->urlSponsorDashboard();
+        } else if ($request->input('redirect_type') == 'auth_provider') {
+            Implementation::activeModel()->urlSponsorDashboard();
+        } else if ($request->input('redirect_type') == 'auth_validator') {
+            Implementation::activeModel()->urlSponsorDashboard();
+        }
+
+        return false;
     }
 }

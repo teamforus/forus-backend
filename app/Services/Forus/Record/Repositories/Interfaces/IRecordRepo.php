@@ -78,6 +78,15 @@ interface IRecordRepo {
     );
 
     /**
+     * Get identity_address by bsn
+     * @param string $bsn
+     * @return string|null
+     */
+    public function identityAddressByBsn(
+        string $bsn
+    );
+
+    /**
      * Get type id by key
      * @param string $key
      * @return int|null

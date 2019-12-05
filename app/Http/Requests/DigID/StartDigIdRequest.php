@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\DigID;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\FormRequest;
+use App\Models\Implementation;
+use Illuminate\Validation\Rule;
 
 class StartDigIdRequest extends FormRequest
 {
@@ -10,9 +12,20 @@ class StartDigIdRequest extends FormRequest
      * Determine if the user is authorized to make this request.
      *
      * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function authorize()
     {
+        $implementation = Implementation::activeModel();
+
+        if (!$implementation) {
+            $this->deny("Invalid implementation.");
+        }
+
+        if (!$implementation->digidEnabled()) {
+            $this->deny("DigId not enabled for this implementation.");
+        }
+
         return true;
     }
 
@@ -23,14 +36,18 @@ class StartDigIdRequest extends FormRequest
      */
     public function rules()
     {
+        $redirectTypes = [
+            'fund_request', 'auth_webshop', 'auth_sponsor', 'auth_provider', 'auth_validator'
+        ];
+
         return [
-            'target' => [
-                'nullable',
-                'alpha_dash',
-            ],
+            'redirect_type' => 'required|in:' . join(',', $redirectTypes),
             'fund_id' => [
-                'required',
-                'exists:funds,id',
+                'required_if:redirect_type,fund_request',
+                Rule::exists('funds', 'id')->whereIn(
+                    'id',
+                    Implementation::activeFundsQuery()->pluck('id')->toArray()
+                )
             ]
         ];
     }

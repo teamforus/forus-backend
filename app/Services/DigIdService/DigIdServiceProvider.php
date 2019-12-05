@@ -6,6 +6,7 @@ use App\Services\BunqService\Commands\ProcessBunqCheckBunqMeTabsCommand;
 use App\Services\BunqService\Commands\ProcessBunqPaymentsCommand;
 use App\Services\BunqService\Commands\ProcessBunqSyncIdealIssuersCommand;
 use App\Services\BunqService\Commands\ProcessBunqTopUpsCommand;
+use App\Services\DigIdService\Console\Commands\DigIdSessionsCleanupCommand;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\DigIdService\Repositories\Interfaces\IDigIdRepo;
 use Illuminate\Console\Scheduling\Schedule;
@@ -15,6 +16,10 @@ class DigIdServiceProvider extends ServiceProvider
 {
     public function boot()
     {
+        $this->commands([
+            DigIdSessionsCleanupCommand::class
+        ]);
+
         $this->app->bind(IDigIdRepo::class, DigIdRepo::class);
         $this->app->bind('digId', function () {
             return app(IDigIdRepo::class);

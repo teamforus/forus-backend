@@ -37,6 +37,8 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
+ * @property-read int|null $records_count
  */
 class Prevalidation extends Model
 {
@@ -62,6 +64,31 @@ class Prevalidation extends Model
         'uid', 'identity_address', 'state', 'fund_id', 'organization_id',
         'exported',
     ];
+
+    public static function assignAvailableToIdentityByBsn(string $identity_address)
+    {
+        $recordRepo = resolve('forus.services.record');
+        $record_type_id = $recordRepo->getTypeIdByKey('bsn');
+
+        if (!$bsn = $recordRepo->bsnByAddress($identity_address)) {
+            return;
+        }
+
+        self::where([
+            'state' => self::STATE_PENDING
+        ])->whereHas('prevalidation_records', function(
+            Builder $builder
+        ) use ($record_type_id, $bsn) {
+            $builder->where([
+                'record_type_id' => $record_type_id,
+                'value' => $bsn,
+            ]);
+        })->get()->each(function(
+            Prevalidation $prevalidation
+        ) use ($identity_address) {
+            $prevalidation->assignToIdentity($identity_address);
+        });
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -93,7 +120,7 @@ class Prevalidation extends Model
 
     /**
      * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return Builder
      */
     public static function search(
         Request $request
@@ -198,7 +225,6 @@ class Prevalidation extends Model
      */
     public function assignToIdentity($identity_address) {
         $recordRepo = resolve('forus.services.record');
-        $bsn = $recordRepo->bsnByAddress($identity_address);
         $bsnTypeId = $recordRepo->getTypeIdByKey('bsn');
 
         foreach($this->prevalidation_records as $record) {
@@ -214,7 +240,7 @@ class Prevalidation extends Model
             );
 
             $validationRequest = $recordRepo->makeValidationRequest(
-                auth_address(),
+                $identity_address,
                 $record['id']
             );
 

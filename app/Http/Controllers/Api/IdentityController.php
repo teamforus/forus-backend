@@ -50,7 +50,13 @@ class IdentityController extends Controller
 
         $identityAddress = $this->identityRepo->makeByEmail(
             $request->input('records.primary_email'),
-            $request->input('records')
+            collect($request->input('records', []))->filter(function(
+                $value, $key
+            ) {
+                return !empty($value) && !in_array($key, [
+                    'bsn', 'primary_email'
+                ]);
+            })->toArray()
         );
 
         $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);

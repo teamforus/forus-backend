@@ -80,9 +80,9 @@ class RecordController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  RecordUpdateRequest  $request
-     * @param  int  $recordId
-     * @return \Illuminate\Http\Response
+     * @param RecordUpdateRequest $request
+     * @param int $recordId
+     * @return array
      */
     public function update(
         RecordUpdateRequest $request,

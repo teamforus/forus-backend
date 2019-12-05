@@ -17,6 +17,7 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
+use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
@@ -121,6 +122,16 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('fund_request_clarification', function ($id) {
             return FundRequestClarification::find($id) ?? abort(404);
+        });
+
+        $router->bind('digid_session_uid', function ($digid_session_uid) {
+            return DigIdSession::where([
+                'state'         => DigIdSession::STATE_PENDING_AUTH,
+                'session_uid'   => $digid_session_uid,
+            ])->where(
+                'created_at', '>=', now()->subSecond(
+                    DigIdSession::SESSION_EXPIRATION_TIME
+                ))->first() ?? abort(404);
         });
 
         $router->bind('platform_config', function ($value) {

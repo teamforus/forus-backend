@@ -558,5 +558,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->patch('notifications', 'Api\Platform\NotificationsController@update');
 
     $router->post('/digid', 'DigIdController@start');
-    $router->post('/digid/resolve', 'DigIdController@resolve');
 });
+
+$router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
+$router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');

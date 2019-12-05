@@ -138,6 +138,22 @@ class RecordRepo implements IRecordRepo
     }
 
     /**
+     * Get identity_address by bsn
+     * @param string $bsn
+     * @return string|null
+     */
+    public function identityAddressByBsn(
+        string $bsn
+    ) {
+        $record = Record::query()->where([
+            'record_type_id' => $this->getTypeIdByKey('bsn'),
+            'value' => $bsn,
+        ])->first();
+
+        return $record ? $record->identity_address : null;
+    }
+
+    /**
      * Get identity id by email record
      * @param string $identityAddress
      * @return string|null
@@ -172,7 +188,7 @@ class RecordRepo implements IRecordRepo
     /**
      * Get type id by key
      * @param string $key
-     * @return int|nullove
+     * @return int|null
      */
     public function getTypeIdByKey(
         string $key
@@ -644,8 +660,9 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Show validation request
+     *
      * @param string $validationUuid
-     * @return bool
+     * @return array|bool
      */
     public function showValidationRequest(
         string $validationUuid
@@ -659,14 +676,12 @@ class RecordRepo implements IRecordRepo
             return false;
         }
 
-        $out = array_merge($validation->only([
+        return array_merge($validation->only([
             'state', 'identity_address', 'uuid'
         ]), $validation->record->only([
             'value'
         ]), $validation->record->record_type->only([
             'key', 'name'
         ]));
-
-        return $out;
     }
 }

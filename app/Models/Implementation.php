@@ -108,6 +108,23 @@ class Implementation extends Model
         return collect(self::query()->where(compact('key'))->first());
     }
 
+    /**
+     * @param $key
+     * @return Implementation|null
+     */
+    public static function findModelByKey($key) {
+        /** @var Implementation|null $implementation */
+        $implementation = self::query()->where(compact('key'))->first();
+        return $implementation;
+    }
+
+    /**
+     * @return Implementation|null
+     */
+    public static function activeModel() {
+        return self::findModelByKey(self::activeKey());
+    }
+
     public static function general_urls() {
         return [
             'url_webshop'   => config('forus.front_ends.webshop'),
@@ -212,7 +229,7 @@ class Implementation extends Model
 
     /**
      * @return DigIdRepo
-     * @throws \Exception
+     * @throws \App\Services\DigIdService\DigIdException
      */
     public function getDigid()
     {
@@ -222,5 +239,49 @@ class Implementation extends Model
             $this->digid_shared_secret,
             $this->digid_a_select_server
         );
+    }
+
+    private function urlFrontend($url, $uri) {
+        return url(sprintf('%s/%s', rtrim($url, '/'), ltrim($uri, '/')));
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlWebshop(string $uri = "/")
+    {
+        return $this->urlFrontend(
+            $this->url_webshop ?? env('WEB_SHOP_GENERAL_URL'), $uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlSponsorDashboard(string $uri = "/")
+    {
+        return $this->urlFrontend(
+            $this->url_sponsor ?? env('PANEL_SPONSOR_URL'), $uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlProviderDashboard(string $uri = "/")
+    {
+        return $this->urlFrontend(
+            $this->url_provider ?? env('PANEL_PROVIDER_URL'), $uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlValidatorDashboard(string $uri = "/")
+    {
+        return $this->urlFrontend(
+            $this->url_validator ?? env('PANEL_VALIDATOR_URL'), $uri);
     }
 }

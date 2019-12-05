@@ -4,6 +4,7 @@ namespace App\Services\DigIdService\Repositories;
 
 use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\Repositories\Interfaces\IDigIdRepo;
+use GuzzleHttp\Client;
 
 class DigIdRepo implements IDigIdRepo
 {
@@ -58,6 +59,41 @@ class DigIdRepo implements IDigIdRepo
         $this->environment = $env;
     }
 
+    public static function responseCodeDetails($errorCode)
+    {
+        if ($errorCode == self::DIGID_SUCCESS) {
+            return 'DIGID_SUCCESS';
+        } elseif ($errorCode == self::DIGID_UNAVAILABLE) {
+            return 'DIGID_UNAVAILABLE';
+        } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_1) {
+            return 'DIGID_TEMPORARY_UNAVAILABLE_1';
+        } elseif ($errorCode == self::DIGID_VERIFICATION_FAILED_1) {
+            return 'DIGID_VERIFICATION_FAILED_1';
+        } elseif ($errorCode == self::DIGID_VERIFICATION_FAILED_2) {
+            return 'DIGID_VERIFICATION_FAILED_2';
+        } elseif ($errorCode == self::DIGID_ILLEGAL_REQUEST) {
+            return 'DIGID_ILLEGAL_REQUEST';
+        } elseif ($errorCode == self::DIGID_ERROR_APP_ID) {
+            return 'DIGID_ERROR_APP_ID';
+        } elseif ($errorCode == self::DIGID_ERROR_ASELECT) {
+            return 'DIGID_ERROR_ASELECT';
+        } elseif ($errorCode == self::DIGID_CANCELLED) {
+            return 'DIGID_CANCELLED';
+        } elseif ($errorCode == self::DIGID_BUSY) {
+            return 'DIGID_BUSY';
+        } elseif ($errorCode == self::DIGID_INVALID_SESSION) {
+            return 'DIGID_INVALID_SESSION';
+        } elseif ($errorCode == self::DIGID_WEBSERVICE_NOT_ACTIVE) {
+            return 'DIGID_WEBSERVICE_NOT_ACTIVE';
+        } elseif ($errorCode == self::DIGID_WEBSERVICE_NOT_AUTHORISED) {
+            return 'DIGID_WEBSERVICE_NOT_AUTHORISED';
+        } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_2) {
+            return 'DIGID_TEMPORARY_UNAVAILABLE_2';
+        }
+
+        return $errorCode;
+    }
+
     /**
      * @return string
      * @throws DigIdException
@@ -100,27 +136,13 @@ class DigIdRepo implements IDigIdRepo
         return sprintf("%s?%s", $this->getApiUrl(), http_build_query($params));
     }
 
-    /**
-     * @param string $app_url
-     * @param array $extraParams
-     * @return bool|string
-     * @throws DigIdException
-     */
-    public function makeAuthRequestUrl($app_url = "", array $extraParams = [])
-    {
+    private function parseResponseBody($response) {
         $result = [];
+        parse_str($response, $result);
+        return $result;
+    }
 
-        $request = $this->makeAuthorizedRequest(array_merge([
-            "request"           => "authenticate",
-            "app_url"           => $app_url,
-        ], $extraParams));
-
-        //- exit(json_encode_pretty($request));
-
-        parse_str(file_get_contents($this->makeRequestUrl($request)), $result);
-
-        // exit(json_encode_pretty($result));
-
+    private function validateAuthRequestResponse($result) {
         // Validate result
         $check = TRUE;
 
@@ -133,62 +155,15 @@ class DigIdRepo implements IDigIdRepo
         // Should be alphanumeric.
         $check = $check && isset($result['a-select-server']) && ctype_alnum($result['a-select-server']);
 
-        // Should be alphanumeric.
+        // Should be numeric and 4 characters.
         $check = $check && isset($result['result_code']) && ctype_digit($result['result_code']);
 
-        // Should be numeric and 4 characters.
-        if (isset($result['result_code']) && $result['result_code'] == self::DIGID_SUCCESS && $check) {
-            // Build redirect URL.
-            return sprintf('%s&%s', $result['as_url'],  http_build_query(array_merge([
-                'rid'               => $result['rid'],
-                'a-select-server'   => $result['a-select-server']
-            ], $extraParams)));
-        } else {
-            return false;
-        }
+        return $check;
     }
 
-    /**
-     * @param string $rid
-     * @param string $aselect_credentials
-     * @return mixed
-     * @throws DigIdException
-     */
-    public function getBsnFromResponse(
-        string $rid,
-        string $aselect_credentials
-    ) {
-        $result = [];
-
-        $uri = $this->makeRequestUrl($this->makeAuthorizedRequest([
-            'request'               => 'verify_credentials',
-            'rid'                   => $rid,
-            'aselect_credentials'   => $aselect_credentials,
-        ]));
-
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $uri);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
-
-        $request = curl_exec($ch);
-
-        // Parse the response.
-        if (!isset($request) || empty($request)) {
-            throw new DigIdException("DigiD: has failed.");
-        }
-
-        parse_str($request, $result);
-
+    private function validateVerifyCredentialsResponse($result) {
         // Validate result.
         $check = true;
-
-        if (curl_getinfo($ch, CURLINFO_HTTP_CODE) !== 200) {
-            throw new DigIdException("DigiD: invalid response.");
-        }
-
-        curl_close($ch);
 
         // Should be numeric.
         $check = $check && isset($result['uid']) && ctype_digit($result['uid']);
@@ -205,16 +180,87 @@ class DigIdRepo implements IDigIdRepo
         // Should be numeric and 4 characters.
         $check = $check && isset($result['result_code']) && ctype_digit($result['result_code']);
 
-        if (!$check) {
-            throw new DigIdException("Invalid response.");
+        return $check;
+    }
+
+    /**
+     * @param string $app_url
+     * @param array $extraParams
+     * @return array|bool
+     * @throws DigIdException
+     */
+    public function makeAuthRequest($app_url = "", array $extraParams = [])
+    {
+        $request = $this->makeRequestUrl($this->makeAuthorizedRequest(array_merge([
+            "request"           => "authenticate",
+            "app_url"           => $app_url,
+        ], $extraParams)));
+
+        $response = (new Client())->get($request);
+        $result = $this->parseResponseBody($response->getBody());
+        $result_code = $result['result_code'] ?? false;
+
+        if ($result_code !== self::DIGID_SUCCESS) {
+            throw (new DigIdException(
+                "Digid API error code received."
+            ))->setDigIdCode($result_code);
         }
 
-        if ($result['result_code'] == self::DIGID_SUCCESS && $check) {
-            return $result['uid'];
-        } elseif ($result['result_code'] == self::DIGID_CANCELLED) {
-            throw new DigIdException('DigiD: login has canceled:');
-        } else {
-            throw new DigIdException('DigiD: login has failed:');
+        if (!$this->validateAuthRequestResponse($result)) {
+            throw (new DigIdException(
+                "Digid invalid auth request, response body."
+            ))->setDigIdCode($result_code);
         }
+
+        return $result;
+    }
+
+    /**
+     * @param string $rid
+     * @param string $aselect_server
+     * @param string $aselect_credentials
+     * @return mixed
+     * @throws DigIdException
+     */
+    public function getBsnFromResponse(
+        string $rid,
+        string $aselect_server,
+        string $aselect_credentials
+    ) {
+        $request = $this->makeRequestUrl($this->makeAuthorizedRequest([
+            'request'               => 'verify_credentials',
+            'rid'                   => $rid,
+            'a-select-server'       => $aselect_server,
+            'aselect_credentials'   => $aselect_credentials,
+        ]));
+
+        $response = (new Client())->get($request);
+        $result = $this->parseResponseBody($response->getBody());
+
+        if ($response->getStatusCode() !== 200) {
+            throw new DigIdException("DigiD: invalid response.");
+        }
+
+        $result_code = $result['result_code'] ?? null;
+
+        if ($result_code == self::DIGID_CANCELLED) {
+            throw (new DigIdException(
+                "Digid API Request canceled."
+            ))->setDigIdCode($result_code);
+        }
+
+        if (!$this->validateVerifyCredentialsResponse($result)) {
+            throw (new DigIdException(
+                "Digid invalid verify credentials request, response body."
+            ))->setDigIdCode($result_code);
+        }
+
+        if ($result_code == self::DIGID_SUCCESS) {
+            return $result;
+        }
+
+        throw (new DigIdException(
+            "Digid API error code received."
+        ))->setDigIdCode($result['result_code']);
     }
 }
