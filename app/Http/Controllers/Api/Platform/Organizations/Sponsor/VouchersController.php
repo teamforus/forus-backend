@@ -234,6 +234,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function exportUnassigned(
         IndexVouchersRequest $request,

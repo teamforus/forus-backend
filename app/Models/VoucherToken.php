@@ -80,13 +80,15 @@ class VoucherToken extends Model
     }
 
     /**
-     * @return string
+     * @return mixed
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function getQrLocalPath () {
-        /** @var \Storage $storage */
-        $storage = app()->make('filesystem')->disk(
-            'public'
+        $storage = resolve('filesystem')->disk(
+            env('VOUCHER_QR_STORAGE_DRIVER', 'public')
         );
+
+        $localStorage = app()->make('filesystem')->disk('local');
 
         $path = $this->qrCodeFilePath();
 
@@ -94,6 +96,8 @@ class VoucherToken extends Model
             $this->storeQrCodeFile();
         }
 
-        return $storage->path($path);
+        $localStorage->put($path, $storage->get($path));
+
+        return storage_path('app/' . $path);
     }
 }
