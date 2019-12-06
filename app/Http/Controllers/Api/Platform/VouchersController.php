@@ -105,6 +105,9 @@ class VouchersController extends Controller
         VoucherToken $voucherToken
     ) {
         $this->authorize('show', $voucherToken->voucher);
+        if ($voucherToken->voucher->expire_at < now()) {
+            abort(403);
+        }
 
         $voucher = $voucherToken->voucher;
 
@@ -127,6 +130,9 @@ class VouchersController extends Controller
         ShareProductVoucherRequest $request
     ) {
         $this->authorize('show', $voucherToken->voucher);
+        if ($voucherToken->voucher->expire_at < now()) {
+            abort(403);
+        }
 
         $voucherToken->voucher->shareVoucherEmail(
             $request->input('reason'),
