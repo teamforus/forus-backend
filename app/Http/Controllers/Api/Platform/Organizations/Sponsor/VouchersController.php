@@ -263,11 +263,13 @@ class VouchersController extends Controller
             $zip->open($zip_name, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
             $zip->addEmptyDir('images');
 
+            $tmp_images = [];
             foreach ($unassigned_vouchers as $voucher) {
                 foreach ($voucher->tokens as $token) {
                     if (!$token->need_confirmation) {
                         $full_path = $token->getQrLocalPath();
 
+                        $tmp_images[] = $full_path;
                         $name = resolve('token_generator')->generate(
                             6, 2
                         );
@@ -280,7 +282,13 @@ class VouchersController extends Controller
 
             $zip->addFile($csv_name);
             $zip->close();
+
             unlink($csv_name);
+            foreach ($tmp_images as $image) {
+                if (file_exists($image)) {
+                    unlink($image);
+                }
+            }
 
             return response()->download(public_path($zip_name));
         }

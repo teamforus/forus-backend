@@ -97,6 +97,7 @@ class VoucherToken extends Model
         }
 
         $localStorage->put($path, $storage->get($path));
+        $storage->delete($path);
 
         return storage_path('app/' . $path);
     }
