@@ -166,6 +166,11 @@ class RouteServiceProvider extends ServiceProvider
 
             if (is_array($config)) {
                 $implementation = Implementation::active();
+                $implementationModal = Implementation::activeModel();
+
+
+                $config['digid'] = $implementationModal ?
+                    $implementationModal->digidEnabled() : false;
 
                 $config['fronts'] = $implementation->only([
                     'url_webshop', 'url_sponsor', 'url_provider',

@@ -15,9 +15,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $state
  * @property int|null $implementation_id
+ * @property string $client_type
  * @property string $identity_address
  * @property string $session_uid
  * @property string $session_secret
+ * @property string $session_request
  * @property string $session_final_url
  * @property string|null $digid_rid
  * @property string|null $digid_uid
@@ -39,6 +41,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|\App\Services\DigIdService\Models\DigIdSession onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession query()
  * @method static bool|null restore()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereClientType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereDigidAppUrl($value)
@@ -54,6 +57,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionRedirectType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionRequest($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionFinalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionSecret($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionUid($value)
@@ -90,22 +95,21 @@ class DigIdSession extends Model
         self::STATE_ERROR,
     ];
 
-    const FINAL_REDIRECT_TYPES = [
-        'auth', 'fund_request'
-    ];
-
     // Sessions which are authorized in 10 minutes are deleted
     const SESSION_EXPIRATION_TIME = 10*60;
 
     protected $table = 'digid_sessions';
 
     protected $fillable = [
-        'state', 'implementation_id', 'identity_address',
+        'state', 'implementation_id', 'client_type', 'identity_address',
+
         'session_uid', 'session_secret', 'session_final_url',
+        'session_request',
+
         'digid_rid', 'digid_uid', 'digid_app_url', 'digid_as_url',
         'digid_auth_redirect_url', 'digid_error_code',
         'digid_error_message', 'digid_request_aselect_server',
-        'digid_response_aselect_server', 'digid_response_aselect_credentials'
+        'digid_response_aselect_server', 'digid_response_aselect_credentials',
     ];
 
     /**
@@ -115,25 +119,39 @@ class DigIdSession extends Model
         return $this->belongsTo(Implementation::class);
     }
 
+    /**
+     * @param string|null $identity_address
+     * @param Implementation $implementation
+     * @param string $client_type
+     * @param string $finalRedirectUrl
+     * @param string $requestType
+     * @return DigIdSession|Model
+     */
     public static function createSession(
-        string $identity_address,
+        ?string $identity_address,
         Implementation $implementation,
-        string $finalRedirectUrl
+        string $client_type,
+        string $finalRedirectUrl,
+        string $requestType
     ) {
-        return self::create([
-            'identity_address'  => $identity_address,
-            'implementation_id' => $implementation->id,
-            'state'             => DigIdSession::STATE_CREATED,
+        $token_generator = resolve('token_generator');
 
-            'session_uid'       => resolve('token_generator')->generate(100),
-            'session_secret'    => resolve('token_generator')->generate(200),
-            'session_final_url' => $finalRedirectUrl,
+        return self::create([
+            'client_type'            => $client_type,
+            'identity_address'      => $identity_address,
+            'implementation_id'     => $implementation->id,
+            'state'                 => DigIdSession::STATE_CREATED,
+
+            'session_uid'           => $token_generator->generate(100),
+            'session_secret'        => $token_generator->generate(200),
+            'session_final_url'     => $finalRedirectUrl,
+            'session_request'       => $requestType,
         ]);
     }
 
     /**
      * @param string $goBackUrl
-     * @return bool|DigIdSession
+     * @return bool|mixed
      */
     public function startAuthSession(string $goBackUrl) {
         try {
@@ -163,6 +181,11 @@ class DigIdSession extends Model
         ]));
     }
 
+    /**
+     * @param $message
+     * @param $errorCode
+     * @return bool
+     */
     private function setError($message, $errorCode) {
         logger()->error(sprintf(
             'Could not make digid auth request, got %s: %s',
@@ -207,5 +230,16 @@ class DigIdSession extends Model
             'digid_response_aselect_credentials'    => $aselect_credentials,
             'state'                                 => self::STATE_AUTHORIZED,
         ]);
+    }
+
+    public function isAuthorized() {
+        return $this->state == self::STATE_AUTHORIZED;
+    }
+
+    public function getErrorKey() {
+        return sprintf(
+            'error%s',
+            $this->digid_error_code ? "_" . $this->digid_error_code : ""
+        );
     }
 }

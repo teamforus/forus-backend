@@ -40,7 +40,7 @@ class IdentityController extends Controller
      * Create new identity
      *
      * @param IdentityStoreRequest $request
-     * @return array
+     * @return \Illuminate\Support\Collection
      * @throws \Exception
      */
     public function store(
@@ -373,7 +373,7 @@ class IdentityController extends Controller
      * @param string $exchangeToken
      * @param string $clientType
      * @param string $implementationKey
-     * @return \Illuminate\Contracts\View\View|void
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,

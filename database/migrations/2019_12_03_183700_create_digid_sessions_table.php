@@ -21,11 +21,13 @@ class CreateDigidSessionsTable extends Migration
             $table->increments('id');
             $table->enum('state', $states)->default('created');
             $table->unsignedInteger('implementation_id')->nullable();
-            $table->string('identity_address', 200);
+            $table->string('client_type', 20)->nullable();
+            $table->string('identity_address', 200)->nullable();
 
             $table->string('session_uid', 200);
             $table->string('session_secret', 200);
             $table->string('session_final_url', 200);
+            $table->string('session_request', 100);
 
             $table->string('digid_rid', 200)->nullable();
             $table->string('digid_uid', 200)->nullable();

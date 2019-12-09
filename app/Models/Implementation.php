@@ -67,6 +67,18 @@ class Implementation extends Model
         'digid_enabled' => 'boolean'
     ];
 
+    const FRONTEND_WEBSHOP = 'webshop';
+    const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
+    const FRONTEND_PROVIDER_DASHBOARD = 'provider';
+    const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
+
+    const FRONTEND_KEYS = [
+        self::FRONTEND_WEBSHOP,
+        self::FRONTEND_SPONSOR_DASHBOARD,
+        self::FRONTEND_PROVIDER_DASHBOARD,
+        self::FRONTEND_VALIDATOR_DASHBOARD,
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
@@ -243,8 +255,19 @@ class Implementation extends Model
         );
     }
 
-    private function urlFrontend($url, $uri) {
-        return url(sprintf('%s/%s', rtrim($url, '/'), ltrim($uri, '/')));
+    /**
+     * @param string $frontend
+     * @param string $uri
+     * @return mixed|string|null
+     */
+    public function urlFrontend(string $frontend, string $uri = '') {
+        switch ($frontend) {
+            case 'webshop': return $this->urlWebshop($uri); break;
+            case 'sponsor': return $this->urlSponsorDashboard($uri); break;
+            case 'provider': return $this->urlProviderDashboard($uri); break;
+            case 'validator': return $this->urlValidatorDashboard($uri); break;
+        }
+        return null;
     }
 
     /**
@@ -253,8 +276,7 @@ class Implementation extends Model
      */
     public function urlWebshop(string $uri = "/")
     {
-        return $this->urlFrontend(
-            $this->url_webshop ?? env('WEB_SHOP_GENERAL_URL'), $uri);
+        return http_resolve_url($this->url_webshop ?? env('WEB_SHOP_GENERAL_URL'), $uri);
     }
 
     /**
@@ -263,8 +285,7 @@ class Implementation extends Model
      */
     public function urlSponsorDashboard(string $uri = "/")
     {
-        return $this->urlFrontend(
-            $this->url_sponsor ?? env('PANEL_SPONSOR_URL'), $uri);
+        return http_resolve_url($this->url_sponsor ?? env('PANEL_SPONSOR_URL'), $uri);
     }
 
     /**
@@ -273,8 +294,7 @@ class Implementation extends Model
      */
     public function urlProviderDashboard(string $uri = "/")
     {
-        return $this->urlFrontend(
-            $this->url_provider ?? env('PANEL_PROVIDER_URL'), $uri);
+        return http_resolve_url($this->url_provider ?? env('PANEL_PROVIDER_URL'), $uri);
     }
 
     /**
@@ -283,7 +303,6 @@ class Implementation extends Model
      */
     public function urlValidatorDashboard(string $uri = "/")
     {
-        return $this->urlFrontend(
-            $this->url_validator ?? env('PANEL_VALIDATOR_URL'), $uri);
+        return http_resolve_url($this->url_validator ?? env('PANEL_VALIDATOR_URL'), $uri);
     }
 }

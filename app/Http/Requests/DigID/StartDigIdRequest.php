@@ -17,6 +17,11 @@ class StartDigIdRequest extends FormRequest
     public function authorize()
     {
         $implementation = Implementation::activeModel();
+        $clientType = $this->header('Client-Type', null);
+
+        if (!$clientType || !in_array($clientType, Implementation::FRONTEND_KEYS)) {
+            $this->deny("Invalid client type.");
+        }
 
         if (!$implementation) {
             $this->deny("Invalid implementation.");
@@ -37,11 +42,11 @@ class StartDigIdRequest extends FormRequest
     public function rules()
     {
         $redirectTypes = [
-            'fund_request', 'auth_webshop', 'auth_sponsor', 'auth_provider', 'auth_validator'
+            'fund_request', 'auth'
         ];
 
         return [
-            'redirect_type' => 'required|in:' . join(',', $redirectTypes),
+            'request' => 'required|in:' . join(',', $redirectTypes),
             'fund_id' => [
                 'required_if:redirect_type,fund_request',
                 Rule::exists('funds', 'id')->whereIn(

@@ -80,6 +80,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $supplied_funds_approved_budget_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
  * @property-read int|null $supplied_funds_approved_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
  */
 class Organization extends Model
 {

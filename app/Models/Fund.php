@@ -110,6 +110,9 @@ use Illuminate\Http\Request;
  * @property-read int|null $providers_allowed_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
  * @property-read int|null $providers_declined_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
  */
 class Fund extends Model
 {

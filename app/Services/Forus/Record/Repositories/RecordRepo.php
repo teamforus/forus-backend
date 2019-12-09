@@ -476,6 +476,10 @@ class RecordRepo implements IRecordRepo
             abort(403,'record.exceptions.primary_email_already_exists');
         }
 
+        if ($typeKey == 'bsn') {
+            abort(403,'record.exceptions.bsn_record_cant_be_created');
+        }
+
         /** @var Record $record */
         $record = Record::create([
             'identity_address' => $identityAddress,
@@ -545,18 +549,15 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         $recordId
     ) {
-        $record =  Record::query()->where([
+        if (empty($record = Record::query()->where([
             'id' => $recordId,
             'identity_address' => $identityAddress
-        ])->first();
-
-        if (!$record) {
+        ])->first())) {
             return false;
         }
 
-        $recordTypeId = $this->getTypeIdByKey('primary_email');
-
-        if ($record['record_type_id'] == $recordTypeId) {
+        if ($record['record_type_id'] ==
+            $this->getTypeIdByKey('primary_email')) {
             abort(403,'record.exceptions.cant_delete_primary_email');
         }
 
