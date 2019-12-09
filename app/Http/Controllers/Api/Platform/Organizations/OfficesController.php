@@ -30,8 +30,7 @@ class OfficesController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('show', $organization);
-        $this->authorize('index', [Office::class, $organization]);
+        $this->authorize('indexPublic', [Office::class, $organization]);
 
         return OfficeResource::collection($organization->offices);
     }
@@ -74,6 +73,14 @@ class OfficesController extends Controller
 
             if ($schedule['end_time'] == 'null') {
                 $schedule['end_time'] = null;
+            }
+
+            if ($schedule['break_start_time'] == 'null') {
+                $schedule['break_start_time'] = null;
+            }
+
+            if ($schedule['break_end_time'] == 'null') {
+                $schedule['break_end_time'] = null;
             }
 
             return $schedule;
@@ -157,6 +164,14 @@ class OfficesController extends Controller
 
             if ($schedule['end_time'] == 'null') {
                 $schedule['end_time'] = null;
+            }
+
+            if ($schedule['break_start_time'] == 'null') {
+                $schedule['break_start_time'] = null;
+            }
+
+            if ($schedule['break_end_time'] == 'null') {
+                $schedule['break_end_time'] = null;
             }
 
             return $schedule;

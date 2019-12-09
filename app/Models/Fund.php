@@ -24,6 +24,7 @@ use Illuminate\Http\Request;
  * @property int $organization_id
  * @property string $name
  * @property string $state
+ * @property string $description
  * @property bool $public
  * @property float|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
@@ -124,8 +125,8 @@ class Fund extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'state', 'name', 'start_date', 'end_date',
-        'notification_amount', 'fund_id', 'notified_at', 'public'
+        'organization_id', 'state', 'name', 'description', 'start_date',
+        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public'
     ];
 
     protected $hidden = [
@@ -222,6 +223,24 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function providers_allowed_products() {
+        return $this->hasMany(FundProvider::class)->where([
+            'allow_products' => true
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function providers_declined_products() {
+        return $this->hasMany(FundProvider::class)->where([
+            'allow_products' => false
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function top_ups() {
         return $this->hasMany(FundTopUp::class);
     }
@@ -298,7 +317,35 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'approved');
+        )->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhereHas('products');
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_approved_budget() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_approved_products() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where(function(Builder $builder) {
+            $builder->orWhere('allow_products', true);
+        });
     }
 
     /**
@@ -308,7 +355,11 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'declined');
+        )->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+            'dismissed' => true,
+        ]);
     }
 
     /**
@@ -318,7 +369,10 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'pending');
+        )->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+        ]);
     }
 
     /**
@@ -700,6 +754,15 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
+            foreach ($fund->provider_organizations_approved as $organization) {
+                resolve('forus.services.notification')->newFundStarted(
+                    $organization->email,
+                    $organization->emailServiceId(),
+                    $fund->name,
+                    $fund->organization->name
+                );
+            }
+
             /*$organizations = Organization::query()->whereIn(
                 'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
@@ -745,9 +808,9 @@ class Fund extends Model
             $organization = $fund->organization;
             $sponsorCount = $organization->employees->count() + 1;
 
-            $providers = $fund->providers()->where([
-                'state' => 'approved'
-            ])->get();
+            $providers = FundProvider::whereActiveQueryBuilder(
+                $fund->providers()
+            )->get();
 
             $providerCount = $providers->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */

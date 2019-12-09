@@ -32,6 +32,7 @@ class StoreFundRequest extends FormRequest
 
         return array_merge([
             'name'                          => 'required|between:2,200',
+            'description'                   => 'nullable|string|max:140',
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'product_categories'            => 'present|array',

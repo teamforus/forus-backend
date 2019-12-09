@@ -125,8 +125,8 @@ class ProductCategory extends Model
     }
 
     /**
-     * @param $request
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param Request $request
+     * @return ProductCategory|\Illuminate\Database\Query\Builder|\Kalnoy\Nestedset\QueryBuilder
      */
     public static function search(Request $request) {
         $query = self::query();

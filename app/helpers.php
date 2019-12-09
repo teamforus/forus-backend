@@ -415,3 +415,13 @@ if (!function_exists('validate_data')) {
         return \Illuminate\Support\Facades\Validator::make($data, $rules);
     }
 }
+
+if (!function_exists('filter_bool')) {
+    /**
+     * @param $value
+     * @return bool
+     */
+    function filter_bool($value) {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+}

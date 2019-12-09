@@ -349,7 +349,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'update'
         ],
         'parameters' => [
-            'providers' => 'organization_fund'
+            'providers' => 'fund_provider'
         ]
     ]);
 
