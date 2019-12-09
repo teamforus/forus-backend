@@ -57,7 +57,7 @@ class VouchersController extends Controller
 
         $voucher = $voucherToken->voucher ?? abort(404);
 
-        $this->authorize('reserve', $product);
+        $this->authorize('reserve', [$product, $voucher]);
 
         return new VoucherResource($voucher->buyProductVoucher(
             $product

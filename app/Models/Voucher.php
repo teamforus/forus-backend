@@ -148,7 +148,7 @@ class Voucher extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function token_without_confirmation() {
         return $this->hasOne(VoucherToken::class)->where([
@@ -157,7 +157,7 @@ class Voucher extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function token_with_confirmation() {
         return $this->hasOne(VoucherToken::class)->where([
@@ -419,7 +419,7 @@ class Voucher extends Model
      * @param Organization $organization
      * @param $fromDate
      * @param $toDate
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Relations\HasManyThrough[]
      */
     public static function getUnassignedVouchers(
         Organization $organization, $fromDate, $toDate
