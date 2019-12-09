@@ -114,7 +114,7 @@ class ProductPolicy
         Product $product,
         Voucher $voucher
     ) {
-        return !empty($identity_address) && $voucher->expire_at >= now() &&
+        return !empty($identity_address) && !$voucher->expired &&
             !$product->expired && !$product->sold_out;
     }
 
