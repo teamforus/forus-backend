@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Fund;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -42,7 +43,9 @@ class ProductResource extends Resource
         $product = $this->resource;
 
         // Load list fund where this fund is available
-        $funds = $product->getFundsWhereIsAvailable()->with('logo.sizes')->get();
+        $funds = $product->getFundsWhereIsAvailable()->where(
+            'state', '!=', Fund::STATE_CLOSED
+        )->with('logo.sizes')->get();
 
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
