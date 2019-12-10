@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
-use App\Events\Vouchers\VoucherCreated;
 use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
 use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Http\Resources\VoucherResource;
-use App\Models\Implementation;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
-use App\Services\Forus\Identity\Repositories\IdentityRepo;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 
 class VouchersController extends Controller
@@ -57,7 +54,7 @@ class VouchersController extends Controller
 
         $voucher = $voucherToken->voucher ?? abort(404);
 
-        $this->authorize('reserve', $product);
+        $this->authorize('reserve', [$product, $voucher]);
 
         return new VoucherResource($voucher->buyProductVoucher(
             $product
@@ -104,15 +101,11 @@ class VouchersController extends Controller
     public function sendEmail(
         VoucherToken $voucherToken
     ) {
-        $this->authorize('show', $voucherToken->voucher);
+        $this->authorize('sendEmail', $voucherToken->voucher);
 
-        $voucher = $voucherToken->voucher;
-
-        $email = $this->recordRepo->primaryEmailByAddress(
-            $voucher->identity_address
-        );
-
-        $voucher->sendToEmail($email);
+        $voucherToken->voucher->sendToEmail($this->recordRepo->primaryEmailByAddress(
+            $voucherToken->voucher->identity_address
+        ));
     }
 
     /**
@@ -126,11 +119,11 @@ class VouchersController extends Controller
         VoucherToken $voucherToken,
         ShareProductVoucherRequest $request
     ) {
-        $this->authorize('show', $voucherToken->voucher);
+        $this->authorize('shareVoucher', $voucherToken->voucher);
 
         $voucherToken->voucher->shareVoucherEmail(
             $request->input('reason'),
-            (bool)$request->get('send_copy', false)
+            (bool) $request->get('send_copy', false)
         );
     }
 

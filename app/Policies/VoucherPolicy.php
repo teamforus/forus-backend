@@ -155,6 +155,30 @@ class VoucherPolicy
      * @param string $identity_address
      * @param Voucher $voucher
      * @return bool
+     */
+    public function sendEmail(
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return $this->show($identity_address, $voucher) && !$voucher->expired;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function shareVoucher(
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return $this->sendEmail($identity_address, $voucher);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
      * @throws AuthorizationJsonException
      */
     public function useAsProvider(
@@ -164,7 +188,7 @@ class VoucherPolicy
         $fund = $voucher->fund;
         $id = 'organizations.id';
 
-        if ($voucher->expire_at->isPast()) {
+        if ($voucher->expired) {
             $this->deny(trans('validation.voucher.expired'));
         }
 

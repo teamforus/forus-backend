@@ -6,6 +6,7 @@ use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
@@ -148,7 +149,7 @@ class Voucher extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function token_without_confirmation() {
         return $this->hasOne(VoucherToken::class)->where([
@@ -157,7 +158,7 @@ class Voucher extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function token_with_confirmation() {
         return $this->hasOne(VoucherToken::class)->where([
@@ -419,7 +420,7 @@ class Voucher extends Model
      * @param Organization $organization
      * @param $fromDate
      * @param $toDate
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Relations\HasManyThrough[]
      */
     public static function getUnassignedVouchers(
         Organization $organization, $fromDate, $toDate
@@ -472,5 +473,49 @@ class Voucher extends Model
         VoucherCreated::dispatch($voucher);
 
         return $voucher;
+    }
+
+    /**
+     * @param Collection|Voucher[] $vouchers
+     * @return string
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public static function zipVouchers(Collection $vouchers)
+    {
+        $token_generator = resolve('token_generator');
+        $zipPath = storage_path('vouchers-export');
+
+        do {
+            $zipFile = sprintf('%s/%s.zip', $zipPath, $token_generator->generate(64));
+        } while (file_exists($zipFile));
+
+        if (!file_exists($zipPath)) {
+            mkdir($zipPath, 0777, true);
+        }
+
+        $fp = fopen('php://temp/maxmemory:1048576', 'w');
+
+        $zip = new \ZipArchive();
+        $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $zip->addEmptyDir('images');
+
+        // $tmp_images = [];
+        foreach ($vouchers as $voucher) {
+            $name = $token_generator->generate(6, 2);
+            $zip->addFromString(
+                "images/$name.png",
+                $voucher->token_without_confirmation->getQrCodeFile()
+            );
+
+            fputcsv($fp, [$name]);
+        }
+
+        rewind($fp);
+        $zip->addFromString('qr_codes.csv', stream_get_contents($fp));
+        fclose($fp);
+
+        $zip->close();
+
+        return $zipFile;
     }
 }

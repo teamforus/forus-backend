@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductPolicy
@@ -101,17 +102,20 @@ class ProductPolicy
 
     /**
      * To be able to make an reservation product should not
-     * be expired or sold out
+     * be expired or sold out and voucher not expired
      *
      * @param $identity_address
+     * @param Voucher $voucher
      * @param Product $product
      * @return bool
      */
     public function reserve(
         $identity_address,
-        Product $product
+        Product $product,
+        Voucher $voucher
     ) {
-        return !empty($identity_address) && !$product->expired && !$product->sold_out;
+        return !empty($identity_address) && !$voucher->expired &&
+            !$product->expired && !$product->sold_out;
     }
 
     /**
