@@ -317,7 +317,9 @@ class Product extends Model
     {
         $product = $this;
 
-        return Fund::whereHas('providers', function(
+        return Fund::where(
+            'state', '!=', Fund::STATE_CLOSED
+        )->whereHas('providers', function(
             Builder $builder
         ) use ($product) {
             $builder->where(function(Builder $builder) use ($product) {
