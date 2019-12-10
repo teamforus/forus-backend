@@ -415,6 +415,7 @@ class BunqService
                     sprintf(" [%s] - %s", Carbon::now(), $e->getMessage())
                 );
             }
+            sleep(1);
         }
     }
 
