@@ -195,6 +195,15 @@ class VoucherTransaction extends Model
             $query->where('amount', '<=', $amount_max);
         }
 
+        if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
+            $query->whereHas('voucher.fund', function (Builder $query) use ($fund_state) {
+                $fund_states = $fund_state == 'closed' ? ['closed'] :
+                    array_diff(Fund::STATES, ['closed']);
+
+                $query->whereIn('state',  $fund_states);
+            });
+        }
+
         $query = $query->latest();
 
         return $query;
