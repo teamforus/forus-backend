@@ -19,7 +19,7 @@ use bunq\Context\ApiContext;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class BunqService
@@ -46,6 +46,8 @@ class BunqService
      * @var bool
      */
     protected $bunqUseSandbox;
+
+    private static $bunq_instances = [];
 
     /**
      * BunqService constructor.
@@ -115,16 +117,22 @@ class BunqService
         $bunqAllowedIp = [],
         $bunqUseSandbox = true
     ) {
+        if (isset(static::$bunq_instances[$fundId])) {
+            return static::$bunq_instances[$fundId];
+        }
+
         try {
-            $bunqService = new static(
+            static::$bunq_instances[$fundId] = new static(
                 $fundId,
                 $bunqKey,
                 $bunqAllowedIp,
                 $bunqUseSandbox
             );
 
-            return $bunqService;
-        } catch (\Exception $exception) {}
+            return static::$bunq_instances[$fundId];
+        } catch (\Exception $exception) {
+            logger()->error($exception);
+        }
 
         return false;
     }
@@ -310,20 +318,41 @@ class BunqService
     }
 
     /**
+     * @return VoucherTransaction|Builder|\Illuminate\Database\Query\Builder
+     */
+    private static function getNextInTransactionsQueueQuery() {
+        return VoucherTransaction::query()->orderBy('updated_at', 'ASC')
+            ->where('state', '=', 'pending')
+            ->where('attempts', '<', 5)
+            ->where(function(Builder $query) {
+                $query->whereNull('last_attempt_at')->orWhere(
+                    'last_attempt_at', '<', Carbon::now()->subHours(8)
+                );
+            });
+    }
+
+    /**
      * Get next pending transaction
      *
      * @return VoucherTransaction|null
      */
     public static function getNextInTransactionsQueue() {
-        return VoucherTransaction::query()->orderBy('updated_at', 'ASC')
-            ->where('state', '=', 'pending')
-            ->where('attempts', '<', 5)
-            ->where(function($query) {
-                /** @var Builder $query */
-                $query
-                    ->whereNull('last_attempt_at')
-                    ->orWhere('last_attempt_at', '<', Carbon::now()->subHours(8));
-            })->first();
+        if (!$transaction = self::getNextInTransactionsQueueQuery()->first()) {
+            return $transaction;
+        }
+
+        if ($transaction->voucher->fund->budget_left >= $transaction->amount) {
+            $transaction->forceFill([
+                'last_attempt_at' => Carbon::now(),
+                'attempts' => $transaction->attempts + 1
+            ])->save();
+        } else {
+            $transaction->forceFill([
+                'last_attempt_at' => Carbon::now(),
+            ])->save();
+        }
+
+        return $transaction;
     }
 
     /**
@@ -332,24 +361,19 @@ class BunqService
      * @return void
      */
     public static function processQueue() {
-        while($transaction = self::getNextInTransactionsQueue()) {
+        while ($transaction = self::getNextInTransactionsQueue()) {
             $voucher = $transaction->voucher;
 
             if ($voucher->fund->budget_left < $transaction->amount) {
-                $transaction->forceFill([
-                    'last_attempt_at'   => Carbon::now(),
-                ])->save();
-
                 continue;
             }
 
-            $transaction->forceFill([
-                'attempts'          => ++$transaction->attempts,
-                'last_attempt_at'   => Carbon::now(),
-            ])->save();
-
             try {
                 if (!$bunq = $voucher->fund->getBunq()) {
+                    logger()->error(sprintf(
+                        'BunqService: Could not make bunq instance: %s!',
+                        $transaction->id
+                    ));
                     continue;
                 }
 
@@ -379,11 +403,15 @@ class BunqService
                     ])->save();
 
                     $transaction->sendPushBunqTransactionSuccess();
+                } else {
+                    logger()->error(sprintf(
+                        'BunqService: invalid payment_id for transaction: %s!',
+                        $transaction->id
+                    ));
                 }
-
             } catch (\Exception $e) {
-                app('log')->error(
-                    'BunqService->processQueue: ' .
+                logger()->error(
+                    'BunqService->processQueue error: ' .
                     sprintf(" [%s] - %s", Carbon::now(), $e->getMessage())
                 );
             }
@@ -444,7 +472,7 @@ class BunqService
      * Get bunq ideal issuers from db (local db cache)
      *
      * @param bool $sandbox
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection
+     * @return BunqIdealIssuer[]|Builder[]|Collection
      */
     public static function getIdealIssuers($sandbox = false) {
         return BunqIdealIssuer::query()->where([
@@ -677,7 +705,7 @@ class BunqService
     /**
      * Get storage.
      *
-     * @return \Storage
+     * @return \Illuminate\Contracts\Filesystem\Filesystem
      */
     private function storage() {
         return app()->make('filesystem')->disk($this->storageDriver);
