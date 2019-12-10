@@ -34,19 +34,19 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('forus.fund:check')
-            ->hourlyAt(1)->withoutOverlapping()->onOneServer();;
+            ->hourlyAt(1)->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.fund.config:check')
-            ->everyMinute()->withoutOverlapping()->onOneServer();;
+            ->everyMinute()->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.fund.users:calculate')
-            ->monthly()->withoutOverlapping()->onOneServer();;
+            ->monthly()->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.voucher:check-expire')
-            ->dailyAt('09:00')->withoutOverlapping()->onOneServer();;
+            ->dailyAt('09:00')->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.fund:check-amount')
-            ->cron('0 */8 * * *')->withoutOverlapping()->onOneServer();;
+            ->cron('0 */8 * * *')->withoutOverlapping()->onOneServer();
     }
 
     /**
