@@ -36,6 +36,13 @@ class OfficePolicy
     }
 
     /**
+     * @return bool
+     */
+    public function indexPublic() {
+        return true;
+    }
+
+    /**
      * @param $identity_address
      * @param Organization $organization
      * @return bool

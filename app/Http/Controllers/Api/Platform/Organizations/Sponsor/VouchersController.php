@@ -18,7 +18,6 @@ use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\Request;
 
 class VouchersController extends Controller
 {
@@ -234,6 +233,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function exportUnassigned(
         IndexVouchersRequest $request,
@@ -249,39 +249,14 @@ class VouchersController extends Controller
             $request->get('to')
         );
 
-        if (count($unassigned_vouchers)) {
-            if (!file_exists('storage/qr-codes')) {
-                mkdir('storage/qr-codes');
-            }
-
-            $zip = new \ZipArchive();
-            $zip_name = 'storage/qr-codes/qr_codes.zip';
-            $csv_name = 'qr_codes.csv';
-
-            $fp = fopen($csv_name, 'w');
-            $zip->open($zip_name, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-            $zip->addEmptyDir('images');
-
-            foreach ($unassigned_vouchers as $voucher) {
-                foreach ($voucher->tokens as $token) {
-                    if (!$token->need_confirmation) {
-                        $full_path = $token->getQrLocalPath();
-
-                        $name = resolve('token_generator')->generate(
-                            6, 2
-                        );
-                        $zip->addFile($full_path, 'images/'.$name.'.png');
-
-                        fputcsv($fp, [$name]);
-                    }
-                }
-            }
-
-            $zip->addFile($csv_name);
-            $zip->close();
-            unlink($csv_name);
-
-            return response()->download(public_path($zip_name));
+        if ($unassigned_vouchers->count() == 0) {
+            abort(404, "No unassigned vouchers to be exported.");
         }
+
+        if (!$zipFile = Voucher::zipVouchers($unassigned_vouchers)) {
+            abort(500, "Couldn't make the archive.");
+        }
+
+        return response()->download($zipFile)->deleteFileAfterSend(true);
     }
 }

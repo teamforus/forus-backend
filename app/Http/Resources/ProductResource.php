@@ -41,13 +41,8 @@ class ProductResource extends Resource
     {
         $product = $this->resource;
 
-        // TODO: Product category restriction
-        /*$suppliedFundIds = $product->organization->supplied_funds_approved;
-        $funds = $product->product_category->funds->whereIn(
-            'id', $suppliedFundIds->pluck('id')
-        );*/
-
-        $funds = $product->organization->supplied_funds_approved;
+        // Load list fund where this fund is available
+        $funds = $product->getFundsWhereIsAvailable()->with('logo.sizes')->get();
 
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
@@ -82,9 +77,7 @@ class ProductResource extends Resource
             'offices' => OfficeResource::collection(
                 $product->organization->offices
             ),
-            'photo' => new MediaResource(
-                $product->photo
-            ),
+            'photo' => new MediaResource($product->photo),
             'product_category' => new ProductCategoryResource(
                 $product->product_category
             )
