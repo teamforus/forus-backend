@@ -91,11 +91,14 @@ class TransactionsController extends Controller
             }
         }
 
+        $needsReview = false;
+
         // TODO: cleanup
-        $threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5);
-        $needsReview = $voucher->transactions()->where(
-            'created_at', '>=', now()->subSeconds($threshold)
-        )->exists();
+        if ($threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5)) {
+            $needsReview = $voucher->transactions()->where(
+                'created_at', '>=', now()->subSeconds($threshold)
+            )->exists();
+        }
 
         /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create(array_merge([

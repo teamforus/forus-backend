@@ -577,14 +577,12 @@ class Fund extends Model
             return false;
         }
 
-        $bunqService = BunqService::create(
+        return BunqService::create(
             $this->id,
             $fundBunq['key'],
             $fundBunq['allowed_ip'],
             $fundBunq['sandbox']
         );
-
-        return $bunqService;
     }
 
     public static function configuredFunds () {
