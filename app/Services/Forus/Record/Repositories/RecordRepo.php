@@ -137,6 +137,21 @@ class RecordRepo implements IRecordRepo
         return $record ? $record->identity_address : null;
     }
 
+    /**
+     * Get identity_address by bsn
+     * @param string $bsn
+     * @return string|null
+     */
+    public function identityAddressByBsn(
+        string $bsn
+    ) {
+        $record = Record::query()->where([
+            'record_type_id' => $this->getTypeIdByKey('bsn'),
+            'value' => $bsn,
+        ])->first();
+
+        return $record ? $record->identity_address : null;
+    }
 
     /**
      * Get identity id by email record
@@ -154,6 +169,21 @@ class RecordRepo implements IRecordRepo
         return $record ? $record->value : null;
     }
 
+    /**
+     * Get bsn by identity_address
+     * @param string $identityAddress
+     * @return string|null
+     */
+    public function bsnByAddress(
+        string $identityAddress
+    ) {
+        $record = Record::query()->where([
+            'record_type_id' => $this->getTypeIdByKey('bsn'),
+            'identity_address' => $identityAddress,
+        ])->first();
+
+        return $record ? $record->value : null;
+    }
 
     /**
      * Get type id by key
@@ -446,6 +476,10 @@ class RecordRepo implements IRecordRepo
             abort(403,'record.exceptions.primary_email_already_exists');
         }
 
+        if ($typeKey == 'bsn') {
+            abort(403,'record.exceptions.bsn_record_cant_be_created');
+        }
+
         /** @var Record $record */
         $record = Record::create([
             'identity_address' => $identityAddress,
@@ -515,18 +549,15 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         $recordId
     ) {
-        $record =  Record::query()->where([
+        if (empty($record = Record::query()->where([
             'id' => $recordId,
             'identity_address' => $identityAddress
-        ])->first();
-
-        if (!$record) {
+        ])->first())) {
             return false;
         }
 
-        $recordTypeId = $this->getTypeIdByKey('primary_email');
-
-        if ($record['record_type_id'] == $recordTypeId) {
+        if ($record['record_type_id'] ==
+            $this->getTypeIdByKey('primary_email')) {
             abort(403,'record.exceptions.cant_delete_primary_email');
         }
 
@@ -630,8 +661,9 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Show validation request
+     *
      * @param string $validationUuid
-     * @return bool
+     * @return array|bool
      */
     public function showValidationRequest(
         string $validationUuid
@@ -645,14 +677,12 @@ class RecordRepo implements IRecordRepo
             return false;
         }
 
-        $out = array_merge($validation->only([
+        return array_merge($validation->only([
             'state', 'identity_address', 'uuid'
         ]), $validation->record->only([
             'value'
         ]), $validation->record->record_type->only([
             'key', 'name'
         ]));
-
-        return $out;
     }
 }

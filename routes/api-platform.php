@@ -175,7 +175,9 @@ $router->post(
 /**
  * Authorization required
  */
-$router->group(['middleware' => ['api.auth']], function() use ($router) {
+$router->group(['middleware' => [
+    'api.auth'
+]], function() use ($router) {
     $router->resource(
         'organizations',
         "Api\Platform\OrganizationsController", [
@@ -557,3 +559,8 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->get('notifications', 'Api\Platform\NotificationsController@index');
     $router->patch('notifications', 'Api\Platform\NotificationsController@update');
 });
+
+
+$router->post('/digid', 'DigIdController@start');
+$router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
+$router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');

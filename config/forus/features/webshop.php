@@ -13,7 +13,7 @@ return [
     ],
     "funds" => [
         // list all funds
-        "list"      => false,
+        "list"      => env('FEATURES_WEBSHOP_FUNDS_LIST', false),
 
         // view fund details
         "show"      => false,

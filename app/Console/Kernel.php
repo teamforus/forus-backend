@@ -47,6 +47,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('forus.fund:check-amount')
             ->cron('0 */8 * * *')->withoutOverlapping()->onOneServer();
+  
+        $schedule->command('digid:session-clean')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
     }
 
     /**

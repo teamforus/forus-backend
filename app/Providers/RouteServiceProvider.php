@@ -17,6 +17,7 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
+use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
@@ -123,6 +124,16 @@ class RouteServiceProvider extends ServiceProvider
             return FundRequestClarification::find($id) ?? abort(404);
         });
 
+        $router->bind('digid_session_uid', function ($digid_session_uid) {
+            return DigIdSession::where([
+                'state'         => DigIdSession::STATE_PENDING_AUTH,
+                'session_uid'   => $digid_session_uid,
+            ])->where(
+                'created_at', '>=', now()->subSecond(
+                    DigIdSession::SESSION_EXPIRATION_TIME
+                ))->first() ?? abort(404);
+        });
+
         $router->bind('platform_config', function ($value) {
             if (Implementation::implementationKeysAvailable()->search(
                 Implementation::activeKey()
@@ -155,6 +166,11 @@ class RouteServiceProvider extends ServiceProvider
 
             if (is_array($config)) {
                 $implementation = Implementation::active();
+                $implementationModal = Implementation::activeModel();
+
+
+                $config['digid'] = $implementationModal ?
+                    $implementationModal->digidEnabled() : false;
 
                 $config['fronts'] = $implementation->only([
                     'url_webshop', 'url_sponsor', 'url_provider',
