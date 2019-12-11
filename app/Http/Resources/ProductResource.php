@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Fund;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\Resource;
 
