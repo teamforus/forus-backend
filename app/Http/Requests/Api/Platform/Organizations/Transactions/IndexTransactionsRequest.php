@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Transactions;
 
+use App\Models\Fund;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IndexTransactionsRequest extends FormRequest
@@ -27,7 +28,7 @@ class IndexTransactionsRequest extends FormRequest
             'per_page'      => 'numeric|between:1,100',
             'q'             => 'nullable|string',
             'state'         => 'nullable|in:pending,success',
-            'fund_state'    => 'nullable|in:closed,active',
+            'fund_state'    => 'nullable|in:' . join(',', Fund::STATES),
             'from'          => 'date:Y-m-d',
             'to'            => 'date:Y-m-d',
             'amount_min'    => 'numeric|min:0',
