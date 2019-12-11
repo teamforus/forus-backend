@@ -315,6 +315,9 @@ class BunqService
     private static function getNextInTransactionsQueueQuery() {
         return VoucherTransaction::query()->orderBy('updated_at', 'ASC')
             ->where('state', '=', 'pending')
+            ->whereHas('voucher', function (Builder $query) {
+                $query->where('fund_id', '=', env('ENABLE_TRANSACTIONS_FOR_FUND', 24));
+            })
             ->where('attempts', '<', 5)
             ->where(function(Builder $query) {
                 $query->whereNull('last_attempt_at')->orWhere(
