@@ -11,5 +11,7 @@
     <br />
     {{ mail_trans('balance_warning.no_transactions') }} <br />
     <br/>
+    {{ mail_trans('balance_warning.top_up_details', ['iban' => $fund_name, 'topup_code' => $topup_code]) }} <br />
+    <br/>
     {{ mail_trans('balance_warning.you_can_login') }}
 @endsection
