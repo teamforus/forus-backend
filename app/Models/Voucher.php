@@ -30,6 +30,7 @@ use Illuminate\Http\Request;
  * @property-read string|null $created_at_locale
  * @property-read bool $expired
  * @property-read bool $is_granted
+ * @property-read bool $has_transactions
  * @property-read string $type
  * @property-read string|null $updated_at_locale
  * @property-read bool $used
@@ -400,6 +401,13 @@ class Voucher extends Model
      */
     public function getIsGrantedAttribute() {
         return !empty($this->identity_address);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getHasTransactionsAttribute() {
+        return count($this->transactions) > 0;
     }
 
     /**
