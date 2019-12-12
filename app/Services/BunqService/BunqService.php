@@ -47,8 +47,6 @@ class BunqService
      */
     protected $bunqUseSandbox;
 
-    private static $bunq_instances = [];
-
     /**
      * BunqService constructor.
      *
@@ -117,19 +115,13 @@ class BunqService
         $bunqAllowedIp = [],
         $bunqUseSandbox = true
     ) {
-        if (isset(static::$bunq_instances[$fundId])) {
-            return static::$bunq_instances[$fundId];
-        }
-
         try {
-            static::$bunq_instances[$fundId] = new static(
+            return new static(
                 $fundId,
                 $bunqKey,
                 $bunqAllowedIp,
                 $bunqUseSandbox
             );
-
-            return static::$bunq_instances[$fundId];
         } catch (\Exception $exception) {
             logger()->error($exception);
         }
