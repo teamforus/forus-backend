@@ -113,6 +113,10 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
+ * @property-read int|null $provider_invitations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
+ * @property-read int|null $providers_approved_count
  */
 class Fund extends Model
 {
@@ -234,6 +238,24 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function providers_approved() {
+        return $this->hasMany(FundProvider::class)->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function provider_invitations() {
+        return $this->hasMany(FundProviderInvitation::class, 'from_fund_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function providers_allowed_products() {
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => true
@@ -331,7 +353,7 @@ class Fund extends Model
         )->where(function(Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
-            $builder->orWhereHas('products');
+            $builder->orWhere('allow_some_products', true);
         });
     }
 

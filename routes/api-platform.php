@@ -264,7 +264,16 @@ $router->group(['middleware' => [
         ]
     ]);
 
-
+    $router->resource(
+        'organizations.funds.provider-invitations',
+        "Api\Platform\Organizations\Funds\FundProviderInvitationsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'provider-invitations' => 'fund_provider_invitations'
+        ]
+    ]);
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
         $router->resource(
@@ -564,3 +573,14 @@ $router->group(['middleware' => [
 $router->post('/digid', 'DigIdController@start');
 $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
 $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
+
+$router->resource(
+    'provider-invitations',
+    "Api\Platform\FundProviderInvitationsController", [
+    'only' => [
+        'show', 'update'
+    ],
+    'parameters' => [
+        'provider-invitations' => 'fund_provider_invitation_token'
+    ]
+]);

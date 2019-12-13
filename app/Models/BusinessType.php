@@ -37,6 +37,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType withTranslation()
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orderByTranslation($key, $sortmethod = 'asc')
  */
 class BusinessType extends Model
 {
