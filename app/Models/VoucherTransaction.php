@@ -125,7 +125,7 @@ class VoucherTransaction extends Model
         }
 
         $mailService->sendPushNotification(
-            $this->voucher->identity_address, $title, $body
+            $this->voucher->identity_address, $title, $body, 'voucher.transaction'
         );
     }
 
@@ -142,7 +142,7 @@ class VoucherTransaction extends Model
         $body = trans('push.bunq_transactions.complete.body', $transData);
 
         $mailService->sendPushNotification(
-            $this->provider->identity_address, $title, $body
+            $this->provider->identity_address, $title, $body, 'bunq.transaction_success'
         );
     }
 

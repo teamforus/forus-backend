@@ -180,14 +180,19 @@ class NotificationService
      * @param $identifier
      * @param string $title
      * @param string $body
+     * @param string $key
      * @return bool
      */
     public function sendPushNotification(
         $identifier,
         string $title,
-        string $body
+        string $body,
+        string $key = null
     ) {
-        if (!$this->serviceApiUrl) {
+        if (!$this->serviceApiUrl &&
+            ($this->isPushUnsubscribable($key) &&
+            $this->isPushUnsubscribed($identifier, $key))
+        ) {
             return false;
         }
 
@@ -876,6 +881,30 @@ class NotificationService
                 $this->recordRepo->identityAddressByEmail($email),
                 $mailClass
             )
+        );
+    }
+
+    /**
+     * Check if Push notification can be subscribed
+     *
+     * @param string $key
+     * @return bool
+     */
+    protected function isPushUnsubscribable(string $key) {
+        return $this->notificationRepo->isPushNotificationUnsubscribable($key);
+    }
+
+    /**
+     * Check if Push notification is unsubscribed
+     *
+     * @param string $identifier
+     * @param string $key
+     * @return bool
+     */
+    protected function isPushUnsubscribed(string $identifier, string $key) {
+        return $this->notificationRepo->isPushNotificationUnsubscribed(
+            $identifier,
+            $key
         );
     }
 

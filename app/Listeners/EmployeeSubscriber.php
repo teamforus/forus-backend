@@ -40,7 +40,7 @@ class EmployeeSubscriber
         $body = trans('push.access_levels.added.body', $transData);
 
         $this->mailService->sendPushNotification(
-            $employee->identity_address, $title, $body
+            $employee->identity_address, $title, $body, 'employee.created'
         );
     }
 
@@ -71,7 +71,7 @@ class EmployeeSubscriber
         $body = trans('push.access_levels.removed.body', $transData);
 
         $this->mailService->sendPushNotification(
-            $employee->identity_address, $title, $body
+            $employee->identity_address, $title, $body, 'employee.deleted'
         );
     }
 
