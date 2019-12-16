@@ -26,7 +26,8 @@ class ClientTypeMiddleware
 
     private function availableTypes() {
         return collect([
-            'webshop', 'general', 'app-me_app', 'sponsor', 'provider', 'validator',
+            'webshop', 'website', 'general', 'app-me_app',
+            'sponsor', 'provider', 'validator',
         ]);
     }
 

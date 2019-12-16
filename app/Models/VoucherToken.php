@@ -44,12 +44,17 @@ class VoucherToken extends Model
         return $this->belongsTo(Voucher::class);
     }
 
-    public function storeQrCodeFile() {
-        /** @var \Storage $storage */
-        $storage = app()->make('filesystem')->disk(
+    /**
+     * @return \Illuminate\Contracts\Filesystem\Filesystem
+     */
+    public function getQrCodeStorage () {
+        return  resolve('filesystem')->disk(
             env('VOUCHER_QR_STORAGE_DRIVER', 'public')
         );
+    }
 
+    public function storeQrCodeFile() {
+        $storage = $this->getQrCodeStorage();
         $qrCode = QrCode::format('png')->size(400)->margin(2);
 
         $storage->put($this->qrCodeFilePath(), $qrCode->generate(json_encode([
@@ -58,12 +63,15 @@ class VoucherToken extends Model
         ])), 'public');
     }
 
-    public function getQrCodeUrl () {
-        /** @var \Storage $storage */
-        $storage = app()->make('filesystem')->disk(
-            env('VOUCHER_QR_STORAGE_DRIVER', 'public')
-        );
+    /**
+     * @return bool
+     */
+    public function qrCodeFileExists() {
+        return $this->getQrCodeStorage()->exists($this->qrCodeFilePath());
+    }
 
+    public function getQrCodeUrl () {
+        $storage = $this->getQrCodeStorage();
         $path = $this->qrCodeFilePath();
 
         if (!$storage->exists($path)) {
@@ -73,27 +81,24 @@ class VoucherToken extends Model
         return $storage->url($path);
     }
 
-    private function qrCodeFilePath() {
-        return sprintf(
-            "vouchers/qr-codes/%s.png",
-            hash('sha256', $this->address));
-    }
-
     /**
      * @return string
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function getQrLocalPath () {
-        /** @var \Storage $storage */
-        $storage = app()->make('filesystem')->disk(
-            'public'
-        );
-
+    public function getQrCodeFile () {
+        $storage = $this->getQrCodeStorage();
         $path = $this->qrCodeFilePath();
 
         if (!$storage->exists($path)) {
             $this->storeQrCodeFile();
         }
 
-        return $storage->path($path);
+        return $storage->get($path);
+    }
+
+    private function qrCodeFilePath() {
+        return sprintf(
+            "vouchers/qr-codes/%s.png",
+            hash('sha256', $this->address));
     }
 }

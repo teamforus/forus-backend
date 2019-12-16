@@ -72,7 +72,7 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'state', 'start_date', 'end_date', 'notification_amount'
+            'name', 'description', 'state', 'start_date', 'end_date', 'notification_amount'
         ], [
             'state' => Fund::STATE_WAITING
         ])));
@@ -145,11 +145,11 @@ class FundsController extends Controller
 
         if ($fund->state == Fund::STATE_WAITING) {
             $params = $request->only([
-                'name', 'start_date', 'end_date', 'notification_amount'
+                'name', 'description', 'start_date', 'end_date', 'notification_amount'
             ]);
         } else {
             $params = $request->only([
-                'name', 'notification_amount'
+                'name', 'description', 'notification_amount'
             ]);
         }
 

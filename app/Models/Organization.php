@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTags;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
@@ -75,10 +76,16 @@ use Illuminate\Database\Query\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_budget
+ * @property-read int|null $supplied_funds_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
+ * @property-read int|null $supplied_funds_approved_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
  */
 class Organization extends Model
 {
-    use HasMedia;
+    use HasMedia, HasTags;
 
     /**
      * The attributes that are mass assignable.
@@ -161,7 +168,34 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where('fund_providers.state', 'approved');
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+            $builder->orWhereHas('products');
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_budget() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_budget', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_products() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+        });
     }
 
     /**

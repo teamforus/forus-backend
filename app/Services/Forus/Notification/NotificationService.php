@@ -180,14 +180,19 @@ class NotificationService
      * @param $identifier
      * @param string $title
      * @param string $body
+     * @param string $key
      * @return bool
      */
     public function sendPushNotification(
         $identifier,
         string $title,
-        string $body
+        string $body,
+        string $key = null
     ) {
-        if (!$this->serviceApiUrl) {
+        if (!$this->serviceApiUrl &&
+            ($this->isPushUnsubscribable($key) &&
+            $this->isPushUnsubscribed($identifier, $key))
+        ) {
             return false;
         }
 
@@ -805,6 +810,8 @@ class NotificationService
      * @param string $fund_name
      * @param string $notification_amount
      * @param string $budget_left
+     * @param string $iban
+     * @param string $topup_code
      * @return bool|null
      */
     public function fundBalanceWarning(
@@ -814,7 +821,9 @@ class NotificationService
         string $sponsor_name,
         string $fund_name,
         string $notification_amount,
-        string $budget_left
+        string $budget_left,
+        string $iban,
+        string $topup_code
     ): bool {
         return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
@@ -822,6 +831,8 @@ class NotificationService
             $notification_amount,
             $budget_left,
             $link,
+            $iban,
+            $topup_code,
             $identifier
         ));
     }
@@ -876,6 +887,30 @@ class NotificationService
                 $this->recordRepo->identityAddressByEmail($email),
                 $mailClass
             )
+        );
+    }
+
+    /**
+     * Check if Push notification can be subscribed
+     *
+     * @param string $key
+     * @return bool
+     */
+    protected function isPushUnsubscribable(string $key) {
+        return $this->notificationRepo->isPushNotificationUnsubscribable($key);
+    }
+
+    /**
+     * Check if Push notification is unsubscribed
+     *
+     * @param string $identifier
+     * @param string $key
+     * @return bool
+     */
+    protected function isPushUnsubscribed(string $identifier, string $key) {
+        return $this->notificationRepo->isPushNotificationUnsubscribed(
+            $identifier,
+            $key
         );
     }
 

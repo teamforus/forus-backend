@@ -69,6 +69,19 @@ class NotificationRepo implements INotificationRepo
     ];
 
     /**
+     * Map between type keys and Mail classes
+     * @var array
+     */
+    protected static $pushNotificationMap = [
+        'voucher.assigned',
+        'voucher.transaction',
+        'employee.created',
+        'employee.deleted',
+        'bunq.transaction_success',
+        'funds.provider_approved',
+    ];
+
+    /**
      * Emails that you can't unsubscribe from
      * @var array
      */
@@ -82,6 +95,14 @@ class NotificationRepo implements INotificationRepo
     public static function getMailMap(): array
     {
         return self::$mailMap;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getPushNotificationMap(): array
+    {
+        return self::$pushNotificationMap;
     }
 
     /**
@@ -134,6 +155,33 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
+     * Check if Push notification can be unsubscribed
+     * @param string $key
+     * @return bool
+     */
+    public function isPushNotificationUnsubscribable(string $key): bool {
+        return in_array($key, self::getPushNotificationMap());
+    }
+
+    /**
+     * Check if Push notification can be unsubscribed
+     * @param string $identity_address
+     * @param string $key
+     * @return bool
+     */
+    public function isPushNotificationUnsubscribed(
+        string $identity_address,
+        string $key
+    ): bool {
+        $subscribed = false;
+        $type = 'push';
+
+        return $this->preferencesModel->newQuery()->where(compact(
+            'identity_address', 'key', 'subscribed', 'type'
+        ))->count() > 0;
+    }
+
+    /**
      * Is email $emailClass unsubscribed
      * @param string $identity_address
      * @param string $emailClass
@@ -148,11 +196,12 @@ class NotificationRepo implements INotificationRepo
             return false;
         }
 
-        $mail_key = array_flip(self::getMailMap())[$emailClass];
+        $key = array_flip(self::getMailMap())[$emailClass];
+        $type = 'email';
         $subscribed = false;
 
         return $this->preferencesModel->newQuery()->where(compact(
-            'identity_address', 'mail_key', 'subscribed'
+            'identity_address', 'key', 'subscribed', 'type'
             ))->count() > 0;
     }
 
@@ -239,16 +288,34 @@ class NotificationRepo implements INotificationRepo
     ): Collection {
         $subscribed = false;
         $identity_address = $identityAddress;
-        $keys = collect(self::mailTypeKeys());
+
+        $mailKeys = collect();
+        foreach (self::mailTypeKeys() as $mailKey) {
+            $mailKeys->push((object)[
+                'value' => $mailKey,
+                'type'  => 'email'
+            ]);
+        }
+
+        $pushKeys = collect();
+        foreach (self::getPushNotificationMap() as $pushKey) {
+            $pushKeys->push((object)[
+                'value' => $pushKey,
+                'type'  => 'push'
+            ]);
+        }
+
+        $keys = $mailKeys->merge($pushKeys);
 
         $unsubscribedKeys = $this->preferencesModel->where(compact(
             'identity_address', 'subscribed'
-        ))->pluck('mail_key')->values();
+        ))->pluck('key')->values();
 
         return $keys->map(function($key) use ($unsubscribedKeys) {
             return [
-                'key' => $key,
-                'subscribed' => $unsubscribedKeys->search($key) === false
+                'key'  => $key->value,
+                'type' => $key->type,
+                'subscribed' => $unsubscribedKeys->search($key->value) === false
             ];
         })->values();
     }
@@ -262,15 +329,19 @@ class NotificationRepo implements INotificationRepo
         string $identityAddress,
         array $data
     ): Collection {
-        $keys = array_intersect(self::mailTypeKeys(), array_keys($data));
+        $data_keys = array_keys(array_pluck($data, 'subscribed', 'key'));
+        $preference_keys = self::allPreferenceKeys();
 
-        foreach ($keys as $key) {
-            $this->preferencesModel->newQuery()->firstOrCreate([
-                'identity_address'  => $identityAddress,
-                'mail_key'          => $key,
-            ])->update([
-                'subscribed'        => $data[$key]
-            ]);
+        foreach ($data as $setting) {
+            if (array_intersect($preference_keys, $data_keys)) {
+                $this->preferencesModel->newQuery()->firstOrCreate([
+                    'identity_address'  => $identityAddress,
+                    'key'               => $setting['key'],
+                    'type'              => $setting['type'],
+                ])->update([
+                    'subscribed'        => $setting['subscribed']
+                ]);
+            }
         }
 
         return $this->getNotificationPreferences($identityAddress);
@@ -285,5 +356,19 @@ class NotificationRepo implements INotificationRepo
             array_keys(self::getMailMap()),
             self::getMandatoryMailKeys()
         ));
+    }
+
+    /**
+     * @return array
+     */
+    public function pushNotificationTypeKeys() : array {
+        return self::getPushNotificationMap();
+    }
+
+    /**
+     * @return array
+     */
+    public function allPreferenceKeys(): array {
+        return array_merge($this->mailTypeKeys(), $this->pushNotificationTypeKeys());
     }
 }

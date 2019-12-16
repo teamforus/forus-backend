@@ -2,8 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Models\FundProvider;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
+/**
+ * Class UpdateFundProviderRequest
+ * @property FundProvider|null $fund_provider
+ * @package App\Http\Requests\Api\Platform\Organizations\Funds
+ */
 class UpdateFundProviderRequest extends FormRequest
 {
     /**
@@ -23,8 +30,19 @@ class UpdateFundProviderRequest extends FormRequest
      */
     public function rules()
     {
+        $fundProvider = $this->fund_provider;
+
         return [
-            'state' => 'required|in:pending,approved,declined'
+            'allow_products' => 'nullable|boolean',
+            'allow_budget' => 'nullable|boolean',
+            'dismissed' => 'nullable|boolean',
+            'enable_products' => 'nullable|array',
+            'enable_products.*' => [
+                'required',
+                Rule::exists('products', 'id')->where(
+                    'organization_id', $fundProvider->organization_id
+                )
+            ]
         ];
     }
 }

@@ -31,7 +31,6 @@ class MediaService
 
     /**
      * MediaService constructor.
-     *
      */
     public function __construct() {
         $this->model = Media::query();

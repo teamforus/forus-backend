@@ -59,7 +59,6 @@ interface IRecordRepo {
         string $email
     );
 
-
     /**
      * Get identity id by email record
      * @param string $identityAddress
@@ -67,6 +66,24 @@ interface IRecordRepo {
      */
     public function primaryEmailByAddress(
         string $identityAddress
+    );
+
+    /**
+     * Get bsn by identity_address
+     * @param string $identityAddress
+     * @return string|null
+     */
+    public function bsnByAddress(
+        string $identityAddress
+    );
+
+    /**
+     * Get identity_address by bsn
+     * @param string $bsn
+     * @return string|null
+     */
+    public function identityAddressByBsn(
+        string $bsn
     );
 
     /**
@@ -152,14 +169,14 @@ interface IRecordRepo {
     /**
      * Get identity records
      * @param string $identityAddress
-     * @param string|null $type
-     * @param integer|null $categoryId
-     * @return array
+     * @param null $type
+     * @param null $categoryId
+     * @return mixed
      */
     public function recordsList(
         string $identityAddress,
-        $type,
-        $categoryId
+        $type = null,
+        $categoryId = null
     );
 
     /**

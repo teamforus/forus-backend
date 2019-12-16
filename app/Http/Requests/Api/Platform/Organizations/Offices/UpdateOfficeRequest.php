@@ -27,7 +27,7 @@ class UpdateOfficeRequest extends FormRequest
         return [
             'name'          => '',
             'address'       => 'required',
-            'schedule'      => 'required',
+            'schedule'      => '',
             'schedule.*'    => ['required', new ScheduleRule()],
             'phone'         => '',
             'email'         => 'nullable|email',

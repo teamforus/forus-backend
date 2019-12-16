@@ -4,8 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use \Illuminate\Database\Eloquent\Builder;
-use DB;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * App\Models\FundProvider
@@ -13,44 +12,75 @@ use DB;
  * @property int $id
  * @property int $organization_id
  * @property int $fund_id
- * @property string $state
+ * @property bool $allow_budget
+ * @property bool $allow_products
+ * @property bool $dismissed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $products
+ * @property-read int|null $products_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowBudget($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowProducts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereDismissed($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
+ * @property-read int|null $fund_provider_products_count
  */
 class FundProvider extends Model
 {
-    const STATE_PENDING = 'pending';
-    const STATE_APPROVED = 'approved';
-    const STATE_DECLINED = 'declined';
-
-    const STATES = [
-        self::STATE_PENDING,
-        self::STATE_APPROVED,
-        self::STATE_DECLINED,
-    ];
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'fund_id', 'state'
+        'organization_id', 'fund_id', 'allow_products', 'allow_budget',
+        'dismissed'
     ];
+
+    /**
+     * @var array
+     */
+    protected $casts = [
+        'dismissed' => 'boolean',
+        'allow_budget' => 'boolean',
+        'allow_products' => 'boolean',
+    ];
+
+    public static function whereActiveQueryBuilder(Builder $builder)
+    {
+        return $builder->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhereHas('products');
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function products() {
+        return $this->belongsToMany(Product::class, 'fund_provider_products');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_products() {
+        return $this->hasMany(FundProviderProduct::class);
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -76,8 +106,10 @@ class FundProvider extends Model
         Organization $organization
     ) {
         $q = $request->input('q', null);
-        $state = $request->input('state', null);
         $fund_id = $request->input('fund_id', null);
+        $dismissed = $request->input('dismissed', null);
+        $allow_products = $request->input('allow_products', null);
+        $allow_budget = $request->input('allow_budget', null);
 
         $providers = FundProvider::query()->whereIn(
             'fund_id',
@@ -92,16 +124,6 @@ class FundProvider extends Model
                     ->orWhere('kvk', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
                     ->orWhere('phone', 'like', "%{$q}%");
-                    // TODO: Remove?
-                    /*->orWhereHas('product_categories', function (
-                        Builder $query
-                    ) use($q) {
-                        return $query->whereHas('translations', function (
-                            Builder $query
-                        ) use ($q) {
-                            $query->where('name', 'LIKE', "%{$q}%");
-                        });
-                    });*/
             });
         }
 
@@ -109,15 +131,23 @@ class FundProvider extends Model
             $providers->where('fund_id', $fund_id);
         }
 
-        if ($state && in_array($state, ['approved', 'declined', 'pending'])){
-            $providers = $providers->where('state', $state);
+        if ($dismissed !== null) {
+            $providers->where('dismissed', !!$dismissed);
         }
 
-        $providers = $providers->orderBy(
-            DB::raw('FIELD(state, "pending", "approved", "declined"), id')
-        );
+        if ($allow_budget !== null) {
+            $providers->where('allow_budget', !!$allow_budget);
+        }
 
-        return $providers;
+        if ($allow_products !== null) {
+            if ($allow_products === 'some') {
+                $providers->whereHas('products');
+            } else {
+                $providers->where('allow_products', !!$allow_products);
+            }
+        }
+
+        return $providers->orderBy('created_at')->orderBy('dismissed');
     }
 
     /**

@@ -10,6 +10,8 @@ namespace App\Models;
  * @property int $week_day
  * @property string|null $start_time
  * @property string|null $end_time
+ * @property string|null $break_start_time
+ * @property string|null $break_end_time
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string|null $created_at_locale
@@ -26,6 +28,8 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereWeekDay($value)
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereBreakEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereBreakStartTime($value)
  */
 class OfficeSchedule extends Model
 {
@@ -35,7 +39,8 @@ class OfficeSchedule extends Model
      * @var array
      */
     protected $fillable = [
-        'office_id', 'week_day', 'start_time', 'end_time'
+        'office_id', 'week_day', 'start_time', 'end_time',
+        'break_start_time', 'break_end_time'
     ];
 
     /**
