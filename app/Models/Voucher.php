@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Services\Forus\Record\Models\Record;
+use App\Services\Forus\Record\Models\RecordType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -30,6 +32,7 @@ use Illuminate\Http\Request;
  * @property-read string|null $created_at_locale
  * @property-read bool $expired
  * @property-read bool $is_granted
+ * @property-read bool $record_email
  * @property-read bool $has_transactions
  * @property-read string $type
  * @property-read string|null $updated_at_locale
@@ -184,6 +187,21 @@ class Voucher extends Model
     public function getUsedAttribute() {
         return $this->type == 'product' ? $this->transactions->count() > 0 :
             $this->amount_available_cached == 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getRecordEmailAttribute() {
+        /** @var Record $record */
+        $record = Record::where([
+            'identity_address' => $this->identity_address,
+            'record_type_id'   => RecordType::where(
+                'key', 'primary_email'
+            )->first()->id,
+        ])->first();
+
+        return $record ? $record->value : null;
     }
 
     /**
