@@ -32,7 +32,6 @@ use Illuminate\Http\Request;
  * @property-read string|null $created_at_locale
  * @property-read bool $expired
  * @property-read bool $is_granted
- * @property-read bool $record_email
  * @property-read bool $has_transactions
  * @property-read string $type
  * @property-read string|null $updated_at_locale
@@ -187,21 +186,6 @@ class Voucher extends Model
     public function getUsedAttribute() {
         return $this->type == 'product' ? $this->transactions->count() > 0 :
             $this->amount_available_cached == 0;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getRecordEmailAttribute() {
-        /** @var Record $record */
-        $record = Record::where([
-            'identity_address' => $this->identity_address,
-            'record_type_id'   => RecordType::where(
-                'key', 'primary_email'
-            )->first()->id,
-        ])->first();
-
-        return $record ? $record->value : null;
     }
 
     /**
