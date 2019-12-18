@@ -15,6 +15,7 @@ use App\Mail\Funds\NewFundApplicableMail;
 use App\Mail\Funds\ProductAddedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
+use App\Mail\Funds\ProviderInvitedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
@@ -244,6 +245,46 @@ class NotificationService
             $sponsor_name,
             $fund_name,
             $sponsor_dashboard_link
+        ));
+    }
+
+    /**
+     * Invite provider to new fund
+     *
+     * @param string $email
+     * @param string $provider_name
+     * @param string $sponsor_name
+     * @param string|null $sponsor_phone
+     * @param string|null $sponsor_email
+     * @param string $fund_name
+     * @param string $fund_start_date
+     * @param string $fund_end_date
+     * @param string $from_fund_name
+     * @param string $invitation_link
+     * @return bool|null
+     */
+    public function providerInvited(
+        string $email,
+        string $provider_name,
+        string $sponsor_name,
+        ?string $sponsor_phone,
+        ?string $sponsor_email,
+        string $fund_name,
+        string $fund_start_date,
+        string $fund_end_date,
+        string $from_fund_name,
+        string $invitation_link
+    ) {
+        return $this->sendMail($email, new ProviderInvitedMail(
+            $provider_name,
+            $sponsor_name,
+            $sponsor_phone,
+            $sponsor_email,
+            $fund_name,
+            $fund_start_date,
+            $fund_end_date,
+            $from_fund_name,
+            $invitation_link
         ));
     }
 

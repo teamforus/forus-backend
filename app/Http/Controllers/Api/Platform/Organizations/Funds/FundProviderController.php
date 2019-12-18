@@ -100,8 +100,7 @@ class FundProviderController extends Controller
             'dismissed', 'allow_products', 'allow_budget',
         ]));
 
-        if ($fundProvider->allow_budget ||
-            $fundProvider->allow_products) {
+        if ($fundProvider->allow_budget || $fundProvider->allow_products) {
             $fundProvider->update([
                 'dismissed' => false
             ]);
@@ -114,6 +113,10 @@ class FundProviderController extends Controller
         if ($disable_products !== null) {
             $fundProvider->products()->detach($disable_products);
         }
+
+        $fundProvider->updateModel([
+            'allow_some_products' => $fundProvider->products()->count() > 0
+        ]);
 
         $mailService = resolve('forus.services.notification');
 

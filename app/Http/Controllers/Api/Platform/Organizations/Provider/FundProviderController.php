@@ -76,7 +76,7 @@ class FundProviderController extends Controller
      * @param StoreFundProviderRequest $request
      * @param Organization $organization
      * @return FundProviderResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreFundProviderRequest $request,
@@ -90,7 +90,8 @@ class FundProviderController extends Controller
             'fund_id'
         ]));
 
-        resolve('forus.services.notification')->providerApplied(
+        $notificationService = resolve('forus.services.notification');
+        $notificationService->providerApplied(
             $fundProvider->fund->organization->email,
             $fundProvider->organization->name,
             $fundProvider->fund->organization->name,
