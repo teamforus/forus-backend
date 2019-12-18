@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $fund_id
  * @property bool $allow_budget
  * @property bool $allow_products
+ * @property bool $allow_some_products
  * @property bool $dismissed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowBudget($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowProducts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowSomeProducts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereDismissed($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereFundId($value)
@@ -37,6 +39,8 @@ use Illuminate\Database\Eloquent\Builder;
  * @mixin \Eloquent
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
  * @property-read int|null $fund_provider_products_count
+ * @property string $state
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereState($value)
  */
 class FundProvider extends Model
 {
@@ -46,8 +50,8 @@ class FundProvider extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'fund_id', 'allow_products', 'allow_budget',
-        'dismissed'
+        'organization_id', 'fund_id', 'dismissed',
+        'allow_products', 'allow_budget', 'allow_some_products'
     ];
 
     /**
@@ -57,6 +61,7 @@ class FundProvider extends Model
         'dismissed' => 'boolean',
         'allow_budget' => 'boolean',
         'allow_products' => 'boolean',
+        'allow_some_products' => 'boolean',
     ];
 
     public static function whereActiveQueryBuilder(Builder $builder)
@@ -64,7 +69,7 @@ class FundProvider extends Model
         return $builder->where(function(Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
-            $builder->orWhereHas('products');
+            $builder->orWhere('allow_some_products',  true);
         });
     }
 

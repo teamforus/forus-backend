@@ -56,6 +56,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory withTranslation()
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orderByTranslation($key, $sortmethod = 'asc')
  */
 class ProductCategory extends Model
 {

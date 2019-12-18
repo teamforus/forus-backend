@@ -37,6 +37,7 @@ use Dimsav\Translatable\Translatable;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token withTranslation()
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token orderByTranslation($key, $sortmethod = 'asc')
  */
 class Token extends Model
 {
