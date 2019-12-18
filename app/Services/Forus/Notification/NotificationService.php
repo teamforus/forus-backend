@@ -69,6 +69,7 @@ class NotificationService
         $this->apiRequest = $apiRequest;
         $this->recordRepo = $recordRepo;
         $this->notificationRepo = $notificationRepo;
+        $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
     }
 
     /**
@@ -190,7 +191,7 @@ class NotificationService
         string $body,
         string $key = null
     ) {
-        if (!$this->serviceApiUrl &&
+        if (!$this->serviceApiUrl ||
             ($this->isPushUnsubscribable($key) &&
             $this->isPushUnsubscribed($identifier, $key))
         ) {
