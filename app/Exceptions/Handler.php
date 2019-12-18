@@ -40,10 +40,8 @@ class Handler extends ExceptionHandler
     public function report(Exception $exception)
     {
         try {
-            if ($exception->getCode() >= 500) {
-                ElasticApm::captureThrowable($exception);
-                ElasticApm::send();
-            }
+            ElasticApm::captureThrowable($exception);
+            ElasticApm::send();
         }
         catch (\Throwable $e) {
             Log::error($e);
