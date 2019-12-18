@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Services\Forus\Record\Models\Record;
+use App\Services\Forus\Record\Models\RecordType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
