@@ -493,6 +493,37 @@ class RecordRepo implements IRecordRepo
     }
 
     /**
+     * Set bsn record
+     * @param string $identityAddress
+     * @param string $bsnValue
+     * @return null|array
+     */
+    public function setBsnRecord(
+        string $identityAddress,
+        string $bsnValue
+    ) {
+        $recordType = $this->getTypeIdByKey('bsn');
+
+        if (Record::where([
+            'identity_address' => $identityAddress,
+            'record_type_id' => $recordType,
+        ])->exists()) {
+            abort(403,'record.exceptions.bsn_record_cant_be_changed');
+        }
+
+        /** @var Record $record */
+        $record = Record::create([
+            'identity_address' => $identityAddress,
+            'order' => 0,
+            'value' => $bsnValue,
+            'record_type_id' => $recordType,
+            'record_category_id' => null,
+        ]);
+
+        return $this->recordGet($identityAddress, $record->id);
+    }
+
+    /**
      * Update record
      * @param string $identityAddress
      * @param mixed $recordId

@@ -208,6 +208,17 @@ interface IRecordRepo {
     );
 
     /**
+     * set bsn record
+     * @param string $identityAddress
+     * @param string $bsnValue
+     * @return null|array
+     */
+    public function setBsnRecord(
+        string $identityAddress,
+        string $bsnValue
+    );
+
+    /**
      * Update record
      * @param string $identityAddress
      * @param mixed $recordId
