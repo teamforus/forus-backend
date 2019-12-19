@@ -15,7 +15,6 @@ use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -184,28 +183,6 @@ class FundProviderController extends Controller
         $nth = $request->input('nth', 1);
         $product_category_id = $request->input('product_category');
 
-        $rangeBetween = function(
-            Carbon $startDate,
-            Carbon $endDate, $countDates
-        ) {
-            $countDates--;
-            $dates = collect();
-            $diffBetweenDates = $startDate->diffInDays($endDate);
-
-            $countDates = min($countDates, $diffBetweenDates);
-            $interval = $diffBetweenDates / $countDates;
-
-            if ($diffBetweenDates > 1) {
-                for ($i = 0; $i < $countDates; $i++) {
-                    $dates->push($startDate->copy()->addDays($i * $interval));
-                }
-            }
-
-            $dates->push($endDate);
-
-            return $dates;
-        };
-
         if ($type == 'quarter') {
             $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfQuarter()->endOfDay();
@@ -234,7 +211,7 @@ class FundProviderController extends Controller
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
-            $dates = collect(CarbonPeriod::between($startDate, $endDate)->toArray());
+            $dates = range_between($startDate, $endDate);
         } elseif ($type == 'all') {
             $firstTransaction = $fund->voucher_transactions()->where([
                 'organization_id' => $organizationFund->organization_id
@@ -245,7 +222,7 @@ class FundProviderController extends Controller
             $startDate = $firstTransaction ? $firstTransaction->created_at->subDay() : Carbon::now();
             $endDate = Carbon::now();
 
-            $dates = $rangeBetween($startDate, $endDate, 8);
+            $dates = range_between($startDate, $endDate, 8);
         } else {
             abort(403, "");
             exit();
