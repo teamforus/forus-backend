@@ -211,7 +211,7 @@ class FundProviderController extends Controller
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
-            $dates = range_between($startDate, $endDate);
+            $dates = range_between_dates($startDate, $endDate);
         } elseif ($type == 'all') {
             $firstTransaction = $fund->voucher_transactions()->where([
                 'organization_id' => $organizationFund->organization_id
@@ -222,7 +222,7 @@ class FundProviderController extends Controller
             $startDate = $firstTransaction ? $firstTransaction->created_at->subDay() : Carbon::now();
             $endDate = Carbon::now();
 
-            $dates = range_between($startDate, $endDate, 8);
+            $dates = range_between_dates($startDate, $endDate, 8);
         } else {
             abort(403, "");
             exit();

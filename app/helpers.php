@@ -464,8 +464,8 @@ if (!function_exists('http_resolve_url')) {
     }
 }
 
-if (!function_exists('range_between')) {
-    function range_between(
+if (!function_exists('range_between_dates')) {
+    function range_between_dates(
         Carbon $startDate,
         Carbon $endDate,
         $countDates = null

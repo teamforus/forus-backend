@@ -225,7 +225,7 @@ class FundsController extends Controller
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
-            $dates = range_between($startDate, $endDate);
+            $dates = range_between_dates($startDate, $endDate);
 
             $dates->prepend(
                 $dates[0]->copy()->subDay(1)->endOfDay()
