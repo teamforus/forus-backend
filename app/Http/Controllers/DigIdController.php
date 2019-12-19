@@ -170,9 +170,8 @@ class DigIdController extends Controller
         }
 
         if (!$identity_bsn && !$bsn_identity) {
-            $recordRepo->recordCreate(
-                $session->identity_address, 'bsn', $session->digid_uid);
-            Prevalidation::assignAvailableToIdentityByBsn($session->identity_address);
+            $recordRepo->setBsnRecord($identity, $bsn);
+            Prevalidation::assignAvailableToIdentityByBsn($identity);
 
             return redirect(url_extend_get_params($session->session_final_url, [
                 'digid_success' => 'signed_up'
