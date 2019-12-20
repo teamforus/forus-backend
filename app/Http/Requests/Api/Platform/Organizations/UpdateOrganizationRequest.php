@@ -45,7 +45,7 @@ class UpdateOrganizationRequest extends FormRequest
                 'digits:8',
                 $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
                     $this->organization->id
-                ): null,
+                ): Rule::unique('organizations', 'kvk'),
                 new KvkRule()
             ],
             'btw'                   => [new BtwRule()],
