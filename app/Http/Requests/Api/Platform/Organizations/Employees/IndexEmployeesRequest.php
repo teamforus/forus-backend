@@ -1,17 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations;
+namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
-use App\Http\Resources\OrganizationResource;
-use App\Rules\DependencyRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Class IndexOrganizationRequest
- * @property string $dependency
- * @package App\Http\Requests\Api\Platform\Organizations
- */
-class IndexOrganizationRequest extends FormRequest
+class IndexEmployeesRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -34,10 +27,7 @@ class IndexOrganizationRequest extends FormRequest
             'per_page'  => 'numeric|between:1,100',
             'role' => [
                 'nullable', 'string', 'exists:roles,key'
-            ],
-            'dependency' => ['nullable', new DependencyRule(
-                OrganizationResource::DEPENDENCIES
-            )]
+            ]
         ];
     }
 }

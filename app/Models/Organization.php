@@ -237,15 +237,23 @@ class Organization extends Model
     }
 
     /**
-     * @param string $role
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     * @param $role
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function employeesOfRole(string $role) {
+    public function employeesOfRoleQuery($role) {
         return $this->employees()->whereHas('roles', function(
             \Illuminate\Database\Eloquent\Builder $query
         ) use ($role) {
-            $query->where('key', $role);
-        })->get();
+            $query->whereIn('key', (array) $role);
+        });
+    }
+
+    /**
+     * @param string|array $role
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     */
+    public function employeesOfRole($role) {
+        return $this->employeesOfRoleQuery($role)->get();
     }
 
     /**

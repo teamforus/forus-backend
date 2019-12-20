@@ -147,59 +147,7 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('platform_config', function ($value) {
-            if (Implementation::implementationKeysAvailable()->search(
-                Implementation::activeKey()
-            ) === false) {
-                return abort(403, 'unknown_implementation_key');
-            };
-
-
-            $ver = request()->input('ver');
-
-            if (preg_match('/[^a-z_\-0-9]/i', $value)) {
-                abort(403);
-            }
-
-            if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
-                abort(403);
-            }
-
-            $config = config(
-                'forus.features.' . $value . ($ver ? '.' . $ver : '')
-            );
-
-            if (is_array($config)) {
-                $config['media'] = collect(config('media.sizes'))->map(function($size) {
-                    return collect($size)->only([
-                        'aspect_ratio', 'size'
-                    ]);
-                });
-            }
-
-            if (is_array($config)) {
-                $implementation = Implementation::active();
-                $implementationModal = Implementation::activeModel();
-
-
-                $config['digid'] = $implementationModal ?
-                    $implementationModal->digidEnabled() : false;
-
-                $config['fronts'] = $implementation->only([
-                    'url_webshop', 'url_sponsor', 'url_provider',
-                    'url_validator', 'url_app'
-                ]);
-
-                $config['map'] = [
-                    'lon' => doubleval(
-                        $implementation['lon'] ?: config('forus.front_ends.map.lon')
-                    ),
-                    'lat' => doubleval(
-                        $implementation['lat'] ?: config('forus.front_ends.map.lat')
-                    )
-                ];
-            }
-
-            return $config ?: [];
+            return Implementation::platformConfig($value);
         });
     }
 

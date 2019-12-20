@@ -117,6 +117,11 @@ use Illuminate\Http\Request;
  * @property-read int|null $provider_invitations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
  * @property-read int|null $providers_approved_count
+ * @property int|null $default_validator_employee_id
+ * @property bool $auto_requests_validation
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
+ * @property-read \App\Models\Employee|null $default_validator_employee
  */
 class Fund extends Model
 {
@@ -141,7 +146,8 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'description', 'start_date',
-        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public'
+        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
+        'default_validator_employee_id', 'auto_requests_validation'
     ];
 
     protected $hidden = [
@@ -150,6 +156,7 @@ class Fund extends Model
 
     protected $casts = [
         'public' => 'boolean',
+        'auto_requests_validation' => 'boolean',
     ];
 
     /**
@@ -276,6 +283,13 @@ class Fund extends Model
      */
     public function top_ups() {
         return $this->hasMany(FundTopUp::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function default_validator_employee() {
+        return $this->belongsTo(Employee::class, 'default_validator_employee_id');
     }
 
     /**

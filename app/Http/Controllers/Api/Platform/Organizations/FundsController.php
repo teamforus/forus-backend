@@ -70,11 +70,17 @@ class FundsController extends Controller
             $this->authorize('destroy', $media);
         }
 
+        $auto_requests_validation =
+            !$request->input('default_validator_employee_id') ? null :
+                $request->input('auto_requests_validation');
+
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'state', 'start_date', 'end_date', 'notification_amount'
+            'name', 'description', 'state', 'start_date', 'end_date',
+            'notification_amount', 'default_validator_employee_id'
         ], [
-            'state' => Fund::STATE_WAITING
+            'state' => Fund::STATE_WAITING,
+            'auto_requests_validation' => $auto_requests_validation
         ])));
 
         $fund->product_categories()->sync(
@@ -143,13 +149,23 @@ class FundsController extends Controller
             $this->authorize('destroy', $media);
         }
 
+        $auto_requests_validation =
+            !$request->input('default_validator_employee_id') ? null :
+                $request->input('auto_requests_validation');
+
         if ($fund->state == Fund::STATE_WAITING) {
-            $params = $request->only([
-                'name', 'description', 'start_date', 'end_date', 'notification_amount'
+            $params = array_merge($request->only([
+                'name', 'description', 'start_date', 'end_date',
+                'notification_amount', 'default_validator_employee_id'
+            ]), [
+                'auto_requests_validation' => $auto_requests_validation
             ]);
         } else {
-            $params = $request->only([
-                'name', 'description', 'notification_amount'
+            $params = array_merge($request->only([
+                'name', 'description', 'notification_amount',
+                'default_validator_employee_id'
+            ]), [
+                'auto_requests_validation' => $auto_requests_validation
             ]);
         }
 

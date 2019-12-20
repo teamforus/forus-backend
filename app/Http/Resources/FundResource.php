@@ -90,6 +90,12 @@ class FundResource extends Resource
             'fund_amount' => $fund->amountFixedByFormula()
         ], $financialData);
 
+        if ($organization->identityCan(auth()->id(), 'manage_funds')) {
+            $data = array_merge($data, $fund->only([
+                'default_validator_employee_id', 'auto_requests_validation'
+            ]));
+        }
+
         if ($organization->identityCan(auth()->id(), 'validate_records')) {
             $data = array_merge($data, [
                 'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',

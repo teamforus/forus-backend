@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Events\Employees\EmployeeCreated;
 use App\Events\Employees\EmployeeDeleted;
 use App\Events\Employees\EmployeeUpdated;
+use App\Http\Requests\Api\Platform\Organizations\Employees\IndexEmployeesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
@@ -29,17 +30,27 @@ class EmployeesController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param IndexEmployeesRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        IndexEmployeesRequest $request,
         Organization $organization
     ) {
         $this->authorize('show', [$organization]);
         $this->authorize('index', [Employee::class, $organization]);
 
-        return EmployeeResource::collection($organization->employees);
+        if ($request->has('role') && $role = $request->input('role')) {
+            $query = $organization->employeesOfRoleQuery($role);
+        } else {
+            $query = $organization->employees();
+        }
+
+        return EmployeeResource::collection($query->paginate(
+            $request->input('per_page', 10)
+        ));
     }
 
     /**
@@ -48,7 +59,7 @@ class EmployeesController extends Controller
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
      * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Excep tion
      */
     public function store(
         StoreEmployeeRequest $request,

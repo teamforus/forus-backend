@@ -24,7 +24,7 @@ class CreateRecordTypesTable extends Migration
             $table->increments('id');
             $table->integer('record_type_id')->unsigned();
             $table->string('locale', 3);
-            $table->string('name', 20);
+            $table->string('name', 40);
 
             $table->unique(['record_type_id', 'locale']);
             $table->foreign('record_type_id'

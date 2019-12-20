@@ -25,10 +25,14 @@ class AddNotificationTypeToNotificationPreferences extends Migration
     /**
      * Reverse the migrations.
      *
-     * @return void
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function down()
     {
+        DB::getDoctrineSchemaManager()
+            ->getDatabasePlatform()
+            ->registerDoctrineTypeMapping('enum', 'string');
+
         Schema::table('notification_preferences', function(Blueprint $table) {
             $table->dropColumn('type');
 

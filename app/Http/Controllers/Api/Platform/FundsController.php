@@ -38,7 +38,7 @@ class FundsController extends Controller
     public function show(Fund $fund)
     {
         if (!in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED])) {
-            return abort(404);
+            abort(404);
         }
 
         return new FundResource($fund);
