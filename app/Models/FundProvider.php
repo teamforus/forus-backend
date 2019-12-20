@@ -169,14 +169,12 @@ class FundProvider extends Model
 
             return [
                 trans("$transKey.provider") => $organization->name,
-                trans("$transKey.email") => $organization->email_public ?
-                    $organization->email : '',
-                trans("$transKey.phone") => $organization->phone ?
-                    $organization->phone : '',
+                trans("$transKey.email") => $organization->email_public ? $organization->email : '',
+                trans("$transKey.phone") => $organization->phone || '',
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
-                trans("$transKey.state") => trans(
-                    "$transKey.state_values." . $fundProvider->state
-                ),
+                trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
+                trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
+                trans("$transKey.allow_some_products") => $fundProvider->allow_some_products ? 'Ja' : 'Nee',
             ];
         })->values();
     }
