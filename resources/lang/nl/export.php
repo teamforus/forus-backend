@@ -22,11 +22,9 @@ return [
         'categories' => 'categoriën',
         'kvk' => 'kvk',
         'state' => 'status',
-        'state_values' => [
-            'pending' => 'in afwachting', 
-            'approved' => 'geaccepteerd',
-            'declined' => 'afgewezen',
-        ]
+	'allow_budget' => 'Geaccepteerd: budget',
+	'allow_products' => 'Geaccepteerd: aanbiedingen',
+	'allow_some_products' => 'Geaccepteerd: specifieke aanbiedingen',
     ],
 
     'voucher_transactions'    => [
