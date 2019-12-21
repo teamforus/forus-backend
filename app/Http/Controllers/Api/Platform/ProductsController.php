@@ -26,20 +26,21 @@ class ProductsController extends Controller
     }
 
     /**
+     * @param SearchProductsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function sample()
+    public function sample(SearchProductsRequest $request)
     {
         $this->authorize('indexPublic', Product::class);
 
-        $products = Product::searchQuery()->has('medias')->take(6);
+        $products = Product::search($request)->has('medias')->take(6);
         $products->groupBy('organization_id')->distinct()->inRandomOrder();
         $resultProducts = $products->with(ProductResource::$load)->get();
 
         if ($resultProducts->count() < 6) {
             $resultProducts = $resultProducts->merge(
-                Product::searchQuery()->whereKeyNot(
+                Product::search($request)->whereKeyNot(
                     $resultProducts->pluck('id')
                 )->inRandomOrder()->take(
                     6 - $resultProducts->count()
