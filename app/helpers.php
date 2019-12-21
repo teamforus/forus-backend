@@ -463,3 +463,40 @@ if (!function_exists('http_resolve_url')) {
         return url(sprintf('%s/%s', rtrim($url, '/'), ltrim($uri, '/')));
     }
 }
+
+if (!function_exists('range_between_dates')) {
+    function range_between_dates(
+        Carbon $startDate,
+        Carbon $endDate,
+        $countDates = null
+    ) {
+        $dates = collect();
+        $diffBetweenDates = $startDate->diffInDays($endDate);
+
+        if ($startDate->isSameDay($endDate)) {
+            return $dates->push($endDate);
+        }
+
+        if (!$countDates) {
+            for ($i = 0; $i <= $diffBetweenDates; $i++) {
+                $dates->push($startDate->copy()->addDays($i));
+            }
+
+            return $dates;
+        }
+
+        $countDates--;
+        $countDates = min($countDates, $diffBetweenDates);
+        $interval = $diffBetweenDates / $countDates;
+
+        if ($diffBetweenDates > 1) {
+            for ($i = 0; $i < $countDates; $i++) {
+                $dates->push($startDate->copy()->addDays($i * $interval));
+            }
+        }
+
+        $dates->push($endDate);
+
+        return $dates;
+    }
+}

@@ -193,6 +193,10 @@ class LoremDbSeeder extends Seeder
 
         foreach ($prevalidations as $prevalidation) {
             foreach($prevalidation->prevalidation_records as $record) {
+                if ($record->record_type->key == 'bsn') {
+                    continue;
+                }
+
                 $record = $this->recordRepo->recordCreate(
                     $identity_address,
                     $record->record_type->key,

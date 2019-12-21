@@ -33,7 +33,7 @@ class FundProviderResource extends Resource
 
         return collect($fundProvider)->only([
             'id', 'organization_id', 'fund_id', 'dismissed',
-            'allow_products', 'allow_budget'
+            'allow_products', 'allow_some_products', 'allow_budget'
         ])->merge([
             'products' => $fundProvider->fund_provider_products()
                 ->pluck('product_id'),
