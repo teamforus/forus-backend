@@ -2,11 +2,18 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations;
 
+use App\Models\Organization;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
+/**
+ * Class UpdateOrganizationRequest
+ * @property Organization|null $organization
+ * @package App\Http\Requests\Api\Platform\Organizations
+ */
 class UpdateOrganizationRequest extends FormRequest
 {
     /**
@@ -36,7 +43,9 @@ class UpdateOrganizationRequest extends FormRequest
             'kvk'                   => [
                 'required',
                 'digits:8',
-                'unique:organizations,kvk',
+                $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
+                    $this->organization->id
+                ): Rule::unique('organizations', 'kvk'),
                 new KvkRule()
             ],
             'btw'                   => [new BtwRule()],
