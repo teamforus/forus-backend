@@ -193,7 +193,8 @@ class RecordRepo implements IRecordRepo
     public function getTypeIdByKey(
         string $key
     ) {
-        return RecordType::query()->where('key', $key)->first()->id;
+        $recordType = RecordType::query()->where('key', $key)->first();
+        return $recordType ? $recordType->id : null;
     }
 
     /**
