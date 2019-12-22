@@ -84,6 +84,58 @@ class FundProviderInvitationPolicy
     }
 
     /**
+     * @param string|null $identity_address
+     * @param Organization $organization
+     * @return bool
+     */
+    public function indexProvider(
+        ?string $identity_address,
+        Organization $organization
+    ) {
+        return $organization->identityCan($identity_address, [
+            'manage_provider_funds'
+        ]);
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param FundProviderInvitation $invitation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function showProvider(
+        ?string $identity_address,
+        FundProviderInvitation $invitation,
+        Organization $organization
+    ) {
+        return $this->acceptProvider(
+            $identity_address, $invitation, $organization
+        );
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param FundProviderInvitation $invitation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function acceptProvider(
+        ?string $identity_address,
+        FundProviderInvitation $invitation,
+        Organization $organization
+    ) {
+        logger()->info('$organization->id: '.$organization->id);
+        logger()->info('$invitation: '.print_r($invitation->toArray(), true));
+        if ($organization->id != $invitation->organization_id) {
+            return false;
+        }
+
+        return $organization->identityCan($identity_address, [
+            'manage_provider_funds'
+        ]);
+    }
+
+    /**
      * Determine whether the user can view the fund provider invitation.
      *
      * @param string|null $identity_address

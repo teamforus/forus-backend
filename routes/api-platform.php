@@ -248,6 +248,17 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    $router->resource(
+        'organizations/{organization}/provider-invitations',
+        'Api\Platform\Organizations\FundProviderInvitationsController', [
+        'only' => [
+            'index', 'show', 'update'
+        ],
+        'parameters' => [
+            'provider-invitations' => 'fund_provider_invitations'
+        ]
+    ]);
+
     $router->get(
         'organizations/{organization}/funds/{fund}/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -573,16 +584,6 @@ $router->group(['middleware' => [
 $router->post('/digid', 'DigIdController@start');
 $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
 $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
-
-$router->get(
-    'organizations/{organization}/provider-invitations',
-    'Api\Platform\FundProviderInvitationsController@getInvitations'
-);
-
-$router->patch(
-    'organizations/{organization}/accept-provider-invitation/{fundProviderInvitation}',
-    'Api\Platform\FundProviderInvitationsController@accept'
-);
 
 $router->resource(
     'provider-invitations',
