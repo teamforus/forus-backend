@@ -574,6 +574,16 @@ $router->post('/digid', 'DigIdController@start');
 $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
 $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
 
+$router->get(
+    'organizations/{organization}/provider-invitations',
+    'Api\Platform\FundProviderInvitationsController@getInvitations'
+);
+
+$router->patch(
+    'organizations/{organization}/accept-provider-invitation/{fundProviderInvitation}',
+    'Api\Platform\FundProviderInvitationsController@accept'
+);
+
 $router->resource(
     'provider-invitations',
     "Api\Platform\FundProviderInvitationsController", [
