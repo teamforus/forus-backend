@@ -125,7 +125,7 @@ class VoucherTransaction extends Model
         }
 
         $mailService->sendPushNotification(
-            $this->voucher->identity_address, $title, $body
+            $this->voucher->identity_address, $title, $body, 'voucher.transaction'
         );
     }
 
@@ -142,7 +142,7 @@ class VoucherTransaction extends Model
         $body = trans('push.bunq_transactions.complete.body', $transData);
 
         $mailService->sendPushNotification(
-            $this->provider->identity_address, $title, $body
+            $this->provider->identity_address, $title, $body, 'bunq.transaction_success'
         );
     }
 
@@ -195,6 +195,17 @@ class VoucherTransaction extends Model
 
         if ($amount_max = $request->input('amount_max')) {
             $query->where('amount', '<=', $amount_max);
+        }
+
+        if ($request->has('state') &&
+            $fund_state = $request->input('fund_state')) {
+            $query->whereHas('voucher.fund', function (
+                Builder $query
+            ) use ($fund_state) {
+                $query->where([
+                    'state' =>  $fund_state
+                ]);
+            });
         }
 
         $query = $query->latest();

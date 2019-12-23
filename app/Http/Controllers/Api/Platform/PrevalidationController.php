@@ -97,6 +97,7 @@ class PrevalidationController extends Controller
                 'uid', $uid
             )->count() > 0);
 
+            /** @var Prevalidation $prevalidation */
             $prevalidation = Prevalidation::create([
                 'uid' => $uid,
                 'state' => 'pending',
@@ -106,10 +107,10 @@ class PrevalidationController extends Controller
             ]);
 
             foreach ($records as $record) {
-                $prevalidation->records()->create($record);
+                $prevalidation->prevalidation_records()->create($record);
             }
 
-            $prevalidation->load('records');
+            $prevalidation->load('prevalidation_records');
 
             return $prevalidation;
         });
@@ -129,7 +130,7 @@ class PrevalidationController extends Controller
 
         return PrevalidationResource::collection(Prevalidation::search(
             $request
-        )->with('records.record_type')->paginate());
+        )->with('prevalidation_records.record_type')->paginate());
     }
 
     /**
@@ -190,29 +191,7 @@ class PrevalidationController extends Controller
         $this->authorize('redeem', $prevalidation);
         $this->clearLoginAttempts($request);
 
-        foreach($prevalidation->records as $record) {
-            /** @var $record PrevalidationRecord */
-            $record = $this->recordRepo->recordCreate(
-                auth_address(),
-                $record->record_type->key,
-                $record->value
-            );
-
-            $validationRequest = $this->recordRepo->makeValidationRequest(
-                auth_address(),
-                $record['id']
-            );
-
-            $this->recordRepo->approveValidationRequest(
-                $prevalidation->identity_address,
-                $validationRequest['uuid'],
-                $prevalidation->organization_id
-            );
-        }
-
-        $prevalidation->update([
-            'state' => 'used'
-        ]);
+        $prevalidation->assignToIdentity(auth_address());
 
         return new PrevalidationResource($prevalidation);
     }

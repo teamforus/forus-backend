@@ -11,11 +11,14 @@
 |
 */
 
-use \Illuminate\Support\Facades\Route;
+$router = app()->make('router');
 
-Route::get('/', function () {
+/**
+ * Authorization not required
+ */
+$router->get('/', function () {
     return "";
 });
 
-Route::get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
-Route::get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');
+$router->get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
+$router->get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');

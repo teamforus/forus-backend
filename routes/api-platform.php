@@ -175,7 +175,9 @@ $router->post(
 /**
  * Authorization required
  */
-$router->group(['middleware' => ['api.auth']], function() use ($router) {
+$router->group(['middleware' => [
+    'api.auth'
+]], function() use ($router) {
     $router->resource(
         'organizations',
         "Api\Platform\OrganizationsController", [
@@ -262,7 +264,16 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         ]
     ]);
 
-
+    $router->resource(
+        'organizations.funds.provider-invitations',
+        "Api\Platform\Organizations\Funds\FundProviderInvitationsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'provider-invitations' => 'fund_provider_invitations'
+        ]
+    ]);
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
         $router->resource(
@@ -349,7 +360,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             'update'
         ],
         'parameters' => [
-            'providers' => 'organization_fund'
+            'providers' => 'fund_provider'
         ]
     ]);
 
@@ -557,3 +568,19 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     $router->get('notifications', 'Api\Platform\NotificationsController@index');
     $router->patch('notifications', 'Api\Platform\NotificationsController@update');
 });
+
+
+$router->post('/digid', 'DigIdController@start');
+$router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
+$router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
+
+$router->resource(
+    'provider-invitations',
+    "Api\Platform\FundProviderInvitationsController", [
+    'only' => [
+        'show', 'update'
+    ],
+    'parameters' => [
+        'provider-invitations' => 'fund_provider_invitation_token'
+    ]
+]);

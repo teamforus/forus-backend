@@ -111,6 +111,7 @@ class VoucherResource extends Resource
         ])->merge([
             'expire_at' => $voucher->expire_at,
             'expire_at_locale' => format_date_locale($voucher->expire_at),
+            'expired' => $voucher->expired,
             'created_at_locale' => $voucher->created_at_locale,
             'amount' => currency_format($amount),
             'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,

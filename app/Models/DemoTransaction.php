@@ -3,11 +3,24 @@
 namespace App\Models;
 
 /**
- * Class DemoTransaction
- * @property mixed $id
+ * App\Models\DemoTransaction
+ *
+ * @property int $id
  * @property string $token
  * @property string $state
- * @package App\Models
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\DemoTransaction whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class DemoTransaction extends Model
 {

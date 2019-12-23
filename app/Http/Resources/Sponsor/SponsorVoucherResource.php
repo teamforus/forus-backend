@@ -47,9 +47,14 @@ class SponsorVoucherResource extends Resource
         }
 
         return array_merge(collect($voucher)->only([
-            "id", 'amount', 'note',
+            'id', 'amount', 'note'
         ])->toArray(), [
             'is_granted' => $voucher->is_granted,
+            'identity_email' => $voucher->identity_address ?
+                resolve('forus.services.record')->primaryEmailByAddress(
+                    $voucher->identity_address
+                ) : null,
+            'has_transactions' => $voucher->has_transactions,
             'address' => $address,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),

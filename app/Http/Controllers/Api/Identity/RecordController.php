@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Identity;
 
 use App\Http\Requests\Api\Records\RecordStoreRequest;
 use App\Http\Requests\Api\Records\RecordUpdateRequest;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -12,10 +13,13 @@ class RecordController extends Controller
     private $recordRepo;
 
     /**
-     * RecordCategoryController constructor.
+     * RecordController constructor.
+     * @param IRecordRepo $recordRepo
      */
-    public function __construct() {
-        $this->recordRepo = app()->make('forus.services.record');
+    public function __construct(
+        IRecordRepo $recordRepo
+    ) {
+        $this->recordRepo = $recordRepo;
     }
 
     /**
@@ -80,9 +84,9 @@ class RecordController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  RecordUpdateRequest  $request
-     * @param  int  $recordId
-     * @return \Illuminate\Http\Response
+     * @param RecordUpdateRequest $request
+     * @param int $recordId
+     * @return array
      */
     public function update(
         RecordUpdateRequest $request,
