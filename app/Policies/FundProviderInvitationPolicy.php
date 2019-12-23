@@ -124,8 +124,6 @@ class FundProviderInvitationPolicy
         FundProviderInvitation $invitation,
         Organization $organization
     ) {
-        logger()->info('$organization->id: '.$organization->id);
-        logger()->info('$invitation: '.print_r($invitation->toArray(), true));
         if ($organization->id != $invitation->organization_id) {
             return false;
         }
