@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
  * @property Organization $resource
  * @package App\Http\Resources
  */
-class OrganizationBasicResource extends Resource
+class ProviderResource extends Resource
 {
     /**
      * Transform the resource into an array.
@@ -30,9 +30,14 @@ class OrganizationBasicResource extends Resource
             $organization->website_public ? 'website': ''
         ])->merge([
             'business_type' => new BusinessTypeResource(
-                $organization->business_type),
-            'logo' => new MediaCompactResource(
-                $organization->logo)
+                $organization->business_type
+            ),
+            'logo' => $organization->logo ? new MediaCompactResource(
+                $organization->logo
+            ) : null,
+            'offices' => OfficeResource::collection(
+                $organization->offices
+            )
         ]);
     }
 }
