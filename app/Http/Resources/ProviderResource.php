@@ -29,9 +29,9 @@ class ProviderResource extends Resource
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': ''
         ])->merge([
-            'business_type' => new BusinessTypeResource(
+            'business_type' => $organization->business_type ? new BusinessTypeResource(
                 $organization->business_type
-            ),
+            ) : null,
             'logo' => $organization->logo ? new MediaCompactResource(
                 $organization->logo
             ) : null,
