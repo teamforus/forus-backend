@@ -5,8 +5,14 @@ namespace App\Http\Requests\Api\Platform\Vouchers\Transactions;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
+/**
+ * Class StoreVoucherTransactionRequest
+ * @package App\Http\Requests\Api\Platform\Vouchers\Transactions
+ */
 class StoreVoucherTransactionRequest extends FormRequest
 {
     /**
@@ -41,9 +47,14 @@ class StoreVoucherTransactionRequest extends FormRequest
          * @var Voucher $voucher
          */
         $voucher = request()->voucher_token_address->voucher;
-        $voucherOrganizations = $voucher->fund->providers()->where([
-            'state' => 'approved'
-        ])->pluck('organization_id');
+
+        if (!$voucher->product_id && !$this->has('product_id')) {
+            $voucherOrganizations = $voucher->fund
+                ->provider_organizations_approved_budget()->pluck('organization_id');
+        } else {
+            $voucherOrganizations = $voucher->fund
+                ->provider_organizations_approved_products()->pluck('organization_id');
+        }
 
         /**
          * Organization approved by voucher fund
@@ -60,7 +71,22 @@ class StoreVoucherTransactionRequest extends FormRequest
         /**
          * Products approved by funds
          */
-        $validProductsIds = Organization::query()->whereIn(
+        $validProductsIds = [];
+
+        if ($this->has('organization_id')) {
+            $organization = Organization::find($this->has('organization_id'));
+
+            if ($organization) {
+                $validProductsIds = $organization->products();
+                $validProductsIds = $validProductsIds->whereHas('fund_providers', function (
+                    Builder $builder
+                ) use ($voucher) {
+                    $builder->where('fund_id', $voucher->fund_id);
+                })->orWhereHas('organization.supplied_funds_approved_products')->pluck('products.id');
+            }
+        }
+
+        Organization::query()->whereIn(
             'id', $validOrganizations
         )->get()->pluck('products')->flatten()->filter(function($product) use ($validCategories) {
             /** @var Product $product */
@@ -95,8 +121,8 @@ class StoreVoucherTransactionRequest extends FormRequest
                     'max:' . $maxAmount,
                 ],
                 'product_id'        => [
-                    'exists:products,id',
-                    'in:' . $validProductsIds->implode(',')
+                    Rule::exists('products', 'id'),
+                    Rule::in($validProductsIds->toArray())
                 ],
                 'organization_id'   => [
                     'required',

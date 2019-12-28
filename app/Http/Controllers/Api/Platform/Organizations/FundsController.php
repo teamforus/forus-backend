@@ -15,7 +15,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -72,7 +71,7 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'state', 'start_date', 'end_date', 'notification_amount'
+            'name', 'description', 'state', 'start_date', 'end_date', 'notification_amount'
         ], [
             'state' => Fund::STATE_WAITING
         ])));
@@ -145,11 +144,11 @@ class FundsController extends Controller
 
         if ($fund->state == Fund::STATE_WAITING) {
             $params = $request->only([
-                'name', 'start_date', 'end_date', 'notification_amount'
+                'name', 'description', 'start_date', 'end_date', 'notification_amount'
             ]);
         } else {
             $params = $request->only([
-                'name', 'notification_amount'
+                'name', 'description', 'notification_amount'
             ]);
         }
 
@@ -226,7 +225,7 @@ class FundsController extends Controller
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
-            $dates = collect(CarbonPeriod::between($startDate, $endDate)->toArray());
+            $dates = range_between_dates($startDate, $endDate);
 
             $dates->prepend(
                 $dates[0]->copy()->subDay(1)->endOfDay()

@@ -24,9 +24,11 @@ class IndexFundProviderRequest extends FormRequest
     public function rules()
     {
         return [
-            'per_page'      => 'numeric|between:1,100',
-            'q'             => 'nullable|string',
-            'state'         => 'nullable|in:pending,approved,declined'
+            'dismissed'         => 'nullable|boolean',
+            'allow_budget'      => 'nullable|boolean',
+            'allow_products'    => 'nullable|in:1,0,some',
+            'per_page'          => 'numeric|between:1,100',
+            'q'                 => 'nullable|string',
         ];
     }
 }

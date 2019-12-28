@@ -27,8 +27,10 @@ class FundStartedMail extends ImplementationMail
     public function build(): ImplementationMail
     {
         return parent::build()
-            ->subject(mail_trans('new_fund_created.title'))
-            ->view('emails.funds.new_fund_created', [
+            ->subject(mail_trans('fund_started.title', [
+                'fund_name' => $this->fund_name
+            ]))
+            ->view('emails.funds.fund_started', [
                 'fund_name'      => $this->fund_name,
                 'sponsor_name'   => $this->sponsor_name
             ]);

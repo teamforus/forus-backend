@@ -28,8 +28,11 @@ class IdentityController extends Controller
 
     public function getPublic()
     {
+        $bsn_is_known = !empty($this->recordRepo->bsnByAddress(auth()->id()));
+
         return [
-            'address' => auth()->id()
+            'address' => auth()->id(),
+            'bsn' => $bsn_is_known
         ];
     }
 
@@ -37,7 +40,7 @@ class IdentityController extends Controller
      * Create new identity
      *
      * @param IdentityStoreRequest $request
-     * @return array
+     * @return \Illuminate\Support\Collection
      * @throws \Exception
      */
     public function store(
@@ -47,7 +50,13 @@ class IdentityController extends Controller
 
         $identityAddress = $this->identityRepo->makeByEmail(
             $request->input('records.primary_email'),
-            $request->input('records')
+            collect($request->input('records', []))->filter(function(
+                $value, $key
+            ) {
+                return !empty($value) && !in_array($key, [
+                    'bsn', 'primary_email'
+                ]);
+            })->toArray()
         );
 
         $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);
@@ -216,6 +225,8 @@ class IdentityController extends Controller
             $platform = 'het dashboard';
         } else if (strpos($source, '_validator') !== false) {
             $platform = 'het dashboard';
+        } else if (strpos($source, '_website') !== false) {
+            $platform = 'het website';
         } else if (strpos($source, 'app-me_app') !== false) {
             $platform = 'Me';
         }
@@ -362,7 +373,7 @@ class IdentityController extends Controller
      * @param string $exchangeToken
      * @param string $clientType
      * @param string $implementationKey
-     * @return \Illuminate\Contracts\View\View|void
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,

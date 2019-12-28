@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTags;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
@@ -55,6 +56,7 @@ use Illuminate\Database\Query\Builder;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $vouchers_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newQuery()
@@ -75,10 +77,16 @@ use Illuminate\Database\Query\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_budget
+ * @property-read int|null $supplied_funds_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
+ * @property-read int|null $supplied_funds_approved_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
  */
 class Organization extends Model
 {
-    use HasMedia;
+    use HasMedia, HasTags;
 
     /**
      * The attributes that are mass assignable.
@@ -155,13 +163,47 @@ class Organization extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_invitations() {
+        return $this->hasMany(FundProviderInvitation::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function supplied_funds_approved() {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where('fund_providers.state', 'approved');
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+            $builder->orWhereHas('products');
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_budget() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_budget', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function supplied_funds_approved_products() {
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+        });
     }
 
     /**

@@ -19,13 +19,13 @@ class BunqServiceProvider extends ServiceProvider
             $schedule = app(Schedule::class);
 
             $schedule->command('forus.bunq:process')
-                ->everyMinute();
+                ->everyMinute()->withoutOverlapping()->onOneServer();
             $schedule->command('forus.bunq:top_up_process')
-                ->everyMinute();
+                ->everyMinute()->withoutOverlapping()->onOneServer();
             $schedule->command('forus.bunq:check_bunq_me_tabs')
-                ->everyMinute();
+                ->everyMinute()->withoutOverlapping()->onOneServer();
             $schedule->command('forus.bunq:sync_ideal_issuers')
-                ->dailyAt("01:00");
+                ->dailyAt("01:00")->withoutOverlapping()->onOneServer();
         });
     }
 

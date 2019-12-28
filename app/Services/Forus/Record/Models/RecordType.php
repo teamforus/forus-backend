@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType withTranslation()
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType orderByTranslation($key, $sortmethod = 'asc')
  */
 class RecordType extends Model
 {

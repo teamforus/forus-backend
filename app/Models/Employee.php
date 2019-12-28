@@ -17,15 +17,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
  * @property-read int|null $roles_count
+ * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee newQuery()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Employee onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee query()
+ * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Employee whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Employee withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Employee withoutTrashed()
  * @mixin \Eloquent
  */
 class Employee extends Model

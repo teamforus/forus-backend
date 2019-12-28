@@ -13,7 +13,7 @@ return [
     ],
     "funds" => [
         // list all funds
-        "list"      => false,
+        "list"      => env('FEATURES_WEBSHOP_FUNDS_LIST', false),
 
         // view fund details
         "show"      => false,
@@ -32,15 +32,4 @@ return [
         // view fund details
         "show"      => true
     ],
-    "identity"      => [
-        "address"   => false
-    ],
-    // enable newsletter
-    "newsletter"    => false,
-
-    // enable contact form
-    "contactForm"   => false,
-
-    // enable blog
-    "blog"          => false
 ];

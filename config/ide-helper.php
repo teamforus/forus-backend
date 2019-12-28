@@ -72,6 +72,7 @@ return array(
         'app/Services/Forus/Identity/Models',
         'app/Services/Forus/Notification/Models',
         'app/Services/Forus/Record/Models',
+        'app/Services/DigIdService/Models',
     ),
 
 

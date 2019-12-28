@@ -133,7 +133,7 @@ class LoremDbSeeder extends Seeder
             $this->makePrevalidations(
                 $fund->organization->identity_address,
                 $fund,
-                $this->generatePrevalidationData('uid', 10)
+                $this->generatePrevalidationData('bsn', 10)
             );
         }
     }
@@ -155,12 +155,8 @@ class LoremDbSeeder extends Seeder
             foreach ($funds as $fund) {
                 $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'state'             => [
-                        0 => 'pending',
-                        1 => 'approved',
-                        2 => 'approved',
-                        3 => 'declined',
-                    ][rand(0, 3)]
+                    'allow_budget'      => !![rand(0, 2)],
+                    'allow_products'    => !![rand(0, 2)]
                 ]);
             }
         }
@@ -169,14 +165,24 @@ class LoremDbSeeder extends Seeder
             $this->makeOffices($organization, rand(1, 2));
             $this->makeProducts($organization, rand(2, 4));
         }
+
+        foreach (Fund::get() as $fund) {
+            $providers = Organization::with('products')->pluck('id');
+
+            if ($fund->provider_organizations_approved()->count() == 0) {
+                $fund->provider_organizations_approved()->create([
+                    'organization_id'   => $providers->random(),
+                    'state'             => 'approved',
+                ]);
+            }
+        }
     }
 
     /**
      * @param string $identity_address
      */
-    public function applyFunds(
-        string $identity_address
-    ) {
+    public function applyFunds(string $identity_address)
+    {
         /** @var Prevalidation[] $prevalidations */
         $prevalidations = Prevalidation::query()->where([
             'state' => 'pending',
@@ -186,7 +192,11 @@ class LoremDbSeeder extends Seeder
         });
 
         foreach ($prevalidations as $prevalidation) {
-            foreach($prevalidation->records as $record) {
+            foreach($prevalidation->prevalidation_records as $record) {
+                if ($record->record_type->key == 'bsn') {
+                    continue;
+                }
+
                 $record = $this->recordRepo->recordCreate(
                     $identity_address,
                     $record->record_type->key,
@@ -404,6 +414,10 @@ class LoremDbSeeder extends Seeder
                 'DB_SEED_URL_APP',
                 "https://dev.$key.forus.io/me/#!/"
             ),
+            'digid_enabled' => !empty(env('DB_SEED_DIGID_SHARED_SECRET', null)),
+            'digid_app_id' => env('DB_SEED_DIGID_APP_ID', null),
+            'digid_shared_secret' => env('DB_SEED_DIGID_SHARED_SECRET', null),
+            'digid_a_select_server' => env('DB_SEED_DIGID_A_SELECT_SERVER', null),
         ]);
     }
 
@@ -494,7 +508,7 @@ class LoremDbSeeder extends Seeder
             ]);
 
             foreach ($records as $record) {
-                $prevalidation->records()->create($record);
+                $prevalidation->prevalidation_records()->create($record);
             }
 
             return $prevalidation;

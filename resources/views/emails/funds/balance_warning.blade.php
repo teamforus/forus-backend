@@ -13,3 +13,4 @@
     <br/>
     {{ mail_trans('balance_warning.you_can_login') }}
 @endsection
+

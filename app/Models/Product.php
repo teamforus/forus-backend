@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
  * @property float $price
  * @property float|null $old_price
  * @property int $total_amount
- * @property int $unlimited_stock
+ * @property bool $unlimited_stock
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -67,6 +67,8 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
+ * @property-read int|null $fund_providers_count
  */
 class Product extends Model
 {
@@ -138,6 +140,16 @@ class Product extends Model
         return $this->hasManyThrough(
             Fund::class,
             FundProduct::class
+        );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function fund_providers() {
+        return $this->belongsToMany(
+            FundProvider::class,
+            'fund_provider_products'
         );
     }
 
@@ -223,16 +235,18 @@ class Product extends Model
      * @return Builder
      */
     public static function searchQuery() {
-        $funds = Implementation::activeFunds()->pluck('id');
-        $organizationIds = FundProvider::whereIn('fund_id', $funds)->where([
-            'state' => 'approved'
-        ])->pluck('organization_id');
 
-        return Product::query()->whereIn(
-            'organization_id', $organizationIds
-        )->where('sold_out', false)->where(
+        return Product::query()->where(function(Builder $builder) {
+            $activeFunds = Implementation::activeFunds()->pluck('id');
+            $builder->whereHas('organization.organization_funds', function(
+                Builder $builder
+            ) use ($activeFunds) {
+                $builder->whereIn('fund_id', $activeFunds->toArray());
+                $builder->where('allow_products', true);
+            })->orWhereHas('fund_providers');
+        })->where('sold_out', false)->where(
             'expire_at', '>', date('Y-m-d')
-        )->orderBy('created_at', 'desc');
+        );
     }
 
     /**
@@ -240,7 +254,7 @@ class Product extends Model
      * @return Builder
      */
     public static function search(Request $request) {
-        $query = self::searchQuery();
+        $query = self::searchQuery()->orderBy('created_at', 'desc');
 
         if ($request->has('product_category_id')) {
             $productCategories = ProductCategory::descendantsAndSelf(
@@ -274,6 +288,55 @@ class Product extends Model
             return $query
                 ->where('name', 'LIKE', "%{$request->input('q')}%")
                 ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
+        });
+    }
+
+    /**
+     * @param Request $request
+     * @return Builder
+     */
+    public static function searchAny(Request $request) {
+        $query = self::query()->orderBy('created_at', 'desc');
+
+        if ($request->has('unlimited_stock')) {
+            $query->where([
+                'unlimited_stock' => !!$request->input('unlimited_stock')
+            ]);
+        }
+
+        if (!$request->has('q')) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $query) use ($request) {
+            return $query
+                ->where('name', 'LIKE', "%{$request->input('q')}%")
+                ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
+        });
+    }
+
+    public function getFundsWhereIsAvailable()
+    {
+        $product = $this;
+
+        return Fund::where(
+            'state', '!=', Fund::STATE_CLOSED
+        )->whereHas('providers', function(
+            Builder $builder
+        ) use ($product) {
+            $builder->where(function(Builder $builder) use ($product) {
+                $builder->where('organization_id', $product->organization_id);
+                $builder->where('allow_products', true);
+            });
+            $builder->orWhere(function(Builder $builder) use ($product) {
+                $builder->where('organization_id', $product->organization_id);
+                $builder->where('allow_products', false);
+                $builder->whereHas('fund_provider_products', function(Builder $builder) use ($product) {
+                    $builder->where([
+                        'product_id' => $product->id,
+                    ]);
+                });
+            });
         });
     }
 }

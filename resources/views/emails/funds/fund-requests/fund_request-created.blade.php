@@ -8,5 +8,5 @@
     {{ mail_trans('fund_request_created.message', ['fund_name' => $fund_name]) }}
     <br/>
     <br/>
-    {!! mail_trans('fund_request_created.webshop_button', ['link' => 'webshop_link') !!}
+    {!! mail_trans('fund_request_created.webshop_button', ['link' => $webshop_link]) !!}
 @endsection

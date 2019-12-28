@@ -15,6 +15,7 @@ use App\Mail\Funds\NewFundApplicableMail;
 use App\Mail\Funds\ProductAddedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
+use App\Mail\Funds\ProviderInvitedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
@@ -68,6 +69,7 @@ class NotificationService
         $this->apiRequest = $apiRequest;
         $this->recordRepo = $recordRepo;
         $this->notificationRepo = $notificationRepo;
+        $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
     }
 
     /**
@@ -180,14 +182,19 @@ class NotificationService
      * @param $identifier
      * @param string $title
      * @param string $body
+     * @param string $key
      * @return bool
      */
     public function sendPushNotification(
         $identifier,
         string $title,
-        string $body
+        string $body,
+        string $key = null
     ) {
-        if (!$this->serviceApiUrl) {
+        if (!$this->serviceApiUrl ||
+            ($this->isPushUnsubscribable($key) &&
+            $this->isPushUnsubscribed($identifier, $key))
+        ) {
             return false;
         }
 
@@ -239,6 +246,46 @@ class NotificationService
             $sponsor_name,
             $fund_name,
             $sponsor_dashboard_link
+        ));
+    }
+
+    /**
+     * Invite provider to new fund
+     *
+     * @param string $email
+     * @param string $provider_name
+     * @param string $sponsor_name
+     * @param string|null $sponsor_phone
+     * @param string|null $sponsor_email
+     * @param string $fund_name
+     * @param string $fund_start_date
+     * @param string $fund_end_date
+     * @param string $from_fund_name
+     * @param string $invitation_link
+     * @return bool|null
+     */
+    public function providerInvited(
+        string $email,
+        string $provider_name,
+        string $sponsor_name,
+        ?string $sponsor_phone,
+        ?string $sponsor_email,
+        string $fund_name,
+        string $fund_start_date,
+        string $fund_end_date,
+        string $from_fund_name,
+        string $invitation_link
+    ) {
+        return $this->sendMail($email, new ProviderInvitedMail(
+            $provider_name,
+            $sponsor_name,
+            $sponsor_phone,
+            $sponsor_email,
+            $fund_name,
+            $fund_start_date,
+            $fund_end_date,
+            $from_fund_name,
+            $invitation_link
         ));
     }
 
@@ -805,6 +852,8 @@ class NotificationService
      * @param string $fund_name
      * @param string $notification_amount
      * @param string $budget_left
+     * @param string $iban
+     * @param string $topup_code
      * @return bool|null
      */
     public function fundBalanceWarning(
@@ -814,7 +863,9 @@ class NotificationService
         string $sponsor_name,
         string $fund_name,
         string $notification_amount,
-        string $budget_left
+        string $budget_left,
+        string $iban,
+        string $topup_code
     ): bool {
         return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
@@ -822,6 +873,8 @@ class NotificationService
             $notification_amount,
             $budget_left,
             $link,
+            $iban,
+            $topup_code,
             $identifier
         ));
     }
@@ -876,6 +929,30 @@ class NotificationService
                 $this->recordRepo->identityAddressByEmail($email),
                 $mailClass
             )
+        );
+    }
+
+    /**
+     * Check if Push notification can be subscribed
+     *
+     * @param string $key
+     * @return bool
+     */
+    protected function isPushUnsubscribable(string $key) {
+        return $this->notificationRepo->isPushNotificationUnsubscribable($key);
+    }
+
+    /**
+     * Check if Push notification is unsubscribed
+     *
+     * @param string $identifier
+     * @param string $key
+     * @return bool
+     */
+    protected function isPushUnsubscribed(string $identifier, string $key) {
+        return $this->notificationRepo->isPushNotificationUnsubscribed(
+            $identifier,
+            $key
         );
     }
 
