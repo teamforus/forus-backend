@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\Resource;
  * @property Organization $resource
  * @package App\Http\Resources
  */
-class OrganizationBasicResource extends Resource
+class OrganizationWithPrivateResource extends Resource
 {
     /**
      * Transform the resource into an array.
@@ -23,10 +23,7 @@ class OrganizationBasicResource extends Resource
         $organization = $this->resource;
 
         return collect($organization)->only([
-            'id', 'name', 'business_type_id',
-            $organization->email_public ? 'email': '',
-            $organization->phone_public ? 'phone': '',
-            $organization->website_public ? 'website': ''
+            'id', 'name', 'business_type_id', 'email', 'phone', 'website'
         ])->merge([
             'business_type' => $organization->business_type ? new BusinessTypeResource(
                 $organization->business_type
