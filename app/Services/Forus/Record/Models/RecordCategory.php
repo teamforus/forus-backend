@@ -2,23 +2,32 @@
 
 namespace App\Services\Forus\Record\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use App\Services\MediaService\Models\Media;
 
 /**
- * Class RecordCategory
- * @property mixed $id
+ * App\Services\Forus\Record\Models\RecordCategory
+ *
+ * @property int $id
  * @property string $identity_address
  * @property string $name
- * @property integer $order
- * @property Media $icon
- * @property Collection $records
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Services\MediaService\Models\Media $icon
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\Record[] $records
+ * @property-read int|null $records_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class RecordCategory extends Model
 {

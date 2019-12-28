@@ -2,20 +2,30 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class FundFormula
- * @property mixed $id
- * @property mixed $fund_id
+ * App\Models\FundFormula
+ *
+ * @property int $id
+ * @property int $fund_id
  * @property string $type
- * @property string $record_type_key
  * @property float $amount
- * @property Fund $fund
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string|null $record_type_key
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund $fund
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormula whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class FundFormula extends Model
 {

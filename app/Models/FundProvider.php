@@ -2,44 +2,90 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use \Illuminate\Database\Eloquent\Builder;
-use DB;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Class FundProvider
- * @property mixed $id
- * @property string $state
- * @property int $fund_id
+ * App\Models\FundProvider
+ *
+ * @property int $id
  * @property int $organization_id
- * @property Fund $fund
- * @property Organization $organization
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $fund_id
+ * @property bool $allow_budget
+ * @property bool $allow_products
+ * @property bool $allow_some_products
+ * @property bool $dismissed
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund $fund
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $products
+ * @property-read int|null $products_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowBudget($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowProducts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereAllowSomeProducts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereDismissed($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereUpdatedAt($value)
+ * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
+ * @property-read int|null $fund_provider_products_count
+ * @property string $state
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereState($value)
  */
 class FundProvider extends Model
 {
-    const STATE_PENDING = 'pending';
-    const STATE_APPROVED = 'approved';
-    const STATE_DECLINED = 'declined';
-
-    const STATES = [
-        self::STATE_PENDING,
-        self::STATE_APPROVED,
-        self::STATE_DECLINED,
-    ];
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'fund_id', 'state'
+        'organization_id', 'fund_id', 'dismissed',
+        'allow_products', 'allow_budget', 'allow_some_products'
     ];
+
+    /**
+     * @var array
+     */
+    protected $casts = [
+        'dismissed' => 'boolean',
+        'allow_budget' => 'boolean',
+        'allow_products' => 'boolean',
+        'allow_some_products' => 'boolean',
+    ];
+
+    public static function whereActiveQueryBuilder(Builder $builder)
+    {
+        return $builder->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products',  true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function products() {
+        return $this->belongsToMany(Product::class, 'fund_provider_products');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_products() {
+        return $this->hasMany(FundProviderProduct::class);
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -65,8 +111,10 @@ class FundProvider extends Model
         Organization $organization
     ) {
         $q = $request->input('q', null);
-        $state = $request->input('state', null);
         $fund_id = $request->input('fund_id', null);
+        $dismissed = $request->input('dismissed', null);
+        $allow_products = $request->input('allow_products', null);
+        $allow_budget = $request->input('allow_budget', null);
 
         $providers = FundProvider::query()->whereIn(
             'fund_id',
@@ -81,16 +129,6 @@ class FundProvider extends Model
                     ->orWhere('kvk', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
                     ->orWhere('phone', 'like', "%{$q}%");
-                    // TODO: Remove?
-                    /*->orWhereHas('product_categories', function (
-                        Builder $query
-                    ) use($q) {
-                        return $query->whereHas('translations', function (
-                            Builder $query
-                        ) use ($q) {
-                            $query->where('name', 'LIKE', "%{$q}%");
-                        });
-                    });*/
             });
         }
 
@@ -98,15 +136,23 @@ class FundProvider extends Model
             $providers->where('fund_id', $fund_id);
         }
 
-        if ($state && in_array($state, ['approved', 'declined', 'pending'])){
-            $providers = $providers->where('state', $state);
+        if ($dismissed !== null) {
+            $providers->where('dismissed', !!$dismissed);
         }
 
-        $providers = $providers->orderBy(
-            DB::raw('FIELD(state, "pending", "approved", "declined")')
-        );
+        if ($allow_budget !== null) {
+            $providers->where('allow_budget', !!$allow_budget);
+        }
 
-        return $providers;
+        if ($allow_products !== null) {
+            if ($allow_products === 'some') {
+                $providers->whereHas('products');
+            } else {
+                $providers->where('allow_products', !!$allow_products);
+            }
+        }
+
+        return $providers->orderBy('created_at')->orderBy('dismissed');
     }
 
     /**
@@ -123,14 +169,12 @@ class FundProvider extends Model
 
             return [
                 trans("$transKey.provider") => $organization->name,
-                trans("$transKey.email") => $organization->email_public ?
-                    $organization->email : '',
-                trans("$transKey.phone") => $organization->phone ?
-                    $organization->phone : '',
+                trans("$transKey.email") => $organization->email_public ? $organization->email : '',
+                trans("$transKey.phone") => $organization->phone || '',
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
-                trans("$transKey.state") => trans(
-                    "$transKey.state_values." . $fundProvider->state
-                ),
+                trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
+                trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
+                trans("$transKey.allow_some_products") => $fundProvider->allow_some_products ? 'Ja' : 'Nee',
             ];
         })->values();
     }

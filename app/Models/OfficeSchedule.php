@@ -2,19 +2,34 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class OfficeSchedule
+ * App\Models\OfficeSchedule
+ *
  * @property int $id
  * @property int $office_id
  * @property int $week_day
- * @property string $start_time
- * @property string $end_time
- * @property Office $office
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string|null $start_time
+ * @property string|null $end_time
+ * @property string|null $break_start_time
+ * @property string|null $break_end_time
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Office $office
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereOfficeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereWeekDay($value)
+ * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereBreakEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OfficeSchedule whereBreakStartTime($value)
  */
 class OfficeSchedule extends Model
 {
@@ -24,7 +39,8 @@ class OfficeSchedule extends Model
      * @var array
      */
     protected $fillable = [
-        'office_id', 'week_day', 'start_time', 'end_time'
+        'office_id', 'week_day', 'start_time', 'end_time',
+        'break_start_time', 'break_end_time'
     ];
 
     /**

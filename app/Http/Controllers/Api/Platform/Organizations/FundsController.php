@@ -12,9 +12,9 @@ use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -71,7 +71,7 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'state', 'start_date', 'end_date', 'notification_amount'
+            'name', 'description', 'state', 'start_date', 'end_date', 'notification_amount'
         ], [
             'state' => Fund::STATE_WAITING
         ])));
@@ -82,6 +82,16 @@ class FundsController extends Controller
 
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
+        }
+
+        if (config('forus.features.dashboard.organizations.funds.criteria')) {
+            $fund->makeCriteria($request->input('criteria'));
+        }
+
+        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
+            if ($request->has('formula_products')) {
+                $fund->updateFormulaProducts($request->input('formula_products', []));
+            }
         }
 
         FundCreated::dispatch($fund);
@@ -134,11 +144,11 @@ class FundsController extends Controller
 
         if ($fund->state == Fund::STATE_WAITING) {
             $params = $request->only([
-                'name', 'start_date', 'end_date', 'notification_amount'
+                'name', 'description', 'start_date', 'end_date', 'notification_amount'
             ]);
         } else {
             $params = $request->only([
-                'name', 'notification_amount'
+                'name', 'description', 'notification_amount'
             ]);
         }
 
@@ -150,6 +160,16 @@ class FundsController extends Controller
 
         if ($media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
+        }
+
+        if (config('forus.features.dashboard.organizations.funds.criteria')) {
+            $fund->updateCriteria($request->input('criteria'));
+        }
+
+        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
+            if ($request->has('formula_products')) {
+                $fund->updateFormulaProducts($request->input('formula_products', []));
+            }
         }
 
         return new FundResource($fund);
@@ -205,7 +225,7 @@ class FundsController extends Controller
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
-            $dates = collect(CarbonPeriod::between($startDate, $endDate)->toArray());
+            $dates = range_between_dates($startDate, $endDate);
 
             $dates->prepend(
                 $dates[0]->copy()->subDay(1)->endOfDay()
@@ -385,6 +405,7 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$fund, $organization]);
 
+        $fund->fund_formula_products()->delete();
         $fund->delete();
 
         return compact('success');

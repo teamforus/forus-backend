@@ -2,29 +2,46 @@
 
 namespace App\Models;
 
-use App\Models\Traits\EloquentModel;
-use Carbon\Carbon;
 use Dimsav\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 /**
- * Class BusinessType
- * @property mixed $id
+ * App\Models\BusinessType
+ *
+ * @property int $id
  * @property string $key
- * @property string $name
- * @property integer $parent_id
- * @property BusinessType $parent
- * @property Collection $organizations
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int|null $parent_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
+ * @property-read int|null $organizations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BusinessTypeTranslation[] $translations
+ * @property-read int|null $translations_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType listsTranslations($translationField)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType notTranslatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orWhereTranslation($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orWhereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType translated()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType translatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereParentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereTranslation($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType withTranslation()
+ * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orderByTranslation($key, $sortmethod = 'asc')
  */
 class BusinessType extends Model
 {
-    use EloquentModel, Translatable;
+    use Translatable;
 
     /**
      * The attributes that are mass assignable.

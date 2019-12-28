@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\File;
 
+use App\Rules\FileTypeRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFileRequest extends FormRequest
@@ -27,9 +28,13 @@ class StoreFileRequest extends FormRequest
             'file' => [
                 'required',
                 'file',
-                'mimes:' . join(',', config('file.allowed_types', [])),
+                'mimes:' . join(',', config('file.allowed_extensions', [])),
                 'max:' . config('file.max_file_size', 2000)
-            ]
+            ],
+            'type' => [
+                'required',
+                new FileTypeRule()
+            ],
         ];
     }
 }

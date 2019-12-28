@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Implementation;
 use Closure;
 
 class ClientTypeMiddleware
@@ -27,7 +26,8 @@ class ClientTypeMiddleware
 
     private function availableTypes() {
         return collect([
-            'webshop', 'general', 'app-me_app'
+            'webshop', 'website', 'general', 'app-me_app',
+            'sponsor', 'provider', 'validator',
         ]);
     }
 

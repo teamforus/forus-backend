@@ -32,7 +32,7 @@ class UpdateNotificationPreferencesRequest extends FormRequest
             'preferences'               => 'nullable|array',
             'preferences.*.key'         => [
                 'required',
-                Rule::in($notificationRepo->mailTypeKeys())
+                Rule::in($notificationRepo->allPreferenceKeys())
             ],
             'preferences.*.subscribed'  => [
                 'required',

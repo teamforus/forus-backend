@@ -32,7 +32,7 @@ class FundPolicy
     ) {
         return $organization->identityCan(
             $identity_address, [
-                'manage_funds', 'view_finances'
+                'manage_funds', 'view_finances', 'view_funds',
             ], false
         );
     }
@@ -69,7 +69,7 @@ class FundPolicy
 
         return $fund->public || $fund->organization->identityCan(
             $identity_address,
-            ['manage_funds', 'view_finances'],
+            ['manage_funds', 'view_finances', 'view_funds'],
             false
         );
     }
@@ -105,7 +105,9 @@ class FundPolicy
         $identity_address,
         Fund $fund
     ) {
-        if (empty($identity_address) && $fund->state != Fund::STATE_ACTIVE) {
+        if (empty($identity_address) &&
+            !in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED])
+        ) {
             return false;
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\StoreIdealBunqMeRequestRequest;
 use App\Http\Resources\BunqIdealIssuerResource;
 use App\Http\Resources\BunqMeIdealRequestResource;
@@ -17,11 +18,15 @@ class FundsController extends Controller
     /**
      * Display a listing of all active funds.
      *
+     * @param IndexFundsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index()
+    public function index(IndexFundsRequest $request)
     {
-        return FundResource::collection(Implementation::activeFunds());
+        return FundResource::collection(Fund::search(
+            $request,
+            Implementation::activeFundsQuery()
+        )->get());
     }
 
     /**
@@ -32,7 +37,7 @@ class FundsController extends Controller
      */
     public function show(Fund $fund)
     {
-        if ($fund->state != Fund::STATE_ACTIVE) {
+        if (!in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED])) {
             return abort(404);
         }
 
@@ -51,7 +56,9 @@ class FundsController extends Controller
     ) {
         $this->authorize('apply', $fund);
 
-        return new VoucherResource($fund->makeVoucher(auth()->id()));
+        return new VoucherResource(
+            $fund->makeVoucher(auth()->id())
+        );
     }
 
     /**

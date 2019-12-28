@@ -6,6 +6,7 @@ use App\Http\Middleware\ApiAuthMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\ImplementationKeyMiddleware;
+use App\Http\Middleware\ParseApiDependencyMiddleware;
 use App\Http\Middleware\RecordApmTransactions;
 use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -28,6 +29,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         TrimStrings::class,
+        ParseApiDependencyMiddleware::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         TrustProxies::class,
         HandleCors::class,

@@ -2,16 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Role
- * @property mixed $id
+ * App\Models\Role
+ *
+ * @property int $id
  * @property string $key
  * @property string $name
- * @property Collection $permissions
- * @package App
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[] $permissions
+ * @property-read int|null $permissions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RolePermission[] $role_permissions
+ * @property-read int|null $role_permissions_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereName($value)
+ * @mixin \Eloquent
  */
 class Role extends Model
 {
@@ -25,5 +34,9 @@ class Role extends Model
         return $this->belongsToMany(Permission::class, (
             new RolePermission
         )->getTable());
+    }
+
+    public function role_permissions() {
+        return $this->hasMany(RolePermission::class);
     }
 }

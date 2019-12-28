@@ -2,18 +2,28 @@
 
 namespace App\Services\MediaService\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class MediaSize
- * @property mixed $id
- * @property integer $media_id
+ * App\Services\MediaService\Models\MediaSize
+ *
+ * @property int $id
+ * @property int $media_id
  * @property string $key
  * @property string $path
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Services\MediaService\Models\Media $media
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize whereMediaId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize wherePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\MediaSize whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class MediaSize extends Model
 {

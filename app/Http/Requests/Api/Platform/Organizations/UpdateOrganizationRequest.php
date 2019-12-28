@@ -2,11 +2,18 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations;
 
+use App\Models\Organization;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
+/**
+ * Class UpdateOrganizationRequest
+ * @property Organization|null $organization
+ * @package App\Http\Requests\Api\Platform\Organizations
+ */
 class UpdateOrganizationRequest extends FormRequest
 {
     /**
@@ -33,7 +40,14 @@ class UpdateOrganizationRequest extends FormRequest
             'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:6,20',
             'phone_public'          => 'boolean',
-            'kvk'                   => ['required', new KvkRule()],
+            'kvk'                   => [
+                'required',
+                'digits:8',
+                $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
+                    $this->organization->id
+                ): Rule::unique('organizations', 'kvk'),
+                new KvkRule()
+            ],
             'btw'                   => [new BtwRule()],
             'website'               => 'nullable|max:200|url',
             'website_public'        => 'boolean',

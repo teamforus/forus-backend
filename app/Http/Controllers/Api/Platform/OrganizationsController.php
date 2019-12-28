@@ -4,26 +4,30 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Events\Organizations\OrganizationCreated;
 use App\Events\Organizations\OrganizationUpdated;
+use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use Illuminate\Http\Request;
 
 class OrganizationsController extends Controller
 {
     /**
      * Display a listing of all identity organizations.
      *
+     * @param IndexOrganizationRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index() {
+    public function index(IndexOrganizationRequest $request)
+    {
         $this->authorize('index', Organization::class);
 
         return OrganizationResource::collection(
             Organization::queryByIdentityPermissions(auth_address())->with(
-                OrganizationResource::$load
+                OrganizationResource::load($request)
             )->get()
         );
     }
@@ -69,16 +73,20 @@ class OrganizationsController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param Request $request
      * @param Organization $organization
      * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
+        Request $request,
         Organization $organization
     ) {
         $this->authorize('show', $organization);
 
-        return new OrganizationResource($organization);
+        return new OrganizationResource(
+            $organization->load(OrganizationResource::load($request))
+        );
     }
 
     /**

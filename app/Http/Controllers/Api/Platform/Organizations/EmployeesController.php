@@ -9,11 +9,23 @@ use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 
 class EmployeesController extends Controller
 {
+    private $identityRepo;
+    private $notificationRepo;
+
+    public function __construct(
+        IIdentityRepo $identityRepo
+    ) {
+        $this->identityRepo = $identityRepo;
+        $this->notificationRepo = resolve('forus.services.notification');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -35,8 +47,8 @@ class EmployeesController extends Controller
      *
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
-     * @return EmployeeResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreEmployeeRequest $request,
@@ -49,16 +61,41 @@ class EmployeesController extends Controller
             'forus.services.record'
         )->identityAddressByEmail($request->input('email'));
 
-        if ($organization->employees()->where([
-                'identity_address' => $identity_address
-            ])->count() > 0) {
-            return response([
-                "errors" => [
-                    "email" => [trans("validation.employee_already_exists", [
-                        'attribute' => 'email'
-                    ])]
-                ]
-            ], 422);
+        if ($identity_address) {
+            if ($organization->employees()->where([
+                    'identity_address' => $identity_address
+                ])->count() > 0) {
+                return response([
+                    "errors" => [
+                        "email" => [trans("validation.employee_already_exists", [
+                            'attribute' => 'email'
+                        ])]
+                    ]
+                ], 422);
+            }
+        } else {
+            $email = $request->input('email');
+
+            $identity_address = $this->identityRepo->makeByEmail($email);
+            $identityProxy = $this->identityRepo->makeIdentityPoxy($identity_address);
+
+            $clientType = $request->headers->get('Client-Type', 'general');
+            $implementationKey = Implementation::activeKey();
+
+            $confirmationLink = url(
+                '/api/v1/identity/proxy/confirmation/redirect/' . collect([
+                    $identityProxy['exchange_token'],
+                    $clientType,
+                    $implementationKey
+                ])->implode('/')
+            );
+
+            $this->notificationRepo->sendEmailEmployeeAdded(
+                $organization->name,
+                $email,
+                $confirmationLink,
+                $identity_address
+            );
         }
 
         /** @var Employee $employee */

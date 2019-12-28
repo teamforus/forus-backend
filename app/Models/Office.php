@@ -4,27 +4,43 @@ namespace App\Models;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 
 /**
- * Class Office
- * @property mixed $id
+ * App\Models\Office
+ *
+ * @property int $id
  * @property int $organization_id
  * @property string $address
- * @property string $phone
- * @property float $lon
- * @property float $lat
- * @property boolean $parsed
- * @property Organization $organization
- * @property Collection|OfficeSchedule[] $schedules
- * @property Media $photo
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string|null $phone
+ * @property string|null $lon
+ * @property string|null $lat
+ * @property int $parsed
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
+ * @property-read \App\Models\Organization $organization
+ * @property-read \App\Services\MediaService\Models\Media $photo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OfficeSchedule[] $schedules
+ * @property-read int|null $schedules_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereLat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereLon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereParsed($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Office extends Model
 {
@@ -53,11 +69,14 @@ class Office extends Model
         $query = self::query();
 
         if ($approved = $request->input('approved', false)) {
-            $query->whereIn('organization_id', FundProvider::whereIn(
-                'fund_id', Implementation::activeFundsQuery()->pluck('id')
-            )->where([
-                'state' => FundProvider::STATE_APPROVED
-            ])->pluck('organization_id')->unique()->values()->toArray());
+            $activeFunds = Implementation::activeFundsQuery()->pluck('id');
+
+            $query->whereHas('organization.organization_funds', function(
+                Builder $builder
+            ) use ($activeFunds) {
+                $builder->whereIn('fund_id', $activeFunds->toArray());
+                FundProvider::whereActiveQueryBuilder($builder);
+            });
         }
 
         if ($request->has('q') && $q = $request->input('q')) {

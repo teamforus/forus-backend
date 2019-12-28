@@ -130,8 +130,9 @@ return [
     'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',
     'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
+    'business_type_id' => 'Organisatie type',
     'voucher' => [
-        'expired' => 'De voucher is verlopen.',
+        'expired' => 'Deze voucher is niet meer geldig.',
         'product_voucher_used' => 'De voucher voor deze aanbieding is al gebruikt!',
         'provider_not_applied' => 'U mag deze voucher niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van deze voucher.',
         'provider_pending' => 'U mag deze voucher niet scannen! Status voor aanmelding van het fonds van deze voucher is wachtend.',

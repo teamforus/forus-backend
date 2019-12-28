@@ -168,7 +168,16 @@ if (!function_exists('implementation_key')) {
      * @return array|string
      */
     function implementation_key() {
-        return request()->header('Client-Key', false);
+        return request()->header('Client-Key', null);
+    }
+}
+
+if (!function_exists('client_type')) {
+    /**
+     * @return array|string
+     */
+    function client_type() {
+        return request()->header('Client-Type', null);
     }
 }
 
@@ -298,7 +307,7 @@ if (!function_exists('cache_optional')) {
     }
 }
 
-if (!function_exists('record_types')) {
+if (!function_exists('record_types_cached')) {
     /**
      * @param float $minutes
      * @param bool $reset
@@ -309,10 +318,11 @@ if (!function_exists('record_types')) {
         bool $reset = false
     ) {
         return cache_optional('record_types', function() {
-            return resolve('forus.services.record')->getRecordTypes();
+            return (array) resolve('forus.services.record')->getRecordTypes();
         }, $minutes, null, $reset);
     }
 }
+
 if (!function_exists('pretty_file_size')) {
     /**
      * Human readable file size
@@ -330,5 +340,163 @@ if (!function_exists('pretty_file_size')) {
 
         return round($bytes, $precision) .
             ['','k','M','G','T','P','E','Z','Y'][$i] . 'B';
+    }
+}
+
+if (!function_exists('service_identity')) {
+    /**
+     * Get identity service instance
+     * @return \App\Services\Forus\Record\Repositories\RecordRepo|mixed
+     */
+    function service_identity() {
+        return resolve('forus.services.identity');
+    }
+}
+
+if (!function_exists('service_record')) {
+    /**
+     * Get record service instance
+     * @return \App\Services\Forus\Record\Repositories\RecordRepo|mixed
+     */
+    function service_record() {
+        return resolve('forus.services.record');
+    }
+}
+
+if (!function_exists('json_encode_pretty')) {
+    /**
+     * @param $value
+     * @param int $options
+     * @param int $depth
+     * @return false|string
+     */
+    function json_encode_pretty($value, $options = 0, $depth = 512) {
+        return json_encode($value, $options + JSON_PRETTY_PRINT, $depth);
+    }
+}
+
+if (!function_exists('log_debug')) {
+    /**
+     * @param $message
+     * @param array $context
+     */
+    function log_debug($message, array $context = []) {
+        logger()->debug(
+            is_string($message) ? $message: json_encode_pretty($message),
+            $context
+        );
+    }
+}
+
+if (!function_exists('api_dependency_requested')) {
+    /**
+     * @param string $key
+     * @param \Illuminate\Http\Request|null $request
+     * @param bool $default
+     * @return bool
+     */
+    function api_dependency_requested(
+        string $key,
+        \Illuminate\Http\Request $request = null,
+        bool $default = true
+    ) {
+        $request = $request ?? request();
+        $dependency = $request->input('dependency', null);
+
+        if (is_array($dependency)) {
+            return in_array($key, $dependency);
+        }
+
+        return $default;
+    }
+}
+
+if (!function_exists('validate_data')) {
+    /**
+     * @param array $data
+     * @param array $rules
+     * @return \Illuminate\Validation\Validator
+     */
+    function validate_data(
+        $data = [],
+        $rules = []
+    ) {
+        return \Illuminate\Support\Facades\Validator::make($data, $rules);
+    }
+}
+
+if (!function_exists('filter_bool')) {
+    /**
+     * @param $value
+     * @return bool
+     */
+    function filter_bool($value) {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+}
+
+if (!function_exists('url_extend_get_params')) {
+    /**
+     * @param string $url
+     * @param array $params
+     * @return string
+     */
+    function url_extend_get_params(string $url, array $params = []) {
+        $url = explode('?', rtrim($url, '/'));
+
+        $urlParams = [];
+        parse_str($url[1] ?? "", $urlParams);
+
+        return sprintf("%s?%s", rtrim($url[0], '/'), http_build_query(array_merge(
+            $params, $urlParams
+        )));
+    }
+}
+
+if (!function_exists('http_resolve_url')) {
+    /**
+     * @param string $url
+     * @param string $uri
+     * @return string
+     */
+    function http_resolve_url(string $url, string $uri = ''): string {
+        return url(sprintf('%s/%s', rtrim($url, '/'), ltrim($uri, '/')));
+    }
+}
+
+if (!function_exists('range_between_dates')) {
+    function range_between_dates(
+        Carbon $startDate,
+        Carbon $endDate,
+        $countDates = null
+    ) {
+        $dates = collect();
+        $diffBetweenDates = $startDate->diffInDays($endDate);
+
+        if ($startDate->isSameDay($endDate)) {
+            return $dates->push($endDate);
+        }
+
+        if (!$countDates) {
+            for ($i = 0; $i <= $diffBetweenDates; $i++) {
+                $dates->push($startDate->copy()->addDays($i));
+            }
+
+            return $dates;
+        }
+
+        $countDates--;
+        $countDates = min($countDates, $diffBetweenDates);
+        $interval = $diffBetweenDates / $countDates;
+
+        if ($diffBetweenDates > 1) {
+            for ($i = 0; $i < $countDates; $i++) {
+                $dates->push($startDate->copy()->addDays($i * $interval));
+            }
+        }
+
+        $dates->push($endDate);
+
+        return $dates;
     }
 }

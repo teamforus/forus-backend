@@ -2,27 +2,42 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
-
 /**
- * Class WalletVoucher
- * @property mixed $id
- * @property integer $wallet_id
- * @property integer $token_id
- * @property integer $product_id
- * @property integer $amount
+ * App\Models\WalletVoucher
+ *
+ * @property int $id
+ * @property int $wallet_id
+ * @property int $token_id
+ * @property int|null $product_id
+ * @property int $amount
  * @property string $type
  * @property string $state
- * @property String $address
- * @property Wallet $wallet
- * @property Token $token
- * @property Product $product
- * @property Collection $voucher_tokens
- * @property Collection $voucher_transactions
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string|null $address
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\Token $token
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\WalletVoucherToken[] $voucher_tokens
+ * @property-read int|null $voucher_tokens_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\WalletVoucherTransaction[] $voucher_transactions
+ * @property-read int|null $voucher_transactions_count
+ * @property-read \App\Models\Wallet $wallet
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereTokenId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucher whereWalletId($value)
+ * @mixin \Eloquent
  */
 class WalletVoucher extends Model
 {

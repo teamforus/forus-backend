@@ -61,7 +61,7 @@ class FundResource extends Resource
         }
 
         $data = array_merge($fund->only([
-            'id', 'name', 'organization_id', 'state', 'notification_amount',
+            'id', 'name', 'description', 'organization_id', 'state', 'notification_amount', 'tags'
         ]), [
             'key' => $fund->fund_config->key ?? '',
             'logo' => new MediaResource($fund->logo),
@@ -78,6 +78,9 @@ class FundResource extends Resource
             ),
             'formulas' => FundFormulaResource::collection(
                 $fund->fund_formulas
+            ),
+            'formula_products' => $fund->fund_formula_products->pluck(
+                'product_id'
             ),
             'validators' => $validators->map(function($validator) {
                 return collect($validator)->only([

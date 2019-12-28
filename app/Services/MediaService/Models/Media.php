@@ -2,32 +2,54 @@
 
 namespace App\Services\MediaService\Models;
 
-use App\Services\FileService\Models\File;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * Class Media
- * @property mixed $id
- * @property string $identity_address
- * @property string $original_name
- * @property int $mediable_id
- * @property int $mediable_type
+ * App\Services\MediaService\Models\Media
+ *
+ * @property int $id
+ * @property string|null $uid
+ * @property string|null $original_name
  * @property string $type
  * @property string $ext
- * @property string $uid
- * @property MediaSize[]|Collection $sizes
- * @property MediaSize $size_original
- * @property Model $mediable
- * @method static static create($attributes = array())
- * @method static static find($id, $columns = ['*'])
- * @method static Builder where($column, $operator = null, $value = null, $boolean = 'and')
- * @package App\Services\MediaService\Models
+ * @property string $identity_address
+ * @property int|null $mediable_id
+ * @property string|null $mediable_type
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Services\MediaService\Models\Media|null $mediable
+ * @property-read \App\Services\MediaService\Models\MediaSize $size_original
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaSize[] $sizes
+ * @property-read int|null $sizes_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereExt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereMediableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereMediableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOriginalName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Media extends Model
 {
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'identity_address', 'original_name', 'mediable_id', 'mediable_type',
+        'type', 'ext', 'uid'
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -50,16 +72,6 @@ class Media extends Model
     public function mediable() {
         return $this->morphTo();
     }
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'identity_address', 'original_name', 'mediable_id', 'mediable_type',
-        'type', 'ext', 'uid'
-    ];
 
     /**
      * @param string $key

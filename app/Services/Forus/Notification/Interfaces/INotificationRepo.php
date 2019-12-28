@@ -28,6 +28,27 @@ interface INotificationRepo
     ): bool;
 
     /**
+     * Check if Push notification can be unsubscribed
+     * @param string $pushKey
+     * @return bool
+     */
+    public function isPushNotificationUnsubscribable(
+        string $pushKey
+    ): bool;
+
+    /**
+     * Check if Push notification can be unsubscribed
+     *
+     * @param string $identifier
+     * @param string $pushKey
+     * @return bool
+     */
+    public function isPushNotificationUnsubscribed(
+        string $identifier,
+        string $pushKey
+    ): bool;
+
+    /**
      * Is email unsubscribed for specific email
      *
      * @param string $identity_address
@@ -110,4 +131,14 @@ interface INotificationRepo
      * @return array
      */
     public function mailTypeKeys(): array;
+
+    /**
+     * @return array
+     */
+    public function pushNotificationTypeKeys(): array;
+
+    /**
+     * @return array
+     */
+    public function allPreferenceKeys(): array;
 }

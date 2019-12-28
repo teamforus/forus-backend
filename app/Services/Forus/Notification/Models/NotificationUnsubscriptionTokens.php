@@ -2,16 +2,25 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class NotificationUnsubscription
+ * App\Models\NotificationUnsubscriptionToken
+ *
  * @property int $id
  * @property string $email
  * @property string $token
- * @property Carbon $created_at
- * * @property Carbon $updated_at
- * @package App\Models
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationUnsubscriptionToken whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class NotificationUnsubscriptionToken extends Model
 {

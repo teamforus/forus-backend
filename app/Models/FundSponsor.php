@@ -2,22 +2,19 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
-
 /**
- * Class FundSponsor
- * @property mixed $id
- * @property integer $fund_id
- * @property integer $sponsor_id
- * @property string $state
- * @property Organization $sponsor
- * @property Fund $fund
- * @property Product $product
- * @property Collection $investments
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * App\Models\FundSponsor
+ *
+ * @property-read \App\Models\Fund $fund
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundSponsorInvestment[] $investments
+ * @property-read int|null $investments_count
+ * @property-read \App\Models\Organization $sponsor
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundSponsor newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundSponsor newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundSponsor query()
+ * @mixin \Eloquent
  */
 class FundSponsor extends Model
 {

@@ -2,32 +2,38 @@
 
 namespace App\Services\Forus\Record\Models;
 
-use App\Models\Traits\EloquentModel;
-use Barryvdh\LaravelIdeHelper\Eloquent;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Record
- * @mixin Eloquent
- * @property mixed $id
+ * App\Services\Forus\Record\Models\Record
+ *
+ * @property int $id
  * @property string $identity_address
- * @property integer $record_type_id
- * @property integer $record_category_id
+ * @property int $record_type_id
+ * @property int|null $record_category_id
  * @property string $value
- * @property integer $order
- * @property RecordType $record_type
- * @property RecordCategory $record_category
- * @property Collection $validations
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Services\Forus\Record\Models\RecordCategory|null $record_category
+ * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordValidation[] $validations
+ * @property-read int|null $validations_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereRecordCategoryId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereValue($value)
+ * @mixin \Eloquent
  */
 class Record extends Model
 {
-    use EloquentModel;
-
     /**
      * The attributes that are mass assignable.
      *

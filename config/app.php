@@ -214,6 +214,7 @@ return [
         App\Services\Forus\Notification\NotificationServiceProvider::class,
 
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
+        App\Services\DigIdService\DigIdServiceProvider::class,
     ],
 
     /*

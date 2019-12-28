@@ -2,25 +2,40 @@
 
 namespace App\Models;
 
-use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Record\Models\Record;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * Class ValidatorRequest
- * @property mixed $id
+ * App\Models\ValidatorRequest
+ *
+ * @property int $id
  * @property int $validator_id
+ * @property string|null $record_validation_uid
+ * @property string $identity_address
  * @property int $record_id
  * @property string $state
- * @property string $identity_address
- * @property Identity $identity
- * @property Record $record
- * @property Validator $validator
- * @property Carbon $validated_at
- * @package App\Models
+ * @property \Illuminate\Support\Carbon $validated_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Services\Forus\Record\Models\Record $record
+ * @property-read \App\Models\Validator $validator
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereRecordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereRecordValidationUid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereValidatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest whereValidatorId($value)
+ * @mixin \Eloquent
  */
 class ValidatorRequest extends Model
 {
@@ -37,15 +52,6 @@ class ValidatorRequest extends Model
     protected $dates = [
         'validated_at'
     ];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\belongsTo
-     */
-    public function identity() {
-        return $this->belongsTo(
-            Identity::class, 'identity_address', 'address'
-        );
-    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\belongsTo

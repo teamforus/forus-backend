@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
-use App\Models\Traits\EloquentModel;
+use App\Models\Traits\HasTags;
 use App\Services\BunqService\BunqService;
+use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
@@ -13,48 +14,113 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Http\Request;
+
 
 /**
- * Class Fund
- * @property mixed $id
- * @property integer $organization_id
- * @property integer|null $fund_id
- * @property string $state
+ * App\Models\Fund
+ *
+ * @property int $id
+ * @property int $organization_id
  * @property string $name
- * @property float $budget_total
- * @property float $budget_validated
- * @property float $budget_used
- * @property float $budget_left
- * @property float $notification_amount
- * @property Media $logo
- * @property boolean $public
- * @property FundConfig $fund_config
- * @property Organization $organization
- * @property Collection|BunqMeTab[] $bunq_me_tabs_paid
- * @property Collection|BunqMeTab[] $bunq_me_tabs
- * @property Collection|FundTopUpTransaction[] $top_up_transactions
- * @property Collection|FundFormula[] $fund_formulas
- * @property Collection|FundMeta[] $metas
- * @property Collection|Product[] $products
- * @property Collection|ProductCategory[] $product_categories
- * @property Collection|FundCriterion[] $criteria
- * @property Collection|Voucher[] $vouchers
- * @property Collection|VoucherTransaction[] $voucher_transactions
- * @property Collection|FundProvider[] $providers
- * @property Collection|Validator[] $validators
- * @property Collection|Organization[] $provider_organizations
- * @property Collection|Organization[] $provider_organizations_approved
- * @property Collection|Organization[] $provider_organizations_declined
- * @property Collection|Organization[] $provider_organizations_pending
- * @property Carbon $start_date
- * @property Carbon $end_date
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string $state
+ * @property string $description
+ * @property bool $public
+ * @property float|null $notification_amount
+ * @property \Illuminate\Support\Carbon|null $notified_at
+ * @property \Illuminate\Support\Carbon|null $start_date
+ * @property \Illuminate\Support\Carbon $end_date
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
+ * @property-read int|null $bunq_me_tabs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
+ * @property-read int|null $bunq_me_tabs_paid_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
+ * @property-read int|null $criteria_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read int|null $employees_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees_validators
+ * @property-read int|null $employees_validators_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $formula_products
+ * @property-read int|null $formula_products_count
+ * @property-read \App\Models\FundConfig $fund_config
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
+ * @property-read int|null $fund_formula_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
+ * @property-read int|null $fund_formulas_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
+ * @property-read int|null $fund_requests_count
+ * @property-read float $budget_left
+ * @property-read float $budget_total
+ * @property-read float $budget_used
+ * @property-read float $budget_validated
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundMeta[] $metas
+ * @property-read int|null $metas_count
+ * @property-read \App\Models\Organization $organization
+ * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $product_categories
+ * @property-read int|null $product_categories_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read int|null $products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations
+ * @property-read int|null $provider_organizations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved
+ * @property-read int|null $provider_organizations_approved_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_declined
+ * @property-read int|null $provider_organizations_declined_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_pending
+ * @property-read int|null $provider_organizations_pending_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers
+ * @property-read int|null $providers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
+ * @property-read int|null $top_up_transactions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
+ * @property-read int|null $top_ups_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
+ * @property-read int|null $validators_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read int|null $voucher_transactions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read int|null $vouchers_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotificationAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund wherePublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereStartDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
+ * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_budget
+ * @property-read int|null $provider_organizations_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_products
+ * @property-read int|null $provider_organizations_approved_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_allowed_products
+ * @property-read int|null $providers_allowed_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
+ * @property-read int|null $providers_declined_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
+ * @property-read int|null $provider_invitations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
+ * @property-read int|null $providers_approved_count
  */
 class Fund extends Model
 {
-    use HasMedia, EloquentModel;
+    use HasMedia, HasTags;
 
     const STATE_ACTIVE = 'active';
     const STATE_CLOSED = 'closed';
@@ -74,8 +140,8 @@ class Fund extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'state', 'name', 'start_date', 'end_date',
-        'notification_amount', 'fund_id', 'notified_at', 'public'
+        'organization_id', 'state', 'name', 'description', 'start_date',
+        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public'
     ];
 
     protected $hidden = [
@@ -172,6 +238,42 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function providers_approved() {
+        return $this->hasMany(FundProvider::class)->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function provider_invitations() {
+        return $this->hasMany(FundProviderInvitation::class, 'from_fund_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function providers_allowed_products() {
+        return $this->hasMany(FundProvider::class)->where([
+            'allow_products' => true
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function providers_declined_products() {
+        return $this->hasMany(FundProvider::class)->where([
+            'allow_products' => false
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function top_ups() {
         return $this->hasMany(FundTopUp::class);
     }
@@ -181,6 +283,13 @@ class Fund extends Model
      */
     public function top_up_transactions() {
         return $this->hasManyThrough(FundTopUpTransaction::class, FundTopUp::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_requests() {
+        return $this->hasMany(FundRequest::class);
     }
 
     /**
@@ -241,7 +350,35 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'approved');
+        )->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_approved_budget() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where(function(Builder $builder) {
+            $builder->where('allow_budget', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function provider_organizations_approved_products() {
+        return $this->belongsToMany(
+            Organization::class,
+            'fund_providers'
+        )->where(function(Builder $builder) {
+            $builder->orWhere('allow_products', true);
+        });
     }
 
     /**
@@ -251,7 +388,11 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'declined');
+        )->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+            'dismissed' => true,
+        ]);
     }
 
     /**
@@ -261,7 +402,10 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', 'pending');
+        )->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+        ]);
     }
 
     /**
@@ -289,6 +433,36 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function employees() {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        );
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function employees_validators() {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles', function(Builder $builder) {
+            $builder->where('key', 'validation');
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function fund_config() {
@@ -300,6 +474,25 @@ class Fund extends Model
      */
     public function fund_formulas() {
         return $this->hasMany(FundFormula::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_formula_products() {
+        return $this->hasMany(FundFormulaProduct::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function formula_products() {
+        return $this->hasManyThrough(
+            Product::class,
+            FundFormulaProduct::class,
+            'fund_id',
+            'id'
+        );
     }
 
     /**
@@ -348,9 +541,7 @@ class Fund extends Model
     ) {
         $recordRepo = app()->make('forus.services.record');
 
-        $trustedIdentities = $fund->validators->pluck(
-            'identity_address'
-        );
+        $trustedIdentities = $fund->validatorIdentities();
 
         /** @var FundCriterion $criterion */
         $recordsOfType = collect($recordRepo->recordsList(
@@ -390,30 +581,59 @@ class Fund extends Model
      */
     public static function amountForIdentity(Fund $fund, $identityAddress)
     {
-        if (!$fundFormula = $fund->fund_formulas) {
+        if ($fund->fund_formulas->count() == 0 &&
+            $fund->fund_formula_products->pluck('price')->sum() == 0) {
             return 0;
         }
 
-        return $fundFormula->map(function(FundFormula $formula) use (
-            $fund, $identityAddress
-        ) {
-            switch ($formula->type) {
-                case 'fixed': return $formula->amount; break;
-                case 'multiply': {
-                    $record = self::getTrustedRecordOfType(
-                        $fund,
-                        $identityAddress,
-                        $formula->record_type_key,
-                        $fund->organization
-                    );
+        return $fund->fund_formulas->map(function(FundFormula $formula) use (
+                $fund, $identityAddress
+            ) {
+                switch ($formula->type) {
+                    case 'fixed': return $formula->amount; break;
+                    case 'multiply': {
+                        $record = self::getTrustedRecordOfType(
+                            $fund,
+                            $identityAddress,
+                            $formula->record_type_key,
+                            $fund->organization
+                        );
 
-                    return is_numeric(
-                        $record['value']
-                    ) ? $formula->amount * $record['value'] : 0;
-                } break;
-                default: return 0; break;
-            }
-        })->sum();
+                        return is_numeric(
+                            $record['value']
+                        ) ? $formula->amount * $record['value'] : 0;
+                    } break;
+                    default: return 0; break;
+                }
+            })->sum() + $fund->fund_formula_products->pluck('price')->sum();
+    }
+
+    /**
+     * @param Request $request
+     * @param Builder|null $query
+     * @return Builder
+     */
+    public static function search(
+        Request $request,
+        Builder $query = null
+    ) {
+        $query = $query ?: self::query();
+
+        if ($request->has('tag')) {
+            $query->whereHas('tags', function(Builder $query) use ($request) {
+                return $query->where('key', $request->get('tag'));
+            });
+        }
+
+        if ($request->has('organization_id')) {
+            $query->where('organization_id', $request->get('organization_id'));
+        }
+
+        if ($request->has('fund_id')) {
+            $query->where('id', $request->get('fund_id'));
+        }
+
+        return $query;
     }
 
     /**
@@ -444,14 +664,12 @@ class Fund extends Model
             return false;
         }
 
-        $bunqService = BunqService::create(
+        return BunqService::create(
             $this->id,
             $fundBunq['key'],
             $fundBunq['allowed_ip'],
             $fundBunq['sandbox']
         );
-
-        return $bunqService;
     }
 
     public static function configuredFunds () {
@@ -518,7 +736,7 @@ class Fund extends Model
 
                 /** @var Organization $organization */
                 // TODO: Notify providers about new fund started
-                
+
                 /*
                 foreach ($organizations as $organization) {
                     resolve('forus.services.mail_notification')->newFundStarted(
@@ -567,6 +785,15 @@ class Fund extends Model
                 'operator' => '>='
             ]);
 
+            foreach ($fund->provider_organizations_approved as $organization) {
+                resolve('forus.services.notification')->newFundStarted(
+                    $organization->email,
+                    $organization->emailServiceId(),
+                    $fund->name,
+                    $fund->organization->name
+                );
+            }
+
             /*$organizations = Organization::query()->whereIn(
                 'id', OrganizationProductCategory::query()->whereIn(
                 'product_category_id',
@@ -612,9 +839,9 @@ class Fund extends Model
             $organization = $fund->organization;
             $sponsorCount = $organization->employees->count() + 1;
 
-            $providers = $fund->providers()->where([
-                'state' => 'approved'
-            ])->get();
+            $providers = FundProvider::whereActiveQueryBuilder(
+                $fund->providers()
+            )->get();
 
             $providerCount = $providers->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */
@@ -667,6 +894,11 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach ($funds as $fund) {
+            if (!$bunq = $fund->getBunq()) {
+                app('log')->error('Top up for this fund not available yet.');
+                continue;
+            }
+
             $transactionCosts = $fund->getTransactionCosts();
 
             if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
@@ -684,6 +916,15 @@ class Fund extends Model
                     'email' => $fund->organization->email
                 ])->unique('email');
 
+                /** @var FundTopUp $topUp */
+                if ($fund->top_ups()->count() == 0) {
+                    $topUp = $fund->top_ups()->create([
+                        'code' => FundTopUp::generateCode()
+                    ]);
+                } else {
+                    $topUp = $fund->top_ups()->first();
+                }
+
                 foreach ($referrers as $referrer) {
                     $mailService->fundBalanceWarning(
                         $referrer['email'],
@@ -692,7 +933,9 @@ class Fund extends Model
                         $fund->organization->name,
                         $fund->name,
                         currency_format($fund->notification_amount - $transactionCosts),
-                        currency_format($fund->budget_left)
+                        currency_format($fund->budget_left),
+                        $bunq->getBankAccountIban(),
+                        $topUp->code
                     );
                 }
 
@@ -745,27 +988,226 @@ class Fund extends Model
     }
 
     /**
-     * @param string $identity_address
-     * @param float|null $amount
+     * @param string|null $identity_address
+     * @param float|null $voucherAmount
+     * @param Carbon|null $expire_at
+     * @param string|null $note
+     * @return Voucher|\Illuminate\Database\Eloquent\Model
+     */
+    public function makeVoucher(
+        string $identity_address = null,
+        float $voucherAmount = null,
+        Carbon $expire_at = null,
+        string $note = null
+    ) {
+        $amount = $voucherAmount ?: self::amountForIdentity(
+            $this,
+            $identity_address
+        );
+
+        $returnable = false;
+        $expire_at = $expire_at ?: $this->end_date;
+        $fund_id = $this->id;
+
+        $voucher = Voucher::create(compact(
+            'identity_address', 'amount', 'expire_at', 'note',
+            'fund_id', 'returnable'
+        ));
+
+        VoucherCreated::dispatch($voucher);
+
+        if ($voucherAmount === null) {
+            foreach ($this->fund_formula_products as $fund_formula_product) {
+                $voucher->buyProductVoucher(
+                    $fund_formula_product->product,
+                    $fund_formula_product->amount,
+                    false
+                );
+            }
+        }
+
+        return $voucher;
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param string|null $note
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function makeVoucher(
+    public function makeProductVoucher(
         string $identity_address = null,
-        float $amount = null,
+        int $product_id = null,
         Carbon $expire_at = null,
         string $note = null
     ) {
-        $amount = $amount ?: self::amountForIdentity($this, $identity_address);
+        $amount = 0;
         $expire_at = $expire_at ?: $this->end_date;
+        $fund_id = $this->id;
 
-        $voucher = $this->vouchers()->create(compact(
-            'identity_address', 'amount', 'expire_at', 'note'
+        $voucher = Voucher::create(compact(
+            'identity_address', 'amount', 'expire_at', 'note', 'product_id',
+            'fund_id'
         ));
 
         VoucherCreated::dispatch($voucher);
 
         return $voucher;
+    }
+
+    /**
+     * @param bool $force_fetch
+     * @return array
+     */
+    public function validatorIdentities(bool $force_fetch = true) {
+        return (
+        $force_fetch ? $this->validators() : $this->validators
+        )->pluck('validators.identity_address')->toArray();
+    }
+
+    /**
+     * @param bool $force_fetch
+     * @return array
+     */
+    public function validatorEmployees(bool $force_fetch = true) {
+        return ($force_fetch ? $this->employees_validators() :
+            $this->employees_validators)
+            ->pluck('employees.identity_address')->toArray();
+    }
+
+    /**
+     * @param string $identity_address
+     * @param array $records
+     * @return FundRequest
+     */
+    public function makeFundRequest(string $identity_address, array $records)
+    {
+        /** @var FundRequest $fundRequest */
+        $fundRequest = $this->fund_requests()->create(compact(
+            'identity_address'
+        ));
+
+        foreach ($records as $record) {
+            /** @var FundRequestRecord $requestRecord */
+            $requestRecord = $fundRequest->records()->create($record);
+
+            foreach ($record['files'] ?? [] as $fileUid) {
+                $requestRecord->attachFile(File::findByUid($fileUid));
+            }
+        }
+
+        return $fundRequest;
+    }
+
+    /**
+     * Store criteria for newly created fund
+     * @param array $criteria
+     * @return $this
+     */
+    public function makeCriteria(array $criteria)
+    {
+        $this->criteria()->createMany(array_map(function($criterion) {
+            return array_only($criterion, [
+                'record_type_key', 'operator', 'value', 'show_attachment',
+                'description'
+            ]);
+        }, $criteria));
+
+        return $this;
+    }
+
+    /**
+     * Update criteria for existing fund
+     * @param array $criteria
+     * @return $this
+     */
+    public function updateCriteria(array $criteria)
+    {
+        $this->criteria()->whereNotIn('id', array_filter(
+            array_pluck($criteria, 'id'), function($id) {
+            return !empty($id);
+        }))->delete();
+
+        foreach ($criteria as $criterion) {
+            /** @var FundCriterion|null $db_criteria */
+            $data_criteria = array_only($criterion, [
+                'record_type_key', 'operator', 'value', 'show_attachment',
+                'description'
+            ]);
+
+            if ($db_criteria = $this->criteria()->find($criterion['id'] ?? null)) {
+                $db_criteria->update($data_criteria);
+            } else {
+                $this->criteria()->create($data_criteria);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param array $productIds
+     * @return $this
+     */
+    public function updateFormulaProducts(array $productIds)
+    {
+        /** @var Collection|Product[] $products */
+        $products = Product::whereIn('id', $productIds)->get();
+
+        $this->fund_formula_products()->whereNotIn(
+            'product_id',
+            $products->pluck('id')
+        )->delete();
+
+        foreach ($products as $product) {
+            $where = [
+                'product_id' => $product->id
+            ];
+
+            if (!$this->fund_formula_products()->where($where)->exists()) {
+                $this->fund_formula_products()->create($where)->update([
+                    'price' => $product->price
+                ]);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlWebshop(string $uri = "/")
+    {
+        return $this->fund_config->implementation->urlWebshop($uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlSponsorDashboard(string $uri = "/")
+    {
+        return $this->fund_config->implementation->urlSponsorDashboard($uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlProviderDashboard(string $uri = "/")
+    {
+        return $this->fund_config->implementation->urlProviderDashboard($uri);
+    }
+
+    /**
+     * @param string $uri
+     * @return mixed|string
+     */
+    public function urlValidatorDashboard(string $uri = "/")
+    {
+        return $this->fund_config->implementation->urlValidatorDashboard($uri);
     }
 }

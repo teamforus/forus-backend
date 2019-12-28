@@ -13,10 +13,17 @@ return [
     ],
     "funds" => [
         // list all funds
-        "list"      => true,
+        "list"      => env('FEATURES_WEBSHOP_FUNDS_LIST', false),
 
         // view fund details
-        "show"      => true
+        "show"      => false,
+
+        /**
+         * Allow users to submit make fund requests
+         * Hides elements from webshop and disable responsible api endpoints
+         * when disabled
+         */
+        'fund_requests' => env('ENABLE_FUND_REQUESTS_WEBSHOP', false),
     ],
     "products" => [
         // list all funds
@@ -25,15 +32,4 @@ return [
         // view fund details
         "show"      => true
     ],
-    "identity"      => [
-        "address"   => false
-    ],
-    // enable newsletter
-    "newsletter"    => false,
-
-    // enable contact form
-    "contactForm"   => false,
-
-    // enable blog
-    "blog"          => false
 ];

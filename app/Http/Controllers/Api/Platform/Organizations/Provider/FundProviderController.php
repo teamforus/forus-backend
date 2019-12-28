@@ -7,40 +7,40 @@ use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequ
 use App\Http\Resources\FundResource;
 use App\Http\Resources\FundProviderResource;
 use App\Models\Fund;
-use App\Models\FundProductCategory;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use Illuminate\Http\Request;
+use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 
 class FundProviderController extends Controller
 {
     /**
      * Display list funds available for apply as provider
      *
-     * @param Request $request
+     * @param IndexFundsRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function availableFunds(
-        Request $request,
+        IndexFundsRequest $request,
         Organization $organization
     ) {
         $this->authorize('show', $organization);
         $this->authorize('indexProvider', [FundProvider::class, $organization]);
 
-        $query = Implementation::activeFundsQuery()->whereNotIn(
+        $query = Implementation::queryFundsByState([
+            Fund::STATE_ACTIVE, Fund::STATE_PAUSED
+        ])->whereNotIn(
             'id', $organization->organization_funds()->pluck(
             'fund_id'
         )->toArray());
 
-        if ($request->has('fund_id')) {
-            $query->where('id', $request->get('fund_id'));
-        }
-
-        return FundResource::collection($query->get());
+        return FundResource::collection(Fund::search(
+            $request, $query
+        )->latest()->get());
     }
 
     /**
@@ -76,7 +76,7 @@ class FundProviderController extends Controller
      * @param StoreFundProviderRequest $request
      * @param Organization $organization
      * @return FundProviderResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreFundProviderRequest $request,
@@ -90,7 +90,8 @@ class FundProviderController extends Controller
             'fund_id'
         ]));
 
-        resolve('forus.services.notification')->providerApplied(
+        $notificationService = resolve('forus.services.notification');
+        $notificationService->providerApplied(
             $fundProvider->fund->organization->email,
             $fundProvider->organization->name,
             $fundProvider->fund->organization->name,

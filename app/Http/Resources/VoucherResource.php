@@ -70,7 +70,7 @@ class VoucherResource extends Resource
                 'expire_at' => $voucher->product->expire_at->format('Y-m-d'),
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
                 'photo' => new MediaResource($voucher->product->photo),
-                'organization' => new OrganizationBasicResource(
+                'organization' => new OrganizationWithPrivateResource(
                     $voucher->product->organization
                 ),
             ])->toArray();
@@ -94,7 +94,7 @@ class VoucherResource extends Resource
             'start_date_locale' => format_datetime_locale($fund->start_date),
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
             'end_date_locale' => format_date_locale($fund->end_date),
-            'organization' => new OrganizationBasicResource(
+            'organization' => new OrganizationWithPrivateResource(
                 $fund->organization
             ),
             'product_categories' => ProductCategoryResource::collection(
@@ -107,10 +107,12 @@ class VoucherResource extends Resource
         );
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at', 'created_at_locale',
+            'identity_address', 'fund_id', 'created_at', 'returnable'
         ])->merge([
             'expire_at' => $voucher->expire_at,
             'expire_at_locale' => format_date_locale($voucher->expire_at),
+            'expired' => $voucher->expired,
+            'created_at_locale' => $voucher->created_at_locale,
             'amount' => currency_format($amount),
             'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens->where('need_confirmation', 0)->first()->address,
@@ -127,9 +129,9 @@ class VoucherResource extends Resource
             )->map(function($product_voucher) {
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at',
-                    'created_at_locale'
+                    'identity_address', 'fund_id', 'created_at', 'returnable',
                 ])->merge([
+                    'created_at_locale' => $product_voucher->created_at_locale,
                     'address' => $product_voucher->tokens->where(
                         'need_confirmation', 1)->first()->address,
                     'amount' => currency_format(

@@ -3,13 +3,23 @@
 namespace App\Models;
 
 /**
- * Class TokenTranslation
- * @property mixed $id
- * @property integer $token_id
+ * App\Models\ProductCategoryTranslation
+ *
+ * @property int $id
+ * @property int $product_category_id
  * @property string $locale
  * @property string $name
- * @property Token $token
- * @package App\Models
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\ProductCategory $product_category
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategoryTranslation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategoryTranslation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategoryTranslation query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategoryTranslation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategoryTranslation whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategoryTranslation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategoryTranslation whereProductCategoryId($value)
+ * @mixin \Eloquent
  */
 class ProductCategoryTranslation extends Model
 {

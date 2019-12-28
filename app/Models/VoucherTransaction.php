@@ -8,23 +8,44 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 /**
- * Class VoucherTransaction
- * @property mixed $id
- * @property integer $voucher_id
- * @property integer $organization_id
- * @property integer $product_id
- * @property string $address
+ * App\Models\VoucherTransaction
+ *
+ * @property int $id
+ * @property int $voucher_id
+ * @property int $organization_id
+ * @property int|null $product_id
  * @property float $amount
- * @property integer $attempts
- * @property integer $payment_id
+ * @property string $address
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $payment_id
+ * @property int $attempts
  * @property string $state
- * @property Product $product
- * @property Voucher $voucher
- * @property Organization $provider
- * @property Collection $notes
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property string|null $last_attempt_at
+ * @property-read string|null $created_at_locale
+ * @property-read mixed $transaction_details
+ * @property-read string|null $updated_at_locale
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
+ * @property-read int|null $notes_count
+ * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\Organization $provider
+ * @property-read \App\Models\Voucher $voucher
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAttempts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereLastAttemptAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereVoucherId($value)
+ * @mixin \Eloquent
  */
 class VoucherTransaction extends Model
 {
@@ -104,7 +125,7 @@ class VoucherTransaction extends Model
         }
 
         $mailService->sendPushNotification(
-            $this->voucher->identity_address, $title, $body
+            $this->voucher->identity_address, $title, $body, 'voucher.transaction'
         );
     }
 
@@ -121,7 +142,7 @@ class VoucherTransaction extends Model
         $body = trans('push.bunq_transactions.complete.body', $transData);
 
         $mailService->sendPushNotification(
-            $this->provider->identity_address, $title, $body
+            $this->provider->identity_address, $title, $body, 'bunq.transaction_success'
         );
     }
 
@@ -143,7 +164,9 @@ class VoucherTransaction extends Model
                 $query->orWhereHas('voucher.fund', function (Builder $query) use ($q) {
                     $query->where('name', 'LIKE', "%{$q}%");
                 });
-            })->orWhere('voucher_transactions.id','LIKE', "%{$q}%");
+
+                $query->orWhere('voucher_transactions.id','LIKE', "%{$q}%");
+            });
         }
 
         if ($request->has('state') && $state = $request->input('state')) {
@@ -172,6 +195,17 @@ class VoucherTransaction extends Model
 
         if ($amount_max = $request->input('amount_max')) {
             $query->where('amount', '<=', $amount_max);
+        }
+
+        if ($request->has('state') &&
+            $fund_state = $request->input('fund_state')) {
+            $query->whereHas('voucher.fund', function (
+                Builder $query
+            ) use ($fund_state) {
+                $query->where([
+                    'state' =>  $fund_state
+                ]);
+            });
         }
 
         $query = $query->latest();

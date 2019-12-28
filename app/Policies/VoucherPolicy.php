@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Database\Eloquent\Builder;
 
 class VoucherPolicy
 {
@@ -50,15 +51,33 @@ class VoucherPolicy
      * @param string $identity_address
      * @param Organization $organization
      * @param Fund $fund
-     * @return bool
+     * @return mixed
+     * @throws AuthorizationJsonException
      */
     public function storeSponsor(
         string $identity_address,
         Organization $organization,
         Fund $fund
     ) {
-        return $this->indexSponsor($identity_address, $organization) &&
-            $fund->organization_id == $organization->id;
+        if (!($this->indexSponsor($identity_address, $organization) &&
+            $fund->organization_id == $organization->id)) {
+            $this->deny('no_permission_to_make_vouchers');
+        }
+
+        if (!$organization->identityCan(
+            $identity_address, [
+            'manage_vouchers'
+        ])) {
+            $this->deny('no_manage_vouchers_permission');
+        }
+
+        if ($organization->employees()->where([
+            'identity_address' => $identity_address
+            ])->count() === 0) {
+            $this->deny('has_to_be_employee');
+        }
+
+        return true;
     }
 
     /**
@@ -136,6 +155,30 @@ class VoucherPolicy
      * @param string $identity_address
      * @param Voucher $voucher
      * @return bool
+     */
+    public function sendEmail(
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return $this->show($identity_address, $voucher) && !$voucher->expired;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function shareVoucher(
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return $this->sendEmail($identity_address, $voucher);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
      * @throws AuthorizationJsonException
      */
     public function useAsProvider(
@@ -145,22 +188,51 @@ class VoucherPolicy
         $fund = $voucher->fund;
         $id = 'organizations.id';
 
-        if ($voucher->expire_at->isPast()) {
-            $this->deny('voucher_expired');
+        if ($voucher->expired) {
+            $this->deny('expired');
         }
 
         if ($voucher->fund->state != Fund::STATE_ACTIVE) {
             $this->deny('fund_not_active');
         }
 
-        $providersApproved = $fund->provider_organizations_approved()
-            ->pluck($id);
-        $providersDeclined = $fund->provider_organizations_declined()
-            ->pluck($id);
-        $providersPending = $fund->provider_organizations_pending()
-            ->pluck($id);
-        $providersApplied = $fund->provider_organizations()
-            ->pluck($id);
+        if ($voucher->type == 'regular') {
+            $providersApproved = $fund->providers()->where([
+                'allow_budget' => true,
+            ])->pluck('organization_id');
+
+            $providersDeclined = $fund->providers()->where([
+                'allow_budget' => false,
+                'dismissed' => true,
+            ])->pluck('organization_id');
+
+            $providersPending = $fund->providers()->where([
+                'allow_budget' => false,
+                'dismissed' => false,
+            ])->pluck('organization_id');
+        } else {
+            $providersApproved = $fund->providers()->where([
+                'allow_products' => true,
+            ])->orWhereHas('fund_provider_products', function(
+                Builder $builder
+            ) use ($voucher) {
+                $builder->where([
+                    'product_id' => $voucher->product_id
+                ]);
+            })->pluck('organization_id');
+
+            $providersDeclined = $fund->providers()->where([
+                'allow_products' => false,
+                'dismissed' => true,
+            ])->pluck('organization_id');
+
+            $providersPending = $fund->providers()->where([
+                'allow_products' => false,
+                'dismissed' => false,
+            ])->pluck('organization_id');
+        }
+
+        $providersApplied = $fund->provider_organizations()->pluck($id);
 
         $providers = Organization::queryByIdentityPermissions(
             $identity_address, 'scan_vouchers'
@@ -213,7 +285,8 @@ class VoucherPolicy
     ) {
         return $this->show($identity_address, $voucher) &&
             $voucher->parent_id != null &&
-            $voucher->transactions->count() == 0;
+            $voucher->transactions->count() == 0 &&
+            $voucher->returnable;
     }
 
     /**

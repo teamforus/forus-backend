@@ -9,6 +9,7 @@ use App\Http\Resources\ProductCategoryResource;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\Resource;
 
 class ProviderVoucherResource extends Resource
@@ -44,13 +45,26 @@ class ProviderVoucherResource extends Resource
         Voucher $voucher
     ) {
         $amountLeft = $voucher->amount_available;
-        $voucherOrganizations = $voucher->fund->provider_organizations_approved();
+
+        if ($voucher->type == 'regular') {
+            $providersApproved = $voucher->fund->providers()->where([
+                'allow_budget' => true,
+            ])->pluck('organization_id');
+        } else {
+            $providersApproved = $voucher->fund->providers()->where([
+                'allow_products' => true,
+            ])->orWhereHas('fund_provider_products', function(
+                Builder $builder
+            ) use ($voucher) {
+                $builder->where([
+                    'product_id' => $voucher->product_id
+                ]);
+            })->pluck('organization_id');
+        }
 
         $allowedOrganizations = Organization::queryByIdentityPermissions(
             $identityAddress, 'scan_vouchers'
-        )->whereIn('id', $voucherOrganizations->pluck(
-            'organizations.id'
-        ))->get();
+        )->whereIn('id', $providersApproved)->get();
 
         $allowedProductCategories = $voucher->fund->product_categories;
         $allowedProducts = Product::query()->whereIn(
@@ -90,7 +104,7 @@ class ProviderVoucherResource extends Resource
                 /** @var Product $product */
                 return collect($product)->only([
                     'id', 'name', 'description', 'total_amount', 'sold_amount',
-                    'product_category_id', 'organization_id',
+                    'product_category_id', 'organization_id', 'unlimited_stock',
                 ])->merge([
                     'price' => currency_format($product->price),
                     'old_price' => currency_format($product->old_price),
@@ -108,8 +122,8 @@ class ProviderVoucherResource extends Resource
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
                     'identity_address', 'fund_id', 'created_at',
-                    'created_at_locale',
                 ])->merge([
+                    'created_at_locale' => $product_voucher->created_at_locale,
                     'address' => $product_voucher->tokens->where(
                         'need_confirmation', 1)->first()->address,
                     'amount' => currency_format(

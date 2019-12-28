@@ -7,6 +7,7 @@ use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
+use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -22,7 +23,8 @@ class Kernel extends ConsoleKernel
         CheckFundConfigCommand::class,
         CalculateFundUsersCommand::class,
         NotifyAboutVoucherExpireCommand::class,
-        NotifyAboutReachedNotificationFundAmount::class
+        NotifyAboutReachedNotificationFundAmount::class,
+        UpdateFundProviderInvitationExpireStateCommand::class,
     ];
 
     /**
@@ -34,19 +36,25 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('forus.fund:check')
-            ->hourlyAt(1);
+            ->hourlyAt(1)->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.fund.config:check')
-            ->everyMinute();
+            ->everyMinute()->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.fund.users:calculate')
-            ->monthly();
+            ->monthly()->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.voucher:check-expire')
-            ->dailyAt('09:00');
+            ->dailyAt('09:00')->withoutOverlapping()->onOneServer();
+
+        $schedule->command('forus.funds.provider_invitations:check-expire')
+            ->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.fund:check-amount')
-            ->cron('0 */8 * * *');
+            ->cron('0 */8 * * *')->withoutOverlapping()->onOneServer();
+  
+        $schedule->command('digid:session-clean')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
     }
 
     /**

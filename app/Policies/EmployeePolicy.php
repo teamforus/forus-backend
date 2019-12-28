@@ -55,6 +55,7 @@ class EmployeePolicy
      * @param Employee $employee
      * @param Organization $organization
      * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         $identity_address,
@@ -69,6 +70,7 @@ class EmployeePolicy
      * @param Employee $employee
      * @param Organization $organization
      * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         $identity_address,
@@ -77,6 +79,11 @@ class EmployeePolicy
     ) {
         if ($employee->organization_id != $organization->id) {
             return false;
+        }
+
+        // organization owner employee can't be edited
+        if ($employee->identity_address == $organization->identity_address) {
+            $this->deny("employees.cant_delete_organization_owner");
         }
 
         return $employee->organization->identityCan(
@@ -90,6 +97,7 @@ class EmployeePolicy
      * @param Employee $employee
      * @param Organization $organization
      * @return bool
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function destroy(
         $identity_address,

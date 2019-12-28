@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Models\Fund;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Class UpdateFundRequest
@@ -29,8 +30,14 @@ class UpdateFundRequest extends FormRequest
      */
     public function rules()
     {
+        $criteriaEditable = config(
+            'forus.features.dashboard.organizations.funds.criteria');
+        $formulaProductsEditable = config(
+            'forus.features.dashboard.organizations.funds.formula_products');
+
         return array_merge([
             'name'                  => 'required|between:2,200',
+            'description'           => 'nullable|string|max:140',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
             'notification_amount'   => 'nullable|numeric'
@@ -44,6 +51,19 @@ class UpdateFundRequest extends FormRequest
                 'required',
                 'date_format:Y-m-d',
                 'after:start_date'
+            ],
+        ] : [], $criteriaEditable ? [
+            'criteria'                      => 'required|array',
+            'criteria.*.operator'           => 'required|in:=,<,>',
+            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
+            'criteria.*.value'              => 'required|string|between:1,10',
+            'criteria.*.show_attachment'    => 'nullable|boolean',
+            'criteria.*.description'        => 'nullable|string|max:4000',
+        ] : [], $formulaProductsEditable ? [
+            'formula_products'              => 'nullable|array',
+            'formula_products.*'            => [
+                'required',
+                Rule::exists('products', 'id')->where('unlimited_stock', true)
             ],
         ] : []);
     }

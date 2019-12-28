@@ -80,7 +80,8 @@ class VoucherSubscriber
             $this->mailService->sendPushNotification(
                 $voucher->identity_address,
                 trans('push.voucher.bought.title', $transData),
-                trans('push.voucher.bought.body', $transData)
+                trans('push.voucher.bought.body', $transData),
+                'voucher.assigned'
             );
         } else {
             $transData = [
@@ -90,7 +91,8 @@ class VoucherSubscriber
             $this->mailService->sendPushNotification(
                 $voucher->identity_address,
                 trans('push.voucher.activated.title', $transData),
-                trans('push.voucher.activated.body', $transData)
+                trans('push.voucher.activated.body', $transData),
+                'voucher.assigned'
             );
         }
 

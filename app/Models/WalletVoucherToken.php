@@ -2,19 +2,30 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
- * Class WalletVoucherToken
- * @property mixed $id
- * @property integer $wallet_voucher_id
+ * App\Models\WalletVoucherToken
+ *
+ * @property int $id
+ * @property int $wallet_voucher_id
  * @property string $type
  * @property string $token
- * @property integer $expires_in
- * @property WalletVoucher $wallet_voucher
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @package App\Models
+ * @property int $expires_in
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $created_at_locale
+ * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\WalletVoucher $wallet_voucher
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken whereExpiresIn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\WalletVoucherToken whereWalletVoucherId($value)
+ * @mixin \Eloquent
  */
 class WalletVoucherToken extends Model
 {
