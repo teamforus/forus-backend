@@ -25,8 +25,9 @@ class OrganizationWithPrivateResource extends Resource
         return collect($organization)->only([
             'id', 'name', 'business_type_id', 'email', 'phone', 'website'
         ])->merge([
-            'business_type' => new BusinessTypeResource(
-                $organization->business_type),
+            'business_type' => $organization->business_type ? new BusinessTypeResource(
+                $organization->business_type
+            ) : null,
             'logo' => new MediaCompactResource(
                 $organization->logo)
         ]);
