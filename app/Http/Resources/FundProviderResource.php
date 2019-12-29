@@ -39,7 +39,7 @@ class FundProviderResource extends Resource
                 ->pluck('product_id'),
             'products_count_all'    => $fundProvider->organization->products()->count(),
             'fund'                  => new FundResource($fundProvider->fund),
-            'organization'          => new OrganizationResource(
+            'organization'          => new OrganizationWithPrivateResource(
                 $fundProvider->organization
             ),
             'validators' => ValidatorResource::collection($fundProvider->organization->validators)
