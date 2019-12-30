@@ -121,6 +121,18 @@ $router->group(['middleware' => ['throttle:20']], function() use ($router) {
 /**
  * Public api routes
  */
+
+$router->resource(
+    'providers',
+    "Api\Platform\ProvidersController", [
+    'only' => [
+        'index', 'show'
+    ],
+    'parameters' => [
+        'providers' => 'organization'
+    ]
+]);
+
 $router->resource(
     'organizations.funds.bunq-transactions',
     "Api\Platform\Organizations\Funds\BunqMeTabsController", [

@@ -100,7 +100,10 @@ class Organization extends Model
     ];
 
     protected $casts = [
-        'btw' => 'string'
+        'btw'               => 'string',
+        'email_public'      => 'boolean',
+        'phone_public'      => 'boolean',
+        'website_public'    => 'boolean',
     ];
 
     /**
@@ -177,8 +180,11 @@ class Organization extends Model
             Fund::class,
             'fund_providers'
         )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
-            $builder->where('fund_providers.allow_products', true);
-            $builder->orWhereHas('products');
+            $builder->where('fund_providers.allow_budget', true);
+            $builder->orWhere(function(\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->where('fund_providers.allow_products', true);
+                $builder->orWhere('fund_providers.allow_some_products', true);
+            });
         });
     }
 
