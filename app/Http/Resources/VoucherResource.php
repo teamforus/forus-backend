@@ -70,7 +70,7 @@ class VoucherResource extends Resource
                 'expire_at' => $voucher->product->expire_at->format('Y-m-d'),
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
                 'photo' => new MediaResource($voucher->product->photo),
-                'organization' => new OrganizationWithPrivateResource(
+                'organization' => new OrganizationBasicWithPrivateResource(
                     $voucher->product->organization
                 ),
             ])->toArray();
@@ -94,7 +94,7 @@ class VoucherResource extends Resource
             'start_date_locale' => format_datetime_locale($fund->start_date),
             'end_date' => $fund->end_date->format('Y-m-d H:i'),
             'end_date_locale' => format_date_locale($fund->end_date),
-            'organization' => new OrganizationWithPrivateResource(
+            'organization' => new OrganizationBasicWithPrivateResource(
                 $fund->organization
             ),
             'product_categories' => ProductCategoryResource::collection(
