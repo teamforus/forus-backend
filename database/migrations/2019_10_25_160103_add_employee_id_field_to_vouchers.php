@@ -23,7 +23,6 @@ class AddEmployeeIdFieldToVouchers extends Migration
 
         Voucher::whereNull('parent_id')->where(function(Builder $query) {
             $vouchers = $query->whereNotNull('note')
-                ->orWhereRaw('`created_at` != `updated_at`')
                 ->orWhereNull('identity_address')->get();
 
             $vouchers->each(function(Voucher $voucher) {
