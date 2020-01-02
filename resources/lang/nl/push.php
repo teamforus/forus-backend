@@ -14,7 +14,7 @@ return [
     "transactions" => [
         "offline_regular_voucher" => [
             "title" => ":fund_name",
-            "body" => "U heeft betaald! €:amount is afgeschreven van uw tegoed.",
+            "body" => "Er is €:amount is afgeschreven van uw :fund_name tegoed.",
         ],
         "offline_product_voucher" => [
             "title" => ":product_name",

@@ -309,6 +309,9 @@ class LoremDbSeeder extends Seeder
 
         OrganizationCreated::dispatch($organization);
 
+        $organization->offices()->delete();
+        $this->makeOffices($organization, rand(2, 3));
+
         return $organization;
     }
 
@@ -350,13 +353,12 @@ class LoremDbSeeder extends Seeder
             'parsed'            => true
         ], $fields));
 
-        $start_time = '08:00';
-        $end_time = '08:00';
-
         foreach (range(0, 4) as $week_day) {
-            $office->schedules()->create(compact(
-                'week_day', 'start_time', 'end_time'
-            ));
+            $office->schedules()->create([
+                'week_day' => $week_day,
+                'start_time' => '08:00',
+                'end_time' => '16:00'
+            ]);
         }
 
         return $office;

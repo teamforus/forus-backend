@@ -15,7 +15,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -242,7 +241,7 @@ class FundsController extends Controller
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
-            $dates = collect(CarbonPeriod::between($startDate, $endDate)->toArray());
+            $dates = range_between_dates($startDate, $endDate);
 
             $dates->prepend(
                 $dates[0]->copy()->subDay(1)->endOfDay()

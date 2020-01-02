@@ -25,8 +25,9 @@ class FundProviderInvitationResource extends Resource
         $invitation = $this->resource;
 
         return collect($invitation)->only([
-            'id', 'state'
+            'id', 'state', 'allow_budget', 'allow_products'
         ])->merge([
+            'expired'               => $invitation->expired,
             'expire_at'             => $invitation->expire_at->format('Y-m-d H:i:s'),
             'expire_at_locale'      => format_date_locale($invitation->expire_at),
             'created_at'            => $invitation->created_at->format('Y-m-d H:i:s'),
