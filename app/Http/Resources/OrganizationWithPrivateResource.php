@@ -61,8 +61,6 @@ class OrganizationWithPrivateResource extends Resource
         $businessType = api_dependency_requested('business_type', $request, true);
         $permissionsCountDep = api_dependency_requested('permissions', $request, true);
 
-        // exit(json_encode_pretty(compact('logoDep', 'fundsDep', 'fundsCountDep', 'businessType', 'permissionsCountDep')));
-
         return array_filter(array_merge(collect($organization)->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
             $organization->email_public ? 'email': '',
