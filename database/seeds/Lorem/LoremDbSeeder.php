@@ -86,7 +86,7 @@ class LoremDbSeeder extends Seeder
             $this->implementations,
             $this->implementationsWithFunds
         ));
-        $this->info("Other implementations created!");
+        $this->success("Other implementations created!");
 
         $this->enableEmails();
     }
@@ -622,10 +622,7 @@ class LoremDbSeeder extends Seeder
 
     public function makeOtherImplementations($implementations) {
         foreach ($implementations as $implementation) {
-            $this->makeImplementation(
-                strtolower($implementation),
-                $implementation
-            );
+            $this->makeImplementation(str_slug($implementation), $implementation);
         }
     }
 
