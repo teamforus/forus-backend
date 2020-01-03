@@ -316,12 +316,12 @@ class Implementation extends Model
                 'state' => Fund::STATE_ACTIVE
             ])->count() == 1;
 
-        $oneActiveFundWithAuthValidation = $this->funds()->where([
+        $oneActiveFundWithAutoValidation = $this->funds()->where([
                 'state' => Fund::STATE_ACTIVE,
                 'auto_requests_validation' => true
             ])->whereNotNull('default_validator_employee_id')->count() == 1;
 
-        return $oneActiveFund && $oneActiveFundWithAuthValidation;
+        return $oneActiveFund && $oneActiveFundWithAutoValidation;
     }
 
     public static function platformConfig($value) {
