@@ -32,6 +32,7 @@ use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 
@@ -902,9 +903,14 @@ class NotificationService
                 rtrim(Implementation::active()['url_sponsor'], '/'),
                 'email/preferences');
 
-            $this->mailer->send($mailable->to($email)->with(compact(
+            /** @var Queueable|Mailable $message */
+            $message = $mailable->with(compact(
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
-            )));
+            ));
+
+            $message = $message->onQueue("emails");
+
+            $this->mailer->to($email)->queue($message);
 
             return $this->checkFailure(get_class($mailable));
         } catch (\Exception $exception) {
