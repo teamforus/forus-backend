@@ -25,6 +25,15 @@ class LoremDbSeeder extends Seeder
     private $productCategories;
     private $primaryEmail;
 
+    private $implementations = [
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Berkelland',
+        'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
+    ];
+
+    private $implementationsWithFunds = [
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier',
+    ];
+
     /**
      * LoremDbSeeder constructor.
      */
@@ -72,6 +81,13 @@ class LoremDbSeeder extends Seeder
 
         $this->applyFunds($this->baseIdentity);
 
+        $this->info("Making other implementations!");
+        $this->makeOtherImplementations(array_diff(
+            $this->implementations,
+            $this->implementationsWithFunds
+        ));
+        $this->success("Other implementations created!");
+
         $this->enableEmails();
     }
 
@@ -106,11 +122,13 @@ class LoremDbSeeder extends Seeder
     public function makeSponsors(
         string $identity_address
     ) {
-        $organizations = [
-            $this->makeOrganization('Zuidhorn', $identity_address),
-            $this->makeOrganization('Nijmegen', $identity_address),
-            $this->makeOrganization('Westerkwartier', $identity_address)
-        ];
+        $self = $this;
+
+        $organizations = collect($this->implementationsWithFunds)->map(function(
+            $implementation
+        ) use ($self, $identity_address) {
+            return $self->makeOrganization($implementation, $identity_address);
+        });
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
@@ -599,6 +617,13 @@ class LoremDbSeeder extends Seeder
                 'expire_at'
             ]))->toArray()
         );
+    }
+
+
+    public function makeOtherImplementations($implementations) {
+        foreach ($implementations as $implementation) {
+            $this->makeImplementation(str_slug($implementation), $implementation);
+        }
     }
 
     /**
