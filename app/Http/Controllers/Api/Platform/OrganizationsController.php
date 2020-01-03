@@ -6,6 +6,7 @@ use App\Events\Organizations\OrganizationCreated;
 use App\Events\Organizations\OrganizationUpdated;
 use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
@@ -118,6 +119,27 @@ class OrganizationsController extends Controller
         if (isset($media) && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
+
+        OrganizationUpdated::dispatch($organization);
+
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateOrganizationBusinessTypeRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateBusinessType(
+        UpdateOrganizationBusinessTypeRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('update', $organization);
+
+        $organization->update(collect($request->only([
+            'business_type_id',
+        ]))->toArray());
 
         OrganizationUpdated::dispatch($organization);
 
