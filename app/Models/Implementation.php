@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
-use function foo\func;
 
 /**
  * App\Models\Implementation
@@ -314,7 +313,10 @@ class Implementation extends Model
         $query = Organization::query();
 
         if (Implementation::activeKey() != 'general') {
-            $funds = Implementation::activeModel()->funds()->pluck('fund_id');
+            $funds = Implementation::activeModel()->funds()->where([
+                'state' => Fund::STATE_ACTIVE
+            ])->pluck('fund_id');
+
             $query->whereHas('supplied_funds_approved', function(
                 EloquentBuilder $builder
             ) use ($funds) {
