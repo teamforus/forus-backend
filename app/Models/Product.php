@@ -235,15 +235,21 @@ class Product extends Model
      * @return Builder
      */
     public static function searchQuery() {
+        $activeFunds = Implementation::activeFunds()->pluck('id')->toArray();
 
-        return Product::query()->where(function(Builder $builder) {
-            $activeFunds = Implementation::activeFunds()->pluck('id');
+        return Product::query()->where(function(
+            Builder $builder
+        ) use ($activeFunds) {
             $builder->whereHas('organization.organization_funds', function(
                 Builder $builder
             ) use ($activeFunds) {
-                $builder->whereIn('fund_id', $activeFunds->toArray());
+                $builder->whereIn('fund_id', $activeFunds);
                 $builder->where('allow_products', true);
-            })->orWhereHas('fund_providers');
+            })->orWhereHas('fund_providers', function(
+                Builder $builder
+            ) use ($activeFunds) {
+                $builder->whereIn('fund_id', $activeFunds);
+            });
         })->where('sold_out', false)->where(
             'expire_at', '>', date('Y-m-d')
         );

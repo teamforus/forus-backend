@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Models\Product;
 use App\Rules\ValidPrevalidationCodeRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -31,14 +32,7 @@ class StoreVoucherRequest extends FormRequest
         $endDate = $fund ? $fund->end_date->format('Y-m-d') : 'today';
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
-        $providers = $fund ?
-            $fund->provider_organizations_approved->pluck('id') : collect();
-
-        $productIdRule = Rule::exists('products', 'id')->where(function (
-            Builder $query
-        ) use ($providers) {
-            $query->whereIn('organization_id', $providers->toArray());
-        });
+        $product = Product::find($this->input('product_id'));
 
         return [
             'fund_id'   => 'required|exists:funds,id',
@@ -55,7 +49,11 @@ class StoreVoucherRequest extends FormRequest
                 'nullable', new ValidPrevalidationCodeRule($fund),
             ],
             'product_id' => [
-                'required_without_all:amount', $productIdRule,
+                'required_without_all:amount',
+                Rule::exists('products', 'id'),
+                Rule::in($product ? ($product->getFundsWhereIsAvailable()->pluck('id')->search(
+                    $this->input('fund_id')
+                ) !== FALSE ? [$product->id] : []) : [])
             ],
         ];
     }
