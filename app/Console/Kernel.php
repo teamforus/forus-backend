@@ -57,7 +57,7 @@ class Kernel extends ConsoleKernel
             ->everyMinute()->withoutOverlapping()->onOneServer();
 
         if (in_array(config('queue.default'), ['redis', 'database'])) {
-            $schedule->command('queue:work --queue=emails')
+            $schedule->command('queue:work --queue=' . env('EMAIL_QUEUE_NAME', 'emails'))
                 ->everyMinute()->withoutOverlapping()->onOneServer();
         }
     }
