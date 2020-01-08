@@ -293,7 +293,12 @@ class Product extends Model
         return $query->where(function (Builder $query) use ($request) {
             return $query
                 ->where('name', 'LIKE', "%{$request->input('q')}%")
-                ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
+                ->orWhere('description', 'LIKE', "%{$request->input('q')}%")
+                ->orWhereHas('organization', function(
+                    Builder $builder
+                ) use ($request) {
+                    $builder->where('name', 'LIKE', "%{$request->input('q')}%");
+                });
         });
     }
 
