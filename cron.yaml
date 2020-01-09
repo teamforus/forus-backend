@@ -3,3 +3,11 @@ cron:
   - name: "schedule"
     url: "/worker/schedule"
     schedule: "* * * * *"
+    
+  - name: "forus.bunq:process"
+    url: "/worker/schedule"
+    schedule: "* * * * *"
+   
+  - name: "forus.bunq:top_up_process"
+    url: "/worker/schedule"
+    schedule: "* * * * *"   
