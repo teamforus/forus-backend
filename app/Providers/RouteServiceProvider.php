@@ -19,7 +19,6 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Services\MediaService\Models\Media;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
@@ -226,9 +225,9 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapWebRoutes()
     {
-        Route::middleware('web')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/web.php'));
+        Route::namespace($this->namespace)->middleware([
+            'web', 'forus_session'
+        ])->group(base_path('routes/web.php'));
     }
 
     /**
@@ -240,18 +239,16 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapApiRoutes()
     {
-        Route::prefix('api/v1')
-             ->middleware([
-                 'api', 'implementation_key', 'client_key'
-             ])
-             ->namespace($this->namespace)
-             ->group(base_path('routes/api.php'));
+        Route::prefix('api/v1')->namespace(
+            $this->namespace
+        )->middleware([
+             'api', 'implementation_key', 'client_key', 'forus_session'
+         ])->group(base_path('routes/api.php'));
 
-        Route::prefix('api/v1/platform')
-            ->middleware([
-                'api', 'implementation_key', 'client_key'
-            ])
-            ->namespace($this->namespace)
-            ->group(base_path('routes/api-platform.php'));
+        Route::prefix('api/v1/platform')->namespace(
+            $this->namespace
+        )->middleware([
+            'api', 'implementation_key', 'client_key'
+        ])->group(base_path('routes/api-platform.php'));
     }
 }

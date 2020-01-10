@@ -165,19 +165,31 @@ if (!function_exists('authorize')) {
 
 if (!function_exists('implementation_key')) {
     /**
+     * @param null $default
      * @return array|string
      */
-    function implementation_key() {
-        return request()->header('Client-Key', null);
+    function implementation_key($default = null) {
+        return request()->header('Client-Key', $default);
     }
 }
 
 if (!function_exists('client_type')) {
     /**
+     * @param null $default
      * @return array|string
      */
-    function client_type() {
-        return request()->header('Client-Type', null);
+    function client_type($default = null) {
+        return request()->header('Client-Type', $default);
+    }
+}
+
+if (!function_exists('client_version')) {
+    /**
+     * @param null $default
+     * @return array|string
+     */
+    function client_version($default = null) {
+        return request()->header('Client-Version', $default);
     }
 }
 

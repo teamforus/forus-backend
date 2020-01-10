@@ -209,6 +209,7 @@ return [
 
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
         App\Services\DigIdService\DigIdServiceProvider::class,
+        App\Services\Forus\Session\SessionServiceProvider::class,
     ],
 
     /*
@@ -261,10 +262,10 @@ return [
         /*
          * Forus services
          */
-        // 'MailService' => \App\Services\Mailer\Facades\MailerService::class,
         'IdentityService' => \App\Services\Forus\Identity\Facades\IdentityService::class,
         'RecordService' => \App\Services\Forus\Record\Facades\RecordService::class,
-        'NotificationService' => \App\Services\Forus\Notification\Facades\Notification::class
+        'NotificationService' => \App\Services\Forus\Notification\Facades\Notification::class,
+        'SessionService' => \App\Services\Forus\Session\Facades\Session::class,
 
     ],
 

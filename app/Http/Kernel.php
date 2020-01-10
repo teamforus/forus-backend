@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\ApiAuthMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\ForusSessionMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Http\Middleware\ParseApiDependencyMiddleware;
 use App\Http\Middleware\RecordApmTransactions;
@@ -77,5 +78,6 @@ class Kernel extends HttpKernel
         'locale' => LocaleMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,
+        'forus_session' => ForusSessionMiddleware::class,
     ];
 }

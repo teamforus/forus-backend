@@ -83,6 +83,7 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $supplied_funds_approved_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
+ * @property-read int|null $fund_provider_invitations_count
  */
 class Organization extends Model
 {

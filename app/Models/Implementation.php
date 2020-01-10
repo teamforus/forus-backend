@@ -96,11 +96,10 @@ class Implementation extends Model
     }
 
     /**
-     * @param string $default
      * @return array|string
      */
-    public static function activeKey($default = 'general') {
-        return request()->header('Client-Key', $default);
+    public static function activeKey() {
+        return request()->header('Client-Key', config('forus.clients.default'));
     }
 
     /**
@@ -115,7 +114,7 @@ class Implementation extends Model
      * @return \Illuminate\Support\Collection
      */
     public static function byKey($key) {
-        if ($key == 'general') {
+        if ($key == config('forus.clients.default')) {
             return collect(self::general_urls());
         }
 
@@ -145,7 +144,7 @@ class Implementation extends Model
             'url_sponsor'   => config('forus.front_ends.panel-sponsor'),
             'url_provider'  => config('forus.front_ends.panel-provider'),
             'url_validator' => config('forus.front_ends.panel-validator'),
-            'url_website'   => config('forus.front_ends.website-general'),
+            'url_website'   => config('forus.front_ends.website-default'),
             'url_app'       => config('forus.front_ends.landing-app'),
             'lon'           => config('forus.front_ends.map.lon'),
             'lat'           => config('forus.front_ends.map.lat')
@@ -174,7 +173,7 @@ class Implementation extends Model
     public static function queryFundsByState($states) {
         $states = (array) $states;
 
-        if (self::activeKey() == 'general') {
+        if (self::activeKey() == config('forus.clients.default')) {
             return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
@@ -198,7 +197,7 @@ class Implementation extends Model
      * @return Collection
      */
     public static function activeProductCategories() {
-        if (self::activeKey() == 'general') {
+        if (self::activeKey() == config('forus.clients.default')) {
             return ProductCategory::all();
         }
 
@@ -213,7 +212,7 @@ class Implementation extends Model
      */
     public static function implementationKeysAvailable() {
         return self::query()->pluck('key')->merge([
-            'general'
+            config('forus.clients.default')
         ]);
     }
 
@@ -229,9 +228,7 @@ class Implementation extends Model
                 $key . '_validator',
                 $key . '_website',
             ];
-        })->flatten()->merge([
-            'app-me_app'
-        ])->values();
+        })->flatten()->merge(config('forus.clients.mobile'))->values();
     }
 
     /**
@@ -312,7 +309,7 @@ class Implementation extends Model
     {
         $query = Organization::query();
 
-        if (Implementation::activeKey() != 'general') {
+        if (Implementation::activeKey() != config('forus.clients.default')) {
             $funds = Implementation::activeModel()->funds()->where([
                 'state' => Fund::STATE_ACTIVE
             ])->pluck('fund_id');
