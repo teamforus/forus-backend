@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\HasTags;
+use App\Services\AuthService\Models\Identity;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -751,7 +752,38 @@ class Fund extends Model
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
+
                 $fund->changeState(self::STATE_CLOSED);
+
+                /** @var NotificationService $mailService */
+                $mailService = resolve('forus.services.notification');
+                $mailService->fundClosedProvider(
+                    $fund->organization->email,
+                    $fund->name,
+                    $fund->end_date,
+                    $fund->organization->name,
+                    $fund->fund_config->implementation->url_sponsor ?? env('PANEL_SPONSOR_URL')
+                );
+
+                $identities = $fund->vouchers->filter(function(Voucher $voucher) {
+                    return $voucher->identity_address;
+                })->pluck('identity_address');
+                $recordService = resolve('forus.services.record');
+
+                $emails = $identities->map(function($identity_address) use ($recordService) {
+                    return $recordService->primaryEmailByAddress($identity_address);
+                });
+
+                foreach ($emails as $email) {
+                    $mailService->fundClosed(
+                        $email,
+                        $fund->name,
+                        $fund->end_date,
+                        $fund->organization->email,
+                        $fund->organization->name,
+                        $fund->fund_config->implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL')
+                    );
+                }
             }
         }
     }
