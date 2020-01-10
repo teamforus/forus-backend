@@ -12,7 +12,7 @@ class FundClosedProvider extends ImplementationMail
 {
     private $fundName;
     private $fundEndDate;
-    private $sponsorName;
+    private $providerName;
     private $link;
 
     /**
@@ -21,17 +21,17 @@ class FundClosedProvider extends ImplementationMail
      * FundClosedProvider constructor.
      * @param $fundName
      * @param $fundEndDate
-     * @param $sponsorName
+     * @param $providerName
      * @param $link
      */
-    public function __construct($fundName, $fundEndDate, $sponsorName, $link)
+    public function __construct($fundName, $fundEndDate, $providerName, $link)
     {
         parent::__construct();
 
-        $this->fundName    = $fundName;
-        $this->fundEndDate = $fundEndDate;
-        $this->sponsorName = $sponsorName;
-        $this->link        = $link;
+        $this->fundName     = $fundName;
+        $this->fundEndDate  = $fundEndDate;
+        $this->providerName = $providerName;
+        $this->link         = $link;
     }
 
     /**
@@ -48,7 +48,7 @@ class FundClosedProvider extends ImplementationMail
             ->view('emails.funds.fund_closed_provider', [
                 'fund_name'      => $this->fundName,
                 'fund_end_date'  => $this->fundEndDate,
-                'sponsor_name'   => $this->sponsorName,
+                'provider_name'  => $this->providerName,
                 'dashboard_link' => $this->link
             ]);
     }

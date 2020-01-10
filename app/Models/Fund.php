@@ -757,13 +757,16 @@ class Fund extends Model
 
                 /** @var NotificationService $mailService */
                 $mailService = resolve('forus.services.notification');
-                $mailService->fundClosedProvider(
-                    $fund->organization->email,
-                    $fund->name,
-                    $fund->end_date,
-                    $fund->organization->name,
-                    $fund->fund_config->implementation->url_sponsor ?? env('PANEL_SPONSOR_URL')
-                );
+
+                foreach ($fund->provider_organizations_approved as $organization) {
+                    $mailService->fundClosedProvider(
+                        $organization->email,
+                        $fund->name,
+                        $fund->end_date,
+                        $organization->name,
+                        $fund->fund_config->implementation->url_provider ?? env('PANEL_PROVIDER_URL')
+                    );
+                }
 
                 $identities = $fund->vouchers->filter(function(Voucher $voucher) {
                     return $voucher->identity_address;
