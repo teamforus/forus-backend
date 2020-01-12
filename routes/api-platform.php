@@ -499,6 +499,11 @@ $router->group(['middleware' => [
     );
 
     $router->get(
+        'organizations/{organization}/sponsor/vouchers/get-unassigned',
+        "Api\Platform\Organizations\Sponsor\VouchersController@getUnassignedVouchers"
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/vouchers/export-unassigned',
         "Api\Platform\Organizations\Sponsor\VouchersController@exportUnassigned"
     );

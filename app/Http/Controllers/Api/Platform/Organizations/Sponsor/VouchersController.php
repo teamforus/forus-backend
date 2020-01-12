@@ -231,6 +231,28 @@ class VouchersController extends Controller
     /**
      * @param IndexVouchersRequest $request
      * @param Organization $organization
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function getUnassignedVouchers(
+        IndexVouchersRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('indexSponsor', [Voucher::class, $organization]);
+
+        return SponsorVoucherResource::collection(
+            Voucher::getUnassignedVouchers(
+                $organization,
+                $request->get('from'),
+                $request->get('to')
+            )
+        );
+    }
+
+    /**
+     * @param IndexVouchersRequest $request
+     * @param Organization $organization
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
