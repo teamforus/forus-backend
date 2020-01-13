@@ -19,7 +19,7 @@ class IdentityRecordsExistsRule implements Rule
         $recordType
     ) {
         $this->recordType = $recordType;
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     /**

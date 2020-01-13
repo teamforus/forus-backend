@@ -11,7 +11,8 @@
 |
 */
 
-$router = app()->make('router');
+/** @var \Illuminate\Routing\Router $router */
+$router = resolve('router');
 
 $router->group([], function() use ($router) {
     $router->resource(

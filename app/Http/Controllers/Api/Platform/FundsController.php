@@ -33,7 +33,7 @@ class FundsController extends Controller
      * Display the specified resource.
      *
      * @param Fund $fund
-     * @return FundResource
+     * @return FundResource|void
      */
     public function show(Fund $fund)
     {

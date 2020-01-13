@@ -21,7 +21,7 @@ class MediaController extends Controller
      */
     public function __construct()
     {
-        $this->mediaService = app()->make('media');
+        $this->mediaService = resolve('media');
     }
 
     /**
@@ -34,7 +34,7 @@ class MediaController extends Controller
     public function index(
         Request $request
     ) {
-        $this->authorize('index', Media::class);
+        $this->authorize('viewAny', Media::class);
 
         $media = Media::query()->where([
             'identity_address' => auth_address()

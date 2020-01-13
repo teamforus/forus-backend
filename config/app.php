@@ -184,7 +184,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\RepositoryServiceProvider::class,
 
-        Dimsav\Translatable\TranslatableServiceProvider::class,
+        \Astrotomic\Translatable\TranslatableServiceProvider::class,
 
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
         App\Services\ApiRequestService\ApiRequestServiceProvider::class,

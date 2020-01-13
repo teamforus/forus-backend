@@ -26,7 +26,7 @@ class VouchersController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index() {
-        $this->authorize('index', Voucher::class);
+        $this->authorize('viewAny', Voucher::class);
 
         return VoucherResource::collection(Voucher::query()->where([
             'identity_address' => auth_address()
@@ -45,20 +45,18 @@ class VouchersController extends Controller
     ) {
         $this->authorize('store', Voucher::class);
 
-        $product = Product::find($request->input('product_id'));
+        $product_id = $request->input('product_id');
+        $voucher_address = $request->input('voucher_address');
+        $voucherToken = VoucherToken::whereAddress($voucher_address)->first();
 
-        /** @var VoucherToken $voucherToken */
-        $voucherToken = VoucherToken::query()->where([
-            'address' => $request->input('voucher_address')
-        ])->first() ?? abort(404);
-
-        $voucher = $voucherToken->voucher ?? abort(404);
+        $voucher = $voucherToken->voucher;
+        $product = Product::find($product_id);
 
         $this->authorize('reserve', [$product, $voucher]);
 
-        return new VoucherResource($voucher->buyProductVoucher(
-            $product
-        )->load(VoucherResource::$load));
+        return new VoucherResource($voucher->buyProductVoucher($product)->load(
+            VoucherResource::$load
+        ));
     }
 
     /**

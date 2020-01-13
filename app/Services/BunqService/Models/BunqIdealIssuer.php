@@ -2,7 +2,6 @@
 
 namespace App\Services\BunqService\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**

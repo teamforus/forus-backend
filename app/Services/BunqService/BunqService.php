@@ -455,7 +455,7 @@ class BunqService
                         ]);
                     } catch (\Exception $exception) {
                         resolve('log')->error($exception->getMessage());
-                    };
+                    }
                 }
             }
         }
@@ -591,6 +591,7 @@ class BunqService
      *
      * @param Carbon $fromDate
      * @return float|int
+     * @throws \Exception
      */
     public function getBunqCosts(
         Carbon $fromDate
@@ -636,17 +637,16 @@ class BunqService
 
             // between 30 and 60 minutes check once per 10 minutes
             if ($bunqMeTab->created_at > now()->subMinutes(60)) {
-                echo $last_check_at->format('H:i:s') . " --- " . now()->subMinutes(10)->format('H:i:s');
                 return $last_check_at < now()->subMinutes(10);
             }
 
             // between 1 and 5 hours check once per 30 minutes
-            if ($bunqMeTab->created_at > now()->subHour(5)) {
+            if ($bunqMeTab->created_at > now()->subHours(5)) {
                 return $last_check_at < now()->subMinutes(30);
             }
 
             // between 5 and 10 hours check once per hour
-            if ($bunqMeTab->created_at > now()->subHour(10)) {
+            if ($bunqMeTab->created_at > now()->subHours(10)) {
                 return $last_check_at < now()->subHour();
             }
 
@@ -701,6 +701,6 @@ class BunqService
      * @return \Illuminate\Contracts\Filesystem\Filesystem
      */
     private function storage() {
-        return app()->make('filesystem')->disk($this->storageDriver);
+        return resolve('filesystem')->disk($this->storageDriver);
     }
 }
