@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Http\Request;
 
 /**
  * App\Models\Implementation
@@ -159,7 +161,7 @@ class Implementation extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return EloquentBuilder
      */
     public static function activeFundsQuery() {
         return self::queryFundsByState('active');
@@ -167,7 +169,7 @@ class Implementation extends Model
 
     /**
      * @param $states
-     * @return Fund|\Illuminate\Database\Eloquent\Builder|Builder
+     * @return Fund|EloquentBuilder|QueryBuilder
      */
     public static function queryFundsByState($states) {
         $states = (array) $states;
@@ -176,7 +178,7 @@ class Implementation extends Model
             return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
-        return Fund::query()->whereIn('id', function(Builder $query) {
+        return Fund::query()->whereIn('id', function(QueryBuilder $query) {
             $query->select('fund_id')->from('fund_configs')->where([
                 'implementation_id' => Implementation::query()->where([
                     'key' => self::activeKey()
@@ -186,7 +188,7 @@ class Implementation extends Model
     }
 
     /**
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public static function activeFunds() {
         return self::activeFundsQuery()->get();
@@ -304,5 +306,81 @@ class Implementation extends Model
     public function urlValidatorDashboard(string $uri = "/")
     {
         return http_resolve_url($this->url_validator ?? env('PANEL_VALIDATOR_URL'), $uri);
+    }
+
+    public static function searchProviders(Request $request)
+    {
+        $query = Organization::query();
+
+        if (Implementation::activeKey() != 'general') {
+            $funds = Implementation::activeModel()->funds()->where([
+                'state' => Fund::STATE_ACTIVE
+            ])->pluck('fund_id');
+
+            $query->whereHas('supplied_funds_approved', function(
+                EloquentBuilder $builder
+            ) use ($funds) {
+                $builder->whereIn('funds.id', $funds);
+            });
+        } else {
+            $query->whereHas('supplied_funds_approved');
+        }
+
+        if ($request->has('business_type_id') && (
+            $business_type = $request->input('business_type_id'))
+        ) {
+            $query->whereHas('business_type', function(
+                EloquentBuilder $builder
+            ) use ($business_type) {
+                $builder->where('id', $business_type);
+            });
+        }
+
+        if ($request->has('fund_id') && (
+            $fund_id = $request->input('fund_id'))
+        ) {
+            $query->whereHas('supplied_funds_approved', function(
+                EloquentBuilder $builder
+            ) use ($fund_id) {
+                $builder->where('funds.id', $fund_id);
+            });
+        }
+
+        if ($request->has('q') && ($q = $request->input('q'))) {
+            $query->where(function(EloquentBuilder $builder) use ($q) {
+                $like = '%' . $q . '%';
+
+                $builder->where('name', 'LIKE', $like);
+
+                $builder->orWhere(function(EloquentBuilder $builder) use ($like) {
+                    $builder->where('email_public', true);
+                    $builder->where('email', 'LIKE', $like);
+                })->orWhere(function(EloquentBuilder $builder) use ($like) {
+                    $builder->where('phone_public', true);
+                    $builder->where('phone', 'LIKE', $like);
+                })->orWhere(function(EloquentBuilder $builder) use ($like) {
+                    $builder->where('website_public', true);
+                    $builder->where('website', 'LIKE', $like);
+                });
+
+                $builder->orWhereHas('business_type.translations', function(
+                    EloquentBuilder $builder
+                ) use ($like) {
+                    $builder->where('business_type_translations.name', 'LIKE', $like);
+                });
+
+                $builder->orWhereHas('offices', function(
+                    EloquentBuilder $builder
+                ) use ($like) {
+                    $builder->where(function(EloquentBuilder $query) use ($like) {
+                        $query->where(
+                            'address','LIKE', $like
+                        );
+                    });
+                });
+            });
+        }
+
+        return $query;
     }
 }
