@@ -25,6 +25,6 @@ class VoucherTransactionNoteResource extends Resource
         ])->merge([
             'created_at_locale' => $this->resource->created_at_locale,
             'updated_at_locale' => $this->resource->updated_at_locale,
-        ]);
+        ])->toArray();
     }
 }

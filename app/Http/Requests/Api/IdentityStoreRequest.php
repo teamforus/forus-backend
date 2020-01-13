@@ -6,9 +6,7 @@ use App\Rules\IdentityPinCodeRule;
 use App\Rules\IdentityRecordsAddressRule;
 use App\Rules\IdentityRecordsRule;
 use App\Rules\IdentityRecordsUniqueRule;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class IdentityStoreRequest extends FormRequest
 {

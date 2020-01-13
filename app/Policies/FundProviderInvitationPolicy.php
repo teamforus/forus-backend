@@ -17,7 +17,7 @@ class FundProviderInvitationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function indexSponsor(
+    public function viewAnySponsor(
         ?string $identity_address,
         Fund $fund,
         Organization $organization
@@ -88,7 +88,7 @@ class FundProviderInvitationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function indexProvider(
+    public function viewAnyProvider(
         ?string $identity_address,
         Organization $organization
     ) {
@@ -138,11 +138,13 @@ class FundProviderInvitationPolicy
      *
      * @param string|null $identity_address
      * @param FundProviderInvitation $fundProviderInvitation
-     * @return bool
+     * @param Organization $organization
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function showByToken(
         ?string $identity_address,
-        FundProviderInvitation $fundProviderInvitation
+        FundProviderInvitation $fundProviderInvitation,
+        Organization $organization
     ) {
         return isset($identity_address) && !empty($fundProviderInvitation);
     }
@@ -152,19 +154,18 @@ class FundProviderInvitationPolicy
      *
      * @param string|null $identity_address
      * @param FundProviderInvitation $fundProviderInvitation
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function acceptFundProviderInvitation(
         ?string $identity_address,
         FundProviderInvitation $fundProviderInvitation
     ) {
         if ($fundProviderInvitation->state == FundProviderInvitation::STATE_ACCEPTED) {
-            $this->deny("Invitation already approved!");
+            return $this->deny("Invitation already approved!");
         }
 
         if ($fundProviderInvitation->state == FundProviderInvitation::STATE_EXPIRED) {
-            $this->deny("Invitation expired!");
+            return $this->deny("Invitation expired!");
         }
 
         return isset($identity_address) &&

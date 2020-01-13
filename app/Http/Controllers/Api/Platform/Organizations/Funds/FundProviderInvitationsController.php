@@ -26,7 +26,7 @@ class FundProviderInvitationsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('indexSponsor', [
+        $this->authorize('viewAnySponsor', [
             FundProviderInvitation::class, $fund, $organization
         ]);
 

@@ -1,0 +1,5 @@
+version: 1
+cron:
+  - name: "schedule"
+    url: "/worker/schedule"
+    schedule: "* * * * *"

@@ -24,6 +24,8 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationPreference whereSubscribed($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationPreference whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationPreference whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\NotificationPreference whereType($value)
  */
 class NotificationPreference extends Model
 {

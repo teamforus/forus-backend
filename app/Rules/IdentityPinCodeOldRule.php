@@ -30,7 +30,7 @@ class IdentityPinCodeOldRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        $identityRepo = app()->make('forus.services.identity');
+        $identityRepo = resolve('forus.services.identity');
 
         $hasPinCode = $identityRepo->hasPinCode($this->proxyIdentity);
 
