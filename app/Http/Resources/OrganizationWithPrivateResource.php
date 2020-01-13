@@ -55,7 +55,7 @@ class OrganizationWithPrivateResource extends Resource
             ])->toArray();
         }
 
-        $logoDep = api_dependency_requested('logo', $request);
+        // $logoDep = api_dependency_requested('logo', $request);
         $fundsDep = api_dependency_requested('funds', $request, false);
         $fundsCountDep = api_dependency_requested('funds_count', $request, false);
         $businessType = api_dependency_requested('business_type', $request, true);

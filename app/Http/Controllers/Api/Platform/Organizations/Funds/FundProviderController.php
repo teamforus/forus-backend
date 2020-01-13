@@ -14,6 +14,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\FundProviderQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -34,17 +35,22 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('indexSponsor', [
+        $this->authorize('viewAnySponsor', [
             FundProvider::class, $organization, $fund
         ]);
 
-        $providers = $fund->providers()->getQuery();
+        $query = $fund->providers()->getQuery();
+        $state = $request->input('state', false);
 
-        if ($request->input('state', false)) {
-            $providers = FundProvider::whereActiveQueryBuilder($providers);
+        if ($state == FundProvider::STATE_APPROVED) {
+            $query = FundProviderQuery::whereApprovedForFundsFilter($query, $fund->id);
         }
 
-        return FundProviderResource::collection($providers->paginate(
+        if ($state == FundProvider::STATE_PENDING) {
+            $query = FundProviderQuery::wherePendingForFundsFilter($query, $fund->id);
+        }
+
+        return FundProviderResource::collection($query->paginate(
             $request->input('per_page', null)
         ));
     }

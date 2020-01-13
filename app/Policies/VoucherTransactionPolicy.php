@@ -25,7 +25,7 @@ class VoucherTransactionPolicy
      * @param string $identity_address
      * @return bool
      */
-    public function index(
+    public function viewAny(
         string $identity_address
     ) {
         return !empty($identity_address);
@@ -36,7 +36,7 @@ class VoucherTransactionPolicy
      * @param Organization|null $organization
      * @return bool
      */
-    public function indexSponsor(
+    public function viewAnySponsor(
         string $identity_address,
         Organization $organization = null
     ) {
@@ -54,7 +54,7 @@ class VoucherTransactionPolicy
      * @param Organization|null $organization
      * @return bool
      */
-    public function indexProvider(
+    public function viewAnyProvider(
         string $identity_address,
         Organization $organization = null
     ) {
@@ -73,7 +73,7 @@ class VoucherTransactionPolicy
      * @param Organization|null $organization
      * @return bool
      */
-    public function indexPublic(
+    public function viewAnyPublic(
         string $identity_address,
         Fund $fund,
         Organization $organization

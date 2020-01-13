@@ -37,7 +37,7 @@ class EmployeesController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', [$organization]);
-        $this->authorize('index', [Employee::class, $organization]);
+        $this->authorize('viewAny', [Employee::class, $organization]);
 
         return EmployeeResource::collection($organization->employees);
     }

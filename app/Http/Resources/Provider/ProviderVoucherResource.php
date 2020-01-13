@@ -59,7 +59,7 @@ class ProviderVoucherResource extends Resource
                 $builder->where([
                     'product_id' => $voucher->product_id
                 ]);
-            })->pluck('organization_id');
+            })->pluck('organization_id')->toArray();
         }
 
         $allowedOrganizations = Organization::queryByIdentityPermissions(

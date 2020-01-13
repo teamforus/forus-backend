@@ -3,11 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\UpdateFundRequestsRequest;
 use App\Http\Resources\FundRequestResource;
-use App\Models\Employee;
-use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
@@ -26,7 +22,7 @@ class FundRequestsController extends Controller
         IndexFundRequestsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('indexValidator', [
+        $this->authorize('viewAnyValidator', [
             FundRequest::class, $organization->funds[0], $organization
         ]);
 

@@ -24,7 +24,7 @@ class FundProviderController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexSponsor', [FundProvider::class, $organization]);
+        $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 
         return FundProviderResource::collection(
             FundProvider::search($request, $organization)->with(
@@ -48,7 +48,7 @@ class FundProviderController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexSponsor', [FundProvider::class, $organization]);
+        $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 
         return resolve('excel')->download(
             new FundProvidersExport($request, $organization),

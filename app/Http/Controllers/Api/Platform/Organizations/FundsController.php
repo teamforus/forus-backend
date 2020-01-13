@@ -12,8 +12,8 @@ use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +34,7 @@ class FundsController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('index', [Fund::class, $organization]);
+        $this->authorize('viewAny', [Fund::class, $organization]);
 
         if (auth()->id()) {
             return FundResource::collection($organization->funds);
@@ -63,7 +63,7 @@ class FundsController extends Controller
         $media = false;
 
         if ($media_uid = $request->input('media_uid')) {
-            $mediaService = app()->make('media');
+            $mediaService = resolve('media');
             $media = $mediaService->findByUid($media_uid);
 
             $this->authorize('destroy', $media);
@@ -80,7 +80,7 @@ class FundsController extends Controller
             $request->input('product_categories', [])
         );
 
-        if ($media && $media->type == 'fund_logo') {
+        if ($media instanceof Media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }
 
@@ -136,7 +136,7 @@ class FundsController extends Controller
         $media = false;
 
         if ($media_uid = $request->input('media_uid')) {
-            $mediaService = app()->make('media');
+            $mediaService = resolve('media');
             $media = $mediaService->findByUid($media_uid);
 
             $this->authorize('destroy', $media);
@@ -158,7 +158,7 @@ class FundsController extends Controller
             $request->input('product_categories', [])
         );
 
-        if ($media && $media->type == 'fund_logo') {
+        if ($media instanceof Media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }
 
@@ -228,7 +228,7 @@ class FundsController extends Controller
             $dates = range_between_dates($startDate, $endDate);
 
             $dates->prepend(
-                $dates[0]->copy()->subDay(1)->endOfDay()
+                $dates[0]->copy()->subDay()->endOfDay()
             );
 
         } elseif ($type == 'all') {
@@ -348,24 +348,7 @@ class FundsController extends Controller
             'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
         ];
     }
-    private function calculateTransactionCosts(
-        Fund $fund,
-        Carbon $startDate,
-        Carbon $endDate
-    ): float {
-        $totalSubtraction = 0.0;
 
-        if (!$fund->fund_config->subtract_transaction_costs) {
-            $transactions = $fund
-                ->voucher_transactions()->whereBetween('voucher_transactions.created_at', [
-                    $startDate, $endDate
-                ])->count();
-
-            $totalSubtraction += $transactions * 0.10;
-        }
-
-        return $totalSubtraction;
-    }
     /**
      * @param Organization $organization
      * @param Fund $fund

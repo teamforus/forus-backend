@@ -126,7 +126,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 201) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error storing user %s contacts: %s',
                     self::typeCodeToString($type),
@@ -163,7 +163,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error removing user push token: %s',
                     $res->getBody()
@@ -207,7 +207,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error sending notification `sendPushNotification`: %s',
                     $res->getBody()

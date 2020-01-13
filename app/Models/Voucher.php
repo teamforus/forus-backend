@@ -4,8 +4,6 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
-use App\Services\Forus\Record\Models\Record;
-use App\Services\Forus\Record\Models\RecordType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -461,7 +459,7 @@ class Voucher extends Model
      */
     public function buyProductVoucher(
         Product $product,
-        ?float $price = null,
+        float $price = null,
         $returnable = true
     ) {
         $price = !$price && ($price !== 0) ? $product->price : $price;

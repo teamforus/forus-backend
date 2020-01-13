@@ -43,6 +43,6 @@ class NotifyAboutVoucherExpireCommand extends Command
             Voucher::checkVoucherExpireQueue(6 * 7);
         } catch (\Exception $e) {
             logger()->error($e->getMessage());
-        };
+        }
     }
 }

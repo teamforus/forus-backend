@@ -19,7 +19,6 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Services\MediaService\Models\Media;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
@@ -36,12 +35,11 @@ class RouteServiceProvider extends ServiceProvider
 
     /**
      * Define your route model bindings, pattern filters, etc.
-     *
-     * @return void
+     * 
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function boot()
     {
-        //
 
         parent::boot();
 
@@ -141,7 +139,7 @@ class RouteServiceProvider extends ServiceProvider
                 'state'         => DigIdSession::STATE_PENDING_AUTH,
                 'session_uid'   => $digid_session_uid,
             ])->where(
-                'created_at', '>=', now()->subSecond(
+                'created_at', '>=', now()->subSeconds(
                     DigIdSession::SESSION_EXPIRATION_TIME
                 ))->first() ?? abort(404);
         });
@@ -151,8 +149,7 @@ class RouteServiceProvider extends ServiceProvider
                 Implementation::activeKey()
             ) === false) {
                 return abort(403, 'unknown_implementation_key');
-            };
-
+            }
 
             $ver = request()->input('ver');
 

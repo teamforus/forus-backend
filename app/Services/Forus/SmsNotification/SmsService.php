@@ -19,7 +19,7 @@ class SmsService
      * MailService constructor.
      */
     public function __construct() {
-        $this->apiRequest = app()->make('api_request');
+        $this->apiRequest = resolve('api_request');
         $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
     }
 
@@ -65,7 +65,7 @@ class SmsService
         ]);
 
         if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error sending sms to phone %s: %s',
                     $phone,

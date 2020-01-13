@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\OfficeQuery;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,40 +70,19 @@ class Office extends Model
     {
         $query = self::query();
 
-        if ($approved = $request->input('approved', false)) {
-            $activeFunds = Implementation::activeFundsQuery()->pluck('id');
-
-            $query->whereHas('organization.organization_funds', function(
-                Builder $builder
-            ) use ($activeFunds) {
-                $builder->whereIn('fund_id', $activeFunds->toArray());
-                FundProvider::whereActiveQueryBuilder($builder);
+        // approved only
+        if ($request->input('approved', false)) {
+            $query->whereHas('organization.organization_funds', function(Builder $builder) {
+                return FundProviderQuery::whereApprovedForFundsFilter(
+                    $builder,
+                    Implementation::activeFundsQuery()->pluck('id')->toArray()
+                );
             });
         }
 
-        if ($request->has('q') && $q = $request->input('q')) {
-            $like = '%' . $q . '%';
-
-            $query->where(function(Builder $query) use ($like) {
-                $query->where(
-                    'address','LIKE', $like
-                )->orWhereHas('organization.business_type.translations', function(
-                    Builder $builder
-                ) use ($like) {
-                    $builder->where('business_type_translations.name', 'LIKE', $like);
-                })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                    $builder->where('organizations.name', 'LIKE', $like);
-                })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                    $builder->where('organizations.email_public', true);
-                    $builder->where('organizations.email', 'LIKE', $like);
-                })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                    $builder->where('organizations.phone_public', true);
-                    $builder->where('organizations.phone', 'LIKE', $like);
-                })->orWhereHas('organization', function(Builder $builder) use ($like) {
-                    $builder->where('organizations.website_public', true);
-                    $builder->where('organizations.website', 'LIKE', $like);
-                });
-            });
+        // full text search
+        if ($request->has('q') && !empty($q = $request->input('q'))) {
+            return OfficeQuery::queryDeepFilter($query, $q);
         }
 
         return $query;

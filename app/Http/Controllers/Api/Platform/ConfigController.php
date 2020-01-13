@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 /**

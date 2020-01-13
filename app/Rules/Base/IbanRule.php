@@ -71,7 +71,10 @@ class IbanRule implements Rule
             }
             $NewString .= $MovedCharArray[$k];
         }
-        if (function_exists("bcmod")) { return bcmod($NewString, '97') == 1; }
+
+        if (function_exists("bcmod")) {
+            return bcmod($NewString, '97') == 1;
+        }
 
         // http://au2.php.net/manual/en/function.bcmod.php#38474
         $x = $NewString; $y = "97";
@@ -82,9 +85,10 @@ class IbanRule implements Rule
             $x = substr($x, $take);
             $mod = $a % $y;
         }
+
         while (strlen($x));
 
-        return (int)$mod == 1;
+        return (int) $mod == 1;
     }
 
     /**

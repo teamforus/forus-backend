@@ -36,6 +36,6 @@ class PrevalidationResource extends Resource
                     return strpos($record->record_type->key, '_eligible') === false;
                 })
             )
-        ]);
+        ])->toArray();
     }
 }

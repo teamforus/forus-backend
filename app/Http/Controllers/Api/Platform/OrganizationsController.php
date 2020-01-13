@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Services\MediaService\Models\Media;
 use Illuminate\Http\Request;
 
 class OrganizationsController extends Controller
@@ -23,7 +24,7 @@ class OrganizationsController extends Controller
      */
     public function index(IndexOrganizationRequest $request)
     {
-        $this->authorize('index', Organization::class);
+        $this->authorize('viewAny', Organization::class);
 
         return OrganizationResource::collection(
             Organization::queryByIdentityPermissions(auth_address())->with(
@@ -61,7 +62,7 @@ class OrganizationsController extends Controller
             ])->toArray()
         );
 
-        if (isset($media) && $media->type == 'organization_logo') {
+        if ($media instanceof Media && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
 
@@ -115,7 +116,7 @@ class OrganizationsController extends Controller
             'iban' => strtoupper($request->get('iban'))
         ])->toArray());
 
-        if (isset($media) && $media->type == 'organization_logo') {
+        if ($media instanceof Media && $media->type == 'organization_logo') {
             $organization->attachMedia($media);
         }
 
