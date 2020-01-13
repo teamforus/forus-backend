@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\HasTags;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -377,7 +378,7 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         )->where(function(Builder $builder) {
-            $builder->orWhere('allow_products', true);
+            $builder->where('allow_products', true);
         });
     }
 
@@ -539,7 +540,7 @@ class Fund extends Model
         string $recordType,
         Organization $organization = null
     ) {
-        $recordRepo = app()->make('forus.services.record');
+        $recordRepo = resolve('forus.services.record');
 
         $trustedIdentities = $fund->validatorIdentities();
 
@@ -839,11 +840,11 @@ class Fund extends Model
             $organization = $fund->organization;
             $sponsorCount = $organization->employees->count() + 1;
 
-            $providers = FundProvider::whereActiveQueryBuilder(
-                $fund->providers()
-            )->get();
+            $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
+                FundProvider::query(), $fund->id
+            );
 
-            $providerCount = $providers->map(function ($fundProvider){
+            $providerCount = $providersQuery->get()->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */
                 return $fundProvider->organization->employees->count() + 1;
             })->sum();

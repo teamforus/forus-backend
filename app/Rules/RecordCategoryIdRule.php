@@ -25,7 +25,7 @@ class RecordCategoryIdRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        $recordRepo = app()->make('forus.services.record');
+        $recordRepo = resolve('forus.services.record');
 
         return !empty($recordRepo->categoryGet(
             request()->get('identity'), $value

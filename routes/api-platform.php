@@ -11,7 +11,8 @@
 |
 */
 
-$router = app()->make('router');
+/** @var \Illuminate\Routing\Router $router */
+$router = resolve('router');
 
 $router->group([], function() use ($router) {
     $router->resource(
@@ -190,6 +191,11 @@ $router->post(
 $router->group(['middleware' => [
     'api.auth'
 ]], function() use ($router) {
+    $router->patch(
+        'organizations/{organization}/update-business',
+        "Api\Platform\OrganizationsController@updateBusinessType"
+    );
+
     $router->resource(
         'organizations',
         "Api\Platform\OrganizationsController", [

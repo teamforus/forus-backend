@@ -12,7 +12,8 @@ class ValidatorRequestNotPendingRule implements Rule
     /**
      * Create a new rule instance.
      *
-     * @return void
+     * ValidatorRequestNotPendingRule constructor.
+     * @param $validatorId
      */
     public function __construct(
         $validatorId

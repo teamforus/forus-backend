@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api;
 
-use App\Rules\IdentityRecordsUniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IdentityStoreValidateEmailRequest extends FormRequest
