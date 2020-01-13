@@ -908,7 +908,7 @@ class NotificationService
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
             ));
 
-            $message = $message->onQueue("emails");
+            $message = $message->onQueue(env('EMAIL_QUEUE_NAME', 'emails'));
 
             $this->mailer->to($email)->queue($message);
 
