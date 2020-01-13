@@ -191,6 +191,11 @@ $router->post(
 $router->group(['middleware' => [
     'api.auth'
 ]], function() use ($router) {
+    $router->patch(
+        'organizations/{organization}/update-business',
+        "Api\Platform\OrganizationsController@updateBusinessType"
+    );
+
     $router->resource(
         'organizations',
         "Api\Platform\OrganizationsController", [
