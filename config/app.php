@@ -209,6 +209,8 @@ return [
 
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
         App\Services\DigIdService\DigIdServiceProvider::class,
+
+        Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
     ],
 
     /*

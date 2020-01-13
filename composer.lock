@@ -1205,6 +1205,62 @@
             "time": "2019-03-31T00:38:28+00:00"
         },
         {
+            "name": "dusterio/laravel-aws-worker",
+            "version": "v0.1.23",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dusterio/laravel-aws-worker.git",
+                "reference": "68d2d62d3888c70f74d0bb7dda91899fe8eaa158"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/68d2d62d3888c70f74d0bb7dda91899fe8eaa158",
+                "reference": "68d2d62d3888c70f74d0bb7dda91899fe8eaa158",
+                "shasum": ""
+            },
+            "require": {
+                "aws/aws-sdk-php": "~3.0",
+                "illuminate/bus": "5.*|^6.0",
+                "illuminate/http": "5.*|^6.0",
+                "illuminate/queue": "5.*|^6.0",
+                "illuminate/support": "5.*|^6.0",
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "dev-master",
+                "phpunit/phpunit": "3.7.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Dusterio\\AwsWorker\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Denis Mysenko",
+                    "email": "denis@mysenko.com",
+                    "homepage": "https://www.mysenko.com"
+                }
+            ],
+            "description": "Run Laravel (or Lumen) tasks and queue listeners inside of AWS Elastic Beanstalk workers",
+            "homepage": "https://github.com/dusterio/laravel-aws-worker",
+            "keywords": [
+                "aws",
+                "elasticbeanstalk",
+                "laravel",
+                "lumen",
+                "php",
+                "sqs",
+                "worker"
+            ],
+            "time": "2019-11-05T01:35:13+00:00"
+        },
+        {
             "name": "egulias/email-validator",
             "version": "2.1.14",
             "source": {
@@ -3315,6 +3371,56 @@
                 "type"
             ],
             "time": "2019-12-15T19:35:24+00:00"
+        },
+        {
+            "name": "predis/predis",
+            "version": "v1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nrk/predis.git",
+                "reference": "f0210e38881631afeafb56ab43405a92cafd9fd1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nrk/predis/zipball/f0210e38881631afeafb56ab43405a92cafd9fd1",
+                "reference": "f0210e38881631afeafb56ab43405a92cafd9fd1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.9"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.8"
+            },
+            "suggest": {
+                "ext-curl": "Allows access to Webdis when paired with phpiredis",
+                "ext-phpiredis": "Allows faster serialization and deserialization of the Redis protocol"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Predis\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Daniele Alessandri",
+                    "email": "suppakilla@gmail.com",
+                    "homepage": "http://clorophilla.net"
+                }
+            ],
+            "description": "Flexible and feature-complete Redis client for PHP and HHVM",
+            "homepage": "http://github.com/nrk/predis",
+            "keywords": [
+                "nosql",
+                "predis",
+                "redis"
+            ],
+            "time": "2016-06-16T16:22:20+00:00"
         },
         {
             "name": "psr/container",

@@ -436,17 +436,6 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    $router->resource(
-        'organizations/{organization}/provider/identities',
-        "Api\Platform\Organizations\Provider\ProviderIdentitiesController", [
-        'only' => [
-            'index', 'show', 'store', 'destroy', 'update'
-        ],
-        'parameters' => [
-            'identities' => 'provider_identity'
-        ]
-    ]);
-
 
     $router->get(
         'organizations/{organization}/provider/transactions/export',
