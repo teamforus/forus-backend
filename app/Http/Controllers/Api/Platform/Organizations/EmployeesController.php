@@ -40,7 +40,7 @@ class EmployeesController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', [$organization]);
-        $this->authorize('index', [Employee::class, $organization]);
+        $this->authorize('viewAny', [Employee::class, $organization]);
 
         if ($request->has('role') && $role = $request->input('role')) {
             $query = $organization->employeesOfRoleQuery($role);

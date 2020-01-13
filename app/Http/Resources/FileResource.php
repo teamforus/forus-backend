@@ -23,6 +23,6 @@ class FileResource extends Resource
             'identity_address', 'original_name', 'type', 'ext', 'uid'
         ])->merge([
             'size' => pretty_file_size($this->resource->size)
-        ]);
+        ])->toArray();
     }
 }

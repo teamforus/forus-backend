@@ -2,9 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Provider;
 
+use App\Models\Organization;
 use App\Rules\FundApplicableRule;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Class StoreFundProviderRequest
+ * @property Organization|null $organization
+ * @package App\Http\Requests\Api\Platform\Organizations\Provider
+ */
 class StoreFundProviderRequest extends FormRequest
 {
     /**
@@ -25,7 +31,7 @@ class StoreFundProviderRequest extends FormRequest
     public function rules()
     {
         return [
-            'fund_id' => ['required', new FundApplicableRule(request()->organization)]
+            'fund_id' => ['required', new FundApplicableRule($this->organization)]
         ];
     }
 }

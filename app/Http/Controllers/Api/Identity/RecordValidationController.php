@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Identity;
 use App\Http\Requests\Api\Identity\ApproveRecordValidationRequest;
 use App\Http\Requests\Api\RecordValidations\RecordValidationStoreRequest;
 use App\Models\Organization;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class RecordValidationController extends Controller
@@ -16,14 +15,13 @@ class RecordValidationController extends Controller
      * RecordCategoryController constructor.
      */
     public function __construct() {
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  RecordValidationStoreRequest  $request
-     * @return \Illuminate\Http\Response
+     * @param RecordValidationStoreRequest $request
+     * @return \Illuminate\Http\Response|array
      */
     public function store(RecordValidationStoreRequest $request)
     {
@@ -45,7 +43,7 @@ class RecordValidationController extends Controller
      * Display the specified resource.
      *
      * @param string $recordUuid
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|array
      */
     public function show(
         string $recordUuid

@@ -25,7 +25,7 @@ class BunqMeTabsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('indexPublic', [
+        $this->authorize('viewAnyPublic', [
             BunqMeTab::class, $fund, $organization
         ]);
 

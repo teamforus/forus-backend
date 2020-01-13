@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\ProductQuery;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
@@ -69,6 +70,7 @@ use Illuminate\Http\Request;
  * @mixin \Eloquent
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product approvedForFunds($fund_id)
  */
 class Product extends Model
 {
@@ -235,18 +237,16 @@ class Product extends Model
      * @return Builder
      */
     public static function searchQuery() {
+        $query = Product::query();
+        $activeFunds = Implementation::activeFunds()->pluck('id')->toArray();
 
-        return Product::query()->where(function(Builder $builder) {
-            $activeFunds = Implementation::activeFunds()->pluck('id');
-            $builder->whereHas('organization.organization_funds', function(
-                Builder $builder
-            ) use ($activeFunds) {
-                $builder->whereIn('fund_id', $activeFunds->toArray());
-                $builder->where('allow_products', true);
-            })->orWhereHas('fund_providers');
-        })->where('sold_out', false)->where(
-            'expire_at', '>', date('Y-m-d')
-        );
+        // only in stock and not expired
+        $query = ProductQuery::inStockAndActiveFilter($query);
+
+        // only approved by at least one sponsor
+        $query = ProductQuery::approvedForFundsFilter($query, $activeFunds);
+
+        return $query;
     }
 
     /**
@@ -256,39 +256,28 @@ class Product extends Model
     public static function search(Request $request) {
         $query = self::searchQuery()->orderBy('created_at', 'desc');
 
-        if ($request->has('product_category_id')) {
-            $productCategories = ProductCategory::descendantsAndSelf(
-                $request->input('product_category_id')
-            )->pluck('id');
-
-            $query->whereIn('product_category_id', $productCategories);
+        // filter by product_category_id
+        if ($category_id = $request->input('product_category_id')) {
+            $query = ProductQuery::productCategoriesFilter($query, $category_id);
         }
 
-        if ($fund_id = $request->input('fund_id', null)) {
-            if ($fund = Fund::find($fund_id)) {
-                $providers = $fund->provider_organizations_approved();
-                $query->whereIn(
-                    'organization_id',
-                    $providers->pluck('organizations.id')->toArray()
-                );
-            }
+        // filter by fund_id
+        if ($request->has('fund_id') && $fund_id = $request->input('fund_id')) {
+            $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
         }
 
-        if ($request->has('unlimited_stock')) {
-            $query->where([
-                'unlimited_stock' => !!$request->input('unlimited_stock')
-            ]);
+        // filter by unlimited stock
+        if ($request->has('unlimited_stock') &&
+            $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
+            return ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
         }
 
-        if (!$request->has('q')) {
-            return $query;
+        // filter by string query
+        if ($request->has('q') && !empty($q = $request->input('q'))) {
+            return ProductQuery::queryDeepFilter($query, $q);
         }
 
-        return $query->where(function (Builder $query) use ($request) {
-            return $query
-                ->where('name', 'LIKE', "%{$request->input('q')}%")
-                ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
-        });
+        return $query;
     }
 
     /**
@@ -298,45 +287,17 @@ class Product extends Model
     public static function searchAny(Request $request) {
         $query = self::query()->orderBy('created_at', 'desc');
 
-        if ($request->has('unlimited_stock')) {
-            $query->where([
-                'unlimited_stock' => !!$request->input('unlimited_stock')
-            ]);
+        // filter by unlimited stock
+        if ($request->has('unlimited_stock') &&
+            $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
+            return ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
         }
 
-        if (!$request->has('q')) {
-            return $query;
+        // filter by string query
+        if ($request->has('q') && !empty($q = $request->input('q'))) {
+            return ProductQuery::queryFilter($query, $q);
         }
 
-        return $query->where(function (Builder $query) use ($request) {
-            return $query
-                ->where('name', 'LIKE', "%{$request->input('q')}%")
-                ->orWhere('description', 'LIKE', "%{$request->input('q')}%");
-        });
-    }
-
-    public function getFundsWhereIsAvailable()
-    {
-        $product = $this;
-
-        return Fund::where(
-            'state', '!=', Fund::STATE_CLOSED
-        )->whereHas('providers', function(
-            Builder $builder
-        ) use ($product) {
-            $builder->where(function(Builder $builder) use ($product) {
-                $builder->where('organization_id', $product->organization_id);
-                $builder->where('allow_products', true);
-            });
-            $builder->orWhere(function(Builder $builder) use ($product) {
-                $builder->where('organization_id', $product->organization_id);
-                $builder->where('allow_products', false);
-                $builder->whereHas('fund_provider_products', function(Builder $builder) use ($product) {
-                    $builder->where([
-                        'product_id' => $product->id,
-                    ]);
-                });
-            });
-        });
+        return $query;
     }
 }

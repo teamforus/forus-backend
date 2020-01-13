@@ -23,7 +23,7 @@ class ValidatorRequestPolicy
      * @param $identity_address
      * @return mixed
      */
-    public function index($identity_address) {
+    public function viewAny($identity_address) {
         return !empty($identity_address);
     }
 

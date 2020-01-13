@@ -58,4 +58,4 @@ class RecordCategory extends Model
             'type' => 'record_category_icon'
         ]);
     }
-};
+}

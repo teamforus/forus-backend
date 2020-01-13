@@ -30,6 +30,6 @@ class MediaResource extends Resource
                 /** @var MediaSize $size */
                 return $size->urlPublic();
             })
-        ]);
+        ])->toArray();
     }
 }

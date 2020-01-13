@@ -289,7 +289,7 @@ class IdentityRepo implements Interfaces\IIdentityRepo
             logger()->error($exception->getMessage());
             abort('400');
             return false;
-        };
+        }
 
         return $this->createProxy(
             $exchangeToken,
