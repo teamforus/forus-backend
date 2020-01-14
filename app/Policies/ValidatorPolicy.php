@@ -26,7 +26,7 @@ class ValidatorPolicy
      * @return bool
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
+    public function viewAny(
         $identity_address,
         Organization $organization = null
     ) {

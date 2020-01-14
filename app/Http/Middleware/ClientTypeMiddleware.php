@@ -19,7 +19,7 @@ class ClientTypeMiddleware
             return response()->json([
                 "message" => 'unknown_client_type'
             ])->setStatusCode(403);
-        };
+        }
 
         return $next($request);
     }

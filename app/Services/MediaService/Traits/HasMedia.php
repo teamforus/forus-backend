@@ -18,7 +18,7 @@ trait HasMedia
     public function attachMedia(Media $media) {
         if (config('media.sizes.' . $media->type . '.type') == 'single') {
             $this->medias->each(function($media) {
-                app()->make('media')->unlink($media);
+                resolve('media')->unlink($media);
             });
         }
 

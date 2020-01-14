@@ -22,7 +22,7 @@ class ImplementationKeyMiddleware
             return response()->json([
                 "message" => 'unknown_implementation_key'
             ])->setStatusCode(403);
-        };
+        }
 
         return $next($request);
     }

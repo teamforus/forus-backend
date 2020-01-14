@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Dimsav\Translatable\Translatable;
+use Astrotomic\Translatable\Translatable;
 
 /**
  * App\Models\Token

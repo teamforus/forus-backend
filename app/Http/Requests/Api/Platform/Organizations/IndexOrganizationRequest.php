@@ -31,7 +31,10 @@ class IndexOrganizationRequest extends FormRequest
     public function rules()
     {
         return [
-            'role' => '',
+            'per_page'  => 'numeric|between:1,100',
+            'role' => [
+                'nullable', 'string', 'exists:roles,key'
+            ],
             'dependency' => ['nullable', new DependencyRule(
                 OrganizationResource::DEPENDENCIES
             )]

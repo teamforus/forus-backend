@@ -22,7 +22,7 @@ class FundRequestsController extends Controller
      */
     public function index(IndexFundRequestsRequest $request, Fund $fund)
     {
-        $this->authorize('indexRequester', [
+        $this->authorize('viewAnyRequester', [
             FundRequest::class, $fund
         ]);
 

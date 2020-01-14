@@ -45,7 +45,7 @@ class VouchersController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexSponsor', [Voucher::class, $organization]);
+        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         return SponsorVoucherResource::collection(
             Voucher::searchSponsor(
@@ -128,10 +128,6 @@ class VouchersController extends Controller
             $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
             $expires_at = $voucher['expires_at'] ?? false;
             $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
-
-            log_debug(json_encode_pretty([
-                $identity, $amount, $expires_at, $note
-            ]));
 
             if (!$product_id) {
                 $voucher = $fund->makeVoucher(
@@ -262,7 +258,7 @@ class VouchersController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexSponsor', [Voucher::class, $organization]);
+        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         /** @var Collection|Voucher[] $unassigned_vouchers */
         $unassigned_vouchers = Voucher::getUnassignedVouchers(

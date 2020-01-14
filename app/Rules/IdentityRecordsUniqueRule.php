@@ -2,7 +2,6 @@
 
 namespace App\Rules;
 
-use App\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Contracts\Validation\Rule;
 
 class IdentityRecordsUniqueRule implements Rule
@@ -20,7 +19,7 @@ class IdentityRecordsUniqueRule implements Rule
         $recordType
     ) {
         $this->recordType = $recordType;
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     /**

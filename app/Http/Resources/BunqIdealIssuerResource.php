@@ -22,6 +22,6 @@ class BunqIdealIssuerResource extends Resource
     {
         return collect($this->resource)->only([
             'id', 'name', 'bic',
-        ]);
+        ])->toArray();
     }
 }
