@@ -4,8 +4,6 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
-use App\Services\Forus\Record\Models\Record;
-use App\Services\Forus\Record\Models\RecordType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -210,7 +208,7 @@ class Voucher extends Model
             $this->identity_address,
             $fund_product_name,
             $fund_product_name,
-            $voucherToken->getQrCodeUrl()
+            $voucherToken->address
         );
     }
 
@@ -238,7 +236,7 @@ class Voucher extends Model
                 $voucherToken->voucher->product->organization->emailServiceId(),
                 $primaryEmail,
                 $product_name,
-                $voucherToken->getQrCodeUrl(),
+                $voucherToken->address,
                 $reason
             );
 
@@ -248,7 +246,7 @@ class Voucher extends Model
                     auth()->id(),
                     $primaryEmail,
                     $product_name,
-                    $voucherToken->getQrCodeUrl(),
+                    $voucherToken->address,
                     $reason
                 );
             }
@@ -512,10 +510,10 @@ class Voucher extends Model
         // $tmp_images = [];
         foreach ($vouchers as $voucher) {
             $name = $token_generator->generate(6, 2);
-            $zip->addFromString(
-                "images/$name.png",
-                $voucher->token_without_confirmation->getQrCodeFile()
-            );
+            $zip->addFromString("images/$name.png", make_qr_code(
+                'voucher',
+                $voucher->token_without_confirmation->address
+            ));
 
             fputcsv($fp, [$name]);
         }

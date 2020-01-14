@@ -500,3 +500,16 @@ if (!function_exists('range_between_dates')) {
         return $dates;
     }
 }
+
+if (!function_exists('make_qr_code')) {
+    /**
+     * @param string $type
+     * @param string $value
+     * @return string|void
+     */
+    function make_qr_code(string $type, string $value) {
+        return QrCode::format('png')->size(400)->margin(2)->generate(
+            json_encode(compact('type', 'value'))
+        );
+    }
+}
