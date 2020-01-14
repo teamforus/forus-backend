@@ -20,11 +20,9 @@ class SmsController extends Controller
     public function send(
         SmsRequest $request
     ) {
-        $smsNotification = resolve('forus.services.sms_notification');
-
-        $result = $smsNotification->sendSms(
-            $request->input('title'),
-            $request->input('phone')
+        $result = resolve('forus.services.sms_notification')->sendSms(
+            trans('sms.messages.' . $request->input('type')),
+            $request->input('phone'),
         );
 
         return $result ? response(null, 200)
