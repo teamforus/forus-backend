@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Exports\FundRequestsExport;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
 use App\Http\Resources\FundRequestResource;
 use App\Models\FundRequest;
@@ -30,6 +31,27 @@ class FundRequestsController extends Controller
             FundRequest::search($request, $organization)->paginate(
                 $request->input('per_page')
             )
+        );
+    }
+
+    /**
+     * @param IndexFundRequestsRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexFundRequestsRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('index', Organization::class);
+
+        return resolve('excel')->download(
+            new FundRequestsExport($request, $organization),
+            date('Y-m-d H:i:s') . '.xls'
         );
     }
 
