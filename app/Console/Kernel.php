@@ -55,6 +55,11 @@ class Kernel extends ConsoleKernel
   
         $schedule->command('digid:session-clean')
             ->everyMinute()->withoutOverlapping()->onOneServer();
+
+        if (in_array(config('queue.default'), ['redis', 'database'])) {
+            $schedule->command('queue:work --queue=emails')
+                ->everyMinute()->withoutOverlapping()->onOneServer();
+        }
     }
 
     /**

@@ -69,6 +69,6 @@ class IdentityProxy extends Model
             return null;
         }
         
-        return self::where(compact('access_token'))->first();
+        return self::whereAccessToken($access_token)->first();
     }
 }

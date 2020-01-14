@@ -14,6 +14,7 @@ class KvkApi
 
     /** @var string $cache_prefix Cache key */
     protected $cache_prefix = 'kvk_service:kvk-number:';
+
     /** @var int $cache_time Cache time in minutes */
     protected $cache_time = 10;
 
@@ -80,7 +81,7 @@ class KvkApi
         int $cacheTime,
         string $kvk_number
     ) {
-        return cache()->remember($cacheKey, $cacheTime, function() use (
+        return cache()->remember($cacheKey, $cacheTime * 60, function() use (
             $kvk_number
         ) {
             return file_get_contents($this->getApiUrl($kvk_number));

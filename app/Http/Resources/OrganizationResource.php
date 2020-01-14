@@ -14,7 +14,6 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class OrganizationResource extends Resource
 {
-
     const DEPENDENCIES = [
         'logo',
         'funds',
@@ -55,13 +54,11 @@ class OrganizationResource extends Resource
             ])->toArray();
         }
 
-        $logoDep = api_dependency_requested('logo', $request);
+        // $logoDep = api_dependency_requested('logo', $request);
         $fundsDep = api_dependency_requested('funds', $request, false);
         $fundsCountDep = api_dependency_requested('funds_count', $request, false);
         $businessType = api_dependency_requested('business_type', $request, true);
         $permissionsCountDep = api_dependency_requested('permissions', $request, true);
-
-        // exit(json_encode_pretty(compact('logoDep', 'fundsDep', 'fundsCountDep', 'businessType', 'permissionsCountDep')));
 
         return array_filter(array_merge(collect($organization)->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',

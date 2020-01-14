@@ -32,6 +32,7 @@ use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 
@@ -126,7 +127,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 201) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error storing user %s contacts: %s',
                     self::typeCodeToString($type),
@@ -163,7 +164,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error removing user push token: %s',
                     $res->getBody()
@@ -207,7 +208,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error sending notification `sendPushNotification`: %s',
                     $res->getBody()
@@ -902,9 +903,14 @@ class NotificationService
                 rtrim(Implementation::active()['url_sponsor'], '/'),
                 'email/preferences');
 
-            $this->mailer->send($mailable->to($email)->with(compact(
+            /** @var Queueable|Mailable $message */
+            $message = $mailable->with(compact(
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
-            )));
+            ));
+
+            $message = $message->onQueue("emails");
+
+            $this->mailer->to($email)->queue($message);
 
             return $this->checkFailure(get_class($mailable));
         } catch (\Exception $exception) {

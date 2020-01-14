@@ -24,6 +24,6 @@ class BunqMeIdealRequestResource extends Resource
         return collect($this->resource)->only([
             'id', 'uuid', 'share_url', 'issuer_authentication_url',
             'amount', 'status', 'created_at', 'updated_at', 'fund_id',
-        ]);
+        ])->toArray();
     }
 }

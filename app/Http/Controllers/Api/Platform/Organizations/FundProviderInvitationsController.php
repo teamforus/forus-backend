@@ -25,7 +25,7 @@ class FundProviderInvitationsController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexProvider', [FundProviderInvitation::class, $organization]);
+        $this->authorize('viewAnyProvider', [FundProviderInvitation::class, $organization]);
 
         return FundProviderInvitationResource::collection(
             $organization->fund_provider_invitations()->paginate(

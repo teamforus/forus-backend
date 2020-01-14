@@ -25,7 +25,7 @@ class TransactionsController extends Controller
         VoucherToken $voucherToken
     ) {
         $this->authorize('show', $voucherToken->voucher);
-        $this->authorize('index', [VoucherTransaction::class, $voucherToken]);
+        $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
         return VoucherTransactionResource::collection(
             VoucherTransaction::searchVoucher($voucherToken->voucher, $request)->paginate(
@@ -104,7 +104,7 @@ class TransactionsController extends Controller
         $transaction = $voucher->transactions()->create(array_merge([
             'amount' => $amount,
             'product_id' => $product ? $product->id : null,
-            'address' => app()->make('token_generator')->address(),
+            'address' => token_generator()->address(),
             'organization_id' => $organizationId,
         ], $needsReview ? [
             'attempts' => 50,

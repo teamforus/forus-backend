@@ -32,7 +32,7 @@ class PrevalidationDataRule implements Rule
     public function passes($attribute, $value)
     {
         $data = collect($value);
-        $recordRepo = app()->make('forus.services.record');
+        $recordRepo = resolve('forus.services.record');
         $recordTypes = collect($recordRepo->getRecordTypes())->pluck('key');
 
         if ($data->isEmpty()) {

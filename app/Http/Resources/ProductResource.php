@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Fund;
 use App\Models\Product;
+use App\Scopes\Builders\FundQuery;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -42,8 +43,8 @@ class ProductResource extends Resource
     {
         $product = $this->resource;
 
-        // Load list fund where this fund is available
-        $funds = $product->getFundsWhereIsAvailable()->with('logo.sizes')->get();
+        $fundsQuery = FundQuery::whereActiveFilter(Fund::query());
+        $fundsQuery = FundQuery::whereProductsAreApprovedFilter($fundsQuery, $product->id);
 
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
@@ -68,7 +69,7 @@ class ProductResource extends Resource
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
             'deleted_at_locale' => $product->deleted_at ? format_date_locale($product->deleted_at) : null,
             'deleted' => !is_null($product->deleted_at),
-            'funds' => $funds->map(function($fund) {
+            'funds' => $fundsQuery->get()->map(function($fund) {
                 return [
                     'logo' => new MediaResource($fund->logo),
                     'id' => $fund->id,

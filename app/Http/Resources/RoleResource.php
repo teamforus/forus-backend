@@ -22,6 +22,6 @@ class RoleResource extends Resource
     {
         return collect($this->resource)->only([
             'id', 'key', 'name'
-        ]);
+        ])->toArray();
     }
 }

@@ -16,7 +16,7 @@ class ValidatorRequestController extends Controller
      * RecordCategoryController constructor.
      */
     public function __construct() {
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     /**
@@ -29,7 +29,7 @@ class ValidatorRequestController extends Controller
     public function index(
         Request $request
     ) {
-        $this->authorize('index', ValidatorRequest::class);
+        $this->authorize('viewAny', ValidatorRequest::class);
 
         return ValidatorRequestResource::collection(
             ValidatorRequest::searchPaginate($request)

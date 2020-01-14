@@ -11,7 +11,8 @@
 |
 */
 
-$router = app()->make('router');
+/** @var \Illuminate\Routing\Router $router */
+$router = resolve('router');
 
 $router->group([], function() use ($router) {
     $router->resource(
@@ -432,17 +433,6 @@ $router->group(['middleware' => [
         ],
         'parameters' => [
             'funds' => 'organization_fund'
-        ]
-    ]);
-
-    $router->resource(
-        'organizations/{organization}/provider/identities',
-        "Api\Platform\Organizations\Provider\ProviderIdentitiesController", [
-        'only' => [
-            'index', 'show', 'store', 'destroy', 'update'
-        ],
-        'parameters' => [
-            'identities' => 'provider_identity'
         ]
     ]);
 

@@ -24,7 +24,7 @@ class TransactionsController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexProvider', [VoucherTransaction::class, $organization]);
+        $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
         return ProviderVoucherTransactionResource::collection(
             VoucherTransaction::searchProvider($request, $organization)->with(
@@ -47,8 +47,8 @@ class TransactionsController extends Controller
         IndexTransactionsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('index', Organization::class);
-        $this->authorize('indexProvider', [VoucherTransaction::class, $organization]);
+        $this->authorize('viewAny', Organization::class);
+        $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
         return resolve('excel')->download(
             new VoucherTransactionsProviderExport($request, $organization),
