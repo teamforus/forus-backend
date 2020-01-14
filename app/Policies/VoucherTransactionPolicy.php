@@ -40,13 +40,9 @@ class VoucherTransactionPolicy
         string $identity_address,
         Organization $organization = null
     ) {
-        if ($organization) {
-            return $organization->identityCan(
-                $identity_address, 'view_finances'
-            );
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan(
+            $identity_address, 'view_finances'
+        );
     }
 
     /**
@@ -58,13 +54,9 @@ class VoucherTransactionPolicy
         string $identity_address,
         Organization $organization = null
     ) {
-        if ($organization) {
-            return $organization->identityCan(
-                $identity_address, 'view_finances'
-            );
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan(
+            $identity_address, 'view_finances'
+        );
     }
 
     /**
