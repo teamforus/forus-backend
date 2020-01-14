@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\NodeTrait;
-use Dimsav\Translatable\Translatable;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;

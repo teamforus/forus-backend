@@ -174,18 +174,22 @@ class VoucherTransaction extends Model
         }
 
         if ($request->has('from') && $from = $request->input('from')) {
+            $from = (Carbon::createFromFormat('Y-m-d', $from));
+
             $query->where(
                 'created_at',
                 '>=',
-                (new Carbon($from))->startOfDay()->format('Y-m-d H:i:s')
+                $from->startOfDay()->format('Y-m-d H:i:s')
             );
         }
 
         if ($request->has('to') && $to = $request->input('to')) {
+            $to = (Carbon::createFromFormat('Y-m-d H:i:s', $to));
+
             $query->where(
                 'created_at',
                 '<=',
-                (new Carbon($to))->endOfDay()->format('Y-m-d H:i:s')
+                $to->endOfDay()->format('Y-m-d H:i:s')
             );
         }
 

@@ -43,9 +43,10 @@ class NotificationUnsubscriptionToken extends Model
 
     /**
      * Find model by token
+     *
      * @param string $token
      * @param bool $onlyActive
-     * @return NotificationUnsubscriptionToken|null
+     * @return NotificationUnsubscriptionToken|\Illuminate\Database\Eloquent\Model|null
      */
     public function findByToken(string $token, bool $onlyActive = true) {
         $token = $this->where(compact('token'));

@@ -22,7 +22,7 @@ class ValidatorsController extends Controller
         Organization $organization
     ) {
         $this->authorize('update', $organization);
-        $this->authorize('index', [Validator::class, $organization]);
+        $this->authorize('viewAny', [Validator::class, $organization]);
 
         return ValidatorResource::collection($organization->validators);
     }
@@ -92,11 +92,9 @@ class ValidatorsController extends Controller
         $this->authorize('update', $organization);
         $this->authorize('update', [$validator, $organization]);
 
-        $identity_address = app()->make(
+        $identity_address = resolve(
             'forus.services.record'
-        )->identityAddressByEmail(
-            $request->input('email')
-        );
+        )->identityAddressByEmail($request->input('email'));
 
         $validator->update($request->only([
             'identity_address' => $identity_address

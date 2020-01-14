@@ -34,11 +34,11 @@ class DigIdSessionsCleanupCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
     public function handle()
     {
-        $olderThan = now()->subSecond(DigIdSession::SESSION_EXPIRATION_TIME);
+        $olderThan = now()->subSeconds(DigIdSession::SESSION_EXPIRATION_TIME);
 
         DigIdSession::where(
             'created_at', '<', $olderThan

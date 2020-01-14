@@ -25,7 +25,7 @@ class OfficePolicy
      * @param Organization $organization
      * @return bool
      */
-    public function index(
+    public function viewAny(
         $identity_address,
         Organization $organization 
     ) {
@@ -38,7 +38,7 @@ class OfficePolicy
     /**
      * @return bool
      */
-    public function indexPublic() {
+    public function viewAnyPublic() {
         return true;
     }
 

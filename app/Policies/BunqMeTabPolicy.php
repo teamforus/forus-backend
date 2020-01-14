@@ -27,7 +27,7 @@ class BunqMeTabPolicy
      * @param Organization|null $organization
      * @return bool
      */
-    public function indexPublic(
+    public function viewAnyPublic(
         string $identity_address,
         Fund $fund,
         Organization $organization

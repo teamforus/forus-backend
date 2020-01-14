@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 use App\Models\Voucher;
+use App\Services\MediaService\Models\Media;
 
 class ProductsController extends Controller
 {
@@ -35,7 +36,7 @@ class ProductsController extends Controller
         IndexProductRequest $request,
         Organization $organization
     ) {
-        $this->authorize('indexPublic', [Product::class, $organization]);
+        $this->authorize('viewAnyPublic', [Product::class, $organization]);
 
         return ProductResource::collection(Product::searchAny($request)->where([
             'organization_id' => $organization->id
@@ -76,7 +77,7 @@ class ProductsController extends Controller
             'unlimited_stock' => $unlimited_stock
         ]));
 
-        if ($media && $media->type == 'product_photo') {
+        if ($media instanceof Media && $media->type == 'product_photo') {
             $product->attachMedia($media);
         }
 
@@ -178,7 +179,7 @@ class ProductsController extends Controller
             ]);
         });
 
-        if ($media && $media->type == 'product_photo') {
+        if ($media instanceof Media && $media->type == 'product_photo') {
             $product->attachMedia($media);
         }
 

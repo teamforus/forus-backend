@@ -2,7 +2,7 @@
 
 namespace App\Services\Forus\Record\Models;
 
-use Dimsav\Translatable\Translatable;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $key
  * @property string $type
+ * @property string $name
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordTypeTranslation[] $translations

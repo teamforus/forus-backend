@@ -27,7 +27,7 @@ class VoucherPolicy
      * @param string $identity_address
      * @return bool
      */
-    public function index(
+    public function viewAny(
         string $identity_address
     ) {
         return !empty($identity_address);
@@ -38,7 +38,7 @@ class VoucherPolicy
      * @param Organization $organization
      * @return mixed
      */
-    public function indexSponsor(
+    public function viewAnySponsor(
         string $identity_address,
         Organization $organization
     ) {
@@ -51,7 +51,7 @@ class VoucherPolicy
      * @param string $identity_address
      * @param Organization $organization
      * @param Fund $fund
-     * @return mixed
+     * @return bool|void
      * @throws AuthorizationJsonException
      */
     public function storeSponsor(
@@ -59,7 +59,7 @@ class VoucherPolicy
         Organization $organization,
         Fund $fund
     ) {
-        if (!($this->indexSponsor($identity_address, $organization) &&
+        if (!($this->viewAnySponsor($identity_address, $organization) &&
             $fund->organization_id == $organization->id)) {
             $this->deny('no_permission_to_make_vouchers');
         }
@@ -186,7 +186,6 @@ class VoucherPolicy
         Voucher $voucher
     ) {
         $fund = $voucher->fund;
-        $id = 'organizations.id';
 
         if ($voucher->expired) {
             $this->deny('expired');
@@ -232,7 +231,7 @@ class VoucherPolicy
             ])->pluck('organization_id');
         }
 
-        $providersApplied = $fund->provider_organizations()->pluck($id);
+        $providersApplied = $fund->provider_organizations()->pluck('organizations.id');
 
         $providers = Organization::queryByIdentityPermissions(
             $identity_address, 'scan_vouchers'
@@ -296,6 +295,7 @@ class VoucherPolicy
     protected function deny(string $error)
     {
         $message = trans("validation.voucher.{$error}");
+
 
         throw new AuthorizationJsonException(json_encode(
             compact('error', 'message')

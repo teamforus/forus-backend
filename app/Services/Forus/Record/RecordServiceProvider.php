@@ -2,8 +2,6 @@
 
 namespace App\Services\Forus\Record;
 
-use App\Services\Forus\Identity\Repositories\IdentityRepo;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use App\Services\Forus\Record\Repositories\RecordIpfsRepo;
 use App\Services\Forus\Record\Repositories\RecordRepo;

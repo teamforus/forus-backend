@@ -21,7 +21,7 @@ class ValidatorResource extends Resource
     public function toArray($request)
     {
         $validator = $this->resource;
-        $recordRepo = app()->make('forus.services.record');
+        $recordRepo = resolve('forus.services.record');
 
         return collect($validator)->only([
             'id', 'identity_address', 'organization_id'
