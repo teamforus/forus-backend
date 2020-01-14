@@ -33,38 +33,30 @@ class VoucherTransactionPolicy
 
     /**
      * @param string $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
      */
     public function indexSponsor(
         string $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            return $organization->identityCan(
-                $identity_address, 'view_finances'
-            );
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan(
+            $identity_address, 'view_finances'
+        );
     }
 
     /**
      * @param string $identity_address
-     * @param Organization|null $organization
+     * @param Organization $organization
      * @return bool
      */
     public function indexProvider(
         string $identity_address,
-        Organization $organization = null
+        Organization $organization
     ) {
-        if ($organization) {
-            return $organization->identityCan(
-                $identity_address, 'view_finances'
-            );
-        }
-
-        return !empty($identity_address);
+        return $organization->identityCan(
+            $identity_address, 'view_finances'
+        );
     }
 
     /**
