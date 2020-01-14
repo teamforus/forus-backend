@@ -27,7 +27,7 @@ class FundProviderPolicy
      * @param Fund|null $fund
      * @return bool
      */
-    public function indexSponsor(
+    public function viewAnySponsor(
         $identity_address,
         Organization $organization,
         Fund $fund = null
@@ -53,7 +53,7 @@ class FundProviderPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function indexProvider(
+    public function viewAnyProvider(
         $identity_address,
         Organization $organization
     ) {

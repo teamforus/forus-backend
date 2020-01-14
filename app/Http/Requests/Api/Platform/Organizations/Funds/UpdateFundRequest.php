@@ -32,15 +32,30 @@ class UpdateFundRequest extends FormRequest
     {
         $criteriaEditable = config(
             'forus.features.dashboard.organizations.funds.criteria');
+
         $formulaProductsEditable = config(
             'forus.features.dashboard.organizations.funds.formula_products');
+
+        if ($this->fund) {
+            $availableValidators = $this->fund->organization
+                ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
+        } else {
+            $availableValidators = [];
+        }
 
         return array_merge([
             'name'                  => 'required|between:2,200',
             'description'           => 'nullable|string|max:140',
             'product_categories'    => 'present|array',
             'product_categories.*'  => 'exists:product_categories,id',
-            'notification_amount'   => 'nullable|numeric'
+            'notification_amount'   => 'nullable|numeric',
+        ], [
+            'auto_requests_validation' => [
+                'nullable', 'boolean'
+            ],
+            'default_validator_employee_id' => [
+                'nullable', Rule::in($availableValidators)
+            ],
         ], ($this->fund && $this->fund->state == Fund::STATE_WAITING) ? [
             'start_date' => [
                 'required',

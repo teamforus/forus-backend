@@ -17,7 +17,7 @@ class ValidatorRequestController extends Controller
      */
     public function index()
     {
-        $this->authorize('index', ValidatorRequest::class);
+        $this->authorize('viewAny', ValidatorRequest::class);
 
         $validatorRequest = ValidatorRequest::query()->where([
             'identity_address' => auth_address()

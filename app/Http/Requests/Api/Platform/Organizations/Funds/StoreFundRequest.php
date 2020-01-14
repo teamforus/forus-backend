@@ -2,9 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Class StoreFundRequest
+ * @property Organization|null $organization
+ * @package App\Http\Requests\Api\Platform\Organizations\Funds
+ */
 class StoreFundRequest extends FormRequest
 {
     /**
@@ -30,6 +36,13 @@ class StoreFundRequest extends FormRequest
         $formulaProductsEditable = config(
             'forus.features.dashboard.organizations.funds.formula_products');
 
+        if ($this->organization) {
+            $availableValidators = $this->organization
+                ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
+        } else {
+            $availableValidators = [];
+        }
+
         return array_merge([
             'name'                          => 'required|between:2,200',
             'description'                   => 'nullable|string|max:140',
@@ -38,6 +51,13 @@ class StoreFundRequest extends FormRequest
             'product_categories'            => 'present|array',
             'product_categories.*'          => 'exists:product_categories,id',
             'notification_amount'           => 'nullable|numeric',
+        ], [
+            'auto_requests_validation' => [
+                'nullable', 'boolean'
+            ],
+            'default_validator_employee_id' => [
+                'nullable', Rule::in($availableValidators)
+            ],
         ], $criteriaEditable ? [
             'criteria'                      => 'required|array',
             'criteria.*.operator'           => 'required|in:=,<,>',

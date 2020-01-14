@@ -27,14 +27,14 @@ class ScheduleRule implements Rule
     {
         $reg_ex = "/(2[0-3]|[01][0-9]):([0-5][0-9])/";
 
-        if (!isset($value['start_time']) || !isset($value['start_time']) ||
+        if (!isset($value['start_time']) || !isset($value['end_time']) ||
             !isset($value['break_start_time']) || !isset($value['break_end_time'])
         ) {
             return false;
         }
 
         // both are valid format
-        $is_valid = (
+        return (
                 preg_match($reg_ex, $value['start_time']) ||
                 $value['start_time'] == 'null'
             ) && (
@@ -47,8 +47,6 @@ class ScheduleRule implements Rule
                 preg_match($reg_ex, $value['break_end_time']) ||
                 $value['break_end_time'] == 'null'
             );
-
-        return $is_valid;
     }
 
     /**
