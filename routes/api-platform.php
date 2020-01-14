@@ -338,6 +338,11 @@ $router->group(['middleware' => [
             ]
         ]);
 
+        $router->get(
+            'organizations/{organization}/requests/export',
+            "Api\Platform\Organizations\FundRequestsController@export"
+        );
+
         $router->resource(
             'organizations/{organization}/requests',
             "Api\Platform\Organizations\FundRequestsController", [

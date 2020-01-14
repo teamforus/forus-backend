@@ -2,6 +2,7 @@
 
 namespace App\Events\FundRequests;
 
+use App\Models\Fund;
 use App\Models\FundRequest;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -32,6 +33,16 @@ class FundRequestEvent
     public function getFundRequest()
     {
         return $this->fundRequest;
+    }
+
+    /**
+     * Get the fund request
+     *
+     * @return Fund
+     */
+    public function getFund()
+    {
+        return $this->fundRequest->fund;
     }
 
     /**
