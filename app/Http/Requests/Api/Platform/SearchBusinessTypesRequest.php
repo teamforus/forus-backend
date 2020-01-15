@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform;
 
-use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SearchBusinessTypesRequest extends FormRequest

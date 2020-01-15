@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Scopes\Builders\ProductQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductPolicy
@@ -26,7 +27,7 @@ class ProductPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function index(
+    public function viewAny(
         $identity_address,
         Organization $organization
     ) {
@@ -39,7 +40,7 @@ class ProductPolicy
     /**
      * @return bool
      */
-    public function indexPublic() {
+    public function viewAnyPublic() {
         return true;
     }
 
@@ -114,8 +115,19 @@ class ProductPolicy
         Product $product,
         Voucher $voucher
     ) {
-        return !empty($identity_address) && !$voucher->expired &&
-            !$product->expired && !$product->sold_out;
+        if (empty($identity_address)) {
+            return false;
+        }
+
+        if (empty($identity_address)) {
+            return false;
+        }
+
+        // check validity
+        return ProductQuery::approvedForFundsAndActiveFilter(
+            Product::query(),
+            $voucher->fund_id
+        )->where('id', $product->id)->exists();
     }
 
     /**

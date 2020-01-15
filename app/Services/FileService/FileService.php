@@ -118,7 +118,7 @@ class FileService
             return $query
                 ->whereNull('fileable_type')
                 ->orWhereNull('fileable_id');
-        })->where('created_at', '<', Carbon::now()->subMinute(60));
+        })->where('created_at', '<', Carbon::now()->subMinutes(60));
 
         if ($identity_address) {
             $expiredFiles->where(compact('identity_address'));
@@ -221,7 +221,8 @@ class FileService
 
     /**
      * Get storage
-     * @return \Storage
+     *
+     * @return \Illuminate\Contracts\Filesystem\Filesystem
      */
     private function storage() {
         return resolve('filesystem')->disk($this->storageDriver);

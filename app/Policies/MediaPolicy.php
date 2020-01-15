@@ -23,7 +23,7 @@ class MediaPolicy
      * @param $identity_address
      * @return mixed
      */
-    public function index(
+    public function viewAny(
         $identity_address
     ) {
         return !empty($identity_address);

@@ -26,7 +26,7 @@ class PrevalidationController extends Controller
      * RecordCategoryController constructor.
      */
     public function __construct() {
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
         $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', $this->maxAttempts);
         $this->decayMinutes = env('ACTIVATION_CODE_DECAY', $this->decayMinutes);
     }
@@ -126,7 +126,7 @@ class PrevalidationController extends Controller
     public function index(
         SearchPrevalidationsRequest $request
     ) {
-        $this->authorize('index', Prevalidation::class);
+        $this->authorize('viewAny', Prevalidation::class);
 
         return PrevalidationResource::collection(Prevalidation::search(
             $request
@@ -143,7 +143,7 @@ class PrevalidationController extends Controller
     public function export(
         SearchPrevalidationsRequest $request
     ) {
-        $this->authorize('index', Prevalidation::class);
+        $this->authorize('viewAny', Prevalidation::class);
 
         return resolve('excel')->download(
             new PrevalidationsExport($request),

@@ -44,6 +44,9 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class FundProvider extends Model
 {
+    const STATE_APPROVED = 'approved';
+    const STATE_PENDING = 'pending';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -63,15 +66,6 @@ class FundProvider extends Model
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
     ];
-
-    public static function whereActiveQueryBuilder(Builder $builder)
-    {
-        return $builder->where(function(Builder $builder) {
-            $builder->where('allow_budget', true);
-            $builder->orWhere('allow_products', true);
-            $builder->orWhere('allow_some_products',  true);
-        });
-    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany

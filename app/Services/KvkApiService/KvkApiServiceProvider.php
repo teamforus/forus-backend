@@ -3,7 +3,6 @@
 namespace App\Services\KvkApiService;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\KvkApiService\KvkApi;
 
 class KvkApiServiceProvider extends ServiceProvider
 {

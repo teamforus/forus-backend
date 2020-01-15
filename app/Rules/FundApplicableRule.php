@@ -2,7 +2,6 @@
 
 namespace App\Rules;
 
-use App\Models\FundProductCategory;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\Rule;
 

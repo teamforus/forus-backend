@@ -11,6 +11,7 @@ use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
+use App\Services\Forus\Record\Models\RecordType;
 
 /**
  * Class LoremDbSeeder
@@ -66,6 +67,8 @@ class LoremDbSeeder extends Seeder
         $this->disableEmails();
         $countProviders = env('DB_SEED_PROVIDERS', 20);
 
+        $this->prepareDependencies();
+
         $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
         $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
@@ -89,6 +92,15 @@ class LoremDbSeeder extends Seeder
         $this->success("Other implementations created!");
 
         $this->enableEmails();
+    }
+
+    public function prepareDependencies() {
+        RecordType::firstOrCreate([
+            'key'       => 'meedoen_2020_eligible',
+            'type'      => 'string',
+        ])->update([
+            'name'      => 'Meedoen 2020 eligible',
+        ]);
     }
 
     /**

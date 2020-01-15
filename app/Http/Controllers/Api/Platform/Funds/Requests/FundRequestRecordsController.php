@@ -25,7 +25,7 @@ class FundRequestRecordsController extends Controller
         Fund $fund,
         FundRequest $fundRequest
     ) {
-        $this->authorize('indexRequester', [
+        $this->authorize('viewAnyRequester', [
             FundRequestRecord::class, $fundRequest, $fund
         ]);
 
