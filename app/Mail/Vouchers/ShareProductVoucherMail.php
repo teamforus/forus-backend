@@ -12,13 +12,13 @@ class ShareProductVoucherMail extends ImplementationMail
 {
     private $requesterMail;
     private $productName;
-    private $qrUrl;
+    private $qrToken;
     private $reason;
 
     public function __construct(
         string $requesterMail,
         string $productName,
-        string $qrUrl,
+        string $qrToken,
         string $reason,
         string $identityId = null
     ) {
@@ -26,7 +26,7 @@ class ShareProductVoucherMail extends ImplementationMail
 
         $this->requesterMail = $requesterMail;
         $this->productName = $productName;
-        $this->qrUrl = $qrUrl;
+        $this->qrToken = $qrToken;
         $this->reason = $reason;
     }
 
@@ -39,7 +39,7 @@ class ShareProductVoucherMail extends ImplementationMail
             ->view('emails.vouchers.share_product', [
                 'requester_email' => $this->requesterMail,
                 'product_name' => $this->productName,
-                'qr_url' => $this->qrUrl,
+                'qr_token' => $this->qrToken,
                 'reason' => $this->reason
             ]);
     }
