@@ -22,7 +22,7 @@ class SmsController extends Controller
     ) {
         $result = resolve('forus.services.sms_notification')->sendSms(
             trans('sms.messages.' . $request->input('type')),
-            $request->input('phone'),
+            $request->input('phone')
         );
 
         return $result ? response(null, 200)
