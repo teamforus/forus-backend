@@ -459,7 +459,7 @@ class Voucher extends Model
      */
     public function buyProductVoucher(
         Product $product,
-        ?float $price = null,
+        float $price = null,
         $returnable = true
     ) {
         $price = !$price && ($price !== 0) ? $product->price : $price;

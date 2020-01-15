@@ -41,40 +41,67 @@ if (!function_exists('media')) {
 
 if (!function_exists('format_date')) {
     /**
-     * @param $value
+     * @param $date
      * @param string $format
-     * @return string
+     * @return string|null
      */
-    function format_date($value, string $format = 'short_date_time') {
-        return (new Carbon($value))->format(
-            config("forus.formats.$format") ?: $format
-        );
+    function format_date($date, string $format = 'short_date_time') {
+        try {
+            if (gettype($date) == 'short_date_time') {
+                $date = new Carbon($date);
+            }
+
+            return $date->formatLocalized(
+                config("forus.formats.$format") ?: $format
+            );
+        } catch (Throwable $throwable) {
+            return gettype($date) == 'string' ? $date : null;
+        }
     }
 }
 
 if (!function_exists('format_datetime_locale')) {
     /**
-     * @param $value
+     * @param $date
      * @param string $format
-     * @return string
+     * @return string|null
      */
-    function format_datetime_locale($value, string $format = 'short_date_time_locale') {
-        return (new Carbon($value))->formatLocalized(
-            config("forus.formats.$format") ?: $format
-        );
+    function format_datetime_locale($date, string $format = 'short_date_time_locale') {
+        try {
+            if (gettype($date) == 'short_date_time_locale') {
+                $date = new Carbon($date);
+            }
+
+            return $date->formatLocalized(
+                config("forus.formats.$format") ?: $format
+            );
+        } catch (Throwable $throwable) {
+            return gettype($date) == 'string' ? $date : null;
+        }
     }
 }
 
 if (!function_exists('format_date_locale')) {
     /**
-     * @param $value
+     * @param null $date
      * @param string $format
-     * @return string
+     * @return string|null
      */
-    function format_date_locale($value, string $format = 'short_date_locale') {
-        return (new Carbon($value))->formatLocalized(
-            config("forus.formats.$format") ?: $format
-        );
+    function format_date_locale(
+        $date = null,
+        string $format = 'short_date_locale'
+    ) {
+        try {
+            if (gettype($date) == 'string') {
+                $date = new Carbon($date);
+            }
+
+            return $date->formatLocalized(
+                config("forus.formats.$format") ?: $format
+            );
+        } catch (Throwable $throwable) {
+            return gettype($date) == 'string' ? $date : null;
+        }
     }
 }
 
@@ -281,8 +308,7 @@ if (!function_exists('str_terminal_color')) {
 
 if (!function_exists('cache_optional')) {
     /**
-     * Try to cache $callback response for $minutes
-     * in case of exception skip cache
+     * Try to cache $callback response for $minutes in case of exception skip cache
      *
      * @param string $key
      * @param callable $callback
@@ -300,8 +326,10 @@ if (!function_exists('cache_optional')) {
     ) {
         try {
             $reset && cache()->driver()->delete($key);
-            return cache()->driver($driver)->remember($key, $minutes, $callback);
-        } catch (\Exception $exception) {
+            return cache()->driver($driver)->remember($key, $minutes * 60, $callback);
+        } catch (\Psr\SimpleCache\CacheException $throwable) {
+            return $callback();
+        } catch (\Throwable $throwable) {
             return $callback();
         }
     }
@@ -363,14 +391,14 @@ if (!function_exists('service_record')) {
     }
 }
 
-if (!function_exists('json_encode_pretty')) {
+if (!function_exists('json_pretty')) {
     /**
      * @param $value
      * @param int $options
      * @param int $depth
      * @return false|string
      */
-    function json_encode_pretty($value, $options = 0, $depth = 512) {
+    function json_pretty($value, $options = 0, $depth = 512) {
         return json_encode($value, $options + JSON_PRETTY_PRINT, $depth);
     }
 }
@@ -382,8 +410,7 @@ if (!function_exists('log_debug')) {
      */
     function log_debug($message, array $context = []) {
         logger()->debug(
-            is_string($message) ? $message: json_encode_pretty($message),
-            $context
+            is_string($message) ? $message: json_pretty($message), $context
         );
     }
 }
@@ -465,6 +492,12 @@ if (!function_exists('http_resolve_url')) {
 }
 
 if (!function_exists('range_between_dates')) {
+    /**
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @param null $countDates
+     * @return \Illuminate\Support\Collection|Carbon[]
+     */
     function range_between_dates(
         Carbon $startDate,
         Carbon $endDate,
@@ -511,5 +544,14 @@ if (!function_exists('make_qr_code')) {
         return QrCode::format('png')->size(400)->margin(2)->generate(
             json_encode(compact('type', 'value'))
         );
+    }
+}
+
+if (!function_exists('token_generator')) {
+    /**
+     * @return \App\Services\TokenGeneratorService\TokenGenerator|mixed
+     */
+    function token_generator() {
+        return resolve('token_generator');
     }
 }

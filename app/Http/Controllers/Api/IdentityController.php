@@ -344,7 +344,7 @@ class IdentityController extends Controller
 
         if ($source == 'app-me_app') {
             return view()->make('pages.auth.deep_link', compact('redirectUrl'));
-        };
+        }
 
         return redirect($redirectUrl);
     }

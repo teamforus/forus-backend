@@ -26,7 +26,7 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function index(
+    public function viewAny(
         $identity_address,
         Organization $organization
     ) {
@@ -98,8 +98,7 @@ class FundPolicy
     /**
      * @param $identity_address
      * @param Fund $fund
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function apply(
         $identity_address,
@@ -112,14 +111,14 @@ class FundPolicy
         }
 
         if (!$fund->fund_formulas()->count() > 0) {
-            $this->deny(trans('fund.no_formula'));
+            return $this->deny(trans('fund.no_formula'));
         }
 
         // The same identity can't apply twice to the same fund
         if ($fund->vouchers()->where(
             'identity_address', $identity_address
         )->count()) {
-            $this->deny(trans('fund.already_received'));
+            return $this->deny(trans('fund.already_received'));
         }
 
         // Check criteria
@@ -138,7 +137,7 @@ class FundPolicy
         });
 
         if ($invalidCriteria->count() > 0) {
-            $this->deny(trans('fund.unmet_criteria'));
+            return $this->deny(trans('fund.unmet_criteria'));
         }
 
         return true;

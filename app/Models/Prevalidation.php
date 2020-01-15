@@ -125,7 +125,7 @@ class Prevalidation extends Model
     public static function search(
         Request $request
     ) {
-        $identity_address = $request->user();
+        $identity_address = auth_address();
 
         $q = $request->input('q', null);
         $fund_id =$request->input('fund_id', null);

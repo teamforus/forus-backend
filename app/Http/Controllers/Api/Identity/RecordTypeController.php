@@ -16,7 +16,7 @@ class RecordTypeController extends Controller
      * RecordTypeController constructor.
      */
     public function __construct() {
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     /**
@@ -28,6 +28,6 @@ class RecordTypeController extends Controller
     {
         return collect($this->recordRepo->getRecordTypes())->map(function($type) {
             return collect($type)->only('key', 'name', 'type');
-        });
+        })->toArray();
     }
 }

@@ -617,7 +617,7 @@ class RecordRepo implements IRecordRepo
         }
 
         return $record->validations()->create([
-            'uuid' => app()->make('token_generator')->generate(64),
+            'uuid' => token_generator()->generate(64),
             'identity_address' => null,
             'state' => 'pending'
         ])->only([

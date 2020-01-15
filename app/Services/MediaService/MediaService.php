@@ -135,7 +135,7 @@ class MediaService
                 'mediable_id'
             );
         })->where(
-            'created_at', '<', Carbon::now()->subMinute(60)
+            'created_at', '<', Carbon::now()->subMinutes(60)
         );
 
         if ($identity_address) {
@@ -237,7 +237,7 @@ class MediaService
      * @param string $ext
      * @param string $type
      * @param string $identity_address
-     * @return Media|bool
+     * @return Media|bool|\Illuminate\Database\Eloquent\Model
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function doUpload(
@@ -339,8 +339,7 @@ class MediaService
     }
 
     /**
-     * Get storage
-     * @return \Storage
+     * @return \Illuminate\Contracts\Filesystem\Filesystem
      */
     private function storage() {
         return resolve('filesystem')->disk($this->storageDriver);
