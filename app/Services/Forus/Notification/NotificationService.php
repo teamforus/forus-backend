@@ -631,7 +631,7 @@ class NotificationService
      * @param $identifier
      * @param string $fund_name
      * @param string $fund_product_name
-     * @param string $qr_url
+     * @param string $qr_token
      *
      * @return bool
      */
@@ -640,12 +640,12 @@ class NotificationService
         $identifier,
         string $fund_name,
         string $fund_product_name,
-        string $qr_url
+        string $qr_token
     ): bool {
         return $this->sendMail($email, new SendVoucherMail(
             $fund_name,
             $fund_product_name,
-            $qr_url,
+            $qr_token,
             $identifier
         ));
     }
@@ -657,7 +657,7 @@ class NotificationService
      * @param $identifier
      * @param string $requester_email
      * @param string $product_name
-     * @param string $qr_url
+     * @param string $qr_token
      * @param string $reason
      * @return bool
      */
@@ -666,13 +666,13 @@ class NotificationService
         $identifier,
         string $requester_email,
         string $product_name,
-        string $qr_url,
+        string $qr_token,
         string $reason
     ) {
         return $this->sendMail($email, new ShareProductVoucherMail(
             $requester_email,
             $product_name,
-            $qr_url,
+            $qr_token,
             $reason,
             $identifier
         ));
@@ -908,7 +908,7 @@ class NotificationService
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
             ));
 
-            $message = $message->onQueue("emails");
+            $message = $message->onQueue(env('EMAIL_QUEUE_NAME', 'emails'));
 
             $this->mailer->to($email)->queue($message);
 

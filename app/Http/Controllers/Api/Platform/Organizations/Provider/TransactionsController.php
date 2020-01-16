@@ -47,7 +47,8 @@ class TransactionsController extends Controller
         IndexTransactionsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('viewAny', Organization::class);
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
         return resolve('excel')->download(
             new VoucherTransactionsProviderExport($request, $organization),
