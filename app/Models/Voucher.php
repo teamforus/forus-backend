@@ -386,13 +386,9 @@ class Voucher extends Model
 
         if ($request->has('unassigned')) {
             if ($request->input('unassigned')) {
-                $query->whereNull(
-                    'identity_address'
-                );
+                $query->whereNull('identity_address');
             } else {
-                $query->whereNotNull(
-                    'identity_address'
-                );
+                $query->whereNotNull('identity_address');
             }
         }
 
