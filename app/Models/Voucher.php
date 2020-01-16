@@ -385,13 +385,15 @@ class Voucher extends Model
         });
 
         if ($request->has('unassigned')) {
-            $query->whereNull(
-                'identity_address'
-            )->whereHas(
-                'tokens', function(Builder $query) {
-                    return $query->where('need_confirmation', 0);
-                }
-            );
+            if ($request->input('unassigned')) {
+                $query->whereNull(
+                    'identity_address'
+                );
+            } else {
+                $query->whereNotNull(
+                    'identity_address'
+                );
+            }
         }
 
         switch ($request->input('type', null)) {
