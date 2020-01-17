@@ -67,19 +67,19 @@ class FundRequestRecordValueRule implements Rule
             switch ($operator) {
                 case '=': {
                     $rangeRule = 'in:' . $criterion->value;
-                }; break;
+                } break;
                 case '<': {
                     $rangeRule = 'max:' . (intval($criterion->value) - 1);
-                }; break;
+                } break;
                 case '<=': {
                     $rangeRule = 'max:' . intval($criterion->value);
-                }; break;
+                } break;
                 case '>': {
                     $rangeRule = 'min:' . (intval($criterion->value) + 1);
-                }; break;
+                } break;
                 case '>=': {
                     $rangeRule = 'min:' . intval($criterion->value);
-                }; break;
+                } break;
             }
         } else {
             $rangeRule = 'in:' . $criterion->value;

@@ -50,7 +50,7 @@ abstract class BaseRepo implements IBaseRepo
      */
     public function byId($id)
     {
-        return $this->model->whereKey($id)->first();
+        return $this->model->newQuery()->where($id)->first();
     }
 
     /**

@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+
 /**
  * App\Models\Model
  *
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model query()
@@ -61,7 +65,7 @@ class Model extends \Illuminate\Database\Eloquent\Model
     /**
      * @param array $attributes
      * @param array $options
-     * @return $this
+     * @return bool|$this
      */
     public function updateModel(array $attributes = [], array $options = [])
     {

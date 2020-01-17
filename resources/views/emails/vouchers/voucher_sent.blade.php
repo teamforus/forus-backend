@@ -12,5 +12,5 @@
     {{ mail_trans('voucher_sent.provider_scans') }}
     <br/>
     <br/>
-    <img style="display: block; margin: 0 auto;" src="{{ $qr_url }}" width="300" />
+    <img style="display: block; margin: 0 auto;" alt="" src="{{ $message->embedData(make_qr_code('voucher', $qr_token), 'qr_token.png') }}" width="300" />
 @endsection

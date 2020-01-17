@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\FundRequests\FundRequestResolved;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
@@ -272,5 +273,42 @@ class FundRequest extends Model
         return $this->updateModel([
             'employee_id' => null
         ]);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    private static function exportTransform(Builder $builder) {
+        $transKey = "export.fund_requests";
+        $recordRepo = resolve('forus.services.record');
+
+        return $builder->with([
+            'employee', 'fund'
+        ])->get()->map(function(
+            FundRequest $fundRequest
+        ) use ($transKey, $recordRepo) {
+            return [
+                trans("$transKey.bsn") => $recordRepo->bsnByAddress(
+                    $fundRequest->identity_address
+                ),
+                trans("$transKey.fund_name") => $fundRequest->fund->name,
+                trans("$transKey.status") => $fundRequest->state,
+                trans("$transKey.validator") => $fundRequest->employee ?
+                    $recordRepo->primaryEmailByAddress($fundRequest->employee->identity_address) : null,
+            ];
+        })->values();
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function exportSponsor(
+        Request $request,
+        Organization $organization
+    ) {
+        return self::exportTransform(self::search($request, $organization));
     }
 }

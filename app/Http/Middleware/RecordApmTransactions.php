@@ -47,6 +47,7 @@ class RecordApmTransactions
                 $this->getTransactionName($request)
             );
         } catch (DuplicateTransactionNameException $e) {
+            return $next($request);
         }
 
         // await the outcome
@@ -60,7 +61,7 @@ class RecordApmTransactions
         ]);
 
         $transaction->setUserContext([
-            'id' => optional($request->user())->getAuthIdentifier(),
+            'id' => auth_address(),
         ]);
 
         $transaction->setMeta([

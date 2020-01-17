@@ -3,9 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Vouchers;
 
 use App\Rules\ProductIdToVoucherRule;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreProductVoucherRequest extends FormRequest
 {
@@ -34,7 +32,9 @@ class StoreProductVoucherRequest extends FormRequest
             'product_id'    => [
                 'required',
                 'exists:products,id',
-                new ProductIdToVoucherRule(request()->input('voucher_address'))
+                new ProductIdToVoucherRule(
+                    request()->input('voucher_address')
+                )
             ],
         ];
     }

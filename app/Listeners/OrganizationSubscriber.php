@@ -2,7 +2,6 @@
 
 namespace App\Listeners;
 
-use App\Events\Employees\EmployeeCreated;
 use App\Events\Organizations\OrganizationCreated;
 use App\Events\Organizations\OrganizationUpdated;
 use App\Models\Employee;

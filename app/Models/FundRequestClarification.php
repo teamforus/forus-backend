@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Services\FileService\Traits\HasFiles;
 use Illuminate\Database\Eloquent\Model;
-use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 /**
  * App\Models\FundRequestClarification
@@ -35,7 +34,7 @@ use Staudenmeir\EloquentHasManyDeep\HasRelationships;
  */
 class FundRequestClarification extends Model
 {
-    use HasFiles, HasRelationships;
+    use HasFiles;
 
     const STATE_PENDING = 'pending';
     const STATE_ANSWERED = 'answered';
@@ -55,11 +54,5 @@ class FundRequestClarification extends Model
 
     public function fund_request_record() {
         return $this->belongsTo(FundRequestRecord::class);
-    }
-
-    public function fund_request() {
-        return $this->hasOneDeep(FundRequestRecord::class, [
-            FundRequestRecord::class,
-        ]);
     }
 }

@@ -4,8 +4,6 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
-use App\Services\Forus\Record\Models\Record;
-use App\Services\Forus\Record\Models\RecordType;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -210,7 +208,7 @@ class Voucher extends Model
             $this->identity_address,
             $fund_product_name,
             $fund_product_name,
-            $voucherToken->getQrCodeUrl()
+            $voucherToken->address
         );
     }
 
@@ -238,7 +236,7 @@ class Voucher extends Model
                 $voucherToken->voucher->product->organization->emailServiceId(),
                 $primaryEmail,
                 $product_name,
-                $voucherToken->getQrCodeUrl(),
+                $voucherToken->address,
                 $reason
             );
 
@@ -248,7 +246,7 @@ class Voucher extends Model
                     auth()->id(),
                     $primaryEmail,
                     $product_name,
-                    $voucherToken->getQrCodeUrl(),
+                    $voucherToken->address,
                     $reason
                 );
             }
@@ -386,6 +384,14 @@ class Voucher extends Model
             }
         });
 
+        if ($request->has('unassigned')) {
+            if ($request->input('unassigned')) {
+                $query->whereNull('identity_address');
+            } else {
+                $query->whereNotNull('identity_address');
+            }
+        }
+
         switch ($request->input('type', null)) {
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
@@ -427,33 +433,6 @@ class Voucher extends Model
     }
 
     /**
-     * @param Organization $organization
-     * @param $fromDate
-     * @param $toDate
-     * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Relations\HasManyThrough[]
-     */
-    public static function getUnassignedVouchers(
-        Organization $organization, $fromDate, $toDate
-    ) {
-        $vouchers = $organization->vouchers()->whereNull(
-            'identity_address'
-        )->whereHas(
-            'tokens', function(Builder $query) {
-                return $query->where('need_confirmation', 0);
-            }
-        );
-
-        if ($fromDate) {
-            $vouchers->where('vouchers.created_at', '>=', $fromDate);
-        }
-        if ($toDate) {
-            $vouchers->where('vouchers.created_at', '<=', $toDate);
-        }
-
-        return $vouchers->get();
-    }
-
-    /**
      * @param Product $product
      * @param float|null $price
      * @param bool $returnable
@@ -461,7 +440,7 @@ class Voucher extends Model
      */
     public function buyProductVoucher(
         Product $product,
-        ?float $price = null,
+        float $price = null,
         $returnable = true
     ) {
         $price = !$price && ($price !== 0) ? $product->price : $price;
@@ -512,10 +491,10 @@ class Voucher extends Model
         // $tmp_images = [];
         foreach ($vouchers as $voucher) {
             $name = $token_generator->generate(6, 2);
-            $zip->addFromString(
-                "images/$name.png",
-                $voucher->token_without_confirmation->getQrCodeFile()
-            );
+            $zip->addFromString("images/$name.png", make_qr_code(
+                'voucher',
+                $voucher->token_without_confirmation->address
+            ));
 
             fputcsv($fp, [$name]);
         }

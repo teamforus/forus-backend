@@ -34,6 +34,7 @@ use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 
@@ -128,7 +129,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 201) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error storing user %s contacts: %s',
                     self::typeCodeToString($type),
@@ -165,7 +166,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error removing user push token: %s',
                     $res->getBody()
@@ -209,7 +210,7 @@ class NotificationService
         ]);
 
         if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
+            resolve('log')->error(
                 sprintf(
                     'Error sending notification `sendPushNotification`: %s',
                     $res->getBody()
@@ -685,7 +686,7 @@ class NotificationService
      * @param $identifier
      * @param string $fund_name
      * @param string $fund_product_name
-     * @param string $qr_url
+     * @param string $qr_token
      *
      * @return bool
      */
@@ -694,12 +695,12 @@ class NotificationService
         $identifier,
         string $fund_name,
         string $fund_product_name,
-        string $qr_url
+        string $qr_token
     ): bool {
         return $this->sendMail($email, new SendVoucherMail(
             $fund_name,
             $fund_product_name,
-            $qr_url,
+            $qr_token,
             $identifier
         ));
     }
@@ -711,7 +712,7 @@ class NotificationService
      * @param $identifier
      * @param string $requester_email
      * @param string $product_name
-     * @param string $qr_url
+     * @param string $qr_token
      * @param string $reason
      * @return bool
      */
@@ -720,13 +721,13 @@ class NotificationService
         $identifier,
         string $requester_email,
         string $product_name,
-        string $qr_url,
+        string $qr_token,
         string $reason
     ) {
         return $this->sendMail($email, new ShareProductVoucherMail(
             $requester_email,
             $product_name,
-            $qr_url,
+            $qr_token,
             $reason,
             $identifier
         ));
@@ -957,9 +958,14 @@ class NotificationService
                 rtrim(Implementation::active()['url_sponsor'], '/'),
                 'email/preferences');
 
-            $this->mailer->send($mailable->to($email)->with(compact(
+            /** @var Queueable|Mailable $message */
+            $message = $mailable->with(compact(
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
-            )));
+            ));
+
+            $message = $message->onQueue(env('EMAIL_QUEUE_NAME', 'emails'));
+
+            $this->mailer->to($email)->queue($message);
 
             return $this->checkFailure(get_class($mailable));
         } catch (\Exception $exception) {

@@ -4,12 +4,12 @@ namespace App\Rules;
 
 use App\Models\Product;
 use App\Models\VoucherToken;
-use Illuminate\Contracts\Validation\Rule;
+use App\Scopes\Builders\ProductQuery;
 
-class ProductIdToVoucherRule implements Rule
+class ProductIdToVoucherRule extends BaseRule
 {
+    protected $messageTransPrefix = 'validation.product_voucher.';
     private $voucherAddress;
-    private $message;
 
     /**
      * Create a new rule instance.
@@ -26,61 +26,31 @@ class ProductIdToVoucherRule implements Rule
      * Determine if the validation rule passes.
      *
      * @param  string  $attribute
-     * @param  mixed  $value
+     * @param  mixed  $product_id
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $product_id)
     {
-        $product = Product::find($value);
+        $product = Product::find($product_id);
+        $voucherToken = VoucherToken::whereAddress($this->voucherAddress)->first();
 
-        /** @var VoucherToken $voucherToken */
-        $voucherToken = VoucherToken::query()->where([
-                'address' => $this->voucherAddress
-            ])->first() ?? abort(404);
-
-        if (!$voucherToken->voucher) {
-            $this->message = trans(
-                'validation.product_voucher.voucher_id_required'
-            );
-
-            return false;
+        // optional check for human readable output
+        if (!$voucher = $voucherToken->voucher) {
+            return $this->rejectTrans('voucher_id_required');
         }
-
-        $amountLeft = $voucherToken->voucher->amount - (
-            $voucherToken->voucher->transactions->sum('amount')) -
-            $voucherToken->voucher->product_vouchers()->sum('amount');
 
         if ($product->sold_out) {
-            $this->message = trans(
-                'validation.product_voucher.product_sold_out');
-            return false;
+            return $this->rejectTrans('product_sold_out');
         }
 
-        if ($product->price > $amountLeft) {
-            $this->message = trans(
-                'validation.product_voucher.not_enough_voucher_funds');
-            return false;
+        if ($product->price > $voucher->amount_available) {
+            return $this->rejectTrans('not_enough_voucher_funds');
         }
 
-        if ($product->getFundsWhereIsAvailable()->pluck('id')->search(
-            $voucherToken->voucher->fund_id) === FALSE) {
-            $this->message = trans(
-                'validation.product_voucher.product_not_applicable_by_voucher'
-            );
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Get the validation error message.
-     *
-     * @return string
-     */
-    public function message()
-    {
-        return $this->message;
+        // check validity
+        return ProductQuery::approvedForFundsAndActiveFilter(
+            Product::query(),
+            $voucher->fund_id
+        )->where('id', $product->id)->exists();
     }
 }

@@ -13,19 +13,19 @@ class SendVoucherMail extends ImplementationMail
 {
     private $fundName;
     private $fund_product_name;
-    private $qr_url;
+    private $qrToken;
 
     public function __construct(
         string $fund_name,
         string $fund_product_name,
-        string $qr_url,
+        string $qrToken,
         string $identifier = null
     ) {
         parent::__construct($identifier);
 
         $this->fundName = $fund_name;
         $this->fund_product_name = $fund_product_name;
-        $this->qr_url = $qr_url;
+        $this->qrToken = $qrToken;
     }
 
     public function build(): ImplementationMail
@@ -37,7 +37,7 @@ class SendVoucherMail extends ImplementationMail
             ->view('emails.vouchers.voucher_sent', [
                 'fund_name' => $this->fundName,
                 'fund_product_name' => $this->fund_product_name,
-                'qr_url' => $this->qr_url
+                'qr_token' => $this->qrToken
             ]);
     }
 }
