@@ -349,13 +349,13 @@ class Implementation extends Model
             });
 
             $implementation = Implementation::active();
-            $implementationModal = Implementation::activeModel();
+            $implementationModel = Implementation::activeModel();
 
-            $config['digid'] = $implementationModal ?
-                $implementationModal->digidEnabled() : false;
+            $config['digid'] = $implementationModel ?
+                $implementationModel->digidEnabled() : false;
 
-            $config['auto_validation'] = $implementationModal &&
-                $implementationModal->autoValidationEnabled();
+            $config['auto_validation'] = $implementationModel &&
+                $implementationModel->autoValidationEnabled();
 
             $config['fronts'] = $implementation->only([
                 'url_webshop', 'url_sponsor', 'url_provider',
@@ -370,6 +370,8 @@ class Implementation extends Model
                     $implementation['lat'] ?: config('forus.front_ends.map.lat')
                 )
             ];
+
+            $config['implementation_name'] = $implementation->get('name') ?: 'general';
         }
 
         return $config ?: [];
