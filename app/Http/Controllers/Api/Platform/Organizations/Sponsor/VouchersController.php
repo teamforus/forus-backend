@@ -239,11 +239,11 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         /** @var Collection|Voucher[] $unassigned_vouchers */
-        $unassigned_vouchers = Voucher::getUnassignedVouchers(
+        $unassigned_vouchers = Voucher::searchSponsor(
+            $request,
             $organization,
-            $request->get('from'),
-            $request->get('to')
-        );
+            Fund::find($request->get('fund_id'))
+        )->get();
 
         if ($unassigned_vouchers->count() == 0) {
             abort(404, "No unassigned vouchers to be exported.");
