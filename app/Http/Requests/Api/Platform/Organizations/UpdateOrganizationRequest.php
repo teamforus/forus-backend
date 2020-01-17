@@ -47,7 +47,7 @@ class UpdateOrganizationRequest extends FormRequest
             'kvk'                   => [
                 'required',
                 'digits:8',
-                !config('app.debug') ? $kvkUniqueRule : null,
+                !env("KVK_API_DEBUG", false) ? $kvkUniqueRule : null,
                 new KvkRule()
             ],
             'btw'                   => [new BtwRule()],
