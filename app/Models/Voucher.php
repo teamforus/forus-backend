@@ -384,6 +384,14 @@ class Voucher extends Model
             }
         });
 
+        if ($request->has('unassigned')) {
+            if ($request->input('unassigned')) {
+                $query->whereNull('identity_address');
+            } else {
+                $query->whereNotNull('identity_address');
+            }
+        }
+
         switch ($request->input('type', null)) {
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
@@ -422,33 +430,6 @@ class Voucher extends Model
         VoucherAssigned::dispatch($this);
 
         return $this;
-    }
-
-    /**
-     * @param Organization $organization
-     * @param $fromDate
-     * @param $toDate
-     * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Relations\HasManyThrough[]
-     */
-    public static function getUnassignedVouchers(
-        Organization $organization, $fromDate, $toDate
-    ) {
-        $vouchers = $organization->vouchers()->whereNull(
-            'identity_address'
-        )->whereHas(
-            'tokens', function(Builder $query) {
-                return $query->where('need_confirmation', 0);
-            }
-        );
-
-        if ($fromDate) {
-            $vouchers->where('vouchers.created_at', '>=', $fromDate);
-        }
-        if ($toDate) {
-            $vouchers->where('vouchers.created_at', '<=', $toDate);
-        }
-
-        return $vouchers->get();
     }
 
     /**
