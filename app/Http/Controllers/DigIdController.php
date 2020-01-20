@@ -45,7 +45,9 @@ class DigIdController extends Controller
         )));
 
         if ($digidSession->state != DigIdSession::STATE_PENDING_AUTH) {
-            return abort(503, 'Unable to handle the request at the moment.');
+            return abort(503, 'Unable to handle the request at the moment.', [
+                'Error-Code' => strtolower('digid_' . $digidSession->digid_error_code),
+            ]);
         }
 
         return [
