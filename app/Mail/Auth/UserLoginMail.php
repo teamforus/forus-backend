@@ -36,7 +36,7 @@ class UserLoginMail extends ImplementationMail
         return parent::build()
             ->subject(mail_trans('login_via_email.subject_title', [
                 'platform' => $this->platform,
-		'time' => date('H:i', strtotime('1 hour'))
+		        'time' => date('H:i', strtotime('1 hour'))
             ]))
             ->view('emails.login.login_via_email', [
                 'platform' => $this->platform,

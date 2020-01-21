@@ -30,6 +30,6 @@ class OrganizationBasicWithPrivateResource extends Resource
             ) : null,
             'logo' => new MediaCompactResource(
                 $organization->logo)
-        ]);
+        ])->toArray();
     }
 }
