@@ -160,8 +160,7 @@ class DigIdSession extends Model
                 'session_secret' => $this->session_secret,
             ]));
         } catch (DigIdException $exception) {
-            return $this->setError(
-                $exception->getMessage(), $exception->getDigIdCode());
+            return $this->setError($exception->getMessage(), $exception->getDigIdCode());
         }
 
         // Build redirect URL.
