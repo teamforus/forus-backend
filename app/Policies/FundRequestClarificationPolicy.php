@@ -19,20 +19,21 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
-    public function indexRequester(
+    public function viewAnyRequester(
         $identity_address,
         FundRequest $request,
         Fund $fund,
         Organization $organization = null
     ) {
-        $this->checkIntegrity($fund, $request, $organization);
+        if (!$this->checkIntegrity($fund, $request, $organization)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
 
         // only fund requester is allowed to see records
         if ($request->identity_address != $identity_address) {
-            $this->deny('fund_requests.not_requester');
+            return $this->deny('fund_requests.not_requester');
         }
 
         return true;
@@ -45,20 +46,21 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
-    public function indexValidator(
+    public function viewAnyValidator(
         $identity_address,
         FundRequest $request,
         Fund $fund,
         Organization $organization = null
     ) {
-        $this->checkIntegrity($fund, $request, $organization);
+        if (!$this->checkIntegrity($fund, $request, $organization)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
 
         // only fund validators are allowed to see records
         if (!in_array($identity_address, $fund->validatorEmployees())) {
-            $this->deny('fund_requests.not_validator');
+            return $this->deny('fund_requests.not_validator');
         }
 
         return true;
@@ -72,8 +74,7 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function viewRequester(
         $identity_address,
@@ -82,11 +83,13 @@ class FundRequestClarificationPolicy
         Fund $fund,
         Organization $organization = null
     ) {
-        $this->checkIntegrity($fund, $request, $organization, $requestClarification);
+        if (!$this->checkIntegrity($fund, $request, $organization, $requestClarification)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
 
         // only fund requester is allowed to see records
         if ($request->identity_address != $identity_address) {
-            $this->deny('fund_requests.not_requester');
+            return $this->deny('fund_requests.not_requester');
         }
 
         return true;
@@ -100,8 +103,7 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function viewValidator(
         $identity_address,
@@ -110,11 +112,13 @@ class FundRequestClarificationPolicy
         Fund $fund,
         Organization $organization = null
     ) {
-        $this->checkIntegrity($fund, $request, $organization, $requestClarification);
+        if (!$this->checkIntegrity($fund, $request, $organization, $requestClarification)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
 
         // only fund validators are allowed to see records
         if (!in_array($identity_address, $fund->validatorEmployees())) {
-            $this->deny('fund_requests.not_validator');
+            return $this->deny('fund_requests.not_validator');
         }
 
         return true;
@@ -127,8 +131,7 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function create(
         $identity_address,
@@ -136,11 +139,13 @@ class FundRequestClarificationPolicy
         Fund $fund,
         Organization $organization = null
     ) {
-        $this->checkIntegrity($fund, $request, $organization);
+        if (!$this->checkIntegrity($fund, $request, $organization)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
 
         // only fund validators are allowed to request clarifications
         if (!in_array($identity_address, $fund->validatorEmployees())) {
-            $this->deny('fund_requests.not_validator');
+            return $this->deny('fund_requests.not_validator');
         }
 
         return true;
@@ -154,8 +159,7 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function update(
         $identity_address,
@@ -164,15 +168,17 @@ class FundRequestClarificationPolicy
         Fund $fund,
         Organization $organization = null
     ) {
-        $this->checkIntegrity($fund, $request, $organization, $requestClarification);
+        if (!$this->checkIntegrity($fund, $request, $organization, $requestClarification)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
 
         if ($requestClarification->state !== FundRequestClarification::STATE_PENDING) {
-            $this->deny('fund_requests.clarification_not_pending');
+            return $this->deny('fund_requests.clarification_not_pending');
         }
 
         // only fund requester may answer to clarification requests
         if ($request->identity_address != $identity_address) {
-            $this->deny('fund_requests.not_requester');
+            return $this->deny('fund_requests.not_requester');
         }
 
         return true;
@@ -183,7 +189,7 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Organization|null $organization
      * @param FundRequestClarification|null $requestClarification
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return bool
      */
     private function checkIntegrity(
         Fund $fund,
@@ -192,16 +198,18 @@ class FundRequestClarificationPolicy
         FundRequestClarification $requestClarification = null
     ) {
         if ($organization && ($organization->id != $fund->organization_id)) {
-            $this->deny('fund_requests.invalid_endpoint');
+            return false;
         }
 
         if ($request->fund_id != $fund->id) {
-            $this->deny('fund_requests.invalid_endpoint');
+            return false;
         }
 
         if ($requestClarification && (
             $requestClarification->fund_request_record->fund_request_id != $request->id)) {
-            $this->deny('fund_requests.invalid_endpoint');
+            return false;
         }
+
+        return true;
     }
 }

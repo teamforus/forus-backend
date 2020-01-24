@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\UpdateFundRequestsRequest;
 use App\Http\Resources\FundRequestResource;
 use App\Models\Employee;
@@ -28,7 +27,7 @@ class FundRequestsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('indexValidator', [
+        $this->authorize('viewAnyValidator', [
             FundRequest::class, $fund, $organization
         ]);
 
@@ -80,8 +79,6 @@ class FundRequestsController extends Controller
 
         // resign employee if employee_id is present and is null
         if (($employeeId = $request->input('employee_id', false)) !== false) {
-            log_debug($employeeId);
-
             !$employeeId ? $fundRequest->resignEmployee() :
                 $fundRequest->assignEmployee(Employee::find($employeeId));
         }

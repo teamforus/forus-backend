@@ -11,7 +11,8 @@
 |
 */
 
-$router = app()->make('router');
+/** @var \Illuminate\Routing\Router $router */
+$router = resolve('router');
 
 /**
  * Public api routes
@@ -192,10 +193,8 @@ $router->group(['middleware' => [
     ]);
 });
 
-// TODO TEMP added throttle 20 per minutes - must be secured
 $router->group(['middleware' => [
-    'throttle:20',
-    'forus_session'
+    'throttle:3', 'forus_session'
 ]], function() use ($router) {
     $router->post(
         '/sms/send',
@@ -210,6 +209,11 @@ $router->group(['middleware' => [
     'api.auth',
     'forus_session'
 ]], function() use ($router) {
+    $router->patch(
+        'organizations/{organization}/update-business',
+        "Api\Platform\OrganizationsController@updateBusinessType"
+    );
+
     $router->resource(
         'organizations',
         "Api\Platform\OrganizationsController", [
@@ -352,6 +356,11 @@ $router->group(['middleware' => [
             ]
         ]);
 
+        $router->get(
+            'organizations/{organization}/requests/export',
+            "Api\Platform\Organizations\FundRequestsController@export"
+        );
+
         $router->resource(
             'organizations/{organization}/requests',
             "Api\Platform\Organizations\FundRequestsController", [
@@ -452,17 +461,6 @@ $router->group(['middleware' => [
         ],
         'parameters' => [
             'funds' => 'organization_fund'
-        ]
-    ]);
-
-    $router->resource(
-        'organizations/{organization}/provider/identities',
-        "Api\Platform\Organizations\Provider\ProviderIdentitiesController", [
-        'only' => [
-            'index', 'show', 'store', 'destroy', 'update'
-        ],
-        'parameters' => [
-            'identities' => 'provider_identity'
         ]
     ]);
 

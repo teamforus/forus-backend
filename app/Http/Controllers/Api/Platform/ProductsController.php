@@ -18,7 +18,7 @@ class ProductsController extends Controller
      */
     public function index(SearchProductsRequest $request)
     {
-        $this->authorize('indexPublic', Product::class);
+        $this->authorize('viewAnyPublic', Product::class);
 
         return ProductResource::collection(Product::search($request)->with(
             ProductResource::$load
@@ -32,7 +32,7 @@ class ProductsController extends Controller
      */
     public function sample(SearchProductsRequest $request)
     {
-        $this->authorize('indexPublic', Product::class);
+        $this->authorize('viewAnyPublic', Product::class);
 
         $products = Product::search($request)->has('medias')->take(6);
         $products->groupBy('organization_id')->distinct()->inRandomOrder();

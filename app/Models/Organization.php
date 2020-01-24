@@ -252,15 +252,23 @@ class Organization extends Model
     }
 
     /**
-     * @param string $role
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     * @param $role
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function employeesOfRole(string $role) {
+    public function employeesOfRoleQuery($role) {
         return $this->employees()->whereHas('roles', function(
             \Illuminate\Database\Eloquent\Builder $query
         ) use ($role) {
-            $query->where('key', $role);
-        })->get();
+            $query->whereIn('key', (array) $role);
+        });
+    }
+
+    /**
+     * @param string|array $role
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     */
+    public function employeesOfRole($role) {
+        return $this->employeesOfRoleQuery($role)->get();
     }
 
     /**
@@ -274,7 +282,7 @@ class Organization extends Model
      * Returns identity organization roles
      *
      * @param $identityAddress
-     * @return Collection
+     * @return Collection|\Illuminate\Support\Collection
      */
     public function identityRoles($identityAddress) {
         /** @var Employee $employee */
@@ -377,28 +385,38 @@ class Organization extends Model
          * Query all the organizations where identity_address has permissions
          * or is the creator
          */
-        return Organization::query()->whereIn('id', function(Builder $query) use ($identityAddress, $permissions) {
-            $query->select(['organization_id'])->from((new Employee)->getTable())->where([
-                'identity_address' => $identityAddress
-            ])->whereIn('id', function (Builder $query) use ($permissions) {
-                $query->select('employee_id')->from((new EmployeeRole)->getTable())->whereIn('role_id', function (Builder $query) use ($permissions) {
-                    $query->select(['id'])->from((new Role)->getTable())->whereIn('id', function (
-                        Builder $query
-                    )  use ($permissions) {
-                        return $query->select(['role_id'])->from((new RolePermission)->getTable())->whereIn('permission_id', function (Builder $query) use ($permissions) {
-                            $query->select('id')->from((new Permission)->getTable());
+        return Organization::query()->where(function(\Illuminate\Database\Eloquent\Builder $builder) use (
+            $identityAddress, $permissions
+        ) {
+            return $builder->whereIn('id', function(Builder $query) use (
+                $identityAddress, $permissions
+            ) {
+                $query->select(['organization_id'])->from((new Employee)->getTable())->where([
+                    'identity_address' => $identityAddress
+                ])->whereIn('id', function (Builder $query) use ($permissions) {
+                    $query->select('employee_id')->from(
+                        (new EmployeeRole)->getTable()
+                    )->whereIn('role_id', function (Builder $query) use ($permissions) {
+                        $query->select(['id'])->from((new Role)->getTable())->whereIn('id', function (
+                            Builder $query
+                        )  use ($permissions) {
+                            return $query->select(['role_id'])->from(
+                                (new RolePermission)->getTable()
+                            )->whereIn('permission_id', function (Builder $query) use ($permissions) {
+                                $query->select('id')->from((new Permission)->getTable());
 
-                            // allow any permission
-                            if ($permissions !== false) {
-                                $query->whereIn('key', $permissions);
-                            }
+                                // allow any permission
+                                if ($permissions !== false) {
+                                    $query->whereIn('key', $permissions);
+                                }
 
-                            return $query;
-                        });
-                    })->get();
+                                return $query;
+                            });
+                        })->get();
+                    });
                 });
-            });
-        })->orWhere('identity_address', $identityAddress);
+            })->orWhere('identity_address', $identityAddress);
+        });
     }
 
     /**

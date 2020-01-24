@@ -235,9 +235,12 @@ class Implementation extends Model
      * @return bool
      */
     public function digidEnabled() {
-        return $this->digid_enabled && !empty($this->digid_app_id) && !empty(
-            $this->digid_shared_secret
-            ) && !empty($this->digid_a_select_server);
+        $digidConfigured =
+            !empty($this->digid_app_id) &&
+            !empty($this->digid_shared_secret) &&
+            !empty($this->digid_a_select_server);
+
+        return $this->digid_enabled && $digidConfigured;
     }
 
     /**
@@ -305,8 +308,73 @@ class Implementation extends Model
         return http_resolve_url($this->url_validator ?? env('PANEL_VALIDATOR_URL'), $uri);
     }
 
-    public static function searchProviders(Request $request)
-    {
+    public function autoValidationEnabled() {
+        $oneActiveFund = $this->funds()->where([
+                'state' => Fund::STATE_ACTIVE
+            ])->count() == 1;
+
+        $oneActiveFundWithAutoValidation = $this->funds()->where([
+                'state' => Fund::STATE_ACTIVE,
+                'auto_requests_validation' => true
+            ])->whereNotNull('default_validator_employee_id')->count() == 1;
+
+        return $oneActiveFund && $oneActiveFundWithAutoValidation;
+    }
+
+    public static function platformConfig($value) {
+        if (!Implementation::isValidKey(Implementation::activeKey())) {
+            return abort(403, 'unknown_implementation_key');
+        }
+
+        $ver = request()->input('ver');
+
+        if (preg_match('/[^a-z_\-0-9]/i', $value)) {
+            abort(403);
+        }
+
+        if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
+            abort(403);
+        }
+
+        $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
+
+        if (is_array($config)) {
+            $config['media'] = collect(config('media.sizes'))->map(function($size) {
+                return collect($size)->only([
+                    'aspect_ratio', 'size'
+                ]);
+            });
+
+            $implementation = Implementation::active();
+            $implementationModel = Implementation::activeModel();
+
+            $config['digid'] = $implementationModel ?
+                $implementationModel->digidEnabled() : false;
+
+            $config['auto_validation'] = $implementationModel &&
+                $implementationModel->autoValidationEnabled();
+
+            $config['fronts'] = $implementation->only([
+                'url_webshop', 'url_sponsor', 'url_provider',
+                'url_validator', 'url_app'
+            ]);
+
+            $config['map'] = [
+                'lon' => doubleval(
+                    $implementation['lon'] ?: config('forus.front_ends.map.lon')
+                ),
+                'lat' => doubleval(
+                    $implementation['lat'] ?: config('forus.front_ends.map.lat')
+                )
+            ];
+
+            $config['implementation_name'] = $implementation->get('name') ?: 'general';
+        }
+
+        return $config ?: [];
+    }
+
+    public static function searchProviders(Request $request) {
         $query = Organization::query();
 
         if (Implementation::activeKey() != config('forus.clients.default')) {

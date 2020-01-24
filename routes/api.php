@@ -11,7 +11,8 @@
 |
 */
 
-$router = app()->make('router');
+/** @var \Illuminate\Support\Facades\Route $router */
+$router = resolve('router');
 
 /**
  * No authorization required

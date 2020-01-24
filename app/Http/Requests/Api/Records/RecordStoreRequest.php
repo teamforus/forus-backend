@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Records;
 
-use App\Rules\IdentityRecordsUniqueRule;
 use App\Rules\RecordCategoryIdRule;
 use App\Rules\RecordTypeKeyExistsRule;
 use Illuminate\Foundation\Http\FormRequest;

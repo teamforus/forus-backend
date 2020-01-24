@@ -29,7 +29,7 @@ class FundProviderController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexProvider', [FundProvider::class, $organization]);
+        $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
         $query = Implementation::queryFundsByState([
             Fund::STATE_ACTIVE, Fund::STATE_PAUSED
@@ -56,7 +56,7 @@ class FundProviderController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexProvider', [FundProvider::class, $organization]);
+        $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
         $state = $request->input('state', false);
         $organization_funds = $organization->organization_funds();

@@ -21,7 +21,7 @@ class EmployeeResource extends Resource
     public function toArray($request)
     {
         $employee = $this->resource;
-        $recordRepo = app()->make('forus.services.record');
+        $recordRepo = resolve('forus.services.record');
 
         return collect($employee)->only([
             'id', 'identity_address', 'organization_id'
@@ -33,6 +33,6 @@ class EmployeeResource extends Resource
             'email' => $recordRepo->primaryEmailByAddress(
                 $employee->identity_address
             ),
-        ]);
+        ])->toArray();
     }
 }

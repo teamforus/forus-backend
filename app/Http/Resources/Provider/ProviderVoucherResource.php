@@ -5,10 +5,11 @@ namespace App\Http\Resources\Provider;
 use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
-use App\Http\Resources\ProductCategoryResource;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
+use App\Scopes\Builders\ProductQuery;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -44,81 +45,45 @@ class ProviderVoucherResource extends Resource
         string $identityAddress,
         Voucher $voucher
     ) {
+        $productVouchers = null;
         $amountLeft = $voucher->amount_available;
 
         if ($voucher->type == 'regular') {
             $providersApproved = $voucher->fund->providers()->where([
                 'allow_budget' => true,
-            ])->pluck('organization_id');
+            ])->pluck('organization_id')->toArray();
         } else {
             $providersApproved = $voucher->fund->providers()->where([
                 'allow_products' => true,
             ])->orWhereHas('fund_provider_products', function(
                 Builder $builder
             ) use ($voucher) {
-                $builder->where([
-                    'product_id' => $voucher->product_id
-                ]);
-            })->pluck('organization_id');
+                $builder->where('product_id', $voucher->product_id);
+            })->pluck('organization_id')->toArray();
         }
 
+        // list organizations allowed to scan vouchers to which
+        // user have access with 'scan_vouchers' permission
         $allowedOrganizations = Organization::queryByIdentityPermissions(
             $identityAddress, 'scan_vouchers'
-        )->whereIn('id', $providersApproved)->get();
+        )->whereIn('id', $providersApproved)->select([
+            'id', 'name'
+        ])->get()->map(function($organization) {
+            return collect($organization)->merge([
+                'logo' => new MediaCompactResource($organization->logo)
+            ]);
+        });
 
-        $allowedProductCategories = $voucher->fund->product_categories;
-        $allowedProducts = Product::query()->whereIn(
-            'organization_id', $allowedOrganizations->pluck('id')
-        )->where('sold_out', '=', false)->whereIn(
-            'product_category_id', $allowedProductCategories->pluck('id')
-        )->where('price', '<=', $amountLeft)->where(
-            'expire_at', '>', date('Y-m-d')
-        )->get();
+        if ($allowedOrganizations->count() == 1) {
+            $productVouchers = $voucher->product_vouchers()->getQuery()->whereIn(
+                'product_id',
+                ProductQuery::approvedForFundsAndActiveFilter(Product::query()->whereIn(
+                    'organization_id',
+                    $allowedOrganizations->pluck('id')->toArray()
+                ), $voucher->fund_id)->pluck('id')->toArray()
+            )->whereHas('transactions', null, '=', 0)->get();
 
-        return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at', 'address'
-        ])->merge([
-            'type' => 'regular',
-            'amount' => currency_format($amountLeft),
-            'fund' => collect($voucher->fund)->only([
-                'id', 'name', 'state'
-            ])->merge([
-                'organization' => new OrganizationBasicResource(
-                    $voucher->fund->organization
-                ),
-                'logo' => new MediaCompactResource($voucher->fund->logo)
-            ]),
-            'allowed_organizations' => collect(
-                $allowedOrganizations
-            )->map(function($organization) {
-                return collect($organization)->only([
-                    'id', 'name'
-                ])->merge([
-                    'logo' => new MediaCompactResource($organization->logo)
-                ]);
-            }),
-            'allowed_product_categories' => ProductCategoryResource::collection(
-                $allowedProductCategories
-            ),
-            'allowed_products' => collect($allowedProducts)->map(function($product) {
-                /** @var Product $product */
-                return collect($product)->only([
-                    'id', 'name', 'description', 'total_amount', 'sold_amount',
-                    'product_category_id', 'organization_id', 'unlimited_stock',
-                ])->merge([
-                    'price' => currency_format($product->price),
-                    'old_price' => currency_format($product->old_price),
-                    'photo' => new MediaCompactResource($product->photo),
-                    'product_category' => new ProductCategoryResource(
-                        $product->product_category
-                    )
-                ]);
-            }),
-            'product_vouchers' => $voucher->product_vouchers ? collect(
-                $voucher->product_vouchers
-            )->filter(function($product_voucher) {
-                return !$product_voucher->used;
-            })->map(function($product_voucher) {
+            $productVouchers = $productVouchers->map(function($product_voucher) {
                 /** @var Voucher $product_voucher */
                 return collect($product_voucher)->only([
                     'identity_address', 'fund_id', 'created_at',
@@ -143,7 +108,33 @@ class ProviderVoucherResource extends Resource
                         'photo' => new MediaResource($product_voucher->product->photo),
                     ])
                 ]);
-            })->values() : null,
+            })->values();
+
+            $productVouchers = $productVouchers->count() > 0 ? $productVouchers : null;
+        }
+
+        $fundData = collect($voucher->fund)->only([
+            'id', 'name', 'state'
+        ])->merge([
+            'organization' => new OrganizationBasicResource(
+                $voucher->fund->organization
+            ),
+            'logo' => new MediaCompactResource($voucher->fund->logo)
+        ]);
+
+        return collect($voucher)->only([
+            'identity_address', 'fund_id', 'created_at', 'address'
+        ])->merge([
+            'type' => 'regular',
+            'amount' => currency_format($amountLeft),
+            'fund' => $fundData,
+            'allowed_organizations' => $allowedOrganizations,
+            // TODO: To be removed in next release
+            'allowed_product_categories' => [],
+            // TODO: To be removed in next release
+            'allowed_products' => [],
+            // TODO: To be moved to separate endpoint in next release
+            'product_vouchers' => $productVouchers,
         ])->toArray();
     }
 

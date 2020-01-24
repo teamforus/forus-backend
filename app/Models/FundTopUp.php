@@ -57,7 +57,7 @@ class FundTopUp extends Model
     public static function generateCode() {
         do {
             $code = strtoupper(
-                app()->make('token_generator')->generate(4,2)
+                token_generator()->generate(4,2)
             );
         } while(FundTopUp::query()->where('code', $code)->count() > 0);
 

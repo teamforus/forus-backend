@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Exports\FundRequestsExport;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\StoreFundRequestRequest;
-use App\Http\Requests\Api\Platform\Funds\Requests\UpdateFundRequestsRequest;
 use App\Http\Resources\FundRequestResource;
-use App\Models\Employee;
-use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
@@ -26,7 +23,7 @@ class FundRequestsController extends Controller
         IndexFundRequestsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('indexValidator', [
+        $this->authorize('viewAnyValidator', [
             FundRequest::class, $organization->funds[0], $organization
         ]);
 
@@ -34,6 +31,27 @@ class FundRequestsController extends Controller
             FundRequest::search($request, $organization)->paginate(
                 $request->input('per_page')
             )
+        );
+    }
+
+    /**
+     * @param IndexFundRequestsRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexFundRequestsRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('index', Organization::class);
+
+        return resolve('excel')->download(
+            new FundRequestsExport($request, $organization),
+            date('Y-m-d H:i:s') . '.xls'
         );
     }
 

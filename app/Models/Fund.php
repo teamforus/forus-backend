@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\HasTags;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -117,6 +118,11 @@ use Illuminate\Http\Request;
  * @property-read int|null $provider_invitations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
  * @property-read int|null $providers_approved_count
+ * @property int|null $default_validator_employee_id
+ * @property bool $auto_requests_validation
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
+ * @property-read \App\Models\Employee|null $default_validator_employee
  */
 class Fund extends Model
 {
@@ -141,7 +147,8 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'description', 'start_date',
-        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public'
+        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
+        'default_validator_employee_id', 'auto_requests_validation'
     ];
 
     protected $hidden = [
@@ -150,6 +157,7 @@ class Fund extends Model
 
     protected $casts = [
         'public' => 'boolean',
+        'auto_requests_validation' => 'boolean',
     ];
 
     /**
@@ -279,6 +287,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function default_validator_employee() {
+        return $this->belongsTo(Employee::class, 'default_validator_employee_id');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function top_up_transactions() {
@@ -377,7 +392,7 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         )->where(function(Builder $builder) {
-            $builder->orWhere('allow_products', true);
+            $builder->where('allow_products', true);
         });
     }
 
@@ -539,7 +554,7 @@ class Fund extends Model
         string $recordType,
         Organization $organization = null
     ) {
-        $recordRepo = app()->make('forus.services.record');
+        $recordRepo = resolve('forus.services.record');
 
         $trustedIdentities = $fund->validatorIdentities();
 
@@ -839,11 +854,11 @@ class Fund extends Model
             $organization = $fund->organization;
             $sponsorCount = $organization->employees->count() + 1;
 
-            $providers = FundProvider::whereActiveQueryBuilder(
-                $fund->providers()
-            )->get();
+            $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
+                FundProvider::query(), $fund->id
+            );
 
-            $providerCount = $providers->map(function ($fundProvider){
+            $providerCount = $providersQuery->get()->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */
                 return $fundProvider->organization->employees->count() + 1;
             })->sum();
