@@ -30,7 +30,7 @@ class IdentityStoreRequest extends FormRequest
         return [
             'pin_code'                  => ['required', new IdentityPinCodeRule()],
             'records'                   => ['required', 'array', new IdentityRecordsRule()],
-            'records.primary_email'     => ['required', 'email', new IdentityRecordsUniqueRule('primary_email')],
+            'records.primary_email'     => ['required', 'email:strict,dns', new IdentityRecordsUniqueRule('primary_email')],
             'records.address'           => [new IdentityRecordsAddressRule()],
             'records.*'                 => ['required'],
             'target' => [

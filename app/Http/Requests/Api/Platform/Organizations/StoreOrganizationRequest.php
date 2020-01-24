@@ -29,7 +29,7 @@ class StoreOrganizationRequest extends FormRequest
         return [
             'name'                  => 'required|between:2,200',
             'iban'                  => ['required', new IbanRule()],
-            'email'                 => 'required|email',
+            'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:6,20',
             'phone_public'          => 'boolean',
