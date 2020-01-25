@@ -90,15 +90,26 @@ class FundProviderController extends Controller
             'fund_id'
         ]));
 
-        $notificationService = resolve('forus.services.notification');
-        $notificationService->providerApplied(
-            $fundProvider->fund->organization->email,
-            $fundProvider->organization->name,
-            $fundProvider->fund->organization->name,
-            $fundProvider->fund->name,
-            config('forus.front_ends.panel-sponsor'),
-            $fundProvider->fund->organization->emailServiceId()
-        );
+        $receiverList = [$fundProvider->organization->email];
+        $fundProvider->fund->organization->employeesOfRoleQuery(
+            'admin'
+        )->get()->each(function ($admin) use (&$receiverList) {
+            $receiverList[] = resolve('forus.services.record')->primaryEmailByAddress(
+                $admin->identity_address
+            );
+        });
+
+        foreach ($receiverList as $email) {
+            $notificationService = resolve('forus.services.notification');
+            $notificationService->providerApplied(
+                $email,
+                $fundProvider->organization->name,
+                $fundProvider->fund->organization->name,
+                $fundProvider->fund->name,
+                config('forus.front_ends.panel-sponsor'),
+                $fundProvider->fund->organization->emailServiceId()
+            );
+        }
 
         return new FundProviderResource($fundProvider);
     }
