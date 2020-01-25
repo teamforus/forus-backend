@@ -36,6 +36,10 @@ class IndexFundsRequest extends FormRequest
             'organization_id' => [
                 'nullable',
                 'exists:organizations,id'
+            ],
+            'active-and-closed' => [
+                'nullable',
+                'boolean'
             ]
         ];
     }

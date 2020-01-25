@@ -25,6 +25,11 @@ class FundsController extends Controller
     {
         return FundResource::collection(Fund::search(
             $request,
+            $request->input('active-and-closed') ?
+            Implementation::queryFundsByState([
+                Fund::STATE_CLOSED,
+                Fund::STATE_ACTIVE,
+            ]) :
             Implementation::activeFundsQuery()
         )->get());
     }
@@ -37,7 +42,7 @@ class FundsController extends Controller
      */
     public function show(Fund $fund)
     {
-        if (!in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED])) {
+        if (!in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED, Fund::STATE_CLOSED])) {
             abort(404);
         }
 
