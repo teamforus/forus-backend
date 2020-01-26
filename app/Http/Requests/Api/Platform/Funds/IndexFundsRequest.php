@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Funds;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IndexFundsRequest extends FormRequest
 {
@@ -37,9 +38,11 @@ class IndexFundsRequest extends FormRequest
                 'nullable',
                 'exists:organizations,id'
             ],
-            'active-and-closed' => [
+            'state' => [
                 'nullable',
-                'boolean'
+                Rule::in([
+                    'active_and_closed'
+                ])
             ]
         ];
     }

@@ -25,7 +25,7 @@ class FundsController extends Controller
     {
         return FundResource::collection(Fund::search(
             $request,
-            $request->input('active-and-closed') ?
+            $request->input('state') == 'active_and_closed' ?
             Implementation::queryFundsByState([
                 Fund::STATE_CLOSED,
                 Fund::STATE_ACTIVE,
