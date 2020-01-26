@@ -242,11 +242,11 @@ class NotificationService
         string $sponsor_dashboard_link
     ) {
         return $this->sendMail($email, new ProviderAppliedMail(
-            $identifier,
             $provider_name,
             $sponsor_name,
             $fund_name,
-            $sponsor_dashboard_link
+            $sponsor_dashboard_link,
+            $identifier
         ));
     }
 
