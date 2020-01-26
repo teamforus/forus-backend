@@ -85,29 +85,35 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
+        $notificationService = resolve('forus.services.notification');
+
         /** @var FundProvider $fundProvider */
         $fundProvider = $organization->organization_funds()->firstOrCreate($request->only([
             'fund_id'
         ]));
 
-        $receiverList = [$fundProvider->organization->email];
-        $fundProvider->fund->organization->employeesOfRoleQuery(
-            'admin'
-        )->get()->each(function ($admin) use (&$receiverList) {
-            $receiverList[] = resolve('forus.services.record')->primaryEmailByAddress(
-                $admin->identity_address
-            );
+        $identities = $fundProvider->fund->organization->employeesOfRoleQuery([
+            'admin', 'policy_officer'
+        ])->pluck('identity_address')->push(
+            $fundProvider->fund->organization->identity_address
+        )->unique();
+
+        $identities = $identities->mapWithKeys(function ($identityAddress) {
+            return [
+                $identityAddress => resolve(
+                    'forus.services.record'
+                )->primaryEmailByAddress($identityAddress)
+            ];
         });
 
-        foreach ($receiverList as $email) {
-            $notificationService = resolve('forus.services.notification');
+        foreach ($identities as $identityAddress => $identityEmail) {
             $notificationService->providerApplied(
-                $email,
+                $identityEmail,
+                $identityAddress,
                 $fundProvider->organization->name,
                 $fundProvider->fund->organization->name,
                 $fundProvider->fund->name,
-                config('forus.front_ends.panel-sponsor'),
-                $fundProvider->fund->organization->emailServiceId()
+                config('forus.front_ends.panel-sponsor')
             );
         }
 
