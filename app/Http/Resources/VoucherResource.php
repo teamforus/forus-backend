@@ -109,7 +109,10 @@ class VoucherResource extends Resource
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'returnable'
         ])->merge([
-            'expire_at' => $voucher->expire_at,
+            'expire_at' => [
+                'date' => $voucher->expire_at->format("Y-m-d H:i:s.00000"),
+                'timeZone' => $voucher->expire_at->timezone->getName(),
+            ],
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'expired' => $voucher->expired,
             'created_at_locale' => $voucher->created_at_locale,
