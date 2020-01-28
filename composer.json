@@ -11,7 +11,7 @@
         "ext-openssl": "*",
         "ext-zip": "*",
         "ext-bcmath": "*",
-        "astrotomic/laravel-translatable": "11.6.1",
+        "astrotomic/laravel-translatable": "11.7.0",
         "barryvdh/laravel-ide-helper": "2.6.6",
         "bunq/sdk_php": "1.12.1",
         "doctrine/dbal": "2.10.1",
