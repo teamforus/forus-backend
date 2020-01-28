@@ -42,8 +42,8 @@ class LocationData
             return sprintf("%s, %s", $this->country, $this->city);
         } else if ($this->country && !$this->city) {
             return $this->country;
-        } else if ($this->country && !$this->city) {
-            return $this->country;
+        } else if ($this->city && !$this->country) {
+            return $this->city;
         } else {
             return "Location not detected.";
         }

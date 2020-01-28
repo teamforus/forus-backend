@@ -30,7 +30,11 @@ class GeoIp
      * @return LocationData
      */
     public static function getLocation(string $ip) {
-        if (!self::isDatabaseAvailable()) {
+        if ($ip == '127.0.0.1') {
+            return new LocationData($ip, "Local application");
+        }
+
+        if (self::isDatabaseAvailable()) {
             try {
                 $reader = new Reader(self::getFileSystem()->path(self::getDbPath()));
                 $record = $reader->city($ip);
