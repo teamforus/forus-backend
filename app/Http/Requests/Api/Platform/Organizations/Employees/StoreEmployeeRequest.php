@@ -30,7 +30,7 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'email'     => [
                 'required',
-                'email',
+                'email:strict,dns',
                 new NotIn([$primaryEmail]),
             ],
             'roles'     => 'present|array',
