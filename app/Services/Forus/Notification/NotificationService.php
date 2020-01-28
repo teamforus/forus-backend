@@ -8,6 +8,8 @@ use App\Mail\FundRequests\FundRequestClarificationRequestedMail;
 use App\Mail\FundRequests\FundRequestRecordDeclinedMail;
 use App\Mail\FundRequests\FundRequestResolvedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
+use App\Mail\Funds\FundClosed;
+use App\Mail\Funds\FundClosedProvider;
 use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
@@ -567,6 +569,59 @@ class NotificationService
         return $this->sendMail($email, new ForusFundCreated(
             $fund_name,
             $organization_name
+        ));
+    }
+
+    /**
+     * Notify users that fund was closed
+     *
+     * @param string $email
+     * @param string $fund_name
+     * @param string $fund_end_date
+     * @param string $fund_contact
+     * @param string $sponsor_name
+     * @param string $webshop_link
+     * @return bool|null
+     */
+    public function fundClosed(
+        string $email,
+        string $fund_name,
+        string $fund_end_date,
+        string $fund_contact,
+        string $sponsor_name,
+        string $webshop_link
+    ) {
+        return $this->sendMail($email, new FundClosed(
+            $fund_name,
+            $fund_end_date,
+            $fund_contact,
+            $sponsor_name,
+            $webshop_link
+        ));
+    }
+
+    /**
+     * Notify providers that fund was closed
+     *
+     * @param string $email
+     * @param string $fund_name
+     * @param string $fund_end_date
+     * @param string $sponsor_name
+     * @param string $dashboard_link
+     * @return bool|null
+     */
+    public function fundClosedProvider(
+        string $email,
+        string $fund_name,
+        string $fund_end_date,
+        string $sponsor_name,
+        string $dashboard_link
+    ) {
+        return $this->sendMail($email, new FundClosedProvider(
+            $fund_name,
+            $fund_end_date,
+            $sponsor_name,
+            $dashboard_link
         ));
     }
 
