@@ -36,7 +36,7 @@ class StoreOrganizationRequest extends FormRequest
             'kvk'                   => [
                 'required',
                 'digits:8',
-                'unique:organizations,kvk',
+                !env("KVK_API_DEBUG", false) ? 'unique:organizations,kvk' : null,
                 new KvkRule()
             ],
             'btw'                   => ['nullable', 'string', new BtwRule()],
