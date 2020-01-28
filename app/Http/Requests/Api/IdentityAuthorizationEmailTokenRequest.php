@@ -28,7 +28,7 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
         return [
             'primary_email' => [
                 'required',
-                'email',
+                'email:strict,dns',
                 new IdentityRecordsExistsRule('primary_email')
             ],
             'source' => [
