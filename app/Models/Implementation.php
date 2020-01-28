@@ -22,6 +22,11 @@ use Illuminate\Http\Request;
  * @property string $url_app
  * @property float|null $lon
  * @property float|null $lat
+ * @property bool $digid_enabled
+ * @property string $digid_env
+ * @property string|null $digid_app_id
+ * @property string|null $digid_shared_secret
+ * @property string|null $digid_a_select_server
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
@@ -30,6 +35,11 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnv($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidSharedSecret($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLat($value)
@@ -42,16 +52,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
- * @property string|null $digid_app_id
- * @property string|null $digid_shared_secret
- * @property string|null $digid_a_select_server
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidSharedSecret($value)
- * @property bool $digid_enabled
- * @property string $digid_env
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnv($value)
  */
 class Implementation extends Model
 {

@@ -25,7 +25,19 @@ if (!function_exists('auth_address')) {
      */
     function auth_address()
     {
-        return auth()->user() ? auth()->user()->getAuthIdentifier() : null;
+        return auth()->user() ? auth()->user()->getAddress() : null;
+    }
+}
+
+if (!function_exists('auth_proxy_id')) {
+    /**
+     * Get the available user instance.
+     *
+     * @return string|null
+     */
+    function auth_proxy_id()
+    {
+        return auth()->user() ? auth()->user()->getProxyId() : null;
     }
 }
 

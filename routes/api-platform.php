@@ -17,9 +17,9 @@ $router = resolve('router');
 /**
  * Public api routes
  */
-$router->group(['middleware' => [
-    'forus_session'
-]], function() use ($router) {
+$router->group([
+    'middleware' => []
+], function() use ($router) {
     $router->resource(
         'product-categories',
         "Api\Platform\ProductCategoryController", [
@@ -194,7 +194,7 @@ $router->group(['middleware' => [
 });
 
 $router->group(['middleware' => [
-    'throttle:3', 'forus_session'
+    'throttle:3'
 ]], function() use ($router) {
     $router->post(
         '/sms/send',
@@ -207,7 +207,6 @@ $router->group(['middleware' => [
  */
 $router->group(['middleware' => [
     'api.auth',
-    'forus_session'
 ]], function() use ($router) {
     $router->patch(
         'organizations/{organization}/update-business',

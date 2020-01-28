@@ -24,8 +24,8 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property int $organization_id
  * @property string $name
+ * @property string|null $description
  * @property string $state
- * @property string $description
  * @property bool $public
  * @property float|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
@@ -33,12 +33,15 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $default_validator_employee_id
+ * @property bool $auto_requests_validation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
  * @property-read int|null $bunq_me_tabs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
  * @property-read int|null $bunq_me_tabs_paid_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
+ * @property-read \App\Models\Employee|null $default_validator_employee
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees_validators
@@ -68,16 +71,30 @@ use Illuminate\Http\Request;
  * @property-read int|null $product_categories_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
+ * @property-read int|null $provider_invitations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations
  * @property-read int|null $provider_organizations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved
  * @property-read int|null $provider_organizations_approved_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_budget
+ * @property-read int|null $provider_organizations_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_products
+ * @property-read int|null $provider_organizations_approved_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_declined
  * @property-read int|null $provider_organizations_declined_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_pending
  * @property-read int|null $provider_organizations_pending_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers
  * @property-read int|null $providers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_allowed_products
+ * @property-read int|null $providers_allowed_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
+ * @property-read int|null $providers_approved_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
+ * @property-read int|null $providers_declined_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
  * @property-read int|null $top_up_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
@@ -91,7 +108,10 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereName($value)
@@ -103,26 +123,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_budget
- * @property-read int|null $provider_organizations_approved_budget_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_products
- * @property-read int|null $provider_organizations_approved_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_allowed_products
- * @property-read int|null $providers_allowed_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
- * @property-read int|null $providers_declined_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
- * @property-read int|null $tags_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
- * @property-read int|null $provider_invitations_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
- * @property-read int|null $providers_approved_count
- * @property int|null $default_validator_employee_id
- * @property bool $auto_requests_validation
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
- * @property-read \App\Models\Employee|null $default_validator_employee
  */
 class Fund extends Model
 {

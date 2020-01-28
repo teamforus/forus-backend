@@ -189,13 +189,13 @@ class RouteServiceProvider extends ServiceProvider
         Route::prefix('api/v1')->namespace(
             $this->namespace
         )->middleware([
-             'api', 'implementation_key', 'client_key', 'forus_session'
+             'api', 'implementation_key', 'client_key',
          ])->group(base_path('routes/api.php'));
 
         Route::prefix('api/v1/platform')->namespace(
             $this->namespace
         )->middleware([
-            'api', 'implementation_key', 'client_key'
+            'api', 'implementation_key', 'client_key',
         ])->group(base_path('routes/api-platform.php'));
     }
 }

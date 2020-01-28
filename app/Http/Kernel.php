@@ -5,7 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\ApiAuthMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
 use App\Http\Middleware\EncryptCookies;
-use App\Http\Middleware\ForusSessionMiddleware;
+use App\Services\Forus\Session\Middleware\ForusSessionMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
 use App\Http\Middleware\ParseApiDependencyMiddleware;
 use App\Http\Middleware\RecordApmTransactions;
@@ -56,7 +56,8 @@ class Kernel extends HttpKernel
         'api' => [
             // 'throttle:120D,1',
             'bindings',
-            'locale'
+            LocaleMiddleware::class,
+            ForusSessionMiddleware::class,
         ],
     ];
 
@@ -75,9 +76,7 @@ class Kernel extends HttpKernel
         'guest' => RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'api.auth' => ApiAuthMiddleware::class,
-        'locale' => LocaleMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,
-        'forus_session' => ForusSessionMiddleware::class,
     ];
 }

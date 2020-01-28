@@ -15,7 +15,11 @@ class CreateSessionsTable extends Migration
     {
         Schema::create('sessions', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('hash', 200)->unique();
+            $table->string('uid', 200)->unique();
+            $table->string('identity_address', 200)->nullable();
+            $table->integer('identity_proxy_id')->unsigned()->nullable();
+            $table->timestamp('last_activity_at');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
