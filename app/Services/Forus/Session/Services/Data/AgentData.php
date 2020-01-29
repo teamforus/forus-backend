@@ -27,7 +27,7 @@ class AgentData extends Parser
      */
     private function a($s)
     {
-        return (preg_match("/^[aeiou]/i", $s) ? 'an ' : 'a ') . $s;
+        return (preg_match("/^[aeiou]/i", $s) ? 'een ' : 'een ') . $s;
     }
 
     /**
@@ -36,14 +36,14 @@ class AgentData extends Parser
     public function toString()
     {
         try {
-            $prefix = $this->camouflage ? 'an unknown browser that imitates ' : '';
+            $prefix = $this->camouflage ? 'een onbekende imititatie browser van ' : '';
             $browser = $this->browser->toString();
             $os = $this->os->toString();
             $engine = $this->engine->toString();
             $device = $this->device->toString();
 
             if (empty($device) && empty($os) && $this->device->type == 'television') {
-                $device = 'television';
+                $device = 'televisie';
             }
 
             if (empty($device) && $this->device->type == 'emulator') {
@@ -51,19 +51,19 @@ class AgentData extends Parser
             }
 
             if (!empty($browser) && !empty($os) && !empty($device)) {
-                return $prefix . $browser . ' on ' . $this->a($device) . ' running ' . $os;
+                return $prefix . $browser . ' op ' . $this->a($device) . ' heeft besturingssysteem:' . $os;
             }
 
             if (!empty($browser) && empty($os) && !empty($device)) {
-                return $prefix . $browser . ' on ' . $this->a($device);
+                return $prefix . $browser . ' op ' . $this->a($device);
             }
 
             if (!empty($browser) && !empty($os) && empty($device)) {
-                return $prefix . $browser . ' on ' . $os;
+                return $prefix . $browser . ' op ' . $os;
             }
 
             if (empty($browser) && !empty($os) && !empty($device)) {
-                return $prefix . $this->a($device) . ' running ' . $os;
+                return $prefix . $this->a($device) . ' heeft besturingssysteem: ' . $os;
             }
 
             if (!empty($browser) && empty($os) && empty($device)) {
@@ -75,7 +75,7 @@ class AgentData extends Parser
             }
 
             if ($this->device->type == 'desktop' && !empty($os) && !empty($engine) && empty($device)) {
-                return 'an unknown browser based on ' . $engine . ' running on ' . $os;
+                return 'een onbekende browser gebasseerd op ' . $engine . ' heeft besturingssysteem: ' . $os;
             }
 
             if ($this->browser->stock && !empty($os) && empty($device)) {
@@ -83,14 +83,14 @@ class AgentData extends Parser
             }
 
             if ($this->browser->stock && !empty($engine) && empty($device)) {
-                return 'an unknown browser based on ' . $engine;
+                return 'een onbekende browser gebasseerd op ' . $engine;
             }
 
             if ($this->device->type == 'bot') {
-                return 'an unknown bot';
+                return 'onbekende bot';
             }
 
-            return 'an unknown client';
+            return 'Client onbekend';
         } catch (\Exception $exception) {
             return parent::toString();
         }
