@@ -45,7 +45,7 @@ class LocationData
         } else if ($this->city && !$this->country) {
             return $this->city;
         } else {
-            return "Location not detected.";
+            return "Locatie niet gedetecteerd";
         }
     }
 
