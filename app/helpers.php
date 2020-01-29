@@ -579,3 +579,20 @@ if (!function_exists('token_generator')) {
         return resolve('token_generator');
     }
 }
+
+
+if (!function_exists('trans_fb')) {
+    /**
+     * Translate the given message with a fallback string if none exists.
+     *
+     * @param string $id
+     * @param string $fallback
+     * @param array $parameters
+     * @param string $locale
+     * @return \Symfony\Component\Translation\TranslatorInterface|string
+     */
+    function trans_fb($id, $fallback, $parameters = [], $locale = null)
+    {
+        return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
+    }
+}

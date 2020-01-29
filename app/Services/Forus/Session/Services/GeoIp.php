@@ -4,6 +4,8 @@
 namespace App\Services\Forus\Session\Services;
 use App\Services\Forus\Session\Services\Data\LocationData;
 use GeoIp2\Database\Reader;
+use GeoIp2\Record\City;
+use GeoIp2\Record\Country;
 
 /**
  * Class GeoIp
@@ -25,6 +27,14 @@ class GeoIp
         return resolve('filesystem.disk');
     }
 
+    private static function countryToString(Country $country) {
+        return trans_fb('geo_ip/countries.' . $country->isoCode, $country->name);
+    }
+
+    private static function cityToString(City $city) {
+        return trans_fb('geo_ip/cities.' . $city->geonameId, $city->name);
+    }
+
     /**
      * @param string $ip
      * @return LocationData
@@ -39,7 +49,11 @@ class GeoIp
                 $reader = new Reader(self::getFileSystem()->path(self::getDbPath()));
                 $record = $reader->city($ip);
 
-                return new LocationData($ip, $record->country->name, $record->city->name);
+                return new LocationData(
+                    $ip,
+                    self::countryToString($record->country),
+                    self::cityToString($record->city)
+                );
             } catch (\Exception $exception) {}
         }
 
