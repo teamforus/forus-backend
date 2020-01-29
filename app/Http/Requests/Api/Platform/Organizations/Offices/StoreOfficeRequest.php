@@ -30,7 +30,7 @@ class StoreOfficeRequest extends FormRequest
             'schedule'      => '',
             'schedule.*'    => ['required', new ScheduleRule()],
             'phone'         => '',
-            'email'         => 'nullable|email',
+            'email'         => 'nullable|email:strict,dns',
         ];
     }
 }

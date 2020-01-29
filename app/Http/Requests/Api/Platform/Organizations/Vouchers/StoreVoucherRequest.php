@@ -41,7 +41,7 @@ class StoreVoucherRequest extends FormRequest
 
         return [
             'fund_id'   => 'required|exists:funds,id',
-            'email'     => 'nullable|email',
+            'email'     => 'nullable|email:strict,dns',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
                 'required_without_all:product_id', 'numeric',

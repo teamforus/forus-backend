@@ -85,20 +85,37 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
+        $notificationService = resolve('forus.services.notification');
+
         /** @var FundProvider $fundProvider */
         $fundProvider = $organization->organization_funds()->firstOrCreate($request->only([
             'fund_id'
         ]));
 
-        $notificationService = resolve('forus.services.notification');
-        $notificationService->providerApplied(
-            $fundProvider->fund->organization->email,
-            $fundProvider->organization->name,
-            $fundProvider->fund->organization->name,
-            $fundProvider->fund->name,
-            config('forus.front_ends.panel-sponsor'),
-            $fundProvider->fund->organization->emailServiceId()
-        );
+        $identities = $fundProvider->fund->organization->employeesOfRoleQuery([
+            'admin', 'policy_officer'
+        ])->pluck('identity_address')->push(
+            $fundProvider->fund->organization->identity_address
+        )->unique();
+
+        $identities = $identities->mapWithKeys(function ($identityAddress) {
+            return [
+                $identityAddress => resolve(
+                    'forus.services.record'
+                )->primaryEmailByAddress($identityAddress)
+            ];
+        });
+
+        foreach ($identities as $identityAddress => $identityEmail) {
+            $notificationService->providerApplied(
+                $identityEmail,
+                $identityAddress,
+                $fundProvider->organization->name,
+                $fundProvider->fund->organization->name,
+                $fundProvider->fund->name,
+                config('forus.front_ends.panel-sponsor')
+            );
+        }
 
         return new FundProviderResource($fundProvider);
     }
