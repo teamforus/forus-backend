@@ -40,7 +40,11 @@ class UpdateProductRequest extends FormRequest
                 'numeric',
                 'min:' . $price
             ],
-            'total_amount'          => 'required|numeric|min:' . $minAmount,
+            'total_amount'          => [
+                'required',
+                'numeric',
+                !$product->unlimited_stock ? 'min:' . $minAmount : null,
+            ],
             'expire_at'             => 'required|date|after:today|after_or_equal:' . $currentExpire,
             'product_category_id'   => 'required|exists:product_categories,id',
         ];
