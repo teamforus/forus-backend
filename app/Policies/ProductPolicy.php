@@ -56,6 +56,8 @@ class ProductPolicy
         return $organization->identityCan(
             $identity_address,
             'manage_products'
+        ) && $organization->products->count() < config(
+            'forus.features.dashboard.organizations.products.maxProductCount'
         );
     }
 
