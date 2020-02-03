@@ -789,7 +789,7 @@ class Fund extends Model
 
                 $emails = $identities->map(function($identity_address) use ($recordService) {
                     return $recordService->primaryEmailByAddress($identity_address);
-                });
+                })->unique();
 
                 foreach ($emails as $email) {
                     $mailService->fundClosed(
