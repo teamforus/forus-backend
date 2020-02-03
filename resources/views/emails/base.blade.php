@@ -37,10 +37,10 @@
                             </tr>
                             <tr>
                                 <td align="center" style="border-collapse: collapse;">
-                                    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 166px!important; text-align: center; margin: 0px auto;">
+                                    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; text-align: center; margin: 0px auto;">
                                         <tr>
-                                            <td align="center" style="border-collapse: collapse; background: #315efd; border-radius: 3px;">
-                                                <a href="@yield('link')" target="_blank" style="display: block; width: 100%; text-align: center; color: #fff; font-size: 14px; font-weight: bold; letter-spacing: 2px; line-height: 46px; text-transform: uppercase; text-decoration: none;">@yield('button_text')</a>
+                                            <td align="center" style="border-collapse: collapse; padding-bottom: 25px;">
+                                                <a href="@yield('link')" target="_blank" style="border-radius: 3px; background: #315efd; padding: 0 15px; display: block; text-align: center; color: #fff; font-size: 14px; font-weight: bold; letter-spacing: 2px; line-height: 46px; text-transform: uppercase; text-decoration: none;">@yield('button_text')</a>
                                             </td>
                                         </tr>
                                     </table>

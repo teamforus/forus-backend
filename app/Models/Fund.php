@@ -766,7 +766,41 @@ class Fund extends Model
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
+
                 $fund->changeState(self::STATE_CLOSED);
+
+                /** @var NotificationService $mailService */
+                $mailService = resolve('forus.services.notification');
+
+                foreach ($fund->provider_organizations_approved as $organization) {
+                    $mailService->fundClosedProvider(
+                        $organization->email,
+                        $fund->name,
+                        $fund->end_date,
+                        $organization->name,
+                        $fund->fund_config->implementation->url_provider ?? env('PANEL_PROVIDER_URL')
+                    );
+                }
+
+                $identities = $fund->vouchers->filter(function(Voucher $voucher) {
+                    return $voucher->identity_address;
+                })->pluck('identity_address');
+                $recordService = resolve('forus.services.record');
+
+                $emails = $identities->map(function($identity_address) use ($recordService) {
+                    return $recordService->primaryEmailByAddress($identity_address);
+                });
+
+                foreach ($emails as $email) {
+                    $mailService->fundClosed(
+                        $email,
+                        $fund->name,
+                        $fund->end_date,
+                        $fund->organization->email,
+                        $fund->organization->name,
+                        $fund->fund_config->implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL')
+                    );
+                }
             }
         }
     }

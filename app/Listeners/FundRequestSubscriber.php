@@ -45,14 +45,14 @@ class FundRequestSubscriber
             !empty($recordRepo->bsnByAddress($fundRequest->identity_address))
         ) {
             $fundRequest->approve();
+        } else {
+            $this->notificationService->newFundRequestCreated(
+                $this->recordService->primaryEmailByAddress($identity_address),
+                $fundRequest->identity_address,
+                $fund->name,
+                $fund->urlWebshop()
+            );
         }
-
-        $this->notificationService->newFundRequestCreated(
-            $this->recordService->primaryEmailByAddress($identity_address),
-            $fundRequest->identity_address,
-            $fund->name,
-            $fund->urlWebshop()
-        );
     }
 
     public function onFundRequestResolved(FundRequestResolved $fundCreated) {

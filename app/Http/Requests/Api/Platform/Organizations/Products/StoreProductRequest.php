@@ -33,7 +33,7 @@ class StoreProductRequest extends FormRequest
             'unlimited_stock'       => 'boolean',
             'old_price'             => 'nullable|numeric|min:' . $price,
             'total_amount'          => [
-                $unlimited_stock ? '' : 'required',
+                $unlimited_stock ? null : 'required',
                 'numeric',
                 'min:1'
             ],

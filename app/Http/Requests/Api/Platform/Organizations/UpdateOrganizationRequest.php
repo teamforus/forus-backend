@@ -33,19 +33,21 @@ class UpdateOrganizationRequest extends FormRequest
      */
     public function rules()
     {
+        $kvkUniqueRule = $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
+            $this->organization->id
+        ): Rule::unique('organizations', 'kvk');
+
         return [
             'name'                  => 'required|between:2,200',
             'iban'                  => ['required', new IbanRule()],
-            'email'                 => 'required|email',
+            'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:6,20',
             'phone_public'          => 'boolean',
             'kvk'                   => [
                 'required',
                 'digits:8',
-                $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
-                    $this->organization->id
-                ): Rule::unique('organizations', 'kvk'),
+                !env("KVK_API_DEBUG", false) ? $kvkUniqueRule : null,
                 new KvkRule()
             ],
             'btw'                   => [new BtwRule()],

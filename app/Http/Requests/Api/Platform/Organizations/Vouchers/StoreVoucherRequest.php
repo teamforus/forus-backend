@@ -41,7 +41,7 @@ class StoreVoucherRequest extends FormRequest
 
         return [
             'fund_id'   => 'required|exists:funds,id',
-            'email'     => 'nullable|email',
+            'email'     => 'nullable|email:strict,dns',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
                 'required_without_all:product_id', 'numeric',
@@ -61,6 +61,17 @@ class StoreVoucherRequest extends FormRequest
                     return $builder->whereIn('id', $validProducts);
                 }),
             ],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages() {
+        return [
+            'amount.between' => 'Er staat niet genoeg budget op het fonds. '.
+                'Het maximale tegoed van een voucher is €:max. '.
+                'Vul het fonds aan om deze voucher aan te maken.'
         ];
     }
 }
