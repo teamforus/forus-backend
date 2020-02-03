@@ -54,7 +54,8 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('prevalidation_uid', function ($value) {
             return Prevalidation::query()->where([
-                    'uid' => $value
+                    'uid' => $value,
+                    'state' => Prevalidation::STATE_PENDING
                 ])->first() ?? null;
         });
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform;
+namespace App\Http\Requests\Api\Platform\Prevalidations;
 
 use App\Models\Organization;
 use App\Rules\PrevalidationDataRule;
