@@ -15,10 +15,15 @@ class FundProviderResource extends Resource
     public static $load = [
         'fund.logo.sizes',
         'fund.providers',
+        'fund.organization',
+        'fund.employees',
+        'fund.organization.validators',
         'fund.top_up_transactions',
         'fund.provider_organizations_approved.employees',
+        'organization.products',
         'organization.logo.sizes',
         'organization.business_type.translations',
+        'fund_provider_products'
     ];
 
     /**
@@ -35,9 +40,9 @@ class FundProviderResource extends Resource
             'id', 'organization_id', 'fund_id', 'dismissed',
             'allow_products', 'allow_some_products', 'allow_budget'
         ])->merge([
-            'products' => $fundProvider->fund_provider_products()
+            'products' => $fundProvider->fund_provider_products
                 ->pluck('product_id'),
-            'products_count_all'    => $fundProvider->organization->products()->count(),
+            'products_count_all'    => $fundProvider->organization->products->count(),
             'fund'                  => new FundResource($fundProvider->fund),
             'organization'          => new OrganizationWithPrivateResource(
                 $fundProvider->organization
