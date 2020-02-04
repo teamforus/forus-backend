@@ -63,4 +63,15 @@ class StoreVoucherRequest extends FormRequest
             ],
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages() {
+        return [
+            'amount.between' => 'Er staat niet genoeg budget op het fonds. '.
+                'Het maximale tegoed van een voucher is €:max. '.
+                'Vul het fonds aan om deze voucher aan te maken.'
+        ];
+    }
 }
