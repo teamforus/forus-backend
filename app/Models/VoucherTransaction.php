@@ -184,7 +184,7 @@ class VoucherTransaction extends Model
         }
 
         if ($request->has('to') && $to = $request->input('to')) {
-            $to = (Carbon::createFromFormat('Y-m-d H:i:s', $to));
+            $to = (Carbon::createFromFormat('Y-m-d', $to));
 
             $query->where(
                 'created_at',
