@@ -401,6 +401,10 @@ class Voucher extends Model
             $query->where('note', 'LIKE', "%{$q}%");
         }
 
+        if ($request->has('sort_by') && $sortBy = $request->input('sort_by')) {
+            $query->orderBy($sortBy, $request->input('sort_order') ?: 'ASC');
+        }
+
         return $query;
     }
 
