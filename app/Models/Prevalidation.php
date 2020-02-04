@@ -25,6 +25,8 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $prevalidation_records
  * @property-read int|null $prevalidation_records_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
+ * @property-read int|null $records_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation query()
@@ -38,8 +40,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
- * @property-read int|null $records_count
  */
 class Prevalidation extends Model
 {

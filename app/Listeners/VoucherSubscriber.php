@@ -70,7 +70,7 @@ class VoucherSubscriber
 
         if ($product = $voucher->product) {
             $imp = Implementation::query()->where([
-                'key' => Implementation::activeKey('general')
+                'key' => Implementation::activeKey()
             ])->first();
 
             $transData = [

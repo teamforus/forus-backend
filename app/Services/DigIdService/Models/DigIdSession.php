@@ -15,12 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $state
  * @property int|null $implementation_id
- * @property string $client_type
- * @property string $identity_address
+ * @property string|null $client_type
+ * @property string|null $identity_address
  * @property string $session_uid
  * @property string $session_secret
- * @property string $session_request
  * @property string $session_final_url
+ * @property string $session_request
  * @property string|null $digid_rid
  * @property string|null $digid_uid
  * @property string|null $digid_app_url
@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $digid_response_aselect_credentials
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Implementation|null $implementation
  * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession newModelQuery()
@@ -57,9 +57,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionRedirectType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionRequest($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionFinalUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionRequest($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionSecret($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereSessionUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereState($value)
