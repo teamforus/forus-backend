@@ -25,8 +25,7 @@ class DigIdRepo implements IDigIdRepo
     const DIGID_API_NOT_RESPONDING          = 'API_0000';
 
     const URL_API_SANDBOX = "https://was-preprod1.digid.nl/was/server";
-    // TODO: set real production api
-    const URL_API_PRODUCTION = "https://was-preprod1.digid.nl/was/server";
+    const URL_API_PRODUCTION = "https://was.digid.nl/was/server";
 
     const ENV_SANDBOX = "sandbox";
     const ENV_PRODUCTION = "production";
