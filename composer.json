@@ -6,11 +6,11 @@
     "type": "project",
     "require": {
         "php": ">=7.2.0",
+        "ext-bcmath": "*",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-openssl": "*",
         "ext-zip": "*",
-        "ext-bcmath": "*",
         "astrotomic/laravel-translatable": "11.7.0",
         "barryvdh/laravel-ide-helper": "2.6.6",
         "bunq/sdk_php": "1.12.1",

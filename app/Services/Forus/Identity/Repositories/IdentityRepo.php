@@ -170,13 +170,23 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     /**
      * Destroy proxy identity by id
-     * @param mixed $proxyIdentityId
+     *
+     * @param $proxyIdentityId
+     * @param bool $terminatedByIdentity
      * @return mixed|void
      * @throws \Exception
      */
-    public function destroyProxyIdentity($proxyIdentityId)
-    {
-        IdentityProxy::find($proxyIdentityId)->delete();
+    public function destroyProxyIdentity(
+        $proxyIdentityId,
+        $terminatedByIdentity = false
+    ) {
+        if ($identityProxy = IdentityProxy::find($proxyIdentityId)) {
+            $identityProxy->update([
+                'state' => $terminatedByIdentity ? 'terminated' : 'destroyed',
+            ]);
+
+            $identityProxy->delete();
+        }
     }
 
     /**

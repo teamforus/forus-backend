@@ -24,20 +24,25 @@ class ServiceIdentityProvider implements UserProvider
      */
     public function retrieveByCredentials(array $credentials)
     {
-        if (empty($credentials) || (count($credentials) !== 1) ||
-            !array_key_exists('bearer_token', $credentials)) {
+        if (empty($credentials) ||
+            !array_key_exists('bearer_token', $credentials) ||
+            empty($credentials['bearer_token']) ||
+            $credentials['bearer_token'] == 'null'
+        ) {
             return null;
         }
 
         $bearerToken = $credentials['bearer_token'];
         $identityService = resolve('forus.services.identity');
 
-        $proxyIdentityId = $identityService->proxyIdByAccessToken($bearerToken);
+        if (!$proxyIdentityId = $identityService->proxyIdByAccessToken($bearerToken)) {
+            return null;
+        }
+
         $proxyIdentityState = $identityService->proxyStateById($proxyIdentityId);
         $identityAddress = $identityService->identityAddressByProxyId($proxyIdentityId);
 
         return new Identity($identityAddress, $proxyIdentityId, $proxyIdentityState);
-        // TODO: Implement retrieveByCredentials() method.
     }
 
     public function retrieveById($identifier)

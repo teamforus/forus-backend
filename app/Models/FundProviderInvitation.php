@@ -20,7 +20,7 @@ use Carbon\Carbon;
  * @property-read \App\Models\Fund $from_fund
  * @property-read \App\Models\Fund $fund
  * @property-read string|null $created_at_locale
- * @property-read Carbon $expire_at
+ * @property-read \Carbon\Carbon $expire_at
  * @property-read bool $expired
  * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization $organization

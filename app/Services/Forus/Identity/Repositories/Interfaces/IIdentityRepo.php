@@ -69,11 +69,15 @@ interface IIdentityRepo {
 
     /**
      * Destroy proxy identity by id
-     * @param mixed $proxyIdentityId
-     * @return mixed|void
-     * @throws \Exception
+     *
+     * @param $proxyIdentityId
+     * @param bool $terminatedByIdentity
+     * @return mixed
      */
-    public function destroyProxyIdentity($proxyIdentityId);
+    public function destroyProxyIdentity(
+        $proxyIdentityId,
+        $terminatedByIdentity = false
+    );
 
     /**
      * @param $proxyIdentityId

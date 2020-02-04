@@ -14,7 +14,12 @@
 /** @var \Illuminate\Routing\Router $router */
 $router = resolve('router');
 
-$router->group([], function() use ($router) {
+/**
+ * Public api routes
+ */
+$router->group([
+    'middleware' => []
+], function() use ($router) {
     $router->resource(
         'product-categories',
         "Api\Platform\ProductCategoryController", [
@@ -109,9 +114,88 @@ $router->group([], function() use ($router) {
         'config/{platform_config}',
         'Api\Platform\ConfigController@getConfig'
     );
+
+    $router->resource(
+        'providers',
+        "Api\Platform\ProvidersController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'providers' => 'organization'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.bunq-transactions',
+        "Api\Platform\Organizations\Funds\BunqMeTabsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'bunq-transactions' => 'bunq_me_tab_paid'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.transactions',
+        "Api\Platform\Organizations\Funds\TransactionsController", [
+        'only' => [
+            'index', 'show',
+        ],
+        'parameters' => [
+            'transactions' => 'transaction_address',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.providers',
+        "Api\Platform\Organizations\Funds\FundProviderController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'providers' => 'organization_fund'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds',
+        "Api\Platform\Organizations\FundsController", [
+        'only' => [
+            'index', 'show'
+        ]
+    ]);
+
+    $router->get(
+        'funds/{configured_fund}/ideal/issuers',
+        "Api\Platform\FundsController@idealIssuers"
+    );
+
+    $router->post(
+        'funds/{fund}/ideal/requests',
+        "Api\Platform\FundsController@idealMakeRequest"
+    );
+
+    $router->post('/digid', 'DigIdController@start');
+    $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
+    $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
+
+    $router->resource(
+        'provider-invitations',
+        "Api\Platform\FundProviderInvitationsController", [
+        'only' => [
+            'show', 'update'
+        ],
+        'parameters' => [
+            'provider-invitations' => 'fund_provider_invitation_token'
+        ]
+    ]);
 });
 
-$router->group(['middleware' => ['throttle:3']], function() use ($router) {
+$router->group(['middleware' => [
+    'throttle:3'
+]], function() use ($router) {
     $router->post(
         '/sms/send',
         'Api\Platform\SmsController@send'
@@ -119,76 +203,10 @@ $router->group(['middleware' => ['throttle:3']], function() use ($router) {
 });
 
 /**
- * Public api routes
- */
-
-$router->resource(
-    'providers',
-    "Api\Platform\ProvidersController", [
-    'only' => [
-        'index', 'show'
-    ],
-    'parameters' => [
-        'providers' => 'organization'
-    ]
-]);
-
-$router->resource(
-    'organizations.funds.bunq-transactions',
-    "Api\Platform\Organizations\Funds\BunqMeTabsController", [
-    'only' => [
-        'index', 'show'
-    ],
-    'parameters' => [
-        'bunq-transactions' => 'bunq_me_tab_paid'
-    ]
-]);
-
-$router->resource(
-    'organizations.funds.transactions',
-    "Api\Platform\Organizations\Funds\TransactionsController", [
-    'only' => [
-        'index', 'show',
-    ],
-    'parameters' => [
-        'transactions' => 'transaction_address',
-    ]
-]);
-
-$router->resource(
-    'organizations.funds.providers',
-    "Api\Platform\Organizations\Funds\FundProviderController", [
-    'only' => [
-        'index', 'show'
-    ],
-    'parameters' => [
-        'providers' => 'organization_fund'
-    ]
-]);
-
-$router->resource(
-    'organizations.funds',
-    "Api\Platform\Organizations\FundsController", [
-    'only' => [
-        'index', 'show'
-    ]
-]);
-
-$router->get(
-    'funds/{configured_fund}/ideal/issuers',
-    "Api\Platform\FundsController@idealIssuers"
-);
-
-$router->post(
-    'funds/{fund}/ideal/requests',
-    "Api\Platform\FundsController@idealMakeRequest"
-);
-
-/**
  * Authorization required
  */
 $router->group(['middleware' => [
-    'api.auth'
+    'api.auth',
 ]], function() use ($router) {
     $router->patch(
         'organizations/{organization}/update-business',
@@ -590,19 +608,3 @@ $router->group(['middleware' => [
     $router->get('notifications', 'Api\Platform\NotificationsController@index');
     $router->patch('notifications', 'Api\Platform\NotificationsController@update');
 });
-
-
-$router->post('/digid', 'DigIdController@start');
-$router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
-$router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
-
-$router->resource(
-    'provider-invitations',
-    "Api\Platform\FundProviderInvitationsController", [
-    'only' => [
-        'show', 'update'
-    ],
-    'parameters' => [
-        'provider-invitations' => 'fund_provider_invitation_token'
-    ]
-]);

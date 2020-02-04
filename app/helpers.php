@@ -25,7 +25,19 @@ if (!function_exists('auth_address')) {
      */
     function auth_address()
     {
-        return auth()->user() ? auth()->user()->getAuthIdentifier() : null;
+        return auth()->user() ? auth()->user()->getAddress() : null;
+    }
+}
+
+if (!function_exists('auth_proxy_id')) {
+    /**
+     * Get the available user instance.
+     *
+     * @return string|null
+     */
+    function auth_proxy_id()
+    {
+        return auth()->user() ? auth()->user()->getProxyId() : null;
     }
 }
 
@@ -192,19 +204,31 @@ if (!function_exists('authorize')) {
 
 if (!function_exists('implementation_key')) {
     /**
+     * @param null $default
      * @return array|string
      */
-    function implementation_key() {
-        return request()->header('Client-Key', null);
+    function implementation_key($default = null) {
+        return request()->header('Client-Key', $default);
     }
 }
 
 if (!function_exists('client_type')) {
     /**
+     * @param null $default
      * @return array|string
      */
-    function client_type() {
-        return request()->header('Client-Type', null);
+    function client_type($default = null) {
+        return request()->header('Client-Type', $default);
+    }
+}
+
+if (!function_exists('client_version')) {
+    /**
+     * @param null $default
+     * @return array|string
+     */
+    function client_version($default = null) {
+        return request()->header('Client-Version', $default);
     }
 }
 
@@ -553,5 +577,22 @@ if (!function_exists('token_generator')) {
      */
     function token_generator() {
         return resolve('token_generator');
+    }
+}
+
+
+if (!function_exists('trans_fb')) {
+    /**
+     * Translate the given message with a fallback string if none exists.
+     *
+     * @param string $id
+     * @param string $fallback
+     * @param array $parameters
+     * @param string $locale
+     * @return \Symfony\Component\Translation\TranslatorInterface|string
+     */
+    function trans_fb($id, $fallback, $parameters = [], $locale = null)
+    {
+        return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
     }
 }
