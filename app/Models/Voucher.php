@@ -402,7 +402,7 @@ class Voucher extends Model
         }
 
         if ($request->has('sort_by') && $sortBy = $request->input('sort_by')) {
-            $query->orderBy($sortBy, $request->input('sort_order') ?: 'ASC');
+            $query->orderBy($sortBy, $request->input('sort_order', 'asc'));
         }
 
         return $query;
