@@ -296,6 +296,7 @@ class FundRequest extends Model
                 trans("$transKey.status") => $fundRequest->state,
                 trans("$transKey.validator") => $fundRequest->employee ?
                     $recordRepo->primaryEmailByAddress($fundRequest->employee->identity_address) : null,
+                trans("$transKey.created_at") => $fundRequest->created_at,
             ];
         })->values();
     }
