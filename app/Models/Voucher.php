@@ -29,8 +29,8 @@ use Illuminate\Http\Request;
  * @property-read mixed $amount_available_cached
  * @property-read string|null $created_at_locale
  * @property-read bool $expired
- * @property-read bool $is_granted
  * @property-read bool $has_transactions
+ * @property-read bool $is_granted
  * @property-read string $type
  * @property-read string|null $updated_at_locale
  * @property-read bool $used
