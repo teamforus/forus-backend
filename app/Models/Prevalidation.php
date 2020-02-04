@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property string|null $uid
  * @property string $identity_address
+ * @property string $redeemed_by_address
  * @property int|null $fund_id
  * @property int|null $organization_id
  * @property string $state
@@ -61,8 +62,8 @@ class Prevalidation extends Model
      * @var array
      */
     protected $fillable = [
-        'uid', 'identity_address', 'state', 'fund_id', 'organization_id',
-        'exported',
+        'uid', 'identity_address', 'redeemed_by_address', 'state',
+        'fund_id', 'organization_id', 'exported',
     ];
 
     public static function assignAvailableToIdentityByBsn(string $identity_address)
@@ -252,7 +253,8 @@ class Prevalidation extends Model
         }
 
         return $this->updateModel([
-            'state' => 'used'
+            'state' => 'used',
+            'redeemed_by_address' => $identity_address
         ]);
     }
 }

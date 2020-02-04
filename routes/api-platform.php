@@ -542,20 +542,17 @@ $router->group(['middleware' => [
         'prevalidations/{prevalidation_uid}/redeem',
         'Api\Platform\PrevalidationController@redeem'
     );
+
     $router->get(
         'prevalidations/export',
         'Api\Platform\PrevalidationController@export'
     );
 
-    $router->get(
-        'prevalidations/{prevalidation_uid}/fund',
-        'Api\Platform\PrevalidationController@showFundId'
-    );
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController', [
             'only' => [
-                'index', 'show', 'store'
+                'index', 'store'
             ],
             'parameters' => [
                 'prevalidations' => 'prevalidation_uid'
