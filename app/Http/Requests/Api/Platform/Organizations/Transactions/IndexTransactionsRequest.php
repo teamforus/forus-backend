@@ -25,7 +25,7 @@ class IndexTransactionsRequest extends FormRequest
     public function rules()
     {
         return [
-            'per_page'      => 'numeric|between:1,100',
+            'per_page'      => 'numeric|between:1,9999',
             'q'             => 'nullable|string',
             'state'         => 'nullable|in:pending,success',
             'fund_state'    => 'nullable|in:' . join(',', Fund::STATES),
