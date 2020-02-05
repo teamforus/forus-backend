@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IndexVouchersRequest extends FormRequest
 {
@@ -33,6 +34,18 @@ class IndexVouchersRequest extends FormRequest
             'to'            => 'nullable|date_format:Y-m-d',
             'type'          => 'required|in:fund_voucher,product_voucher',
             'unassigned'    => 'nullable|boolean',
+            'sort_by'       => [
+                'nullable',
+                Rule::in([
+                    'amount', 'expire_at', 'created_at'
+                ])
+            ],
+            'sort_order'    => [
+                'nullable',
+                Rule::in([
+                    'asc', 'desc'
+                ])
+            ],
         ];
     }
 }
