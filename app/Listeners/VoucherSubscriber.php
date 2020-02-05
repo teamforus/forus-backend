@@ -100,7 +100,7 @@ class VoucherSubscriber
             $voucher->identity_address
         );
 
-        $voucher->sendToEmail($email);
+        $voucher->assignedVoucherEmail($email);
     }
 
     /**

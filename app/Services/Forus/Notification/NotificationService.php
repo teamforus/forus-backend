@@ -24,6 +24,7 @@ use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
 use App\Mail\Validations\AddedAsValidatorMail;
 use App\Mail\Validations\NewValidationRequestMail;
+use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Vouchers\FundStatisticsMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Mail\Vouchers\ProductReservedMail;
@@ -701,6 +702,34 @@ class NotificationService
             $fund_name,
             $fund_product_name,
             $qr_token,
+            $identifier
+        ));
+    }
+
+    /**
+     * Send assigned voucher to email
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $fund_name
+     * @param int $voucher_amount
+     * @param string $voucher_expire_minus_day
+     * @param string $qr_token
+     * @return bool
+     */
+    public function assignVoucher(
+        string $email,
+        $identifier,
+        string $fund_name,
+        int $voucher_amount,
+        string $voucher_expire_minus_day,
+        string $qr_token
+    ): bool {
+        return $this->sendMail($email, new AssignedVoucherMail(
+            $fund_name,
+            $qr_token,
+            $voucher_amount,
+            $voucher_expire_minus_day,
             $identifier
         ));
     }
