@@ -213,6 +213,27 @@ class Voucher extends Model
     }
 
     /**
+     * @param string|null $email
+     */
+    public function assignedVoucherEmail(
+        string $email = null
+    ) {
+        /** @var VoucherToken $voucherToken */
+        $voucherToken = $this->tokens()->where([
+            'need_confirmation' => false
+        ])->first();
+
+        resolve('forus.services.notification')->assignVoucher(
+            $email,
+            $this->identity_address,
+            $this->fund->name,
+            $this->amount,
+            $this->expire_at->subDay()->format('l, d F Y'),
+            $voucherToken->address
+        );
+    }
+
+    /**
      * @param string $reason
      * @param bool $sendCopyToUser
      */
