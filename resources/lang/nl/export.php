@@ -26,6 +26,14 @@ return [
 	'allow_products' => 'Geaccepteerd: aanbiedingen',
 	'allow_some_products' => 'Geaccepteerd: specifieke aanbiedingen',
     ],
+	
+    'fund_requests'              => [
+		'bsn' => 'Burgerservicenummer',
+		'fund_name' => 'Fonds naam',
+		'status' => 'Status',
+        'validator' => 'Validator',
+        'created_at' => 'Indien datum',
+    ],	
 
     'voucher_transactions'    => [
 		'amount' => 'bedrag',
