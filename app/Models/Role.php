@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $key
  * @property string $name
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read int|null $employees_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Permission[] $permissions
  * @property-read int|null $permissions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RolePermission[] $role_permissions
@@ -29,6 +31,12 @@ class Role extends Model
     ];
 
     public $timestamps = false;
+
+    public function employees() {
+        return $this->belongsToMany(Employee::class, (
+        new EmployeeRole
+        )->getTable());
+    }
 
     public function permissions() {
         return $this->belongsToMany(Permission::class, (

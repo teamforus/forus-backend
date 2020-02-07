@@ -4,6 +4,8 @@ use App\Models\Implementation;
 use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
 
 if (!function_exists('auth_user')) {
     /**
@@ -594,5 +596,20 @@ if (!function_exists('trans_fb')) {
     function trans_fb($id, $fallback, $parameters = [], $locale = null)
     {
         return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
+    }
+}
+
+if (!function_exists('str_var_replace')) {
+    function str_var_replace($string, $replace)
+    {
+        foreach ($replace as $key => $value) {
+            $string = str_replace(
+                [':'.$key, ':' . Str::upper($key), ':' . Str::ucfirst($key)],
+                [$value, Str::upper($value), Str::ucfirst($value)],
+                $string
+            );
+        }
+
+        return $string;
     }
 }
