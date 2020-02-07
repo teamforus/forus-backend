@@ -29,7 +29,7 @@
         "philkra/elastic-apm-laravel": "6.0.1",
         "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "2.0.0",
-        "aws/aws-sdk-php": "3.133.8",
+        "aws/aws-sdk-php": "3.133.9",
         "barryvdh/laravel-cors": "0.11.4",
         "dusterio/laravel-aws-worker": "0.1.23",
         "predis/predis": "1.1.1"

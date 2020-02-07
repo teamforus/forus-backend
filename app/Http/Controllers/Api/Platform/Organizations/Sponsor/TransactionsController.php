@@ -26,11 +26,15 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
+        $transactionsQuery = VoucherTransaction::searchSponsor($request, $organization);
+
+        $meta = [
+            'total_amount' => currency_format($transactionsQuery->sum('amount'))
+        ];
+
         return SponsorVoucherTransactionResource::collection(
-            VoucherTransaction::searchSponsor($request, $organization)->paginate(
-                $request->input('per_page', 25)
-            )
-        );
+            $transactionsQuery->paginate($request->input('per_page', 25))
+        )->additional(compact('meta'));
     }
 
     /**
