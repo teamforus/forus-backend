@@ -29,7 +29,7 @@ return [
 	
     'fund_requests'              => [
 		'bsn' => 'Burgerservicenummer',
-		'fund_name' => 'Fonds naam',
+		'fund_name' => 'Fondsnaam',
 		'status' => 'Status',
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
