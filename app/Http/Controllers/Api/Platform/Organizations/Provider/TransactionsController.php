@@ -26,7 +26,7 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        $transactionsQuery = VoucherTransaction::searchSponsor($request, $organization)->with(
+        $transactionsQuery = VoucherTransaction::searchProvider($request, $organization)->with(
                 ProviderVoucherTransactionResource::$load
         );
         
