@@ -248,7 +248,7 @@ $router->group(['middleware' => [
     // deprecated, remove in next releases
     $router->get(
         'vouchers/{voucher_token_address}/provider',
-        "Api\Platform\Provider\VouchersController@provider"
+        "Api\Platform\Provider\VouchersController@show"
     );
 
     $router->group(['prefix' => '/provider'], function() use ($router) {
