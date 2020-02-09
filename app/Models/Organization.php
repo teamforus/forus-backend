@@ -264,11 +264,31 @@ class Organization extends Model
     }
 
     /**
+     * @param $permission
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function employeesWithPermissionsQuery($permission) {
+        return $this->employees()->whereHas('roles.permissions', function(
+            \Illuminate\Database\Eloquent\Builder $query
+        ) use ($permission) {
+            $query->whereIn('key', (array) $permission);
+        });
+    }
+
+    /**
      * @param string|array $role
      * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
      */
     public function employeesOfRole($role) {
         return $this->employeesOfRoleQuery($role)->get();
+    }
+
+    /**
+     * @param string|array $permission
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     */
+    public function employeesWithPermissions($permission) {
+        return $this->employeesWithPermissionsQuery($permission)->get();
     }
 
     /**

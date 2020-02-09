@@ -79,6 +79,26 @@ class FundRequestPolicy
      * Determine whether the user can view the fundRequest.
      *
      * @param string|null $identity_address
+     * @param Organization|null $organization
+     * @return bool|\Illuminate\Auth\Access\Response
+     */
+    public function viewAnyValidatorForOrganization(
+        ?string $identity_address,
+        Organization $organization = null
+    ) {
+        if (!$organization->employeesOfRoleQuery([
+            'validation'
+        ])->where(compact('identity_address'))->exists()) {
+            return $this->deny('fund_requests.invalid_validator');
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the user can view the fundRequest.
+     *
+     * @param string|null $identity_address
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
@@ -241,12 +261,12 @@ class FundRequestPolicy
      * @return bool
      */
     private function checkIntegrity(
-        Fund $fund,
+        Fund $fund = null,
         Organization $organization = null,
         FundRequest $request = null
     ) {
-        if (!$fund) {
-            $fund = $organization->funds[0];
+        if ($fund == null) {
+            return true;
         }
 
         if ($organization && ($organization->id != $fund->organization_id)) {
