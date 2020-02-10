@@ -33,7 +33,7 @@
         "predis/predis": "1.1.1",
         "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "2.0.0",
-        "twilio/sdk": "^5.42"
+        "twilio/sdk": "5.42.2"
     },
     "require-dev": {
         "filp/whoops": "2.7.1",
