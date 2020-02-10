@@ -35,7 +35,9 @@ class SmsRequest extends FormRequest
                 ])
             ],
             'phone' => [
-                'required', "starts_with:+31"
+                "required",
+                "starts_with:+31",
+                "size:12"
             ]
         ];
     }
