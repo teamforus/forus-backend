@@ -82,6 +82,7 @@ return [
 		'string'  => ':attribute moet :size karakters lang zijn.',
 		'array'   => ':attribute moet :size items bevatten.',
 	],
+    'starts_with' => ':Attribute moet starten met een van de volgende: :values',
     'string'               => 'Het :attribute moet een reeks zijn.',
 	'timezone'             => ':attribute moet een geldige tijdszone zijn.',
 	'unique'               => ':attribute is al bezet.',

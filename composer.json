@@ -12,9 +12,12 @@
         "ext-openssl": "*",
         "ext-zip": "*",
         "astrotomic/laravel-translatable": "11.7.0",
+        "aws/aws-sdk-php": "3.133.10",
+        "barryvdh/laravel-cors": "0.11.4",
         "barryvdh/laravel-ide-helper": "2.6.6",
         "bunq/sdk_php": "1.12.1",
         "doctrine/dbal": "2.10.1",
+        "dusterio/laravel-aws-worker": "0.1.23",
         "fideloper/proxy": "4.2.2",
         "fruitcake/laravel-cors": "1.0.3",
         "graham-campbell/markdown": "11.2.0",
@@ -27,12 +30,10 @@
         "league/flysystem-aws-s3-v3": "1.0.23",
         "maatwebsite/excel": "3.1.18",
         "philkra/elastic-apm-laravel": "6.0.1",
+        "predis/predis": "1.1.1",
         "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "2.0.0",
-        "aws/aws-sdk-php": "3.133.10",
-        "barryvdh/laravel-cors": "0.11.4",
-        "dusterio/laravel-aws-worker": "0.1.23",
-        "predis/predis": "1.1.1"
+        "twilio/sdk": "5.42.2"
     },
     "require-dev": {
         "filp/whoops": "2.7.1",
