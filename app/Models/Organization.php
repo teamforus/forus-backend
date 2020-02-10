@@ -17,19 +17,21 @@ use Illuminate\Database\Query\Builder;
  * @property string $name
  * @property string $iban
  * @property string $email
- * @property int $email_public
+ * @property bool $email_public
  * @property string $phone
- * @property int $phone_public
+ * @property bool $phone_public
  * @property string $kvk
  * @property string $btw
  * @property string|null $website
- * @property int $website_public
+ * @property bool $website_public
  * @property int|null $business_type_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
+ * @property-read int|null $fund_provider_invitations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
@@ -51,12 +53,17 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $supplied_funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved
  * @property-read int|null $supplied_funds_approved_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_budget
+ * @property-read int|null $supplied_funds_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
+ * @property-read int|null $supplied_funds_approved_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
  * @property-read int|null $validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $vouchers_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newQuery()
@@ -77,13 +84,6 @@ use Illuminate\Database\Query\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_budget
- * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
- * @property-read int|null $supplied_funds_approved_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
- * @property-read int|null $tags_count
- * @property-read int|null $fund_provider_invitations_count
  */
 class Organization extends Model
 {
@@ -264,11 +264,31 @@ class Organization extends Model
     }
 
     /**
+     * @param $permission
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function employeesWithPermissionsQuery($permission) {
+        return $this->employees()->whereHas('roles.permissions', function(
+            \Illuminate\Database\Eloquent\Builder $query
+        ) use ($permission) {
+            $query->whereIn('key', (array) $permission);
+        });
+    }
+
+    /**
      * @param string|array $role
      * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
      */
     public function employeesOfRole($role) {
         return $this->employeesOfRoleQuery($role)->get();
+    }
+
+    /**
+     * @param string|array $permission
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     */
+    public function employeesWithPermissions($permission) {
+        return $this->employeesWithPermissionsQuery($permission)->get();
     }
 
     /**

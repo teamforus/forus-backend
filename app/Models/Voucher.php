@@ -29,8 +29,8 @@ use Illuminate\Http\Request;
  * @property-read mixed $amount_available_cached
  * @property-read string|null $created_at_locale
  * @property-read bool $expired
- * @property-read bool $is_granted
  * @property-read bool $has_transactions
+ * @property-read bool $is_granted
  * @property-read string $type
  * @property-read string|null $updated_at_locale
  * @property-read bool $used
@@ -208,6 +208,27 @@ class Voucher extends Model
             $this->identity_address,
             $fund_product_name,
             $fund_product_name,
+            $voucherToken->address
+        );
+    }
+
+    /**
+     * @param string|null $email
+     */
+    public function assignedVoucherEmail(
+        string $email = null
+    ) {
+        /** @var VoucherToken $voucherToken */
+        $voucherToken = $this->tokens()->where([
+            'need_confirmation' => false
+        ])->first();
+
+        resolve('forus.services.notification')->assignVoucher(
+            $email,
+            $this->identity_address,
+            $this->fund->name,
+            $this->amount,
+            $this->expire_at->subDay()->format('l, d F Y'),
             $voucherToken->address
         );
     }
@@ -399,6 +420,10 @@ class Voucher extends Model
 
         if ($request->has('q') && $q = $request->input('q')) {
             $query->where('note', 'LIKE', "%{$q}%");
+        }
+
+        if ($request->has('sort_by') && $sortBy = $request->input('sort_by')) {
+            $query->orderBy($sortBy, $request->input('sort_order', 'asc'));
         }
 
         return $query;

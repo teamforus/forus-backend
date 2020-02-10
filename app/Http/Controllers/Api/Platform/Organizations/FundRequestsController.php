@@ -23,8 +23,8 @@ class FundRequestsController extends Controller
         IndexFundRequestsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('viewAnyValidator', [
-            FundRequest::class, $organization->funds[0], $organization
+        $this->authorize('viewAnyValidatorForOrganization', [
+            FundRequest::class, $organization
         ]);
 
         return FundRequestResource::collection(
@@ -47,7 +47,9 @@ class FundRequestsController extends Controller
         IndexFundRequestsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('index', Organization::class);
+        $this->authorize('viewAnyValidatorForOrganization', [
+            FundRequest::class, $organization
+        ]);
 
         return resolve('excel')->download(
             new FundRequestsExport($request, $organization),

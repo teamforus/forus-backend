@@ -27,6 +27,8 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon $expire_at
  * @property bool $sold_out
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
+ * @property-read int|null $fund_providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string|null $created_at_locale
@@ -68,9 +70,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
- * @property-read int|null $fund_providers_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product approvedForFunds($fund_id)
  */
 class Product extends Model
 {

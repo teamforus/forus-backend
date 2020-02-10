@@ -54,7 +54,8 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('prevalidation_uid', function ($value) {
             return Prevalidation::query()->where([
-                    'uid' => $value
+                    'uid' => $value,
+                    'state' => Prevalidation::STATE_PENDING
                 ])->first() ?? null;
         });
 
@@ -172,9 +173,9 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapWebRoutes()
     {
-        Route::middleware('web')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/web.php'));
+        Route::namespace($this->namespace)->middleware([
+            'web', 'forus_session'
+        ])->group(base_path('routes/web.php'));
     }
 
     /**
@@ -186,18 +187,16 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapApiRoutes()
     {
-        Route::prefix('api/v1')
-             ->middleware([
-                 'api', 'implementation_key', 'client_key'
-             ])
-             ->namespace($this->namespace)
-             ->group(base_path('routes/api.php'));
+        Route::prefix('api/v1')->namespace(
+            $this->namespace
+        )->middleware([
+             'api', 'implementation_key', 'client_key',
+         ])->group(base_path('routes/api.php'));
 
-        Route::prefix('api/v1/platform')
-            ->middleware([
-                'api', 'implementation_key', 'client_key'
-            ])
-            ->namespace($this->namespace)
-            ->group(base_path('routes/api-platform.php'));
+        Route::prefix('api/v1/platform')->namespace(
+            $this->namespace
+        )->middleware([
+            'api', 'implementation_key', 'client_key',
+        ])->group(base_path('routes/api-platform.php'));
     }
 }

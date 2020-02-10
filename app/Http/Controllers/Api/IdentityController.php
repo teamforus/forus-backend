@@ -12,8 +12,18 @@ use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Rules\IdentityRecordsUniqueRule;
+use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
+use App\Services\Forus\Notification\NotificationService;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\Request;
 
+/**
+ * Class IdentityController
+ * @property IIdentityRepo $identityRepo
+ * @property IRecordRepo $recordRepo
+ * @property NotificationService $mailService
+ * @package App\Http\Controllers\Api
+ */
 class IdentityController extends Controller
 {
     protected $identityRepo;
@@ -28,11 +38,11 @@ class IdentityController extends Controller
 
     public function getPublic()
     {
-        $bsn_is_known = !empty($this->recordRepo->bsnByAddress(auth()->id()));
+        $bsnIsKnown = !empty($this->recordRepo->bsnByAddress(auth_address()));
 
         return [
-            'address' => auth()->id(),
-            'bsn' => $bsn_is_known
+            'address'   => auth()->id(),
+            'bsn'       => $bsnIsKnown
         ];
     }
 
@@ -48,40 +58,51 @@ class IdentityController extends Controller
     ) {
         $this->middleware('throttle', [10, 1 * 60]);
 
-        $identityAddress = $this->identityRepo->makeByEmail(
-            $request->input('records.primary_email'),
-            collect($request->input('records', []))->filter(function(
-                $value, $key
-            ) {
-                return !empty($value) && !in_array($key, [
-                    'bsn', 'primary_email'
-                ]);
-            })->toArray()
-        );
+        // client type, key and target primary email
+        $clientType = client_type('general');
+        $clientKey = implementation_key(config('forus.clients.default'));
+        $primaryEmail = $request->input('records.primary_email');
 
+        // build records list and remove bsn and primary_email
+        $records = collect($request->input('records', []));
+        $records = $records->filter(function($value, $key) {
+            return !empty($value) && !in_array($key, ['bsn', 'primary_email']);
+        })->toArray();
+
+        // make identity and exchange_token
+        $identityAddress = $this->identityRepo->makeByEmail($primaryEmail, $records);
         $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);
-        $clientType = $request->headers->get('Client-Type', 'general');
+        $exchangeToken = $identityProxy['exchange_token'];
 
-        if (in_array($clientType, ['webshop', 'app-me_app'])) {
+        // registration through webshop or mobile app
+        $isWebshopOrMobile = in_array($clientType, array_merge(
+            config('forus.clients.webshop'),
+            config('forus.clients.mobile')
+        ));
+
+        // send confirmation email
+        if ($isWebshopOrMobile) {
+            $isMobile = in_array($clientType, config('forus.clients.mobile'));
+
+            // build confirmation link
             $confirmationLink = url(sprintf(
                 '/api/v1/identity/proxy/confirmation/redirect/%s/%s/%s%s',
-                $identityProxy['exchange_token'],
+                $exchangeToken,
                 $clientType,
-                Implementation::activeKey(),
-                $clientType != 'app-me_app' ? (
-                    '?' . http_build_query($request->only('target'))
-                ) : ''
+                $clientKey,
+                $isMobile ? '' : ('?' . http_build_query($request->only('target')))
             ));
 
             $this->mailService->sendEmailConfirmationLink(
-                $request->input('records.primary_email'),
+                $primaryEmail,
                 $confirmationLink,
                 $identityAddress
             );
+            
+            // TODO: always require confirmation
+            // otherwise (dashboards) skip confirmation part
         } else {
-            $this->identityRepo->exchangeEmailConfirmationToken(
-                $identityProxy['exchange_token']
-            );
+            $this->identityRepo->exchangeEmailConfirmationToken($exchangeToken);
         }
 
         return collect($identityProxy)->only('access_token');
@@ -227,7 +248,7 @@ class IdentityController extends Controller
             $platform = 'het dashboard';
         } else if (strpos($source, '_website') !== false) {
             $platform = 'het website';
-        } else if (strpos($source, 'app-me_app') !== false) {
+        } else if (strpos($source, 'me_app') !== false) {
             $platform = 'Me';
         }
 
@@ -322,7 +343,9 @@ class IdentityController extends Controller
 
         list($implementation, $frontend) = explode('_', $source);
 
-        if ($source == 'app-me_app') {
+        $isMobile = in_array($source, config('forus.clients.mobile'));
+
+        if ($isMobile) {
             $sourceUrl = config('forus.front_ends.app-me_app');
         } else if ($implementation == 'general') {
             $sourceUrl = Implementation::general_urls()['url_' . $frontend];
@@ -342,7 +365,7 @@ class IdentityController extends Controller
             }))
         );
 
-        if ($source == 'app-me_app') {
+        if ($isMobile) {
             return view()->make('pages.auth.deep_link', compact('redirectUrl'));
         }
 
@@ -388,9 +411,13 @@ class IdentityController extends Controller
             abort(404, "Invalid implementation key.");
         }
 
-        if (in_array($clientType, [
-            'webshop', 'sponsor', 'provider', 'validator'
-        ])) {
+        $isMobile = in_array($clientType, config('forus.clients.mobile'));
+        $isWebshopOrDashboard = in_array($clientType, array_merge(
+            config('forus.clients.webshop'),
+            config('forus.clients.dashboards')
+        ));
+
+        if ($isWebshopOrDashboard) {
             $webShopUrl = Implementation::byKey($implementationKey);
             $webShopUrl = $webShopUrl['url_' . $clientType];
 
@@ -399,7 +426,7 @@ class IdentityController extends Controller
                 $exchangeToken,
                 http_build_query(compact('target'))
             ));
-        } elseif ($clientType == 'app-me_app') {
+        } elseif ($isMobile) {
             $sourceUrl = config('forus.front_ends.app-me_app');
             $redirectUrl = sprintf(
                 $sourceUrl . "identity-confirmation?%s",

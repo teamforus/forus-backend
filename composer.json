@@ -6,11 +6,11 @@
     "type": "project",
     "require": {
         "php": ">=7.2.0",
+        "ext-bcmath": "*",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-openssl": "*",
         "ext-zip": "*",
-        "ext-bcmath": "*",
         "astrotomic/laravel-translatable": "11.7.0",
         "barryvdh/laravel-ide-helper": "2.6.6",
         "bunq/sdk_php": "1.12.1",
@@ -29,7 +29,7 @@
         "philkra/elastic-apm-laravel": "6.0.1",
         "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "2.0.0",
-        "aws/aws-sdk-php": "3.133.6",
+        "aws/aws-sdk-php": "3.133.9",
         "barryvdh/laravel-cors": "0.11.4",
         "dusterio/laravel-aws-worker": "0.1.23",
         "predis/predis": "1.1.1"
