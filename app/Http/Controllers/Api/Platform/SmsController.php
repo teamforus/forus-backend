@@ -20,12 +20,16 @@ class SmsController extends Controller
     public function send(
         SmsRequest $request
     ) {
-        $result = resolve('forus.services.sms_notification')->sendSms(
-            trans('sms.messages.' . $request->input('type')),
-            $request->input('phone')
-        );
+        $phone = $request->input('phone');
+        $message = trans('sms.messages.' . $request->input('type'));
+        $smsService = resolve('forus.services.sms_notification');
 
-        return $result ? response(null, 200)
-            : response()->json(['errors' => ['phone' => [trans('sms.failed')]]], 422);
+        $result = $smsService->sendSms($message, $phone);
+
+        return $result ? response(null, 200): response()->json([
+            'errors' => [
+                'phone' => (array) trans('sms.failed')
+            ]
+        ], 422);
     }
 }
