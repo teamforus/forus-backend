@@ -29,7 +29,8 @@ class AddRedeemByIdentityAddressToPrevalidationsTable extends Migration
     public function down()
     {
         Schema::table('prevalidations', function (Blueprint $table) {
-            $table->dropColumn('redeemed_by_identity_address');
+            $table->dropForeign('prevalidations_redeemed_by_address_foreign');
+            $table->dropColumn('redeemed_by_address');
         });
     }
 }
