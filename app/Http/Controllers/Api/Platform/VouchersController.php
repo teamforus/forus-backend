@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
-use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -74,20 +73,6 @@ class VouchersController extends Controller
         return new VoucherResource(
             $voucherToken->voucher->load(VoucherResource::$load)
         );
-    }
-
-    /**
-     * @param VoucherToken $voucherToken
-     * @return ProviderVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function provider(
-        VoucherToken $voucherToken
-    ) {
-        $this->authorize('useAsProvider', $voucherToken->voucher);
-        $voucherToken->voucher->setAttribute('address', $voucherToken->address);
-
-        return new ProviderVoucherResource($voucherToken->voucher);
     }
 
     /**

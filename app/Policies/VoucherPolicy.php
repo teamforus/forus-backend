@@ -296,7 +296,6 @@ class VoucherPolicy
     {
         $message = trans("validation.voucher.{$error}");
 
-
         throw new AuthorizationJsonException(json_encode(
             compact('error', 'message')
         ), 403);

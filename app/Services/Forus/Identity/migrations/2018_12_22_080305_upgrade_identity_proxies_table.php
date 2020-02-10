@@ -19,7 +19,7 @@ class UpgradeIdentityProxiesTable extends Migration
             $table->string('exchange_token', 200)->after('access_token');
         });
 
-        IdentityProxy::all()->each(function(IdentityProxy $identityProxy) {
+        IdentityProxy::withTrashed()->get()->each(function(IdentityProxy $identityProxy) {
             if (!empty($identityProxy['auth_code'])) {
                 $identityProxy->update([
                     'type' => 'pin_code',

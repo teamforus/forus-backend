@@ -13,9 +13,11 @@ class AddDeletedAtToIdentityProxiesTable extends Migration
      */
     public function up()
     {
-        Schema::table('identity_proxies', function (Blueprint $table) {
-            $table->softDeletes()->after('state');
-        });
+        if (!Schema::hasColumn('identity_proxies', 'deleted_at')) {
+            Schema::table('identity_proxies', function (Blueprint $table) {
+                $table->softDeletes()->after('state');
+            });
+        }
     }
 
     /**
@@ -23,10 +25,5 @@ class AddDeletedAtToIdentityProxiesTable extends Migration
      *
      * @return void
      */
-    public function down()
-    {
-        Schema::table('identity_proxies', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
-    }
+    public function down() {}
 }
