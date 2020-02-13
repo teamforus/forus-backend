@@ -11,7 +11,7 @@
 |
 */
 
-$router = app()->make('router');
+$router = resolve('router');
 
 /**
  * Authorization not required

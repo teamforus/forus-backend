@@ -20,9 +20,9 @@ use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
-use App\Models\NotificationPreference;
-use App\Models\NotificationUnsubscription;
-use App\Models\NotificationUnsubscriptionToken;
+use App\Services\Forus\Notification\Models\NotificationPreference;
+use App\Services\Forus\Notification\Models\NotificationUnsubscription;
+use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use Illuminate\Support\Collection;
 
@@ -32,10 +32,6 @@ use Illuminate\Support\Collection;
  */
 class NotificationRepo implements INotificationRepo
 {
-    protected $preferencesModel;
-    protected $unsubscriptionModel;
-    protected $unsubTokenModel;
-
     /**
      * Map between type keys and Mail classes
      * @var array
@@ -114,28 +110,12 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * NotificationServiceRepo constructor.
-     * @param NotificationPreference $preferencesModel
-     * @param NotificationUnsubscription $unsubscriptionModel
-     * @param NotificationUnsubscriptionToken $unsubscriptionTokenModel
-     */
-    public function __construct(
-        NotificationPreference $preferencesModel,
-        NotificationUnsubscription $unsubscriptionModel,
-        NotificationUnsubscriptionToken $unsubscriptionTokenModel
-    ) {
-        $this->preferencesModel = $preferencesModel;
-        $this->unsubscriptionModel = $unsubscriptionModel;
-        $this->unsubTokenModel = $unsubscriptionTokenModel;
-    }
-
-    /**
      * Is email unsubscribed from all emails
      * @param string $email
      * @return bool
      */
     public function isEmailUnsubscribed(string $email): bool {
-        return $this->unsubscriptionModel->newQuery()->where(
+        return NotificationUnsubscription::where(
             compact('email'))->count() > 0;
     }
 
@@ -176,7 +156,7 @@ class NotificationRepo implements INotificationRepo
         $subscribed = false;
         $type = 'push';
 
-        return $this->preferencesModel->newQuery()->where(compact(
+        return NotificationPreference::where(compact(
             'identity_address', 'key', 'subscribed', 'type'
         ))->count() > 0;
     }
@@ -200,7 +180,7 @@ class NotificationRepo implements INotificationRepo
         $type = 'email';
         $subscribed = false;
 
-        return $this->preferencesModel->newQuery()->where(compact(
+        return NotificationPreference::where(compact(
             'identity_address', 'key', 'subscribed', 'type'
             ))->count() > 0;
     }
@@ -238,9 +218,9 @@ class NotificationRepo implements INotificationRepo
      * @return string
      */
     private function makeToken(string $email, string $token = null) {
-        $model = $token ? $this->unsubTokenModel->findByToken($token) : null;
+        $model = $token ? NotificationUnsubscriptionToken::findByToken($token) : null;
 
-        return ($model ?: $this->unsubTokenModel->makeToken($email))->token;
+        return ($model ?: NotificationUnsubscriptionToken::makeToken($email))->token;
     }
 
     /**
@@ -250,7 +230,7 @@ class NotificationRepo implements INotificationRepo
     public function unsubscribeEmail(
         string $email
     ): void {
-        $this->unsubscriptionModel->newQuery()->firstOrCreate(
+        NotificationUnsubscription::firstOrCreate(
             compact('email')
         );
     }
@@ -262,7 +242,7 @@ class NotificationRepo implements INotificationRepo
     public function reSubscribeEmail(
         string $email
     ): void {
-        $this->unsubscriptionModel->where(compact('email'))->delete();
+        NotificationUnsubscription::where(compact('email'))->delete();
     }
 
     /**
@@ -274,7 +254,7 @@ class NotificationRepo implements INotificationRepo
         string $token,
         bool $active = true
     ): ?string {
-        $token = $this->unsubTokenModel->findByToken($token, $active);
+        $token = NotificationUnsubscriptionToken::findByToken($token, $active);
 
         return $token ? $token->email : null;
     }
@@ -307,7 +287,7 @@ class NotificationRepo implements INotificationRepo
 
         $keys = $mailKeys->merge($pushKeys);
 
-        $unsubscribedKeys = $this->preferencesModel->where(compact(
+        $unsubscribedKeys = NotificationPreference::where(compact(
             'identity_address', 'subscribed'
         ))->pluck('key')->values();
 
@@ -334,7 +314,7 @@ class NotificationRepo implements INotificationRepo
 
         foreach ($data as $setting) {
             if (array_intersect($preference_keys, $data_keys)) {
-                $this->preferencesModel->newQuery()->firstOrCreate([
+                NotificationPreference::firstOrCreate([
                     'identity_address'  => $identityAddress,
                     'key'               => $setting['key'],
                     'type'              => $setting['type'],

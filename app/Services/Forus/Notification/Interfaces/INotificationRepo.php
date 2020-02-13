@@ -39,12 +39,12 @@ interface INotificationRepo
     /**
      * Check if Push notification can be unsubscribed
      *
-     * @param string $identifier
+     * @param string $identity_address
      * @param string $pushKey
      * @return bool
      */
     public function isPushNotificationUnsubscribed(
-        string $identifier,
+        string $identity_address,
         string $pushKey
     ): bool;
 
