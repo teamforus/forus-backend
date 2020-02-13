@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property string|null $uid
  * @property string $identity_address
- * @property string $redeemed_by_address
+ * @property string|null $redeemed_by_address
  * @property int|null $fund_id
  * @property int|null $organization_id
  * @property string $state
@@ -36,6 +36,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRedeemedByAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
