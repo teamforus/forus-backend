@@ -8,6 +8,7 @@ use App\Http\Resources\OfficeResource;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Services\MediaService\Models\Media;
 
 class OfficesController extends Controller
 {
@@ -16,8 +17,8 @@ class OfficesController extends Controller
 
     public function __construct()
     {
-        $this->geocodeService = app()->make('geocode_api');
-        $this->mediaService = app()->make('media');
+        $this->geocodeService = resolve('geocode_api');
+        $this->mediaService = resolve('media');
     }
 
     /**
@@ -30,7 +31,7 @@ class OfficesController extends Controller
     public function index(
         Organization $organization
     ) {
-        $this->authorize('indexPublic', [Office::class, $organization]);
+        $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
         return OfficeResource::collection($organization->offices);
     }
@@ -101,7 +102,7 @@ class OfficesController extends Controller
             $office->update($coordinates);
         }
 
-        if ($media && $media->type == 'office_photo') {
+        if ($media instanceof Media && $media->type == 'office_photo') {
             $office->attachMedia($media);
         }
 
@@ -193,7 +194,7 @@ class OfficesController extends Controller
             $office->update($coordinates);
         }
 
-        if ($media && $media->type == 'office_photo') {
+        if ($media instanceof Media && $media->type == 'office_photo') {
             $office->attachMedia($media);
         }
 

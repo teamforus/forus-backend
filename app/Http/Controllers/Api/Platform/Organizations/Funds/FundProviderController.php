@@ -14,6 +14,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\FundProviderQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -34,19 +35,24 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('indexSponsor', [
+        $this->authorize('viewAnySponsor', [
             FundProvider::class, $organization, $fund
         ]);
 
-        $providers = $fund->providers()->getQuery();
+        $query = $fund->providers()->getQuery();
+        $state = $request->input('state', false);
 
-        if ($request->input('state', false)) {
-            $providers = FundProvider::whereActiveQueryBuilder($providers);
+        if ($state == FundProvider::STATE_APPROVED) {
+            $query = FundProviderQuery::whereApprovedForFundsFilter($query, $fund->id);
         }
 
-        return FundProviderResource::collection($providers->paginate(
-            $request->input('per_page', null)
-        ));
+        if ($state == FundProvider::STATE_PENDING) {
+            $query = FundProviderQuery::wherePendingForFundsFilter($query, $fund->id);
+        }
+
+        return FundProviderResource::collection($query->with(
+            FundProviderResource::$load
+        )->paginate($request->input('per_page', 15)));
     }
 
     /**
@@ -261,57 +267,54 @@ class FundProviderController extends Controller
             ];
         });
 
-        $transactions = $fund->voucher_transactions()->whereBetween(
-            'voucher_transactions.created_at', [
-                $startDate->copy()->endOfDay(),
-                $endDate->copy()->endOfDay()
-            ]
-        )->where([
+        $transactions = $fund->voucher_transactions()->where([
             'organization_id' => $organizationFund->organization_id
+        ])->whereBetween('voucher_transactions.created_at', [
+            $startDate->copy()->endOfDay(),
+            $endDate->copy()->endOfDay()
         ]);
 
-        if($product_category_id){
-            if($product_category_id == -1){
-                $transactions = $transactions->whereNull('voucher_transactions.product_id');
-            }else{
-                $transactions = $transactions->whereHas('product', function (Builder $query) use($product_category_id){
+        if ($product_category_id) {
+            if ($product_category_id == -1){
+                $transactions->whereNull('voucher_transactions.product_id');
+            } else {
+                $transactions->whereHas('product', function (
+                    Builder $query
+                ) use ($product_category_id) {
                     return $query->where('product_category_id', $product_category_id);
                 });
             }
         }
-
-        $avg_transaction = $dates->where('value', '>', 0)->avg('value');
 
         $fundUsageInRange = $fund->voucher_transactions()->whereBetween(
             'voucher_transactions.created_at', [
                 $startDate->copy()->endOfDay(),
                 $endDate->copy()->endOfDay()
             ]
-        )->where([
-            'organization_id' => $organizationFund->organization_id
-        ]);
+        );
 
-        if($product_category_id){
-            if($product_category_id == -1){
+        if ($product_category_id) {
+            if ($product_category_id == -1){
                 $fundUsageInRange = $fundUsageInRange->whereNull('voucher_transactions.product_id');
-            }else{
-                $fundUsageInRange = $fundUsageInRange->whereHas('product', function (Builder $query) use($product_category_id){
+            } else{
+                $fundUsageInRange = $fundUsageInRange->whereHas('product', function (
+                    Builder $query
+                ) use($product_category_id){
                     return $query->where('product_category_id', $product_category_id);
                 });
             }
         }
 
         $fundUsageInRange = $fundUsageInRange->sum('voucher_transactions.amount');
+        $fundUsageTotal = $fund->voucher_transactions();
 
-        $fundUsageTotal = $fund->voucher_transactions()->where([
-            'organization_id' => $organizationFund->organization_id
-        ]);
-
-        if($product_category_id){
-            if($product_category_id == -1){
+        if ($product_category_id) {
+            if ($product_category_id == -1) {
                 $fundUsageTotal = $fundUsageTotal->whereNull('voucher_transactions.product_id');
-            }else{
-                $fundUsageTotal = $fundUsageTotal->whereHas('product', function (Builder $query) use($product_category_id){
+            } else {
+                $fundUsageTotal = $fundUsageTotal->whereHas('product', function (
+                    Builder $query
+                ) use ($product_category_id){
                     return $query->where('product_category_id', $product_category_id);
                 });
             }
@@ -324,25 +327,28 @@ class FundProviderController extends Controller
             'organization_id' => $organizationFund->organization_id
         ]);
 
-        if($product_category_id){
-            if($product_category_id == -1){
+        if ($product_category_id) {
+            if ($product_category_id == -1) {
                 $providerUsageTotal = $providerUsageTotal->whereNull('voucher_transactions.product_id');
-            }else{
-                $providerUsageTotal = $providerUsageTotal->whereHas('product', function (Builder $query) use($product_category_id){
+            } else {
+                $providerUsageTotal = $providerUsageTotal->whereHas('product', function (
+                    Builder $query
+                ) use ($product_category_id) {
                     return $query->where('product_category_id', $product_category_id);
                 });
             }
         }
 
         $providerUsageTotal = $providerUsageTotal->sum('voucher_transactions.amount');
+        $avgTransaction = $transactions->average('voucher_transactions.amount');
 
         return [
             'dates' => $dates,
             'usage' => $providerUsageInRange,
             'transactions' => $transactions->count(),
-            'avg_transaction' => $avg_transaction ? $avg_transaction : 0,
-            'share_in_range' => $fundUsageInRange > 0 ? $providerUsageInRange / $fundUsageInRange : 0,
-            'share_total' => $fundUsageTotal > 0 ? $providerUsageTotal / $fundUsageTotal : 0,
+            'avg_transaction' => round($avgTransaction ?: 0, 2),
+            'share_in_range' => round($fundUsageInRange > 0 ? $providerUsageInRange / $fundUsageInRange : 0, 2),
+            'share_total' => round($fundUsageTotal > 0 ? $providerUsageTotal / $fundUsageTotal : 0, 2),
         ];
     }
 

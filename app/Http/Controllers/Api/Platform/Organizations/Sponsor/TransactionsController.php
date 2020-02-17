@@ -24,13 +24,17 @@ class TransactionsController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexSponsor', [VoucherTransaction::class, $organization]);
+        $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
+
+        $transactionsQuery = VoucherTransaction::searchSponsor($request, $organization);
+
+        $meta = [
+            'total_amount' => currency_format($transactionsQuery->sum('amount'))
+        ];
 
         return SponsorVoucherTransactionResource::collection(
-            VoucherTransaction::searchSponsor($request, $organization)->paginate(
-                $request->input('per_page', 25)
-            )
-        );
+            $transactionsQuery->paginate($request->input('per_page', 25))
+        )->additional(compact('meta'));
     }
 
     /**
@@ -45,7 +49,8 @@ class TransactionsController extends Controller
         IndexTransactionsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('index', Organization::class);
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
         return resolve('excel')->download(
             new VoucherTransactionsSponsorExport($request, $organization),

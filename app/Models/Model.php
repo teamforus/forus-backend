@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+
 /**
  * App\Models\Model
  *
@@ -61,7 +63,7 @@ class Model extends \Illuminate\Database\Eloquent\Model
     /**
      * @param array $attributes
      * @param array $options
-     * @return $this
+     * @return bool|$this
      */
     public function updateModel(array $attributes = [], array $options = [])
     {

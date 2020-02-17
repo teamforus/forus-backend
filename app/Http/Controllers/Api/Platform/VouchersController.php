@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
-use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -26,7 +25,7 @@ class VouchersController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index() {
-        $this->authorize('index', Voucher::class);
+        $this->authorize('viewAny', Voucher::class);
 
         return VoucherResource::collection(Voucher::query()->where([
             'identity_address' => auth_address()
@@ -45,20 +44,18 @@ class VouchersController extends Controller
     ) {
         $this->authorize('store', Voucher::class);
 
-        $product = Product::find($request->input('product_id'));
+        $product_id = $request->input('product_id');
+        $voucher_address = $request->input('voucher_address');
+        $voucherToken = VoucherToken::whereAddress($voucher_address)->first();
 
-        /** @var VoucherToken $voucherToken */
-        $voucherToken = VoucherToken::query()->where([
-            'address' => $request->input('voucher_address')
-        ])->first() ?? abort(404);
-
-        $voucher = $voucherToken->voucher ?? abort(404);
+        $voucher = $voucherToken->voucher;
+        $product = Product::find($product_id);
 
         $this->authorize('reserve', [$product, $voucher]);
 
-        return new VoucherResource($voucher->buyProductVoucher(
-            $product
-        )->load(VoucherResource::$load));
+        return new VoucherResource($voucher->buyProductVoucher($product)->load(
+            VoucherResource::$load
+        ));
     }
 
     /**
@@ -76,20 +73,6 @@ class VouchersController extends Controller
         return new VoucherResource(
             $voucherToken->voucher->load(VoucherResource::$load)
         );
-    }
-
-    /**
-     * @param VoucherToken $voucherToken
-     * @return ProviderVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function provider(
-        VoucherToken $voucherToken
-    ) {
-        $this->authorize('useAsProvider', $voucherToken->voucher);
-        $voucherToken->voucher->setAttribute('address', $voucherToken->address);
-
-        return new ProviderVoucherResource($voucherToken->voucher);
     }
 
     /**

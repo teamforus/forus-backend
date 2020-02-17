@@ -25,7 +25,7 @@ class TransactionsController extends Controller
         Organization $organization,
         Fund $fund
     ) {
-        $this->authorize('indexPublic', [
+        $this->authorize('viewAnyPublic', [
             VoucherTransaction::class, $fund, $organization
         ]);
 

@@ -20,21 +20,6 @@ class AddEmployeeIdFieldToVouchers extends Migration
             $table->foreign('employee_id'
             )->references('id')->on('employees')->onDelete('set null');
         });
-
-        Voucher::whereNull('parent_id')->where(function(Builder $query) {
-            $vouchers = $query->whereNotNull('note')
-                ->orWhereRaw('`created_at` != `updated_at`')
-                ->orWhereNull('identity_address')->get();
-
-            $vouchers->each(function(Voucher $voucher) {
-                $employees = $voucher->fund->organization->employees();
-                $voucher->update([
-                    'employee_id' => $employees->whereHas('roles', function(Builder $query) {
-                        return $query->where('key', 'validation');
-                    })->first()->id ?? null
-                ]);
-            });
-        });
     }
 
     /**

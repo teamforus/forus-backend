@@ -6,11 +6,11 @@ use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
-use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 use App\Models\Voucher;
+use App\Services\MediaService\Models\Media;
 
 class ProductsController extends Controller
 {
@@ -36,7 +36,7 @@ class ProductsController extends Controller
         IndexProductRequest $request,
         Organization $organization
     ) {
-        $this->authorize('indexPublic', [Product::class, $organization]);
+        $this->authorize('viewAnyPublic', [Product::class, $organization]);
 
         return ProductResource::collection(Product::searchAny($request)->where([
             'organization_id' => $organization->id
@@ -58,7 +58,7 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('store', [Product::class, $organization]);
 
-        $media = false;
+        $media = null;
         $unlimited_stock = $request->input('unlimited_stock', false);
         $total_amount = $request->input('total_amount');
 
@@ -77,13 +77,12 @@ class ProductsController extends Controller
             'unlimited_stock' => $unlimited_stock
         ]));
 
-        if ($media && $media->type == 'product_photo') {
+        if ($media instanceof Media && $media->type == 'product_photo') {
             $product->attachMedia($media);
         }
 
         $notifiedIdentities = [];
 
-        /** @var Fund $fund */
         foreach ($organization->supplied_funds_approved as $fund) {
             $productCategories = $fund->product_categories()->pluck(
                 'product_categories.id'
@@ -153,7 +152,7 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
-        $media = false;
+        $media = null;
         $unlimited_stock = $product->unlimited_stock;
         $total_amount = $request->input('total_amount');
 
@@ -180,7 +179,7 @@ class ProductsController extends Controller
             ]);
         });
 
-        if ($media && $media->type == 'product_photo') {
+        if ($media instanceof Media && $media->type == 'product_photo') {
             $product->attachMedia($media);
         }
 

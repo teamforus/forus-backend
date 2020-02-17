@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+
 /**
  * App\Models\FundProviderInvitation
  *
@@ -18,7 +20,7 @@ namespace App\Models;
  * @property-read \App\Models\Fund $from_fund
  * @property-read \App\Models\Fund $fund
  * @property-read string|null $created_at_locale
- * @property-read \Illuminate\Support\Carbon $expire_at
+ * @property-read \Carbon\Carbon $expire_at
  * @property-read bool $expired
  * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization $organization
@@ -153,7 +155,7 @@ class FundProviderInvitation extends Model
     /**
      * Date when invitation will expire
      *
-     * @return \Illuminate\Support\Carbon
+     * @return \Carbon\Carbon
      */
     public function getExpireAtAttribute() {
         return $this->created_at->addMinutes(self::VALIDITY_IN_MINUTES);

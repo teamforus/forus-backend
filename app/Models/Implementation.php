@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Http\Request;
 
 /**
  * App\Models\Implementation
@@ -20,6 +22,11 @@ use Illuminate\Database\Query\Builder;
  * @property string $url_app
  * @property float|null $lon
  * @property float|null $lat
+ * @property bool $digid_enabled
+ * @property string $digid_env
+ * @property string|null $digid_app_id
+ * @property string|null $digid_shared_secret
+ * @property string|null $digid_a_select_server
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
@@ -28,6 +35,11 @@ use Illuminate\Database\Query\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnv($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidSharedSecret($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLat($value)
@@ -40,16 +52,6 @@ use Illuminate\Database\Query\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
- * @property string|null $digid_app_id
- * @property string|null $digid_shared_secret
- * @property string|null $digid_a_select_server
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidSharedSecret($value)
- * @property bool $digid_enabled
- * @property string $digid_env
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnv($value)
  */
 class Implementation extends Model
 {
@@ -94,11 +96,10 @@ class Implementation extends Model
     }
 
     /**
-     * @param string $default
      * @return array|string
      */
-    public static function activeKey($default = 'general') {
-        return request()->header('Client-Key', $default);
+    public static function activeKey() {
+        return request()->header('Client-Key', config('forus.clients.default'));
     }
 
     /**
@@ -113,7 +114,7 @@ class Implementation extends Model
      * @return \Illuminate\Support\Collection
      */
     public static function byKey($key) {
-        if ($key == 'general') {
+        if ($key == config('forus.clients.default')) {
             return collect(self::general_urls());
         }
 
@@ -143,7 +144,7 @@ class Implementation extends Model
             'url_sponsor'   => config('forus.front_ends.panel-sponsor'),
             'url_provider'  => config('forus.front_ends.panel-provider'),
             'url_validator' => config('forus.front_ends.panel-validator'),
-            'url_website'   => config('forus.front_ends.website-general'),
+            'url_website'   => config('forus.front_ends.website-default'),
             'url_app'       => config('forus.front_ends.landing-app'),
             'lon'           => config('forus.front_ends.map.lon'),
             'lat'           => config('forus.front_ends.map.lat')
@@ -159,7 +160,7 @@ class Implementation extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return EloquentBuilder
      */
     public static function activeFundsQuery() {
         return self::queryFundsByState('active');
@@ -167,16 +168,16 @@ class Implementation extends Model
 
     /**
      * @param $states
-     * @return Fund|\Illuminate\Database\Eloquent\Builder|Builder
+     * @return Fund|EloquentBuilder|QueryBuilder
      */
     public static function queryFundsByState($states) {
         $states = (array) $states;
 
-        if (self::activeKey() == 'general') {
+        if (self::activeKey() == config('forus.clients.default')) {
             return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
-        return Fund::query()->whereIn('id', function(Builder $query) {
+        return Fund::query()->whereIn('id', function(QueryBuilder $query) {
             $query->select('fund_id')->from('fund_configs')->where([
                 'implementation_id' => Implementation::query()->where([
                     'key' => self::activeKey()
@@ -186,7 +187,7 @@ class Implementation extends Model
     }
 
     /**
-     * @return Collection
+     * @return \Illuminate\Support\Collection
      */
     public static function activeFunds() {
         return self::activeFundsQuery()->get();
@@ -196,7 +197,7 @@ class Implementation extends Model
      * @return Collection
      */
     public static function activeProductCategories() {
-        if (self::activeKey() == 'general') {
+        if (self::activeKey() == config('forus.clients.default')) {
             return ProductCategory::all();
         }
 
@@ -211,7 +212,7 @@ class Implementation extends Model
      */
     public static function implementationKeysAvailable() {
         return self::query()->pluck('key')->merge([
-            'general'
+            config('forus.clients.default')
         ]);
     }
 
@@ -227,18 +228,19 @@ class Implementation extends Model
                 $key . '_validator',
                 $key . '_website',
             ];
-        })->flatten()->merge([
-            'app-me_app'
-        ])->values();
+        })->flatten()->merge(config('forus.clients.mobile'))->values();
     }
 
     /**
      * @return bool
      */
     public function digidEnabled() {
-        return $this->digid_enabled && !empty($this->digid_app_id) && !empty(
-            $this->digid_shared_secret
-            ) && !empty($this->digid_a_select_server);
+        $digidConfigured =
+            !empty($this->digid_app_id) &&
+            !empty($this->digid_shared_secret) &&
+            !empty($this->digid_a_select_server);
+
+        return $this->digid_enabled && $digidConfigured;
     }
 
     /**
@@ -304,5 +306,146 @@ class Implementation extends Model
     public function urlValidatorDashboard(string $uri = "/")
     {
         return http_resolve_url($this->url_validator ?? env('PANEL_VALIDATOR_URL'), $uri);
+    }
+
+    public function autoValidationEnabled() {
+        $oneActiveFund = $this->funds()->where([
+                'state' => Fund::STATE_ACTIVE
+            ])->count() == 1;
+
+        $oneActiveFundWithAutoValidation = $this->funds()->where([
+                'state' => Fund::STATE_ACTIVE,
+                'auto_requests_validation' => true
+            ])->whereNotNull('default_validator_employee_id')->count() == 1;
+
+        return $oneActiveFund && $oneActiveFundWithAutoValidation;
+    }
+
+    public static function platformConfig($value) {
+        if (!Implementation::isValidKey(Implementation::activeKey())) {
+            return abort(403, 'unknown_implementation_key');
+        }
+
+        $ver = request()->input('ver');
+
+        if (preg_match('/[^a-z_\-0-9]/i', $value)) {
+            abort(403);
+        }
+
+        if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
+            abort(403);
+        }
+
+        $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
+
+        if (is_array($config)) {
+            $config['media'] = collect(config('media.sizes'))->map(function($size) {
+                return collect($size)->only([
+                    'aspect_ratio', 'size'
+                ]);
+            });
+
+            $implementation = Implementation::active();
+            $implementationModel = Implementation::activeModel();
+
+            $config['digid'] = $implementationModel ?
+                $implementationModel->digidEnabled() : false;
+
+            $config['auto_validation'] = $implementationModel &&
+                $implementationModel->autoValidationEnabled();
+
+            $config['fronts'] = $implementation->only([
+                'url_webshop', 'url_sponsor', 'url_provider',
+                'url_validator', 'url_app'
+            ]);
+
+            $config['map'] = [
+                'lon' => doubleval(
+                    $implementation['lon'] ?: config('forus.front_ends.map.lon')
+                ),
+                'lat' => doubleval(
+                    $implementation['lat'] ?: config('forus.front_ends.map.lat')
+                )
+            ];
+
+            $config['implementation_name'] = $implementation->get('name') ?: 'general';
+        }
+
+        return $config ?: [];
+    }
+
+    public static function searchProviders(Request $request) {
+        $query = Organization::query();
+
+        if (Implementation::activeKey() != config('forus.clients.default')) {
+            $funds = Implementation::activeModel()->funds()->where([
+                'state' => Fund::STATE_ACTIVE
+            ])->pluck('fund_id');
+
+            $query->whereHas('supplied_funds_approved', function(
+                EloquentBuilder $builder
+            ) use ($funds) {
+                $builder->whereIn('funds.id', $funds);
+            });
+        } else {
+            $query->whereHas('supplied_funds_approved');
+        }
+
+        if ($request->has('business_type_id') && (
+            $business_type = $request->input('business_type_id'))
+        ) {
+            $query->whereHas('business_type', function(
+                EloquentBuilder $builder
+            ) use ($business_type) {
+                $builder->where('id', $business_type);
+            });
+        }
+
+        if ($request->has('fund_id') && (
+            $fund_id = $request->input('fund_id'))
+        ) {
+            $query->whereHas('supplied_funds_approved', function(
+                EloquentBuilder $builder
+            ) use ($fund_id) {
+                $builder->where('funds.id', $fund_id);
+            });
+        }
+
+        if ($request->has('q') && ($q = $request->input('q'))) {
+            $query->where(function(EloquentBuilder $builder) use ($q) {
+                $like = '%' . $q . '%';
+
+                $builder->where('name', 'LIKE', $like);
+
+                $builder->orWhere(function(EloquentBuilder $builder) use ($like) {
+                    $builder->where('email_public', true);
+                    $builder->where('email', 'LIKE', $like);
+                })->orWhere(function(EloquentBuilder $builder) use ($like) {
+                    $builder->where('phone_public', true);
+                    $builder->where('phone', 'LIKE', $like);
+                })->orWhere(function(EloquentBuilder $builder) use ($like) {
+                    $builder->where('website_public', true);
+                    $builder->where('website', 'LIKE', $like);
+                });
+
+                $builder->orWhereHas('business_type.translations', function(
+                    EloquentBuilder $builder
+                ) use ($like) {
+                    $builder->where('business_type_translations.name', 'LIKE', $like);
+                });
+
+                $builder->orWhereHas('offices', function(
+                    EloquentBuilder $builder
+                ) use ($like) {
+                    $builder->where(function(EloquentBuilder $query) use ($like) {
+                        $query->where(
+                            'address','LIKE', $like
+                        );
+                    });
+                });
+            });
+        }
+
+        return $query;
     }
 }

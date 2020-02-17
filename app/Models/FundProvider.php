@@ -19,10 +19,12 @@ use Illuminate\Database\Eloquent\Builder;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
+ * @property-read int|null $fund_provider_products_count
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $products
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newQuery()
@@ -37,13 +39,12 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
- * @property-read int|null $fund_provider_products_count
- * @property string $state
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereState($value)
  */
 class FundProvider extends Model
 {
+    const STATE_APPROVED = 'approved';
+    const STATE_PENDING = 'pending';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -63,15 +64,6 @@ class FundProvider extends Model
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
     ];
-
-    public static function whereActiveQueryBuilder(Builder $builder)
-    {
-        return $builder->where(function(Builder $builder) {
-            $builder->where('allow_budget', true);
-            $builder->orWhere('allow_products', true);
-            $builder->orWhere('allow_some_products',  true);
-        });
-    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -169,8 +161,8 @@ class FundProvider extends Model
 
             return [
                 trans("$transKey.provider") => $organization->name,
-                trans("$transKey.email") => $organization->email_public ? $organization->email : '',
-                trans("$transKey.phone") => $organization->phone || '',
+                trans("$transKey.email") => $organization->email,
+                trans("$transKey.phone") => $organization->phone,
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
                 trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
                 trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',

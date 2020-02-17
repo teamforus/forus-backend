@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform;
+namespace App\Http\Requests\Api\Platform\Prevalidations;
 
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\PrevalidationDataRule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UploadPrevalidationsRequest extends FormRequest
@@ -28,7 +30,9 @@ class UploadPrevalidationsRequest extends FormRequest
         $fundsAvailable = Organization::queryByIdentityPermissions(
             auth()->id(),
             'validate_records'
-        )->get()->pluck('funds')->flatten()->pluck('id');
+        )->get()->pluck('funds')->flatten()->filter(function ($fund) {
+            return $fund->state != Fund::STATE_CLOSED;
+        })->pluck('id');
 
         return [
             'fund_id' => 'required|in:' . $fundsAvailable->implode(','),

@@ -11,6 +11,7 @@ use App\Models\Fund;
 use App\Models\Product;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
+use App\Services\Forus\Record\Models\RecordType;
 
 /**
  * Class LoremDbSeeder
@@ -25,6 +26,15 @@ class LoremDbSeeder extends Seeder
     private $productCategories;
     private $primaryEmail;
 
+    private $implementations = [
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Berkelland',
+        'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
+    ];
+
+    private $implementationsWithFunds = [
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier',
+    ];
+
     /**
      * LoremDbSeeder constructor.
      */
@@ -36,7 +46,7 @@ class LoremDbSeeder extends Seeder
         $this->mailService = resolve('forus.services.notification');
 
         $this->productCategories = ProductCategory::all();
-        $this->primaryEmail = env('DB_SEED_BASE_EMAIL', 'example@example.com');
+        $this->primaryEmail = config('forus.seeders.lorem_db_seeder.default_email');
     }
 
     private function disableEmails() {
@@ -55,7 +65,9 @@ class LoremDbSeeder extends Seeder
     public function run()
     {
         $this->disableEmails();
-        $countProviders = env('DB_SEED_PROVIDERS', 20);
+        $countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
+
+        $this->prepareDependencies();
 
         $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
@@ -72,7 +84,23 @@ class LoremDbSeeder extends Seeder
 
         $this->applyFunds($this->baseIdentity);
 
+        $this->info("Making other implementations!");
+        $this->makeOtherImplementations(array_diff(
+            $this->implementations,
+            $this->implementationsWithFunds
+        ));
+        $this->success("Other implementations created!");
+
         $this->enableEmails();
+    }
+
+    public function prepareDependencies() {
+        RecordType::firstOrCreate([
+            'key'       => 'meedoen_2020_eligible',
+            'type'      => 'string',
+        ])->update([
+            'name'      => 'Meedoen 2020 eligible',
+        ]);
     }
 
     /**
@@ -106,11 +134,13 @@ class LoremDbSeeder extends Seeder
     public function makeSponsors(
         string $identity_address
     ) {
-        $organizations = [
-            $this->makeOrganization('Zuidhorn', $identity_address),
-            $this->makeOrganization('Nijmegen', $identity_address),
-            $this->makeOrganization('Westerkwartier', $identity_address)
-        ];
+        $self = $this;
+
+        $organizations = collect($this->implementationsWithFunds)->map(function(
+            $implementation
+        ) use ($self, $identity_address) {
+            return $self->makeOrganization($implementation, $identity_address);
+        });
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
@@ -126,7 +156,7 @@ class LoremDbSeeder extends Seeder
                 $fund,
                 $implementation,
                 $implementation->key . '_' . date('Y'), [
-                    'bunq_key' => env('DB_SEED_BUNQ_KEY', ''),
+                    'bunq_key' => config('forus.seeders.lorem_db_seeder.bunq_key'),
                 ]
             );
 
@@ -232,7 +262,10 @@ class LoremDbSeeder extends Seeder
 
             while ($voucher->amount_available > ($voucher->amount / 2)) {
                 $voucher->transactions()->create([
-                    'amount' => rand(5, 50),
+                    'amount' => rand(
+                        intval(config('forus.seeders.lorem_db_seeder.voucher_transaction_min')),
+                        intval(config('forus.seeders.lorem_db_seeder.voucher_transaction_max'))
+                    ),
                     'product_id' => null,
                     'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
@@ -297,6 +330,9 @@ class LoremDbSeeder extends Seeder
 
         OrganizationCreated::dispatch($organization);
 
+        $organization->offices()->delete();
+        $this->makeOffices($organization, rand(2, 3));
+
         return $organization;
     }
 
@@ -338,13 +374,12 @@ class LoremDbSeeder extends Seeder
             'parsed'            => true
         ], $fields));
 
-        $start_time = '08:00';
-        $end_time = '08:00';
-
         foreach (range(0, 4) as $week_day) {
-            $office->schedules()->create(compact(
-                'week_day', 'start_time', 'end_time'
-            ));
+            $office->schedules()->create([
+                'week_day' => $week_day,
+                'start_time' => '08:00',
+                'end_time' => '16:00'
+            ]);
         }
 
         return $office;
@@ -392,32 +427,34 @@ class LoremDbSeeder extends Seeder
         string $name
     ) {
         return Implementation::create([
-            'key' => $key,
-            'name' => $name,
-            'url_webshop' => env(
-                'DB_SEED_URL_WEBSHOP',
-                "https://dev.$key.forus.io/#!/"
+            'key'   => $key,
+            'name'  => $name,
+
+            'url_webshop' => str_var_replace(
+                config('forus.seeders.lorem_db_seeder.url_webshop'),
+                compact('key')
             ),
-            'url_sponsor' => env(
-                'DB_SEED_URL_SPONSOR',
-                "https://dev.$key.forus.io/sponsor/#!/"
+            'url_sponsor' => str_var_replace(
+                config('forus.seeders.lorem_db_seeder.url_sponsor'),
+                compact('key')
             ),
-            'url_provider' => env(
-                'DB_SEED_URL_PROVIDER',
-                "https://dev.$key.forus.io/provider/#!/"
+            'url_provider' => str_var_replace(
+                config('forus.seeders.lorem_db_seeder.url_provider'),
+                compact('key')
             ),
-            'url_validator' => env(
-                'DB_SEED_URL_VALIDATOR',
-                "https://dev.$key.forus.io/validator/#!/"
+            'url_validator' => str_var_replace(
+                config('forus.seeders.lorem_db_seeder.url_validator'),
+                compact('key')
             ),
-            'url_app' => env(
-                'DB_SEED_URL_APP',
-                "https://dev.$key.forus.io/me/#!/"
+            'url_app' => str_var_replace(
+                config('forus.seeders.lorem_db_seeder.url_app'),
+                compact('key')
             ),
-            'digid_enabled' => !empty(env('DB_SEED_DIGID_SHARED_SECRET', null)),
-            'digid_app_id' => env('DB_SEED_DIGID_APP_ID', null),
-            'digid_shared_secret' => env('DB_SEED_DIGID_SHARED_SECRET', null),
-            'digid_a_select_server' => env('DB_SEED_DIGID_A_SELECT_SERVER', null),
+
+            'digid_enabled'         => config('forus.seeders.lorem_db_seeder.digid_enabled'),
+            'digid_app_id'          => config('forus.seeders.lorem_db_seeder.digid_app_id'),
+            'digid_shared_secret'   => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
+            'digid_a_select_server' => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
         ]);
     }
 
@@ -443,23 +480,11 @@ class LoremDbSeeder extends Seeder
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured'
         ]))->toArray());
 
-        $fund->criteria()->createMany([[
-            'record_type_key'   => 'children_nth',
-            'operator'          => '>',
-            'value'             => 2,
-        ], [
-            'record_type_key'   => 'net_worth',
-            'operator'          => '<',
-            'value'             => 1000,
-        ], [
-            'record_type_key'   => 'gender',
-            'operator'          => '=',
-            'value'             => 'Female',
-        ]]);
+        $fund->criteria()->createMany(config('forus.seeders.lorem_db_seeder.funds_criteria'));
 
         $fund->fund_formulas()->create([
             'type'      => 'fixed',
-            'amount'    => 600
+            'amount'    => config('forus.seeders.lorem_db_seeder.voucher_amount')
         ]);
     }
 
@@ -597,6 +622,13 @@ class LoremDbSeeder extends Seeder
                 'expire_at'
             ]))->toArray()
         );
+    }
+
+
+    public function makeOtherImplementations($implementations) {
+        foreach ($implementations as $implementation) {
+            $this->makeImplementation(str_slug($implementation), $implementation);
+        }
     }
 
     /**

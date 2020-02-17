@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Dimsav\Translatable\Translatable;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -17,14 +17,16 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
  * @property-read int|null $organizations_count
+ * @property-read \App\Models\BusinessTypeTranslation $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BusinessTypeTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType listsTranslations($translationField)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType notTranslatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orWhereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orWhereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orWhereTranslation($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orWhereTranslationLike($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orderByTranslation($translationField, $sortMethod = 'asc')
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType translated()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType translatedIn($locale = null)
@@ -32,12 +34,11 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereParentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereTranslationLike($translationField, $value, $locale = null)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType withTranslation()
  * @mixin \Eloquent
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\BusinessType orderByTranslation($key, $sortmethod = 'asc')
  */
 class BusinessType extends Model
 {

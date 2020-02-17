@@ -20,16 +20,39 @@ class FundRequestSubscriber
         $this->notificationService = resolve('forus.services.notification');
     }
 
-    public function onFundRequestCreated(FundRequestCreated $fundCreated) {
-        $fundRequest = $fundCreated->getFundRequest();
+    /**
+     * @param FundRequestCreated $fundRequestCreated
+     * @throws \Exception
+     */
+    public function onFundRequestCreated(
+        FundRequestCreated $fundRequestCreated
+    ) {
+        $fund = $fundRequestCreated->getFund();
+        $fundRequest = $fundRequestCreated->getFundRequest();
         $identity_address = $fundRequest->identity_address;
 
-        $this->notificationService->newFundRequestCreated(
-            $this->recordService->primaryEmailByAddress($identity_address),
-            $fundRequest->identity_address,
-            $fundRequest->fund->name,
-            $fundRequest->fund->urlWebshop()
-        );
+        $recordRepo = resolve('forus.services.record');
+
+        // assign fund request to default validator
+        if ($fund->default_validator_employee) {
+            $fundRequest->assignEmployee($fund->default_validator_employee);
+        }
+
+        // auto approve request if required
+        if ($fund->default_validator_employee &&
+            $fund->auto_requests_validation &&
+            $fundRequest->employee &&
+            !empty($recordRepo->bsnByAddress($fundRequest->identity_address))
+        ) {
+            $fundRequest->approve();
+        } else {
+            $this->notificationService->newFundRequestCreated(
+                $this->recordService->primaryEmailByAddress($identity_address),
+                $fundRequest->identity_address,
+                $fund->name,
+                $fund->urlWebshop()
+            );
+        }
     }
 
     public function onFundRequestResolved(FundRequestResolved $fundCreated) {

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\HasTags;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -23,8 +24,8 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property int $organization_id
  * @property string $name
+ * @property string|null $description
  * @property string $state
- * @property string $description
  * @property bool $public
  * @property float|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
@@ -32,12 +33,15 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $default_validator_employee_id
+ * @property bool $auto_requests_validation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
  * @property-read int|null $bunq_me_tabs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
  * @property-read int|null $bunq_me_tabs_paid_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
+ * @property-read \App\Models\Employee|null $default_validator_employee
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees_validators
@@ -67,16 +71,30 @@ use Illuminate\Http\Request;
  * @property-read int|null $product_categories_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
+ * @property-read int|null $provider_invitations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations
  * @property-read int|null $provider_organizations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved
  * @property-read int|null $provider_organizations_approved_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_budget
+ * @property-read int|null $provider_organizations_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_products
+ * @property-read int|null $provider_organizations_approved_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_declined
  * @property-read int|null $provider_organizations_declined_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_pending
  * @property-read int|null $provider_organizations_pending_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers
  * @property-read int|null $providers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_allowed_products
+ * @property-read int|null $providers_allowed_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
+ * @property-read int|null $providers_approved_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
+ * @property-read int|null $providers_declined_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
  * @property-read int|null $top_up_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
@@ -90,7 +108,10 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereName($value)
@@ -102,21 +123,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_budget
- * @property-read int|null $provider_organizations_approved_budget_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_products
- * @property-read int|null $provider_organizations_approved_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_allowed_products
- * @property-read int|null $providers_allowed_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
- * @property-read int|null $providers_declined_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
- * @property-read int|null $tags_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
- * @property-read int|null $provider_invitations_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
- * @property-read int|null $providers_approved_count
  */
 class Fund extends Model
 {
@@ -141,7 +147,8 @@ class Fund extends Model
      */
     protected $fillable = [
         'organization_id', 'state', 'name', 'description', 'start_date',
-        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public'
+        'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
+        'default_validator_employee_id', 'auto_requests_validation'
     ];
 
     protected $hidden = [
@@ -150,6 +157,7 @@ class Fund extends Model
 
     protected $casts = [
         'public' => 'boolean',
+        'auto_requests_validation' => 'boolean',
     ];
 
     /**
@@ -279,6 +287,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function default_validator_employee() {
+        return $this->belongsTo(Employee::class, 'default_validator_employee_id');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function top_up_transactions() {
@@ -377,7 +392,7 @@ class Fund extends Model
             Organization::class,
             'fund_providers'
         )->where(function(Builder $builder) {
-            $builder->orWhere('allow_products', true);
+            $builder->where('allow_products', true);
         });
     }
 
@@ -539,7 +554,7 @@ class Fund extends Model
         string $recordType,
         Organization $organization = null
     ) {
-        $recordRepo = app()->make('forus.services.record');
+        $recordRepo = resolve('forus.services.record');
 
         $trustedIdentities = $fund->validatorIdentities();
 
@@ -751,7 +766,41 @@ class Fund extends Model
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
+
                 $fund->changeState(self::STATE_CLOSED);
+
+                /** @var NotificationService $mailService */
+                $mailService = resolve('forus.services.notification');
+
+                foreach ($fund->provider_organizations_approved as $organization) {
+                    $mailService->fundClosedProvider(
+                        $organization->email,
+                        $fund->name,
+                        $fund->end_date,
+                        $organization->name,
+                        $fund->fund_config->implementation->url_provider ?? env('PANEL_PROVIDER_URL')
+                    );
+                }
+
+                $identities = $fund->vouchers->filter(function(Voucher $voucher) {
+                    return $voucher->identity_address;
+                })->pluck('identity_address');
+                $recordService = resolve('forus.services.record');
+
+                $emails = $identities->map(function($identity_address) use ($recordService) {
+                    return $recordService->primaryEmailByAddress($identity_address);
+                });
+
+                foreach ($emails as $email) {
+                    $mailService->fundClosed(
+                        $email,
+                        $fund->name,
+                        $fund->end_date,
+                        $fund->organization->email,
+                        $fund->organization->name,
+                        $fund->fund_config->implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL')
+                    );
+                }
             }
         }
     }
@@ -839,11 +888,11 @@ class Fund extends Model
             $organization = $fund->organization;
             $sponsorCount = $organization->employees->count() + 1;
 
-            $providers = FundProvider::whereActiveQueryBuilder(
-                $fund->providers()
-            )->get();
+            $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
+                FundProvider::query(), $fund->id
+            );
 
-            $providerCount = $providers->map(function ($fundProvider){
+            $providerCount = $providersQuery->get()->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */
                 return $fundProvider->organization->employees->count() + 1;
             })->sum();

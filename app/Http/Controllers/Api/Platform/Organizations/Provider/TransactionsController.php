@@ -24,15 +24,19 @@ class TransactionsController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('indexProvider', [VoucherTransaction::class, $organization]);
+        $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        return ProviderVoucherTransactionResource::collection(
-            VoucherTransaction::searchProvider($request, $organization)->with(
+        $transactionsQuery = VoucherTransaction::searchProvider($request, $organization)->with(
                 ProviderVoucherTransactionResource::$load
-            )->paginate(
-                $request->input('per_page', 25)
-            )
         );
+        
+        $meta = [
+            'total_amount' => currency_format($transactionsQuery->sum('amount'))
+        ];
+        
+        return ProviderVoucherTransactionResource::collection(
+            $transactionsQuery->paginate($request->input('per_page', 25))
+        )->additional(compact('meta'));
     }
 
     /**
@@ -47,7 +51,8 @@ class TransactionsController extends Controller
         IndexTransactionsRequest $request,
         Organization $organization
     ) {
-        $this->authorize('index', Organization::class);
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
         return resolve('excel')->download(
             new VoucherTransactionsProviderExport($request, $organization),

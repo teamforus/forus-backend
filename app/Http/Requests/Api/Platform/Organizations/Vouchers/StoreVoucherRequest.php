@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Models\Product;
 use App\Rules\ValidPrevalidationCodeRule;
+use App\Scopes\Builders\ProductQuery;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Query\Builder;
@@ -27,22 +29,19 @@ class StoreVoucherRequest extends FormRequest
      */
     public function rules()
     {
-        $fund = Fund::find($this->input('fund_id'));
+        $fund_id = $this->input('fund_id');
+        $fund = Fund::find($fund_id);
+
         $endDate = $fund ? $fund->end_date->format('Y-m-d') : 'today';
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
-        $providers = $fund ?
-            $fund->provider_organizations_approved->pluck('id') : collect();
 
-        $productIdRule = Rule::exists('products', 'id')->where(function (
-            Builder $query
-        ) use ($providers) {
-            $query->whereIn('organization_id', $providers->toArray());
-        });
+        $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $fund_id);
+        $validProducts = $productsQuery->pluck('id')->toArray();
 
         return [
             'fund_id'   => 'required|exists:funds,id',
-            'email'     => 'nullable|email',
+            'email'     => 'nullable|email:strict,dns',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
                 'required_without_all:product_id', 'numeric',
@@ -55,8 +54,24 @@ class StoreVoucherRequest extends FormRequest
                 'nullable', new ValidPrevalidationCodeRule($fund),
             ],
             'product_id' => [
-                'required_without_all:amount', $productIdRule,
+                'required_without_all:amount',
+                Rule::exists('products', 'id')->where(function(
+                    Builder $builder
+                ) use ($validProducts) {
+                    return $builder->whereIn('id', $validProducts);
+                }),
             ],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function messages() {
+        return [
+            'amount.between' => 'Er staat niet genoeg budget op het fonds. '.
+                'Het maximale tegoed van een voucher is €:max. '.
+                'Vul het fonds aan om deze voucher aan te maken.'
         ];
     }
 }

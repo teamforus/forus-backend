@@ -30,7 +30,7 @@ class FundRequestClarificationsController extends Controller
         Fund $fund,
         FundRequest $fundRequest
     ) {
-        $this->authorize('indexValidator', [
+        $this->authorize('viewAnyValidator', [
             FundRequestClarification::class, $fundRequest, $fund, $organization
         ]);
 

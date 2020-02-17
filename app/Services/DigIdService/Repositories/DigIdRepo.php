@@ -22,10 +22,10 @@ class DigIdRepo implements IDigIdRepo
     const DIGID_WEBSERVICE_NOT_ACTIVE       = '0080';
     const DIGID_WEBSERVICE_NOT_AUTHORISED   = '0099';
     const DIGID_TEMPORARY_UNAVAILABLE_2     = '010c';
+    const DIGID_API_NOT_RESPONDING          = 'API_0000';
 
     const URL_API_SANDBOX = "https://was-preprod1.digid.nl/was/server";
-    // TODO: set real production api
-    const URL_API_PRODUCTION = "https://was-preprod1.digid.nl/was/server";
+    const URL_API_PRODUCTION = "https://was.digid.nl/was/server";
 
     const ENV_SANDBOX = "sandbox";
     const ENV_PRODUCTION = "production";
@@ -62,33 +62,37 @@ class DigIdRepo implements IDigIdRepo
     public static function responseCodeDetails($errorCode)
     {
         if ($errorCode == self::DIGID_SUCCESS) {
-            return 'DIGID_SUCCESS';
+            return 'FundRequestAutoComponent.js';
         } elseif ($errorCode == self::DIGID_UNAVAILABLE) {
-            return 'DIGID_UNAVAILABLE';
+            return 'digid_unavailable';
         } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_1) {
-            return 'DIGID_TEMPORARY_UNAVAILABLE_1';
+            return 'digid_temporary_unavailable_1';
         } elseif ($errorCode == self::DIGID_VERIFICATION_FAILED_1) {
-            return 'DIGID_VERIFICATION_FAILED_1';
+            return 'digid_verification_failed_1';
         } elseif ($errorCode == self::DIGID_VERIFICATION_FAILED_2) {
-            return 'DIGID_VERIFICATION_FAILED_2';
+            return 'digid_verification_failed_2';
         } elseif ($errorCode == self::DIGID_ILLEGAL_REQUEST) {
-            return 'DIGID_ILLEGAL_REQUEST';
+            return 'digid_illegal_request';
         } elseif ($errorCode == self::DIGID_ERROR_APP_ID) {
-            return 'DIGID_ERROR_APP_ID';
+            return 'digid_error_app_id';
         } elseif ($errorCode == self::DIGID_ERROR_ASELECT) {
-            return 'DIGID_ERROR_ASELECT';
+            return 'digid_error_aselect';
         } elseif ($errorCode == self::DIGID_CANCELLED) {
-            return 'DIGID_CANCELLED';
+            return 'digid_cancelled';
         } elseif ($errorCode == self::DIGID_BUSY) {
-            return 'DIGID_BUSY';
+            return 'digid_busy';
         } elseif ($errorCode == self::DIGID_INVALID_SESSION) {
-            return 'DIGID_INVALID_SESSION';
+            return 'digid_invalid_session';
         } elseif ($errorCode == self::DIGID_WEBSERVICE_NOT_ACTIVE) {
-            return 'DIGID_WEBSERVICE_NOT_ACTIVE';
+            return 'digid_webservice_not_active';
         } elseif ($errorCode == self::DIGID_WEBSERVICE_NOT_AUTHORISED) {
-            return 'DIGID_WEBSERVICE_NOT_AUTHORISED';
+            return 'digid_webservice_not_authorised';
         } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_2) {
-            return 'DIGID_TEMPORARY_UNAVAILABLE_2';
+            return 'digid_temporary_unavailable_2';
+        } elseif ($errorCode == self::DIGID_TEMPORARY_UNAVAILABLE_2) {
+            return 'digid_api_not_responding';
+        } elseif ($errorCode == self::DIGID_API_NOT_RESPONDING) {
+            return 'digid_api_not_responding';
         }
 
         return $errorCode;
@@ -196,7 +200,14 @@ class DigIdRepo implements IDigIdRepo
             "app_url"           => $app_url,
         ], $extraParams)));
 
-        $response = (new Client())->get($request);
+        try {
+            $response = (new Client())->get($request);
+        } catch (\Exception $exception) {
+            throw (new DigIdException(
+                "Digid API not responding."
+            ))->setDigIdCode(self::DIGID_API_NOT_RESPONDING);
+        }
+
         $result = $this->parseResponseBody($response->getBody());
         $result_code = $result['result_code'] ?? false;
 

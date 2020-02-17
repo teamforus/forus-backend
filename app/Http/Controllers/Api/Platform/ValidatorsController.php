@@ -15,7 +15,7 @@ class ValidatorsController extends Controller
     protected $recordRepo;
 
     public function __construct() {
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     /**

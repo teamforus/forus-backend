@@ -35,7 +35,8 @@ return [
         ],
         "products" => [
             // list all funds
-            "list" => true
+            "list" => true,
+            "maxProductCount" => env('PRODUCT_MAX_COUNT', 25)
         ],
     ],
 ];

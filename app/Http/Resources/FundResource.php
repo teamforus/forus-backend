@@ -35,19 +35,13 @@ class FundResource extends Resource
             return $carry + ($organization->employees->count() + 1);
         }, 0);
 
-        if ($fund->state == Fund::STATE_ACTIVE) {
-            $requesterCount = $fund->vouchers->where(
-                'parent_id', '=', null
-            )->count();
-        } else {
-            $requesterCount = 0;
-        }
-
         if (Gate::allows('funds.showFinances', [$fund, $organization])) {
             $financialData = [
                 'sponsor_count'             => $sponsorCount,
                 'provider_employees_count'  => $providersEmployeeCount,
-                'requester_count'           => $requesterCount,
+                'requester_count'           => $fund->vouchers->where(
+                    'parent_id', '=', null
+                )->count(),
                 'validators_count'          => $validators->count(),
                 'budget'                    => [
                     'total'     => currency_format($fund->budget_total),
@@ -89,6 +83,12 @@ class FundResource extends Resource
             }),
             'fund_amount' => $fund->amountFixedByFormula()
         ], $financialData);
+
+        if ($organization->identityCan(auth()->id(), 'manage_funds')) {
+            $data = array_merge($data, $fund->only([
+                'default_validator_employee_id', 'auto_requests_validation'
+            ]));
+        }
 
         if ($organization->identityCan(auth()->id(), 'validate_records')) {
             $data = array_merge($data, [

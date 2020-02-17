@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Support\Collection;
 
 /**
  * Class OrganizationBasicResource
@@ -16,7 +17,7 @@ class OrganizationBasicResource extends Resource
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @return array|Collection
      */
     public function toArray($request)
     {

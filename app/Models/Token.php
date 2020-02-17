@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Dimsav\Translatable\Translatable;
+use Astrotomic\Translatable\Translatable;
 
 /**
  * App\Models\Token
@@ -16,14 +16,16 @@ use Dimsav\Translatable\Translatable;
  * @property-read \App\Models\Fund $fund
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
+ * @property-read \App\Models\TokenTranslation $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\TokenTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token listsTranslations($translationField)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token notTranslatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token orWhereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token orWhereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token orWhereTranslation($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token orWhereTranslationLike($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token orderByTranslation($translationField, $sortMethod = 'asc')
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token translated()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token translatedIn($locale = null)
@@ -32,12 +34,11 @@ use Dimsav\Translatable\Translatable;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereTranslationLike($translationField, $value, $locale = null)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token withTranslation()
  * @mixin \Eloquent
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Token orderByTranslation($key, $sortmethod = 'asc')
  */
 class Token extends Model
 {

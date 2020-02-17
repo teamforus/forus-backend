@@ -29,14 +29,14 @@ class StoreOrganizationRequest extends FormRequest
         return [
             'name'                  => 'required|between:2,200',
             'iban'                  => ['required', new IbanRule()],
-            'email'                 => 'required|email',
+            'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:6,20',
             'phone_public'          => 'boolean',
             'kvk'                   => [
                 'required',
                 'digits:8',
-                'unique:organizations,kvk',
+                !env("KVK_API_DEBUG", false) ? 'unique:organizations,kvk' : null,
                 new KvkRule()
             ],
             'btw'                   => ['nullable', 'string', new BtwRule()],

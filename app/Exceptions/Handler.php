@@ -5,7 +5,6 @@ namespace App\Exceptions;
 use ElasticApm;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Support\Facades\Log;
 
 class Handler extends ExceptionHandler
 {
@@ -44,7 +43,7 @@ class Handler extends ExceptionHandler
             ElasticApm::send();
         }
         catch (\Throwable $e) {
-            Log::error($e);
+            logger()->error($e);
         }
 
         parent::report($exception);
@@ -56,6 +55,7 @@ class Handler extends ExceptionHandler
      * @param \Illuminate\Http\Request $request
      * @param Exception $exception
      * @return \Symfony\Component\HttpFoundation\Response
+     * @throws Exception
      */
     public function render($request, Exception $exception)
     {

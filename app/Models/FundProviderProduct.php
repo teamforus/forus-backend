@@ -13,8 +13,7 @@ namespace App\Models;
  * @property-read \App\Models\FundProvider $fund_provider
  * @property-read string|null $created_at_locale
  * @property-read string|null $updated_at_locale
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
- * @property-read int|null $products_count
+ * @property-read \App\Models\Product $product
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct query()
@@ -31,8 +30,8 @@ class FundProviderProduct extends Model
         'product_id', 'fund_provider_id'
     ];
 
-    public function products() {
-        return $this->hasMany(Product::class);
+    public function product() {
+        return $this->belongsTo(Product::class);
     }
 
     public function fund_provider() {

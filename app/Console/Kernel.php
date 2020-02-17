@@ -55,6 +55,15 @@ class Kernel extends ConsoleKernel
   
         $schedule->command('digid:session-clean')
             ->everyMinute()->withoutOverlapping()->onOneServer();
+
+        // use cron to send email/notifications
+        if (env('QUEUE_USE_CRON', false)) {
+            $schedule->command('queue:work --queue=' . env('EMAIL_QUEUE_NAME', 'emails'))
+                ->everyMinute()->withoutOverlapping()->onOneServer();
+
+            $schedule->command('queue:work --queue=' . env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications'))
+                ->everyMinute()->withoutOverlapping()->onOneServer();
+        }
     }
 
     /**

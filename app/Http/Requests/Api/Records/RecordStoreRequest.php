@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Records;
 
-use App\Rules\IdentityRecordsUniqueRule;
 use App\Rules\RecordCategoryIdRule;
 use App\Rules\RecordTypeKeyExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,7 +30,7 @@ class RecordStoreRequest extends FormRequest
         $valueRules = ['required'];
 
         if ($type == 'email' || $type == 'primary_email') {
-            array_push($valueRules, 'email');
+            array_push($valueRules, 'email:strict,dns');
         }
 
         /*if ($type == 'primary_email') {

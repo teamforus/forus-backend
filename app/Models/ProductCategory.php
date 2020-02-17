@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\NodeTrait;
-use Dimsav\Translatable\Translatable;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -32,6 +32,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\ProductCategory|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
+ * @property-read \App\Models\ProductCategoryTranslation $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductCategoryTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory d()
@@ -39,8 +40,9 @@ use Illuminate\Http\Request;
  * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newModelQuery()
  * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory notTranslatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslation($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslationLike($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orderByTranslation($translationField, $sortMethod = 'asc')
  * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translated()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translatedIn($locale = null)
@@ -51,12 +53,11 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereParentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereRgt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereService($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslationLike($translationField, $value, $locale = null)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory withTranslation()
  * @mixin \Eloquent
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orderByTranslation($key, $sortmethod = 'asc')
  */
 class ProductCategory extends Model
 {

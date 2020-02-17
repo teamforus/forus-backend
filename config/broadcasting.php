@@ -54,6 +54,20 @@ return [
             'driver' => 'null',
         ],
 
+        'apn' => env('APN_ENABLED', false) ? [
+            'environment' => env('APN_SANDBOX', true) ?
+                \NotificationChannels\Apn\ApnChannel::SANDBOX :
+                \NotificationChannels\Apn\ApnChannel::PRODUCTION,
+            'certificate' => env('APN_CERTIFICATE_PATH_RAW', false) ?: storage_path(
+                env('APN_CERTIFICATE_PATH', false) ?: "app/apn-cert.pem"
+            ),
+            // optional pass phrase
+            'pass_phrase' => env('APN_PASS_PHRASE', null),
+        ] : null,
+
+        'fcm' => env('FCM_ENABLED', false) ? [
+            'key' => env('FCM_KEY'),
+        ] : null,
     ],
 
 ];

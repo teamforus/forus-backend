@@ -36,9 +36,7 @@ class BearerTokenGuard implements Guard
 
     public function id()
     {
-        if ($user = $this->user()) {
-            return $this->user()->getAuthIdentifier();
-        }
+        return $this->user() ? $this->user()->getAuthIdentifier() : null;
     }
 
     public function user()

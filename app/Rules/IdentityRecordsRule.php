@@ -16,7 +16,7 @@ class IdentityRecordsRule implements Rule
      */
     public function __construct()
     {
-        $this->recordRepo = app()->make('forus.services.record');
+        $this->recordRepo = resolve('forus.services.record');
     }
 
     /**

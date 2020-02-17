@@ -19,7 +19,7 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Services\MediaService\Models\Media;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
@@ -36,12 +36,11 @@ class RouteServiceProvider extends ServiceProvider
 
     /**
      * Define your route model bindings, pattern filters, etc.
-     *
-     * @return void
+     * 
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function boot()
     {
-        //
 
         parent::boot();
 
@@ -56,7 +55,8 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('prevalidation_uid', function ($value) {
             return Prevalidation::query()->where([
-                    'uid' => $value
+                    'uid' => $value,
+                    'state' => Prevalidation::STATE_PENDING
                 ])->first() ?? null;
         });
 
@@ -92,6 +92,22 @@ class RouteServiceProvider extends ServiceProvider
             return VoucherToken::query()->where([
                     'address' => $value
                 ])->first() ?? abort(404);
+        });
+
+        $router->bind('product_voucher_token_address', function ($value) {
+            return VoucherToken::query()->where([
+                    'address' => $value
+                ])->whereHas('voucher', function(Builder $builder) {
+                    $builder->whereNotNull('parent_id');
+                })->first() ?? abort(404);
+        });
+
+        $router->bind('budget_voucher_token_address', function ($value) {
+            return VoucherToken::query()->where([
+                    'address' => $value
+                ])->whereHas('voucher', function(Builder $builder) {
+                    $builder->whereNull('parent_id');
+                })->first() ?? abort(404);
         });
 
         $router->bind('transaction_address', function ($value) {
@@ -141,65 +157,13 @@ class RouteServiceProvider extends ServiceProvider
                 'state'         => DigIdSession::STATE_PENDING_AUTH,
                 'session_uid'   => $digid_session_uid,
             ])->where(
-                'created_at', '>=', now()->subSecond(
+                'created_at', '>=', now()->subSeconds(
                     DigIdSession::SESSION_EXPIRATION_TIME
                 ))->first() ?? abort(404);
         });
 
         $router->bind('platform_config', function ($value) {
-            if (Implementation::implementationKeysAvailable()->search(
-                Implementation::activeKey()
-            ) === false) {
-                return abort(403, 'unknown_implementation_key');
-            };
-
-
-            $ver = request()->input('ver');
-
-            if (preg_match('/[^a-z_\-0-9]/i', $value)) {
-                abort(403);
-            }
-
-            if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
-                abort(403);
-            }
-
-            $config = config(
-                'forus.features.' . $value . ($ver ? '.' . $ver : '')
-            );
-
-            if (is_array($config)) {
-                $config['media'] = collect(config('media.sizes'))->map(function($size) {
-                    return collect($size)->only([
-                        'aspect_ratio', 'size'
-                    ]);
-                });
-            }
-
-            if (is_array($config)) {
-                $implementation = Implementation::active();
-                $implementationModal = Implementation::activeModel();
-
-
-                $config['digid'] = $implementationModal ?
-                    $implementationModal->digidEnabled() : false;
-
-                $config['fronts'] = $implementation->only([
-                    'url_webshop', 'url_sponsor', 'url_provider',
-                    'url_validator', 'url_app'
-                ]);
-
-                $config['map'] = [
-                    'lon' => doubleval(
-                        $implementation['lon'] ?: config('forus.front_ends.map.lon')
-                    ),
-                    'lat' => doubleval(
-                        $implementation['lat'] ?: config('forus.front_ends.map.lat')
-                    )
-                ];
-            }
-
-            return $config ?: [];
+            return Implementation::platformConfig($value);
         });
     }
 
@@ -226,9 +190,9 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapWebRoutes()
     {
-        Route::middleware('web')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/web.php'));
+        Route::namespace($this->namespace)->middleware([
+            'web'
+        ])->group(base_path('routes/web.php'));
     }
 
     /**
@@ -240,18 +204,16 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapApiRoutes()
     {
-        Route::prefix('api/v1')
-             ->middleware([
-                 'api', 'implementation_key', 'client_key'
-             ])
-             ->namespace($this->namespace)
-             ->group(base_path('routes/api.php'));
+        Route::prefix('api/v1')->namespace(
+            $this->namespace
+        )->middleware([
+             'api', 'implementation_key', 'client_key',
+         ])->group(base_path('routes/api.php'));
 
-        Route::prefix('api/v1/platform')
-            ->middleware([
-                'api', 'implementation_key', 'client_key'
-            ])
-            ->namespace($this->namespace)
-            ->group(base_path('routes/api-platform.php'));
+        Route::prefix('api/v1/platform')->namespace(
+            $this->namespace
+        )->middleware([
+            'api', 'implementation_key', 'client_key',
+        ])->group(base_path('routes/api-platform.php'));
     }
 }

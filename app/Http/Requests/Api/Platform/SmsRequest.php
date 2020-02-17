@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Class SmsRequest
@@ -28,8 +29,16 @@ class SmsRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|string',
-            'phone' => 'required'
+            'type' => [
+                'required', Rule::in([
+                    'me_app_download_link'
+                ])
+            ],
+            'phone' => [
+                "required",
+                "starts_with:+31",
+                "size:12"
+            ]
         ];
     }
 }

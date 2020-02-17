@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
-use App\Rules\IdentityRecordsExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\NotIn;
 
@@ -31,7 +30,7 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'email'     => [
                 'required',
-                'email',
+                'email:strict,dns',
                 new NotIn([$primaryEmail]),
             ],
             'roles'     => 'present|array',

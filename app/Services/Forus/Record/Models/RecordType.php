@@ -2,7 +2,7 @@
 
 namespace App\Services\Forus\Record\Models;
 
-use Dimsav\Translatable\Translatable;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -13,27 +13,28 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Services\Forus\Record\Models\RecordTypeTranslation $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordTypeTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType listsTranslations($translationField)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType notTranslatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType orWhereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType orWhereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType orWhereTranslation($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType orWhereTranslationLike($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType orderByTranslation($translationField, $sortMethod = 'asc')
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType translated()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType translatedIn($locale = null)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereTranslation($key, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereTranslationLike($key, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereTranslationLike($translationField, $value, $locale = null)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType withTranslation()
  * @mixin \Eloquent
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType orderByTranslation($key, $sortmethod = 'asc')
  */
 class RecordType extends Model
 {

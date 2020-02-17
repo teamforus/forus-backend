@@ -17,19 +17,21 @@ use Illuminate\Database\Query\Builder;
  * @property string $name
  * @property string $iban
  * @property string $email
- * @property int $email_public
+ * @property bool $email_public
  * @property string $phone
- * @property int $phone_public
+ * @property bool $phone_public
  * @property string $kvk
  * @property string $btw
  * @property string|null $website
- * @property int $website_public
+ * @property bool $website_public
  * @property int|null $business_type_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
+ * @property-read int|null $fund_provider_invitations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
@@ -51,12 +53,17 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $supplied_funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved
  * @property-read int|null $supplied_funds_approved_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_budget
+ * @property-read int|null $supplied_funds_approved_budget_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
+ * @property-read int|null $supplied_funds_approved_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
  * @property-read int|null $validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $vouchers_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newQuery()
@@ -77,12 +84,6 @@ use Illuminate\Database\Query\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_budget
- * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
- * @property-read int|null $supplied_funds_approved_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
- * @property-read int|null $tags_count
  */
 class Organization extends Model
 {
@@ -100,7 +101,10 @@ class Organization extends Model
     ];
 
     protected $casts = [
-        'btw' => 'string'
+        'btw'               => 'string',
+        'email_public'      => 'boolean',
+        'phone_public'      => 'boolean',
+        'website_public'    => 'boolean',
     ];
 
     /**
@@ -177,8 +181,11 @@ class Organization extends Model
             Fund::class,
             'fund_providers'
         )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
-            $builder->where('fund_providers.allow_products', true);
-            $builder->orWhereHas('products');
+            $builder->where('fund_providers.allow_budget', true);
+            $builder->orWhere(function(\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->where('fund_providers.allow_products', true);
+                $builder->orWhere('fund_providers.allow_some_products', true);
+            });
         });
     }
 
@@ -245,15 +252,43 @@ class Organization extends Model
     }
 
     /**
-     * @param string $role
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     * @param $role
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function employeesOfRole(string $role) {
+    public function employeesOfRoleQuery($role) {
         return $this->employees()->whereHas('roles', function(
             \Illuminate\Database\Eloquent\Builder $query
         ) use ($role) {
-            $query->where('key', $role);
-        })->get();
+            $query->whereIn('key', (array) $role);
+        });
+    }
+
+    /**
+     * @param $permission
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function employeesWithPermissionsQuery($permission) {
+        return $this->employees()->whereHas('roles.permissions', function(
+            \Illuminate\Database\Eloquent\Builder $query
+        ) use ($permission) {
+            $query->whereIn('key', (array) $permission);
+        });
+    }
+
+    /**
+     * @param string|array $role
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     */
+    public function employeesOfRole($role) {
+        return $this->employeesOfRoleQuery($role)->get();
+    }
+
+    /**
+     * @param string|array $permission
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     */
+    public function employeesWithPermissions($permission) {
+        return $this->employeesWithPermissionsQuery($permission)->get();
     }
 
     /**
@@ -267,7 +302,7 @@ class Organization extends Model
      * Returns identity organization roles
      *
      * @param $identityAddress
-     * @return Collection
+     * @return Collection|\Illuminate\Support\Collection
      */
     public function identityRoles($identityAddress) {
         /** @var Employee $employee */
@@ -370,28 +405,38 @@ class Organization extends Model
          * Query all the organizations where identity_address has permissions
          * or is the creator
          */
-        return Organization::query()->whereIn('id', function(Builder $query) use ($identityAddress, $permissions) {
-            $query->select(['organization_id'])->from((new Employee)->getTable())->where([
-                'identity_address' => $identityAddress
-            ])->whereIn('id', function (Builder $query) use ($permissions) {
-                $query->select('employee_id')->from((new EmployeeRole)->getTable())->whereIn('role_id', function (Builder $query) use ($permissions) {
-                    $query->select(['id'])->from((new Role)->getTable())->whereIn('id', function (
-                        Builder $query
-                    )  use ($permissions) {
-                        return $query->select(['role_id'])->from((new RolePermission)->getTable())->whereIn('permission_id', function (Builder $query) use ($permissions) {
-                            $query->select('id')->from((new Permission)->getTable());
+        return Organization::query()->where(function(\Illuminate\Database\Eloquent\Builder $builder) use (
+            $identityAddress, $permissions
+        ) {
+            return $builder->whereIn('id', function(Builder $query) use (
+                $identityAddress, $permissions
+            ) {
+                $query->select(['organization_id'])->from((new Employee)->getTable())->where([
+                    'identity_address' => $identityAddress
+                ])->whereIn('id', function (Builder $query) use ($permissions) {
+                    $query->select('employee_id')->from(
+                        (new EmployeeRole)->getTable()
+                    )->whereIn('role_id', function (Builder $query) use ($permissions) {
+                        $query->select(['id'])->from((new Role)->getTable())->whereIn('id', function (
+                            Builder $query
+                        )  use ($permissions) {
+                            return $query->select(['role_id'])->from(
+                                (new RolePermission)->getTable()
+                            )->whereIn('permission_id', function (Builder $query) use ($permissions) {
+                                $query->select('id')->from((new Permission)->getTable());
 
-                            // allow any permission
-                            if ($permissions !== false) {
-                                $query->whereIn('key', $permissions);
-                            }
+                                // allow any permission
+                                if ($permissions !== false) {
+                                    $query->whereIn('key', $permissions);
+                                }
 
-                            return $query;
-                        });
-                    })->get();
+                                return $query;
+                            });
+                        })->get();
+                    });
                 });
-            });
-        })->orWhere('identity_address', $identityAddress);
+            })->orWhere('identity_address', $identityAddress);
+        });
     }
 
     /**

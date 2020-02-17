@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\Request;
 
 class ClientTypeMiddleware
 {
@@ -13,25 +14,22 @@ class ClientTypeMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next)
     {
-        if ($this->availableTypes()->search($this->activeType()) === false) {
+        if (!in_array($this->activeType($request), $this->availableTypes())) {
             return response()->json([
                 "message" => 'unknown_client_type'
             ])->setStatusCode(403);
-        };
+        }
 
         return $next($request);
     }
 
     private function availableTypes() {
-        return collect([
-            'webshop', 'website', 'general', 'app-me_app',
-            'sponsor', 'provider', 'validator',
-        ]);
+        return array_flatten(config('forus.clients'));
     }
 
-    private function activeType() {
-        return request()->header('Client-Type', 'general');
+    private function activeType(Request $request) {
+        return $request->header('Client-Type', config('forus.clients.default'));
     }
 }

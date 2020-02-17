@@ -58,7 +58,7 @@ class StoreBatchVoucherRequest extends FormRequest
                 'nullable', 'date_format:Y-m-d', 'after:' . $endDate,
             ],
             'vouchers.*.note'       => 'nullable|string|max:280',
-            'vouchers.*.email'      => 'nullable|email',
+            'vouchers.*.email'      => 'nullable|email:strict,dns',
         ];
     }
 }

@@ -8,6 +8,8 @@ use App\Mail\FundRequests\FundRequestClarificationRequestedMail;
 use App\Mail\FundRequests\FundRequestRecordDeclinedMail;
 use App\Mail\FundRequests\FundRequestResolvedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
+use App\Mail\Funds\FundClosed;
+use App\Mail\Funds\FundClosedProvider;
 use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
@@ -22,6 +24,7 @@ use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
 use App\Mail\Validations\AddedAsValidatorMail;
 use App\Mail\Validations\NewValidationRequestMail;
+use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Vouchers\FundStatisticsMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Mail\Vouchers\ProductReservedMail;
@@ -31,9 +34,12 @@ use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
+use App\Services\Forus\Notification\Models\NotificationToken;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Class MailService
@@ -41,12 +47,15 @@ use Illuminate\Mail\Mailable;
  */
 class NotificationService
 {
-    const TYPE_EMAIL = 1;
-    const TYPE_PUSH_ANDROID = 2;
-    const TYPE_PUSH_IOS = 3;
+    const TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
+    const TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
+
+    const TYPES = [
+        self::TYPE_PUSH_IOS,
+        self::TYPE_PUSH_ANDROID,
+    ];
 
     protected $notificationRepo;
-    protected $serviceApiUrl;
     protected $recordRepo;
     protected $apiRequest;
     protected $mailer;
@@ -69,152 +78,100 @@ class NotificationService
         $this->apiRequest = $apiRequest;
         $this->recordRepo = $recordRepo;
         $this->notificationRepo = $notificationRepo;
-        $this->serviceApiUrl = env('SERVICE_EMAIL_URL', false);
     }
 
     /**
-     * Get endpoint url
+     * Add notification token for identity
      *
-     * @param string $uri
-     * @param string|null $locale
-     * @return string
-     */
-    private function getEndpoint(
-        string $uri,
-        string $locale = null
-    ) {
-        if (!$locale) {
-            $locale = config('app.locale', 'en');
-        }
-
-        return $this->serviceApiUrl . '/' . $locale . $uri;
-    }
-
-    public static function typeCodeToString(int $code) {
-        switch ($code) {
-            case self::TYPE_EMAIL: return "Email"; break;
-            case self::TYPE_PUSH_ANDROID: return "Push message android"; break;
-            case self::TYPE_PUSH_IOS: return "Push message ios"; break;
-        }
-
-        return "Unknown";
-    }
-
-    /**
-     * Register new connection for given identifier
-     *
-     * @param $identifier
-     * @param int $type
-     * @param string $value
+     * @param $identity_address
+     * @param string $type
+     * @param string $token
      * @return bool
      */
-    public function addConnection(
-        $identifier,
-        int $type,
-        string $value
+    public function storeNotificationToken(
+        $identity_address,
+        string $type,
+        string $token
     ) {
-        if (!$this->serviceApiUrl) {
+        if (!in_array($type, self::TYPES)) {
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/user/connections/add/', 'en');
-
-        $res = $this->apiRequest->post($endpoint, [
-            'user_id'   => $identifier ?? '',
-            'type'      => $type,
-            'value'     => $value,
-        ]);
-
-        if ($res->getStatusCode() != 201) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error storing user %s contacts: %s',
-                    self::typeCodeToString($type),
-                    $res->getBody()
-                )
-            );
-
-            return false;
-        }
+        NotificationToken::firstOrCreate(
+            compact('identity_address', 'type', 'token')
+        );
 
         return true;
     }
 
     /**
-     * Register new connection for given identifier
+     * Remove notification token
      *
-     * @param $identifier
-     * @param string $value
-     * @return bool
+     * @param string $token
+     * @param string|null $type
+     * @param null $identity_address
      */
-    public function deleteConnection(
-        $identifier,
-        string $value
+    public function removeNotificationToken(
+        string $token,
+        string $type = null,
+        $identity_address = null
     ) {
-        if (!$this->serviceApiUrl) {
-            return false;
+        $query = NotificationToken::where(compact('token'));
+
+        if ($type) {
+            $query->where(compact('type'));
         }
 
-        $endpoint = $this->getEndpoint('/user/connections/remove/', 'en');
-
-        $res = $this->apiRequest->post($endpoint, [
-            'user_id'   => $identifier ?? '',
-            'value'     => $value,
-        ]);
-
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error removing user push token: %s',
-                    $res->getBody()
-                )
-            );
-
-            return false;
+        if ($identity_address) {
+            $query->where(compact('identity_address'));
         }
 
-        return true;
+        $query->delete();
     }
 
     /**
      * Send push notification
      *
-     * @param $identifier
+     * @param $identity_address
      * @param string $title
      * @param string $body
      * @param string $key
      * @return bool
      */
     public function sendPushNotification(
-        $identifier,
+        $identity_address,
         string $title,
         string $body,
         string $key = null
     ) {
-        if (!$this->serviceApiUrl ||
-            ($this->isPushUnsubscribable($key) &&
-            $this->isPushUnsubscribed($identifier, $key))
-        ) {
+        if ($this->isPushUnsubscribable($key) &&
+            $this->isPushUnsubscribed($identity_address, $key)) {
             return false;
         }
 
-        $endpoint = $this->getEndpoint('/sender/mobile/push/', 'en');
+        /** @var NotificationToken[] $notificationTokens */
+        $notificationTokens = NotificationToken::where([
+            'identity_address' => $identity_address
+        ])->get();
 
-        $res = $this->apiRequest->post($endpoint, [
-            'reffer_id' => $identifier ?? '',
-            'title'     => $title,
-            'body'      => $body,
-        ]);
+        foreach ($notificationTokens as $notificationToken) {
+            if (!config(sprintf(
+                'broadcasting.connections.%s',
+                $notificationToken->type
+            ))) {
+                continue;
+            }
 
-        if ($res->getStatusCode() != 200) {
-            app()->make('log')->error(
-                sprintf(
-                    'Error sending notification `sendPushNotification`: %s',
-                    $res->getBody()
-                )
+            $notification = $notificationToken->makeBasicNotification(
+                $title, $body
             );
 
-            return false;
+            if ($notification) {
+                Notification::route(
+                    $notificationToken->type,
+                    $notificationToken->token
+                )->notify($notification);
+            }
         }
 
         return true;
@@ -241,11 +198,11 @@ class NotificationService
         string $sponsor_dashboard_link
     ) {
         return $this->sendMail($email, new ProviderAppliedMail(
-            $identifier,
             $provider_name,
             $sponsor_name,
             $fund_name,
-            $sponsor_dashboard_link
+            $sponsor_dashboard_link,
+            $identifier
         ));
     }
 
@@ -570,6 +527,59 @@ class NotificationService
     }
 
     /**
+     * Notify users that fund was closed
+     *
+     * @param string $email
+     * @param string $fund_name
+     * @param string $fund_end_date
+     * @param string $fund_contact
+     * @param string $sponsor_name
+     * @param string $webshop_link
+     * @return bool|null
+     */
+    public function fundClosed(
+        string $email,
+        string $fund_name,
+        string $fund_end_date,
+        string $fund_contact,
+        string $sponsor_name,
+        string $webshop_link
+    ) {
+        return $this->sendMail($email, new FundClosed(
+            $fund_name,
+            $fund_end_date,
+            $fund_contact,
+            $sponsor_name,
+            $webshop_link
+        ));
+    }
+
+    /**
+     * Notify providers that fund was closed
+     *
+     * @param string $email
+     * @param string $fund_name
+     * @param string $fund_end_date
+     * @param string $sponsor_name
+     * @param string $dashboard_link
+     * @return bool|null
+     */
+    public function fundClosedProvider(
+        string $email,
+        string $fund_name,
+        string $fund_end_date,
+        string $sponsor_name,
+        string $dashboard_link
+    ) {
+        return $this->sendMail($email, new FundClosedProvider(
+            $fund_name,
+            $fund_end_date,
+            $sponsor_name,
+            $dashboard_link
+        ));
+    }
+
+    /**
      * Send number of fund users
      *
      * @param string $email
@@ -630,7 +640,7 @@ class NotificationService
      * @param $identifier
      * @param string $fund_name
      * @param string $fund_product_name
-     * @param string $qr_url
+     * @param string $qr_token
      *
      * @return bool
      */
@@ -639,12 +649,40 @@ class NotificationService
         $identifier,
         string $fund_name,
         string $fund_product_name,
-        string $qr_url
+        string $qr_token
     ): bool {
         return $this->sendMail($email, new SendVoucherMail(
             $fund_name,
             $fund_product_name,
-            $qr_url,
+            $qr_token,
+            $identifier
+        ));
+    }
+
+    /**
+     * Send assigned voucher to email
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $fund_name
+     * @param int $voucher_amount
+     * @param string $voucher_expire_minus_day
+     * @param string $qr_token
+     * @return bool
+     */
+    public function assignVoucher(
+        string $email,
+        $identifier,
+        string $fund_name,
+        int $voucher_amount,
+        string $voucher_expire_minus_day,
+        string $qr_token
+    ): bool {
+        return $this->sendMail($email, new AssignedVoucherMail(
+            $fund_name,
+            $qr_token,
+            $voucher_amount,
+            $voucher_expire_minus_day,
             $identifier
         ));
     }
@@ -656,7 +694,7 @@ class NotificationService
      * @param $identifier
      * @param string $requester_email
      * @param string $product_name
-     * @param string $qr_url
+     * @param string $qr_token
      * @param string $reason
      * @return bool
      */
@@ -665,13 +703,13 @@ class NotificationService
         $identifier,
         string $requester_email,
         string $product_name,
-        string $qr_url,
+        string $qr_token,
         string $reason
     ) {
         return $this->sendMail($email, new ShareProductVoucherMail(
             $requester_email,
             $product_name,
-            $qr_url,
+            $qr_token,
             $reason,
             $identifier
         ));
@@ -902,9 +940,14 @@ class NotificationService
                 rtrim(Implementation::active()['url_sponsor'], '/'),
                 'email/preferences');
 
-            $this->mailer->send($mailable->to($email)->with(compact(
+            /** @var Queueable|Mailable $message */
+            $message = $mailable->with(compact(
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
-            )));
+            ));
+
+            $message = $message->onQueue(env('EMAIL_QUEUE_NAME', 'emails'));
+
+            $this->mailer->to($email)->queue($message);
 
             return $this->checkFailure(get_class($mailable));
         } catch (\Exception $exception) {
@@ -945,13 +988,13 @@ class NotificationService
     /**
      * Check if Push notification is unsubscribed
      *
-     * @param string $identifier
+     * @param string $identity_address
      * @param string $key
      * @return bool
      */
-    protected function isPushUnsubscribed(string $identifier, string $key) {
+    protected function isPushUnsubscribed(string $identity_address, string $key) {
         return $this->notificationRepo->isPushNotificationUnsubscribed(
-            $identifier,
+            $identity_address,
             $key
         );
     }

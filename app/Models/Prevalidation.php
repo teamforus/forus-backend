@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property string|null $uid
  * @property string $identity_address
+ * @property string|null $redeemed_by_address
  * @property int|null $fund_id
  * @property int|null $organization_id
  * @property string $state
@@ -24,6 +25,8 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $prevalidation_records
  * @property-read int|null $prevalidation_records_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
+ * @property-read int|null $records_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation query()
@@ -33,12 +36,11 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRedeemedByAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
- * @property-read int|null $records_count
  */
 class Prevalidation extends Model
 {
@@ -61,8 +63,8 @@ class Prevalidation extends Model
      * @var array
      */
     protected $fillable = [
-        'uid', 'identity_address', 'state', 'fund_id', 'organization_id',
-        'exported',
+        'uid', 'identity_address', 'redeemed_by_address', 'state',
+        'fund_id', 'organization_id', 'exported',
     ];
 
     public static function assignAvailableToIdentityByBsn(string $identity_address)
@@ -125,7 +127,7 @@ class Prevalidation extends Model
     public static function search(
         Request $request
     ) {
-        $identity_address = $request->user();
+        $identity_address = auth_address();
 
         $q = $request->input('q', null);
         $fund_id =$request->input('fund_id', null);
@@ -252,7 +254,8 @@ class Prevalidation extends Model
         }
 
         return $this->updateModel([
-            'state' => 'used'
+            'state' => 'used',
+            'redeemed_by_address' => $identity_address
         ]);
     }
 }

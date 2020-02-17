@@ -11,7 +11,8 @@
 |
 */
 
-$router = app()->make('router');
+/** @var \Illuminate\Support\Facades\Route $router */
+$router = resolve('router');
 
 /**
  * No authorization required
@@ -125,6 +126,22 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             $router->patch('/{recordUuid}/approve', 'Api\Identity\RecordValidationController@approve');
             $router->patch('/{recordUuid}/decline', 'Api\Identity\RecordValidationController@decline');
         });
+
+        /**
+         * Sessions validations
+         */
+        $router->resource('sessions', 'Api\Identity\SessionController', [
+            'only' => [
+                'index', 'show'
+            ],
+            'parameters' => [
+                'sessions' => 'sessionUid'
+            ]
+        ]);
+
+        $router->patch('sessions/{sessionUid}/terminate', 'Api\Identity\SessionController@terminate');
+        $router->patch('sessions/terminate', 'Api\Identity\SessionController@terminateAll');
+
     });
 
     $router->get('/status', function() {

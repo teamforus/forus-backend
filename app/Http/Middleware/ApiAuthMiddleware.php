@@ -15,6 +15,13 @@ class ApiAuthMiddleware
      */
     public function handle($request, Closure $next)
     {
+        if (!$request->user()) {
+            return response()->json([
+                "message" => 'invalid_access_token'
+            ])->setStatusCode(401);
+        }
+
+        // TODO: deprecated, remove after making sure it's not used anywhere
         $proxyId = $request->user()->getProxyId();
         $proxyState = $request->user()->getProxyState();
         $address = $request->user()->getAddress();
