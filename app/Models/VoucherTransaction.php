@@ -124,9 +124,11 @@ class VoucherTransaction extends Model
             $body = trans('push.transactions.offline_product_voucher.body', $transData);
         }
 
-        $mailService->sendPushNotification(
-            $this->voucher->identity_address, $title, $body, 'voucher.transaction'
-        );
+        if ($this->voucher->identity_address) {
+            $mailService->sendPushNotification(
+                $this->voucher->identity_address, $title, $body, 'voucher.transaction'
+            );
+        }
     }
 
     /**
