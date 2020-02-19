@@ -18,8 +18,5 @@
     {{ mail_trans('voucher_sent.provider_scans') }}
     <br/>
     <br/>
-    {{ mail_trans('voucher_sent.purchase_notice', ['voucher_amount' => $voucher_amount]) }}
-    <br/>
-    <br/>
     {{ mail_trans('voucher_sent.have_fund') }}
 @endsection
