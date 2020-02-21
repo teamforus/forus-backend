@@ -648,6 +648,8 @@ class NotificationService
         string $email,
         $identifier,
         string $fund_name,
+        int $voucher_amount,
+        string $voucher_expire_minus_day,
         string $fund_product_name,
         string $qr_token
     ): bool {
@@ -655,6 +657,8 @@ class NotificationService
             $fund_name,
             $fund_product_name,
             $qr_token,
+            $voucher_amount,
+            $voucher_expire_minus_day,
             $identifier
         ));
     }
