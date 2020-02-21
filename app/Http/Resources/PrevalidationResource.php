@@ -34,7 +34,7 @@ class PrevalidationResource extends Resource
             'records' => PrevalidationRecordResource::collection(
                 $this->resource->prevalidation_records->filter(function($record) {
                     return strpos($record->record_type->key, '_eligible') === false;
-                })
+                })->sortByDesc('record_type_id')
             )
         ])->toArray();
     }

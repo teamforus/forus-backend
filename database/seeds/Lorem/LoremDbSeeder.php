@@ -95,12 +95,16 @@ class LoremDbSeeder extends Seeder
     }
 
     public function prepareDependencies() {
-        RecordType::firstOrCreate([
-            'key'       => 'meedoen_2020_eligible',
-            'type'      => 'string',
-        ])->update([
-            'name'      => 'Meedoen 2020 eligible',
-        ]);
+        foreach($this->implementationsWithFunds as $fundName) {
+            $fundRecordName = sprintf("%s %s eligible", $fundName, date('Y'));
+
+            RecordType::firstOrCreate([
+                'key'       => str_slug($fundRecordName, '_'),
+                'type'      => 'string',
+            ])->update([
+                'name'      => $fundRecordName,
+            ]);
+        }
     }
 
     /**
