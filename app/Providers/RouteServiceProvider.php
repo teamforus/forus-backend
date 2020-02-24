@@ -174,7 +174,7 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapWebRoutes()
     {
         Route::namespace($this->namespace)->middleware([
-            'web', 'forus_session'
+            'web'
         ])->group(base_path('routes/web.php'));
     }
 
