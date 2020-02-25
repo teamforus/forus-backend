@@ -58,4 +58,14 @@ class RecordType extends Model
     public $translatedAttributes = [
         'name'
     ];
+
+    /**
+     * @param array $attributes
+     * @param array $options
+     * @return bool|\App\Models\Model
+     */
+    public function updateModel(array $attributes = [], array $options = [])
+    {
+        return tap($this)->update($attributes, $options);
+    }
 }
