@@ -29,7 +29,7 @@
         "laravel/framework": "6.10.1",
         "laravel/helpers": "1.1.1",
         "laravel/tinker": "1.0.10",
-        "league/flysystem-aws-s3-v3": "1.0.23",
+        "league/flysystem-aws-s3-v3": "1.0.24",
         "maatwebsite/excel": "3.1.18",
         "philkra/elastic-apm-laravel": "6.0.1",
         "predis/predis": "1.1.1",
