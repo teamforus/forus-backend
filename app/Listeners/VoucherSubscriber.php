@@ -56,9 +56,7 @@ class VoucherSubscriber
                 $product->name,
                 format_date_locale($product->expire_at)
             );
-        }
-
-        if ($voucher->identity_address) {
+            
             $email = resolve('forus.services.record')->primaryEmailByAddress(
                 $voucher->identity_address
             );
@@ -79,6 +77,10 @@ class VoucherSubscriber
                 $product->organization->name,
                 format_date_locale($product->expire_at->subDay())
             );
+        }
+
+        if ($voucher->identity_address && !($product = $voucher->product)) {
+            VoucherAssigned::dispatch($voucher);
         }
     }
 
