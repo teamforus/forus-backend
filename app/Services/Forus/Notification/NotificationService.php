@@ -28,6 +28,7 @@ use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Vouchers\FundStatisticsMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Mail\Vouchers\ProductReservedMail;
+use App\Mail\Vouchers\ProductReservedUserMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Mail\Vouchers\SendVoucherMail;
@@ -778,6 +779,44 @@ class NotificationService
         return $this->sendMail($email, new ProductReservedMail(
             $product_name,
             $expiration_date,
+            $identifier
+        ));
+    }
+
+    /**
+     * Notify provider that a product was reserved and customer will come by
+     * in shop to pickup the product or service.
+     *
+     * @param string $email
+     * @param $identifier
+     * @param string $product_name
+     * @param string $product_price
+     * @param string $provider_phone
+     * @param string $provider_email
+     * @param string $qr_token
+     * @param string $provider_organization_name
+     * @param string $expire_at_minus_1_day
+     * @return bool|null
+     */
+    public function productReservedUser(
+        string $email,
+        $identifier,
+        string $product_name,
+        string $product_price,
+        string $provider_phone,
+        string $provider_email,
+        string $qr_token,
+        string $provider_organization_name,
+        string $expire_at_minus_1_day
+    ) {
+        return $this->sendMail($email, new ProductReservedUserMail(
+            $product_name,
+            $product_price,
+            $provider_phone,
+            $provider_email,
+            $qr_token,
+            $provider_organization_name,
+            $expire_at_minus_1_day,
             $identifier
         ));
     }
