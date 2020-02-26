@@ -491,7 +491,7 @@ class LoremDbSeeder extends Seeder
             /** @var RecordType $recordType */
             $recordType = RecordType::firstOrCreate([
                 'key'       => str_slug($eligibility_key . '_nth', '_'),
-                'type'      => 'string',
+                'type'      => 'number',
             ])->updateModel([
                 'name'      => $eligibility_key . ' nth',
             ]);

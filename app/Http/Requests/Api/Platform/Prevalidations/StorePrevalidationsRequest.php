@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Prevalidations;
 
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Models\Organization;
 use App\Models\PrevalidationRecord;
 use App\Services\Forus\Record\Models\RecordType;
@@ -38,13 +39,14 @@ class StorePrevalidationsRequest extends FormRequest
 
         $fund = Fund::find(request()->input('fund_id'));
         $isUnique = true;
+        $dataRules = [];
+        $recordRepo = resolve('forus.services.record');
+        $recordTypes = collect($recordRepo->getRecordTypes())->keyBy('key');
 
         if ($fund) {
             $isUnique = PrevalidationRecord::where(function (
                 Builder $builder
-            ) use ($fund) {
-                $recordRepo = resolve('forus.services.record');
-
+            ) use ($fund, $recordRepo) {
                 $builder->where([
                     'record_type_id' => $recordRepo->getTypeIdByKey(
                         $fund->fund_config->csv_primary_key
@@ -59,6 +61,42 @@ class StorePrevalidationsRequest extends FormRequest
                     ]);
                 });
             })->doesntExist();
+
+            $dataRules = $fund->criteria->mapWithKeys(function(
+                FundCriterion $fundCriterion
+            ) use ($recordRepo, $recordTypes) {
+                $recordType = $recordTypes[$fundCriterion->record_type_key];
+                $typeKey = $recordType['type'];
+
+                $operators = [
+                    '<'     => 'lt:',
+                    '<='    => 'lte:',
+                    '='     => 'in:',
+                    '>'     => 'gt:',
+                    '>='    => 'gte:',
+                ];
+
+                $dataTypes = [
+                    'number' => 'numeric',
+                    'string' => 'string',
+                ];
+
+                if ($typeKey == 'number') {
+                    $operatorRule = $operators[$fundCriterion->operator] . $fundCriterion->value;
+                } elseif ($typeKey == 'string') {
+                    $operatorRule = Rule::in($fundCriterion->value);
+                } else {
+                    $operatorRule = null;
+                }
+
+                return [
+                    'data.' . $fundCriterion->record_type_key => [
+                        'required',
+                        $dataTypes[$typeKey] ?? $typeKey['string'],
+                        $operatorRule,
+                    ]
+                ];
+            })->toArray();
         }
 
         return array_merge([
@@ -72,15 +110,15 @@ class StorePrevalidationsRequest extends FormRequest
             ]
         ], $fund ? $fund->requiredPrevalidationKeys()->mapWithKeys(function(
             $key
-        ) use ($fund, $isUnique) {
-            return [
+        ) use ($fund, $isUnique, $dataRules) {
+            return array_merge([
                 'data.' . $key => [
                     'required',
                     $fund->fund_config->csv_primary_key == $key && !$isUnique ? (
-                        $isUnique ? null : Rule::in([])
+                    $isUnique ? null : Rule::in([])
                     ) : null
                 ]
-            ];
+            ], $dataRules);
         })->toArray() : []);
     }
 
