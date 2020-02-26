@@ -56,27 +56,7 @@ class VoucherSubscriber
                 $product->name,
                 format_date_locale($product->expire_at)
             );
-            
-            $email = resolve('forus.services.record')->primaryEmailByAddress(
-                $voucher->identity_address
-            );
-
-            /** @var VoucherToken $voucherToken */
-            $voucherToken = $voucher->tokens()->where([
-                'need_confirmation' => false
-            ])->first();
-
-            $this->mailService->productReservedUser(
-                $email,
-                $product->organization->emailServiceId(),
-                $product->name,
-                $product->price,
-                $product->organization->phone,
-                $product->organization->email,
-                $voucherToken->address,
-                $product->organization->name,
-                format_date_locale($product->expire_at->subDay())
-            );
+           
         }
 
         if ($voucher->identity_address && !($product = $voucher->product)) {
