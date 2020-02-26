@@ -56,7 +56,9 @@ class VoucherSubscriber
                 $product->name,
                 format_date_locale($product->expire_at)
             );
-            
+        }
+
+        if ($voucher->identity_address) {
             $email = resolve('forus.services.record')->primaryEmailByAddress(
                 $voucher->identity_address
             );
@@ -77,10 +79,6 @@ class VoucherSubscriber
                 $product->organization->name,
                 format_date_locale($product->expire_at->subDay())
             );
-        }
-
-        if ($voucher->identity_address && !($product = $voucher->product)) {
-            VoucherAssigned::dispatch($voucher);
         }
     }
 
@@ -105,28 +103,6 @@ class VoucherSubscriber
                 trans('push.voucher.bought.body', $transData),
                 'voucher.assigned'
             );
-            
-            $email = resolve('forus.services.record')->primaryEmailByAddress(
-                $voucher->identity_address
-            );
-
-            /** @var VoucherToken $voucherToken */
-            $voucherToken = $voucher->tokens()->where([
-                'need_confirmation' => false
-            ])->first();
-
-            $this->mailService->productReservedUser(
-                $email,
-                $product->organization->emailServiceId(),
-                $product->name,
-                $product->price,
-                $product->organization->phone,
-                $product->organization->email,
-                $voucherToken->address,
-                $product->organization->name,
-                format_date_locale($product->expire_at->subDay())
-            );
-            
         } else {
             $transData = [
                 "fund_name" => $voucher->fund->name
