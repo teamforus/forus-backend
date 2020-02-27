@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Exports\PrevalidationsExport;
 use App\Http\Requests\Api\Platform\Prevalidations\RedeemPrevalidationRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\SearchPrevalidationsRequest;
+use App\Http\Requests\Api\Platform\Prevalidations\StorePrevalidationsRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
-use App\Models\PrevalidationRecord;
 use App\Traits\ThrottleWithMeta;
 use App\Http\Controllers\Controller;
 
@@ -31,90 +31,44 @@ class PrevalidationController extends Controller
     }
 
     /**
+     * @param StorePrevalidationsRequest $request
+     * @return PrevalidationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function store(
+        StorePrevalidationsRequest $request
+    ) {
+        $this->authorize('store', Prevalidation::class);
+
+        $prevalidations = Prevalidation::storePrevalidations(
+            Fund::find($request->input('fund_id')),
+            [$request->input('data')]
+        );
+
+        log_debug(json_pretty([
+            $prevalidations,
+            [$request->input('data')]
+        ]));
+
+        return new PrevalidationResource($prevalidations[0]);
+    }
+
+    /**
      * @param UploadPrevalidationsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(
+    public function storeCollection(
         UploadPrevalidationsRequest $request
     ) {
         $this->authorize('store', Prevalidation::class);
 
-        $recordRepo = resolve('forus.services.record');
-
-        $fund = Fund::find($request->input('fund_id'));
-        $data = $request->input('data');
-
-        $fundPrevalidationPrimaryKey = $recordRepo->getTypeIdByKey(
-            $fund->fund_config->csv_primary_key
+        $prevalidations = Prevalidation::storePrevalidations(
+            Fund::find($request->input('fund_id')),
+            $request->input('data')
         );
 
-        $existingPrevalidations = Prevalidation::where([
-            'identity_address' => auth()->id(),
-            'fund_id' => $fund->id
-        ])->pluck('id');
-
-        $primaryKeyValues = PrevalidationRecord::whereIn(
-            'prevalidation_id', $existingPrevalidations
-        )->where([
-            'record_type_id' => $fundPrevalidationPrimaryKey,
-        ])->pluck('value');
-
-        $data = collect($data)->map(function($record) use (
-            $primaryKeyValues, $fund
-        ) {
-            $record = collect($record);
-
-            if ($primaryKeyValues->search(
-                $record[$fund->fund_config->csv_primary_key]) !== false) {
-                return [];
-            }
-
-            return $record->map(function($value, $key) {
-                $record_type_id = app()->make(
-                    'forus.services.record'
-                )->getTypeIdByKey($key);
-
-                if (!$record_type_id || $key == 'primary_email') {
-                    return false;
-                }
-
-                if (is_null($value)) {
-                    $value = '';
-                }
-
-                return compact('record_type_id', 'value');
-            })->filter(function($value) {
-                return !!$value;
-            })->values();
-        })->filter(function($records) {
-            return collect($records)->count();
-        })->map(function($records) use ($request, $fund) {
-            do {
-                $uid = app()->make('token_generator')->generate(4, 2);
-            } while(Prevalidation::query()->where(
-                'uid', $uid
-            )->count() > 0);
-
-            /** @var Prevalidation $prevalidation */
-            $prevalidation = Prevalidation::create([
-                'uid' => $uid,
-                'state' => 'pending',
-                'organization_id' => $fund->organization_id,
-                'fund_id' => $fund->id,
-                'identity_address' => auth_address()
-            ]);
-
-            foreach ($records as $record) {
-                $prevalidation->prevalidation_records()->create($record);
-            }
-
-            $prevalidation->load('prevalidation_records');
-
-            return $prevalidation;
-        });
-
-        return PrevalidationResource::collection($data);
+        return PrevalidationResource::collection($prevalidations);
     }
 
     /**

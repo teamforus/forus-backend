@@ -67,8 +67,6 @@ class LoremDbSeeder extends Seeder
         $this->disableEmails();
         $countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
 
-        $this->prepareDependencies();
-
         $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
         $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
@@ -92,15 +90,6 @@ class LoremDbSeeder extends Seeder
         $this->success("Other implementations created!");
 
         $this->enableEmails();
-    }
-
-    public function prepareDependencies() {
-        RecordType::firstOrCreate([
-            'key'       => 'meedoen_2020_eligible',
-            'type'      => 'string',
-        ])->update([
-            'name'      => 'Meedoen 2020 eligible',
-        ]);
     }
 
     /**
@@ -477,10 +466,44 @@ class LoremDbSeeder extends Seeder
             'csv_primary_key'       => 'uid',
             'is_configured'         => true
         ])->merge(collect($fields)->only([
-            'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured'
+            'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
+            'csv_primary_key', 'is_configured'
         ]))->toArray());
 
-        $fund->criteria()->createMany(config('forus.seeders.lorem_db_seeder.funds_criteria'));
+        $eligibility_key = sprintf("%s %s eligible", $fund->name, date('Y'));
+        $criteria = config('forus.seeders.lorem_db_seeder.funds_criteria');
+
+        if ($fund->id == 1) {
+            /** @var RecordType $recordType */
+            $recordType = RecordType::firstOrCreate([
+                'key'       => str_slug($eligibility_key, '_'),
+                'type'      => 'string',
+            ])->updateModel([
+                'name'      => $eligibility_key,
+            ]);
+
+            array_push($criteria, [
+                'record_type_key'   => $recordType->key,
+                'operator'          => '=',
+                'value'             => 'Ja',
+            ]);
+        } elseif ($fund->id == 2) {
+            /** @var RecordType $recordType */
+            $recordType = RecordType::firstOrCreate([
+                'key'       => str_slug($eligibility_key . '_nth', '_'),
+                'type'      => 'number',
+            ])->updateModel([
+                'name'      => $eligibility_key . ' nth',
+            ]);
+
+            array_push($criteria, [
+                'record_type_key'   => $recordType->key,
+                'operator'          => '>',
+                'value'             => '0',
+            ]);
+        }
+
+        $fund->criteria()->createMany($criteria);
 
         $fund->fund_formulas()->create([
             'type'      => 'fixed',

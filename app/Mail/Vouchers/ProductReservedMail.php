@@ -5,7 +5,7 @@ namespace App\Mail\Vouchers;
 use App\Mail\ImplementationMail;
 
 /**
- * Class ProductBoughtMail
+ * Class ProductReservedMail
  * @package App\Mail\Vouchers
  */
 class ProductReservedMail extends ImplementationMail

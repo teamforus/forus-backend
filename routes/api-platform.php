@@ -574,6 +574,11 @@ $router->group(['middleware' => [
         'Api\Platform\PrevalidationController@export'
     );
 
+    $router->post(
+        'prevalidations/collection',
+        'Api\Platform\PrevalidationController@storeCollection'
+    );
+
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController', [

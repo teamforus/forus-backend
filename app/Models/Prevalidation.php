@@ -258,4 +258,86 @@ class Prevalidation extends Model
             'redeemed_by_address' => $identity_address
         ]);
     }
+
+    /**
+     * @param Fund $fund
+     * @param array $data
+     * @return \Illuminate\Support\Collection
+     */
+    public static function storePrevalidations(
+        Fund $fund,
+        array $data
+    ) {
+        $recordRepo = resolve('forus.services.record');
+
+        $fundPrevalidationPrimaryKey = $recordRepo->getTypeIdByKey(
+            $fund->fund_config->csv_primary_key
+        );
+
+        $existingPrevalidations = Prevalidation::where([
+            'identity_address' => auth()->id(),
+            'fund_id' => $fund->id
+        ])->pluck('id');
+
+        $primaryKeyValues = PrevalidationRecord::whereIn(
+            'prevalidation_id', $existingPrevalidations
+        )->where([
+            'record_type_id' => $fundPrevalidationPrimaryKey,
+        ])->pluck('value');
+
+        return collect($data)->map(function($record) use (
+            $primaryKeyValues, $fund
+        ) {
+            $record = collect($record);
+
+            if ($primaryKeyValues->search(
+                    $record[$fund->fund_config->csv_primary_key]) !== false) {
+                return [];
+            }
+
+            return $record->map(function($value, $key) {
+                $record_type_id = app()->make(
+                    'forus.services.record'
+                )->getTypeIdByKey($key);
+
+                if (!$record_type_id || $key == 'primary_email') {
+                    return false;
+                }
+
+                if (is_null($value)) {
+                    $value = '';
+                }
+
+                return compact('record_type_id', 'value');
+            })->filter(function($value) {
+                return !!$value;
+            })->values();
+        })->filter(function($records) {
+            log_debug(json_pretty($records));
+            return collect($records)->count();
+        })->map(function($records) use ($fund) {
+            do {
+                $uid = app()->make('token_generator')->generate(4, 2);
+            } while(Prevalidation::query()->where(
+                'uid', $uid
+            )->count() > 0);
+
+            /** @var Prevalidation $prevalidation */
+            $prevalidation = Prevalidation::create([
+                'uid' => $uid,
+                'state' => 'pending',
+                'organization_id' => $fund->organization_id,
+                'fund_id' => $fund->id,
+                'identity_address' => auth_address()
+            ]);
+
+            foreach ($records as $record) {
+                $prevalidation->prevalidation_records()->create($record);
+            }
+
+            $prevalidation->load('prevalidation_records');
+
+            return $prevalidation;
+        });
+    }
 }

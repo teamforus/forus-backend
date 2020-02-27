@@ -460,7 +460,12 @@ class IdentityController extends Controller
     public function checkToken(
         Request $request
     ) {
-        $accessToken = $request->input('access_token');
+        $accessToken = $request->header('Access-Token', null);
+
+        // TODO: deprecated, remove when mobile apps are ready
+        if (!$accessToken) {
+            $accessToken = $request->get('access_token', null);
+        }
 
         $proxyIdentityId = $this->identityRepo->proxyIdByAccessToken($accessToken);
         $identityAddress = $this->identityRepo->identityAddressByProxyId($proxyIdentityId);
