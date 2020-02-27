@@ -4,7 +4,7 @@
         'provider_organization_name' => $provider_organization_name
     ]))
 @section('html')
-    {{ mail_trans('dear_user') }}
+    {{ mail_trans('dear_user') }},
     <br/>
     <br/>
     <br/>
@@ -14,7 +14,7 @@
     ]) }}
     <br/>
     <br/>
-    <span style="text-align: center;">{{ $product_name }}</span>
+    <span style="text-align: center; font-size: 24px;">{{ $product_name }}</span>
     <br/>
     <img style="display: block; margin: 0 auto;" alt="" src="{{ $message->embedData(make_qr_code('voucher', $qr_token), 'qr_token.png') }}" width="300" />
     <br/>
