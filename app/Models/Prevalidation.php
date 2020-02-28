@@ -313,7 +313,6 @@ class Prevalidation extends Model
                 return !!$value;
             })->values();
         })->filter(function($records) {
-            log_debug(json_pretty($records));
             return collect($records)->count();
         })->map(function($records) use ($fund) {
             do {

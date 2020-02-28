@@ -8,10 +8,8 @@ use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
-use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\VoucherQuery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -68,32 +66,22 @@ class ProviderVoucherResource extends Resource
         VoucherToken $voucherToken
     ) {
         $voucher = $voucherToken->voucher;
-        $amountLeft = $voucher->amount_available;
-        $productVouchers = null;
 
-        $productVouchers = [];
-        $allowedOrganizations = OrganizationQuery::whereHasPermissions(
-            Organization::query(), $identityAddress, 'scan_vouchers'
-        )->whereHas('organization_funds', function(Builder $builder) use ($voucher) {
-            FundProviderQuery::whereApprovedForFundsFilter(
-                $builder,
-                $voucher->fund_id,
-                $voucher->type == 'regular' ? 'budget': 'product',
-                $voucher->type == 'regular' ? null: $voucher->product_id
-            );
-        })->select('id', 'name')->get()->map(function($organization) {
+        $allowedOrganizations = OrganizationQuery::whereHasPermissionToScanVoucher(
+            Organization::query(),
+            $identityAddress,
+            $voucher
+        )->select('id', 'name')->get()->map(function($organization) {
             return collect($organization)->merge([
                 'logo' => new MediaCompactResource($organization->logo)
             ]);
         });
 
-        if ($allowedOrganizations->count() == 1) {
-            $productVouchers = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
-                $voucher->product_vouchers()->getQuery(),
-                $identityAddress,
-                $voucher->fund_id
-            )->whereDoesntHave('transactions')->get();
-        }
+        $productVouchers = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
+            $voucher->product_vouchers()->getQuery(),
+            $identityAddress,
+            $voucher->fund_id
+        )->whereDoesntHave('transactions')->get();
 
         $fundData = collect($voucher->fund)->only([
             'id', 'name', 'state'
@@ -107,7 +95,7 @@ class ProviderVoucherResource extends Resource
         ])->merge([
             'address' => $voucherToken->address,
             'type' => 'regular',
-            'amount' => currency_format($amountLeft),
+            'amount' => currency_format($voucher->amount_available),
             'fund' => $fundData,
             'allowed_organizations' => $allowedOrganizations,
             // TODO: To be removed in next release

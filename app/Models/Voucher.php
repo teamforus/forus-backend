@@ -63,6 +63,14 @@ use Illuminate\Http\Request;
  */
 class Voucher extends Model
 {
+    const TYPE_BUDGET = 'regular';
+    const TYPE_PRODUCT = 'product';
+
+    const TYPES = [
+        self::TYPE_BUDGET,
+        self::TYPE_PRODUCT,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -492,9 +500,8 @@ class Voucher extends Model
     }
 
     /**
-     * @param Collection|Voucher[] $vouchers
+     * @param Collection $vouchers
      * @return string
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public static function zipVouchers(Collection $vouchers)
     {

@@ -259,7 +259,7 @@ $router->group(['middleware' => [
                 'show'
             ],
             'parameters' => [
-                'vouchers' => 'budget_voucher_token_address',
+                'vouchers' => 'voucher_token_address',
             ]
         ]);
 

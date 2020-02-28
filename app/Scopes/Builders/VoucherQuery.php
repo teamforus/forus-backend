@@ -10,14 +10,14 @@ class VoucherQuery
 {
     /**
      * @param Builder $builder
-     * @param $identity_address
+     * @param string $identity_address
      * @param $fund_id
      * @param null $organization_id     Provider organization id
      * @return Builder
      */
     public static function whereProductVouchersCanBeScannedForFundBy(
         Builder $builder,
-        $identity_address,
+        string $identity_address,
         $fund_id,
         $organization_id = null
     ) {
@@ -31,12 +31,16 @@ class VoucherQuery
                     $builder->whereIn('organizations.id', (array) $organization_id);
                 }
 
-                OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');
+                OrganizationQuery::whereHasPermissions(
+                    $builder, $identity_address, 'scan_vouchers'
+                );
 
                 $builder->whereHas('organization_funds', function(
                     Builder $builder
                 ) use ($fund_id) {
-                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'product');
+                    FundProviderQuery::whereApprovedForFundsFilter(
+                        $builder, $fund_id, 'product'
+                    );
                 });
             });
 
