@@ -613,3 +613,23 @@ if (!function_exists('str_var_replace')) {
         return $string;
     }
 }
+
+if (!function_exists('record_repo')) {
+    /**
+     * @return \App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo
+     */
+    function record_repo()
+    {
+        return resolve('forus.services.record');
+    }
+}
+
+if (!function_exists('identity_repo')) {
+    /**
+     * @return \App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo
+     */
+    function identity_repo()
+    {
+        return resolve('forus.services.identity');
+    }
+}

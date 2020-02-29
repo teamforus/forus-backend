@@ -6,11 +6,20 @@ use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Implementation;
 use App\Models\VoucherToken;
+use App\Services\Forus\Notification\NotificationService;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Class VoucherSubscriber
+ * @property IRecordRepo $recordService
+ * @property NotificationService $mailService
+ * @package App\Listeners
+ */
 class VoucherSubscriber
 {
     private $mailService;
+    private $recordService;
     private $tokenGenerator;
 
     /**
@@ -19,6 +28,7 @@ class VoucherSubscriber
     public function __construct()
     {
         $this->mailService = resolve('forus.services.notification');
+        $this->recordService = resolve('forus.services.record');
         $this->tokenGenerator = resolve('token_generator');
     }
 
@@ -27,58 +37,28 @@ class VoucherSubscriber
      */
     public function onVoucherCreated(VoucherCreated $voucherCreated) {
         $voucher = $voucherCreated->getVoucher();
+        $product = $voucher->product;
 
         $voucher->tokens()->create([
             'address'           => $this->tokenGenerator->address(),
             'need_confirmation' => true,
         ]);
 
+        /** @var VoucherToken $voucherToken */
         $voucher->tokens()->create([
             'address'           => $this->tokenGenerator->address(),
             'need_confirmation' => false,
         ]);
 
-        if ($product = $voucher->product) {
+        if ($product) {
             $product->updateSoldOutState();
 
             if ($product->sold_out) {
-                $this->mailService->productSoldOut(
-                    $product->organization->email,
-                    $product->organization->emailServiceId(),
-                    $product->name,
-                    Implementation::active()['url_provider']
-                );
+                $product->sendSoldOutEmail();
             }
 
-            $this->mailService->productReserved(
-                $product->organization->email,
-                $product->organization->emailServiceId(),
-                $product->name,
-                format_date_locale($product->expire_at)
-            );
-        }
-
-        if ($voucher->identity_address) {
-            $email = resolve('forus.services.record')->primaryEmailByAddress(
-                $voucher->identity_address
-            );
-
-            /** @var VoucherToken $voucherToken */
-            $voucherToken = $voucher->tokens()->where([
-                'need_confirmation' => false
-            ])->first();
-
-            $this->mailService->productReservedUser(
-                $email,
-                $product->organization->emailServiceId(),
-                $product->name,
-                $product->price,
-                $product->organization->phone,
-                $product->organization->email,
-                $voucherToken->address,
-                $product->organization->name,
-                format_date_locale($product->expire_at->subDay())
-            );
+            $product->sendProductReservedEmail();
+            $product->sendProductReservedUserEmail($voucher);
         }
     }
 
@@ -87,16 +67,15 @@ class VoucherSubscriber
      */
     public function onVoucherAssigned(VoucherAssigned $voucherCreated) {
         $voucher = $voucherCreated->getVoucher();
+        $product = $voucher->product;
+        $implementation = Implementation::activeModel();
 
-        if ($product = $voucher->product) {
-            $imp = Implementation::query()->where([
-                'key' => Implementation::activeKey()
-            ])->first();
+        $transData = [
+            "implementation_name" => $implementation->name ?? 'General',
+            "fund_name" => $voucher->fund->name
+        ];
 
-            $transData = [
-                "implementation_name" => $imp ? $imp->name : 'General'
-            ];
-
+        if ($product) {
             $this->mailService->sendPushNotification(
                 $voucher->identity_address,
                 trans('push.voucher.bought.title', $transData),
@@ -104,10 +83,6 @@ class VoucherSubscriber
                 'voucher.assigned'
             );
         } else {
-            $transData = [
-                "fund_name" => $voucher->fund->name
-            ];
-
             $this->mailService->sendPushNotification(
                 $voucher->identity_address,
                 trans('push.voucher.activated.title', $transData),
@@ -116,11 +91,9 @@ class VoucherSubscriber
             );
         }
 
-        $email = resolve('forus.services.record')->primaryEmailByAddress(
+        $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
             $voucher->identity_address
-        );
-
-        $voucher->assignedVoucherEmail($email);
+        ));
     }
 
     /**
