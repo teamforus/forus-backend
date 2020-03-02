@@ -15,6 +15,10 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 
+/**
+ * Class EmployeesController
+ * @package App\Http\Controllers\Api\Platform\Organizations
+ */
 class EmployeesController extends Controller
 {
     private $identityRepo;
@@ -58,8 +62,8 @@ class EmployeesController extends Controller
      *
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
-     * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Excep tion
+     * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreEmployeeRequest $request,

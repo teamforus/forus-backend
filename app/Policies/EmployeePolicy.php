@@ -29,10 +29,7 @@ class EmployeePolicy
         $identity_address,
         Organization $organization
     ) {
-        return $organization->identityCan(
-            $identity_address,
-            'manage_employees'
-        );
+        return $organization->isEmployee($identity_address);
     }
 
     /**

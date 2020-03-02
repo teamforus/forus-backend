@@ -12,8 +12,6 @@ use App\Models\Office;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Product;
-use App\Models\Validator;
-use App\Models\ValidatorRequest;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Policies\BunqMeTabPolicy;
@@ -25,11 +23,9 @@ use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
-use App\Policies\ValidatorPolicy;
 use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
-use App\Policies\ValidatorRequestPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
@@ -62,12 +58,10 @@ class AuthServiceProvider extends ServiceProvider
         Voucher::class                  => VoucherPolicy::class,
         Employee::class                 => EmployeePolicy::class,
         BunqMeTab::class                => BunqMeTabPolicy::class,
-        Validator::class                => ValidatorPolicy::class,
         FundRequest::class              => FundRequestPolicy::class,
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
-        ValidatorRequest::class         => ValidatorRequestPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,

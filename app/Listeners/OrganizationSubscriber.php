@@ -20,10 +20,6 @@ class OrganizationSubscriber
     public function onOrganizationCreated(OrganizationCreated $organizationCreated) {
         $organization = $organizationCreated->getOrganization();
 
-        $organization->validators()->create([
-            'identity_address' => $organization->identity_address
-        ]);
-
         /** @var Employee $employee */
         $employee = $organization->employees()->firstOrCreate([
             'identity_address' => $organization->identity_address
