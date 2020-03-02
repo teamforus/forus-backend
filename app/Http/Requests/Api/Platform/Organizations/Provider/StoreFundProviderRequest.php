@@ -31,7 +31,10 @@ class StoreFundProviderRequest extends FormRequest
     public function rules()
     {
         return [
-            'fund_id' => ['required', new FundApplicableRule($this->organization)]
+            'fund_id' => [
+                'required',
+                new FundApplicableRule($this->organization)
+            ]
         ];
     }
 }
