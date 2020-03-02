@@ -458,14 +458,6 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
-        'organizations.validators',
-        "Api\Platform\Organizations\ValidatorsController", [
-        'only' => [
-            'index', 'show', /*'store', 'update', 'destroy'*/
-        ]
-    ]);
-
-    $router->resource(
         'organizations.employees',
         "Api\Platform\Organizations\EmployeesController", [
         'only' => [
@@ -592,14 +584,6 @@ $router->group(['middleware' => [
     );
 
     $router->resource(
-        'validators',
-        "Api\Platform\ValidatorsController", [
-        'only' => [
-            'index'
-        ]
-    ]);
-
-    $router->resource(
         'employees',
         "Api\Platform\EmployeesController", [
         'only' => [
@@ -607,21 +591,6 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    $router->resource(
-        'validator-requests',
-        "Api\Platform\ValidatorRequestController", [
-        'only' => [
-            'index', 'show', 'store'
-        ]
-    ]);
-
-    $router->resource(
-        'validator/validator-requests',
-        "Api\Platform\Validator\ValidatorRequestController", [
-        'only' => [
-            'index', 'show', 'update'
-        ]
-    ]);
 
     $router->post(
         '/devices/register-push',
