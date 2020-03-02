@@ -64,8 +64,6 @@ use Illuminate\Http\Request;
  * @property-read \App\Services\MediaService\Models\Media $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundMeta[] $metas
- * @property-read int|null $metas_count
  * @property-read \App\Models\Organization $organization
  * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $product_categories
  * @property-read int|null $product_categories_count
@@ -176,13 +174,6 @@ class Fund extends Model
      */
     public function organization() {
         return $this->belongsTo(Organization::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function metas() {
-        return $this->hasMany(FundMeta::class);
     }
 
     /**
