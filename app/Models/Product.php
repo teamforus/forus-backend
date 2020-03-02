@@ -299,4 +299,58 @@ class Product extends Model
 
         return $query;
     }
+
+    /**
+     * Send product sold out email to provider
+     * @return void
+     */
+    public function sendSoldOutEmail() {
+        $mailService = resolve('forus.services.notification');
+        $mailService->productSoldOut(
+            $this->organization->email,
+            $this->organization->emailServiceId(),
+            $this->name,
+            Implementation::active()['url_provider']
+        );
+    }
+
+    /**
+     * Send product reserved email to provider
+     * @return void
+     */
+    public function sendProductReservedEmail() {
+        $mailService = resolve('forus.services.notification');
+        $mailService->productReserved(
+            $this->organization->email,
+            $this->organization->emailServiceId(),
+            $this->name,
+            format_date_locale($this->expire_at)
+        );
+    }
+
+    /**
+     * Send product reserved email to user
+     * @param Voucher $voucher
+     * * @return void
+     */
+    public function sendProductReservedUserEmail(Voucher $voucher) {
+        if (!$voucher->identity_address) {
+            return;
+        }
+
+        $mailService = resolve('forus.services.notification');
+        $recordService = resolve('forus.services.record');
+
+        $mailService->productReservedUser(
+            $recordService->primaryEmailByAddress($voucher->identity_address),
+            $this->organization->emailServiceId(),
+            $this->name,
+            $this->price,
+            $this->organization->phone,
+            $this->organization->email,
+            $voucher->token_without_confirmation->address,
+            $this->organization->name,
+            format_date_locale($this->expire_at->subDay())
+        );
+    }
 }
