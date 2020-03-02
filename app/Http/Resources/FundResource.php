@@ -64,9 +64,6 @@ class FundResource extends Resource
             'start_date_locale' => format_date_locale($fund->start_date),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($organization),
-            'product_categories' => ProductCategoryResource::collection(
-                $fund->product_categories
-            ),
             'criteria' => FundCriterionResource::collection(
                 $fund->criteria
             ),

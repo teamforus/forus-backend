@@ -64,11 +64,6 @@ class StoreVoucherTransactionRequest extends FormRequest
         ));
 
         /**
-         * Product categories approved by fund
-         */
-        $validCategories = $voucher->fund->product_categories->pluck('id');
-
-        /**
          * Products approved by funds
          */
         $validProductsIds = [];
@@ -85,13 +80,6 @@ class StoreVoucherTransactionRequest extends FormRequest
                 })->orWhereHas('organization.supplied_funds_approved_products')->pluck('products.id');
             }
         }
-
-        Organization::query()->whereIn(
-            'id', $validOrganizations
-        )->get()->pluck('products')->flatten()->filter(function($product) use ($validCategories) {
-            /** @var Product $product */
-            return $validCategories->search($product->product_category_id) !== false;
-        })->pluck('id');
 
         if ($voucher->product) {
             $product = $voucher->product;

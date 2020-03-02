@@ -37,7 +37,6 @@ class NewProductCategories extends Migration
 
             ProductCategoriesTableSeeder::seedProducts(true);
             ProductCategoriesTableSeeder::migrateProducts($map);
-            ProductCategoriesTableSeeder::migrateFundProductCategories($map);
         }
     }
 

@@ -117,16 +117,6 @@ class ProductCategory extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function funds() {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_product_categories'
-        );
-    }
-
-    /**
      * @param Request $request
      * @return ProductCategory|\Illuminate\Database\Query\Builder|\Kalnoy\Nestedset\QueryBuilder
      */

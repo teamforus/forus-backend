@@ -194,20 +194,6 @@ class Implementation extends Model
     }
 
     /**
-     * @return Collection
-     */
-    public static function activeProductCategories() {
-        if (self::activeKey() == config('forus.clients.default')) {
-            return ProductCategory::all();
-        }
-
-        return ProductCategory::query()->whereIn(
-            'id', FundProductCategory::query()->whereIn(
-            'fund_id', self::activeFunds()->pluck('id')
-        )->pluck('product_category_id')->unique())->get();
-    }
-
-    /**
      * @return \Illuminate\Support\Collection
      */
     public static function implementationKeysAvailable() {
