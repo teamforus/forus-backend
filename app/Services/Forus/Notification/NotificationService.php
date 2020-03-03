@@ -14,7 +14,6 @@ use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
 use App\Mail\Funds\NewFundApplicableMail;
-use App\Mail\Funds\ProductAddedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderInvitedMail;
@@ -606,31 +605,6 @@ class NotificationService
             $provider_amount,
             $requester_amount,
             $sponsor_amount + $provider_amount + $requester_amount
-        ));
-    }
-
-    /**
-     * Notify sponsor that new product added by approved provider
-     *
-     * @param string $email
-     * @param $identifier
-     * @param string $sponsor_name
-     * @param string $fund_name
-     * @param string $webshop_link
-     * @return bool
-     */
-    public function newProductAdded(
-        string $email,
-        $identifier,
-        string $sponsor_name,
-        string $fund_name,
-        string $webshop_link
-    ) {
-        return $this->sendMail($email, new ProductAddedMail(
-            $sponsor_name,
-            $fund_name,
-            $webshop_link,
-            $identifier
         ));
     }
 
