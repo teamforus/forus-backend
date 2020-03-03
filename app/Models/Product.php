@@ -314,15 +314,16 @@ class Product extends Model
 
     /**
      * Send product reserved email to provider
+     * @param Voucher $voucher
      * @return void
      */
-    public function sendProductReservedEmail() {
+    public function sendProductReservedEmail(Voucher $voucher) {
         $mailService = resolve('forus.services.notification');
         $mailService->productReserved(
             $this->organization->email,
             $this->organization->emailServiceId(),
             $this->name,
-            format_date_locale($this->expire_at)
+            format_date_locale($voucher->expire_at)
         );
     }
 
@@ -348,7 +349,7 @@ class Product extends Model
             $this->organization->email,
             $voucher->token_without_confirmation->address,
             $this->organization->name,
-            format_date_locale($this->expire_at->subDay())
+            format_date_locale($voucher->expire_at->subDay())
         );
     }
 }
