@@ -3,8 +3,6 @@
 namespace App\Services\Forus\Notification\Commands;
 
 use Illuminate\Console\Command;
-use NotificationChannels\Apn\ApnFeedback;
-use NotificationChannels\Apn\FeedbackService;
 
 class NotificationsTokensImportCommand extends Command
 {

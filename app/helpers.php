@@ -633,3 +633,14 @@ if (!function_exists('identity_repo')) {
         return resolve('forus.services.identity');
     }
 }
+
+if (!function_exists('query_with_trashed')) {
+    /**
+     * @param Builder|\Illuminate\Database\Eloquent\SoftDeletes|\Illuminate\Database\Eloquent\Relations\Relation $builder
+     * @return mixed
+     */
+    function query_with_trashed($builder)
+    {
+        return $builder->withTrashed();
+    }
+}

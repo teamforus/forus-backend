@@ -17,7 +17,6 @@ class FundProviderResource extends Resource
         'fund.providers',
         'fund.organization',
         'fund.employees',
-        'fund.organization.validators',
         'fund.top_up_transactions',
         'fund.provider_organizations_approved.employees',
         'organization.products',
@@ -47,7 +46,6 @@ class FundProviderResource extends Resource
             'organization'          => new OrganizationWithPrivateResource(
                 $fundProvider->organization
             ),
-            'validators' => ValidatorResource::collection($fundProvider->organization->validators)
         ])->toArray();
     }
 }

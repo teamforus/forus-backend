@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Services\DigIdService\Repositories\DigIdRepo;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
@@ -191,20 +189,6 @@ class Implementation extends Model
      */
     public static function activeFunds() {
         return self::activeFundsQuery()->get();
-    }
-
-    /**
-     * @return Collection
-     */
-    public static function activeProductCategories() {
-        if (self::activeKey() == config('forus.clients.default')) {
-            return ProductCategory::all();
-        }
-
-        return ProductCategory::query()->whereIn(
-            'id', FundProductCategory::query()->whereIn(
-            'fund_id', self::activeFunds()->pluck('id')
-        )->pluck('product_category_id')->unique())->get();
     }
 
     /**

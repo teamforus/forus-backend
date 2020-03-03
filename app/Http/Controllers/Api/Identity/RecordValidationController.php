@@ -6,16 +6,22 @@ use App\Http\Requests\Api\Identity\ApproveRecordValidationRequest;
 use App\Http\Requests\Api\RecordValidations\RecordValidationStoreRequest;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
+/**
+ * Class RecordValidationController
+ * @package App\Http\Controllers\Api\Identity
+ */
 class RecordValidationController extends Controller
 {
     private $recordRepo;
 
     /**
-     * RecordCategoryController constructor.
+     * RecordValidationController constructor.
+     * @param IRecordRepo $recordRepo
      */
-    public function __construct() {
-        $this->recordRepo = resolve('forus.services.record');
+    public function __construct(IRecordRepo $recordRepo) {
+        $this->recordRepo = $recordRepo;
     }
 
     /**

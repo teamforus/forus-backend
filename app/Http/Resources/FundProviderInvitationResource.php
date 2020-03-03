@@ -31,7 +31,9 @@ class FundProviderInvitationResource extends Resource
             'expire_at'             => $invitation->expire_at->format('Y-m-d H:i:s'),
             'expire_at_locale'      => format_date_locale($invitation->expire_at),
             'created_at'            => $invitation->created_at->format('Y-m-d H:i:s'),
-            'created_at_locale'     => $invitation->created_at_locale,
+            'created_at_locale'     => format_datetime_locale(
+                $invitation->created_at
+            ),
             'provider_organization' => new OrganizationResource(
                 $invitation->organization
             ),

@@ -13,8 +13,6 @@ use App\Services\Forus\Record\Models\RecordType;
  * @property string $value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Prevalidation $prevalidation
  * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord newModelQuery()

@@ -57,7 +57,7 @@ class VoucherSubscriber
                 $product->sendSoldOutEmail();
             }
 
-            $product->sendProductReservedEmail();
+            $product->sendProductReservedEmail($voucher);
             $product->sendProductReservedUserEmail($voucher);
         }
     }

@@ -23,8 +23,12 @@ class VoucherTransactionNoteResource extends Resource
         return collect($this->resource)->only([
             'id', 'message', 'icon', 'group', 'created_at', 'created_at'
         ])->merge([
-            'created_at_locale' => $this->resource->created_at_locale,
-            'updated_at_locale' => $this->resource->updated_at_locale,
+            'created_at_locale' => format_datetime_locale(
+                $this->resource->created_at
+            ),
+            'updated_at_locale' => format_datetime_locale(
+                $this->resource->updated_at
+            ),
         ])->toArray();
     }
 }
