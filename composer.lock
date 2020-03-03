@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "85aebbd75139c52825a46bb4a0d2d5bf",
+    "content-hash": "3d17ecc2f97366625845601cf0925de9",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -60,27 +60,27 @@
         },
         {
             "name": "astrotomic/laravel-translatable",
-            "version": "v11.7.0",
+            "version": "v11.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Astrotomic/laravel-translatable.git",
-                "reference": "889f8b91f28a8a72873099cf452945adbd03dc9f"
+                "reference": "8bd84a30381dfd9e2e1f24252b54279899959a7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Astrotomic/laravel-translatable/zipball/889f8b91f28a8a72873099cf452945adbd03dc9f",
-                "reference": "889f8b91f28a8a72873099cf452945adbd03dc9f",
+                "url": "https://api.github.com/repos/Astrotomic/laravel-translatable/zipball/8bd84a30381dfd9e2e1f24252b54279899959a7b",
+                "reference": "8bd84a30381dfd9e2e1f24252b54279899959a7b",
                 "shasum": ""
             },
             "require": {
-                "illuminate/contracts": "5.8.* || ^6.0",
-                "illuminate/database": "5.8.* || ^6.0",
-                "illuminate/support": "5.8.* || ^6.0",
+                "illuminate/contracts": "5.8.* || ^6.0 || ^7.0",
+                "illuminate/database": "5.8.* || ^6.0 || ^7.0",
+                "illuminate/support": "5.8.* || ^6.0 || ^7.0",
                 "php": ">=7.2"
             },
             "require-dev": {
-                "orchestra/testbench": "3.8.* || ^4.0",
-                "phpunit/phpunit": "^8.0"
+                "orchestra/testbench": "3.8.* || ^4.0 || ^5.0",
+                "phpunit/phpunit": "^8.0 || ^9.0"
             },
             "type": "library",
             "extra": {
@@ -102,7 +102,7 @@
             "authors": [
                 {
                     "name": "Tom Witkowski",
-                    "email": "dev.gummibeer@gmail.com",
+                    "email": "gummibeer@astrotomic.info",
                     "homepage": "https://gummibeer.de",
                     "role": "Developer"
                 },
@@ -114,13 +114,14 @@
                 }
             ],
             "description": "A Laravel package for multilingual models",
+            "homepage": "https://astrotomic.info",
             "keywords": [
                 "database",
                 "language",
                 "laravel",
                 "translation"
             ],
-            "time": "2020-01-28T11:49:28+00:00"
+            "time": "2020-03-03T10:43:26+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
