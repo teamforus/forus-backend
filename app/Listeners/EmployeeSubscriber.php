@@ -59,10 +59,6 @@ class EmployeeSubscriber
     public function onEmployeeDeleted(EmployeeDeleted $employeeDeleted) {
         $employee = $employeeDeleted->getEmployee();
 
-        $employee->organization->validators()->where([
-            'identity_address' => $employee->identity_address
-        ])->delete();
-
         $transData = [
             "org_name" => $employee->organization->name
         ];
@@ -80,28 +76,13 @@ class EmployeeSubscriber
      * @throws \Exception
      */
     private function updateValidatorEmployee(Employee $employee) {
-        $organization = $employee->organization;
-        $query = $employee->only('identity_address');
-
-        if ($organization->identity_address == $employee->identity_address) {
-            return;
-        }
-
-        if (!$employee->hasRole('validation')) {
-            $organization->validators()->where([
-                'identity_address' => $employee->identity_address
-            ])->delete();
-        } elseif ($organization->validators()->where($query)->count() == 0) {
-            $organization->validators()->create($query);
-
-            /*$this->mailService->youAddedAsValidator(
-                $this->recordService->primaryEmailByAddress(
-                    $employee->identity_address
-                ),
-                $employee->identity_address,
-                $organization->name
-            );*/
-        }
+        /*$this->mailService->youAddedAsValidator(
+            $this->recordService->primaryEmailByAddress(
+                $employee->identity_address
+            ),
+            $employee->identity_address,
+            $organization->name
+        );*/
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
 use Gate;
@@ -22,10 +23,12 @@ class FundResource extends Resource
      */
     public function toArray($request)
     {
-        $fund                   = $this->resource;
-        $organization           = $fund->organization;
-        $validators             = $organization->validators;
-        $sponsorCount           = $organization->employees->count() + 1;
+        $fund               = $this->resource;
+        $organization       = $fund->organization;
+        $sponsorCount       = $organization->employees->count() + 1;
+        $validators         = $organization->employeesWithPermissionsQuery([
+            'validate_records'
+        ])->get();
 
         $providersEmployeeCount = $fund->provider_organizations_approved;
         $providersEmployeeCount = $providersEmployeeCount->reduce(function (
@@ -73,7 +76,7 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck(
                 'product_id'
             ),
-            'validators' => $validators->map(function($validator) {
+            'validators' => $validators->map(function(Employee $validator) {
                 return collect($validator)->only([
                     'identity_address'
                 ]);
