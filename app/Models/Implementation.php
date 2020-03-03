@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Services\DigIdService\Repositories\DigIdRepo;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;

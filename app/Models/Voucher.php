@@ -27,12 +27,10 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Fund $fund
  * @property-read mixed $amount_available
  * @property-read mixed $amount_available_cached
- * @property-read string|null $created_at_locale
  * @property-read bool $expired
  * @property-read bool $has_transactions
  * @property-read bool $is_granted
  * @property-read string $type
- * @property-read string|null $updated_at_locale
  * @property-read bool $used
  * @property-read \App\Models\Voucher|null $parent
  * @property-read \App\Models\Product|null $product
@@ -104,9 +102,9 @@ class Voucher extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function product() {
-        return $this->belongsTo(
+        return query_with_trashed($this->belongsTo(
             Product::class, 'product_id', 'id'
-        )->withTrashed();
+        ));
     }
 
     /**
@@ -492,9 +490,8 @@ class Voucher extends Model
     }
 
     /**
-     * @param Collection|Voucher[] $vouchers
+     * @param Collection $vouchers
      * @return string
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public static function zipVouchers(Collection $vouchers)
     {

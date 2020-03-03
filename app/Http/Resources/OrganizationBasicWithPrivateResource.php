@@ -3,14 +3,13 @@
 namespace App\Http\Resources;
 
 use App\Models\Organization;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class OrganizationBasicResource
  * @property Organization $resource
  * @package App\Http\Resources
  */
-class OrganizationBasicWithPrivateResource extends Resource
+class OrganizationBasicWithPrivateResource extends OrganizationBasicResource
 {
     /**
      * Transform the resource into an array.
@@ -22,14 +21,10 @@ class OrganizationBasicWithPrivateResource extends Resource
     {
         $organization = $this->resource;
 
-        return collect($organization)->only([
-            'id', 'name', 'business_type_id', 'email', 'phone', 'website'
-        ])->merge([
-            'business_type' => $organization->business_type ? new BusinessTypeResource(
-                $organization->business_type
-            ) : null,
-            'logo' => new MediaCompactResource(
-                $organization->logo)
-        ])->toArray();
+        return array_merge(parent::toArray($request), [
+            'email' => $organization->email ?? null,
+            'phone' => $organization->phone ?? null,
+            'website' => $organization->website ?? null,
+        ]);
     }
 }

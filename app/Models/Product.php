@@ -31,11 +31,9 @@ use Illuminate\Http\Request;
  * @property-read int|null $fund_providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
- * @property-read string|null $created_at_locale
  * @property-read bool $expired
  * @property-read bool $is_offer
  * @property-read int $stock_amount
- * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization

@@ -19,8 +19,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * @property \Illuminate\Support\Carbon $validated_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Services\Forus\Record\Models\Record $record
  * @property-read \App\Models\Validator $validator
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ValidatorRequest newModelQuery()

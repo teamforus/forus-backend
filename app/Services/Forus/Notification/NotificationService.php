@@ -614,9 +614,10 @@ class NotificationService
      * @param string $email
      * @param $identifier
      * @param string $fund_name
+     * @param int $voucher_amount
+     * @param string $voucher_expire_minus_day
      * @param string $fund_product_name
      * @param string $qr_token
-     *
      * @return bool
      */
     public function sendVoucher(

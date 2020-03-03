@@ -59,7 +59,7 @@ class EmployeesController extends Controller
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
      * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Excep tion
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreEmployeeRequest $request,

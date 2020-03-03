@@ -107,7 +107,7 @@ class VoucherResource extends Resource
             ],
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'expired' => $voucher->expired,
-            'created_at_locale' => $voucher->created_at_locale,
+            'created_at_locale' => format_datetime_locale($voucher->created_at),
             'amount' => currency_format($amount),
             'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens->where('need_confirmation', 0)->first()->address,
@@ -126,7 +126,7 @@ class VoucherResource extends Resource
                 return collect($product_voucher)->only([
                     'identity_address', 'fund_id', 'created_at', 'returnable',
                 ])->merge([
-                    'created_at_locale' => $product_voucher->created_at_locale,
+                    'created_at_locale' => format_datetime_locale($product_voucher->created_at),
                     'address' => $product_voucher->tokens->where(
                         'need_confirmation', 1)->first()->address,
                     'amount' => currency_format(
