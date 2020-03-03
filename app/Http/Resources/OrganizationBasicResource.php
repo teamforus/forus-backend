@@ -23,17 +23,21 @@ class OrganizationBasicResource extends Resource
     {
         $organization = $this->resource;
 
+        $privateData = [
+            'email' => $organization->email_public ? $organization->email ?? null: null,
+            'phone' => $organization->phone_public ? $organization->phone ?? null: null,
+            'website' => $organization->website_public ? $organization->website ?? null: null,
+        ];
+
         return collect($organization)->only([
             'id', 'name', 'business_type_id',
-            $organization->email_public ? 'email': '',
-            $organization->phone_public ? 'phone': '',
-            $organization->website_public ? 'website': ''
-        ])->merge([
+            'email_public', 'phone_public', 'website_public'
+        ])->merge(array_merge($privateData, [
             'business_type' => $organization->business_type ? new BusinessTypeResource(
                 $organization->business_type
             ) : null,
             'logo' => new MediaCompactResource(
                 $organization->logo)
-        ]);
+        ]))->toArray();
     }
 }

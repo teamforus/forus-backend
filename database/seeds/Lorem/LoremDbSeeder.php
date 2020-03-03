@@ -392,18 +392,12 @@ class LoremDbSeeder extends Seeder
             $flag = true;
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
-        $fund = $organization->createFund(array_merge([
+        return $organization->createFund(array_merge([
             'name'          => $fundName,
             'start_date'    => Carbon::now()->format('Y-m-d'),
             'end_date'      => Carbon::now()->addDays(60)->format('Y-m-d'),
             'state'         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING
         ], $fields));
-
-        $fund->product_categories()->sync(
-            $this->productCategories->pluck('id')->random(6)->toArray()
-        );
-
-        return $fund;
     }
 
     /**

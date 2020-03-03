@@ -19,8 +19,6 @@ class ProductResource extends Resource
         'vouchers_reserved',
         'photo.sizes',
         'product_category.translations',
-        'product_category.funds',
-        'product_category.funds.logo',
         // 'organization.product_categories.translations',
         'organization.offices.photo.sizes',
         'organization.offices.schedules',

@@ -2,10 +2,8 @@
 
 namespace App\Exports;
 
-use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
-use App\Models\VoucherTransaction;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;

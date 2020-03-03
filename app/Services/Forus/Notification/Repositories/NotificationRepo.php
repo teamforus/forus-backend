@@ -8,7 +8,6 @@ use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
 use App\Mail\Funds\NewFundApplicableMail;
-use App\Mail\Funds\ProductAddedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
@@ -56,7 +55,6 @@ class NotificationRepo implements INotificationRepo
         'funds.product_sold_out' => ProductSoldOutMail::class,
         'funds.product_reserved' => ProductReservedMail::class,
         'funds.fund_expires' => FundExpiredMail::class,
-        'funds.product_added' => ProductAddedMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
 
         // Authorization emails

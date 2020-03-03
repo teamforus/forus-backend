@@ -26,8 +26,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $clarifications_pending_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records_approved

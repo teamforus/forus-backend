@@ -2,7 +2,6 @@
 
 use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\FundProductCategory;
 use App\Models\ProductCategoryTranslation;
 
 class ProductCategoriesTableSeeder extends DatabaseSeeder
@@ -95,14 +94,6 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
     public static function migrateProducts($list) {
         foreach ($list as $oldId => $newId) {
             Product::withTrashed()->where('product_category_id', $oldId)->update([
-                'product_category_id' => $newId
-            ]);
-        }
-    }
-
-    public static function migrateFundProductCategories($list) {
-        foreach ($list as $oldId => $newId) {
-            FundProductCategory::where('product_category_id', $oldId)->update([
                 'product_category_id' => $newId
             ]);
         }

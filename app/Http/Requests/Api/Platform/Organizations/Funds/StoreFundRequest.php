@@ -48,8 +48,6 @@ class StoreFundRequest extends FormRequest
             'description'                   => 'nullable|string|max:140',
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
-            'product_categories'            => 'present|array',
-            'product_categories.*'          => 'exists:product_categories,id',
             'notification_amount'           => 'nullable|numeric',
         ], [
             'auto_requests_validation' => [

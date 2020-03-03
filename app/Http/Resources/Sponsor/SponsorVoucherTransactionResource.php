@@ -24,8 +24,8 @@ class SponsorVoucherTransactionResource extends Resource
             "id", "organization_id", "product_id", "created_at",
             "updated_at", "address", "state", "payment_id",
         ])->merge([
-            'created_at_locale' => $voucherTransaction->created_at_locale,
-            'updated_at_locale' => $voucherTransaction->updated_at_locale,
+            'created_at_locale' => format_datetime_locale($voucherTransaction->created_at),
+            'updated_at_locale' => format_datetime_locale($voucherTransaction->updated_at),
             'amount' => currency_format($voucherTransaction->amount),
             'timestamp' => $voucherTransaction->created_at->timestamp,
             "organization" => collect($voucherTransaction->provider)->only([

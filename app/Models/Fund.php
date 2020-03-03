@@ -59,14 +59,10 @@ use Illuminate\Http\Request;
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Services\MediaService\Models\Media $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $product_categories
- * @property-read int|null $product_categories_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
@@ -181,16 +177,6 @@ class Fund extends Model
         return $this->belongsToMany(
             Product::class,
             'fund_products'
-        );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function product_categories() {
-        return $this->belongsToMany(
-            ProductCategory::class,
-            'fund_product_categories'
         );
     }
 
@@ -714,15 +700,6 @@ class Fund extends Model
                 $fund->state == self::STATE_PAUSED) {
                 $fund->changeState(self::STATE_ACTIVE);
 
-                /*
-                $organizations = Organization::query()->whereIn(
-                    'id', OrganizationProductCategory::query()->whereIn(
-                    'product_category_id',
-                    $fund->product_categories()->pluck('id')->all()
-                )->pluck('organization_id')->toArray()
-                )->get();
-                */
-
                 /** @var Organization $organization */
                 // TODO: Notify providers about new fund started
 
@@ -816,13 +793,6 @@ class Fund extends Model
                     $fund->organization->name
                 );
             }
-
-            /*$organizations = Organization::query()->whereIn(
-                'id', OrganizationProductCategory::query()->whereIn(
-                'product_category_id',
-                $fund->product_categories()->pluck('id')->all()
-            )->pluck('organization_id')->toArray()
-            )->get();*/
 
             /** @var Organization $organization */
             // TODO: Notify providers about new fund applicable
