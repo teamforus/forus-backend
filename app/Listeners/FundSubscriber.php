@@ -9,18 +9,10 @@ class FundSubscriber
 {
     public function onFundCreated(FundCreated $fundCreated) {
         $fund = $fundCreated->getFund();
-
         $notificationService = resolve('forus.services.notification');
 
-        $notificationService->newFundCreated(
-            $fund->organization->email,
-            $fund->organization->emailServiceId(),
-            $fund->name,
-            env('WEB_SHOP_GENERAL_URL')
-        );
-
         if ($email = env('EMAIL_FOR_FUND_CREATED', false)) {
-            $notificationService->newFundCreatedNotifyCompany(
+            $notificationService->newFundCreatedNotifyForus(
                 $email,
                 $fund->name,
                 $fund->organization->name

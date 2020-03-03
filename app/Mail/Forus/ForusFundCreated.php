@@ -26,7 +26,7 @@ class ForusFundCreated extends ImplementationMail
     public function build(): ImplementationMail
     {
         return parent::build()
-            ->subject(mail_trans('fund_created.title', [
+            ->subject(mail_trans('forus/fund_created.title', [
                 'fund_name' => $this->fundName
             ]))
             ->view('emails.forus.new_fund_created', [
