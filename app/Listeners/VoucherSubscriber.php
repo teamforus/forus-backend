@@ -59,6 +59,10 @@ class VoucherSubscriber
 
             $product->sendProductReservedEmail($voucher);
             $product->sendProductReservedUserEmail($voucher);
+        } else if ($voucher->identity_address) {
+            $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
+                $voucher->identity_address
+            ));
         }
     }
 
