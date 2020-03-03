@@ -339,4 +339,16 @@ class VoucherTransaction extends Model
             self::searchSponsor($request, $organization, $fund, $provider)
         );
     }
+    /**
+     * @param string $group
+     * @param string $note
+     * @return \Illuminate\Database\Eloquent\Model|VoucherTransactionNote
+     */
+    public function addNote(string $group, string $note)
+    {
+        return $this->notes()->create([
+            'message' => $note,
+            'group' => $group
+        ]);
+    }
 }

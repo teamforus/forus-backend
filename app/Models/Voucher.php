@@ -61,6 +61,14 @@ use Illuminate\Http\Request;
  */
 class Voucher extends Model
 {
+    const TYPE_BUDGET = 'regular';
+    const TYPE_PRODUCT = 'product';
+
+    const TYPES = [
+        self::TYPE_BUDGET,
+        self::TYPE_PRODUCT,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
