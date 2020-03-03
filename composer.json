@@ -18,7 +18,7 @@
         "doctrine/dbal": "2.10.1",
         "dusterio/laravel-aws-worker": "0.1.23",
         "fideloper/proxy": "4.2.2",
-        "fruitcake/laravel-cors": "1.0.3",
+        "fruitcake/laravel-cors": "1.0.4",
         "geoip2/geoip2": "2.10.0",
         "graham-campbell/markdown": "11.2.0",
         "guzzlehttp/guzzle": "6.5.2",
