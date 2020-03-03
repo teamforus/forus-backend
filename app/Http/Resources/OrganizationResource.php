@@ -65,12 +65,7 @@ class OrganizationResource extends Resource
             'phone' => $organization->phone_public ? $organization->phone ?? null: null,
             'website' => $organization->website_public ? $organization->website ?? null: null,
         ];
-
-        log_debug(collect($organization)->only([
-            'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
-            'email_public', 'phone_public', 'website_public'
-        ])->merge($privateData)->toArray());
-
+        
         return array_filter(array_merge(collect($organization)->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
             'email_public', 'phone_public', 'website_public'
