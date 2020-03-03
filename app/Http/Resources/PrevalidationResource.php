@@ -32,9 +32,7 @@ class PrevalidationResource extends Resource
             'id', 'uid', 'state', 'exported', 'fund_id',
         ])->merge($creatorFields)->merge([
             'records' => PrevalidationRecordResource::collection(
-                $this->resource->prevalidation_records->filter(function($record) {
-                    return strpos($record->record_type->key, '_eligible') === false;
-                })->sortByDesc('record_type_id')
+                $this->resource->prevalidation_records->sortByDesc('record_type_id')
             )
         ])->toArray();
     }
