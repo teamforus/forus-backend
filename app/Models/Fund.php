@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 
-
 /**
  * App\Models\Fund
  *
@@ -699,20 +698,6 @@ class Fund extends Model
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
                 $fund->changeState(self::STATE_ACTIVE);
-
-                /** @var Organization $organization */
-                // TODO: Notify providers about new fund started
-
-                /*
-                foreach ($organizations as $organization) {
-                    resolve('forus.services.mail_notification')->newFundStarted(
-                        $organization->email,
-                        $organization->emailServiceId(),
-                        $fund->name,
-                        $fund->organization->name
-                    );
-                }
-                */
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
@@ -793,17 +778,6 @@ class Fund extends Model
                     $fund->organization->name
                 );
             }
-
-            /** @var Organization $organization */
-            // TODO: Notify providers about new fund applicable
-            /*foreach ($organizations as $organization) {
-                resolve('forus.services.mail_notification')->newFundApplicable(
-                    $organization->email,
-                    $organization->emailServiceId(),
-                    $fund->name,
-                    config('forus.front_ends.panel-provider')
-                );
-            }*/
         }
     }
 
