@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19ab2dbc12cffc4c32838a2b4f7a7310",
+    "content-hash": "e3c16474e02827bfbcb5b209e9cedba2",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -125,16 +125,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.133.27",
+            "version": "3.133.29",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "5527195465ac42cb5127a60b84eb2d8dc3b0d5c9"
+                "reference": "ec8f628041e0d1de4fad76ac041c6025bd38d2da"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/5527195465ac42cb5127a60b84eb2d8dc3b0d5c9",
-                "reference": "5527195465ac42cb5127a60b84eb2d8dc3b0d5c9",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/ec8f628041e0d1de4fad76ac041c6025bd38d2da",
+                "reference": "ec8f628041e0d1de4fad76ac041c6025bd38d2da",
                 "shasum": ""
             },
             "require": {
@@ -205,7 +205,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2020-03-02T19:20:19+00:00"
+            "time": "2020-03-04T19:10:59+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
