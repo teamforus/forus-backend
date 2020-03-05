@@ -12,7 +12,7 @@
         "ext-openssl": "*",
         "ext-zip": "*",
         "astrotomic/laravel-translatable": "11.8.0",
-        "aws/aws-sdk-php": "3.133.29",
+        "aws/aws-sdk-php": "3.133.30",
         "barryvdh/laravel-ide-helper": "2.6.6",
         "bunq/sdk_php": "1.12.1",
         "doctrine/dbal": "2.10.1",
