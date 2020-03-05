@@ -214,10 +214,7 @@ class Voucher extends Model
             $this->identity_address,
             $fund_product_name,
             $this->amount,
-            format_date_locale(
-                $this->expire_at->subDay(), 
-                'short_date_inc_weekday_locale'
-            ),
+            format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
             $fund_product_name,
             $voucherToken->address
         );
@@ -239,10 +236,7 @@ class Voucher extends Model
             $this->identity_address,
             $this->fund->name,
             $this->amount,
-            format_date_locale(
-                $this->expire_at->subDay(), 
-                'short_date_inc_weekday_locale'
-            ),
+            format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
             $voucherToken->address
         );
     }
@@ -336,10 +330,7 @@ class Voucher extends Model
                 $fund_name = $voucher->fund->name;
                 $sponsor_name = $voucher->fund->organization->name;
                 $start_date = $voucher->fund->start_date->format('Y');
-                $end_date = format_date_locale(
-                    $voucher->fund->end_date, 
-                    'short_date_inc_weekday_locale'
-                );
+                $end_date = format_date_locale($voucher->fund->end_date, 'long_date_locale');
                 $phone = $voucher->fund->organization->phone;
                 $email = $voucher->fund->organization->email;
                 $webshopLink = env('WEB_SHOP_GENERAL_URL');
