@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e3c16474e02827bfbcb5b209e9cedba2",
+    "content-hash": "a64cfc5f8ad209e0de6f61f5ba9c71b4",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1206,24 +1206,24 @@
         },
         {
             "name": "dusterio/laravel-aws-worker",
-            "version": "v0.1.23",
+            "version": "v0.1.25",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dusterio/laravel-aws-worker.git",
-                "reference": "68d2d62d3888c70f74d0bb7dda91899fe8eaa158"
+                "reference": "99dda70aee533ea73b9a961b40c715ead4798c11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/68d2d62d3888c70f74d0bb7dda91899fe8eaa158",
-                "reference": "68d2d62d3888c70f74d0bb7dda91899fe8eaa158",
+                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/99dda70aee533ea73b9a961b40c715ead4798c11",
+                "reference": "99dda70aee533ea73b9a961b40c715ead4798c11",
                 "shasum": ""
             },
             "require": {
                 "aws/aws-sdk-php": "~3.0",
-                "illuminate/bus": "5.*|^6.0",
-                "illuminate/http": "5.*|^6.0",
-                "illuminate/queue": "5.*|^6.0",
-                "illuminate/support": "5.*|^6.0",
+                "illuminate/bus": "5.*|^6.0|^7.0",
+                "illuminate/http": "5.*|^6.0|^7.0",
+                "illuminate/queue": "5.*|^6.0|^7.0",
+                "illuminate/support": "5.*|^6.0|^7.0",
                 "php": ">=5.5.0"
             },
             "require-dev": {
@@ -1258,7 +1258,7 @@
                 "sqs",
                 "worker"
             ],
-            "time": "2019-11-05T01:35:13+00:00"
+            "time": "2020-03-04T22:54:56+00:00"
         },
         {
             "name": "egulias/email-validator",
