@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\Resource;
 class OfficeResource extends Resource
 {
     public static $load = [
-        'photo.sizes', 'organization.business_type.translations',
+        'photo.presets', 'organization.business_type.translations',
         'organization.logo', 'schedules',
     ];
 

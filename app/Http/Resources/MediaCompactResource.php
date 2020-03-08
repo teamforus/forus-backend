@@ -3,7 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Services\MediaService\Models\Media;
-use App\Services\MediaService\Models\MediaSize;
+use App\Services\MediaService\Models\MediaPreset;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -21,14 +21,13 @@ class MediaCompactResource extends Resource
      */
     public function toArray($request)
     {
-        $sizes = collect($this->resource->sizes);
+        $presets = collect($this->resource->presets);
 
         return collect($this->resource)->only([
-            'original_name', 'type', 'ext', 'uid'
+            'original_name', 'type', 'ext', 'uid', 'dominant_color'
         ])->merge([
-            'sizes' => $sizes->keyBy('key')->map(function($size) {
-                /** @var MediaSize $size */
-                return $size->urlPublic();
+            'sizes' => $presets->keyBy('key')->map(function(MediaPreset $preset) {
+                return $preset->urlPublic();
             })
         ])->toArray();
     }

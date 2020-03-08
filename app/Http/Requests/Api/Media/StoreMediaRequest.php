@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api\Media;
 
-use App\Rules\MediaTypeRule;
+use App\Services\MediaService\MediaService;
+use App\Services\MediaService\Rules\FileMimeTypeRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreMediaRequest extends FormRequest
 {
@@ -24,9 +26,22 @@ class StoreMediaRequest extends FormRequest
      */
     public function rules()
     {
+        $type = MediaService::getMediaConfig($this->input('type'));
+
         return [
-            'file' => 'required|file|image|mimes:jpg,jpeg,png|max:4096',
-            'type' => ['required', new MediaTypeRule()],
+            'file' => array_merge([
+                'required',
+                'file',
+                'image',
+            ], $type ? [
+                'mimes:' . join(',', $type->getSourceExtensions()),
+                new FileMimeTypeRule($type->getSourceMimeTypes()),
+                'max:' . $type->getMaxSourceFileSize(4096),
+            ]: []),
+            'type' => [
+                'required',
+                Rule::in(array_keys(MediaService::getMediaConfigs()))
+            ],
         ];
     }
 }

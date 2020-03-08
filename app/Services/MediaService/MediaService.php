@@ -2,38 +2,95 @@
 
 namespace App\Services\MediaService;
 
+use App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException;
+use App\Services\MediaService\Jobs\RegenerateMediaJob;
 use App\Services\MediaService\Models\Media;
-use App\Services\MediaService\Models\MediaSize;
+use App\Services\MediaService\Models\MediaPreset as PresetModel;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\UploadedFile;
-use Intervention\Image\Constraint;
 
 class MediaService
 {
     /**
+     * Media model
      * @var Media $model
      */
     protected $model;
 
     /**
-     * Filesystem driver to use for storage
+     * Default Filesystem driver to use for storage
+     * May be overwritten in media config file
      * @var string $storageDriver
      */
     protected $storageDriver;
 
     /**
-     * Path to upload images in
+     * Default storage path
+     * May be overwritten in media config file
      * @var string $storagePath
      */
     protected $storagePath;
 
     /**
+     * @var array|MediaConfig[]
+     */
+    protected static $mediaConfigs = [];
+
+    /**
+     * @param array $configs
+     * @param bool $append
+     * @return MediaConfig[]|array
+     * @throws MediaConfigAlreadyRegisteredException
+     */
+    public static function setMediaConfigs(array $configs = [], bool $append = true) {
+        if (!$append) {
+            self::$mediaConfigs = [];
+        }
+
+        foreach ($configs as $config) {
+            self::addMediaConfig($config);
+        }
+
+        return self::getMediaConfigs();
+    }
+
+    /**
+     * @return MediaConfig[]|array
+     */
+    public static function getMediaConfigs() {
+        return self::$mediaConfigs;
+    }
+
+    /**
+     * @param MediaConfig $mediaConfig
+     * @return MediaConfig
+     * @throws MediaConfigAlreadyRegisteredException
+     */
+    public static function addMediaConfig(MediaConfig $mediaConfig) {
+        if (isset(self::$mediaConfigs[$mediaConfig->getName()])) {
+            throw new MediaConfigAlreadyRegisteredException(sprintf(
+                "Media config %s already registered",
+                $mediaConfig->getName()
+            ));
+        }
+
+        return self::$mediaConfigs[$mediaConfig->getName()] = $mediaConfig;
+    }
+
+    /**
+     * @param string $name
+     * @return MediaConfig|mixed|null
+     */
+    public static function getMediaConfig(string $name) {
+        return self::$mediaConfigs[$name] ?? null;
+    }
+
+    /**
      * MediaService constructor.
      */
     public function __construct() {
-        $this->model = Media::query();
+        $this->model = new Media();
         $this->storagePath = str_start(config('media.storage_path'), '/');
         $this->storageDriver = config('media.filesystem_driver', 'local');
     }
@@ -41,10 +98,10 @@ class MediaService
     /**
      * @param Media $media
      * @param $type
-     * @return \Illuminate\Database\Eloquent\Model|null|object|static
+     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Relations\HasMany|object|null
      */
     public function getSize(Media $media, $type) {
-        return $media->sizes()->where('type', $type)->first();
+        return $media->presets()->where('type', $type)->first();
     }
 
     /**
@@ -53,96 +110,105 @@ class MediaService
      * @throws \Exception
      */
     public function clear() {
-        $this->clearMediasWithDeletedMediable();
+        $this->clearMediasWithoutMediable();
         $this->clearExpiredMedias();
         $this->clearStorage();
     }
 
     /**
-     * Delete all media that was assigned, but objects no longer exists
+     * Delete all media with missing mediable
      *
      * @return int
      * @throws \Exception
      */
-    public function clearMediasWithDeletedMediable() {
-        $deleted = 0;
-
-        $medias = $this->model->with('mediable')->whereNotNull(
-            'mediable_id'
-        )->whereNotNull(
-            'mediable_type'
-        )->get();
+    public function clearMediasWithoutMediable() {
+        $medias = $this->getMediaWithoutMediableList();
 
         foreach ($medias as $media) {
-            if (!$media->mediable) {
-                $this->unlink($media);
-                $deleted++;
-            }
+            $this->unlink($media);
         }
 
-        return $deleted;
+        return $medias->count();
+    }
+
+    /**
+     * Get all media with missing mediable
+     *
+     * @return Media[]|Builder[]|Collection|\Illuminate\Database\Query\Builder[]|\Illuminate\Support\Collection
+     */
+    public function getMediaWithoutMediableList() {
+        return $this->model->newQuery()->with('mediable')->whereNotNull(
+            'mediable_id'
+        )->whereNotNull('mediable_type')->get()->filter(function(Media $media) {
+            return is_null($media->mediable);
+        });
     }
 
     /**
      * Clear media that are created but not assigned to any resource
      *
+     * @param float|int $minutes_to_expire
      * @return int
      * @throws \Exception
      */
-    public function clearExpiredMedias() {
-        $expiredMedias = $this->getExpired();
+    public function clearExpiredMedias($minutes_to_expire = 5 * 60) {
+        $expiredMedias = $this->getExpiredList($minutes_to_expire);
 
         foreach ($expiredMedias as $media) {
             $this->unlink($media);
         }
 
-        return $expiredMedias->count();
+        return count($expiredMedias);
     }
 
     /**
-     * Clear files that are missing in database from storage
+     * Returns list of all files uploaded to storage but not assigned to any entity
+     *
+     * @param float|int $minutes_to_expire
+     * @return Media[]|Builder[]|Collection
+     */
+    public function getExpiredList(
+        $minutes_to_expire = 5 * 60
+    ) {
+        $expiredMedias = $this->model->newQuery()->where(function(Builder $query) {
+            $query->whereNull('mediable_type');
+            $query->orWhereNull('mediable_id');
+        })->where('created_at', '<', Carbon::now()->subMinutes($minutes_to_expire));
+
+        // query to filter media without user
+        return $expiredMedias->get();
+    }
+
+    /**
+     * Delete all files which exists on storage but are not listed in db
      *
      * @return int count files deleted
      */
     public function clearStorage() {
+        $unusedFiles = $this->getUnusedFilesList();
         $storage = $this->storage();
 
-        $dbFiles = collect(MediaSize::query()->pluck('path'));
-        $storageFiles = collect($storage->allFiles($this->storagePath));
+        foreach ($unusedFiles as $unusedFile) {
+            $storage->delete($unusedFile);
+        }
 
-        $unusedFiles = $storageFiles->filter(function($file) use ($dbFiles) {
-            return $dbFiles->search($file) === false;
-        });
-
-        $unusedFiles->each(function($file) use ($storage) {
-            $storage->delete($file);
-        });
-
-        return $unusedFiles->count();
+        return count($unusedFiles);
     }
 
     /**
-     * Returns list of expired Media Models
+     * Make list files which exists on storage but are not listed in db
      *
-     * @param null $identity_address
-     * @return Collection
+     * @return array
      */
-    public function getExpired($identity_address = null) {
-        $expiredMedias = $this->model->where(function(Builder $query) {
-            return $query->whereNull(
-                'mediable_type'
-            )->orWhereNull(
-                'mediable_id'
-            );
-        })->where(
-            'created_at', '<', Carbon::now()->subMinutes(60)
-        );
+    public function getUnusedFilesList() {
+        $storage = $this->storage();
+        $dbFiles = PresetModel::query()->pluck('path');
 
-        if ($identity_address) {
-            $expiredMedias->where('identity_address', $identity_address);
-        }
-
-        return $expiredMedias->get();
+        return array_filter($storage->allFiles(
+            $this->storagePath
+        ), function($file) use ($dbFiles) {
+            return $dbFiles->search(str_start($file, '/')) === false;
+        });
     }
 
     /**
@@ -153,8 +219,7 @@ class MediaService
      * @throws \Exception
      */
     public function unlink(Media $media) {
-        foreach ($media->sizes as $size) {
-            /** @var MediaSize $size */
+        foreach ($media->presets as $size) {
             $size->unlink();
             $size->delete();
         }
@@ -163,168 +228,265 @@ class MediaService
     }
 
     /**
-     * Returns a unique string that is free to be used as media name
-     *
-     * @param $path
-     * @param $ext
-     * @return string
-     */
-    protected function makeUniqueFileNme($path, $ext) {
-        $tokenGenerator = resolve('token_generator');
-        $storage = $this->storage();
-
-        do {
-            $name = $tokenGenerator->generate('62');
-        } while($storage->exists($path . '/' . $name . '.' . $ext));
-
-        return $name;
-    }
-
-    /**
-     * @param UploadedFile $file
+     * @param string $filePath
+     * @param string $fileName
      * @param $type
-     * @param $identity
-     * @param $extension
-     * @return Media|bool
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @return Media|bool|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
      */
     public function uploadSingle(
-        UploadedFile $file,
-        $type,
-        $identity,
-        $extension = false
+        string $filePath,
+        string $fileName,
+        $type
     ) {
-        // file info
-        $path   = (string) $file;
-        $name   = $file->getClientOriginalName();
-        $ext    = $extension ?: $file->getClientOriginalExtension();
-
-        // get clear name
-        $name   = rtrim($name, '.' . $ext);
-
-        // do upload
-        return $this->doUpload($path, $name, $ext, $type, $identity);
+        return $this->makeMedia(
+            TmpFile::fromTmpFile($filePath),
+            pathinfo($fileName,PATHINFO_FILENAME),
+            pathinfo($fileName,PATHINFO_EXTENSION),
+            $type
+        );
     }
 
     /**
-     * @param $type
-     * @param Media $media
-     * @param $identity
-     * @return Media|bool
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @return string
      */
-    public function cloneMedia(
-        $type,
-        Media $media,
-        $identity
-    ) {
-        if ($media->size_original && $media->size_original->fileExists()) {
-            return $this->doUpload(
-                $media->size_original->storagePath(),
-                $media->original_name,
-                $media->ext,
-                $type,
-                $identity
-            );
-        }
+    protected function makeUniqueUid() {
+        do {
+            $uid = bin2hex(openssl_random_pseudo_bytes(64 / 2));
+        } while($this->model->newQuery()->where(compact('uid'))->exists());
 
-        return false;
+        return $uid;
     }
 
     /**
-     * @param string $path
      * @param string $original_name
      * @param string $ext
      * @param string $type
-     * @param string $identity_address
-     * @return Media|bool|\Illuminate\Database\Eloquent\Model
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @return Media|Builder|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
      */
-    protected function doUpload(
-        string $path,
+    protected function makeMediaModel(
         string $original_name,
         string $ext,
-        string $type,
-        string $identity_address
+        string $type
     ) {
-        $mediaConfig = config('media.sizes.' . $type);
-        $mediaSizes = $mediaConfig['size'];
-        $mediaQuery = Media::query();
-        $mediable_type = null;
-        $mediable_id = null;
-
-        if (!in_array($ext, ['jpg', 'png'])) {
-            $ext = 'jpg';
-        }
-
-        do {
-            $uid = resolve('token_generator')->generate('64');
-        } while($mediaQuery->where(compact('uid'))->count() > 0);
-
-        if (!$media = Media::create(compact(
-            'uid', 'identity_address', 'original_name', 'type', 'ext',
-            'mediable_id', 'mediable_type'
-        ))) {
-            return false;
-        }
-
-        $storage = $this->storage();
-
-        foreach ($mediaSizes as $mediaSizeKey => $mediaSize) {
-            $uniqueName = $this->makeUniqueFileNme($this->storagePath, $ext);
-            $filePath = str_start($uniqueName . '.' . $ext, '/');
-            $filePath = str_start($this->storagePath . $filePath, '/');
-            $storage->put($filePath, file_get_contents($path));
-
-            $mediaSize = [
-                'x' => $mediaSize[0],
-                'y' => $mediaSize[1],
-                'keepRatio' => isset($mediaSize[2]) ? $mediaSize[2] : true,
-                'quality' => isset($mediaSize[3]) ? $mediaSize[3] : 75,
-            ];
-
-            $image = \Image::make(
-                $storage->get($filePath)
-            )->backup();
-
-            if ($mediaSize['keepRatio']) {
-                $image = $image->resize(
-                    $mediaSize['x'],
-                    $mediaSize['y'], function (
-                    Constraint $constraint
-                ) {
-                    $constraint->aspectRatio();
-                });
-            } else {
-                $image = $image->fit(
-                    $mediaSize['x'],
-                    $mediaSize['y']
-                );
-            }
-
-            if ($ext == 'jpg') {
-                $image = \Image::canvas(
-                    $image->width(),
-                    $image->height(),
-                    '#ffffff'
-                )->insert($image)->backup();
-            }
-
-            $storage->put(
-                $filePath,
-                $image->encode($ext, $mediaSize['quality'])->encoded,
-                'public'
-            );
-
-            // media size row create
-            $media->sizes()->create([
-                'key'   => $mediaSizeKey,
-                'path'  => $filePath
-            ]);
-            $image->reset();
+        if (!$media = $this->model->newQuery()->create(array_merge(compact(
+            'original_name', 'type', 'ext'
+        ), [
+            'uid' => self::makeUniqueUid()
+        ]))) {
+            throw new \Exception("Could not create media model.");
         }
 
         return $media;
+    }
+
+    /**
+     * @param TmpFile $path
+     * @param string $original_name
+     * @param string $ext
+     * @param string $type
+     * @return Media|bool|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
+     */
+    protected function makeMedia(
+        TmpFile $path,
+        string $original_name,
+        string $ext,
+        string $type
+    ) {
+        return $this->makeMediaPresets(
+            $this->makeMediaModel($original_name, $ext, $type),
+            self::getMediaConfig($type),
+            self::getMediaConfig($type)->getPresets(),
+            $path
+        );
+    }
+
+    /**
+     * @param Media $media
+     * @param MediaConfig $mediaConfig
+     * @param array $mediaPresets
+     * @param TmpFile $tmpFile
+     * @param bool $onlySync
+     * @return Media
+     */
+    public function makeMediaPresets(
+        Media $media,
+        MediaConfig $mediaConfig,
+        array $mediaPresets,
+        TmpFile $tmpFile,
+        bool $onlySync = false
+    ) {
+        $useQueue = !$onlySync && $mediaConfig->useQueue();
+
+        if ($useQueue) {
+            /** @var MediaPreset[] $mediaPresets */
+            $mediaPresets = array_values(array_filter($mediaPresets, function(
+                MediaPreset $mediaPreset
+            ) use ($mediaConfig) {
+                return in_array($mediaPreset->name, $mediaConfig->getSyncPresets());
+            }));
+        }
+
+        foreach ($mediaPresets as $mediaPreset) {
+            $mediaPreset->makePresetModel(
+                $tmpFile->path(), $this->storage(), $this->storagePath, $media
+            );
+        }
+
+        if ($useQueue) {
+            RegenerateMediaJob::dispatch($mediaConfig, $media)->onQueue(
+                config('media.queue_name')
+            );
+        }
+
+        $mediaConfig->onMediaPresetsUpdated($media);
+
+        $tmpFile->close();
+        return $media;
+    }
+
+    /**
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function regenerateAllMedia() {
+        foreach (self::getMediaConfigs() as $mediaConfig) {
+            if ($mediaConfig->getPresets()[
+                $mediaConfig->getRegenerationPresetName()] ?? false) {
+                $this->regenerateMedia($mediaConfig);
+            }
+        }
+    }
+
+    /**
+     * @param MediaConfig $mediaConfig
+     * @param Media|null $media
+     * @param bool $onlySync
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\Exception
+     */
+    public function regenerateMedia(
+        MediaConfig $mediaConfig,
+        Media $media = null,
+        bool $onlySync = false
+    ) {
+        $sourcePresetName = $mediaConfig->getRegenerationPresetName();
+        $medias = $this->model->newQuery()->where([
+            'type' => $mediaConfig->getName()
+        ]);
+
+        if ($media) {
+            $medias->where('id', $media->id);
+        }
+
+        $medias = $medias->get();
+
+        $newPresets = array_filter($mediaConfig->getPresets(), function(
+            MediaPreset $mediaPreset
+        ) use ($sourcePresetName) {
+            return $mediaPreset->name != $sourcePresetName;
+        });
+
+        $newPresetsKeys = array_map(function(MediaPreset $mediaPreset) {
+            return $mediaPreset->name;
+        }, $newPresets);
+
+        foreach ($medias as $media) {
+            $source = $media->findPreset($sourcePresetName);
+
+            if (!$source) {
+                throw new \Exception(sprintf(join([
+                    "Could not regenerate files for media \"%s\".\n",
+                    "Source preset \"%s\" is missing.\n"
+                ]), $media->id, $sourcePresetName));
+            }
+
+            /** @var PresetModel[] $mediaSizes */
+            $presetModels = $media->presets()->where(
+                'key', '!=', $sourcePresetName
+            )->get();
+
+            foreach ($presetModels as $presetModel) {
+                $presetModel->unlink();
+
+                if (!in_array($presetModel->key, $newPresetsKeys)) {
+                    $presetModel->delete();
+                }
+            }
+
+            $this->makeMediaPresets($media, $mediaConfig, $newPresets, new TmpFile(
+                $this->storage()->get($source->path)
+            ), $onlySync);
+        }
+    }
+
+    /**
+     * @param Media $media
+     * @param string|null $type
+     * @param bool $forceRegenerate
+     * @return Media|bool|Builder|\Illuminate\Database\Eloquent\Model
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\Exception
+     */
+    public function cloneMedia(
+        Media $media,
+        string $type = null,
+        bool $forceRegenerate = false
+    ) {
+        $type = $type ?? $media->type;
+        $copyFiles = $type == $media->type;
+
+        if (!$forceRegenerate && $copyFiles) {
+            return $this->cloneMediaCopy($media);
+        }
+
+        return $this->cloneMediaGenerate($media, $type);
+    }
+
+    /**
+     * @param Media $media
+     * @return Media|bool|\Illuminate\Database\Eloquent\Model
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\Exception
+     */
+    protected function cloneMediaCopy(Media $media) {
+        $oldMediaConfig = self::getMediaConfig($media->type);
+        $source = $media->findPreset($oldMediaConfig->getRegenerationPresetName());
+
+        return $this->makeMedia(
+            new TmpFile($this->storage()->get($source->path)),
+            $media->original_name,
+            $media->ext,
+            $media->type
+        );
+    }
+
+    /**
+     * @param Media $media
+     * @param string $type
+     * @return Media|Builder|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
+     */
+    protected function cloneMediaGenerate(Media $media, string $type) {
+        $mediaConfig = self::getMediaConfig($type);
+        $mediaPresets = $mediaConfig->getPresets();
+        $newMedia = $this->makeMediaModel(
+            $media->original_name, $media->ext, $type
+        );
+
+        foreach ($mediaPresets as $mediaPreset) {
+            /** @var PresetModel $presetModel */
+            if ($presetModel = $media->presets()->where([
+                'key' => $mediaPreset->name
+            ])->first()) {
+                $mediaPreset->copyPresetModel(
+                    $this->storage(),
+                    $this->storagePath,
+                    $presetModel,
+                    $newMedia
+                );
+            }
+        }
+
+        return $newMedia;
     }
 
     /**
@@ -333,7 +495,7 @@ class MediaService
      */
     public function findByUid(string $uid = null) {
         /** @var Media $media */
-        $media = $this->model->where('uid', $uid)->first();
+        $media = $this->model->newQuery()->where('uid', $uid)->first();
 
         return $media;
     }
@@ -347,7 +509,7 @@ class MediaService
 
     /**
      * @param string $path
-     * @return mixed
+     * @return mixeds
      */
     public function urlPublic(string $path) {
         return $this->storage()->url(ltrim($path, '/'));
@@ -363,7 +525,24 @@ class MediaService
 
     /**
      * @param string $path
-     * @return mixed
+     * @return string|null
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|null
+     */
+    public function getContent(string $path) {
+        return $this->storageFileExists($path) ? $this->storage()->get($path) : null;
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function storageFileExists(string $path) {
+        return $this->storage()->exists($path);
+    }
+
+    /**
+     * @param string $path
+     * @return bool
      */
     public function deleteFile(string $path) {
         return $this->storage()->delete($path);

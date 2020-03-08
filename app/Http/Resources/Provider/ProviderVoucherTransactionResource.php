@@ -18,9 +18,9 @@ class ProviderVoucherTransactionResource extends Resource
     public static $load = [
         'provider',
         'provider.business_type.translations',
-        'provider.logo.sizes',
+        'provider.logo.presets',
         'voucher.fund',
-        'voucher.fund.logo.sizes',
+        'voucher.fund.logo.presets',
         'product',
         'notes',
     ];
