@@ -14,7 +14,7 @@
         "astrotomic/laravel-translatable": "11.8.0",
         "aws/aws-sdk-php": "3.133.31",
         "barryvdh/laravel-ide-helper": "2.6.7",
-        "bunq/sdk_php": "1.12.1",
+        "bunq/sdk_php": "1.13.0",
         "doctrine/dbal": "2.10.1",
         "dusterio/laravel-aws-worker": "0.1.25",
         "fideloper/proxy": "4.3.0",
