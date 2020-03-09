@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 
-
 /**
  * App\Models\Fund
  *
@@ -59,16 +58,10 @@ use Illuminate\Http\Request;
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Services\MediaService\Models\Media $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundMeta[] $metas
- * @property-read int|null $metas_count
  * @property-read \App\Models\Organization $organization
- * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $product_categories
- * @property-read int|null $product_categories_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
@@ -99,8 +92,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $top_up_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
- * @property-read int|null $validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -179,29 +170,12 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function metas() {
-        return $this->hasMany(FundMeta::class);
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function products() {
         return $this->belongsToMany(
             Product::class,
             'fund_products'
-        );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function product_categories() {
-        return $this->belongsToMany(
-            ProductCategory::class,
-            'fund_product_categories'
         );
     }
 
@@ -436,20 +410,6 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function validators() {
-        return $this->hasManyThrough(
-            Validator::class,
-            Organization::class,
-            'id',
-            'organization_id',
-            'organization_id',
-            'id'
-        );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
-     */
     public function employees() {
         return $this->hasManyThrough(
             Employee::class,
@@ -555,8 +515,7 @@ class Fund extends Model
         Organization $organization = null
     ) {
         $recordRepo = resolve('forus.services.record');
-
-        $trustedIdentities = $fund->validatorIdentities();
+        $trustedIdentities = $fund->validatorEmployees();
 
         /** @var FundCriterion $criterion */
         $recordsOfType = collect($recordRepo->recordsList(
@@ -739,29 +698,6 @@ class Fund extends Model
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
                 $fund->changeState(self::STATE_ACTIVE);
-
-                /*
-                $organizations = Organization::query()->whereIn(
-                    'id', OrganizationProductCategory::query()->whereIn(
-                    'product_category_id',
-                    $fund->product_categories()->pluck('id')->all()
-                )->pluck('organization_id')->toArray()
-                )->get();
-                */
-
-                /** @var Organization $organization */
-                // TODO: Notify providers about new fund started
-
-                /*
-                foreach ($organizations as $organization) {
-                    resolve('forus.services.mail_notification')->newFundStarted(
-                        $organization->email,
-                        $organization->emailServiceId(),
-                        $fund->name,
-                        $fund->organization->name
-                    );
-                }
-                */
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
@@ -842,24 +778,6 @@ class Fund extends Model
                     $fund->organization->name
                 );
             }
-
-            /*$organizations = Organization::query()->whereIn(
-                'id', OrganizationProductCategory::query()->whereIn(
-                'product_category_id',
-                $fund->product_categories()->pluck('id')->all()
-            )->pluck('organization_id')->toArray()
-            )->get();*/
-
-            /** @var Organization $organization */
-            // TODO: Notify providers about new fund applicable
-            /*foreach ($organizations as $organization) {
-                resolve('forus.services.mail_notification')->newFundApplicable(
-                    $organization->email,
-                    $organization->emailServiceId(),
-                    $fund->name,
-                    config('forus.front_ends.panel-provider')
-                );
-            }*/
         }
     }
 
@@ -1103,16 +1021,6 @@ class Fund extends Model
         VoucherCreated::dispatch($voucher);
 
         return $voucher;
-    }
-
-    /**
-     * @param bool $force_fetch
-     * @return array
-     */
-    public function validatorIdentities(bool $force_fetch = true) {
-        return (
-        $force_fetch ? $this->validators() : $this->validators
-        )->pluck('validators.identity_address')->toArray();
     }
 
     /**

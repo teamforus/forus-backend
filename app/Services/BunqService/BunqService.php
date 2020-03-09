@@ -607,6 +607,10 @@ class BunqService
         return $amount;
     }
 
+    /**
+     * @param Fund $fund
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany|\Illuminate\Database\Query\Builder
+     */
     public static function getBunqMeTabsQueue(
         Fund $fund
     ) {
@@ -615,6 +619,9 @@ class BunqService
         ])->where('created_at', '>', now()->subDays(5));
     }
 
+    /**
+     * @param Fund $fund
+     */
     public static function processBunqMeTabQueue(
         Fund $fund
     ) {

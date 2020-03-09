@@ -45,11 +45,6 @@ class PrevalidationController extends Controller
             [$request->input('data')]
         );
 
-        log_debug(json_pretty([
-            $prevalidations,
-            [$request->input('data')]
-        ]));
-
         return new PrevalidationResource($prevalidations[0]);
     }
 

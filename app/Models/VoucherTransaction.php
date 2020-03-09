@@ -22,9 +22,7 @@ use Illuminate\Http\Request;
  * @property int $attempts
  * @property string $state
  * @property string|null $last_attempt_at
- * @property-read string|null $created_at_locale
  * @property-read mixed $transaction_details
- * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
  * @property-read \App\Models\Product|null $product
@@ -300,7 +298,7 @@ class VoucherTransaction extends Model
                 trans("$transKey.amount") => currency_format(
                     $transaction->amount
                 ),
-                trans("$transKey.date") => $transaction->created_at_locale,
+                trans("$transKey.date") => format_datetime_locale($transaction->created_at),
                 trans("$transKey.fund") => $transaction->voucher->fund->name,
                 trans("$transKey.provider") => $transaction->provider->name,
                 trans("$transKey.state") => trans(
@@ -340,5 +338,17 @@ class VoucherTransaction extends Model
         return self::exportTransform(
             self::searchSponsor($request, $organization, $fund, $provider)
         );
+    }
+    /**
+     * @param string $group
+     * @param string $note
+     * @return \Illuminate\Database\Eloquent\Model|VoucherTransactionNote
+     */
+    public function addNote(string $group, string $note)
+    {
+        return $this->notes()->create([
+            'message' => $note,
+            'group' => $group
+        ]);
     }
 }

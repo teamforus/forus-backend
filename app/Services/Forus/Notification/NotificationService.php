@@ -10,11 +10,8 @@ use App\Mail\FundRequests\FundRequestResolvedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundClosed;
 use App\Mail\Funds\FundClosedProvider;
-use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
-use App\Mail\Funds\NewFundApplicableMail;
-use App\Mail\Funds\ProductAddedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderInvitedMail;
@@ -341,51 +338,6 @@ class NotificationService
         ));
     }
 
-
-    /**
-     * Notify provider about new fund available for sign up
-     *
-     * @param string $email
-     * @param $identifier
-     * @param string $fund_name
-     * @param string $provider_dashboard_link
-     * @return bool
-     */
-    public function newFundApplicable(
-        string $email,
-        $identifier,
-        string $fund_name,
-        string $provider_dashboard_link
-    ) {
-        return $this->sendMail($email, new NewFundApplicableMail(
-            $fund_name,
-            $provider_dashboard_link,
-            $identifier
-        ));
-    }
-
-    /**
-     * Notify user that new fund was created
-     *
-     * @param string $email
-     * @param $identifier
-     * @param string $fund_name
-     * @param string $webshop_link
-     * @return bool
-     */
-    public function newFundCreated(
-        string $email,
-        $identifier,
-        string $fund_name,
-        string $webshop_link
-    ) {
-        return $this->sendMail($email, new FundCreatedMail(
-            $fund_name,
-            $webshop_link,
-            $identifier
-        ));
-    }
-
     /**
      * Notify user that new fund request was created
      *
@@ -516,7 +468,7 @@ class NotificationService
      * @param string $organization_name
      * @return bool
      */
-    public function newFundCreatedNotifyCompany(
+    public function newFundCreatedNotifyForus(
         string $email,
         string $fund_name,
         string $organization_name
@@ -610,39 +562,15 @@ class NotificationService
     }
 
     /**
-     * Notify sponsor that new product added by approved provider
-     *
-     * @param string $email
-     * @param $identifier
-     * @param string $sponsor_name
-     * @param string $fund_name
-     * @param string $webshop_link
-     * @return bool
-     */
-    public function newProductAdded(
-        string $email,
-        $identifier,
-        string $sponsor_name,
-        string $fund_name,
-        string $webshop_link
-    ) {
-        return $this->sendMail($email, new ProductAddedMail(
-            $sponsor_name,
-            $fund_name,
-            $webshop_link,
-            $identifier
-        ));
-    }
-
-    /**
      * Send voucher by email
      *
      * @param string $email
      * @param $identifier
      * @param string $fund_name
+     * @param int $voucher_amount
+     * @param string $voucher_expire_minus_day
      * @param string $fund_product_name
      * @param string $qr_token
-     *
      * @return bool
      */
     public function sendVoucher(

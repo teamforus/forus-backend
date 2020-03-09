@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
-
 /**
  * App\Models\FundProviderInvitation
  *
@@ -19,10 +17,8 @@ use Carbon\Carbon;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $from_fund
  * @property-read \App\Models\Fund $fund
- * @property-read string|null $created_at_locale
  * @property-read \Carbon\Carbon $expire_at
  * @property-read bool $expired
- * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization $organization
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation newQuery()

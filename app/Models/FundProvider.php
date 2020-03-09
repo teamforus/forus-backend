@@ -21,8 +21,6 @@ use Illuminate\Database\Eloquent\Builder;
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
  * @property-read int|null $fund_provider_products_count
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count

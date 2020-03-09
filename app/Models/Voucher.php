@@ -27,12 +27,10 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Fund $fund
  * @property-read mixed $amount_available
  * @property-read mixed $amount_available_cached
- * @property-read string|null $created_at_locale
  * @property-read bool $expired
  * @property-read bool $has_transactions
  * @property-read bool $is_granted
  * @property-read string $type
- * @property-read string|null $updated_at_locale
  * @property-read bool $used
  * @property-read \App\Models\Voucher|null $parent
  * @property-read \App\Models\Product|null $product
@@ -63,6 +61,14 @@ use Illuminate\Http\Request;
  */
 class Voucher extends Model
 {
+    const TYPE_BUDGET = 'regular';
+    const TYPE_PRODUCT = 'product';
+
+    const TYPES = [
+        self::TYPE_BUDGET,
+        self::TYPE_PRODUCT,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -104,9 +110,9 @@ class Voucher extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function product() {
-        return $this->belongsTo(
+        return query_with_trashed($this->belongsTo(
             Product::class, 'product_id', 'id'
-        )->withTrashed();
+        ));
     }
 
     /**
@@ -208,7 +214,7 @@ class Voucher extends Model
             $this->identity_address,
             $fund_product_name,
             $this->amount,
-            $this->expire_at->subDay()->format('l, d F Y'),
+            format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
             $fund_product_name,
             $voucherToken->address
         );
@@ -230,7 +236,7 @@ class Voucher extends Model
             $this->identity_address,
             $this->fund->name,
             $this->amount,
-            $this->expire_at->subDay()->format('l, d F Y'),
+            format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
             $voucherToken->address
         );
     }
@@ -324,7 +330,7 @@ class Voucher extends Model
                 $fund_name = $voucher->fund->name;
                 $sponsor_name = $voucher->fund->organization->name;
                 $start_date = $voucher->fund->start_date->format('Y');
-                $end_date = $voucher->fund->end_date->format('l, d F Y');
+                $end_date = format_date_locale($voucher->fund->end_date, 'long_date_locale');
                 $phone = $voucher->fund->organization->phone;
                 $email = $voucher->fund->organization->email;
                 $webshopLink = env('WEB_SHOP_GENERAL_URL');
@@ -492,9 +498,8 @@ class Voucher extends Model
     }
 
     /**
-     * @param Collection|Voucher[] $vouchers
+     * @param Collection $vouchers
      * @return string
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public static function zipVouchers(Collection $vouchers)
     {

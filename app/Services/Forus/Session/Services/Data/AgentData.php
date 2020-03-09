@@ -27,7 +27,8 @@ class AgentData extends Parser
      */
     private function a($s)
     {
-        return (preg_match("/^[aeiou]/i", $s) ? 'een ' : 'een ') . $s;
+        return 'een ';
+        // return (preg_match("/^[aeiou]/i", $s) ? 'an ' : 'a ') . $s;
     }
 
     /**

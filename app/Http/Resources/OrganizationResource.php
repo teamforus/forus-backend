@@ -60,12 +60,19 @@ class OrganizationResource extends Resource
         $businessType = api_dependency_requested('business_type', $request, true);
         $permissionsCountDep = api_dependency_requested('permissions', $request, true);
 
+        $privateData = [
+            'email' => $organization->email_public ? $organization->email ?? null: null,
+            'phone' => $organization->phone_public ? $organization->phone ?? null: null,
+            'website' => $organization->website_public ? $organization->website ?? null: null,
+        ];
+        
         return array_filter(array_merge(collect($organization)->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
-            $organization->email_public ? 'email': '',
-            $organization->phone_public ? 'phone': '',
-            $organization->website_public ? 'website': '',
-        ])->toArray(), $ownerData, [
+            'email_public', 'phone_public', 'website_public'
+        ])->merge(array_merge(
+            $privateData,
+            $ownerData
+        ))->toArray(), [
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(
                 $organization->business_type
@@ -80,7 +87,7 @@ class OrganizationResource extends Resource
                 auth()->id()
             )->pluck('key') : '_null_',
         ]), function($item) {
-            return $item != '_null_';
+            return $item !== '_null_';
         });
     }
 }

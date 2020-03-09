@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
+use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
-use App\Models\Product;
+use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
@@ -46,36 +47,18 @@ class TransactionsController extends Controller
         StoreVoucherTransactionRequest $request,
         VoucherToken $voucherToken
     ) {
+        $this->authorize('useAsProvider', $voucherToken->voucher);
+
+        $product = false;
+        $needsReview = false;
         $voucher = $voucherToken->voucher;
+        $note = $request->input('note', false);
 
-        $this->authorize('useAsProvider', $voucher);
-
-        /** @var Product|null $product */
-        if ($voucher->type == 'product') {
-            $product = $voucher->product;
+        if ($voucher->type == Voucher::TYPE_PRODUCT) {
             $amount = $voucher->amount;
+            $product = $voucher->product;
             $organizationId = $product->organization_id;
-        } else {
-            $maxAmount = $voucher->amount - $voucher->transactions->sum('amount');
-            $product = Product::query()->find($request->get('product_id'));
 
-            if (!$product) {
-                $amount = $request->input('amount');
-                $organizationId = $request->input('organization_id');
-            } else {
-                $amount = $product->price;
-                $organizationId = $product->organization_id;
-            }
-
-            if ($amount > $maxAmount) {
-                return response()->json([
-                    'message' => trans('validation.voucher.not_enough_funds'),
-                    'key' => 'not_enough_funds'
-                ], 403);
-            }
-        }
-
-        if ($product) {
             if ($product->expired) {
                 return response()->json([
                     'message' => trans('validation.voucher.product_expired'),
@@ -89,9 +72,17 @@ class TransactionsController extends Controller
                     'key' => 'product_expired'
                 ], 403);
             }
-        }
+        } else {
+            $organizationId = $request->input('organization_id');
+            $amount = $request->input('amount');
 
-        $needsReview = false;
+            if ($amount > $voucher->amount_available) {
+                return response()->json([
+                    'message' => trans('validation.voucher.not_enough_funds'),
+                    'key' => 'not_enough_funds'
+                ], 403);
+            }
+        }
 
         // TODO: cleanup
         if ($threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5)) {
@@ -111,24 +102,11 @@ class TransactionsController extends Controller
             'last_attempt_at' => now()
         ] : []));
 
-        $transaction->sendPushNotificationTransaction();
-
-        if ($product) {
-            $product->updateSoldOutState();
+        if ($note) {
+            $transaction->addNote('provider', $note);
         }
 
-        if ($voucher->type != 'product') {
-            $voucher->sendEmailAvailableAmount();
-        }
-
-        $note = $request->input('note', false);
-
-        if ($note && !empty($note)) {
-            $transaction->notes()->create([
-                'message' => $note,
-                'group' => 'provider'
-            ]);
-        }
+        VoucherTransactionCreated::dispatch($transaction);
 
         return new VoucherTransactionResource($transaction);
     }
