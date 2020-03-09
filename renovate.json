@@ -5,6 +5,12 @@
   "baseBranches": [
     "develop"
   ],
+  "packageRules": [
+    {
+      "packageNames": ["aws-sdk"],
+      "schedule": ["after 9pm on sunday"]
+    }
+  ],
   "composer": {
     "enabled": true
   }
