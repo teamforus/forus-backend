@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c33fa3a8027ee117d99c678fc2635ac1",
+    "content-hash": "7fcb560613eb08699fa91dbf01cd5e4c",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2034,31 +2034,31 @@
         },
         {
             "name": "laravel-notification-channels/apn",
-            "version": "v0.5.0",
+            "version": "v0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel-notification-channels/apn.git",
-                "reference": "61b7270409bad89f2f61963a54159b4e89b5db6a"
+                "reference": "2e0dc0f9253fd245fb8388abaa1ea29971531d7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel-notification-channels/apn/zipball/61b7270409bad89f2f61963a54159b4e89b5db6a",
-                "reference": "61b7270409bad89f2f61963a54159b4e89b5db6a",
+                "url": "https://api.github.com/repos/laravel-notification-channels/apn/zipball/2e0dc0f9253fd245fb8388abaa1ea29971531d7f",
+                "reference": "2e0dc0f9253fd245fb8388abaa1ea29971531d7f",
                 "shasum": ""
             },
             "require": {
-                "illuminate/config": "^6.0",
-                "illuminate/events": "^6.0",
-                "illuminate/notifications": "^6.0",
-                "illuminate/queue": "^6.0",
-                "illuminate/support": "^6.0",
+                "illuminate/config": "^6.0|^7.0",
+                "illuminate/events": "^6.0|^7.0",
+                "illuminate/notifications": "^6.0|^7.0",
+                "illuminate/queue": "^6.0|^7.0",
+                "illuminate/support": "^6.0|^7.0",
                 "php": "^7.2",
                 "zendframework/zendservice-apple-apns": "^1.2"
             },
             "require-dev": {
-                "mockery/mockery": "~1.0",
+                "mockery/mockery": "~1.3.1",
                 "phpunit/phpunit": "~8.0",
-                "squizlabs/php_codesniffer": "~3.4"
+                "squizlabs/php_codesniffer": "~3.5"
             },
             "type": "library",
             "extra": {
@@ -2089,7 +2089,7 @@
             ],
             "description": "Apple APN Push Notification Channel",
             "homepage": "https://github.com/laravel-notification-channels/apn",
-            "time": "2019-09-05T06:56:00+00:00"
+            "time": "2020-03-05T22:25:42+00:00"
         },
         {
             "name": "laravel-notification-channels/fcm",
