@@ -207,6 +207,8 @@ class Voucher extends Model
             $email,
             $this->identity_address,
             $fund_product_name,
+            $this->amount,
+            $this->expire_at->subDay()->format('l, d F Y'),
             $fund_product_name,
             $voucherToken->address
         );

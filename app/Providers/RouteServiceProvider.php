@@ -19,6 +19,7 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
 use App\Services\DigIdService\Models\DigIdSession;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
@@ -91,6 +92,22 @@ class RouteServiceProvider extends ServiceProvider
             return VoucherToken::query()->where([
                     'address' => $value
                 ])->first() ?? abort(404);
+        });
+
+        $router->bind('product_voucher_token_address', function ($value) {
+            return VoucherToken::query()->where([
+                    'address' => $value
+                ])->whereHas('voucher', function(Builder $builder) {
+                    $builder->whereNotNull('parent_id');
+                })->first() ?? abort(404);
+        });
+
+        $router->bind('budget_voucher_token_address', function ($value) {
+            return VoucherToken::query()->where([
+                    'address' => $value
+                ])->whereHas('voucher', function(Builder $builder) {
+                    $builder->whereNull('parent_id');
+                })->first() ?? abort(404);
         });
 
         $router->bind('transaction_address', function ($value) {

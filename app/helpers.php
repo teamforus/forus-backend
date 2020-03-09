@@ -4,6 +4,8 @@ use App\Models\Implementation;
 use \Carbon\Carbon;
 use \Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
 
 if (!function_exists('auth_user')) {
     /**
@@ -594,5 +596,40 @@ if (!function_exists('trans_fb')) {
     function trans_fb($id, $fallback, $parameters = [], $locale = null)
     {
         return ($id === ($translation = trans($id, $parameters, $locale))) ? $fallback : $translation;
+    }
+}
+
+if (!function_exists('str_var_replace')) {
+    function str_var_replace($string, $replace)
+    {
+        foreach ($replace as $key => $value) {
+            $string = str_replace(
+                [':'.$key, ':' . Str::upper($key), ':' . Str::ucfirst($key)],
+                [$value, Str::upper($value), Str::ucfirst($value)],
+                $string
+            );
+        }
+
+        return $string;
+    }
+}
+
+if (!function_exists('record_repo')) {
+    /**
+     * @return \App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo
+     */
+    function record_repo()
+    {
+        return resolve('forus.services.record');
+    }
+}
+
+if (!function_exists('identity_repo')) {
+    /**
+     * @return \App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo
+     */
+    function identity_repo()
+    {
+        return resolve('forus.services.identity');
     }
 }

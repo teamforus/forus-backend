@@ -34,7 +34,11 @@ class SmsRequest extends FormRequest
                     'me_app_download_link'
                 ])
             ],
-            'phone' => 'required'
+            'phone' => [
+                "required",
+                "starts_with:+31",
+                "size:12"
+            ]
         ];
     }
 }

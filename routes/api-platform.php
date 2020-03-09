@@ -245,10 +245,36 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    // deprecated, remove in next releases
     $router->get(
         'vouchers/{voucher_token_address}/provider',
-        "Api\Platform\VouchersController@provider"
+        "Api\Platform\Provider\VouchersController@show"
     );
+
+    $router->group(['prefix' => '/provider'], function() use ($router) {
+        $router->resource(
+            'vouchers',
+            "Api\Platform\Provider\VouchersController", [
+            'only' => [
+                'show'
+            ],
+            'parameters' => [
+                'vouchers' => 'budget_voucher_token_address',
+            ]
+        ]);
+
+        $router->resource(
+            'vouchers.product-vouchers',
+            "Api\Platform\Provider\Vouchers\ProductVouchersController", [
+            'only' => [
+                'index'
+            ],
+            'parameters' => [
+                'vouchers' => 'budget_voucher_token_address',
+                'product-vouchers' => 'product_voucher_token_address',
+            ]
+        ]);
+    });
 
     $router->post(
         'vouchers/{voucher_token_address}/send-email',
@@ -546,6 +572,11 @@ $router->group(['middleware' => [
     $router->get(
         'prevalidations/export',
         'Api\Platform\PrevalidationController@export'
+    );
+
+    $router->post(
+        'prevalidations/collection',
+        'Api\Platform\PrevalidationController@storeCollection'
     );
 
     $router->resource(

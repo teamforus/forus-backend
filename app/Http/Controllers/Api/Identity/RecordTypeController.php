@@ -27,6 +27,10 @@ class RecordTypeController extends Controller
     public function index()
     {
         return collect($this->recordRepo->getRecordTypes())->map(function($type) {
+            if (is_null($type['name'])) {
+                $type['name'] = $type['key'];
+            }
+
             return collect($type)->only('key', 'name', 'type');
         })->toArray();
     }
