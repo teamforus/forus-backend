@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0544e37d4c2860e31c9bda56674b5935",
+    "content-hash": "c10d44be7d2f0eb2fa00af6ab1be3671",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1206,16 +1206,16 @@
         },
         {
             "name": "dusterio/laravel-aws-worker",
-            "version": "v0.1.25",
+            "version": "v0.1.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dusterio/laravel-aws-worker.git",
-                "reference": "99dda70aee533ea73b9a961b40c715ead4798c11"
+                "reference": "4a9b9aabc4fe0827fc670b611cfe65c3adf39ab9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/99dda70aee533ea73b9a961b40c715ead4798c11",
-                "reference": "99dda70aee533ea73b9a961b40c715ead4798c11",
+                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/4a9b9aabc4fe0827fc670b611cfe65c3adf39ab9",
+                "reference": "4a9b9aabc4fe0827fc670b611cfe65c3adf39ab9",
                 "shasum": ""
             },
             "require": {
@@ -1258,7 +1258,7 @@
                 "sqs",
                 "worker"
             ],
-            "time": "2020-03-04T22:54:56+00:00"
+            "time": "2020-03-10T04:15:56+00:00"
         },
         {
             "name": "egulias/email-validator",
