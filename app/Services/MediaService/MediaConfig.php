@@ -168,7 +168,8 @@ abstract class MediaConfig
 
     /**
      * @param Media $media
+     * @param bool $fromQueue
      * @return mixed
      */
-    abstract  public function onMediaPresetsUpdated(Media $media);
+    abstract public function onMediaPresetsUpdated(Media $media, bool $fromQueue = false);
 }

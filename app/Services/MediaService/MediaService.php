@@ -230,20 +230,23 @@ class MediaService
     /**
      * @param string $filePath
      * @param string $fileName
-     * @param $type
-     * @return Media|bool|\Illuminate\Database\Eloquent\Model
+     * @param string $type
+     * @param array|null $syncPresets
+     * @return Media
      * @throws \Exception
      */
     public function uploadSingle(
         string $filePath,
         string $fileName,
-        $type
+        string $type,
+        array $syncPresets = null
     ) {
         return $this->makeMedia(
             TmpFile::fromTmpFile($filePath),
             pathinfo($fileName,PATHINFO_FILENAME),
             pathinfo($fileName,PATHINFO_EXTENSION),
-            $type
+            $type,
+            $syncPresets
         );
     }
 
@@ -286,20 +289,23 @@ class MediaService
      * @param string $original_name
      * @param string $ext
      * @param string $type
-     * @return Media|bool|\Illuminate\Database\Eloquent\Model
+     * @param array|null $syncPresets
+     * @return Media
      * @throws \Exception
      */
     protected function makeMedia(
         TmpFile $path,
         string $original_name,
         string $ext,
-        string $type
+        string $type,
+        array $syncPresets = null
     ) {
         return $this->makeMediaPresets(
             $this->makeMediaModel($original_name, $ext, $type),
             self::getMediaConfig($type),
             self::getMediaConfig($type)->getPresets(),
-            $path
+            $path,
+            $syncPresets
         );
     }
 
@@ -308,7 +314,8 @@ class MediaService
      * @param MediaConfig $mediaConfig
      * @param array $mediaPresets
      * @param TmpFile $tmpFile
-     * @param bool $onlySync
+     * @param array|null $syncPresets
+     * @param bool $fromQueue
      * @return Media
      */
     public function makeMediaPresets(
@@ -316,18 +323,32 @@ class MediaService
         MediaConfig $mediaConfig,
         array $mediaPresets,
         TmpFile $tmpFile,
-        bool $onlySync = false
+        array $syncPresets = null,
+        bool $fromQueue = false
     ) {
-        $useQueue = !$onlySync && $mediaConfig->useQueue();
+        $useQueue = !$fromQueue && $mediaConfig->useQueue();
 
         if ($useQueue) {
             /** @var MediaPreset[] $mediaPresets */
             $mediaPresets = array_values(array_filter($mediaPresets, function(
                 MediaPreset $mediaPreset
-            ) use ($mediaConfig) {
-                return in_array($mediaPreset->name, $mediaConfig->getSyncPresets());
+            ) use ($mediaConfig, $syncPresets) {
+                return in_array(
+                    $mediaPreset->name,
+                    is_null($syncPresets) ? $mediaConfig->getSyncPresets() : array_merge([
+                        $mediaConfig->getRegenerationPresetName()
+                    ], $syncPresets)
+                );
             }));
         }
+
+        log_debug([
+            $mediaPresets,
+            /*$syncPresets,
+            $mediaConfig->getSyncPresets(),
+            $syncPresets ?: $mediaConfig->getSyncPresets(),
+            !is_null($syncPresets) ? $syncPresets : $mediaConfig->getSyncPresets(),*/
+        ]);
 
         foreach ($mediaPresets as $mediaPreset) {
             $mediaPreset->makePresetModel(
@@ -341,9 +362,9 @@ class MediaService
             );
         }
 
-        $mediaConfig->onMediaPresetsUpdated($media);
-
+        $mediaConfig->onMediaPresetsUpdated($media, $fromQueue);
         $tmpFile->close();
+
         return $media;
     }
 
@@ -362,13 +383,13 @@ class MediaService
     /**
      * @param MediaConfig $mediaConfig
      * @param Media|null $media
-     * @param bool $onlySync
+     * @param bool $fromQueue
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\Exception
      */
     public function regenerateMedia(
         MediaConfig $mediaConfig,
         Media $media = null,
-        bool $onlySync = false
+        bool $fromQueue = false
     ) {
         $sourcePresetName = $mediaConfig->getRegenerationPresetName();
         $medias = $this->model->newQuery()->where([
@@ -416,7 +437,7 @@ class MediaService
 
             $this->makeMediaPresets($media, $mediaConfig, $newPresets, new TmpFile(
                 $this->storage()->get($source->path)
-            ), $onlySync);
+            ), null, $fromQueue);
         }
     }
 

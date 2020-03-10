@@ -28,6 +28,6 @@ class ProductPhotoMediaConfig extends MediaImageConfig
         $this->addPreset(new MediaImagePreset('thumbnail', 200, 200, false, 90));
         $this->addPreset(new MediaImagePreset('small', 400, 300, false));
         $this->addPreset(new MediaImagePreset('large', 1200, 800, false));
-        $this->addPreset(new MediaImagePreset('original', 1600, 1600, true));
+        $this->addPreset(MediaImagePreset::createOriginal('original'));
     }
 }

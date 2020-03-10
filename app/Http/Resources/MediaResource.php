@@ -21,18 +21,21 @@ class MediaResource extends Resource
      */
     public function toArray($request)
     {
-        if (is_null($this->resource)) {
+        if (is_null($media = $this->resource)) {
             return null;
         }
 
-        $presets = collect($this->resource->presets);
+        $presets = $media->presets->filter(function(MediaPreset $preset) {
+            return $preset->key != 'original';
+        })->keyBy('key')->map(function(MediaPreset $preset) {
+            return $preset->urlPublic();
+        });
 
-        return collect($this->resource)->only([
-            'identity_address', 'original_name', 'type', 'ext', 'uid', 'dominant_color'
+        return collect($media)->only([
+            'identity_address', 'original_name', 'type', 'ext', 'uid',
         ])->merge([
-            'sizes' => $presets->keyBy('key')->map(function(MediaPreset $preset) {
-                return $preset->urlPublic();
-            })
+            'dominant_color' => $media->dominant_color ?? null,
+            'sizes' => $presets
         ])->toArray();
     }
 }

@@ -63,7 +63,10 @@ class MediaController extends Controller
             if ($media = $this->mediaService->uploadSingle(
                 (string) $file,
                 $file->getClientOriginalName(),
-                $request->input('type')
+                $request->input('type'),
+                $request->input('sync_presets', [
+                    'thumbnail'
+                ])
             )) {
                 $media->update([
                     'identity_address' => auth_address()

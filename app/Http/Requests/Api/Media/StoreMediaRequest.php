@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Media;
 
+use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Rules\FileMimeTypeRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,6 +43,17 @@ class StoreMediaRequest extends FormRequest
                 'required',
                 Rule::in(array_keys(MediaService::getMediaConfigs()))
             ],
+            'sync_presets' => [
+                'nullable',
+                'array'
+            ],
+            'sync_presets.*' => [
+                'nullable',
+                Rule::in(array_map(function(MediaPreset $mediaPreset) {
+                    return $mediaPreset->name;
+                }, $type->getPresets()))
+            ],
+
         ];
     }
 }

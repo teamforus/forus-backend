@@ -27,6 +27,6 @@ class FundLogoMediaConfig extends MediaImageConfig
 
         $this->addPreset(new MediaImagePreset('thumbnail', 100, 100, false, 90));
         $this->addPreset(new MediaImagePreset('large', 500, 500, false));
-        $this->addPreset(new MediaImagePreset('original', 1000, 1000, true));
+        $this->addPreset(MediaImagePreset::createOriginal('original'));
     }
 }

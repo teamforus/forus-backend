@@ -21,14 +21,21 @@ class MediaCompactResource extends Resource
      */
     public function toArray($request)
     {
-        $presets = collect($this->resource->presets);
+        if (is_null($media = $this->resource)) {
+            return null;
+        }
 
-        return collect($this->resource)->only([
+        $presets = $media->presets->filter(function(MediaPreset $preset) {
+            return $preset->key != 'original';
+        })->keyBy('key')->map(function(MediaPreset $preset) {
+            return $preset->urlPublic();
+        });
+
+        return collect($media)->only([
             'original_name', 'type', 'ext', 'uid', 'dominant_color'
         ])->merge([
-            'sizes' => $presets->keyBy('key')->map(function(MediaPreset $preset) {
-                return $preset->urlPublic();
-            })
+            'dominant_color' => $media->dominant_color ?? null,
+            'sizes' => $presets
         ])->toArray();
     }
 }

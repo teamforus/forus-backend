@@ -25,11 +25,15 @@ abstract class MediaImageConfig extends MediaConfig
 
     /**
      * @param Media $media
+     * @param bool $fromQueue
      * @return mixed|void
      */
-    public function onMediaPresetsUpdated(Media $media)
+    public function onMediaPresetsUpdated(Media $media, bool $fromQueue = false)
     {
-        if ($this->save_dominant_color && $media->presets()->count() > 0) {
+        if ($fromQueue &&
+            $this->save_dominant_color &&
+            $media->presets()->count() > 0
+        ) {
             try {
                 $file = new TmpFile($media->findPreset(
                     $this->getRegenerationPresetName()
