@@ -98,6 +98,7 @@ class ProviderVoucherResource extends Resource
             'amount' => currency_format($voucher->amount_available),
             'fund' => $fundData,
             'allowed_organizations' => $allowedOrganizations,
+        ])->merge(env('DISABLE_DEPRECATED_API') ? [] : [
             // TODO: To be removed in next release
             'allowed_product_categories' => [],
             // TODO: To be removed in next release

@@ -94,10 +94,10 @@ class Implementation extends Model
     }
 
     /**
-     * @return array|string
+     * @return array|string|null
      */
     public static function activeKey() {
-        return request()->header('Client-Key', config('forus.clients.default'));
+        return request()->header('Client-Key', 'general');
     }
 
     /**
@@ -112,7 +112,7 @@ class Implementation extends Model
      * @return \Illuminate\Support\Collection
      */
     public static function byKey($key) {
-        if ($key == config('forus.clients.default')) {
+        if ($key == 'general') {
             return collect(self::general_urls());
         }
 
@@ -171,7 +171,7 @@ class Implementation extends Model
     public static function queryFundsByState($states) {
         $states = (array) $states;
 
-        if (self::activeKey() == config('forus.clients.default')) {
+        if (self::activeKey() == 'general') {
             return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
@@ -196,7 +196,7 @@ class Implementation extends Model
      */
     public static function implementationKeysAvailable() {
         return self::query()->pluck('key')->merge([
-            config('forus.clients.default')
+            'general'
         ]);
     }
 
@@ -345,10 +345,10 @@ class Implementation extends Model
 
             $config['map'] = [
                 'lon' => doubleval(
-                    $implementation['lon'] ?: config('forus.front_ends.map.lon')
+                    $implementation['lon'] ?? config('forus.front_ends.map.lon')
                 ),
                 'lat' => doubleval(
-                    $implementation['lat'] ?: config('forus.front_ends.map.lat')
+                    $implementation['lat'] ?? config('forus.front_ends.map.lat')
                 )
             ];
 
@@ -361,7 +361,7 @@ class Implementation extends Model
     public static function searchProviders(Request $request) {
         $query = Organization::query();
 
-        if (Implementation::activeKey() != config('forus.clients.default')) {
+        if (Implementation::activeKey() != 'general') {
             $funds = Implementation::activeModel()->funds()->where([
                 'state' => Fund::STATE_ACTIVE
             ])->pluck('fund_id');

@@ -654,18 +654,18 @@ class NotificationService
      * @param string $email
      * @param $identifier
      * @param string $link
-     * @param string $platform
+     * @param string $source
      * @return bool
      */
     public function loginViaEmail(
         string $email,
         $identifier,
         string $link,
-        string $platform
+        string $source
     ) {
         return $this->sendMail($email, new UserLoginMail(
             $link,
-            $platform,
+            $source,
             $identifier
         ));
     }

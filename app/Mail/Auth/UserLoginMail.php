@@ -22,10 +22,26 @@ class UserLoginMail extends ImplementationMail
 
     public function __construct(
         string $link,
-        string $platform,
+        string $source,
         string $identityId = null
     ) {
         parent::__construct($identityId);
+
+        $platform = '';
+
+        if (strpos($source, '_webshop') !== false) {
+            $platform = 'de webshop';
+        } else if (strpos($source, '_sponsor') !== false) {
+            $platform = 'het dashboard';
+        } else if (strpos($source, '_provider') !== false) {
+            $platform = 'het dashboard';
+        } else if (strpos($source, '_validator') !== false) {
+            $platform = 'het dashboard';
+        } else if (strpos($source, '_website') !== false) {
+            $platform = 'het website';
+        } else if (strpos($source, 'me_app') !== false) {
+            $platform = 'Me';
+        }
 
         $this->link = $link;
         $this->platform = $platform;
