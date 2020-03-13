@@ -1,11 +1,9 @@
 @extends('emails.base')
 
 @section('title', mail_trans('fund_statistics.title', [
-    'sponsor_name' => $sponsor_name,
     'fund_name' => $fund_name
 ]))
 @section('html')
-    {{ mail_trans('fund_statistics.sponsor', ['sponsor_name' => $sponsor_name]) }}
     <br />
     <br />
     {{ mail_trans('fund_statistics.fund', ['fund_name' => $fund_name]) }}

@@ -2,7 +2,13 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\FundProviderQuery;
 use App\Services\DigIdService\Repositories\DigIdRepo;
+use App\Services\MediaService\MediaConfig;
+use App\Services\MediaService\MediaImageConfig;
+use App\Services\MediaService\MediaImagePreset;
+use App\Services\MediaService\MediaPreset;
+use App\Services\MediaService\MediaService;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
@@ -323,10 +329,21 @@ class Implementation extends Model
         $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
 
         if (is_array($config)) {
-            $config['media'] = collect(config('media.sizes'))->map(function($size) {
-                return collect($size)->only([
-                    'aspect_ratio', 'size'
-                ]);
+            $config['media'] = collect(MediaService::getMediaConfigs())->map(function(
+                MediaImageConfig $mediaConfig
+            ) {
+                return [
+                    'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
+                    'size' => collect($mediaConfig->getPresets())->map(function(
+                        MediaPreset $mediaPreset
+                    ) {
+                        return $mediaPreset instanceof MediaImagePreset ? [
+                            $mediaPreset->width,
+                            $mediaPreset->height,
+                            $mediaPreset->preserve_aspect_ratio,
+                        ] : null;
+                    })
+                ];
             });
 
             $implementation = Implementation::active();
@@ -357,7 +374,62 @@ class Implementation extends Model
 
         return $config ?: [];
     }
+    /**
+     * Send funds user count statistic to email
+     * @param string $email
+     * @return void
+     */
+    public static function sendUserStatisticsReport(string $email)
+    {
 
+        $funds = Implementation::queryFundsByState([
+            Fund::STATE_ACTIVE, Fund::STATE_PAUSED
+        ])->get();
+
+        if ($funds->count() == 0) {
+            return null;
+        }
+        foreach($funds as $fund) {
+            $organization = $fund->organization;
+            $implementation_id = $fund->fund_config->implementation->id;
+            $all_implementation[] = $fund->fund_config->implementation;
+
+            if(empty($sponsorCount[$implementation_id])){
+                $sponsorCount[$implementation_id] = 0;
+            }
+            if(empty($providerCount[$implementation_id])){
+                $providerCount[$implementation_id] = 0;
+            }
+            if(empty($requesterCount[$implementation_id])){
+                $requesterCount[$implementation_id] = 0;
+            }
+            $sponsorCount[$implementation_id] += $organization->employees->unique()->count();
+
+            $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
+                FundProvider::query(), $fund->id
+            );
+
+            $providerCount[$implementation_id] += $providersQuery->get()->map(function ($fundProvider){
+                return $fundProvider->organization->employees->count();
+            })->sum();
+
+            if ($fund->state == Fund::STATE_ACTIVE) {
+                $requesterCount[$implementation_id] += $fund->vouchers()->whereNull('parent_id')->count();
+            } 
+        }
+        $all_implementation_ids_unique = array_unique($all_implementation);
+
+        foreach ($all_implementation_ids_unique as $imp) {
+            resolve('forus.services.notification')->sendFundUserStatisticsReport(
+                $email,
+                $imp->name,
+                $sponsorCount[$imp->id],
+                $providerCount[$imp->id],
+                $requesterCount[$imp->id]
+            );
+        }
+    }
+    
     public static function searchProviders(Request $request) {
         $query = Organization::query();
 

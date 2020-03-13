@@ -782,57 +782,6 @@ class Fund extends Model
     }
 
     /**
-     * Send funds user count statistic to email
-     * @param string $email
-     * @return void
-     */
-    public static function sendUserStatisticsReport(string $email)
-    {
-        /** @var Collection|Fund[] $funds */
-        $funds = self::query()->whereHas('fund_config', function (
-            Builder $query
-        ) {
-            return $query->where('is_configured', true);
-        })->whereIn('state', [
-            self::STATE_ACTIVE,
-            self::STATE_PAUSED,
-        ])->get();
-
-        if ($funds->count() == 0) {
-            return null;
-        }
-
-        foreach($funds as $fund) {
-            $organization = $fund->organization;
-            $sponsorCount = $organization->employees->count() + 1;
-
-            $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
-                FundProvider::query(), $fund->id
-            );
-
-            $providerCount = $providersQuery->get()->map(function ($fundProvider){
-                /** @var FundProvider $fundProvider */
-                return $fundProvider->organization->employees->count() + 1;
-            })->sum();
-
-            if ($fund->state == self::STATE_ACTIVE) {
-                $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
-            } else {
-                $requesterCount = 0;
-            }
-
-            resolve('forus.services.notification')->sendFundUserStatisticsReport(
-                $email,
-                $fund->name,
-                $organization->name,
-                $sponsorCount,
-                $providerCount,
-                $requesterCount
-            );
-        }
-    }
-
-    /**
      * @return void
      */
     public static function notifyAboutReachedNotificationAmount()

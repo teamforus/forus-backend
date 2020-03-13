@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Fund;
+use App\Models\Implementation;
 use Illuminate\Console\Command;
 
 class CalculateFundUsersCommand extends Command
@@ -43,7 +43,7 @@ class CalculateFundUsersCommand extends Command
         }
 
         try {
-            Fund::sendUserStatisticsReport($email);
+            Implementation::sendUserStatisticsReport($email);
         } catch (\Exception $e) {}
     }
 }

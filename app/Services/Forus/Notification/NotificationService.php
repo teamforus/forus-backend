@@ -546,14 +546,12 @@ class NotificationService
     public function sendFundUserStatisticsReport(
         string $email,
         string $fund_name,
-        string $sponsor_name,
         int $sponsor_amount,
         int $provider_amount,
         int $requester_amount
     ) {
         return $this->sendMail($email, new FundStatisticsMail(
             $fund_name,
-            $sponsor_name,
             $sponsor_amount,
             $provider_amount,
             $requester_amount,
@@ -916,7 +914,9 @@ class NotificationService
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
             ));
 
-            $message = $message->onQueue(env('EMAIL_QUEUE_NAME', 'emails'));
+            $message = $message->onQueue(config(
+                'forus.notifications.email_queue_name'
+            ));
 
             $this->mailer->to($email)->queue($message);
 
