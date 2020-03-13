@@ -20,9 +20,9 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\MediaService\Models\Media|null $mediable
- * @property-read \App\Services\MediaService\Models\MediaSize $size_original
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaSize[] $sizes
- * @property-read int|null $sizes_count
+ * @property-read \App\Services\MediaService\Models\MediaPreset $size_original
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaPreset[] $presets
+ * @property-read int|null $presets_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media query()
@@ -47,21 +47,21 @@ class Media extends Model
      */
     protected $fillable = [
         'identity_address', 'original_name', 'mediable_id', 'mediable_type',
-        'type', 'ext', 'uid'
+        'type', 'ext', 'uid', 'dominant_color'
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function sizes() {
-        return $this->hasMany(MediaSize::class);
+    public function presets() {
+        return $this->hasMany(MediaPreset::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function size_original() {
-        return $this->hasOne(MediaSize::class)->where([
+        return $this->hasOne(MediaPreset::class)->where([
             'key' => 'original'
         ]);
     }
@@ -75,10 +75,10 @@ class Media extends Model
 
     /**
      * @param string $key
-     * @return MediaSize|null
+     * @return MediaPreset|null
      */
-    public function findSize(string $key) {
-        return $this->sizes->where('key', $key)->first();
+    public function findPreset(string $key) {
+        return $this->presets->where('key', $key)->first();
     }
 
     /**
@@ -94,7 +94,7 @@ class Media extends Model
      * @return string|null
      */
     public function urlPublic(string $key) {
-        if ($size = $this->findSize($key)) {
+        if ($size = $this->findPreset($key)) {
             return $size->urlPublic();
         }
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c10d44be7d2f0eb2fa00af6ab1be3671",
+    "content-hash": "c81f706a66a11919e74380ab15c2f485",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -125,16 +125,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.133.32",
+            "version": "3.133.35",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "c4bd227436446f02d2b9963f3ea4ae6dc380420b"
+                "reference": "ab87be32ed4f52a9779d40277e4989af35be7dd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/c4bd227436446f02d2b9963f3ea4ae6dc380420b",
-                "reference": "c4bd227436446f02d2b9963f3ea4ae6dc380420b",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/ab87be32ed4f52a9779d40277e4989af35be7dd5",
+                "reference": "ab87be32ed4f52a9779d40277e4989af35be7dd5",
                 "shasum": ""
             },
             "require": {
@@ -205,7 +205,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2020-03-09T18:10:46+00:00"
+            "time": "2020-03-12T19:45:53+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1374,16 +1374,16 @@
         },
         {
             "name": "fruitcake/laravel-cors",
-            "version": "v1.0.4",
+            "version": "v1.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fruitcake/laravel-cors.git",
-                "reference": "138ad34ba5f578283e94c5614f6c48a10bc3ac6a"
+                "reference": "0e0500133dbb6325266133dd72f040617c9cdbd0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fruitcake/laravel-cors/zipball/138ad34ba5f578283e94c5614f6c48a10bc3ac6a",
-                "reference": "138ad34ba5f578283e94c5614f6c48a10bc3ac6a",
+                "url": "https://api.github.com/repos/fruitcake/laravel-cors/zipball/0e0500133dbb6325266133dd72f040617c9cdbd0",
+                "reference": "0e0500133dbb6325266133dd72f040617c9cdbd0",
                 "shasum": ""
             },
             "require": {
@@ -1438,7 +1438,7 @@
                 "crossdomain",
                 "laravel"
             ],
-            "time": "2020-02-21T13:24:15+00:00"
+            "time": "2020-03-11T21:05:07+00:00"
         },
         {
             "name": "geoip2/geoip2",

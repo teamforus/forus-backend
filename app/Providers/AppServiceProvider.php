@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use App\Media\FundLogoMediaConfig;
+use App\Media\OfficePhotoMediaConfig;
+use App\Media\ProductPhotoMediaConfig;
+use App\Media\ProductPhotosMediaConfig;
+use App\Media\RecordCategoryIconMediaConfig;
+use Carbon\Carbon;
+use App\Media\OrganizationLogoMediaConfig;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Office;
@@ -9,7 +16,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Voucher;
-use Carbon\Carbon;
+use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -19,21 +26,14 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      *
-     * @return void
+     * @throws \App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException
+     * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */
     public function boot()
     {
+        self::setLocale(config('app.locale'));
+
         Schema::defaultStringLength(191);
-
-        $locale = config('app.locale');
-
-        if (strlen($locale) == 2) {
-            $locale .= '_' . strtoupper($locale);
-        }
-
-        setlocale(LC_ALL, $locale);
-
-        Carbon::setLocale($locale);
 
         Relation::morphMap([
             'fund'              => Fund::class,
@@ -44,6 +44,28 @@ class AppServiceProvider extends ServiceProvider
             'organization'      => Organization::class,
             'product_category'  => ProductCategory::class,
         ]);
+
+        MediaService::setMediaConfigs([
+            new FundLogoMediaConfig(),
+            new OfficePhotoMediaConfig(),
+            new ProductPhotoMediaConfig(),
+            new OrganizationLogoMediaConfig(),
+            new RecordCategoryIconMediaConfig(),
+        ]);
+    }
+
+    /**
+     * @param string $locale
+     * @return false|string
+     */
+    public function setLocale(string $locale) {
+        if (strlen($locale) == 2) {
+            $locale .= '_' . strtoupper($locale);
+        }
+
+        Carbon::setLocale($locale);
+
+        return setlocale(LC_ALL, $locale);
     }
 
     /**

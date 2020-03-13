@@ -3,6 +3,11 @@
 namespace App\Models;
 
 use App\Services\DigIdService\Repositories\DigIdRepo;
+use App\Services\MediaService\MediaConfig;
+use App\Services\MediaService\MediaImageConfig;
+use App\Services\MediaService\MediaImagePreset;
+use App\Services\MediaService\MediaPreset;
+use App\Services\MediaService\MediaService;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
@@ -323,10 +328,21 @@ class Implementation extends Model
         $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
 
         if (is_array($config)) {
-            $config['media'] = collect(config('media.sizes'))->map(function($size) {
-                return collect($size)->only([
-                    'aspect_ratio', 'size'
-                ]);
+            $config['media'] = collect(MediaService::getMediaConfigs())->map(function(
+                MediaImageConfig $mediaConfig
+            ) {
+                return [
+                    'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
+                    'size' => collect($mediaConfig->getPresets())->map(function(
+                        MediaPreset $mediaPreset
+                    ) {
+                        return $mediaPreset instanceof MediaImagePreset ? [
+                            $mediaPreset->width,
+                            $mediaPreset->height,
+                            $mediaPreset->preserve_aspect_ratio,
+                        ] : null;
+                    })
+                ];
             });
 
             $implementation = Implementation::active();
