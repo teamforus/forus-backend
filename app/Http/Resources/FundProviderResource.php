@@ -13,14 +13,14 @@ use Illuminate\Http\Resources\Json\Resource;
 class FundProviderResource extends Resource
 {
     public static $load = [
-        'fund.logo.sizes',
+        'fund.logo.presets',
         'fund.providers',
         'fund.organization',
         'fund.employees',
         'fund.top_up_transactions',
         'fund.provider_organizations_approved.employees',
         'organization.products',
-        'organization.logo.sizes',
+        'organization.logo.presets',
         'organization.business_type.translations',
         'fund_provider_products'
     ];

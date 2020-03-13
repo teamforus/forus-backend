@@ -17,17 +17,17 @@ class ProductResource extends Resource
     public static $load = [
         'voucher_transactions',
         'vouchers_reserved',
-        'photo.sizes',
+        'photo.presets',
         'product_category.translations',
         // 'organization.product_categories.translations',
-        'organization.offices.photo.sizes',
+        'organization.offices.photo.presets',
         'organization.offices.schedules',
         'organization.offices.organization',
         'organization.offices.organization.business_type.translations',
-        'organization.offices.organization.logo.sizes',
+        'organization.offices.organization.logo.presets',
         // 'organization.offices.organization.product_categories.translations',
         'organization.supplied_funds_approved.logo',
-        'organization.logo.sizes',
+        'organization.logo.presets',
         'organization.business_type.translations',
     ];
 

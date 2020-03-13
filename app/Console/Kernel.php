@@ -5,6 +5,8 @@ namespace App\Console;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
+use App\Console\Commands\MediaCleanupCommand;
+use App\Console\Commands\MediaRegenerateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
@@ -19,11 +21,22 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        // media
+        MediaCleanupCommand::class,
+        MediaRegenerateCommand::class,
+
+        // funds
         CheckFundStateCommand::class,
         CheckFundConfigCommand::class,
+
+        // statistics
         CalculateFundUsersCommand::class,
+
+        // notifications
         NotifyAboutVoucherExpireCommand::class,
         NotifyAboutReachedNotificationFundAmount::class,
+
+        // provider invitations
         UpdateFundProviderInvitationExpireStateCommand::class,
     ];
 
