@@ -245,11 +245,13 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    // deprecated, remove in next releases
-    $router->get(
-        'vouchers/{voucher_token_address}/provider',
-        "Api\Platform\Provider\VouchersController@show"
-    );
+    // TODO: deprecated, remove in next releases
+    if (!env('DISABLE_DEPRECATED_API', FALSE)) {
+        $router->get(
+            'vouchers/{voucher_token_address}/provider',
+            "Api\Platform\Provider\VouchersController@show"
+        );
+    }
 
     $router->group(['prefix' => '/provider'], function() use ($router) {
         $router->resource(

@@ -28,11 +28,26 @@ class IdentityStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'pin_code'                  => ['required', new IdentityPinCodeRule()],
-            'records'                   => ['required', 'array', new IdentityRecordsRule()],
-            'records.primary_email'     => ['required', 'email:strict,dns', new IdentityRecordsUniqueRule('primary_email')],
-            'records.address'           => [new IdentityRecordsAddressRule()],
-            'records.*'                 => ['required'],
+            'pin_code' => [
+                'nullable',
+                new IdentityPinCodeRule()
+            ],
+            'records' => [
+                'required',
+                'array',
+                new IdentityRecordsRule()
+            ],
+            'records.primary_email' => [
+                'required',
+                'email:strict,dns',
+                new IdentityRecordsUniqueRule('primary_email')
+            ],
+            'records.address' => [
+                new IdentityRecordsAddressRule()
+            ],
+            'records.*' => [
+                'required'
+            ],
             'target' => [
                 'nullable',
                 'alpha_dash',

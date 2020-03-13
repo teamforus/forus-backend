@@ -31,7 +31,7 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
                 'email:strict,dns',
                 new IdentityRecordsExistsRule('primary_email')
             ],
-            'source' => [
+            'source' => env('DISABLE_DEPRECATED_API', false) ? [] : [
                 'required',
                 'in:' . Implementation::keysAvailable()->implode(',')
             ],

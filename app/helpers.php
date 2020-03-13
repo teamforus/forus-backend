@@ -206,10 +206,10 @@ if (!function_exists('authorize')) {
 
 if (!function_exists('implementation_key')) {
     /**
-     * @param null $default
-     * @return array|string
+     * @param string $default
+     * @return array|string|null
      */
-    function implementation_key($default = null) {
+    function implementation_key($default = 'general') {
         return request()->header('Client-Key', $default);
     }
 }

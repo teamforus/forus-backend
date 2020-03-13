@@ -16,20 +16,21 @@ class KeyPairGenerator
     {
         $command = "cd " . storage_path('/bash/');
         $command .= "; ./ethereum-wallet-generator.sh;";
+        $wallet = (object) [];
 
-        try {
-            $wallet = json_decode(shell_exec($command));
+        if (env("ETH_ADDRESS_SIMULATE")) {
+            $wallet->address = app()->make('token_generator')->address();
+        } else {
+            try {
+                $wallet = json_decode(shell_exec($command));
 
-            if ($wallet->address ==
-                '0xdcc703c0E500B653Ca82273B7BFAd8045D85a470') {
-                throw new \Exception('Address is empty');
+                if ($wallet->address ==
+                    '0xdcc703c0E500B653Ca82273B7BFAd8045D85a470') {
+                    throw new \Exception('Address is empty');
+                }
+            } catch (\Exception $e) {
+                return null;
             }
-
-            if (env("ETH_ADDRESS_SIMULATE")){
-                $wallet->address = app()->make('token_generator')->address();
-            }
-        } catch (\Exception $e) {
-            return null;
         }
 
         $wallet->passphrase = app('token_generator')->generate(32);
