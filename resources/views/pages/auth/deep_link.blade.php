@@ -3,7 +3,7 @@
 @section('content')
     <p class="app-missing">Please install me.app on this device first.</p>
     <p>
-        <a class="button" href="{{ $redirectUrl }}" onclick="onClick()">Open me.app</a>
+        <a class="button" href="{{ $redirectUrl }}" onclick="onClick()">Open me app</a>
     </p>
 @endsection
 
