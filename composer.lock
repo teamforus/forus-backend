@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c81f706a66a11919e74380ab15c2f485",
+    "content-hash": "98f368b242694577e3be9871224e8c54",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2093,22 +2093,22 @@
         },
         {
             "name": "laravel-notification-channels/fcm",
-            "version": "1.6.0",
+            "version": "1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel-notification-channels/fcm.git",
-                "reference": "e315d5fd97224a000a4a54001edbe772a295c592"
+                "reference": "be0d6a45dc42e99d37bb23496d75600563ae4ca5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel-notification-channels/fcm/zipball/e315d5fd97224a000a4a54001edbe772a295c592",
-                "reference": "e315d5fd97224a000a4a54001edbe772a295c592",
+                "url": "https://api.github.com/repos/laravel-notification-channels/fcm/zipball/be0d6a45dc42e99d37bb23496d75600563ae4ca5",
+                "reference": "be0d6a45dc42e99d37bb23496d75600563ae4ca5",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^6.2",
-                "illuminate/notifications": "~5.5 || ~6.0",
-                "illuminate/support": "~5.5 || ~6.0",
+                "illuminate/notifications": "~5.5 || ~6.0 || ~7.0",
+                "illuminate/support": "~5.5 || ~6.0 || ~7.0",
                 "php": ">=7.0"
             },
             "require-dev": {
@@ -2142,7 +2142,7 @@
             ],
             "description": "FCM (Firebase Cloud Messaging) Notifications Driver for Laravel",
             "homepage": "https://github.com/laravel-notification-channels/fcm",
-            "time": "2020-01-25T00:28:16+00:00"
+            "time": "2020-03-04T09:34:42+00:00"
         },
         {
             "name": "laravel/framework",
@@ -7801,7 +7801,8 @@
         "ext-curl": "*",
         "ext-json": "*",
         "ext-openssl": "*",
-        "ext-zip": "*"
+        "ext-zip": "*",
+        "ext-fileinfo": "*"
     },
     "platform-dev": []
 }
