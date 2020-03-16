@@ -30,17 +30,23 @@
             }
 
             .button {
-                background: rgb(17, 134, 191);
-                border: none;
-                color: #fff;
-                font: 500 14px sans-serif;
-                padding: 10px 30px;
-                border-radius: 3px;
-                cursor: pointer;
-                transition: .4s;
-                outline: none;
-                box-shadow: 2px 4px 20px rgba(0,0,0,.1);
+                position: absolute;
+                top: 50%;
+                left: 45%;
+                width: 166px;
+                height: 46px;
+                box-shadow: 0 5px 65px rgba(0, 0, 0, 0.1);
+                font-style: normal;
+                font: 600 14px/46px "Helvetica";
+                text-align: center;
+                color: #FFFFFF;
+                letter-spacing: 2px;
+                text-transform: uppercase;
                 text-decoration: none;
+                background: #315EFD;
+                border-radius: 6px;
+                padding: 0;
+                cursor: pointer;
             }
 
             .button:hover {

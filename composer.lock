@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7fcb560613eb08699fa91dbf01cd5e4c",
+    "content-hash": "98f368b242694577e3be9871224e8c54",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -125,16 +125,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.133.31",
+            "version": "3.133.35",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "330a696c1f1de0267921f732602e55fb3ddfd550"
+                "reference": "ab87be32ed4f52a9779d40277e4989af35be7dd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/330a696c1f1de0267921f732602e55fb3ddfd550",
-                "reference": "330a696c1f1de0267921f732602e55fb3ddfd550",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/ab87be32ed4f52a9779d40277e4989af35be7dd5",
+                "reference": "ab87be32ed4f52a9779d40277e4989af35be7dd5",
                 "shasum": ""
             },
             "require": {
@@ -205,7 +205,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2020-03-06T19:16:46+00:00"
+            "time": "2020-03-12T19:45:53+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1206,16 +1206,16 @@
         },
         {
             "name": "dusterio/laravel-aws-worker",
-            "version": "v0.1.25",
+            "version": "v0.1.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dusterio/laravel-aws-worker.git",
-                "reference": "99dda70aee533ea73b9a961b40c715ead4798c11"
+                "reference": "4a9b9aabc4fe0827fc670b611cfe65c3adf39ab9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/99dda70aee533ea73b9a961b40c715ead4798c11",
-                "reference": "99dda70aee533ea73b9a961b40c715ead4798c11",
+                "url": "https://api.github.com/repos/dusterio/laravel-aws-worker/zipball/4a9b9aabc4fe0827fc670b611cfe65c3adf39ab9",
+                "reference": "4a9b9aabc4fe0827fc670b611cfe65c3adf39ab9",
                 "shasum": ""
             },
             "require": {
@@ -1258,7 +1258,7 @@
                 "sqs",
                 "worker"
             ],
-            "time": "2020-03-04T22:54:56+00:00"
+            "time": "2020-03-10T04:15:56+00:00"
         },
         {
             "name": "egulias/email-validator",
@@ -1374,16 +1374,16 @@
         },
         {
             "name": "fruitcake/laravel-cors",
-            "version": "v1.0.4",
+            "version": "v1.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fruitcake/laravel-cors.git",
-                "reference": "138ad34ba5f578283e94c5614f6c48a10bc3ac6a"
+                "reference": "0e0500133dbb6325266133dd72f040617c9cdbd0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fruitcake/laravel-cors/zipball/138ad34ba5f578283e94c5614f6c48a10bc3ac6a",
-                "reference": "138ad34ba5f578283e94c5614f6c48a10bc3ac6a",
+                "url": "https://api.github.com/repos/fruitcake/laravel-cors/zipball/0e0500133dbb6325266133dd72f040617c9cdbd0",
+                "reference": "0e0500133dbb6325266133dd72f040617c9cdbd0",
                 "shasum": ""
             },
             "require": {
@@ -1438,7 +1438,7 @@
                 "crossdomain",
                 "laravel"
             ],
-            "time": "2020-02-21T13:24:15+00:00"
+            "time": "2020-03-11T21:05:07+00:00"
         },
         {
             "name": "geoip2/geoip2",
@@ -2093,22 +2093,22 @@
         },
         {
             "name": "laravel-notification-channels/fcm",
-            "version": "1.6.0",
+            "version": "1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel-notification-channels/fcm.git",
-                "reference": "e315d5fd97224a000a4a54001edbe772a295c592"
+                "reference": "be0d6a45dc42e99d37bb23496d75600563ae4ca5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel-notification-channels/fcm/zipball/e315d5fd97224a000a4a54001edbe772a295c592",
-                "reference": "e315d5fd97224a000a4a54001edbe772a295c592",
+                "url": "https://api.github.com/repos/laravel-notification-channels/fcm/zipball/be0d6a45dc42e99d37bb23496d75600563ae4ca5",
+                "reference": "be0d6a45dc42e99d37bb23496d75600563ae4ca5",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^6.2",
-                "illuminate/notifications": "~5.5 || ~6.0",
-                "illuminate/support": "~5.5 || ~6.0",
+                "illuminate/notifications": "~5.5 || ~6.0 || ~7.0",
+                "illuminate/support": "~5.5 || ~6.0 || ~7.0",
                 "php": ">=7.0"
             },
             "require-dev": {
@@ -2142,7 +2142,7 @@
             ],
             "description": "FCM (Firebase Cloud Messaging) Notifications Driver for Laravel",
             "homepage": "https://github.com/laravel-notification-channels/fcm",
-            "time": "2020-01-25T00:28:16+00:00"
+            "time": "2020-03-04T09:34:42+00:00"
         },
         {
             "name": "laravel/framework",
@@ -7801,7 +7801,8 @@
         "ext-curl": "*",
         "ext-json": "*",
         "ext-openssl": "*",
-        "ext-zip": "*"
+        "ext-zip": "*",
+        "ext-fileinfo": "*"
     },
     "platform-dev": []
 }

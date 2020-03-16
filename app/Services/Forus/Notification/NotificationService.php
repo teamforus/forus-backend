@@ -654,18 +654,18 @@ class NotificationService
      * @param string $email
      * @param $identifier
      * @param string $link
-     * @param string $platform
+     * @param string $source
      * @return bool
      */
     public function loginViaEmail(
         string $email,
         $identifier,
         string $link,
-        string $platform
+        string $source
     ) {
         return $this->sendMail($email, new UserLoginMail(
             $link,
-            $platform,
+            $source,
             $identifier
         ));
     }
@@ -916,7 +916,9 @@ class NotificationService
                 'email', 'unsubscribeLink', 'notificationPreferencesLink'
             ));
 
-            $message = $message->onQueue(env('EMAIL_QUEUE_NAME', 'emails'));
+            $message = $message->onQueue(config(
+                'forus.notifications.email_queue_name'
+            ));
 
             $this->mailer->to($email)->queue($message);
 

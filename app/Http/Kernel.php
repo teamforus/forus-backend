@@ -57,7 +57,6 @@ class Kernel extends HttpKernel
             // 'throttle:120D,1',
             'bindings',
             LocaleMiddleware::class,
-            ForusSessionMiddleware::class,
         ],
     ];
 
@@ -76,6 +75,7 @@ class Kernel extends HttpKernel
         'guest' => RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'api.auth' => ApiAuthMiddleware::class,
+        'forus_session' => ForusSessionMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,
     ];
