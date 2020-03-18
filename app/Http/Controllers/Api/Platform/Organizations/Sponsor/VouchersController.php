@@ -229,6 +229,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function exportUnassigned(
         IndexVouchersRequest $request,
@@ -243,12 +244,13 @@ class VouchersController extends Controller
             $organization,
             Fund::find($request->get('fund_id'))
         )->get();
+        $export_type = $request->get('export_type', 'png');
 
         if ($unassigned_vouchers->count() == 0) {
             abort(404, "No unassigned vouchers to be exported.");
         }
 
-        if (!$zipFile = Voucher::zipVouchers($unassigned_vouchers)) {
+        if (!$zipFile = Voucher::zipVouchers($unassigned_vouchers, $export_type)) {
             abort(500, "Couldn't make the archive.");
         }
 

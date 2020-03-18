@@ -34,6 +34,9 @@ class IndexVouchersRequest extends FormRequest
             'to'            => 'nullable|date_format:Y-m-d',
             'type'          => 'required|in:fund_voucher,product_voucher',
             'unassigned'    => 'nullable|boolean',
+            'export_type'   => [
+                Rule::in(['pdf', 'png'])
+            ],
             'sort_by'       => [
                 'nullable',
                 Rule::in([

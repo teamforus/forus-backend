@@ -499,9 +499,11 @@ class Voucher extends Model
 
     /**
      * @param Collection $vouchers
+     * @param $exportType
      * @return string
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public static function zipVouchers(Collection $vouchers)
+    public static function zipVouchers(Collection $vouchers, $exportType)
     {
         $token_generator = resolve('token_generator');
         $zipPath = storage_path('vouchers-export');
@@ -518,17 +520,25 @@ class Voucher extends Model
 
         $zip = new \ZipArchive();
         $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        $zip->addEmptyDir('images');
 
-        // $tmp_images = [];
-        foreach ($vouchers as $voucher) {
-            $name = $token_generator->generate(6, 2);
-            $zip->addFromString("images/$name.png", make_qr_code(
-                'voucher',
-                $voucher->token_without_confirmation->address
-            ));
+        if ($exportType == 'png') {
+            $zip->addEmptyDir('images');
 
-            fputcsv($fp, [$name]);
+            // $tmp_images = [];
+            foreach ($vouchers as $voucher) {
+                $name = $token_generator->generate(6, 2);
+                $zip->addFromString("images/$name.png", make_qr_code(
+                    'voucher',
+                    $voucher->token_without_confirmation->address
+                ));
+
+                fputcsv($fp, [$name]);
+            }
+        } else {
+            /** @var \Dompdf\Dompdf $pdf */
+            $pdf = app()->make('dompdf.wrapper');
+            $pdf->loadView('pages.vouchers_export', compact('vouchers', 'fp'));
+            $zip->addFromString('qr_codes.pdf', $pdf->output());
         }
 
         rewind($fp);
