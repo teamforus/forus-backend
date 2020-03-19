@@ -179,17 +179,16 @@ class NotificationService
      * Notify sponsor that new provider applied to his fund
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $provider_name
      * @param string $sponsor_name
      * @param string $fund_name
      * @param string $sponsor_dashboard_link
-     * @return bool
-     * @throws \Exception
+     * @return bool|null
      */
     public function providerApplied(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $provider_name,
         string $sponsor_name,
         string $fund_name,
@@ -200,7 +199,7 @@ class NotificationService
             $sponsor_name,
             $fund_name,
             $sponsor_dashboard_link,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -208,6 +207,7 @@ class NotificationService
      * Invite provider to new fund
      *
      * @param string $email
+     * @param EmailFrom|null $emailFrom
      * @param string $provider_name
      * @param string $sponsor_name
      * @param string|null $sponsor_phone
@@ -221,6 +221,7 @@ class NotificationService
      */
     public function providerInvited(
         string $email,
+        ?EmailFrom $emailFrom,
         string $provider_name,
         string $sponsor_name,
         ?string $sponsor_phone,
@@ -240,24 +241,23 @@ class NotificationService
             $fund_start_date,
             $fund_end_date,
             $from_fund_name,
-            $invitation_link
+            $invitation_link,
+            $emailFrom
         ));
     }
 
     /**
-     * Notify provider that his request to apply for fund was approved
-     *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
      * @param string $provider_dashboard_link
-     * @return bool
+     * @return bool|null
      */
     public function providerApproved(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $provider_name,
         string $sponsor_name,
@@ -268,7 +268,7 @@ class NotificationService
             $provider_name,
             $sponsor_name,
             $provider_dashboard_link,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -276,16 +276,16 @@ class NotificationService
      * Notify provider that his request to apply for fund was rejected
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $provider_name
      * @param string $sponsor_name
      * @param string $phone_number
-     * @return bool
+     * @return bool|null
      */
     public function providerRejected(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $provider_name,
         string $sponsor_name,
@@ -296,7 +296,7 @@ class NotificationService
             $provider_name,
             $sponsor_name,
             $phone_number,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -304,18 +304,18 @@ class NotificationService
      * Notify user that now he can validate records for the given sponsor
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $sponsor_name
-     * @return bool
+     * @return bool|null
      */
     public function youAddedAsValidator(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $sponsor_name
     ) {
         return $this->sendMail($email, new AddedAsValidatorMail(
             $sponsor_name,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -323,18 +323,18 @@ class NotificationService
      * Notify user about new validation request on validation dashboard
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $validator_dashboard_link
-     * @return bool
+     * @return bool|null
      */
     public function newValidationRequest(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $validator_dashboard_link
     ) {
         return $this->sendMail($email, new NewValidationRequestMail(
             $validator_dashboard_link,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -342,21 +342,21 @@ class NotificationService
      * Notify user that new fund request was created
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $webshop_link
-     * @return bool
+     * @return bool|null
      */
     public function newFundRequestCreated(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $webshop_link
     ) {
         return $this->sendMail($email, new FundRequestCreatedMail(
             $fund_name,
             $webshop_link,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -364,7 +364,7 @@ class NotificationService
      * Notify user that fund request resolved
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $requestStatus
      * @param string $fundName
      * @param string $webshopLink
@@ -372,7 +372,7 @@ class NotificationService
      */
     public function fundRequestResolved(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $requestStatus,
         string $fundName,
         string $webshopLink
@@ -381,7 +381,7 @@ class NotificationService
             $requestStatus,
             $fundName,
             $webshopLink,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -389,15 +389,15 @@ class NotificationService
      * Notify user that fund request record declined
      *
      * @param string $email
-     * @param $identifier
-     * @param string $rejectionNote
+     * @param EmailFrom|null $emailFrom
+     * @param string|null $rejectionNote
      * @param string $fundName
      * @param string $webshopLink
      * @return bool|null
      */
     public function fundRequestRecordDeclined(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         ?string $rejectionNote,
         string $fundName,
         string $webshopLink
@@ -406,7 +406,7 @@ class NotificationService
             $fundName,
             $rejectionNote,
             $webshopLink,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -414,7 +414,7 @@ class NotificationService
      * Notify user that new fund request clarification requested
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fundName
      * @param string $question
      * @param string $webshopClarificationLink
@@ -423,7 +423,7 @@ class NotificationService
      */
     public function sendFundRequestClarificationToRequester(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fundName,
         string $question,
         string $webshopClarificationLink,
@@ -434,7 +434,7 @@ class NotificationService
             $question,
             $webshopClarificationLink,
             $webshopLink,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -442,21 +442,21 @@ class NotificationService
      * Notify providers that new fund was started
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $sponsor_name
-     * @return bool
+     * @return bool|null
      */
     public function newFundStarted(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $sponsor_name
     ) {
         return $this->sendMail($email, new FundStartedMail(
             $fund_name,
             $sponsor_name,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -464,18 +464,21 @@ class NotificationService
      * Notify company that new fund was created
      *
      * @param string $email
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $organization_name
-     * @return bool
+     * @return bool|null
      */
     public function newFundCreatedNotifyForus(
         string $email,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $organization_name
     ) {
         return $this->sendMail($email, new ForusFundCreated(
             $fund_name,
-            $organization_name
+            $organization_name,
+            $emailFrom
         ));
     }
 
@@ -483,6 +486,7 @@ class NotificationService
      * Notify users that fund was closed
      *
      * @param string $email
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $fund_end_date
      * @param string $fund_contact
@@ -492,6 +496,7 @@ class NotificationService
      */
     public function fundClosed(
         string $email,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $fund_end_date,
         string $fund_contact,
@@ -503,7 +508,8 @@ class NotificationService
             $fund_end_date,
             $fund_contact,
             $sponsor_name,
-            $webshop_link
+            $webshop_link,
+            $emailFrom
         ));
     }
 
@@ -511,6 +517,7 @@ class NotificationService
      * Notify providers that fund was closed
      *
      * @param string $email
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $fund_end_date
      * @param string $sponsor_name
@@ -519,6 +526,7 @@ class NotificationService
      */
     public function fundClosedProvider(
         string $email,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $fund_end_date,
         string $sponsor_name,
@@ -528,7 +536,8 @@ class NotificationService
             $fund_name,
             $fund_end_date,
             $sponsor_name,
-            $dashboard_link
+            $dashboard_link,
+            $emailFrom
         ));
     }
 
@@ -536,15 +545,17 @@ class NotificationService
      * Send number of fund users
      *
      * @param string $email
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $sponsor_name
      * @param int $sponsor_amount
      * @param int $provider_amount
      * @param int $requester_amount
-     * @return bool
+     * @return bool|null
      */
     public function sendFundUserStatisticsReport(
         string $email,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $sponsor_name,
         int $sponsor_amount,
@@ -557,7 +568,8 @@ class NotificationService
             $sponsor_amount,
             $provider_amount,
             $requester_amount,
-            $sponsor_amount + $provider_amount + $requester_amount
+            $sponsor_amount + $provider_amount + $requester_amount,
+            $emailFrom
         ));
     }
 
@@ -565,7 +577,7 @@ class NotificationService
      * Send voucher by email
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param int $voucher_amount
      * @param string $voucher_expire_minus_day
@@ -575,7 +587,7 @@ class NotificationService
      */
     public function sendVoucher(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         int $voucher_amount,
         string $voucher_expire_minus_day,
@@ -588,7 +600,7 @@ class NotificationService
             $qr_token,
             $voucher_amount,
             $voucher_expire_minus_day,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -596,7 +608,7 @@ class NotificationService
      * Send assigned voucher to email
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param int $voucher_amount
      * @param string $voucher_expire_minus_day
@@ -605,7 +617,7 @@ class NotificationService
      */
     public function assignVoucher(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         int $voucher_amount,
         string $voucher_expire_minus_day,
@@ -616,7 +628,7 @@ class NotificationService
             $qr_token,
             $voucher_amount,
             $voucher_expire_minus_day,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -624,16 +636,16 @@ class NotificationService
      * Send voucher by email
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $requester_email
      * @param string $product_name
      * @param string $qr_token
      * @param string $reason
-     * @return bool
+     * @return bool|null
      */
     public function shareProductVoucher(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $requester_email,
         string $product_name,
         string $qr_token,
@@ -644,7 +656,7 @@ class NotificationService
             $product_name,
             $qr_token,
             $reason,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -652,21 +664,21 @@ class NotificationService
      * Send restore identity link to address email
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $link
      * @param string $source
-     * @return bool
+     * @return bool|null
      */
     public function loginViaEmail(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $link,
         string $source
     ) {
         return $this->sendMail($email, new UserLoginMail(
             $link,
             $source,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -674,21 +686,21 @@ class NotificationService
      * New transaction was made send current voucher balance
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $current_budget
-     * @return bool
+     * @return bool|null
      */
     public function sendVoucherAmountLeftEmail(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $current_budget
     ) {
         return $this->sendMail($email, new PaymentSuccessMail(
             $fund_name,
             $current_budget,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -697,21 +709,21 @@ class NotificationService
      * in shop to pickup the product or service.
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $product_name
      * @param string $expiration_date
-     * @return bool
+     * @return bool|null
      */
     public function productReserved(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $product_name,
         string $expiration_date
     ) {
         return $this->sendMail($email, new ProductReservedMail(
             $product_name,
             $expiration_date,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -720,7 +732,7 @@ class NotificationService
      * in shop to pickup the product or service.
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $product_name
      * @param string $product_price
      * @param string $provider_phone
@@ -732,7 +744,7 @@ class NotificationService
      */
     public function productReservedUser(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $product_name,
         string $product_price,
         string $provider_phone,
@@ -749,7 +761,7 @@ class NotificationService
             $qr_token,
             $provider_organization_name,
             $expire_at_minus_1_day,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -757,21 +769,21 @@ class NotificationService
      * Notify provider that a product was sold out.
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $product_name
      * @param string $sponsor_dashboard_url
-     * @return bool
+     * @return bool|null
      */
     public function productSoldOut(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $product_name,
         string $sponsor_dashboard_url
     ) {
         return $this->sendMail($email, new ProductSoldOutMail(
             $product_name,
             $sponsor_dashboard_url,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -779,19 +791,19 @@ class NotificationService
      * Send email confirmation link
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $confirmationLink
-     * @return bool
+     * @return bool|null
      */
     public function sendEmailConfirmationLink(
         string $email,
-        string $confirmationLink,
-        $identifier
+        ?EmailFrom $emailFrom,
+        string $confirmationLink
     ) {
         return $this->sendMail($email, new EmailActivationMail(
             config('app.name'),
             $confirmationLink,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -799,20 +811,20 @@ class NotificationService
      * @param string $orgName
      * @param string $email
      * @param string $confirmationLink
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @return bool|null
      */
     public function sendEmailEmployeeAdded(
         string $orgName,
         string $email,
         string $confirmationLink,
-        $identifier
+        ?EmailFrom $emailFrom
     ) {
         return $this->sendMail($email, new EmployeeAddedMail(
             $orgName,
             config('app.name'),
             $confirmationLink,
-            $identifier
+            $emailFrom
         ));
     }
 
@@ -827,7 +839,8 @@ class NotificationService
      * @param string $sponsor_phone
      * @param string $sponsor_email
      * @param string $webshopLink
-     * @return bool
+     * @param EmailFrom|null $emailFrom
+     * @return bool|null
      */
     public function voucherExpireSoon(
         string $email,
@@ -837,17 +850,18 @@ class NotificationService
         string $end_date,
         string $sponsor_phone,
         string $sponsor_email,
-        string $webshopLink
+        string $webshopLink,
+        ?EmailFrom $emailFrom
     ) {
         return $this->sendMail($email, new FundExpiredMail(
             $fund_name,
             $sponsor_name,
             $start_date,
             $end_date,
-            $sponsor_name,
             $sponsor_phone,
             $sponsor_email,
-            $webshopLink
+            $webshopLink,
+            $emailFrom
         ));
     }
 
@@ -855,7 +869,7 @@ class NotificationService
      * Fund balance reached the threshold set in preferences
      *
      * @param string $email
-     * @param $identifier
+     * @param EmailFrom|null $emailFrom
      * @param string $link
      * @param string $sponsor_name
      * @param string $fund_name
@@ -863,11 +877,11 @@ class NotificationService
      * @param string $budget_left
      * @param string $iban
      * @param string $topup_code
-     * @return bool|null
+     * @return bool
      */
     public function fundBalanceWarning(
         string $email,
-        $identifier,
+        ?EmailFrom $emailFrom,
         string $link,
         string $sponsor_name,
         string $fund_name,
@@ -884,7 +898,7 @@ class NotificationService
             $link,
             $iban,
             $topup_code,
-            $identifier
+            $emailFrom
         ));
     }
 

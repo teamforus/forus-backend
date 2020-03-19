@@ -48,7 +48,7 @@ class FundRequestSubscriber
         } else {
             $this->notificationService->newFundRequestCreated(
                 $this->recordService->primaryEmailByAddress($identity_address),
-                $fundRequest->identity_address,
+                $fund->fund_config->implementation->getEmailFrom(),
                 $fund->name,
                 $fund->urlWebshop()
             );
@@ -61,7 +61,7 @@ class FundRequestSubscriber
 
         $this->notificationService->fundRequestResolved(
             $this->recordService->primaryEmailByAddress($identity_address),
-            $identity_address,
+            $fundRequest->fund->fund_config->implementation->getEmailFrom(),
             $fundRequest->state,
             $fundRequest->fund->name,
             $fundRequest->fund->urlWebshop()

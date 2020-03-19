@@ -711,6 +711,7 @@ class Fund extends Model
                 foreach ($fund->provider_organizations_approved as $organization) {
                     $mailService->fundClosedProvider(
                         $organization->email,
+                        $fund->fund_config->implementation->getEmailFrom(),
                         $fund->name,
                         $fund->end_date,
                         $organization->name,
@@ -730,6 +731,7 @@ class Fund extends Model
                 foreach ($emails as $email) {
                     $mailService->fundClosed(
                         $email,
+                        $fund->fund_config->implementation->getEmailFrom(),
                         $fund->name,
                         $fund->end_date,
                         $fund->organization->email,
@@ -773,7 +775,7 @@ class Fund extends Model
             foreach ($fund->provider_organizations_approved as $organization) {
                 resolve('forus.services.notification')->newFundStarted(
                     $organization->email,
-                    $organization->emailServiceId(),
+                    $fund->fund_config->implementation->getEmailFrom(),
                     $fund->name,
                     $fund->organization->name
                 );
@@ -823,6 +825,7 @@ class Fund extends Model
 
             resolve('forus.services.notification')->sendFundUserStatisticsReport(
                 $email,
+                $fund->fund_config->implementation->getEmailFrom(),
                 $fund->name,
                 $organization->name,
                 $sponsorCount,
@@ -895,7 +898,7 @@ class Fund extends Model
                 foreach ($referrers as $referrer) {
                     $mailService->fundBalanceWarning(
                         $referrer['email'],
-                        $referrer['identity'],
+                        $fund->fund_config->implementation->getEmailFrom(),
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,

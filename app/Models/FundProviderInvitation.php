@@ -120,6 +120,7 @@ class FundProviderInvitation extends Model
                 $recordRepo->primaryEmailByAddress(
                     $providerInvitation->organization->identity_address
                 ),
+                Implementation::emailFrom(),
                 $providerInvitation->organization->name,
                 $providerInvitation->fund->organization->name,
                 $providerInvitation->fund->organization->phone,

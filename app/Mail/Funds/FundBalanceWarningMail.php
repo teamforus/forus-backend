@@ -3,6 +3,7 @@
 namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class BalanceWarningMail
@@ -26,9 +27,9 @@ class FundBalanceWarningMail extends ImplementationMail
         string $link,
         string $iban,
         string $topup_code,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->fundName = $fund_name;
         $this->sponsorName = $sponsor_name;

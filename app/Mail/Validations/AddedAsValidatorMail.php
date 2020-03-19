@@ -3,6 +3,7 @@
 namespace App\Mail\Validations;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class AddedAsValidatorMail
@@ -14,9 +15,9 @@ class AddedAsValidatorMail extends ImplementationMail
 
     public function __construct(
         string $sponsor_name,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->sponsorName = $sponsor_name;
     }

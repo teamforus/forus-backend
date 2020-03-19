@@ -31,7 +31,7 @@ class FundRequestClarificationSubscriber
 
         $this->notificationService->sendFundRequestClarificationToRequester(
             $this->recordService->primaryEmailByAddress($identity_address),
-            $fundRequest->identity_address,
+            $fundRequest->fund->fund_config->implementation->getEmailFrom(),
             $fundRequest->fund->name,
             $clarification->question,
             $webshopUrl . sprintf(

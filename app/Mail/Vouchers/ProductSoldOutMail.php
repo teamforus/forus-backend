@@ -4,6 +4,7 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class ProductSoldOutMail
@@ -17,9 +18,9 @@ class ProductSoldOutMail extends ImplementationMail
     public function __construct(
         string $productName,
         string $link,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ){
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->productName = $productName;
         $this->link = $link;

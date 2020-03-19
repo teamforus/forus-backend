@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\DigIdService\Repositories\DigIdRepo;
+use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaConfig;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
@@ -23,6 +24,8 @@ use Illuminate\Http\Request;
  * @property string $url_provider
  * @property string $url_validator
  * @property string $url_app
+ * @property string $email_from_address
+ * @property string $email_from_name
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $digid_enabled
@@ -60,7 +63,7 @@ class Implementation extends Model
 {
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
-        'url_validator', 'lon', 'lat'
+        'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name'
     ];
 
     protected $hidden = [
@@ -447,5 +450,26 @@ class Implementation extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * @return EmailFrom
+     */
+    public static function emailFrom() {
+        if ($activeModel = self::activeModel()) {
+            return $activeModel->getEmailFrom();
+        }
+
+        return EmailFrom::createDefault();
+    }
+
+    /**
+     * @return EmailFrom
+     */
+    public function getEmailFrom() {
+        return new EmailFrom(
+            $this->email_from_address ?: config('mail.from.address'),
+            $this->email_from_name ?: config('mail.from.name')
+        );
     }
 }

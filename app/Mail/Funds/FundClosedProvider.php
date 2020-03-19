@@ -3,6 +3,7 @@
 namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class FundClosed
@@ -23,10 +24,16 @@ class FundClosedProvider extends ImplementationMail
      * @param $fundEndDate
      * @param $providerName
      * @param $link
+     * @param EmailFrom|null $emailFrom
      */
-    public function __construct($fundName, $fundEndDate, $providerName, $link)
-    {
-        parent::__construct();
+    public function __construct(
+        $fundName,
+        $fundEndDate,
+        $providerName,
+        $link,
+        ?EmailFrom $emailFrom
+    ) {
+        parent::__construct($emailFrom);
 
         $this->fundName     = $fundName;
         $this->fundEndDate  = $fundEndDate;

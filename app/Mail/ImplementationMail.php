@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -16,18 +17,16 @@ class ImplementationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    private $identityRepo;
-    public $identityId;
+    private static $emailFrom;
 
     /**
      * ImplementationMail constructor.
-     * @param string|null $identityId
+     * @param EmailFrom|null $emailFrom
      */
     public function __construct(
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        $this->identityRepo = resolve('forus.services.identity');
-        $this->identityId = $identityId;
+        self::$emailFrom = $emailFrom;
     }
 
     /**
@@ -36,8 +35,8 @@ class ImplementationMail extends Mailable
     public function build(): ImplementationMail
     {
         return $this->from(
-            config('mail.from.address'),
-            config('mail.from.name')
+            self::$emailFrom->getEmail(),
+            self::$emailFrom->getName()
         );
     }
 }

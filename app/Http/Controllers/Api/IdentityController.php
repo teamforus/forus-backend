@@ -98,8 +98,8 @@ class IdentityController extends Controller
         // send confirmation email
         $this->mailService->sendEmailConfirmationLink(
             $primaryEmail,
-            $confirmationLink,
-            $identityAddress
+            Implementation::emailFrom(),
+            $confirmationLink
         );
 
         return response()->json(null, 201);
@@ -227,7 +227,9 @@ class IdentityController extends Controller
 
         $this->mailService->loginViaEmail(
             $email,
-            $identityId,
+            Implementation::query()->where([
+                'key' => implementation_key()
+            ])->first()->getEmailFrom(),
             $redirect_link,
             $source
         );

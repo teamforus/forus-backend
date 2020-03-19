@@ -28,7 +28,7 @@ class FundRequestRecordSubscriber
 
         $this->notificationService->fundRequestRecordDeclined(
             $this->recordService->primaryEmailByAddress($identity_address),
-            $fundRequest->identity_address,
+            $fundRequest->fund->fund_config->implementation->getEmailFrom(),
             $requestRecord->note,
             $fundRequest->fund->name,
             env('WEB_SHOP_GENERAL_URL')

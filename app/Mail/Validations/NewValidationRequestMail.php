@@ -3,6 +3,7 @@
 namespace App\Mail\Validations;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class NewValidationRequestMail
@@ -14,9 +15,9 @@ class NewValidationRequestMail extends ImplementationMail
 
     public function __construct(
         string $link,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->link = $link;
     }
