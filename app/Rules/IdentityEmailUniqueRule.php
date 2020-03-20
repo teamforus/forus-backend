@@ -23,7 +23,7 @@ class IdentityEmailUniqueRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        return identity_repo()->isEmailAvailable();
+        return identity_repo()->isEmailAvailable($value);
     }
 
     /**
