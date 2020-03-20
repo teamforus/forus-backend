@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api;
 use App\Rules\IdentityPinCodeRule;
 use App\Rules\IdentityRecordsAddressRule;
 use App\Rules\IdentityRecordsRule;
-use App\Rules\IdentityRecordsUniqueRule;
+use App\Rules\IdentityEmailUniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IdentityStoreRequest extends FormRequest
@@ -40,7 +40,7 @@ class IdentityStoreRequest extends FormRequest
             'records.primary_email' => [
                 'required',
                 'email:strict,dns',
-                new IdentityRecordsUniqueRule('primary_email')
+                new IdentityEmailUniqueRule()
             ],
             'records.address' => [
                 new IdentityRecordsAddressRule()

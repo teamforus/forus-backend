@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Implementation;
-use App\Rules\IdentityRecordsExistsRule;
+use App\Rules\IdentityEmailExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IdentityAuthorizationEmailTokenRequest extends FormRequest
@@ -29,7 +29,7 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
             'primary_email' => [
                 'required',
                 'email:strict,dns',
-                new IdentityRecordsExistsRule('primary_email')
+                new IdentityEmailExistsRule()
             ],
             'source' => env('DISABLE_DEPRECATED_API', false) ? [] : [
                 'required',

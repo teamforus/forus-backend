@@ -11,7 +11,6 @@ use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
-use App\Rules\IdentityRecordsUniqueRule;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
@@ -38,12 +37,11 @@ class IdentityFallbackController extends Controller
 
     public function getPublic()
     {
-        $bsnIsKnown = !empty($this->recordRepo->bsnByAddress(auth_address()));
+        $address = auth()->id();
+        $primary_email = identity_repo()->getPrimaryEmail($address);
+        $bsn = !empty($this->recordRepo->bsnByAddress($address));
 
-        return [
-            'address'   => auth()->id(),
-            'bsn'       => $bsnIsKnown
-        ];
+        return response()->json(compact('address', 'primary_email', 'bsn'));
     }
 
     /**
@@ -115,12 +113,14 @@ class IdentityFallbackController extends Controller
      */
     public function storeValidateEmail(IdentityStoreValidateEmailRequest $request) {
         $this->middleware('throttle', [10, 1 * 60]);
-        $ruleUnique = new IdentityRecordsUniqueRule('primary_email');
+
         $email = (string) $request->input('email', '');
+        $used = !identity_repo()->isEmailAvailable($email);
 
         return [
             'email' => [
-                'unique' => $ruleUnique->passes('email', $email),
+                'used' => $used,
+                'unique' => $used,
                 'valid' => validate_data(compact('email'), [
                     'email' => 'required|email'
                 ])->passes(),

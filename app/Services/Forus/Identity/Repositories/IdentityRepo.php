@@ -3,6 +3,7 @@
 namespace App\Services\Forus\Identity\Repositories;
 
 use App\Services\Forus\Identity\Models\Identity;
+use App\Services\Forus\Identity\Models\IdentityEmail;
 use App\Services\Forus\Identity\Models\IdentityProxy;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
@@ -52,11 +53,12 @@ class IdentityRepo implements Interfaces\IIdentityRepo
             app('key_pair_generator')->make()
         )->merge([
             'pin_code' => app('hash')->make($pinCode)
-        ])->toArray())->toArray();
+        ])->toArray());
 
-        $this->recordRepo->updateRecords($identity['address'], $records);
+        $identity->addEmail($records['primary_email'], false, true);
+        $this->recordRepo->updateRecords($identity->address, $records);
 
-        return $identity['address'];
+        return $identity->address;
     }
 
     /**
@@ -542,5 +544,57 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     private function makeAccessToken()
     {
         return $this->makeToken(200);
+    }
+
+    /**
+     * @param string $identity_address
+     * @return string|null
+     */
+    public function getPrimaryEmail(string $identity_address): ?string {
+        return IdentityEmail::where([
+            'primary' => 1,
+            'identity_address' => $identity_address
+            ])->first()->email ?? null;
+    }
+
+    /**
+     * @param string $primary_email
+     * @return string|null
+     */
+    public function getAddress(string $primary_email): ?string {
+        return IdentityEmail::where([
+            'primary' => true,
+            'email' => $primary_email
+            ])->first()->identity_address ?? null;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param string $primary_email
+     * @param bool $verified
+     * @param bool $primary
+     * @return IdentityEmail
+     */
+    public function addIdentityEmail(
+        string $identity_address,
+        string $primary_email,
+        bool $verified = false,
+        bool $primary = false
+    ): IdentityEmail {
+        return Identity::whereAddress($identity_address)->first()->addEmail(
+            $primary_email,
+            $verified,
+            $primary
+        );
+    }
+
+    /**
+     * @param string $email
+     * @return bool
+     */
+    public function isEmailAvailable(
+        string $email
+    ): bool {
+        return !IdentityEmail::whereEmail($email)->exists();
     }
 }

@@ -1,6 +1,8 @@
 <?php
 namespace App\Services\Forus\Identity\Repositories\Interfaces;
 
+use App\Services\Forus\Identity\Models\IdentityEmail;
+
 interface IIdentityRepo {
     /**
      * Make new identity
@@ -215,4 +217,38 @@ interface IIdentityRepo {
      * @return string
      */
     public function exchangeQrCodeToken(string $token);
+
+    /**
+     * @param string $identity_address
+     * @return string|null
+     */
+    public function getPrimaryEmail(string $identity_address): ?string;
+
+    /**
+     * @param string $primary_email
+     * @return string|null
+     */
+    public function getAddress(string $primary_email): ?string;
+
+    /**
+     * @param string $identity_address
+     * @param string $primary_email
+     * @param bool $verified
+     * @param bool $primary
+     * @return IdentityEmail
+     */
+    public function addIdentityEmail(
+        string $identity_address,
+        string $primary_email,
+        bool $verified = false,
+        bool $primary = false
+    ): IdentityEmail;
+
+    /**
+     * @param string $email
+     * @return bool
+     */
+    public function isEmailAvailable(
+        string $email
+    ): bool;
 }
