@@ -97,12 +97,13 @@ class EmployeesController extends Controller
             $clientType = $request->headers->get('Client-Type', 'general');
             $implementationKey = Implementation::activeKey();
 
-            $confirmationLink = url(
-                '/api/v1/identity/proxy/confirmation/redirect/' . collect([
-                    $identityProxy['exchange_token'],
-                    $clientType,
-                    $implementationKey
-                ])->implode('/')
+            $dashboardUrl = Implementation::byKey($implementationKey);
+            $dashboardUrl = $dashboardUrl['url_' . $clientType];
+
+            $confirmationLink = sprintf(
+                $dashboardUrl . "confirmation/email/%s?%s",
+                $identityProxy['exchange_token'],
+                http_build_query(compact('target'))
             );
 
             $this->notificationRepo->sendEmailEmployeeAdded(
