@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
-use App\Services\Forus\Record\Models\Record;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -429,18 +428,13 @@ class Voucher extends Model
 
         if ($request->has('q') && $q = $request->input('q')) {
             $recordRepo = resolve('forus.services.record');
-            $record = Record::query()->where(
-                'record_type_id', $recordRepo->getTypeIdByKey('primary_email')
-            )->where('value', 'LIKE', '%'.$q.'%')->first();
-            $identityId = $record ? $record->identity_address : null;
 
-            $query->where(function (Builder $query) use ($q, $identityId) {
-                $query = $query->where('note', 'LIKE', "%{$q}%");
-                if (!$identityId) {
-                    return $query;
-                }
-
-                return $query->orWhere('identity_address', $identityId);
+            $query->where(function (Builder $query) use ($q, $recordRepo) {
+                $query->where('note', 'LIKE', "%{$q}%");
+                $query->orWhereIn(
+                    'identity_address',
+                    $recordRepo->identityAddressesByEmailSearch($q)
+                );
             });
         }
 

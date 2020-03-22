@@ -69,6 +69,15 @@ interface IRecordRepo {
     );
 
     /**
+     * Search identity addresses by email substring
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressesByEmailSearch(
+        string $search
+    ): array;
+
+    /**
      * Get bsn by identity_address
      * @param string $identityAddress
      * @return string|null
