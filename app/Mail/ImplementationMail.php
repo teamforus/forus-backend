@@ -17,7 +17,7 @@ class ImplementationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    private static $emailFrom;
+    protected $emailFrom;
 
     /**
      * ImplementationMail constructor.
@@ -26,7 +26,7 @@ class ImplementationMail extends Mailable
     public function __construct(
         ?EmailFrom $emailFrom
     ) {
-        self::$emailFrom = $emailFrom;
+        $this->emailFrom = $emailFrom;
     }
 
     /**
@@ -35,8 +35,8 @@ class ImplementationMail extends Mailable
     public function build(): ImplementationMail
     {
         return $this->from(
-            self::$emailFrom->getEmail(),
-            self::$emailFrom->getName()
+            $this->emailFrom->getEmail(),
+            $this->emailFrom->getName()
         );
     }
 }

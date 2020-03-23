@@ -227,9 +227,7 @@ class IdentityController extends Controller
 
         $this->mailService->loginViaEmail(
             $email,
-            Implementation::query()->where([
-                'key' => implementation_key()
-            ])->first()->getEmailFrom(),
+            Implementation::emailFrom(),
             $redirect_link,
             $source
         );

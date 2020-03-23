@@ -28,6 +28,7 @@ class AddEmailFromFieldsToImplementationTable extends Migration
     {
         Schema::table('implementations', function(Blueprint $table) {
             $table->dropColumn('email_from_address');
+            $table->dropColumn('email_from_name');
         });
     }
 }
