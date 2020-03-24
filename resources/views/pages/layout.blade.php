@@ -31,8 +31,11 @@
 
             .button {
                 position: absolute;
-                top: 50%;
-                left: 45%;
+                bottom: 0;
+                top: 0;
+                left: 0;
+                right: 0;
+                margin: auto;
                 width: 166px;
                 height: 46px;
                 box-shadow: 0 5px 65px rgba(0, 0, 0, 0.1);
