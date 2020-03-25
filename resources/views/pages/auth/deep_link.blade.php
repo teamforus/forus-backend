@@ -16,6 +16,8 @@
             setTimeout(showMessage, 2500);
         };
 
-        setTimeout(onClick, 100);
+        setTimeout(function() {
+            document.querySelector('.app-missing .button').click();
+        }, 100);
     </script>
 @endsection
