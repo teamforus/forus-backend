@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="app-missing">
-        <p>This link is meant to be opened on the same device used to request authentication by email and you already have "me.app" installed.</p>
+        <p>This link is meant to be opened on the same device used to request authentication by email where you already have "me.app" installed.</p>
         <a class="button" href="{{ $redirectUrl }}" onclick="onClick()">OPEN ME APP</a>
     </div>
 @endsection
