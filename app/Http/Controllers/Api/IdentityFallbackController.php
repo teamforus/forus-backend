@@ -38,10 +38,10 @@ class IdentityFallbackController extends Controller
     public function getPublic()
     {
         $address = auth()->id();
-        $primary_email = identity_repo()->getPrimaryEmail($address);
+        $email = $this->identityRepo->getPrimaryEmail($address);
         $bsn = !empty($this->recordRepo->bsnByAddress($address));
 
-        return response()->json(compact('address', 'primary_email', 'bsn'));
+        return response()->json(compact('address', 'email', 'bsn'));
     }
 
     /**
