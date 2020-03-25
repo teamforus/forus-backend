@@ -1,19 +1,21 @@
 @extends('pages.layout')
 
 @section('content')
-    <p class="app-missing">Please install me.app on this device first.</p>
-    <p>
-        <a class="button" href="{{ $redirectUrl }}" onclick="onClick()">Open me app</a>
-    </p>
+    <div class="app-missing">
+        <p>This link is meant to be opened on the same device used to request authentication by email and you already have "me.app" installed.</p>
+        <a class="button" href="{{ $redirectUrl }}" onclick="onClick()">OPEN ME APP</a>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         onClick = function() {
             let showMessage = function () {
-                document.querySelector('.app-missing').style.display = "block";
+                document.querySelector('.app-missing p').style.display = "block";
             };
             setTimeout(showMessage, 2500);
-        }
+        };
+
+        setTimeout(onClick, 100);
     </script>
 @endsection
