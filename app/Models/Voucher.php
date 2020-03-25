@@ -427,7 +427,15 @@ class Voucher extends Model
         }
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $query->where('note', 'LIKE', "%{$q}%");
+            $recordRepo = resolve('forus.services.record');
+
+            $query->where(function (Builder $query) use ($q, $recordRepo) {
+                $query->where('note', 'LIKE', "%{$q}%");
+                $query->orWhereIn(
+                    'identity_address',
+                    $recordRepo->identityAddressesByEmailSearch($q)
+                );
+            });
         }
 
         if ($request->has('sort_by') && $sortBy = $request->input('sort_by')) {
