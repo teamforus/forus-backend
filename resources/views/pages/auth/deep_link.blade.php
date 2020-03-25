@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="app-missing">
-        <p>Open deze link op het zelfde apparaat waar het aanmeldverzoek is aanvraagd.</p>
+        <p>Open deze link op het zelfde apparaat waar het aanmeldverzoek is aangevraagd.</p>
         <a class="button" href="{{ $redirectUrl }}" onclick="onClick()">OPEN ME APP</a>
     </div>
 @endsection
