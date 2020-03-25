@@ -66,7 +66,9 @@ class IdentityController extends Controller
         // client type, key and primary email
         $clientKey = implementation_key();
         $clientType = client_type();
-        $primaryEmail = $request->input('records.primary_email');
+        $primaryEmail = $request->input('email', $request->input(
+            'records.primary_email'
+        ));
 
         // build records list and remove bsn and primary_email
         $records = collect($request->input('records', []));
@@ -208,7 +210,7 @@ class IdentityController extends Controller
     ) {
         $this->middleware('throttle', [10, 1 * 60]);
 
-        $email = $request->input('primary_email');
+        $email = $request->input('email', $request->input('primary_email'));
         $source = sprintf('%s_%s', client_type(), implementation_key());
         $isMobile = in_array(client_type(), config('forus.clients.mobile'));
 

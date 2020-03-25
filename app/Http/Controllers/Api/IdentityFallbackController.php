@@ -59,7 +59,9 @@ class IdentityFallbackController extends Controller
         // client type, key and target primary email
         $clientType = client_type(config('forus.clients.default'));
         $clientKey = implementation_key('general');
-        $primaryEmail = $request->input('records.primary_email');
+        $primaryEmail = $request->input('email', $request->input(
+            'records.primary_email'
+        ));
 
         // build records list and remove bsn and primary_email
         $records = collect($request->input('records', []));
@@ -223,7 +225,7 @@ class IdentityFallbackController extends Controller
     ) {
         $this->middleware('throttle', [10, 1 * 60]);
 
-        $email = $request->input('primary_email');
+        $email = $request->input('email', $request->input('primary_email'));
         $source = $request->input('source');
 
         $identityId = $this->recordRepo->identityAddressByEmail($email);

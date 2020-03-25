@@ -69,6 +69,18 @@ interface IRecordRepo {
     );
 
     /**
+     * Change identity primary_email record value
+     *
+     * @param string $identityAddress
+     * @param string $email
+     * @return mixed|string|null
+     */
+    public function setIdentityPrimaryEmailRecord(
+        string $identityAddress,
+        string $email
+    ): void;
+
+    /**
      * Get bsn by identity_address
      * @param string $identityAddress
      * @return string|null

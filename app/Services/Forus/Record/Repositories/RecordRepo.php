@@ -174,6 +174,25 @@ class RecordRepo implements IRecordRepo
     }
 
     /**
+     * Change identity primary_email record value
+     *
+     * @param string $identityAddress
+     * @param string $email
+     * @return mixed|string|null
+     */
+    public function setIdentityPrimaryEmailRecord(
+        string $identityAddress,
+        string $email
+    ): void {
+        Record::query()->where([
+            'record_type_id' => $this->getTypeIdByKey('primary_email'),
+            'identity_address' => $identityAddress,
+        ])->update([
+            'value' => $email
+        ]);
+    }
+
+    /**
      * Get bsn by identity_address
      * @param string $identityAddress
      * @return string|null

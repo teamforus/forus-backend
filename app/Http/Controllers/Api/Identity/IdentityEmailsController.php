@@ -5,8 +5,18 @@ namespace App\Http\Controllers\Api\Identity;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IdentityEmailResource;
 use App\Services\Forus\Identity\Models\IdentityEmail;
+use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Notification;
 
+/**
+ * Class IdentityEmailsController
+ * @property IRecordRepo $rec
+ * @property Notification $recordRepo
+ * @property IIdentityRepo $identityRepo
+ * @package App\Http\Controllers\Api\Identity
+ */
 class IdentityEmailsController extends Controller
 {
     protected $identityRepo;
@@ -14,12 +24,18 @@ class IdentityEmailsController extends Controller
     protected $recordRepo;
 
     /**
-     * IdentityController constructor.
+     * IdentityEmailsController constructor.
+     *
+     * @param IRecordRepo $recordRepo
+     * @param IIdentityRepo $identityRepo
      */
-    public function __construct() {
+    public function __construct(
+        IRecordRepo $recordRepo,
+        IIdentityRepo $identityRepo
+    ) {
         $this->mailService = resolve('forus.services.notification');
-        $this->identityRepo = resolve('forus.services.identity');
-        $this->recordRepo = resolve('forus.services.record');
+        $this->identityRepo = $identityRepo;
+        $this->recordRepo = $recordRepo;
     }
 
     /**
@@ -119,7 +135,7 @@ class IdentityEmailsController extends Controller
 
     /**
      * @param IdentityEmail $identityEmail
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function emailVerificationToken(IdentityEmail $identityEmail)
@@ -130,6 +146,6 @@ class IdentityEmailsController extends Controller
             'verified' => 1
         ]);
 
-        return response('You successfully verified your email.', 200);
+        return view()->make('messages.email-verified');
     }
 }

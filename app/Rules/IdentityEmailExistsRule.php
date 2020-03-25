@@ -23,7 +23,7 @@ class IdentityEmailExistsRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        return is_string(identity_repo()->getAddress($value));
+        return is_string($value) && is_string(identity_repo()->getAddress($value));
     }
 
     /**

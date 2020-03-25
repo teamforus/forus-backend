@@ -100,7 +100,7 @@ class LoremDbSeeder extends Seeder
     public function makeBaseIdentity(
         string $primaryEmail
     ) {
-        $identityAddress = $this->identityRepo->make('1111', [
+        $identityAddress = $this->identityRepo->make([
             'primary_email' => $primaryEmail,
             'given_name' => 'John',
             'family_name' => 'Doe'

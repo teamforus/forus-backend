@@ -14,13 +14,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $verified
  * @property bool $primary
  * @property string $verification_token
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\Forus\Identity\Models\Identity $identity
+ * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail newQuery()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail query()
+ * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereIdentityAddress($value)
@@ -28,6 +33,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereVerificationToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereVerified($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail withoutTrashed()
  * @mixin \Eloquent
  */
 class IdentityEmail extends Model
@@ -38,7 +45,7 @@ class IdentityEmail extends Model
      * @var array 
      */
     protected $fillable = [
-        'email', 'identity_address', 'verified', 'primary',
+        'email', 'identity_address', 'verified', 'primary', 'initial',
         'verification_token'
     ];
 
@@ -46,6 +53,7 @@ class IdentityEmail extends Model
      * @var array
      */
     protected $casts = [
+        'initial' => 'bool',
         'primary' => 'bool',
         'verified' => 'bool',
     ];
@@ -69,7 +77,7 @@ class IdentityEmail extends Model
     }
 
     /**
-     *
+     * Make this identity email as primary
      */
     public function makePrimary() {
         $this->update([
@@ -80,6 +88,20 @@ class IdentityEmail extends Model
             'identity_emails.id', '!=', $this->id
         )->update([
             'primary' => false,
+        ]);
+
+        record_repo()->setIdentityPrimaryEmailRecord(
+            $this->identity_address,
+            $this->email
+        );
+    }
+
+    /**
+     * Set this identity email as verified
+     */
+    public function setVerified() {
+        $this->update([
+            'verified' => true
         ]);
     }
 }

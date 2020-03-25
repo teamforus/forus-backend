@@ -25,12 +25,21 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'primary_email' => [
-                'required',
-                'email:strict,dns',
-                new IdentityEmailExistsRule()
-            ],
+        $emailRule = [
+            'email:strict,dns',
+            new IdentityEmailExistsRule()
+        ];
+
+        return array_merge(env('DISABLE_DEPRECATED_API', false) ? [
+            'email' => array_merge((array) 'required', $emailRule),
+        ] : [
+            'email' => array_merge((array) (
+                $this->has('primary_email') ? 'nullable' : 'required'
+            ), $emailRule),
+            'primary_email' => array_merge((array) (
+                $this->has('email') ? 'nullable' : 'required'
+            ), $emailRule),
+        ], [
             'source' => env('DISABLE_DEPRECATED_API', false) ? [] : [
                 'required',
                 'in:' . Implementation::keysAvailable()->implode(',')
@@ -39,6 +48,6 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
                 'nullable',
                 'alpha_dash',
             ]
-        ];
+        ]);
     }
 }

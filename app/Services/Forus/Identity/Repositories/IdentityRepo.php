@@ -42,20 +42,15 @@ class IdentityRepo implements Interfaces\IIdentityRepo
 
     /**
      * Make new identity
-     * @param string $pinCode
      * @param array $records
      * @throws \Exception
-     * @return mixed
+     * @return string
      */
-    public function make(string $pinCode, array $records = [])
+    public function make(array $records = []): string
     {
-        $identity = $this->model->create(collect(
-            app('key_pair_generator')->make()
-        )->merge([
-            'pin_code' => app('hash')->make($pinCode)
-        ])->toArray());
+        $identity = $this->model->create(app('key_pair_generator')->make());
 
-        $identity->addEmail($records['primary_email'], false, true);
+        $identity->addEmail($records['primary_email'], false, true, true);
         $this->recordRepo->updateRecords($identity->address, $records);
 
         return $identity->address;
@@ -65,16 +60,14 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      * Make new identity by email
      * @param string $primaryEmail
      * @param array $records
-     * @param int $pinCode
      * @return mixed
      * @throws \Exception
      */
     public function makeByEmail(
         string $primaryEmail,
-        array $records = [],
-        $pinCode = 1111
+        array $records = []
     ) {
-        $identityAddress = $this->make($pinCode, array_merge([
+        $identityAddress = $this->make(array_merge([
             'primary_email' => $primaryEmail
         ], $records));
 
@@ -525,6 +518,15 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         $proxy->update(array_merge([
             'state' => 'active',
         ], $identity_address ? compact('identity_address') : []));
+
+        $initialEmail = $proxy->identity->initial_email;
+        $isEmailToken = in_array($type, [
+            'email_code', 'confirmation_code'
+        ]);
+
+        if ($isEmailToken && $initialEmail && !$initialEmail->verified) {
+            $proxy->identity->initial_email->setVerified();
+        }
 
         return $proxy;
     }

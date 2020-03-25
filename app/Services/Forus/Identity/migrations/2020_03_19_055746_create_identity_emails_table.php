@@ -21,6 +21,7 @@ class CreateIdentityEmailsTable extends Migration
             $table->string('identity_address', 200)->index();
             $table->boolean('verified')->default(0);
             $table->boolean('primary')->default(0)->index();
+            $table->boolean('initial')->default(0)->index();
             $table->string('verification_token', 200);
             $table->softDeletes();
             $table->timestamps();
@@ -42,6 +43,7 @@ class CreateIdentityEmailsTable extends Migration
                     'record_type_id' => $recordService->getTypeIdByKey('primary_email'),
                     'identity_address' => $identity->address,
                 ])->first()->value,
+                true,
                 true,
                 true
             );

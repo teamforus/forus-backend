@@ -138,13 +138,11 @@ class FundProviderInvitationPolicy
      *
      * @param string|null $identity_address
      * @param FundProviderInvitation $fundProviderInvitation
-     * @param Organization $organization
      * @return bool|\Illuminate\Auth\Access\Response
      */
     public function showByToken(
         ?string $identity_address,
-        FundProviderInvitation $fundProviderInvitation,
-        Organization $organization
+        FundProviderInvitation $fundProviderInvitation
     ) {
         return isset($identity_address) && !empty($fundProviderInvitation);
     }
