@@ -5,6 +5,7 @@
   "baseBranches": [
     "develop"
   ],
+  "lockFileMaintenance": { "enabled": true },
   "packageRules": [
     {
       "packageNames": ["aws-sdk"],
@@ -12,6 +13,6 @@
     }
   ],
   "composer": {
-    "enabled": true
+    "enabled": false
   }
 }
