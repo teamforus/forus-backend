@@ -20,7 +20,6 @@ interface IRecordRepo {
     */
     public function getRecordTypes();
 
-
     /**
      * Check if record type and value is unique
      * @param string $recordTypeKey
@@ -48,7 +47,6 @@ interface IRecordRepo {
         string $recordValue,
         string $excludeIdentity = null
     );
-
 
     /**
      * Get identity id by email record

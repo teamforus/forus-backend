@@ -41,4 +41,16 @@ class StoreProductRequest extends FormRequest
             'product_category_id'   => 'required|exists:product_categories,id',
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages()
+    {
+        return [
+            'expire_at.after' => trans('validation.after', [
+                'date' => trans('validation.attributes.today')
+            ])
+        ];
+    }
 }

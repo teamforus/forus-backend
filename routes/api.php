@@ -229,8 +229,6 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         $router->get('files/{file_uid}/download', 'Api\FileController@download');
         $router->post('files/validate', 'Api\FileController@storeValidate');
     }
-
-    $router->get('/debug', 'TestController@test');
 });
 
 if (env('APP_DEBUG', false) == true && env('APP_ENV') == 'dev') {

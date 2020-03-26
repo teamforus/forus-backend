@@ -35,6 +35,10 @@ class StoreEmployeeRequest extends FormRequest
             ],
             'roles'     => 'present|array',
             'roles.*'   => 'exists:roles,id',
+            'target' => [
+                'nullable',
+                'alpha_dash',
+            ],
         ];
     }
 

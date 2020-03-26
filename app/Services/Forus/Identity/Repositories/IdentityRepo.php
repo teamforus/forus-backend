@@ -5,6 +5,7 @@ namespace App\Services\Forus\Identity\Repositories;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Identity\Models\IdentityEmail;
 use App\Services\Forus\Identity\Models\IdentityProxy;
+use App\Services\Forus\Record\Models\Record;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
 class IdentityRepo implements Interfaces\IIdentityRepo
@@ -598,5 +599,18 @@ class IdentityRepo implements Interfaces\IIdentityRepo
         string $email
     ): bool {
         return !IdentityEmail::whereEmail($email)->exists();
+    }
+
+    /**
+     * Search identity addresses by email substring
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressesByEmailSearch(
+        string $search
+    ): array {
+        return IdentityEmail::where('email', 'LIKE', "%{$search}%")->where([
+            'primary' => true,
+        ])->pluck('identity_address')->toArray();
     }
 }

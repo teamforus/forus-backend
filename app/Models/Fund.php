@@ -92,6 +92,7 @@ use Illuminate\Http\Request;
  * @property-read int|null $top_up_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp $top_up_model
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -1166,5 +1167,22 @@ class Fund extends Model
     public function urlValidatorDashboard(string $uri = "/")
     {
         return $this->fund_config->implementation->urlValidatorDashboard($uri);
+    }
+
+    /**
+     * @return FundTopUp
+     */
+    public function getTopUpModelAttribute()
+    {
+        /** @var FundTopUp $topUp */
+        if ($this->top_ups()->count() > 0) {
+            $topUp = $this->top_ups()->first();
+        } else {
+            $topUp = $this->top_ups()->create([
+                'code' => FundTopUp::generateCode()
+            ]);
+        }
+
+        return $topUp;
     }
 }

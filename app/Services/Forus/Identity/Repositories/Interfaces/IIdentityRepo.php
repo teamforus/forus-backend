@@ -247,4 +247,13 @@ interface IIdentityRepo {
     public function isEmailAvailable(
         string $email
     ): bool;
+
+    /**
+     * Search identity addresses by email substring
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressesByEmailSearch(
+        string $search
+    ): array;
 }

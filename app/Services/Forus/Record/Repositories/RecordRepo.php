@@ -232,8 +232,7 @@ class RecordRepo implements IRecordRepo
         string $name,
         int $order = 0
     ) {
-        /** @var RecordCategory $recordCategory */
-        $recordCategory =  RecordCategory::query()->create([
+        $recordCategory = RecordCategory::create([
             'identity_address' => $identityAddress,
             'name' => $name,
             'order' => $order,

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Data\VoucherExportData;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -395,7 +396,7 @@ class Voucher extends Model
      * @param Fund $fund
      * @return Builder
      */
-    public static function searchSponsor(
+    public static function searchSponsorQuery(
         Request $request,
         Organization $organization,
         Fund $fund = null
@@ -427,7 +428,15 @@ class Voucher extends Model
         }
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $query->where('note', 'LIKE', "%{$q}%");
+            $identityRepo = resolve('forus.services.identity');
+
+            $query->where(function (Builder $query) use ($q, $identityRepo) {
+                $query->where('note', 'LIKE', "%{$q}%");
+                $query->orWhereIn(
+                    'identity_address',
+                    $identityRepo->identityAddressesByEmailSearch($q)
+                );
+            });
         }
 
         if ($request->has('sort_by') && $sortBy = $request->input('sort_by')) {
@@ -435,6 +444,20 @@ class Voucher extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param Fund|null $fund
+     * @return Builder[]|Collection
+     */
+    public static function searchSponsor(
+        Request $request,
+        Organization $organization,
+        Fund $fund = null
+    ) {
+        return self::searchSponsorQuery($request, $organization, $fund)->get();
     }
 
     /**
@@ -499,10 +522,12 @@ class Voucher extends Model
 
     /**
      * @param Collection $vouchers
+     * @param $exportType
      * @return string
      */
-    public static function zipVouchers(Collection $vouchers)
+    public static function zipVouchers(Collection $vouchers, $exportType)
     {
+        $vouchersData = [];
         $token_generator = resolve('token_generator');
         $zipPath = storage_path('vouchers-export');
 
@@ -515,20 +540,31 @@ class Voucher extends Model
         }
 
         $fp = fopen('php://temp/maxmemory:1048576', 'w');
-
         $zip = new \ZipArchive();
         $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        $zip->addEmptyDir('images');
 
-        // $tmp_images = [];
+        if ($exportType == 'png') {
+            $zip->addEmptyDir('images');
+        }
+
         foreach ($vouchers as $voucher) {
-            $name = $token_generator->generate(6, 2);
-            $zip->addFromString("images/$name.png", make_qr_code(
-                'voucher',
-                $voucher->token_without_confirmation->address
-            ));
+            $voucherData = new VoucherExportData($voucher);
 
-            fputcsv($fp, [$name]);
+            fputcsv($fp, (array) $voucherData->getName());
+            array_push($vouchersData, $voucherData);
+
+            if ($exportType == 'png') {
+                $zip->addFromString(
+                    sprintf("images/%s.png", $voucherData->getName()),
+                    make_qr_code('voucher', $voucher->token_without_confirmation->address)
+                );
+            }
+        }
+
+        if ($exportType == 'pdf') {
+            $pdf = resolve('dompdf.wrapper');
+            $pdf->loadView('pdf.vouchers_export', compact('vouchersData'));
+            $zip->addFromString('qr_codes.pdf', $pdf->output());
         }
 
         rewind($fp);
