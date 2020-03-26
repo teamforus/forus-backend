@@ -370,15 +370,7 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
 
-        if ($fund->top_ups()->count() == 0) {
-            $topUp = $fund->top_ups()->create([
-                'code' => FundTopUp::generateCode()
-            ]);
-        } else {
-            $topUp = $fund->top_ups()->first();
-        }
-
-        return new TopUpResource($topUp);
+        return new TopUpResource($fund->top_up_model);
     }
 
     /**
