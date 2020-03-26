@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations;
 
+use App\Models\Organization;
 use App\Rules\Base\BtwRule;
 use App\Rules\Base\IbanRule;
 use App\Rules\Base\KvkRule;
@@ -26,6 +27,10 @@ class StoreOrganizationRequest extends FormRequest
      */
     public function rules()
     {
+        $kvk = $this->input('kvk');
+        $kvkDebug = env("KVK_API_DEBUG", false);
+        $kvkGeneric = $kvk == Organization::GENERIC_KVK;
+
         return [
             'name'                  => 'required|between:2,200',
             'iban'                  => ['required', new IbanRule()],
@@ -36,8 +41,8 @@ class StoreOrganizationRequest extends FormRequest
             'kvk'                   => [
                 'required',
                 'digits:8',
-                !env("KVK_API_DEBUG", false) ? 'unique:organizations,kvk' : null,
-                new KvkRule()
+                $kvkDebug || $kvkGeneric ? null : 'unique:organizations,kvk',
+                $kvkGeneric ? null : new KvkRule(),
             ],
             'btw'                   => ['nullable', 'string', new BtwRule()],
             'website'               => 'nullable|max:200|url',
