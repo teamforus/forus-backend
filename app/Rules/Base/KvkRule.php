@@ -29,7 +29,9 @@ class KvkRule implements Rule
 
         try {
             $valid = app()->make('kvk_api')->kvkNumberData($value);
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            logger()->error($e->getMessage());
+        }
 
         return $valid;
     }

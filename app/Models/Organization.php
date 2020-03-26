@@ -85,6 +85,8 @@ class Organization extends Model
 {
     use HasMedia, HasTags;
 
+    const GENERIC_KVK = 00000000;
+
     /**
      * The attributes that are mass assignable.
      *
