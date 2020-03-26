@@ -26,7 +26,7 @@
         "intervention/image": "2.5.1",
         "kalnoy/nestedset": "5.0.1",
         "laravel-notification-channels/apn": "0.6.0",
-        "laravel-notification-channels/fcm": "1.7.0",
+        "laravel-notification-channels/fcm": "2.0.1",
         "laravel/framework": "6.10.1",
         "laravel/helpers": "1.2.0",
         "laravel/tinker": "1.0.10",
