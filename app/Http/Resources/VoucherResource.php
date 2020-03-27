@@ -98,6 +98,9 @@ class VoucherResource extends Resource
             $voucher->transactions
         );
 
+        $activeUntil = $voucher->type == 'product' ?
+            $voucher->product->expire_at : $voucher->expire_at->subDay();
+
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'returnable'
         ])->merge([
@@ -105,7 +108,9 @@ class VoucherResource extends Resource
                 'date' => $voucher->expire_at->format("Y-m-d H:i:s.00000"),
                 'timeZone' => $voucher->expire_at->timezone->getName(),
             ],
+            'last_active_day' => $activeUntil->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
+            'last_active_day_locale' => format_date_locale($activeUntil),
             'expired' => $voucher->expired,
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'amount' => currency_format($amount),
