@@ -2,23 +2,10 @@
   "extends": [
     "config:base"
   ],
-  "rangeStrategy": "pin",
   "baseBranches": [
     "develop"
   ],
-  "automerge": true,
-  "major": {
-    "automerge": false
-  },
-  "schedule": [
-    "after 10pm and before 6am on every weekday"
-  ],
-  "packageRules": [
-    {
-      "packagePatterns": ["^laravel/"],
-      "enabled": false
-    }
-  ],
+  "lockFileMaintenance": { "enabled": true },
   "packageRules": [
     {
       "packageNames": ["aws-sdk"],
@@ -26,9 +13,6 @@
     }
   ],
   "composer": {
-    "enabled": true
-  },
-  "lockFileMaintenance": {
-    "enabled": true
+    "enabled": false
   }
 }
