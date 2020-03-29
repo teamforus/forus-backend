@@ -29,7 +29,10 @@ class IdentityStoreRequest extends FormRequest
     {
         return [
             'pin_code' => [
-                'nullable',
+                in_array(
+                    client_type(),
+                    config('forus.clients.mobile')
+                ) ? 'nullable' : 'required',
                 new IdentityPinCodeRule()
             ],
             'records' => [
