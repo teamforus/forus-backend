@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
-use App\Rules\IdentityRecordsExistsRule;
+use App\Rules\IdentityEmailExistsRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendVoucherRequest extends FormRequest
@@ -27,7 +27,7 @@ class SendVoucherRequest extends FormRequest
         return [
             'email'     => [
                 'required',
-                new IdentityRecordsExistsRule('primary_email')
+                new IdentityEmailExistsRule()
             ],
         ];
     }

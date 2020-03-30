@@ -10,7 +10,6 @@ use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
-use App\Rules\IdentityRecordsUniqueRule;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
@@ -46,9 +45,10 @@ class IdentityController extends Controller
     public function getPublic()
     {
         $address = auth()->id();
-        $bsn = !empty($this->recordRepo->bsnByAddress(auth_address()));
+        $email = $this->identityRepo->getPrimaryEmail($address);
+        $bsn = !empty($this->recordRepo->bsnByAddress($address));
 
-        return response()->json(compact('address', 'bsn'));
+        return response()->json(compact('address', 'email', 'bsn'));
     }
 
     /**
@@ -66,7 +66,9 @@ class IdentityController extends Controller
         // client type, key and primary email
         $clientKey = implementation_key();
         $clientType = client_type();
-        $primaryEmail = $request->input('records.primary_email');
+        $primaryEmail = $request->input('email', $request->input(
+            'records.primary_email'
+        ));
 
         // build records list and remove bsn and primary_email
         $records = collect($request->input('records', []));
@@ -114,12 +116,14 @@ class IdentityController extends Controller
      */
     public function storeValidateEmail(IdentityStoreValidateEmailRequest $request) {
         $this->middleware('throttle', [10, 1 * 60]);
-        $ruleUnique = new IdentityRecordsUniqueRule('primary_email');
+
         $email = (string) $request->input('email', '');
+        $used = !identity_repo()->isEmailAvailable($email);
 
         return response()->json([
             'email' => [
-                'unique' => $ruleUnique->passes('email', $email),
+                'used' => $used,
+                'unique' =>  $used,
                 'valid' => validate_data(compact('email'), [
                     'email' => 'required|email'
                 ])->passes(),
@@ -206,7 +210,7 @@ class IdentityController extends Controller
     ) {
         $this->middleware('throttle', [10, 1 * 60]);
 
-        $email = $request->input('primary_email');
+        $email = $request->input('email', $request->input('primary_email'));
         $source = sprintf('%s_%s', client_type(), implementation_key());
         $isMobile = in_array(client_type(), config('forus.clients.mobile'));
 

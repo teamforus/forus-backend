@@ -428,13 +428,13 @@ class Voucher extends Model
         }
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $recordRepo = resolve('forus.services.record');
+            $identityRepo = resolve('forus.services.identity');
 
-            $query->where(function (Builder $query) use ($q, $recordRepo) {
+            $query->where(function (Builder $query) use ($q, $identityRepo) {
                 $query->where('note', 'LIKE', "%{$q}%");
                 $query->orWhereIn(
                     'identity_address',
-                    $recordRepo->identityAddressesByEmailSearch($q)
+                    $identityRepo->identityAddressesByEmailSearch($q)
                 );
             });
         }

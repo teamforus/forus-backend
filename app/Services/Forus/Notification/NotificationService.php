@@ -19,6 +19,7 @@ use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
+use App\Mail\User\IdentityEmailVerificationMail;
 use App\Mail\Validations\AddedAsValidatorMail;
 use App\Mail\Validations\NewValidationRequestMail;
 use App\Mail\Vouchers\AssignedVoucherMail;
@@ -886,6 +887,20 @@ class NotificationService
             $topup_code,
             $identifier
         ));
+    }
+
+    /**
+     * Send verification link for identity email
+     *
+     * @param string $email
+     * @param string $link
+     * @return bool|null
+     */
+    public function sendEmailVerificationLink(
+        string $email,
+        string $link
+    ): bool {
+        return $this->sendMail($email, new IdentityEmailVerificationMail($link));
     }
 
     /**
