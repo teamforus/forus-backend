@@ -133,7 +133,7 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
@@ -177,10 +177,12 @@ class IdentityController extends Controller
                 http_build_query(compact('token'))
             );
 
-            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
+            return view()->make('pages.auth.deep_link', array_merge([
+                'type' => 'email_confirmation'
+            ], compact('redirectUrl', 'exchangeToken')));
         }
 
-        return abort(404);
+        abort(404);
     }
 
     /**
@@ -247,6 +249,7 @@ class IdentityController extends Controller
         IdentityAuthorizationEmailRedirectRequest $request,
         string $emailToken
     ) {
+        $exchangeToken = $emailToken;
         $clientType = $request->input('client_type');
         $implementationKey = $request->input('implementation_key');
         $isMobile = $request->input('is_mobile', false);
@@ -282,7 +285,9 @@ class IdentityController extends Controller
         );
 
         if ($isMobile) {
-            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
+            return view()->make('pages.auth.deep_link', array_merge([
+                'type' => 'email_sign_in'
+            ], compact('redirectUrl', 'exchangeToken')));
         }
 
         return redirect($redirectUrl);
