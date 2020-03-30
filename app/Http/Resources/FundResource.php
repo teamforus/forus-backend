@@ -82,8 +82,7 @@ class FundResource extends Resource
                 ]);
             }),
             'fund_amount'    => $fund->amountFixedByFormula(),
-            'implementation' => $fund->fund_config ?
-                new ImplementationResource($fund->fund_config->implementation) : null,
+            'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
         ], $financialData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {
