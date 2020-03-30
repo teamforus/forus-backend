@@ -33,6 +33,7 @@ use Illuminate\Http\Request;
  * @property-read bool $is_granted
  * @property-read string $type
  * @property-read bool $used
+ * @property-read Carbon $last_active_day
  * @property-read \App\Models\Voucher|null $parent
  * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
@@ -191,6 +192,14 @@ class Voucher extends Model
     public function getUsedAttribute() {
         return $this->type == 'product' ? $this->transactions->count() > 0 :
             $this->amount_available_cached == 0;
+    }
+
+    /**
+     * @return Carbon|\Illuminate\Support\Carbon
+     */
+    public function getLastActiveDayAttribute() {
+        return $this->type == 'product' ?
+            $this->product->expire_at : $this->expire_at->subDay();
     }
 
     /**
