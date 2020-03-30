@@ -60,11 +60,13 @@ class KvkApi
                 $this->cache_time,
                 $kvk_number
             ));
-            // todo: add && count($response->data->items) back when implementing something better for larger organization with same kvk (offices applying)
-            if (is_object($response)) {
+
+            if (is_object($response) && (count($response->data->items) > 0)) {
                 return $response;
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            logger()->error($e->getMessage());
+        }
 
         return false;
     }

@@ -910,14 +910,14 @@ class NotificationService
      * @param Mailable $mailable
      * @return bool|null
      */
-    private function sendMail($email, Mailable $mailable) {
+    private function sendMail($email, Mailable $mailable): bool {
         if (config()->get('mail.disable', false)) {
             return true;
         }
 
         try {
             if ($this->isUnsubscribed($email, $mailable)) {
-                return null;
+                return false;
             }
 
             $unsubscribeLink = $this->notificationRepo->makeUnsubLink($email);
