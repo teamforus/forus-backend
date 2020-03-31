@@ -129,7 +129,7 @@ class FundProviderController extends Controller
             $request->input('allow_budget')) {
             $mailService->providerApproved(
                 $fundProvider->organization->email,
-                $fundProvider->organization->emailServiceId(),
+                Implementation::emailFrom(),
                 $fundProvider->fund->name,
                 $fundProvider->organization->name,
                 $fundProvider->fund->organization->name,
@@ -151,7 +151,7 @@ class FundProviderController extends Controller
             !$request->input('allow_budget')) {
             $mailService->providerRejected(
                 $fundProvider->organization->email,
-                $fundProvider->organization->identity_address,
+                Implementation::emailFrom(),
                 $fundProvider->fund->name,
                 $fundProvider->organization->name,
                 $fundProvider->fund->organization->name,

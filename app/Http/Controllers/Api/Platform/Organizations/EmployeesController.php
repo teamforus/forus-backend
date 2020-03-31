@@ -110,7 +110,7 @@ class EmployeesController extends Controller
                 $organization->name,
                 $email,
                 $confirmationLink,
-                $identity_address
+                Implementation::emailFrom()
             );
         }
 

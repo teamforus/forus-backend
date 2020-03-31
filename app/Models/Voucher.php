@@ -221,7 +221,7 @@ class Voucher extends Model
 
         resolve('forus.services.notification')->sendVoucher(
             $email,
-            $this->identity_address,
+            $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
             $fund_product_name,
             $this->amount,
             format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
@@ -243,7 +243,7 @@ class Voucher extends Model
 
         resolve('forus.services.notification')->assignVoucher(
             $email,
-            $this->identity_address,
+            $this->fund->fund_config->implementation->getEmailFrom(),
             $this->fund->name,
             $this->amount,
             format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
@@ -272,7 +272,7 @@ class Voucher extends Model
 
             $notificationService->shareProductVoucher(
                 $voucherToken->voucher->product->organization->email,
-                $voucherToken->voucher->product->organization->emailServiceId(),
+                $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
                 $primaryEmail,
                 $product_name,
                 $voucherToken->address,
@@ -282,7 +282,7 @@ class Voucher extends Model
             if ($sendCopyToUser) {
                 $notificationService->shareProductVoucher(
                     $primaryEmail,
-                    auth()->id(),
+                    $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
                     $primaryEmail,
                     $product_name,
                     $voucherToken->address,
@@ -309,7 +309,7 @@ class Voucher extends Model
 
         resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
             $email,
-            $this->identity_address,
+            $this->fund->fund_config->implementation->getEmailFrom(),
             $fund_name,
             $amount
         );
@@ -353,7 +353,8 @@ class Voucher extends Model
                     $end_date,
                     $phone,
                     $email,
-                    $webshopLink
+                    $webshopLink,
+                    $voucher->fund->fund_config->implementation->getEmailFrom()
                 );
             }
         }

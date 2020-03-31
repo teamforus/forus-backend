@@ -3,6 +3,7 @@
 namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class ProviderApprovedMail
@@ -20,9 +21,9 @@ class ProviderApprovedMail extends ImplementationMail
         string $providerName,
         string $sponsorName,
         string $link,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->fundName = $fundName;
         $this->providerName = $providerName;

@@ -3,6 +3,7 @@
 namespace App\Mail\Auth;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class UserLoginMail
@@ -23,9 +24,9 @@ class UserLoginMail extends ImplementationMail
     public function __construct(
         string $link,
         string $source,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $platform = '';
 

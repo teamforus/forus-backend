@@ -4,6 +4,7 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class VoucherMail
@@ -23,10 +24,9 @@ class SendVoucherMail extends ImplementationMail
         string $qrToken,
         int $voucher_amount,
         string $voucher_expire_minus_day,
-        string $identifier = null
-        
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identifier);
+        parent::__construct($emailFrom);
 
         $this->fundName = $fund_name;
         $this->fund_product_name = $fund_product_name;

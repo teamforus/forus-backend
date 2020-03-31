@@ -95,8 +95,8 @@ class IdentityFallbackController extends Controller
 
             $this->mailService->sendEmailConfirmationLink(
                 $primaryEmail,
-                $confirmationLink,
-                $identityAddress
+                Implementation::emailFrom(),
+                $confirmationLink
             );
             
             // TODO: always require confirmation

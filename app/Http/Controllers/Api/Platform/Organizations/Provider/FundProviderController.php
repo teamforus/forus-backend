@@ -109,7 +109,7 @@ class FundProviderController extends Controller
         foreach ($identities as $identityAddress => $identityEmail) {
             $notificationService->providerApplied(
                 $identityEmail,
-                $identityAddress,
+                Implementation::emailFrom(),
                 $fundProvider->organization->name,
                 $fundProvider->fund->organization->name,
                 $fundProvider->fund->name,

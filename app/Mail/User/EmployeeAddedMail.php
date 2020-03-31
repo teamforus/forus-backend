@@ -3,6 +3,7 @@
 namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 class EmployeeAddedMail extends ImplementationMail
 {
@@ -18,15 +19,15 @@ class EmployeeAddedMail extends ImplementationMail
      * @param string $orgName
      * @param string $platform
      * @param string $confirmationLink
-     * @param string $identityId
+     * @param EmailFrom|null $emailFrom
      */
     public function __construct(
         string $orgName,
         string $platform,
         string $confirmationLink,
-        ?string $identityId
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->orgName = $orgName;
         $this->platform = $platform;
