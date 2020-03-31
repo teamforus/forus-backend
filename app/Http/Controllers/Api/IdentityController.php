@@ -123,7 +123,7 @@ class IdentityController extends Controller
         return response()->json([
             'email' => [
                 'used' => $used,
-                'unique' =>  $used,
+                'unique' => !$used,
                 'valid' => validate_data(compact('email'), [
                     'email' => 'required|email'
                 ])->passes(),
@@ -137,7 +137,7 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
@@ -184,7 +184,7 @@ class IdentityController extends Controller
             return view()->make('pages.auth.deep_link', compact('redirectUrl'));
         }
 
-        return abort(404);
+        abort(404);
     }
 
     /**
