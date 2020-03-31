@@ -8,7 +8,6 @@ use App\Mail\ImplementationMail;
 class AssignedVoucherMail extends ImplementationMail
 {
     private $fundName;
-    private $voucher;
     private $qrToken;
     private $voucher_amount;
     private $voucher_expire_minus_day;

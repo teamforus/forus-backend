@@ -8,7 +8,6 @@ use App\Http\Requests\Api\IdentityAuthorizationEmailRedirectRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
-use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Rules\IdentityRecordsUniqueRule;
@@ -30,27 +29,33 @@ class IdentityController extends Controller
     protected $mailService;
     protected $recordRepo;
 
+    /**
+     * IdentityController constructor.
+     */
     public function __construct() {
         $this->mailService = resolve('forus.services.notification');
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
     }
 
+    /**
+     * Get identity details
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getPublic()
     {
-        $bsnIsKnown = !empty($this->recordRepo->bsnByAddress(auth_address()));
+        $address = auth()->id();
+        $bsn = !empty($this->recordRepo->bsnByAddress(auth_address()));
 
-        return [
-            'address'   => auth()->id(),
-            'bsn'       => $bsnIsKnown
-        ];
+        return response()->json(compact('address', 'bsn'));
     }
 
     /**
-     * Create new identity
+     * Create new identity (registration)
      *
      * @param IdentityStoreRequest $request
-     * @return \Illuminate\Support\Collection
+     * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      */
     public function store(
@@ -58,9 +63,9 @@ class IdentityController extends Controller
     ) {
         $this->middleware('throttle', [10, 1 * 60]);
 
-        // client type, key and target primary email
-        $clientType = client_type('general');
-        $clientKey = implementation_key(config('forus.clients.default'));
+        // client type, key and primary email
+        $clientKey = implementation_key();
+        $clientType = client_type();
         $primaryEmail = $request->input('records.primary_email');
 
         // build records list and remove bsn and primary_email
@@ -73,44 +78,38 @@ class IdentityController extends Controller
         $identityAddress = $this->identityRepo->makeByEmail($primaryEmail, $records);
         $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);
         $exchangeToken = $identityProxy['exchange_token'];
+        $isMobile = in_array($clientType, config('forus.clients.mobile'));
 
-        // registration through webshop or mobile app
-        $isWebshopOrMobile = in_array($clientType, array_merge(
-            config('forus.clients.webshop'),
-            config('forus.clients.mobile')
+        $queryParams = sprintf("?%s", http_build_query(array_merge(
+            $request->only('target'), [
+                'client_type' => $clientType,
+                'implementation_key' => $clientKey,
+                'is_mobile' => $isMobile ? 1 : 0,
+            ]
+        )));
+
+        // build confirmation link
+        $confirmationLink = url(sprintf(
+            '/api/v1/identity/proxy/confirmation/redirect/%s%s',
+            $exchangeToken,
+            $queryParams
         ));
 
         // send confirmation email
-        if ($isWebshopOrMobile) {
-            $isMobile = in_array($clientType, config('forus.clients.mobile'));
+        $this->mailService->sendEmailConfirmationLink(
+            $primaryEmail,
+            $confirmationLink,
+            $identityAddress
+        );
 
-            // build confirmation link
-            $confirmationLink = url(sprintf(
-                '/api/v1/identity/proxy/confirmation/redirect/%s/%s/%s%s',
-                $exchangeToken,
-                $clientType,
-                $clientKey,
-                $isMobile ? '' : ('?' . http_build_query($request->only('target')))
-            ));
-
-            $this->mailService->sendEmailConfirmationLink(
-                $primaryEmail,
-                $confirmationLink,
-                $identityAddress
-            );
-            
-            // TODO: always require confirmation
-            // otherwise (dashboards) skip confirmation part
-        } else {
-            $this->identityRepo->exchangeEmailConfirmationToken($exchangeToken);
-        }
-
-        return collect($identityProxy)->only('access_token');
+        return response()->json(null, 201);
     }
 
     /**
+     * Validate email for registration, format and if it's already in the system
+     *
      * @param IdentityStoreValidateEmailRequest $request
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      */
     public function storeValidateEmail(IdentityStoreValidateEmailRequest $request) {
@@ -118,306 +117,51 @@ class IdentityController extends Controller
         $ruleUnique = new IdentityRecordsUniqueRule('primary_email');
         $email = (string) $request->input('email', '');
 
-        return [
+        return response()->json([
             'email' => [
                 'unique' => $ruleUnique->passes('email', $email),
                 'valid' => validate_data(compact('email'), [
                     'email' => 'required|email'
                 ])->passes(),
             ]
-        ];
+        ], 200);
     }
 
     /**
-     * @param IdentityUpdatePinCodeRequest $request
-     * @return array
-     * @throws \Exception
-     */
-    public function updatePinCode(IdentityUpdatePinCodeRequest $request)
-    {
-        $success = $this->identityRepo->updatePinCode(
-            $request->get('proxyIdentity'),
-            $request->input('pin_code'),
-            $request->input('old_pin_code')
-        );
-
-        return compact('success');
-    }
-
-    /**
-     * @param Request $request
-     * @param string $pinCode
-     * @return array
-     * @throws \Exception
-     */
-    public function checkPinCode(Request $request, string $pinCode)
-    {
-        $success = $this->identityRepo->cmpPinCode(
-            $request->get('proxyIdentity'),
-            $pinCode
-        );
-
-        return compact('success');
-    }
-
-    /**
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
-     * @throws \Exception
-     */
-    public function proxyDestroy(Request $request) {
-        $proxyDestroy = $request->get('proxyIdentity');
-
-        $this->identityRepo->destroyProxyIdentity($proxyDestroy);
-
-        return response()->json([], 200);
-    }
-
-    /**
-     * Make new code authorization proxy identity
+     * Redirect from email confirmation link to one of the front-ends or
+     * show a button with deep link to mobile app
      *
-     * @return array
-     * @throws \Exception
-     */
-    public function proxyAuthorizationCode() {
-        // TODO: Remove legacy transformation when android/ios is ready
-        $proxy = collect(
-            $this->identityRepo->makeAuthorizationCodeProxy()
-        )->only([
-            'access_token', 'exchange_token'
-        ]);
-
-        $proxy['auth_code'] = intval($proxy['exchange_token']);
-
-        return $proxy->toArray();
-    }
-
-    /**
-     * Make new token authorization proxy identity
-     *
-     * @return array
-     * @throws \Exception
-     */
-    public function proxyAuthorizationToken() {
-        // TODO: Remove legacy transformation when android/ios is ready
-        $proxy = collect(
-            $this->identityRepo->makeAuthorizationTokenProxy()
-        )->only([
-            'access_token', 'exchange_token'
-        ]);
-
-        $proxy['auth_token'] = $proxy['exchange_token'];
-
-        return $proxy->toArray();
-    }
-
-    /**
-     * Make new email authorization proxy identity
-     *
-     * @param IdentityAuthorizationEmailTokenRequest $request
-     * @return array
-     * @throws \Exception
-     */
-    public function proxyAuthorizationEmailToken(
-        IdentityAuthorizationEmailTokenRequest $request
-    ) {
-        $this->middleware('throttle', [10, 1 * 60]);
-
-        $email = $request->input('primary_email');
-        $source = $request->input('source');
-
-        $identityId = $this->recordRepo->identityAddressByEmail($email);
-        $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
-
-        $link = url(sprintf(
-            '/api/v1/identity/proxy/redirect/email/%s/%s?target=%s',
-            $source,
-            $proxy['exchange_token'],
-            $request->input('target', '')
-        ));
-
-        $platform = '';
-
-        if (strpos($source, '_webshop') !== false) {
-            $platform = 'de webshop';
-        } else if (strpos($source, '_sponsor') !== false) {
-            $platform = 'het dashboard';
-        } else if (strpos($source, '_provider') !== false) {
-            $platform = 'het dashboard';
-        } else if (strpos($source, '_validator') !== false) {
-            $platform = 'het dashboard';
-        } else if (strpos($source, '_website') !== false) {
-            $platform = 'het website';
-        } else if (strpos($source, 'me_app') !== false) {
-            $platform = 'Me';
-        }
-
-        if (!empty($proxy)) {
-            $this->mailService->loginViaEmail(
-                $email,
-                $identityId,
-                $link,
-                $platform
-            );
-        }
-
-        return [
-            'success' => !empty($proxy)
-        ];
-    }
-
-    /**
-     * Create and activate a short living token for current user
-     *
-     * @return array
-     * @throws \Exception
-     */
-    public function proxyAuthorizationShortToken() {
-        $proxy = $this->identityRepo->makeAuthorizationShortTokenProxy();
-
-        $this->identityRepo->activateAuthorizationShortTokenProxy(
-            auth()->id(), $proxy['exchange_token']
-        );
-
-        return array_only($proxy,[
-            'exchange_token'
-        ]);
-    }
-
-    /**
-     *
-     * @param string $shortToken
-     * @return array
-     */
-    public function proxyExchangeAuthorizationShortToken(
-        string $shortToken
-    ) {
-        return [
-            'access_token' => $this->identityRepo
-                ->exchangeAuthorizationShortTokenProxy($shortToken)
-        ];
-    }
-
-    /**
-     * Authorize code
-     * @param IdentityAuthorizeCodeRequest $request
-     * @return array|
-     */
-    public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request) {
-        $success = $this->identityRepo->activateAuthorizationCodeProxy(
-            auth()->id(), $request->post('auth_code', '')
-        );
-
-        return compact('success');
-    }
-
-    /**
-     * Authorize token
-     * @param IdentityAuthorizeTokenRequest $request
-     * @return array|
-     */
-    public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request) {
-        $success = $this->identityRepo->activateAuthorizationTokenProxy(
-            auth()->id(), $request->post('auth_token', '')
-        );
-
-        return compact('success');
-    }
-
-    /**
-     * Redirect email token
-     *
-     * @param IdentityAuthorizationEmailRedirectRequest $request
-     * @param string $source
-     * @param string $emailToken
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     */
-    public function proxyRedirectEmail(
-        IdentityAuthorizationEmailRedirectRequest $request,
-        string $source,
-        string $emailToken
-    ) {
-        if (Implementation::keysAvailable()->search($source) === false) {
-            abort(404);
-        }
-
-        list($implementation, $frontend) = explode('_', $source);
-
-        $isMobile = in_array($source, config('forus.clients.mobile'));
-
-        if ($isMobile) {
-            $sourceUrl = config('forus.front_ends.app-me_app');
-        } else if ($implementation == 'general') {
-            $sourceUrl = Implementation::general_urls()['url_' . $frontend];
-        } else {
-            $sourceUrl = Implementation::query()->where([
-                'key' => $implementation
-            ])->first()['url_' . $frontend];
-        }
-
-        $redirectUrl = sprintf(
-            $sourceUrl . "identity-restore?%s",
-            http_build_query(array_filter([
-                'token' => $emailToken,
-                'target' => $request->input('target', null)
-            ], function($var) {
-                return !empty($var);
-            }))
-        );
-
-        if ($isMobile) {
-            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
-        }
-
-        return redirect($redirectUrl);
-    }
-
-    /**
-     * Authorize email token
-     * @param string $source
-     * @param string $emailToken
-     * @return array
-     */
-    public function proxyAuthorizeEmail(
-        string $source,
-        string $emailToken
-    ) {
-        if (Implementation::keysAvailable()->search($source) === false) {
-            abort(404);
-        }
-
-        return [
-            'access_token' => $this->identityRepo->activateAuthorizationEmailProxy($emailToken)
-        ];
-    }
-
-    /**
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
-     * @param string $clientType
-     * @param string $implementationKey
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
-        string $exchangeToken,
-        string $clientType = 'webshop',
-        string $implementationKey = 'general'
+        string $exchangeToken
     ) {
         $token = $exchangeToken;
-        $target = $request->input('target', '');
+        $isMobile = $request->input('is_mobile', false);
 
-        if (!Implementation::isValidKey($implementationKey)) {
+        $target = $request->input('target', false);
+        $clientType = $request->input('client_type', '');
+        $implementationKey = $request->input('implementation_key');
+
+        if ((!$isMobile || $clientType) && !in_array(
+            $clientType, array_flatten(config('forus.clients')))) {
+            abort(404, "Invalid client type.");
+        }
+
+        if ((!$isMobile || $clientType) &&
+            !Implementation::isValidKey($implementationKey)) {
             abort(404, "Invalid implementation key.");
         }
 
-        $isMobile = in_array($clientType, config('forus.clients.mobile'));
-        $isWebshopOrDashboard = in_array($clientType, array_merge(
+        $isWebFrontend = in_array($clientType, array_merge(
             config('forus.clients.webshop'),
             config('forus.clients.dashboards')
         ));
 
-        if ($isWebshopOrDashboard) {
+        if ($isWebFrontend) {
             $webShopUrl = Implementation::byKey($implementationKey);
             $webShopUrl = $webShopUrl['url_' . $clientType];
 
@@ -440,15 +184,212 @@ class IdentityController extends Controller
     }
 
     /**
+     * Exchange email confirmation token for access_token
+     *
      * @param $exchangeToken
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function emailConfirmationExchange(
-        $exchangeToken
-    ) {
-        return [
+    public function emailConfirmationExchange(string $exchangeToken) {
+        return response()->json([
             'access_token' => $this->identityRepo->exchangeEmailConfirmationToken($exchangeToken)
-        ];
+        ], 200);
+    }
+
+    /**
+     * Make new email authorization request
+     *
+     * @param IdentityAuthorizationEmailTokenRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function proxyAuthorizationEmailToken(
+        IdentityAuthorizationEmailTokenRequest $request
+    ) {
+        $this->middleware('throttle', [10, 1 * 60]);
+
+        $email = $request->input('primary_email');
+        $source = sprintf('%s_%s', client_type(), implementation_key());
+        $isMobile = in_array(client_type(), config('forus.clients.mobile'));
+
+        $identityId = $this->recordRepo->identityAddressByEmail($email);
+        $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
+
+        $redirect_link = url(sprintf(
+            '/api/v1/identity/proxy/email/redirect/%s?%s',
+            $proxy['exchange_token'],
+            http_build_query(array_merge([
+                'target' => $request->input('target', ''),
+                'is_mobile' => $isMobile ? 1 : 0
+            ], $isMobile ? [] : [
+                'client_type' => client_type(),
+                'implementation_key' => implementation_key(),
+            ]))
+        ));
+
+        $this->mailService->loginViaEmail(
+            $email,
+            $identityId,
+            $redirect_link,
+            $source
+        );
+
+        return response()->json(null, 201);
+    }
+
+    /**
+     * Redirect from email sign in link to one of the front-ends or
+     * show a button with deep link to mobile app
+     *
+     * @param IdentityAuthorizationEmailRedirectRequest $request
+     * @param string $emailToken
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function emailTokenRedirect(
+        IdentityAuthorizationEmailRedirectRequest $request,
+        string $emailToken
+    ) {
+        $clientType = $request->input('client_type');
+        $implementationKey = $request->input('implementation_key');
+        $isMobile = $request->input('is_mobile', false);
+
+        if ((!$isMobile || $clientType) && !in_array(
+            $clientType, array_flatten(config('forus.clients')))) {
+            abort(404, "Invalid client type.");
+        }
+
+        if ((!$isMobile || $clientType) &&
+            !Implementation::isValidKey($implementationKey)) {
+            abort(404, "Invalid implementation key.");
+        }
+
+        if ($isMobile) {
+            $sourceUrl = config('forus.front_ends.app-me_app');
+        } else if ($implementationKey == 'general') {
+            $sourceUrl = Implementation::general_urls()['url_' . $clientType];
+        } else {
+            $sourceUrl = Implementation::query()->where([
+                'key' => $implementationKey
+            ])->first()['url_' . $clientType];
+        }
+
+        $redirectUrl = sprintf(
+            $sourceUrl . "identity-restore?%s",
+            http_build_query(array_filter([
+                'token' => $emailToken,
+                'target' => $request->input('target', null)
+            ], function($var) {
+                return !empty($var);
+            }))
+        );
+
+        if ($isMobile) {
+            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
+        }
+
+        return redirect($redirectUrl);
+    }
+
+    /**
+     * Exchange email sign in token for access_token
+     *
+     * @param string $emailToken
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function emailTokenExchange(
+        string $emailToken
+    ) {
+        return response()->json([
+            'access_token' => $this->identityRepo->activateAuthorizationEmailProxy($emailToken)
+        ], 200);
+    }
+
+    /**
+     * Make new pin code authorization request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function proxyAuthorizationCode() {
+        $proxy = $this->identityRepo->makeAuthorizationCodeProxy();
+
+        return response()->json([
+            'access_token' => $proxy['access_token'],
+            'auth_code' => intval($proxy['exchange_token']),
+        ], 201);
+    }
+
+    /**
+     * Authorize pin code authorization request
+     *
+     * @param IdentityAuthorizeCodeRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request) {
+        $this->identityRepo->activateAuthorizationCodeProxy(
+            auth()->id(), $request->post('auth_code', '')
+        );
+
+        return response()->json(null, 200);
+    }
+
+    /**
+     * Make new auth token (qr-code) authorization request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function proxyAuthorizationToken() {
+        $proxy = $this->identityRepo->makeAuthorizationTokenProxy();
+
+        return response()->json([
+            'access_token' => $proxy['access_token'],
+            'auth_token' => $proxy['exchange_token'],
+        ], 201);
+    }
+
+    /**
+     * Authorize auth code (qr-code) authorization request
+     *
+     * @param IdentityAuthorizeTokenRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request) {
+        $this->identityRepo->activateAuthorizationTokenProxy(
+            auth()->id(), $request->post('auth_token', '')
+        );
+
+        return response()->json(null, 200);
+    }
+
+    /**
+     * Create and activate a short living token for current user
+     *
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
+     */
+    public function proxyAuthorizationShortToken() {
+        $proxy = $this->identityRepo->makeAuthorizationShortTokenProxy();
+
+        $this->identityRepo->activateAuthorizationShortTokenProxy(
+            auth()->id(), $proxy['exchange_token']
+        );
+
+        return response()->json(array_only($proxy,[
+            'exchange_token'
+        ]), 201);
+    }
+
+    /**
+     * Exchange `short_token` for `access_token`
+     *
+     * @param string $shortToken
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function proxyExchangeAuthorizationShortToken(
+        string $shortToken
+    ) {
+        $access_token = $this->identityRepo->exchangeAuthorizationShortTokenProxy(
+            $shortToken
+        );
+
+        return response()->json(compact('access_token'), 200);
     }
 
     /**
@@ -457,16 +398,8 @@ class IdentityController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function checkToken(
-        Request $request
-    ) {
+    public function checkToken(Request $request) {
         $accessToken = $request->header('Access-Token', null);
-
-        // TODO: deprecated, remove when mobile apps are ready
-        if (!$accessToken) {
-            $accessToken = $request->get('access_token', null);
-        }
-
         $proxyIdentityId = $this->identityRepo->proxyIdByAccessToken($accessToken);
         $identityAddress = $this->identityRepo->identityAddressByProxyId($proxyIdentityId);
         $proxyIdentityState = $this->identityRepo->proxyStateById($proxyIdentityId);
@@ -486,5 +419,20 @@ class IdentityController extends Controller
         return response()->json([
             "message" => 'active'
         ]);
+    }
+
+    /**
+     * Destroy an access token
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @throws \Exception
+     */
+    public function proxyDestroy(Request $request) {
+        $proxyDestroy = $request->get('proxyIdentity');
+
+        $this->identityRepo->destroyProxyIdentity($proxyDestroy);
+
+        return response()->json(null, 200);
     }
 }

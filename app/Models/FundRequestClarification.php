@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Services\FileService\Traits\HasFiles;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * App\Models\FundRequestClarification

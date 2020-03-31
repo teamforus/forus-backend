@@ -18,27 +18,22 @@ class VoucherResource extends Resource
     public static $load = [
         'parent',
         'tokens',
-        'transactions.voucher.fund.logo.sizes',
-        'transactions.provider.logo.sizes',
-        'transactions.product.photo.sizes',
-        'product_vouchers.product.photo.sizes',
-        'product.photo.sizes',
+        'transactions.voucher.fund.logo.presets',
+        'transactions.provider.logo.presets',
+        'transactions.product.photo.presets',
+        'product_vouchers.product.photo.presets',
+        'product.photo.presets',
         'product.product_category.translations',
-        'product.organization.logo.sizes',
+        'product.organization.logo.presets',
         'product.organization.offices.schedules',
-        'product.organization.offices.photo.sizes',
-        'product.organization.offices.organization.logo.sizes',
-        // 'product.organization.offices.organization.product_categories.translations',
-        // 'product.organization.product_categories.translations',
+        'product.organization.offices.photo.presets',
+        'product.organization.offices.organization.logo.presets',
         'fund.fund_config.implementation',
-        'fund.product_categories.translations',
         'fund.provider_organizations_approved.offices.schedules',
-        'fund.provider_organizations_approved.offices.photo.sizes',
-        'fund.provider_organizations_approved.offices.organization.logo.sizes',
-        // 'fund.provider_organizations_approved.offices.organization.product_categories.translations',
-        'fund.logo.sizes',
-        'fund.organization.logo.sizes',
-        // 'fund.organization.product_categories.translations',
+        'fund.provider_organizations_approved.offices.photo.presets',
+        'fund.provider_organizations_approved.offices.organization.logo.presets',
+        'fund.logo.presets',
+        'fund.organization.logo.presets',
     ];
 
     /**
@@ -97,9 +92,6 @@ class VoucherResource extends Resource
             'organization' => new OrganizationBasicWithPrivateResource(
                 $fund->organization
             ),
-            'product_categories' => ProductCategoryResource::collection(
-                $fund->product_categories
-            ),
         ]);
 
         $transactions = VoucherTransactionResource::collection(
@@ -115,7 +107,7 @@ class VoucherResource extends Resource
             ],
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'expired' => $voucher->expired,
-            'created_at_locale' => $voucher->created_at_locale,
+            'created_at_locale' => format_datetime_locale($voucher->created_at),
             'amount' => currency_format($amount),
             'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
             'address_printable' => $voucher->tokens->where('need_confirmation', 0)->first()->address,
@@ -134,7 +126,7 @@ class VoucherResource extends Resource
                 return collect($product_voucher)->only([
                     'identity_address', 'fund_id', 'created_at', 'returnable',
                 ])->merge([
-                    'created_at_locale' => $product_voucher->created_at_locale,
+                    'created_at_locale' => format_datetime_locale($product_voucher->created_at),
                     'address' => $product_voucher->tokens->where(
                         'need_confirmation', 1)->first()->address,
                     'amount' => currency_format(

@@ -2,6 +2,8 @@
 
 namespace App\Services\MediaService\Traits;
 
+use App\Services\MediaService\MediaConfig;
+use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -16,7 +18,9 @@ trait HasMedia
      * @param Media $media
      */
     public function attachMedia(Media $media) {
-        if (config('media.sizes.' . $media->type . '.type') == 'single') {
+        $mediaConfig = MediaService::getMediaConfig($media->type);
+
+        if ($mediaConfig->getType() == MediaConfig::TYPE_SINGLE) {
             $this->medias->each(function($media) {
                 resolve('media')->unlink($media);
             });

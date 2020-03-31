@@ -1,7 +1,9 @@
 <?php
 
 return [
-    'mobile' => [
+    'mobile' => env('DISABLE_DEPRECATED_API', false) ? [
+        'me_app-android', 'me_app-ios',
+    ] : [
         'app-me_app', 'me_app-android', 'me_app-ios',
     ],
     'dashboards' => [
@@ -13,5 +15,5 @@ return [
     'websites' => [
         'website',
     ],
-    'default' => 'general',
+    'default' => env('DISABLE_DEPRECATED_API', false) ? null : 'general',
 ];

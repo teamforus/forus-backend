@@ -25,22 +25,34 @@
                 text-align: center;
             }
 
-            .app-missing {
+            .app-missing {}
+
+            .app-missing p {
                 display: none;
+                font: 400 18px/24px sans-serif;
+                margin: 0 0 20px;
+            }
+
+            .app-missing .button {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
             }
 
             .button {
-                background: rgb(17, 134, 191);
-                border: none;
-                color: #fff;
-                font: 500 14px sans-serif;
-                padding: 10px 30px;
-                border-radius: 3px;
-                cursor: pointer;
-                transition: .4s;
-                outline: none;
-                box-shadow: 2px 4px 20px rgba(0,0,0,.1);
+                padding: 5px 15px;
+                box-shadow: 0 5px 65px rgba(0, 0, 0, 0.1);
+                font-style: normal;
+                font: 600 14px/36px "Helvetica";
+                text-align: center;
+                color: #FFFFFF;
+                letter-spacing: 2px;
                 text-decoration: none;
+                background: #315EFD;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all .4s;
             }
 
             .button:hover {

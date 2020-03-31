@@ -23,10 +23,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $children_count
  * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $descendants_with_products
  * @property-read int|null $descendants_with_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
- * @property-read int|null $funds_count
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
  * @property-read int|null $organizations_count
  * @property-read \App\Models\ProductCategory|null $parent
@@ -113,16 +109,6 @@ class ProductCategory extends Model
         return $this->belongsToMany(
             Organization::class,
             'organization_product_categories'
-        );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function funds() {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_product_categories'
         );
     }
 

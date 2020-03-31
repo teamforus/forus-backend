@@ -5,8 +5,6 @@ namespace App\Models;
 /**
  * App\Models\OrganizationProductCategory
  *
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Organization $organization
  * @property-read \App\Models\ProductCategory $product
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationProductCategory newModelQuery()

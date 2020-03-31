@@ -82,10 +82,6 @@ class FundsController extends Controller
             'auto_requests_validation' => $auto_requests_validation
         ])));
 
-        $fund->product_categories()->sync(
-            $request->input('product_categories', [])
-        );
-
         if ($media instanceof Media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);
         }
@@ -169,10 +165,6 @@ class FundsController extends Controller
         }
 
         $fund->update($params);
-
-        $fund->product_categories()->sync(
-            $request->input('product_categories', [])
-        );
 
         if ($media instanceof Media && $media->type == 'fund_logo') {
             $fund->attachMedia($media);

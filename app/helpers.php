@@ -206,10 +206,10 @@ if (!function_exists('authorize')) {
 
 if (!function_exists('implementation_key')) {
     /**
-     * @param null $default
-     * @return array|string
+     * @param string $default
+     * @return array|string|null
      */
-    function implementation_key($default = null) {
+    function implementation_key($default = 'general') {
         return request()->header('Client-Key', $default);
     }
 }
@@ -631,5 +631,16 @@ if (!function_exists('identity_repo')) {
     function identity_repo()
     {
         return resolve('forus.services.identity');
+    }
+}
+
+if (!function_exists('query_with_trashed')) {
+    /**
+     * @param Builder|\Illuminate\Database\Eloquent\SoftDeletes|\Illuminate\Database\Eloquent\Relations\Relation $builder
+     * @return mixed
+     */
+    function query_with_trashed($builder)
+    {
+        return $builder->withTrashed();
     }
 }

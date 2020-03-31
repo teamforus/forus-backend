@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\Organizations\OrganizationCreated;
 use App\Events\Organizations\OrganizationUpdated;
 use App\Models\Employee;
+use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Events\Dispatcher;
 
@@ -20,10 +21,6 @@ class OrganizationSubscriber
     public function onOrganizationCreated(OrganizationCreated $organizationCreated) {
         $organization = $organizationCreated->getOrganization();
 
-        $organization->validators()->create([
-            'identity_address' => $organization->identity_address
-        ]);
-
         /** @var Employee $employee */
         $employee = $organization->employees()->firstOrCreate([
             'identity_address' => $organization->identity_address
@@ -32,14 +29,18 @@ class OrganizationSubscriber
         $employee->roles()->sync(Role::pluck('id'));
 
         try {
-            $offices = resolve('kvk_api')->getOffices($organization->kvk);
+            $kvkService = resolve('kvk_api');
 
-            foreach (collect($offices ?: []) as $office) {
-                $organization->offices()->create(
-                    collect($office)->only([
-                        'address', 'lon', 'lat'
-                    ])->toArray()
-                );
+            if ($organization->kvk != Organization::GENERIC_KVK) {
+                $offices = $kvkService->getOffices($organization->kvk);
+
+                foreach (collect($offices ?: []) as $office) {
+                    $organization->offices()->create(
+                        collect($office)->only([
+                            'address', 'lon', 'lat'
+                        ])->toArray()
+                    );
+                }
             }
         } catch (\Exception $e) { }
     }

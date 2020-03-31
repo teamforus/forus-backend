@@ -34,6 +34,7 @@ class ProductsController extends Controller
     {
         $this->authorize('viewAnyPublic', Product::class);
 
+
         $products = Product::search($request)->has('medias')->take(6);
         $products->groupBy('organization_id')->distinct()->inRandomOrder();
         $resultProducts = $products->with(ProductResource::$load)->get();

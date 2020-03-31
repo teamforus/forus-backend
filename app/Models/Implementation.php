@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Services\DigIdService\Repositories\DigIdRepo;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
+use App\Services\MediaService\MediaConfig;
+use App\Services\MediaService\MediaImageConfig;
+use App\Services\MediaService\MediaImagePreset;
+use App\Services\MediaService\MediaPreset;
+use App\Services\MediaService\MediaService;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
@@ -96,10 +99,10 @@ class Implementation extends Model
     }
 
     /**
-     * @return array|string
+     * @return array|string|null
      */
     public static function activeKey() {
-        return request()->header('Client-Key', config('forus.clients.default'));
+        return request()->header('Client-Key', 'general');
     }
 
     /**
@@ -114,7 +117,7 @@ class Implementation extends Model
      * @return \Illuminate\Support\Collection
      */
     public static function byKey($key) {
-        if ($key == config('forus.clients.default')) {
+        if ($key == 'general') {
             return collect(self::general_urls());
         }
 
@@ -173,7 +176,7 @@ class Implementation extends Model
     public static function queryFundsByState($states) {
         $states = (array) $states;
 
-        if (self::activeKey() == config('forus.clients.default')) {
+        if (self::activeKey() == 'general') {
             return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
@@ -194,25 +197,11 @@ class Implementation extends Model
     }
 
     /**
-     * @return Collection
-     */
-    public static function activeProductCategories() {
-        if (self::activeKey() == config('forus.clients.default')) {
-            return ProductCategory::all();
-        }
-
-        return ProductCategory::query()->whereIn(
-            'id', FundProductCategory::query()->whereIn(
-            'fund_id', self::activeFunds()->pluck('id')
-        )->pluck('product_category_id')->unique())->get();
-    }
-
-    /**
      * @return \Illuminate\Support\Collection
      */
     public static function implementationKeysAvailable() {
         return self::query()->pluck('key')->merge([
-            config('forus.clients.default')
+            'general'
         ]);
     }
 
@@ -339,10 +328,21 @@ class Implementation extends Model
         $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
 
         if (is_array($config)) {
-            $config['media'] = collect(config('media.sizes'))->map(function($size) {
-                return collect($size)->only([
-                    'aspect_ratio', 'size'
-                ]);
+            $config['media'] = collect(MediaService::getMediaConfigs())->map(function(
+                MediaImageConfig $mediaConfig
+            ) {
+                return [
+                    'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
+                    'size' => collect($mediaConfig->getPresets())->map(function(
+                        MediaPreset $mediaPreset
+                    ) {
+                        return $mediaPreset instanceof MediaImagePreset ? [
+                            $mediaPreset->width,
+                            $mediaPreset->height,
+                            $mediaPreset->preserve_aspect_ratio,
+                        ] : null;
+                    })
+                ];
             });
 
             $implementation = Implementation::active();
@@ -361,10 +361,10 @@ class Implementation extends Model
 
             $config['map'] = [
                 'lon' => doubleval(
-                    $implementation['lon'] ?: config('forus.front_ends.map.lon')
+                    $implementation['lon'] ?? config('forus.front_ends.map.lon')
                 ),
                 'lat' => doubleval(
-                    $implementation['lat'] ?: config('forus.front_ends.map.lat')
+                    $implementation['lat'] ?? config('forus.front_ends.map.lat')
                 )
             ];
 
@@ -377,7 +377,7 @@ class Implementation extends Model
     public static function searchProviders(Request $request) {
         $query = Organization::query();
 
-        if (Implementation::activeKey() != config('forus.clients.default')) {
+        if (Implementation::activeKey() != 'general') {
             $funds = Implementation::activeModel()->funds()->where([
                 'state' => Fund::STATE_ACTIVE
             ])->pluck('fund_id');

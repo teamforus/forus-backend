@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 class ClientTypeMiddleware
 {
     /**
+     * @var array
+     */
+    private $except = [
+        'emailSignUpRedirect',
+        'emailSignInRedirect',
+    ];
+
+    /**
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -16,7 +24,11 @@ class ClientTypeMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!in_array($this->activeType($request), $this->availableTypes())) {
+        $exclude = in_array($request->route()->getName(), $this->except);
+
+        if (!$exclude && !in_array(
+            $this->activeType($request),
+            $this->availableTypes())) {
             return response()->json([
                 "message" => 'unknown_client_type'
             ])->setStatusCode(403);
@@ -25,10 +37,17 @@ class ClientTypeMiddleware
         return $next($request);
     }
 
+    /**
+     * @return array
+     */
     private function availableTypes() {
-        return array_flatten(config('forus.clients'));
+        return array_filter(array_flatten(config('forus.clients')));
     }
 
+    /**
+     * @param Request $request
+     * @return array|string|null
+     */
     private function activeType(Request $request) {
         return $request->header('Client-Type', config('forus.clients.default'));
     }

@@ -12,8 +12,6 @@ namespace App\Models;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Models\Product $product
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct newQuery()

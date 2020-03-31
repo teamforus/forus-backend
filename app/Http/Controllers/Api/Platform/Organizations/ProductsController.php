@@ -81,39 +81,6 @@ class ProductsController extends Controller
             $product->attachMedia($media);
         }
 
-        $notifiedIdentities = [];
-
-        foreach ($organization->supplied_funds_approved as $fund) {
-            $productCategories = $fund->product_categories()->pluck(
-                'product_categories.id'
-            );
-
-            if ($productCategories->search(
-                $product->product_category_id) !== false
-            ) {
-                if (in_array(
-                    $fund->organization->identity_address,
-                    $notifiedIdentities
-                )) {
-                    continue;
-                }
-
-                array_push(
-                    $notifiedIdentities,
-                    $fund->organization->identity_address
-                );
-
-                resolve('forus.services.notification')->newProductAdded(
-                    $fund->organization->email,
-                    $fund->organization->emailServiceId(),
-                    $fund->organization->name,
-                    $fund->name,
-                    $fund->fund_config->implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL')
-
-                );
-            }
-        }
-
         return new ProductResource($product);
     }
 

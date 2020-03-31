@@ -5,7 +5,6 @@ namespace App\Http\Requests\Api\Platform\Prevalidations;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\PrevalidationDataRule;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UploadPrevalidationsRequest extends FormRequest

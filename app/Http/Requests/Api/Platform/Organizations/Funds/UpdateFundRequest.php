@@ -46,8 +46,6 @@ class UpdateFundRequest extends FormRequest
         return array_merge([
             'name'                  => 'required|between:2,200',
             'description'           => 'nullable|string|max:140',
-            'product_categories'    => 'present|array',
-            'product_categories.*'  => 'exists:product_categories,id',
             'notification_amount'   => 'nullable|numeric',
         ], [
             'auto_requests_validation' => [

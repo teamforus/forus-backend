@@ -4,11 +4,8 @@ namespace App\Services\Forus\Notification\Repositories;
 
 use App\Mail\Auth\UserLoginMail;
 use App\Mail\Funds\FundBalanceWarningMail;
-use App\Mail\Funds\FundCreatedMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
-use App\Mail\Funds\NewFundApplicableMail;
-use App\Mail\Funds\ProductAddedMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
@@ -48,15 +45,12 @@ class NotificationRepo implements INotificationRepo
 
         // Mails for sponsors/providers
         'funds.new_fund_started' => FundStartedMail::class,
-        'funds.new_fund_created' => FundCreatedMail::class,
-        'funds.new_fund_applicable' => NewFundApplicableMail::class,
         'funds.provider_applied' => ProviderAppliedMail::class,
         'funds.provider_approved' => ProviderApprovedMail::class,
         'funds.provider_rejected' => ProviderRejectedMail::class,
         'funds.product_sold_out' => ProductSoldOutMail::class,
         'funds.product_reserved' => ProductReservedMail::class,
         'funds.fund_expires' => FundExpiredMail::class,
-        'funds.product_added' => ProductAddedMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
 
         // Authorization emails
@@ -82,7 +76,8 @@ class NotificationRepo implements INotificationRepo
      * @var array
      */
     protected static $mandatoryEmail = [
-        'auth.user_login', 'auth.email_activation', 'vouchers.share_voucher', 'vouchers.send_voucher',
+        'auth.user_login', 'auth.email_activation', 'vouchers.share_voucher',
+        'vouchers.send_voucher', 'funds.balance_warning',
     ];
 
     /**

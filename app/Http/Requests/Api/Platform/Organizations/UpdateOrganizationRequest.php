@@ -33,6 +33,10 @@ class UpdateOrganizationRequest extends FormRequest
      */
     public function rules()
     {
+        $kvk = $this->input('kvk');
+        $kvkDebug = env("KVK_API_DEBUG", false);
+        $kvkGeneric = $kvk == Organization::GENERIC_KVK;
+
         $kvkUniqueRule = $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
             $this->organization->id
         ): Rule::unique('organizations', 'kvk');
@@ -47,8 +51,8 @@ class UpdateOrganizationRequest extends FormRequest
             'kvk'                   => [
                 'required',
                 'digits:8',
-                !env("KVK_API_DEBUG", false) ? $kvkUniqueRule : null,
-                new KvkRule()
+                $kvkDebug || $kvkGeneric ? null : $kvkUniqueRule,
+                $kvkGeneric ? null : new KvkRule(),
             ],
             'btw'                   => [new BtwRule()],
             'website'               => 'nullable|max:200|url',

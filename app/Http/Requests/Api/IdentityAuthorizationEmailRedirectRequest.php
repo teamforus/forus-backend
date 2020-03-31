@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IdentityAuthorizationEmailRedirectRequest extends FormRequest
 {
@@ -27,7 +28,11 @@ class IdentityAuthorizationEmailRedirectRequest extends FormRequest
             'target' => [
                 'nullable',
                 'alpha_dash',
-            ]
+            ],
+            'is_mobile' => env('DISABLE_DEPRECATED_API', false) ? [
+                 'present',
+                 Rule::in(1, 0)
+            ] : [],
         ];
     }
 }

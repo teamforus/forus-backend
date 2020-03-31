@@ -20,8 +20,6 @@ use App\Services\FileService\Traits\HasFiles;
  * @property-read \App\Models\FundRequest $fund_request
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $fund_request_clarifications
  * @property-read int|null $fund_request_clarifications_count
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord query()

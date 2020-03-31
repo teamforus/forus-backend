@@ -170,6 +170,23 @@ class RecordRepo implements IRecordRepo
     }
 
     /**
+     * Search identity addresses by email substring
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressesByEmailSearch(
+        string $search
+    ): array {
+        $records = Record::query()->where([
+            'record_type_id' => $this->getTypeIdByKey('primary_email'),
+        ])->where('value', 'LIKE', "%{$search}%")->get();
+
+        return $records->map(function(Record $record) {
+            return $record->identity_address;
+        })->toArray();
+    }
+
+    /**
      * Get bsn by identity_address
      * @param string $identityAddress
      * @return string|null

@@ -32,7 +32,10 @@ class FundProviderQuery
                         $builder->orWhereHas('fund_provider_products', function(
                             Builder $builder
                         ) use ($product_id) {
-                            $builder->whereIn('fund_provider_products.id', (array) $product_id);
+                            $builder->whereIn(
+                                'fund_provider_products.product_id',
+                                (array) $product_id
+                            );
                         });
                     } else {
                         $builder->orWhereHas('fund_provider_products');
@@ -46,13 +49,24 @@ class FundProviderQuery
                         $builder->orWhereHas('fund_provider_products', function(
                             Builder $builder
                         ) use ($product_id) {
-                            $builder->whereIn('fund_provider_products.id', (array) $product_id);
+                            $builder->whereIn(
+                                'fund_provider_products.product_id',
+                                (array) $product_id
+                            );
                         });
                     } else {
                         $builder->orWhereHas('fund_provider_products');
                     }
                 }
             });
+
+            if ($type == 'product' && $product_id) {
+                $builder->whereHas('organization.products', function(
+                    Builder $builder
+                ) use ($product_id) {
+                    $builder->whereIn('products.id', (array) $product_id);
+                });
+            }
         });
     }
 

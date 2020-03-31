@@ -38,8 +38,6 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
  * @property-read int|null $funds_voucher_transactions_count
- * @property-read string|null $created_at_locale
- * @property-read string|null $updated_at_locale
  * @property-read \App\Services\MediaService\Models\Media $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
@@ -59,8 +57,6 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $supplied_funds_approved_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Validator[] $validators
- * @property-read int|null $validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -88,6 +84,8 @@ use Illuminate\Database\Query\Builder;
 class Organization extends Model
 {
     use HasMedia, HasTags;
+
+    const GENERIC_KVK = 00000000;
 
     /**
      * The attributes that are mass assignable.
@@ -221,13 +219,6 @@ class Organization extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function validators() {
-        return $this->hasMany(Validator::class);
-    }
-
-    /**
      * Get organization logo
      * @return MorphOne
      */
@@ -271,7 +262,7 @@ class Organization extends Model
         return $this->employees()->whereHas('roles.permissions', function(
             \Illuminate\Database\Eloquent\Builder $query
         ) use ($permission) {
-            $query->whereIn('key', (array) $permission);
+            $query->whereIn('permissions.key', (array) $permission);
         });
     }
 
@@ -324,6 +315,20 @@ class Organization extends Model
         $roles = $this->identityRoles($identityAddress);
 
         return $roles->pluck('permissions')->flatten()->unique('id');
+    }
+
+    /**
+     * Check if identity is organization employee
+     * @param $identityAddress string
+     * @return bool
+     */
+    public function isEmployee(
+        string $identityAddress = null
+    ) {
+        return $identityAddress && $this->employees()->whereIn(
+            'identity_address',
+            (array) $identityAddress
+        )->exists();
     }
 
     /**

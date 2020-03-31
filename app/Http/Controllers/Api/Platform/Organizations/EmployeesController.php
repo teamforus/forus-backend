@@ -14,15 +14,25 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
+/**
+ * Class EmployeesController
+ * @property IRecordRepo $recordRepo
+ * @property IIdentityRepo $identityRepo
+ * @package App\Http\Controllers\Api\Platform\Organizations
+ */
 class EmployeesController extends Controller
 {
+    private $recordRepo;
     private $identityRepo;
     private $notificationRepo;
 
     public function __construct(
+        IRecordRepo $recordRepo,
         IIdentityRepo $identityRepo
     ) {
+        $this->recordRepo = $recordRepo;
         $this->identityRepo = $identityRepo;
         $this->notificationRepo = resolve('forus.services.notification');
     }
@@ -58,8 +68,8 @@ class EmployeesController extends Controller
      *
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
-     * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Excep tion
+     * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreEmployeeRequest $request,
@@ -68,9 +78,9 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('store', [Employee::class, $organization]);
 
-        $identity_address = resolve(
-            'forus.services.record'
-        )->identityAddressByEmail($request->input('email'));
+        $email = $request->input('email');
+        $target = $request->input('target', null);
+        $identity_address = $this->recordRepo->identityAddressByEmail($email);
 
         if ($identity_address) {
             if ($organization->employees()->where([
@@ -85,20 +95,15 @@ class EmployeesController extends Controller
                 ], 422);
             }
         } else {
-            $email = $request->input('email');
-
             $identity_address = $this->identityRepo->makeByEmail($email);
             $identityProxy = $this->identityRepo->makeIdentityPoxy($identity_address);
+            $clientType = client_type('general');
 
-            $clientType = $request->headers->get('Client-Type', 'general');
-            $implementationKey = Implementation::activeKey();
-
-            $confirmationLink = url(
-                '/api/v1/identity/proxy/confirmation/redirect/' . collect([
-                    $identityProxy['exchange_token'],
-                    $clientType,
-                    $implementationKey
-                ])->implode('/')
+            $confirmationLink = sprintf(
+                "%s/confirmation/email/%s?%s",
+                rtrim(Implementation::active()['url_' . $clientType], '/'),
+                $identityProxy['exchange_token'],
+                http_build_query(compact('target'))
             );
 
             $this->notificationRepo->sendEmailEmployeeAdded(

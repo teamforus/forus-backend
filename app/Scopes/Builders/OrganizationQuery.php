@@ -4,17 +4,22 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Organization;
+use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationQuery
 {
     /**
      * @param Builder $builder
-     * @param $identityAddress
+     * @param string $identityAddress
      * @param $permissions
      * @return Organization|Builder|mixed
      */
-    public static function whereHasPermissions(Builder $builder, $identityAddress, $permissions) {
+    public static function whereHasPermissions(
+        Builder $builder,
+        string $identityAddress,
+        $permissions
+    ) {
         return $builder->where(function(
             Builder $builder
         ) use ($identityAddress, $permissions) {
@@ -29,6 +34,34 @@ class OrganizationQuery
                     $builder->whereIn('permissions.key', (array) $permissions);
                 });
             })->orWhere('organizations.identity_address', $identityAddress);
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return Organization|Builder
+     */
+    public static function whereHasPermissionToScanVoucher(
+        Builder $query,
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return self::whereHasPermissions(
+            $query, $identity_address,'scan_vouchers'
+        )->whereHas('organization_funds', function(
+            Builder $builder
+        ) use ($voucher) {
+            if ($voucher->type == Voucher::TYPE_PRODUCT) {
+                FundProviderQuery::whereApprovedForFundsFilter(
+                    $builder, $voucher->fund_id, 'product', $voucher->product_id
+                );
+            } else {
+                FundProviderQuery::whereApprovedForFundsFilter(
+                    $builder, $voucher->fund_id, 'budget'
+                );
+            }
         });
     }
 }

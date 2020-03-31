@@ -20,7 +20,9 @@ class AddOrganizationOwnersToEmployeesList extends Migration
             $employee = $organization->employees()->firstOrCreate($query);
             $employee->roles()->sync(Role::pluck('id'));
 
-            $organization->validators()->firstOrCreate($query);
+            if (method_exists($organization, 'validators')) {
+                $organization->validators()->firstOrCreate($query);
+            }
         });
     }
 

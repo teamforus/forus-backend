@@ -245,11 +245,13 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    // deprecated, remove in next releases
-    $router->get(
-        'vouchers/{voucher_token_address}/provider',
-        "Api\Platform\Provider\VouchersController@show"
-    );
+    // TODO: deprecated, remove in next releases
+    if (!env('DISABLE_DEPRECATED_API', FALSE)) {
+        $router->get(
+            'vouchers/{voucher_token_address}/provider',
+            "Api\Platform\Provider\VouchersController@show"
+        );
+    }
 
     $router->group(['prefix' => '/provider'], function() use ($router) {
         $router->resource(
@@ -259,7 +261,7 @@ $router->group(['middleware' => [
                 'show'
             ],
             'parameters' => [
-                'vouchers' => 'budget_voucher_token_address',
+                'vouchers' => 'voucher_token_address',
             ]
         ]);
 
@@ -458,14 +460,6 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
-        'organizations.validators',
-        "Api\Platform\Organizations\ValidatorsController", [
-        'only' => [
-            'index', 'show', /*'store', 'update', 'destroy'*/
-        ]
-    ]);
-
-    $router->resource(
         'organizations.employees',
         "Api\Platform\Organizations\EmployeesController", [
         'only' => [
@@ -592,14 +586,6 @@ $router->group(['middleware' => [
     );
 
     $router->resource(
-        'validators',
-        "Api\Platform\ValidatorsController", [
-        'only' => [
-            'index'
-        ]
-    ]);
-
-    $router->resource(
         'employees',
         "Api\Platform\EmployeesController", [
         'only' => [
@@ -607,21 +593,6 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    $router->resource(
-        'validator-requests',
-        "Api\Platform\ValidatorRequestController", [
-        'only' => [
-            'index', 'show', 'store'
-        ]
-    ]);
-
-    $router->resource(
-        'validator/validator-requests',
-        "Api\Platform\Validator\ValidatorRequestController", [
-        'only' => [
-            'index', 'show', 'update'
-        ]
-    ]);
 
     $router->post(
         '/devices/register-push',
