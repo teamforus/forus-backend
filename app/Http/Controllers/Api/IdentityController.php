@@ -123,7 +123,7 @@ class IdentityController extends Controller
         return response()->json([
             'email' => [
                 'used' => $used,
-                'unique' =>  $used,
+                'unique' => !$used,
                 'valid' => validate_data(compact('email'), [
                     'email' => 'required|email'
                 ])->passes(),
