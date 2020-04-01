@@ -75,15 +75,7 @@ class EmployeeSubscriber
      * @param Employee $employee
      * @throws \Exception
      */
-    private function updateValidatorEmployee(Employee $employee) {
-        /*$this->mailService->youAddedAsValidator(
-            $this->recordService->primaryEmailByAddress(
-                $employee->identity_address
-            ),
-            $employee->identity_address,
-            $organization->name
-        );*/
-    }
+    private function updateValidatorEmployee(Employee $employee) {}
 
     /**
      * The events dispatcher

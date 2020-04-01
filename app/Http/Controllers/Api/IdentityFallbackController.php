@@ -241,7 +241,7 @@ class IdentityFallbackController extends Controller
         if (!empty($proxy)) {
             $this->mailService->loginViaEmail(
                 $email,
-                $identityId,
+                Implementation::emailFrom(),
                 $confirmation_link,
                 $source
             );

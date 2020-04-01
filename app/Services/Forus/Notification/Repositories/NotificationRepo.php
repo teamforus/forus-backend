@@ -10,8 +10,6 @@ use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\User\EmailActivationMail;
-use App\Mail\Validations\AddedAsValidatorMail;
-use App\Mail\Validations\NewValidationRequestMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
@@ -38,10 +36,6 @@ class NotificationRepo implements INotificationRepo
         'vouchers.send_voucher' => SendVoucherMail::class,
         'vouchers.share_voucher' => ShareProductVoucherMail::class,
         'vouchers.payment_success' => PaymentSuccessMail::class,
-
-        // Validators
-        'validations.new_validation_request' => NewValidationRequestMail::class,
-        'validations.you_added_as_validator' => AddedAsValidatorMail::class,
 
         // Mails for sponsors/providers
         'funds.new_fund_started' => FundStartedMail::class,
