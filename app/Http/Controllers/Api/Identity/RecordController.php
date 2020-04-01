@@ -12,6 +12,10 @@ class RecordController extends Controller
 {
     private $recordRepo;
 
+    const HIDDEN_RECORD_TYPES = [
+        'bsn'
+    ];
+
     /**
      * RecordController constructor.
      * @param IRecordRepo $recordRepo
@@ -29,11 +33,13 @@ class RecordController extends Controller
      */
     public function index(Request $request)
     {
-        return $this->recordRepo->recordsList(
+        return array_filter($this->recordRepo->recordsList(
             auth_address(),
             $request->get('type', null),
             $request->get('record_category_id', null)
-        );
+        ), function($record) {
+            return !in_array($record['key'], self::HIDDEN_RECORD_TYPES);
+        });
     }
 
     /**
@@ -67,18 +73,16 @@ class RecordController extends Controller
     public function show(
         int $recordId
     ) {
-        $identity = auth_address();
-
-        if (empty($this->recordRepo->recordGet(
-            $identity, $recordId
-        ))) {
-            abort(404, trans('records.codes.404'));
-        }
-
-        return $this->recordRepo->recordGet(
+        $record = $this->recordRepo->recordGet(
             auth_address(),
             $recordId
         );
+
+        if (empty($record) || in_array($record['key'], self::HIDDEN_RECORD_TYPES)) {
+            abort(404, trans('records.codes.404'));
+        }
+
+        return $record;
     }
 
     /**
