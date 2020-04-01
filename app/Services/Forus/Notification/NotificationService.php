@@ -20,8 +20,6 @@ use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
 use App\Mail\User\IdentityEmailVerificationMail;
-use App\Mail\Validations\AddedAsValidatorMail;
-use App\Mail\Validations\NewValidationRequestMail;
 use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Vouchers\FundStatisticsMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
@@ -297,44 +295,6 @@ class NotificationService
             $provider_name,
             $sponsor_name,
             $phone_number,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user that now he can validate records for the given sponsor
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $sponsor_name
-     * @return bool|null
-     */
-    public function youAddedAsValidator(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $sponsor_name
-    ) {
-        return $this->sendMail($email, new AddedAsValidatorMail(
-            $sponsor_name,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user about new validation request on validation dashboard
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $validator_dashboard_link
-     * @return bool|null
-     */
-    public function newValidationRequest(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $validator_dashboard_link
-    ) {
-        return $this->sendMail($email, new NewValidationRequestMail(
-            $validator_dashboard_link,
             $emailFrom
         ));
     }
@@ -816,10 +776,10 @@ class NotificationService
      * @return bool|null
      */
     public function sendEmailEmployeeAdded(
-        string $orgName,
         string $email,
-        string $confirmationLink,
-        ?EmailFrom $emailFrom
+        ?EmailFrom $emailFrom,
+        string $orgName,
+        string $confirmationLink
     ) {
         return $this->sendMail($email, new EmployeeAddedMail(
             $orgName,
@@ -833,6 +793,7 @@ class NotificationService
      * Notify user that voucher is about to expire
      *
      * @param string $email
+     * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $sponsor_name
      * @param string $start_date
@@ -840,19 +801,18 @@ class NotificationService
      * @param string $sponsor_phone
      * @param string $sponsor_email
      * @param string $webshopLink
-     * @param EmailFrom|null $emailFrom
      * @return bool|null
      */
     public function voucherExpireSoon(
         string $email,
+        ?EmailFrom $emailFrom,
         string $fund_name,
         string $sponsor_name,
         string $start_date,
         string $end_date,
         string $sponsor_phone,
         string $sponsor_email,
-        string $webshopLink,
-        ?EmailFrom $emailFrom
+        string $webshopLink
     ) {
         return $this->sendMail($email, new FundExpiredMail(
             $fund_name,
@@ -877,7 +837,7 @@ class NotificationService
      * @param string $notification_amount
      * @param string $budget_left
      * @param string $iban
-     * @param string $topup_code
+     * @param string $top_up_code
      * @return bool
      */
     public function fundBalanceWarning(
@@ -889,7 +849,7 @@ class NotificationService
         string $notification_amount,
         string $budget_left,
         string $iban,
-        string $topup_code
+        string $top_up_code
     ): bool {
         return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
@@ -898,7 +858,7 @@ class NotificationService
             $budget_left,
             $link,
             $iban,
-            $topup_code,
+            $top_up_code,
             $emailFrom
         ));
     }

@@ -347,14 +347,14 @@ class Voucher extends Model
 
                 $notificationService->voucherExpireSoon(
                     $primaryEmail,
+                    $voucher->fund->fund_config->implementation->getEmailFrom(),
                     $fund_name,
                     $sponsor_name,
                     $start_date,
                     $end_date,
                     $phone,
                     $email,
-                    $webshopLink,
-                    $voucher->fund->fund_config->implementation->getEmailFrom()
+                    $webshopLink
                 );
             }
         }
