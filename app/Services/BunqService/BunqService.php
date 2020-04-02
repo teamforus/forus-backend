@@ -306,7 +306,9 @@ class BunqService
      * @return array|Payment[]
      */
     public function getPayments() {
-        return Payment::listing(null)->getValue();
+        return Payment::listing(null, [
+            'count' => 200
+        ])->getValue();
     }
 
     /**
