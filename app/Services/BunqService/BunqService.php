@@ -307,7 +307,7 @@ class BunqService
      */
     public function getPayments() {
         return Payment::listing(null, [
-            'count' => 200
+            'count' => 100
         ])->getValue();
     }
 
