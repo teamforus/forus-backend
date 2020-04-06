@@ -433,8 +433,8 @@ class Fund extends Model
             'organization_id',
             'organization_id',
             'id'
-        )->whereHas('roles', function(Builder $builder) {
-            $builder->where('key', 'validation');
+        )->whereHas('roles.permissions', function(Builder $builder) {
+            $builder->where('key', 'validate_records');
         });
     }
 
