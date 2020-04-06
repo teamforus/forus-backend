@@ -3,6 +3,7 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class ProductReservedUserMail
@@ -26,9 +27,9 @@ class ProductReservedUserMail extends ImplementationMail
         string $qrToken,
         string $providerOrganizationName,
         string $expireAtMinus1Day,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->productName = $productName;
         $this->productPrice = $productPrice;

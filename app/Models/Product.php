@@ -306,7 +306,7 @@ class Product extends Model
         $mailService = resolve('forus.services.notification');
         $mailService->productSoldOut(
             $this->organization->email,
-            $this->organization->emailServiceId(),
+            Implementation::emailFrom(),
             $this->name,
             Implementation::active()['url_provider']
         );
@@ -321,7 +321,7 @@ class Product extends Model
         $mailService = resolve('forus.services.notification');
         $mailService->productReserved(
             $this->organization->email,
-            $this->organization->emailServiceId(),
+            Implementation::emailFrom(),
             $this->name,
             format_date_locale($voucher->expire_at)
         );
@@ -342,7 +342,7 @@ class Product extends Model
 
         $mailService->productReservedUser(
             $recordService->primaryEmailByAddress($voucher->identity_address),
-            $this->organization->emailServiceId(),
+            $voucher->fund->fund_config->implementation->getEmailFrom(),
             $this->name,
             $this->price,
             $this->organization->phone,

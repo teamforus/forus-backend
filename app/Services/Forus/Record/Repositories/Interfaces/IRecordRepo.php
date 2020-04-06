@@ -20,7 +20,6 @@ interface IRecordRepo {
     */
     public function getRecordTypes();
 
-
     /**
      * Check if record type and value is unique
      * @param string $recordTypeKey
@@ -49,7 +48,6 @@ interface IRecordRepo {
         string $excludeIdentity = null
     );
 
-
     /**
      * Get identity id by email record
      * @param string $email
@@ -69,13 +67,16 @@ interface IRecordRepo {
     );
 
     /**
-     * Search identity addresses by email substring
-     * @param string $search
-     * @return array
+     * Change identity primary_email record value
+     *
+     * @param string $identityAddress
+     * @param string $email
+     * @return mixed|string|null
      */
-    public function identityAddressesByEmailSearch(
-        string $search
-    ): array;
+    public function setIdentityPrimaryEmailRecord(
+        string $identityAddress,
+        string $email
+    ): void;
 
     /**
      * Get bsn by identity_address

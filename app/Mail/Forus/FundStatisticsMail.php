@@ -3,6 +3,7 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class FundStatisticsMail
@@ -23,9 +24,10 @@ class FundStatisticsMail extends ImplementationMail
         string $sponsorAmount,
         string $providerAmount,
         string $requestAmount,
-        string $totalAmount
+        string $totalAmount,
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct(null);
+        parent::__construct($emailFrom);
 
         $this->fundName = $fundName;
         $this->sponsorName = $sponsorName;

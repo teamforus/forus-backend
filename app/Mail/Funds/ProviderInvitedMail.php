@@ -3,6 +3,7 @@
 namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class ProviderAppliedMail
@@ -31,9 +32,9 @@ class ProviderInvitedMail extends ImplementationMail
         string $fund_end_date,
         string $from_fund_name,
         string $invitation_link,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
         $this->provider_name            = $provider_name;
         $this->sponsor_name             = $sponsor_name;
         $this->sponsor_phone            = $sponsor_phone;

@@ -22,3 +22,5 @@ $router->get('/', function () {
 
 $router->get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
 $router->get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');
+
+$router->get('/email-verification/{identity_email_token}', 'Api\Identity\IdentityEmailsController@emailVerificationToken');

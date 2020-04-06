@@ -19,6 +19,7 @@ use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
 use App\Services\DigIdService\Models\DigIdSession;
+use App\Services\Forus\Identity\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
@@ -70,6 +71,14 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('fund_provider', function ($id) {
             return FundProvider::find($id) ?? abort(404);
+        });
+
+        $router->bind('identity_email', function ($id) {
+            return IdentityEmail::find($id) ?? abort(404);
+        });
+
+        $router->bind('identity_email_token', function ($id) {
+            return IdentityEmail::whereVerificationToken($id)->first() ?? abort(404);
         });
 
         $router->bind('fund_provider_invitations', function ($id) {

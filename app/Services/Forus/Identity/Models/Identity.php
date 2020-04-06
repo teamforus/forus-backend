@@ -15,6 +15,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $address
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityEmail[] $emails
+ * @property-read int|null $emails_count
+ * @property-read \App\Services\Forus\Identity\Models\IdentityEmail $initial_email
+ * @property-read \App\Services\Forus\Identity\Models\IdentityEmail $primary_email
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityProxy[] $proxies
  * @property-read int|null $proxies_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newModelQuery()
@@ -44,7 +48,55 @@ class Identity extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function emails() {
+        return $this->hasMany(IdentityEmail::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function primary_email() {
+        return $this->hasOne(IdentityEmail::class, 'identity_address', 'address')->where([
+            'primary' => true
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function initial_email() {
+        return $this->hasOne(IdentityEmail::class, 'identity_address', 'address')->where([
+            'initial' => true
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function proxies() {
         return $this->hasMany(IdentityProxy::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @param string $email
+     * @param bool $verified
+     * @param bool $primary
+     * @param bool $initial
+     * @return IdentityEmail
+     */
+    public function addEmail(
+        string $email,
+        bool $verified = false,
+        bool $primary = false,
+        bool $initial = false
+    ): IdentityEmail {
+        /** @var IdentityEmail $identityEmail */
+        $identityEmail = $this->emails()->create(array_merge(compact(
+            'email', 'verified', 'primary', 'initial'
+        ), [
+            'verification_token' => token_generator()->generate(200),
+        ]));
+
+        return $identityEmail;
     }
 }

@@ -3,8 +3,16 @@
 namespace App\Listeners;
 
 use App\Events\FundRequestRecords\FundRequestRecordDeclined;
+use App\Services\Forus\Notification\NotificationService;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Class FundRequestRecordSubscriber
+ * @property IRecordRepo $recordService
+ * @property NotificationService $notificationService
+ * @package App\Listeners
+ */
 class FundRequestRecordSubscriber
 {
     protected $recordService;
@@ -28,7 +36,7 @@ class FundRequestRecordSubscriber
 
         $this->notificationService->fundRequestRecordDeclined(
             $this->recordService->primaryEmailByAddress($identity_address),
-            $fundRequest->identity_address,
+            $fundRequest->fund->fund_config->implementation->getEmailFrom(),
             $requestRecord->note,
             $fundRequest->fund->name,
             env('WEB_SHOP_GENERAL_URL')

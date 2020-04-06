@@ -342,14 +342,6 @@ class MediaService
             }));
         }
 
-        log_debug([
-            $mediaPresets,
-            /*$syncPresets,
-            $mediaConfig->getSyncPresets(),
-            $syncPresets ?: $mediaConfig->getSyncPresets(),
-            !is_null($syncPresets) ? $syncPresets : $mediaConfig->getSyncPresets(),*/
-        ]);
-
         foreach ($mediaPresets as $mediaPreset) {
             $mediaPreset->makePresetModel(
                 $tmpFile->path(), $this->storage(), $this->storagePath, $media

@@ -37,6 +37,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property string $dominant_color
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereDominantColor($value)
  */
 class Media extends Model
 {

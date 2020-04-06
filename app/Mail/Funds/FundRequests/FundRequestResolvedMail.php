@@ -3,6 +3,7 @@
 namespace App\Mail\FundRequests;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class FundRequestCreatedMail
@@ -18,9 +19,9 @@ class FundRequestResolvedMail extends ImplementationMail
         string $requestStatus,
         string $fundName,
         string $link,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
         $this->requestStatus = $requestStatus;
         $this->fundName = $fundName;
         $this->link = $link;

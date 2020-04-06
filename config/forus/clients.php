@@ -15,5 +15,8 @@ return [
     'websites' => [
         'website',
     ],
+    'auth' => [
+        'pin_code-auth',
+    ],
     'default' => env('DISABLE_DEPRECATED_API', false) ? null : 'general',
 ];

@@ -17,6 +17,11 @@ class OrganizationLogoMediaConfig extends MediaImageConfig
     protected $name = 'organization_logo';
 
     /**
+     * @var int
+     */
+    protected $preview_aspect_ratio = 1.33;
+
+    /**
      * OrganizationLogoMediaConfig constructor.
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */

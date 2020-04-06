@@ -3,6 +3,7 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class ShareProductMail
@@ -20,9 +21,9 @@ class ShareProductVoucherMail extends ImplementationMail
         string $productName,
         string $qrToken,
         string $reason,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->requesterMail = $requesterMail;
         $this->productName = $productName;

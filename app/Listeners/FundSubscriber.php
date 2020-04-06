@@ -14,6 +14,7 @@ class FundSubscriber
         if ($email = env('EMAIL_FOR_FUND_CREATED', false)) {
             $notificationService->newFundCreatedNotifyForus(
                 $email,
+                $fund->fund_config->implementation->getEmailFrom(),
                 $fund->name,
                 $fund->organization->name
             );

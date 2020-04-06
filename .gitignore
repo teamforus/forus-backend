@@ -15,4 +15,4 @@ yarn-error.log
 .phpstorm.meta.php
 _ide_helper.php
 .DS_Store
-/app/Http/Controllers/TestController.php
+/public/assets

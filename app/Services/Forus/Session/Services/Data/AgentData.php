@@ -52,7 +52,7 @@ class AgentData extends Parser
             }
 
             if (!empty($browser) && !empty($os) && !empty($device)) {
-                return $prefix . $browser . ' op ' . $this->a($device) . ' heeft besturingssysteem:' . $os;
+                return $prefix . $browser . ' op ' . $this->a($device) . ' heeft besturingssysteem: ' . $os;
             }
 
             if (!empty($browser) && empty($os) && !empty($device)) {
