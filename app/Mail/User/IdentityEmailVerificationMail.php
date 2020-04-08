@@ -3,6 +3,7 @@
 namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class EmailActivationMail
@@ -15,9 +16,10 @@ class IdentityEmailVerificationMail extends ImplementationMail
     /**
      * IdentityEmailVerificationMail constructor.
      * @param string $link
+     * @param EmailFrom $emailFrom
      */
-    public function __construct(string $link) {
-        parent::__construct(null);
+    public function __construct(string $link, ?EmailFrom $emailFrom) {
+        parent::__construct($emailFrom);
         $this->link = $link;
     }
 
