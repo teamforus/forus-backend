@@ -24,8 +24,6 @@ use Illuminate\Http\Request;
  * @property string $url_provider
  * @property string $url_validator
  * @property string $url_app
- * @property string $email_from_address
- * @property string $email_from_name
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $digid_enabled
