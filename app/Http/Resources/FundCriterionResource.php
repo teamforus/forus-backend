@@ -26,6 +26,9 @@ class FundCriterionResource extends Resource
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
             'description'
         ])->merge([
+            'description_html' => resolve('markdown')->convertToHtml(
+                $this->resource->description
+            ),
             'record_type_name' => $recordTypes[$this->resource->record_type_key],
             'show_attachment'  => $this->resource->show_attachment ? true : false,
         ])->toArray();
