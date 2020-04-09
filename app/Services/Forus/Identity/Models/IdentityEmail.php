@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Identity\Models;
 
+use App\Models\Implementation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -72,6 +73,7 @@ class IdentityEmail extends Model
         $notificationService = resolve('forus.services.notification');
         $notificationService->sendEmailVerificationLink(
             $this->email,
+            Implementation::emailFrom(),
             url(sprintf('/email-verification/%s', $this->verification_token))
         );
     }
