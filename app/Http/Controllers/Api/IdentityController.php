@@ -213,7 +213,7 @@ class IdentityController extends Controller
         $this->middleware('throttle', [10, 1 * 60]);
 
         $email = $request->input('email', $request->input('primary_email'));
-        $source = sprintf('%s_%s', client_type(), implementation_key());
+        $source = sprintf('%s_%s', implementation_key(), client_type());
         $isMobile = in_array(client_type(), config('forus.clients.mobile'));
 
         $identityId = $this->recordRepo->identityAddressByEmail($email);

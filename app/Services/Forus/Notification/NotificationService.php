@@ -867,14 +867,16 @@ class NotificationService
      * Send verification link for identity email
      *
      * @param string $email
+     * @param EmailFrom $emailFrom
      * @param string $link
      * @return bool|null
      */
     public function sendEmailVerificationLink(
         string $email,
+        ?EmailFrom $emailFrom,
         string $link
     ): bool {
-        return $this->sendMail($email, new IdentityEmailVerificationMail($link));
+        return $this->sendMail($email, new IdentityEmailVerificationMail($link, $emailFrom));
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\Funds\FundCreated;
+use App\Models\Implementation;
 use Illuminate\Events\Dispatcher;
 
 class FundSubscriber
@@ -14,7 +15,7 @@ class FundSubscriber
         if ($email = env('EMAIL_FOR_FUND_CREATED', false)) {
             $notificationService->newFundCreatedNotifyForus(
                 $email,
-                $fund->fund_config->implementation->getEmailFrom(),
+                Implementation::emailFrom(),
                 $fund->name,
                 $fund->organization->name
             );
