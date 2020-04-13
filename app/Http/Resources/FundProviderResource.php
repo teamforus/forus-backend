@@ -46,6 +46,9 @@ class FundProviderResource extends Resource
             'organization'          => new OrganizationWithPrivateResource(
                 $fundProvider->organization
             ),
+            'validators' => EmployeeResource::collection(
+                $fundProvider->organization->employeesOfRole('validation')
+            ),
         ])->toArray();
     }
 }
