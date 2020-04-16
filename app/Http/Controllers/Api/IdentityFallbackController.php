@@ -81,7 +81,7 @@ class IdentityFallbackController extends Controller
         ));
 
         // send confirmation email
-        if ($isWebshopOrMobile) {
+        if ($isWebshopOrMobile || $request->input('confirm', false)) {
             $isMobile = in_array($clientType, config('forus.clients.mobile'));
 
             // build confirmation link
