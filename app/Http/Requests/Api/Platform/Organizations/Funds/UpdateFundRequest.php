@@ -69,7 +69,7 @@ class UpdateFundRequest extends FormRequest
             'criteria'                      => 'required|array',
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
-            'criteria.*.value'              => 'required|string|between:1,10',
+            'criteria.*.value'              => 'required|string|between:1,20',
             'criteria.*.show_attachment'    => 'nullable|boolean',
             'criteria.*.description'        => 'nullable|string|max:4000',
         ] : [], $formulaProductsEditable ? [
