@@ -47,7 +47,7 @@ class FundProviderResource extends Resource
                 $fundProvider->organization
             ),
             'validators' => EmployeeResource::collection(
-                $fundProvider->organization->employeesOfRole('validation')
+                $fundProvider->organization->employees
             ),
         ])->toArray();
     }
