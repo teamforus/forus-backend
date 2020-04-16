@@ -36,6 +36,7 @@ return [
     ],	
 
     'voucher_transactions'    => [
+        'id' => 'ID',
 		'amount' => 'bedrag',
 		'date' => 'datum',
 		'fund' => 'fonds',
