@@ -918,6 +918,23 @@ class Fund extends Model
     }
 
     /**
+    * @param Collection|Fund[] $funds
+    * @return mixed
+    */
+    public static function sortByState($funds) {
+        return $funds->sort(function (Fund $fund1, Fund $fund2) {
+            if ($fund1->state == $fund2->state) {
+                return 0;
+            }
+
+            return !in_array($fund1->state, [
+                Fund::STATE_ACTIVE,
+                Fund::STATE_PAUSED,
+            ]);
+        });
+    }
+
+    /**
      * @param float $amount
      * @param string $description
      * @param string|null $issuer
