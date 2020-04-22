@@ -95,7 +95,7 @@ class FundResource extends Resource
         if ($organization->identityCan(auth()->id(), 'validate_records')) {
             $data = array_merge($data, [
                 'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
-                'csv_required_keys' => $fund->requiredPrevalidationKeys()
+                'csv_required_keys' => $fund->requiredPrevalidationKeys()->toArray()
             ]);
         }
 
