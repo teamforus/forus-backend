@@ -3,6 +3,7 @@
 namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class FundExpiredMail
@@ -26,9 +27,9 @@ class FundExpiredMail extends ImplementationMail
         string $phoneNumberSponsor,
         string $emailAddressSponsor,
         string $shopImplementationUrl,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->fundName = $fundName;
         $this->sponsorName = $sponsorName;

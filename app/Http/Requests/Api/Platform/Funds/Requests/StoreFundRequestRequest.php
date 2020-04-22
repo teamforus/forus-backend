@@ -65,4 +65,26 @@ class StoreFundRequestRequest extends FormRequest
             ],
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function messages() {
+        $recordRepo = resolve('forus.services.record');
+        $messages = [];
+
+        foreach ($this->get('records') as $key => $val) {
+            if (isset($val['record_type_key'])) {
+                $recordTypeName = collect(
+                    $recordRepo->getRecordTypes()
+                )->firstWhere('key', $val['record_type_key'])['name'] ?? '';
+
+                $messages["records.*.required"] = trans('validation.required', [
+                    'attribute' => $recordTypeName
+                ]);
+            }
+        }
+
+        return $messages;
+    }
 }

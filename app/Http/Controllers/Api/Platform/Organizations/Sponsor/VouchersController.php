@@ -48,7 +48,7 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         return SponsorVoucherResource::collection(
-            Voucher::searchSponsor(
+            Voucher::searchSponsorQuery(
                 $request,
                 $organization,
                 Fund::find($request->get('fund_id'))
@@ -237,18 +237,15 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        /** @var Collection|Voucher[] $unassigned_vouchers */
-        $unassigned_vouchers = Voucher::searchSponsor(
-            $request,
-            $organization,
-            Fund::find($request->get('fund_id'))
-        )->get();
+        $fund = Fund::find($request->get('fund_id'));
+        $export_type = $request->get('export_type', 'png');
+        $unassigned_vouchers = Voucher::searchSponsor($request, $organization, $fund);
 
         if ($unassigned_vouchers->count() == 0) {
             abort(404, "No unassigned vouchers to be exported.");
         }
 
-        if (!$zipFile = Voucher::zipVouchers($unassigned_vouchers)) {
+        if (!$zipFile = Voucher::zipVouchers($unassigned_vouchers, $export_type)) {
             abort(500, "Couldn't make the archive.");
         }
 

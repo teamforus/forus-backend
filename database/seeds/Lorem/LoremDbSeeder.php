@@ -100,7 +100,7 @@ class LoremDbSeeder extends Seeder
     public function makeBaseIdentity(
         string $primaryEmail
     ) {
-        $identityAddress = $this->identityRepo->make('1111', [
+        $identityAddress = $this->identityRepo->make([
             'primary_email' => $primaryEmail,
             'given_name' => 'John',
             'family_name' => 'Doe'
@@ -392,12 +392,19 @@ class LoremDbSeeder extends Seeder
             $flag = true;
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
-        return $organization->createFund(array_merge([
+        $fund = $organization->createFund(array_merge([
             'name'          => $fundName,
             'start_date'    => Carbon::now()->format('Y-m-d'),
             'end_date'      => Carbon::now()->addDays(60)->format('Y-m-d'),
             'state'         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING
         ], $fields));
+
+        $fund->top_up_model->transactions()->create([
+            'bunq_transaction_id' => "XXXX",
+            'amount' => 100000
+        ]);
+
+        return $fund;
     }
 
     /**

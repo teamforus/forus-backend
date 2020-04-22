@@ -129,12 +129,14 @@ class RecordRepo implements IRecordRepo
     public function identityAddressByEmail(
         string $email
     ) {
-        $record = Record::query()->where([
+        return identity_repo()->getAddress($email);
+
+        /*$record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('primary_email'),
             'value' => $email,
         ])->first();
 
-        return $record ? $record->identity_address : null;
+        return $record ? $record->identity_address : null;*/
     }
 
     /**
@@ -161,29 +163,33 @@ class RecordRepo implements IRecordRepo
     public function primaryEmailByAddress(
         string $identityAddress
     ) {
-        $record = Record::query()->where([
+        return identity_repo()->getPrimaryEmail($identityAddress);
+
+        /*$record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('primary_email'),
             'identity_address' => $identityAddress,
         ])->first();
 
-        return $record ? $record->value : null;
+        return $record ? $record->value : null;*/
     }
 
     /**
-     * Search identity addresses by email substring
-     * @param string $search
-     * @return array
+     * Change identity primary_email record value
+     *
+     * @param string $identityAddress
+     * @param string $email
+     * @return mixed|string|null
      */
-    public function identityAddressesByEmailSearch(
-        string $search
-    ): array {
-        $records = Record::query()->where([
+    public function setIdentityPrimaryEmailRecord(
+        string $identityAddress,
+        string $email
+    ): void {
+        Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('primary_email'),
-        ])->where('value', 'LIKE', "%{$search}%")->get();
-
-        return $records->map(function(Record $record) {
-            return $record->identity_address;
-        })->toArray();
+            'identity_address' => $identityAddress,
+        ])->update([
+            'value' => $email
+        ]);
     }
 
     /**
@@ -226,8 +232,7 @@ class RecordRepo implements IRecordRepo
         string $name,
         int $order = 0
     ) {
-        /** @var RecordCategory $recordCategory */
-        $recordCategory =  RecordCategory::query()->create([
+        $recordCategory = RecordCategory::create([
             'identity_address' => $identityAddress,
             'name' => $name,
             'order' => $order,

@@ -3,6 +3,7 @@
 namespace App\Mail\Funds\Forus;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class FundCreatedMail
@@ -15,9 +16,10 @@ class ForusFundCreated extends ImplementationMail
 
     public function __construct(
         string $fundName,
-        string $organizationName
+        string $organizationName,
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct(null);
+        parent::__construct($emailFrom);
 
         $this->fundName = $fundName;
         $this->organizationName = $organizationName;

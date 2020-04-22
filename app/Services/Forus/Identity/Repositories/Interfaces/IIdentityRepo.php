@@ -1,30 +1,28 @@
 <?php
 namespace App\Services\Forus\Identity\Repositories\Interfaces;
 
+use App\Services\Forus\Identity\Models\IdentityEmail;
+
 interface IIdentityRepo {
     /**
      * Make new identity
-     * @param string $pinCode
      * @param array $records
-     * @return mixed
+     * @return string
      */
     public function make(
-        string $pinCode ,
         array $records = []
-    );
+    ) : string;
 
     /**
      * Make new identity by email
      * @param string $primaryEmail
      * @param array $records
-     * @param int $pinCode
      * @return mixed
      * @throws \Exception
      */
     public function makeByEmail(
         string $primaryEmail,
-        array $records = [],
-        $pinCode = 1111
+        array $records = []
     );
     /**
      * @param $email
@@ -215,4 +213,47 @@ interface IIdentityRepo {
      * @return string
      */
     public function exchangeQrCodeToken(string $token);
+
+    /**
+     * @param string $identity_address
+     * @return string|null
+     */
+    public function getPrimaryEmail(string $identity_address): ?string;
+
+    /**
+     * @param string $primary_email
+     * @return string|null
+     */
+    public function getAddress(string $primary_email): ?string;
+
+    /**
+     * @param string $identity_address
+     * @param string $primary_email
+     * @param bool $verified
+     * @param bool $primary
+     * @return IdentityEmail
+     */
+    public function addIdentityEmail(
+        string $identity_address,
+        string $primary_email,
+        bool $verified = false,
+        bool $primary = false
+    ): IdentityEmail;
+
+    /**
+     * @param string $email
+     * @return bool
+     */
+    public function isEmailAvailable(
+        string $email
+    ): bool;
+
+    /**
+     * Search identity addresses by email substring
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressesByEmailSearch(
+        string $search
+    ): array;
 }

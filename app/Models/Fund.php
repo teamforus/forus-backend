@@ -92,6 +92,7 @@ use Illuminate\Http\Request;
  * @property-read int|null $top_up_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp $top_up_model
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -432,8 +433,8 @@ class Fund extends Model
             'organization_id',
             'organization_id',
             'id'
-        )->whereHas('roles', function(Builder $builder) {
-            $builder->where('key', 'validation');
+        )->whereHas('roles.permissions', function(Builder $builder) {
+            $builder->where('key', 'validate_records');
         });
     }
 
@@ -711,6 +712,7 @@ class Fund extends Model
                 foreach ($fund->provider_organizations_approved as $organization) {
                     $mailService->fundClosedProvider(
                         $organization->email,
+                        $fund->fund_config->implementation->getEmailFrom(),
                         $fund->name,
                         $fund->end_date,
                         $organization->name,
@@ -730,6 +732,7 @@ class Fund extends Model
                 foreach ($emails as $email) {
                     $mailService->fundClosed(
                         $email,
+                        $fund->fund_config->implementation->getEmailFrom(),
                         $fund->name,
                         $fund->end_date,
                         $fund->organization->email,
@@ -773,7 +776,7 @@ class Fund extends Model
             foreach ($fund->provider_organizations_approved as $organization) {
                 resolve('forus.services.notification')->newFundStarted(
                     $organization->email,
-                    $organization->emailServiceId(),
+                    $fund->fund_config->implementation->getEmailFrom(),
                     $fund->name,
                     $fund->organization->name
                 );
@@ -823,6 +826,7 @@ class Fund extends Model
 
             resolve('forus.services.notification')->sendFundUserStatisticsReport(
                 $email,
+                $fund->fund_config->implementation->getEmailFrom(),
                 $fund->name,
                 $organization->name,
                 $sponsorCount,
@@ -895,7 +899,7 @@ class Fund extends Model
                 foreach ($referrers as $referrer) {
                     $mailService->fundBalanceWarning(
                         $referrer['email'],
-                        $referrer['identity'],
+                        $fund->fund_config->implementation->getEmailFrom(),
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
@@ -1166,5 +1170,22 @@ class Fund extends Model
     public function urlValidatorDashboard(string $uri = "/")
     {
         return $this->fund_config->implementation->urlValidatorDashboard($uri);
+    }
+
+    /**
+     * @return FundTopUp
+     */
+    public function getTopUpModelAttribute()
+    {
+        /** @var FundTopUp $topUp */
+        if ($this->top_ups()->count() > 0) {
+            $topUp = $this->top_ups()->first();
+        } else {
+            $topUp = $this->top_ups()->create([
+                'code' => FundTopUp::generateCode()
+            ]);
+        }
+
+        return $topUp;
     }
 }

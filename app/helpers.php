@@ -6,6 +6,7 @@ use \Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
+use \App\Services\Forus\Session\Services\Browser;
 
 if (!function_exists('auth_user')) {
     /**
@@ -436,7 +437,8 @@ if (!function_exists('log_debug')) {
      */
     function log_debug($message, array $context = []) {
         logger()->debug(
-            is_string($message) ? $message: json_pretty($message), $context
+            is_string($message) ? $message : json_pretty($message),
+            $context
         );
     }
 }
@@ -642,5 +644,17 @@ if (!function_exists('query_with_trashed')) {
     function query_with_trashed($builder)
     {
         return $builder->withTrashed();
+    }
+}
+
+
+if (!function_exists('user_agent_data')) {
+    /**
+     * @param null $user_agent
+     * @return \App\Services\Forus\Session\Services\Data\AgentData|null
+     */
+    function user_agent_data($user_agent = null)
+    {
+        return Browser::getAgentData($user_agent ?: request()->userAgent());
     }
 }

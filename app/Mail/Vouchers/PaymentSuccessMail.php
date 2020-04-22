@@ -3,6 +3,7 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class PaymentSuccessMail
@@ -16,9 +17,9 @@ class PaymentSuccessMail extends ImplementationMail
     public function __construct(
         string $fundName,
         string $currentBudget,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->fundName = $fundName;
         $this->currentBudget = $currentBudget;

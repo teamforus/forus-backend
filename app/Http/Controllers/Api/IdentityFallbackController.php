@@ -11,7 +11,6 @@ use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Requests\Api\IdentityUpdatePinCodeRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
-use App\Rules\IdentityRecordsUniqueRule;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
@@ -38,12 +37,11 @@ class IdentityFallbackController extends Controller
 
     public function getPublic()
     {
-        $bsnIsKnown = !empty($this->recordRepo->bsnByAddress(auth_address()));
+        $address = auth()->id();
+        $email = $this->identityRepo->getPrimaryEmail($address);
+        $bsn = !empty($this->recordRepo->bsnByAddress($address));
 
-        return [
-            'address'   => auth()->id(),
-            'bsn'       => $bsnIsKnown
-        ];
+        return response()->json(compact('address', 'email', 'bsn'));
     }
 
     /**
@@ -61,7 +59,9 @@ class IdentityFallbackController extends Controller
         // client type, key and target primary email
         $clientType = client_type(config('forus.clients.default'));
         $clientKey = implementation_key('general');
-        $primaryEmail = $request->input('records.primary_email');
+        $primaryEmail = $request->input('email', $request->input(
+            'records.primary_email'
+        ));
 
         // build records list and remove bsn and primary_email
         $records = collect($request->input('records', []));
@@ -81,7 +81,7 @@ class IdentityFallbackController extends Controller
         ));
 
         // send confirmation email
-        if ($isWebshopOrMobile) {
+        if ($isWebshopOrMobile || $request->input('confirm', false)) {
             $isMobile = in_array($clientType, config('forus.clients.mobile'));
 
             // build confirmation link
@@ -95,8 +95,8 @@ class IdentityFallbackController extends Controller
 
             $this->mailService->sendEmailConfirmationLink(
                 $primaryEmail,
-                $confirmationLink,
-                $identityAddress
+                Implementation::emailFrom(),
+                $confirmationLink
             );
             
             // TODO: always require confirmation
@@ -115,12 +115,14 @@ class IdentityFallbackController extends Controller
      */
     public function storeValidateEmail(IdentityStoreValidateEmailRequest $request) {
         $this->middleware('throttle', [10, 1 * 60]);
-        $ruleUnique = new IdentityRecordsUniqueRule('primary_email');
+
         $email = (string) $request->input('email', '');
+        $used = !identity_repo()->isEmailAvailable($email);
 
         return [
             'email' => [
-                'unique' => $ruleUnique->passes('email', $email),
+                'used' => $used,
+                'unique' => !$used,
                 'valid' => validate_data(compact('email'), [
                     'email' => 'required|email'
                 ])->passes(),
@@ -223,7 +225,7 @@ class IdentityFallbackController extends Controller
     ) {
         $this->middleware('throttle', [10, 1 * 60]);
 
-        $email = $request->input('primary_email');
+        $email = $request->input('email', $request->input('primary_email'));
         $source = $request->input('source');
 
         $identityId = $this->recordRepo->identityAddressByEmail($email);
@@ -239,7 +241,7 @@ class IdentityFallbackController extends Controller
         if (!empty($proxy)) {
             $this->mailService->loginViaEmail(
                 $email,
-                $identityId,
+                Implementation::emailFrom(),
                 $confirmation_link,
                 $source
             );

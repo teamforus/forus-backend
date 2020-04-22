@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api;
 use App\Rules\IdentityPinCodeRule;
 use App\Rules\IdentityRecordsAddressRule;
 use App\Rules\IdentityRecordsRule;
-use App\Rules\IdentityRecordsUniqueRule;
+// use App\Rules\IdentityEmailUniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IdentityStoreRequest extends FormRequest
@@ -27,24 +27,27 @@ class IdentityStoreRequest extends FormRequest
      */
     public function rules()
     {
+        $emailRule = [
+            'email:strict,dns',
+            'unique:identity_emails,email',
+        ];
+
         return [
             'pin_code' => [
-                in_array(
-                    client_type(),
-                    config('forus.clients.mobile')
-                ) ? 'nullable' : 'required',
+                'nullable',
                 new IdentityPinCodeRule()
             ],
+            'email' => array_merge((array) (
+                $this->has('records.primary_email') ? 'nullable' : 'required'
+            ), $emailRule),
             'records' => [
-                'required',
+                !env('DISABLE_DEPRECATED_API', false) && !$this->has('email') ? 'required' : 'nullable',
                 'array',
                 new IdentityRecordsRule()
             ],
-            'records.primary_email' => [
-                'required',
-                'email:strict,dns',
-                new IdentityRecordsUniqueRule('primary_email')
-            ],
+            'records.primary_email' => array_merge((array) (
+                $this->has('email') ? 'nullable' : 'required'
+            ), $emailRule),
             'records.address' => [
                 new IdentityRecordsAddressRule()
             ],

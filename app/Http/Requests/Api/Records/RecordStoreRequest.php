@@ -33,14 +33,6 @@ class RecordStoreRequest extends FormRequest
             array_push($valueRules, 'email:strict,dns');
         }
 
-        /*if ($type == 'primary_email') {
-            array_push($valueRules, new IdentityRecordsUniqueRule('primary_email'));
-        }
-
-        if ($type == 'bsn') {
-            array_push($valueRules, new IdentityRecordsUniqueRule('bsn'));
-        }*/
-
         return [
             'type' => [
                 'required',

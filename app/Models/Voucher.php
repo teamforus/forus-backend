@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Models\Data\VoucherExportData;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -32,6 +33,7 @@ use Illuminate\Http\Request;
  * @property-read bool $is_granted
  * @property-read string $type
  * @property-read bool $used
+ * @property-read Carbon $last_active_day
  * @property-read \App\Models\Voucher|null $parent
  * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
@@ -193,6 +195,14 @@ class Voucher extends Model
     }
 
     /**
+     * @return Carbon|\Illuminate\Support\Carbon
+     */
+    public function getLastActiveDayAttribute() {
+        return $this->type == 'product' ?
+            $this->product->expire_at : $this->expire_at->subDay();
+    }
+
+    /**
      * @param string|null $email
      */
     public function sendToEmail(
@@ -211,7 +221,7 @@ class Voucher extends Model
 
         resolve('forus.services.notification')->sendVoucher(
             $email,
-            $this->identity_address,
+            $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
             $fund_product_name,
             $this->amount,
             format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
@@ -233,7 +243,7 @@ class Voucher extends Model
 
         resolve('forus.services.notification')->assignVoucher(
             $email,
-            $this->identity_address,
+            $this->fund->fund_config->implementation->getEmailFrom(),
             $this->fund->name,
             $this->amount,
             format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
@@ -262,7 +272,7 @@ class Voucher extends Model
 
             $notificationService->shareProductVoucher(
                 $voucherToken->voucher->product->organization->email,
-                $voucherToken->voucher->product->organization->emailServiceId(),
+                $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
                 $primaryEmail,
                 $product_name,
                 $voucherToken->address,
@@ -272,7 +282,7 @@ class Voucher extends Model
             if ($sendCopyToUser) {
                 $notificationService->shareProductVoucher(
                     $primaryEmail,
-                    auth()->id(),
+                    $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
                     $primaryEmail,
                     $product_name,
                     $voucherToken->address,
@@ -299,7 +309,7 @@ class Voucher extends Model
 
         resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
             $email,
-            $this->identity_address,
+            $this->fund->fund_config->implementation->getEmailFrom(),
             $fund_name,
             $amount
         );
@@ -337,6 +347,7 @@ class Voucher extends Model
 
                 $notificationService->voucherExpireSoon(
                     $primaryEmail,
+                    $voucher->fund->fund_config->implementation->getEmailFrom(),
                     $fund_name,
                     $sponsor_name,
                     $start_date,
@@ -395,7 +406,7 @@ class Voucher extends Model
      * @param Fund $fund
      * @return Builder
      */
-    public static function searchSponsor(
+    public static function searchSponsorQuery(
         Request $request,
         Organization $organization,
         Fund $fund = null
@@ -427,13 +438,13 @@ class Voucher extends Model
         }
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $recordRepo = resolve('forus.services.record');
+            $identityRepo = resolve('forus.services.identity');
 
-            $query->where(function (Builder $query) use ($q, $recordRepo) {
+            $query->where(function (Builder $query) use ($q, $identityRepo) {
                 $query->where('note', 'LIKE', "%{$q}%");
                 $query->orWhereIn(
                     'identity_address',
-                    $recordRepo->identityAddressesByEmailSearch($q)
+                    $identityRepo->identityAddressesByEmailSearch($q)
                 );
             });
         }
@@ -443,6 +454,20 @@ class Voucher extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param Fund|null $fund
+     * @return Builder[]|Collection
+     */
+    public static function searchSponsor(
+        Request $request,
+        Organization $organization,
+        Fund $fund = null
+    ) {
+        return self::searchSponsorQuery($request, $organization, $fund)->get();
     }
 
     /**
@@ -507,10 +532,12 @@ class Voucher extends Model
 
     /**
      * @param Collection $vouchers
+     * @param $exportType
      * @return string
      */
-    public static function zipVouchers(Collection $vouchers)
+    public static function zipVouchers(Collection $vouchers, $exportType)
     {
+        $vouchersData = [];
         $token_generator = resolve('token_generator');
         $zipPath = storage_path('vouchers-export');
 
@@ -523,20 +550,31 @@ class Voucher extends Model
         }
 
         $fp = fopen('php://temp/maxmemory:1048576', 'w');
-
         $zip = new \ZipArchive();
         $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        $zip->addEmptyDir('images');
 
-        // $tmp_images = [];
+        if ($exportType == 'png') {
+            $zip->addEmptyDir('images');
+        }
+
         foreach ($vouchers as $voucher) {
-            $name = $token_generator->generate(6, 2);
-            $zip->addFromString("images/$name.png", make_qr_code(
-                'voucher',
-                $voucher->token_without_confirmation->address
-            ));
+            $voucherData = new VoucherExportData($voucher);
 
-            fputcsv($fp, [$name]);
+            fputcsv($fp, (array) $voucherData->getName());
+            array_push($vouchersData, $voucherData);
+
+            if ($exportType == 'png') {
+                $zip->addFromString(
+                    sprintf("images/%s.png", $voucherData->getName()),
+                    make_qr_code('voucher', $voucher->token_without_confirmation->address)
+                );
+            }
+        }
+
+        if ($exportType == 'pdf') {
+            $pdf = resolve('dompdf.wrapper');
+            $pdf->loadView('pdf.vouchers_export', compact('vouchersData'));
+            $zip->addFromString('qr_codes.pdf', $pdf->output());
         }
 
         rewind($fp);

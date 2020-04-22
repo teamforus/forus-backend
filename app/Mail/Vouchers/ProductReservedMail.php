@@ -3,6 +3,7 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class ProductReservedMail
@@ -16,9 +17,9 @@ class ProductReservedMail extends ImplementationMail
     public function __construct(
         string $productName,
         string $expirationDate,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->productName = $productName;
         $this->expirationDate = $expirationDate;

@@ -4,23 +4,14 @@ namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 
-class IdentityRecordsExistsRule implements Rule
+class IdentityEmailExistsRule implements Rule
 {
-    private $recordType;
-    private $recordRepo;
-
     /**
      * Create a new rule instance.
      *
-     * @param string $recordType
      * @return void
      */
-    public function __construct(
-        $recordType
-    ) {
-        $this->recordType = $recordType;
-        $this->recordRepo = resolve('forus.services.record');
-    }
+    public function __construct() {}
 
     /**
      * Determine if the validation rule passes.
@@ -32,8 +23,7 @@ class IdentityRecordsExistsRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        return is_string($value) &&
-            $this->recordRepo->isRecordExists($this->recordType, $value);
+        return is_string($value) && is_string(identity_repo()->getAddress($value));
     }
 
     /**

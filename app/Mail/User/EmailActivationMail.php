@@ -3,6 +3,7 @@
 namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
+use App\Services\Forus\Notification\EmailFrom;
 
 /**
  * Class EmailActivationMail
@@ -16,9 +17,9 @@ class EmailActivationMail extends ImplementationMail
     public function __construct(
         string $platform,
         string $link,
-        string $identityId = null
+        ?EmailFrom $emailFrom
     ) {
-        parent::__construct($identityId);
+        parent::__construct($emailFrom);
 
         $this->platform = $platform;
         $this->link = $link;
