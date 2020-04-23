@@ -37,12 +37,14 @@ class FundsController extends Controller
         $this->authorize('viewAny', [Fund::class, $organization]);
 
         if (auth()->id()) {
-            return FundResource::collection($organization->funds);
+            return FundResource::collection(Fund::sortByState($organization->funds));
         }
 
-        return FundResource::collection($organization->funds()->where([
-            'public' => true
-        ])->get());
+        return FundResource::collection(
+            Fund::sortByState($organization->funds()->where([
+                'public' => true
+            ])->get())
+        );
     }
 
     /**
