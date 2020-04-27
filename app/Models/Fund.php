@@ -4,7 +4,10 @@ namespace App\Models;
 
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\HasTags;
+use App\Scopes\Builders\FundCriteriaQuery;
+use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -1032,9 +1035,23 @@ class Fund extends Model
      * @return array
      */
     public function validatorEmployees(bool $force_fetch = true) {
-        return ($force_fetch ? $this->employees_validators() :
+        $employees = ($force_fetch ? $this->employees_validators() :
             $this->employees_validators)
             ->pluck('employees.identity_address')->toArray();
+
+        $externalEmployees = [];
+
+        foreach ($this->organization->external_validators as $external_validator) {
+            $externalEmployees = array_merge(
+                $externalEmployees,
+                $external_validator->employeesOfRole('validation')->pluck('identity_address')->toArray()
+            );
+        }
+
+        return array_merge(
+            $employees,
+            $externalEmployees
+        );
     }
 
     /**
@@ -1062,29 +1079,13 @@ class Fund extends Model
     }
 
     /**
-     * Store criteria for newly created fund
-     * @param array $criteria
-     * @return $this
-     */
-    public function makeCriteria(array $criteria)
-    {
-        $this->criteria()->createMany(array_map(function($criterion) {
-            return array_only($criterion, [
-                'record_type_key', 'operator', 'value', 'show_attachment',
-                'description'
-            ]);
-        }, $criteria));
-
-        return $this;
-    }
-
-    /**
      * Update criteria for existing fund
      * @param array $criteria
      * @return $this
      */
     public function updateCriteria(array $criteria)
     {
+        // remove criteria not listed in the array
         $this->criteria()->whereNotIn('id', array_filter(
             array_pluck($criteria, 'id'), function($id) {
             return !empty($id);
@@ -1092,16 +1093,47 @@ class Fund extends Model
 
         foreach ($criteria as $criterion) {
             /** @var FundCriterion|null $db_criteria */
-            $data_criteria = array_only($criterion, [
+            $data_criterion = array_only($criterion, [
                 'record_type_key', 'operator', 'value', 'show_attachment',
                 'description'
             ]);
 
-            if ($db_criteria = $this->criteria()->find($criterion['id'] ?? null)) {
-                $db_criteria->update($data_criteria);
+            /** @var FundCriterion $db_criterion */
+            if ($db_criterion = $this->criteria()->find($criterion['id'] ?? null)) {
+                $db_criterion->update($data_criterion);
             } else {
-                $this->criteria()->create($data_criteria);
+                $db_criterion = $this->criteria()->create($data_criterion);
             }
+
+            if (!isset($criterion['validators']) || !is_array($criterion['validators'])) {
+                continue;
+            }
+
+            $current_validators = [];
+            $validators = $validators = array_unique(array_values(
+                $criterion['validators']
+            ));
+
+            foreach ($validators as $organization_validator_id) {
+                /** @var OrganizationValidator $validator */
+                $validator = $this->organization->organization_validators()->where([
+                    'organization_validators.id' => $organization_validator_id
+                ])->first();
+
+                /** @var FundCriterionValidator $validatorModel */
+                $validatorModel = $db_criterion->fund_criterion_validators()->firstOrCreate([
+                    'organization_validator_id' => $validator->id
+                ], [
+                    'accepted' => $validator->validator_organization
+                        ->validator_auto_accept_funds
+                ]);
+
+                array_push($current_validators, $validatorModel->id);
+            }
+
+            $db_criterion->fund_criterion_validators()->whereNotIn(
+                'fund_criterion_validators.id', $current_validators
+            )->delete();
         }
 
         return $this;
@@ -1187,5 +1219,52 @@ class Fund extends Model
         }
 
         return $topUp;
+    }
+
+    /**
+     * @param Organization $validatorOrganization
+     */
+    public function detachExternalValidator(Organization $validatorOrganization)
+    {
+        /** @var FundCriterion[] $fundCriteria */
+        $fundCriteria = FundCriteriaQuery::whereHasExternalValidatorFilter(
+            $this->criteria()->getQuery(),
+            $validatorOrganization->id
+        )->get();
+
+        foreach ($fundCriteria as $criterion) {
+            FundCriteriaValidatorQuery::whereHasExternalValidatorFilter(
+                $criterion->fund_criterion_validators()->getQuery(),
+                $validatorOrganization->id
+            )->delete();
+        }
+
+        /** @var FundRequest[] $fundRequests */
+        $fundRequests = FundRequestQuery::whereExternalValidatorFilter(
+            $this->fund_requests()->getQuery(),
+            $validatorOrganization->id
+        )->where([
+            'state' => FundRequest::STATE_PENDING,
+        ])->get();
+
+        foreach ($fundRequests as $fundRequest) {
+            $fundRequest->resignEmployee();
+
+            foreach ($fundRequest->clarifications as $clarification) {
+                foreach ($clarification->files as $file) {
+                    try {
+                        $file->unlink();
+                        $file->delete();
+                    } catch (\Exception $exception) {
+                        logger()->error($exception->getMessage());
+                    }
+                }
+            }
+
+            $fundRequest->clarifications()->delete();
+            $fundRequest->records()->update([
+                'state' => FundRequestRecord::STATE_PENDING
+            ]);
+        }
     }
 }

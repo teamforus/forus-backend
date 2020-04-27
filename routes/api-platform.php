@@ -160,6 +160,17 @@ $router->group([
     ]);
 
     $router->resource(
+        'organizations.external-funds',
+        "Api\Platform\Organizations\ExternalFundsController", [
+        'only' => [
+            'index', 'update'
+        ],
+        'parameters' => [
+            'external-funds' => 'fund'
+        ]
+    ]);
+
+    $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
         'only' => [
@@ -211,6 +222,11 @@ $router->group(['middleware' => [
     $router->patch(
         'organizations/{organization}/update-business',
         "Api\Platform\OrganizationsController@updateBusinessType"
+    );
+
+    $router->patch(
+        'organizations/{organization}/roles',
+        "Api\Platform\OrganizationsController@updateRoles"
     );
 
     $router->resource(
@@ -330,6 +346,14 @@ $router->group(['middleware' => [
         'organizations/{organization}/funds/{fund}/top-up',
         "Api\Platform\Organizations\FundsController@topUp");
 
+    $router->patch(
+        'organizations/{organization}/funds/criteria/validate',
+        "Api\Platform\Organizations\FundsController@updateCriteriaValidate");
+
+    $router->patch(
+        'organizations/{organization}/funds/{fund}/criteria',
+        "Api\Platform\Organizations\FundsController@updateCriteria");
+
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
@@ -350,11 +374,31 @@ $router->group(['middleware' => [
     ]);
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
+        $router->patch(
+            'organizations/{organization}/funds/{fund}/requests/{fund_request}/assign',
+            "Api\Platform\Organizations\Funds\FundRequestsController@assign"
+        );
+
+        $router->patch(
+            'organizations/{organization}/funds/{fund}/requests/{fund_request}/resign',
+            "Api\Platform\Organizations\Funds\FundRequestsController@resign"
+        );
+
+        $router->patch(
+            'organizations/{organization}/funds/{fund}/requests/{fund_request}/approve',
+            "Api\Platform\Organizations\Funds\FundRequestsController@approve"
+        );
+
+        $router->patch(
+            'organizations/{organization}/funds/{fund}/requests/{fund_request}/decline',
+            "Api\Platform\Organizations\Funds\FundRequestsController@decline"
+        );
+
         $router->resource(
             'organizations/{organization}/funds/{fund}/requests',
             "Api\Platform\Organizations\Funds\FundRequestsController", [
             'only' => [
-                'index', 'show', 'update'
+                'index', 'show'
             ],
             'parameters' => [
                 'requests' => 'fund_request',
@@ -456,6 +500,17 @@ $router->group(['middleware' => [
         "Api\Platform\Organizations\OfficesController", [
         'only' => [
             'index', 'show', 'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.validators',
+        "Api\Platform\Organizations\ValidatorOrganizationsController", [
+        'only' => [
+            'index', 'show', 'store', 'destroy'
+        ],
+        'parameters' => [
+            'validators' => 'validator_organization'
         ]
     ]);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\FundCriterion;
+use App\Models\FundCriterionValidator;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -21,6 +22,7 @@ class FundCriterionResource extends Resource
     public function toArray($request)
     {
         $recordTypes = array_pluck(record_types_cached(), 'name', 'key');
+        $external_validators = $this->resource->fund_criterion_validators;
 
         return collect($this->resource)->only([
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
@@ -29,6 +31,15 @@ class FundCriterionResource extends Resource
             'description_html' => resolve('markdown')->convertToHtml(
                 $this->resource->description
             ),
+            'external_validators' => $external_validators->map(function(
+                FundCriterionValidator $validator
+            ) {
+                return [
+                    'organization_validator_id' => $validator->organization_validator_id,
+                    'organization_id' => $validator->external_validator->validator_organization_id,
+                    'accepted' => $validator->accepted,
+                ];
+            })->toArray(),
             'record_type_name' => $recordTypes[$this->resource->record_type_key],
             'show_attachment'  => $this->resource->show_attachment ? true : false,
         ])->toArray();

@@ -37,6 +37,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail withoutTrashed()
  * @mixin \Eloquent
+ * @property bool $initial
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereInitial($value)
  */
 class IdentityEmail extends Model
 {

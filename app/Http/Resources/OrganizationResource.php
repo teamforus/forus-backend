@@ -68,7 +68,9 @@ class OrganizationResource extends Resource
         
         return array_filter(array_merge(collect($organization)->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
-            'email_public', 'phone_public', 'website_public'
+            'email_public', 'phone_public', 'website_public',
+            'is_sponsor', 'is_provider', 'is_validator',
+            'validator_auto_accept_funds'
         ])->merge(array_merge(
             $privateData,
             $ownerData

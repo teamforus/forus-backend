@@ -30,6 +30,14 @@ class FundResource extends Resource
             'validate_records'
         ])->get();
 
+        $externalEmployees = collect();
+
+        foreach ($fund->organization->external_validators as $external_validator) {
+            $externalEmployees = $externalEmployees->merge(
+                $external_validator->employeesOfRole('validation')
+            );
+        }
+
         $providersEmployeeCount = $fund->provider_organizations_approved;
         $providersEmployeeCount = $providersEmployeeCount->reduce(function (
             int $carry,
@@ -76,7 +84,9 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck(
                 'product_id'
             ),
-            'validators' => $validators->map(function(Employee $validator) {
+            'validators' => $validators->merge(
+                $externalEmployees
+            )->map(function(Employee $validator) {
                 return collect($validator)->only([
                     'identity_address'
                 ]);

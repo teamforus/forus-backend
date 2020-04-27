@@ -31,6 +31,7 @@ class FundRequestResource extends Resource
         ] : [
             'id', 'state', 'fund_id', 'created_at', 'updated_at'
         ]), [
+            'fund' => new FundResource($fundRequest->fund),
             'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
             'created_at_locale' => format_datetime_locale(
                 $this->resource->created_at

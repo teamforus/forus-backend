@@ -42,4 +42,21 @@ class FundQuery
             });
         });
     }
+
+    /**
+     * @param Builder $query
+     * @param int|array $organization_id External validator organization id
+     * @return Builder
+     */
+    public static function whereExternalValidatorFilter(Builder $query, $organization_id) {
+        return $query->whereHas('criteria.fund_criterion_validators', function(
+            Builder $builder
+        ) use ($organization_id) {
+            $builder->whereHas('external_validator.validator_organization', function(
+                Builder $builder
+            ) use ($organization_id) {
+                $builder->whereIn('organizations.id', (array) $organization_id);
+            });
+        });
+    }
 }

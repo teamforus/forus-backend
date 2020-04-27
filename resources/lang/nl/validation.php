@@ -192,6 +192,7 @@ return [
         'state' => 'status',
         'start_date' => 'startdatum',
         'end_date' => 'einddatum',
+        'value' => "waarde",
     ],
     'owner_cant_be_employee' => 'De aanbieder kan niet toegevoegd worden als medewerker',
 

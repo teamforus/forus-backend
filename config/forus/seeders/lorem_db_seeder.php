@@ -5,7 +5,8 @@ return [
     'default_email'             => env('DB_SEED_BASE_EMAIL', 'example@example.com'),
 
     // count of providers to be generated
-    'providers_count'           => env('DB_SEED_PROVIDERS', 20),
+    'providers_count'           => env('DB_SEED_PROVIDERS', 5),
+    'validators_count'           => env('DB_SEED_VALIDATORS', 10),
 
     // amount in generated vouchers
     'voucher_amount'            => env('DB_SEED_VOUCHER_AMOUNT', 600),

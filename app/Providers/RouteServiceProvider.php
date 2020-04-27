@@ -65,6 +65,10 @@ class RouteServiceProvider extends ServiceProvider
             return Organization::find($id) ?? abort(404);
         });
 
+        $router->bind('validator_organization', function ($id) {
+            return Organization::whereIsValidator(true)->find($id) ?? abort(404);
+        });
+
         $router->bind('fund', function ($id) {
             return Fund::find($id) ?? abort(404);
         });

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use \App\Services\Forus\Session\Services\Browser;
+use \Illuminate\Pagination\LengthAwarePaginator;
 
 if (!function_exists('auth_user')) {
     /**
@@ -646,7 +647,6 @@ if (!function_exists('query_with_trashed')) {
         return $builder->withTrashed();
     }
 }
-
 
 if (!function_exists('user_agent_data')) {
     /**

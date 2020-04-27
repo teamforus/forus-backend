@@ -41,10 +41,9 @@ class FundRequestSubscriber
         // auto approve request if required
         if ($fund->default_validator_employee &&
             $fund->auto_requests_validation &&
-            $fundRequest->employee &&
             !empty($recordRepo->bsnByAddress($fundRequest->identity_address))
         ) {
-            $fundRequest->approve();
+            $fundRequest->approve($fund->default_validator_employee);
         } else {
             $this->notificationService->newFundRequestCreated(
                 $this->recordService->primaryEmailByAddress($identity_address),

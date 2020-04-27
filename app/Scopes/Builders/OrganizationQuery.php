@@ -12,6 +12,26 @@ class OrganizationQuery
     /**
      * @param Builder $builder
      * @param string $identityAddress
+     * @return Organization|Builder|mixed
+     */
+    public static function whereIsEmployee(
+        Builder $builder,
+        string $identityAddress
+    ) {
+        return $builder->where(function(
+            Builder $builder
+        ) use ($identityAddress) {
+            $builder->whereHas('employees', function(
+                Builder $builder
+            ) use ($identityAddress) {
+                $builder->where('employees.identity_address', $identityAddress);
+            });
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $identityAddress
      * @param $permissions
      * @return Organization|Builder|mixed
      */

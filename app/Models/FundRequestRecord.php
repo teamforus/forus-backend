@@ -32,6 +32,12 @@ use App\Services\FileService\Traits\HasFiles;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereValue($value)
  * @mixin \Eloquent
+ * @property int|null $employee_id
+ * @property-read \App\Models\Employee|null $employee
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereEmployeeId($value)
+ * @property int|null $fund_criterion_id
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereFundCriterionId($value)
+ * @property-read \App\Models\FundCriterion|null $fund_criterion
  */
 class FundRequestRecord extends Model
 {
@@ -49,7 +55,7 @@ class FundRequestRecord extends Model
 
     protected $fillable = [
         'value', 'record_type_key', 'fund_request_id', 'record_type_id',
-        'identity_address', 'state', 'note',
+        'identity_address', 'state', 'note', 'employee_id', 'fund_criterion_id',
     ];
 
     /**
@@ -61,11 +67,27 @@ class FundRequestRecord extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function fund_criterion()
+    {
+        return $this->belongsTo(FundCriterion::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function fund_request_clarifications()
     {
         return $this->hasMany(FundRequestClarification::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     /**

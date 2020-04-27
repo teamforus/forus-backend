@@ -2,9 +2,13 @@
 
 namespace App\Policies;
 
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
+use App\Scopes\Builders\EmployeeQuery;
+use App\Scopes\Builders\FundRequestRecordQuery;
+use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Http\Request;
 
@@ -137,9 +141,10 @@ class FundRequestPolicy
         Fund $fund,
         Organization $organization = null
     ) {
-        if (!$this->checkIntegrity($fund, $organization, $request)) {
+        // TODO: Restore
+        /*if (!$this->checkIntegrity($fund, $organization, $request)) {
             return $this->deny('fund_requests.invalid_endpoint');
-        }
+        }*/
 
         // only validators and fund requester may see requests
         if (!in_array($identity_address, $request->fund->validatorEmployees())) {
@@ -191,6 +196,79 @@ class FundRequestPolicy
      * Determine whether the user can update the fundRequest.
      *
      * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Fund $fund
+     * @param Organization|null $organization
+     * @return bool|\Illuminate\Auth\Access\Response
+     */
+    public function assignAsValidator(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Fund $fund,
+        Organization $organization = null
+    ) {
+        if (!$this->checkIntegrity($fund, $organization, $fundRequest)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
+
+        // only pending requests could be updated by fund validators
+        if ($fundRequest->state !== FundRequest::STATE_PENDING) {
+            return $this->deny('fund_request.not_pending');
+        }
+
+        $hasRecordsAvailable = FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            $fundRequest->records()->getQuery(),
+            $identity_address,
+            $this->request->input('employee_id', null)
+        )->exists();
+
+        if (!$hasRecordsAvailable) {
+            return $this->deny('fund_request.no_records_available');
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the user can update the fundRequest.
+     *
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Fund $fund
+     * @param Organization|null $organization
+     * @return bool|\Illuminate\Auth\Access\Response
+     */
+    public function resignAsValidator(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Fund $fund,
+        Organization $organization = null
+    ) {
+        if (!$this->checkIntegrity($fund, $organization, $fundRequest)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
+
+        // only pending requests could be updated by fund validators
+        if ($fundRequest->state !== FundRequest::STATE_PENDING) {
+            return $this->deny('fund_request.not_pending');
+        }
+
+        $hasRecordsAssigned = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            $fundRequest->records()->getQuery(),
+            $identity_address
+        )->exists();
+
+        if (!$hasRecordsAssigned) {
+            return $this->deny('fund_request.no_records_assigned');
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the user can update the fundRequest.
+     *
+     * @param string|null $identity_address
      * @param FundRequest $request
      * @param Fund $fund
      * @param Organization|null $organization
@@ -211,16 +289,36 @@ class FundRequestPolicy
             return $this->deny('fund_request.not_pending');
         }
 
+        $hasAvailableRecords = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            $request->records()->getQuery(),
+            $identity_address
+        )->whereNull('employee_id')->exists();
+
+        $identityEmployees = EmployeeQuery::whereHasPermissionFilter(
+            Employee::query(),
+            'validate_records'
+        )->where(compact('identity_address'))->get();
+
+        $employee_id = $this->request->input('employee_id', false);
+        $state = $this->request->input('state', false);
+
+        if ($employee_id && !$hasAvailableRecords) {
+            return $this->deny('fund_request.no_available_records');
+        }
+
+        if ($state && !$hasAvailableRecords) {
+            return $this->deny('fund_request.no_available_records');
+        }
+
         // when request is assigned to employee,
         // only assigned employee is allowed to update request
-        if ($request->employee_id) {
-            if ($request->employee->identity_address !== $identity_address) {
-                return $this->deny('fund_request.not_assigned_employee');
-            }
+        if (!$hasAvailableRecords) {
+            return $this->deny('fund_request.not_assigned_employee');
         } else {
-            if ($this->request->input('state', null)) {
-                return $this->deny('fund_request.not_assigned_employee_cant_change_state');
-            }
+        }
+
+        if ($this->request->input('state', null)) {
+            return $this->deny('fund_request.not_assigned_employee_cant_change_state');
         }
 
         // only fund validators may update requests

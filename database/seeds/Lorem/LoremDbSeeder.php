@@ -26,6 +26,9 @@ class LoremDbSeeder extends Seeder
     private $productCategories;
     private $primaryEmail;
 
+    private $countProviders;
+    private $countValidators;
+
     private $implementations = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Berkelland',
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
@@ -44,6 +47,9 @@ class LoremDbSeeder extends Seeder
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
         $this->mailService = resolve('forus.services.notification');
+
+        $this->countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
+        $this->countValidators = config('forus.seeders.lorem_db_seeder.validators_count');
 
         $this->productCategories = ProductCategory::all();
         $this->primaryEmail = config('forus.seeders.lorem_db_seeder.default_email');
@@ -65,7 +71,6 @@ class LoremDbSeeder extends Seeder
     public function run()
     {
         $this->disableEmails();
-        $countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
 
         $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
@@ -77,8 +82,12 @@ class LoremDbSeeder extends Seeder
         $this->success("Sponsors created!");
 
         $this->info("Making Providers!");
-        $this->makeProviders($this->baseIdentity, $countProviders);
+        $this->makeProviders($this->baseIdentity, $this->countProviders);
         $this->success("Providers created!");
+
+        $this->info("Making Validators!");
+        $this->makeExternalValidators($this->baseIdentity, $this->countValidators);
+        $this->success("Validators created!");
 
         $this->applyFunds($this->baseIdentity);
 
@@ -165,7 +174,7 @@ class LoremDbSeeder extends Seeder
         string $identity_address,
         int $count = 10
     ) {
-        $organizations = $this->makeOrganizations($identity_address,  $count);
+        $organizations = $this->makeOrganizations("Provider", $identity_address,  $count);
 
         foreach (collect($organizations)->random(ceil(count($organizations) / 2)) as $organization) {
             /** @var Fund[] $funds */
@@ -194,6 +203,26 @@ class LoremDbSeeder extends Seeder
                     'state'             => 'approved',
                 ]);
             }
+        }
+    }
+
+    /**
+     * @param string $identity_address
+     * @param int $count
+     */
+    public function makeExternalValidators(
+        string $identity_address,
+        int $count = 10
+    ) {
+        $organizations = $this->makeOrganizations("Validator", $identity_address,  $count);
+
+        foreach ($organizations as $key => $organization) {
+            $this->makeOffices($organization, rand(1, 2));
+
+            $organization->update([
+                'is_validator' => true,
+                'validator_auto_accept_funds' => $key <= ($this->countValidators / 2),
+            ]);
         }
     }
 
@@ -264,12 +293,14 @@ class LoremDbSeeder extends Seeder
     }
 
     /**
+     * @param string $prefix
      * @param string $identity_address
      * @param int $count
      * @param array $fields
-     * @return array
+     * @return Organization[]
      */
     public function makeOrganizations(
+        string $prefix,
         string $identity_address,
         int $count = 1,
         array $fields = []
@@ -279,7 +310,7 @@ class LoremDbSeeder extends Seeder
 
         while ($count-- > 0) {
             array_push($out, $this->makeOrganization(
-                'Provider #' . $nth++,
+                sprintf('%s #%s', $prefix, $nth++),
                 $identity_address,
                 $fields
             ));

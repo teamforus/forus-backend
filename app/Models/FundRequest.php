@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Events\FundRequests\FundRequestResolved;
+use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\FundRequestRecordQuery;
+use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -12,7 +15,6 @@ use Illuminate\Http\Request;
  *
  * @property int $id
  * @property int $fund_id
- * @property int|null $employee_id
  * @property string $identity_address
  * @property string $note
  * @property string $state
@@ -24,7 +26,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $clarifications_answered_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $clarifications_pending
  * @property-read int|null $clarifications_pending_count
- * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
@@ -77,7 +78,20 @@ class FundRequest extends Model
         $query = self::query();
 
         if ($organization) {
-            $query->whereIn('fund_id', $organization->funds()->pluck('id'));
+            $internalFunds = $organization->funds()->pluck('id')->toArray();
+            $externalFunds = FundQuery::whereExternalValidatorFilter(
+                Fund::query(),
+                OrganizationQuery::whereHasPermissions(
+                    Organization::query(),
+                    auth_address(),
+                    'validate_records'
+                )->pluck('organizations.id')->toArray()
+            )->pluck('funds.id')->toArray();
+
+            $query->whereIn('fund_id', array_unique(array_merge(
+                $externalFunds,
+                $internalFunds
+            )));
         }
 
         if ($request->has('q') && $q = $request->input('q')) {
@@ -95,14 +109,6 @@ class FundRequest extends Model
     public function fund()
     {
         return $this->belongsTo(Fund::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function employee()
-    {
-        return $this->belongsTo(Employee::class);
     }
 
     /**
@@ -172,42 +178,21 @@ class FundRequest extends Model
     }
 
     /**
+     * @param Employee $employee
      * @param string|null $note
-     * @return FundRequest
+     * @return FundRequest|bool
      * @throws \Exception
      */
-    public function decline(string $note = null) {
-        if (!$this->employee_id) {
-            throw new \Exception("No employee assigned.", 403);
-        }
-
-        foreach ($this->records_pending as $record) {
+    public function decline(Employee $employee, string $note = null) {
+        $this->records_pending()->where([
+            'employee_id' => $employee->id
+        ])->each(function(FundRequestRecord $record) use ($note) {
             $record->decline($note, false);
-        }
-
-        $this->records_approved()->each(function(FundRequestRecord $record) {
-            $record->makeValidation();
         });
 
-        return $this->updateStateByRecords()->updateModel([
-            'note' => $note,
-        ]);
-    }
-
-    /**
-     * @return FundRequest
-     * @throws \Exception
-     */
-    public function approve() {
-        if (!$this->employee_id) {
-            throw new \Exception("No employee assigned.", 403);
-        }
-
-        $this->records_pending()->each(function(FundRequestRecord $record) {
-            $record->approve(false);
-        });
-
-        $this->records_approved()->each(function(FundRequestRecord $record) {
+        $this->records_approved()->where([
+            'employee_id' => $employee->id
+        ])->each(function(FundRequestRecord $record) {
             $record->makeValidation();
         });
 
@@ -215,23 +200,23 @@ class FundRequest extends Model
     }
 
     /**
-     * @param string $state
-     * @param string|null $note
-     * @return $this|FundRequest
-     * @throws \Exception
+     * @param Employee $employee
+     * @return $this
      */
-    public function resolve(string $state, string $note = null)
-    {
-        switch ($state) {
-            case self::STATE_APPROVED: {
-                return $this->approve();
-            } break;
-            case self::STATE_DECLINED: {
-                return $this->decline($note);
-            } break;
-        }
+    public function approve(Employee $employee) {
+        $this->records_pending()->where([
+            'employee_id' => $employee->id
+        ])->each(function(FundRequestRecord $record) {
+            $record->approve(false);
+        });
 
-        return $this;
+        $this->records_approved()->where([
+            'employee_id' => $employee->id
+        ])->each(function(FundRequestRecord $record) {
+            $record->makeValidation();
+        });
+
+        return $this->updateStateByRecords();
     }
 
     public function updateStateByRecords() {
@@ -256,21 +241,32 @@ class FundRequest extends Model
 
     /**
      * @param Employee $employee
-     * @return FundRequest
+     * @return $this
      */
     public function assignEmployee(Employee $employee) {
-        return $this->updateModel([
+        FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            $this->records()->getQuery(),
+            $employee->identity_address,
+            $employee->id
+        )->update([
             'employee_id' => $employee->id
         ]);
+
+        return $this;
     }
 
     /**
-     * @return FundRequest
+     * @param Employee $employee
+     * @return $this
      */
-    public function resignEmployee() {
-        return $this->updateModel([
+    public function resignEmployee(Employee $employee) {
+        $this->records()->where([
+            'employee_id' => $employee->id,
+        ])->update([
             'employee_id' => null
         ]);
+
+        return $this;
     }
 
     /**

@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Events\Funds\FundCreated;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
-use App\Models\FundTopUp;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
@@ -87,7 +87,7 @@ class FundsController extends Controller
         }
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
-            $fund->makeCriteria($request->input('criteria'));
+            $fund->updateCriteria($request->input('criteria'));
         }
 
         if (config('forus.features.dashboard.organizations.funds.formula_products')) {
@@ -181,6 +181,45 @@ class FundsController extends Controller
         }
 
         return new FundResource($fund);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateFundCriteriaRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return FundResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateCriteria(
+        UpdateFundCriteriaRequest $request,
+        Organization $organization,
+        Fund $fund
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('update', [$fund, $organization]);
+
+        if (config('forus.features.dashboard.organizations.funds.criteria')) {
+            $fund->updateCriteria($request->input('criteria'));
+        }
+
+        return new FundResource($fund);
+    }
+
+    /**
+     * @param UpdateFundCriteriaRequest $request
+     * @param Organization $organization
+     * @return mixed
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateCriteriaValidate(
+        UpdateFundCriteriaRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('show', $organization);
+
+        return response()->json([], 200);
     }
 
     /**
