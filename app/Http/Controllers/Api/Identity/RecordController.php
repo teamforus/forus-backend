@@ -33,13 +33,13 @@ class RecordController extends Controller
      */
     public function index(Request $request)
     {
-        return array_filter($this->recordRepo->recordsList(
+        return array_values(array_filter($this->recordRepo->recordsList(
             auth_address(),
             $request->get('type', null),
             $request->get('record_category_id', null)
         ), function($record) {
             return !in_array($record['key'], self::HIDDEN_RECORD_TYPES);
-        });
+        }));
     }
 
     /**
