@@ -89,4 +89,18 @@ class FundProviderQuery
             });
         });
     }
+
+    /**
+     * @param Builder $query
+     * @param string $q
+     * @return Builder
+     */
+    public static function queryFilter(Builder $query, string $q = '') {
+        return $query->whereHas('organization', function(Builder $builder) use ($q) {
+            return $builder->where('name', 'LIKE', "%{$q}%")
+                ->orWhere('kvk', 'LIKE', "%{$q}%")
+                ->orWhere('email', 'LIKE', "%{$q}%")
+                ->orWhere('phone', 'LIKE', "%{$q}%");
+        });
+    }
 }
