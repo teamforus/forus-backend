@@ -3,7 +3,13 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Fund;
+use App\Models\FundProvider;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Container\Container;
+use Illuminate\Http\Request;
 
 class FundProviderQuery
 {
@@ -88,5 +94,28 @@ class FundProviderQuery
                 $builder->doesntHave('fund_provider_products');
             });
         });
+    }
+
+    /**
+     * @param Builder $query
+     * @param Request $request
+     * @param Fund $fund
+     * @return mixed
+     */
+    public static function sortByRevenue(
+        Builder $query,
+        Request $request,
+        Fund $fund
+    ) {
+        $page = Paginator::resolveCurrentPage('page');
+        $pageSize = $request->input('per_page', 15);
+        $results = $query->get()->sortByDesc(function (FundProvider $fundProvider) use ($request, $fund) {
+            return $fundProvider->getFinances($request, $fund)['usage'];
+        });
+
+        return new LengthAwarePaginator($results->forPage($page, $pageSize), $results->count(), $pageSize, $page, [
+            'path'     => Paginator::resolveCurrentPath(),
+            'pageName' => 'page',
+        ]);
     }
 }
