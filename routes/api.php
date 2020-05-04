@@ -37,7 +37,7 @@ $router->group([], function() use ($router) {
                 $router->get('/email/exchange/{emailToken}', 'Api\IdentityController@emailTokenExchange');
 
                 // sign up, email confirmation
-                $router->get('/confirmation/redirect/{exchangeToken}', 'Api\IdentityController@emailConfirmationRedirect')->name('emailSignUpRedirect');;
+                $router->get('/confirmation/redirect/{exchangeToken}', 'Api\IdentityController@emailConfirmationRedirect')->name('emailSignUpRedirect');
                 $router->get('/confirmation/exchange/{exchangeToken}', 'Api\IdentityController@emailConfirmationExchange');
 
                 $router->get('/check-token', 'Api\IdentityController@checkToken');

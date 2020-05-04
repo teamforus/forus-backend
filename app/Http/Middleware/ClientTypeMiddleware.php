@@ -11,6 +11,8 @@ class ClientTypeMiddleware
      * @var array
      */
     private $except = [
+        'digidResolve',
+        'digidRedirect',
         'emailSignUpRedirect',
         'emailSignInRedirect',
     ];
