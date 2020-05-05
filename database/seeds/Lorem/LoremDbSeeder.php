@@ -128,7 +128,7 @@ class LoremDbSeeder extends Seeder
         $organizations = collect($this->implementationsWithFunds)->map(function(
             $implementation
         ) use ($self, $identity_address) {
-            return $self->makeOrganization($implementation, $identity_address);
+            return $self->makeOrganization($implementation, $identity_address, []);
         });
 
         foreach ($organizations as $organization) {
@@ -165,7 +165,12 @@ class LoremDbSeeder extends Seeder
         string $identity_address,
         int $count = 10
     ) {
-        $organizations = $this->makeOrganizations($identity_address,  $count);
+        $organizations = $this->makeOrganizations(
+            $identity_address,
+            $count,
+            [],
+            $this->config('provider_offices_count')
+        );
 
         foreach (collect($organizations)->random(ceil(count($organizations) / 2)) as $organization) {
             /** @var Fund[] $funds */
@@ -181,8 +186,7 @@ class LoremDbSeeder extends Seeder
         }
 
         foreach ($organizations as $organization) {
-            $this->makeOffices($organization, rand(1, 2));
-            $this->makeProducts($organization, rand(2, 4));
+            $this->makeProducts($organization, $this->config('provider_products_count'));
         }
 
         foreach (Fund::get() as $fund) {
@@ -267,12 +271,14 @@ class LoremDbSeeder extends Seeder
      * @param string $identity_address
      * @param int $count
      * @param array $fields
+     * @param int $offices_count
      * @return array
      */
     public function makeOrganizations(
         string $identity_address,
         int $count = 1,
-        array $fields = []
+        array $fields = [],
+        int $offices_count = 0
     ) {
         $out = [];
         $nth= 1;
@@ -281,7 +287,8 @@ class LoremDbSeeder extends Seeder
             array_push($out, $this->makeOrganization(
                 'Provider #' . $nth++,
                 $identity_address,
-                $fields
+                $fields,
+                $offices_count
             ));
         }
 
@@ -292,12 +299,14 @@ class LoremDbSeeder extends Seeder
      * @param string $name
      * @param string $identity_address
      * @param array $fields
+     * @param int $offices_count
      * @return Organization|\Illuminate\Database\Eloquent\Model
      */
     public function makeOrganization(
         string $name,
         string $identity_address,
-        array $fields = []
+        array $fields = [],
+        int $offices_count = 0
     ) {
         $organization = Organization::create(
             collect(collect([
@@ -319,8 +328,7 @@ class LoremDbSeeder extends Seeder
 
         OrganizationCreated::dispatch($organization);
 
-        $organization->offices()->delete();
-        $this->makeOffices($organization, rand(2, 3));
+        $this->makeOffices($organization, $offices_count);
 
         return $organization;
     }
@@ -648,11 +656,19 @@ class LoremDbSeeder extends Seeder
         );
     }
 
-
     public function makeOtherImplementations($implementations) {
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);
         }
+    }
+
+    /**
+     * @param $key
+     * @param null $default
+     * @return \Illuminate\Config\Repository|mixed
+     */
+    public function config($key, $default = null) {
+        return config(sprintf('forus.seeders.lorem_db_seeder.%s', $key), $default);
     }
 
     /**

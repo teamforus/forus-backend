@@ -111,12 +111,12 @@ class FundProviderController extends Controller
             ]);
         }
 
-        if ($enable_products !== null) {
-            $fundProvider->products()->attach($enable_products);
+        if (is_array($enable_products)) {
+            $fundProvider->approveProducts($enable_products);
         }
 
-        if ($disable_products !== null) {
-            $fundProvider->products()->detach($disable_products);
+        if (is_array($disable_products)) {
+            $fundProvider->declineProducts($disable_products);
         }
 
         $fundProvider->updateModel([

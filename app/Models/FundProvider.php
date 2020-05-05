@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\FundProviderChatQuery;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
+ * @property-read int|null $fund_provider_chats_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
  * @property-read int|null $fund_provider_products_count
  * @property-read \App\Models\Organization $organization
@@ -75,6 +78,13 @@ class FundProvider extends Model
      */
     public function fund_provider_products() {
         return $this->hasMany(FundProviderProduct::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_chats() {
+        return $this->hasMany(FundProviderChat::class);
     }
 
     /**
@@ -179,5 +189,41 @@ class FundProvider extends Model
         Organization $organization
     ) {
         return self::exportTransform(self::search($request, $organization));
+    }
+
+    /**
+     * @param array $products
+     * @return $this
+     */
+    public function approveProducts(array $products)
+    {
+        $this->products()->attach($products);
+
+        FundProviderChatQuery::whereProductFilter(
+            $this->fund_provider_chats()->getQuery(),
+            $products
+        )->get()->each(function(FundProviderChat $chat) {
+            $chat->addSystemMessage('Aanbieding geaccepteerd.', auth_address());
+        });
+
+        return $this;
+    }
+
+    /**
+     * @param array $products
+     * @return $this
+     */
+    public function declineProducts(array $products)
+    {
+        $this->products()->detach($products);
+
+        FundProviderChatQuery::whereProductFilter(
+            $this->fund_provider_chats()->getQuery(),
+            $products
+        )->get()->each(function(FundProviderChat $chat) {
+            $chat->addSystemMessage('Aanbieding afgewezen.', auth_address());
+        });
+
+        return $this;
     }
 }

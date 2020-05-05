@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
-use App\Services\MediaService\MediaConfig;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
