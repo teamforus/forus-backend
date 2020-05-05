@@ -3,13 +3,8 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Fund;
-use App\Models\FundProvider;
+use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Container\Container;
-use Illuminate\Http\Request;
 
 class FundProviderQuery
 {
@@ -98,24 +93,20 @@ class FundProviderQuery
 
     /**
      * @param Builder $query
-     * @param Request $request
-     * @param Fund $fund
-     * @return mixed
+     * @param array|string|int $fund_id
+     * @return Builder|\Illuminate\Database\Query\Builder
      */
     public static function sortByRevenue(
         Builder $query,
-        Request $request,
-        Fund $fund
+        $fund_id
     ) {
-        $page = Paginator::resolveCurrentPage('page');
-        $pageSize = $request->input('per_page', 15);
-        $results = $query->get()->sortByDesc(function (FundProvider $fundProvider) use ($request, $fund) {
-            return $fundProvider->getFinances($request, $fund)['usage'];
-        });
-
-        return new LengthAwarePaginator($results->forPage($page, $pageSize), $results->count(), $pageSize, $page, [
-            'path'     => Paginator::resolveCurrentPath(),
-            'pageName' => 'page',
-        ]);
+        return $query->select('*')->selectSub(VoucherTransaction::selectRaw(
+            'sum(`voucher_transactions`.`amount`)'
+        )->whereColumn(
+            'voucher_transactions.organization_id',
+            'fund_providers.organization_id'
+        )->whereHas('voucher', function(Builder $builder) use ($fund_id) {
+            $builder->whereIn('fund_id', (array) $fund_id);
+        }), 'usage')->orderBy('usage', 'DESC');
     }
 }

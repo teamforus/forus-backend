@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 
 /**
  * App\Models\FundProvider
@@ -156,7 +154,7 @@ class FundProvider extends Model
         }
 
         $dates = $dates->map(function (Carbon $date, $key) use ($fund, $dates, $product_category_id) {
-            if($key > 0) {
+            if ($key > 0) {
                 $voucherQuery = $fund->voucher_transactions()->whereBetween(
                     'voucher_transactions.created_at', [
                         $dates[$key - 1]->copy()->endOfDay(),

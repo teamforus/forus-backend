@@ -48,9 +48,11 @@ class FundProviderController extends Controller
             $query = FundProviderQuery::wherePendingForFundsFilter($query, $fund->id);
         }
 
-        return FundProviderResource::collection(FundProviderQuery::sortByRevenue($query->with(
-            FundProviderResource::$load
-        ), $request, $fund));
+        return FundProviderResource::collection(
+            FundProviderQuery::sortByRevenue($query, $fund->id)->paginate(
+                $request->input('per_page')
+            )
+        );
     }
 
     /**
