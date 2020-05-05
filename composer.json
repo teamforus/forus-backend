@@ -15,7 +15,7 @@
         "aws/aws-sdk-php": "3.133.44",
         "barryvdh/laravel-dompdf": "^0.8.6",
         "barryvdh/laravel-ide-helper": "2.6.7",
-        "bunq/sdk_php": "1.12.1",
+        "bunq/sdk_php": "1.13.1",
         "doctrine/dbal": "2.10.1",
         "dusterio/laravel-aws-worker": "0.1.26",
         "fideloper/proxy": "4.2.2",
