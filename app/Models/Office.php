@@ -70,7 +70,7 @@ class Office extends Model
 
         // approved only
         if ($request->input('approved', false)) {
-            $query->whereHas('organization.organization_funds', function(Builder $builder) {
+            $query->whereHas('organization.fund_providers', function(Builder $builder) {
                 return FundProviderQuery::whereApprovedForFundsFilter(
                     $builder,
                     Implementation::activeFundsQuery()->pluck('id')->toArray()

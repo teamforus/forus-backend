@@ -27,6 +27,8 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon $expire_at
  * @property bool $sold_out
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
+ * @property-read int|null $fund_provider_chats_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
@@ -160,6 +162,13 @@ class Product extends Model
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'product_photo'
         ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_chats() {
+        return $this->hasMany(FundProviderChat::class);
     }
 
     /**

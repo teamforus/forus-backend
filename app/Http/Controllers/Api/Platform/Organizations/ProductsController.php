@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Events\Products\ProductCreated;
+use App\Events\Products\ProductUpdated;
 use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
@@ -9,7 +11,6 @@ use App\Http\Resources\ProductResource;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
-use App\Models\Voucher;
 use App\Services\MediaService\Models\Media;
 
 class ProductsController extends Controller
@@ -77,6 +78,8 @@ class ProductsController extends Controller
             'unlimited_stock' => $unlimited_stock
         ]));
 
+        ProductCreated::dispatch($product);
+
         if ($media instanceof Media && $media->type == 'product_photo') {
             $product->attachMedia($media);
         }
@@ -136,19 +139,11 @@ class ProductsController extends Controller
             'total_amount' => $unlimited_stock ? 0 : $total_amount
         ]));
 
-        $product->updateSoldOutState();
-
-        $product->vouchers()->each(function (Voucher $voucher) {
-            $voucher->update([
-                'expire_at' => $voucher->fund->end_date->gt(
-                    $voucher->product->expire_at
-                ) ? $voucher->product->expire_at : $voucher->fund->end_date
-            ]);
-        });
-
         if ($media instanceof Media && $media->type == 'product_photo') {
             $product->attachMedia($media);
         }
+
+        ProductUpdated::dispatch($product);
 
         return new ProductResource($product);
     }

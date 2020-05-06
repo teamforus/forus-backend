@@ -23,7 +23,7 @@ abstract class BasePolicy
      * @param array $data
      * @throws AuthorizationJsonException
      */
-    protected function deny(string $error, $code = 403, $data = [])
+    protected function deny(string $error, $code = 403)
     {
         $policyError = $titleKey = sprintf(
             "%s/%s.%s",
@@ -44,7 +44,7 @@ abstract class BasePolicy
         $meta = compact('error', 'title', 'message', 'code');
 
         throw new AuthorizationJsonException(json_encode(array_merge_recursive(
-            compact('error', 'message', 'meta'), $data
+            compact('error', 'message', 'meta')
         )), $code);
     }
 }

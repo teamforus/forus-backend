@@ -34,7 +34,7 @@ class FundProviderController extends Controller
         $query = Implementation::queryFundsByState([
             Fund::STATE_ACTIVE, Fund::STATE_PAUSED
         ])->whereNotIn(
-            'id', $organization->organization_funds()->pluck(
+            'id', $organization->fund_providers()->pluck(
             'fund_id'
         )->toArray());
 
@@ -59,14 +59,14 @@ class FundProviderController extends Controller
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
         $state = $request->input('state', false);
-        $organization_funds = $organization->organization_funds();
+        $fund_providers = $organization->fund_providers();
 
         if ($state) {
-            $organization_funds->where('state', $state);
+            $fund_providers->where('state', $state);
         }
 
         return FundProviderResource::collection(
-            $organization_funds->get()
+            $fund_providers->get()
         );
     }
 
@@ -88,7 +88,7 @@ class FundProviderController extends Controller
         $notificationService = resolve('forus.services.notification');
 
         /** @var FundProvider $fundProvider */
-        $fundProvider = $organization->organization_funds()->firstOrCreate($request->only([
+        $fundProvider = $organization->fund_providers()->firstOrCreate($request->only([
             'fund_id'
         ]));
 

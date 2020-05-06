@@ -8,6 +8,7 @@ use App\Listeners\FundRequestRecordSubscriber;
 use App\Listeners\FundRequestSubscriber;
 use App\Listeners\FundSubscriber;
 use App\Listeners\OrganizationSubscriber;
+use App\Listeners\ProductSubscriber;
 use App\Listeners\VoucherSubscriber;
 use App\Listeners\VoucherTransactionsSubscriber;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -22,6 +23,7 @@ class EventServiceProvider extends ServiceProvider
     protected $subscribe = [
         FundSubscriber::class,
         VoucherSubscriber::class,
+        ProductSubscriber::class,
         EmployeeSubscriber::class,
         FundRequestSubscriber::class,
         OrganizationSubscriber::class,

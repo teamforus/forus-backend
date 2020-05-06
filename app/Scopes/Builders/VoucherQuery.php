@@ -35,7 +35,7 @@ class VoucherQuery
                     $builder, $identity_address, 'scan_vouchers'
                 );
 
-                $builder->whereHas('organization_funds', function(
+                $builder->whereHas('fund_providers', function(
                     Builder $builder
                 ) use ($fund_id) {
                     FundProviderQuery::whereApprovedForFundsFilter(

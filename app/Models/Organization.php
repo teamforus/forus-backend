@@ -32,6 +32,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $employees_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
+ * @property-read int|null $fund_providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
@@ -43,8 +45,6 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $medias_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $organization_funds
- * @property-read int|null $organization_funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds
@@ -214,10 +214,9 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function organization_funds() {
+    public function fund_providers() {
         return $this->hasMany(FundProvider::class);
     }
-
     /**
      * Get organization logo
      * @return MorphOne
