@@ -147,6 +147,14 @@ class FundProvider extends Model
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
             $dates = range_between_dates($startDate, $endDate);
+        } elseif ($type == 'year') {
+            $startDate = Carbon::createFromDate($year, 1, 1)->startOfYear();
+            $endDate = Carbon::createFromDate($year, 1, 1)->endOfYear();
+
+            $dates->push($startDate);
+            $dates->push($startDate->copy()->addMonths(4));
+            $dates->push($startDate->copy()->addMonths(8));
+            $dates->push($endDate);
         } elseif ($type == 'all') {
             $firstTransaction = $fund->voucher_transactions()->where([
                 'organization_id' => $this->organization_id
