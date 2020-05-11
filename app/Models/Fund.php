@@ -887,15 +887,6 @@ class Fund extends Model
                     'email' => $fund->organization->email
                 ])->unique('email');
 
-                /** @var FundTopUp $topUp */
-                if ($fund->top_ups()->count() == 0) {
-                    $topUp = $fund->top_ups()->create([
-                        'code' => FundTopUp::generateCode()
-                    ]);
-                } else {
-                    $topUp = $fund->top_ups()->first();
-                }
-
                 foreach ($referrers as $referrer) {
                     $mailService->fundBalanceWarning(
                         $referrer['email'],
@@ -904,9 +895,7 @@ class Fund extends Model
                         $fund->organization->name,
                         $fund->name,
                         currency_format($fund->notification_amount - $transactionCosts),
-                        currency_format($fund->budget_left),
-                        $bunq->getBankAccountIban(),
-                        $topUp->code
+                        currency_format($fund->budget_left)
                     );
                 }
 
