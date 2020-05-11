@@ -865,11 +865,6 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach ($funds as $fund) {
-            if (!$bunq = $fund->getBunq()) {
-                app('log')->error('Top up for this fund not available yet.');
-                continue;
-            }
-
             $transactionCosts = $fund->getTransactionCosts();
 
             if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
