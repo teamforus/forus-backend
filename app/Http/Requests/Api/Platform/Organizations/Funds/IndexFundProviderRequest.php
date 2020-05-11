@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class FinanceRequest extends FormRequest
+class IndexFundProviderRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +24,7 @@ class FinanceRequest extends FormRequest
     public function rules()
     {
         return [
-            'type'  => 'required|in:year,quarter,month,week,all',
-            'nth'   => 'numeric',
-            'year'  => 'required|date_format:Y',
+            'q'  => 'nullable|string|max:50',
         ];
     }
 }
