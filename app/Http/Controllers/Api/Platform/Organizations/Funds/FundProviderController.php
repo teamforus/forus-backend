@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundProviderRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundProviderRequest;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\FundProviderResource;
@@ -15,21 +16,20 @@ use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
-use Illuminate\Http\Request;
 
 class FundProviderController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
+     * @param IndexFundProviderRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Request $request,
+        IndexFundProviderRequest $request,
         Organization $organization,
         Fund $fund
     ) {
@@ -39,6 +39,10 @@ class FundProviderController extends Controller
 
         $query = $fund->providers()->getQuery();
         $state = $request->input('state', false);
+
+        if ($q = $request->input('q', false)) {
+            $query = FundProviderQuery::queryFilter($query, $q);
+        }
 
         if ($state == FundProvider::STATE_APPROVED) {
             $query = FundProviderQuery::whereApprovedForFundsFilter($query, $fund->id);
