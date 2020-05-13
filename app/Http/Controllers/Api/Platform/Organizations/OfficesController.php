@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Http\Requests\Api\Platform\Organizations\Offices\IndexOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\StoreOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
@@ -24,16 +25,20 @@ class OfficesController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param IndexOfficeRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        IndexOfficeRequest $request,
         Organization $organization
     ) {
         $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
-        return OfficeResource::collection($organization->offices);
+        return OfficeResource::collection($organization->offices()->paginate(
+            $request->input('per_page')
+        ));
     }
 
     /**

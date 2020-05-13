@@ -3,9 +3,12 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundProviderChat;
+use App\Models\FundProviderChatMessage;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class ProductResource
@@ -23,7 +26,7 @@ class ProductResource extends Resource
         'organization.offices.photo.presets',
         'organization.offices.schedules',
         'organization.offices.organization',
-        'organization.offices.organization.business_type.translations',
+        // 'organization.offices.organization.business_type.translations',
         'organization.offices.organization.logo.presets',
         // 'organization.offices.organization.product_categories.translations',
         'organization.supplied_funds_approved.logo',
@@ -44,10 +47,23 @@ class ProductResource extends Resource
         $fundsQuery = FundQuery::whereActiveFilter(Fund::query());
         $fundsQuery = FundQuery::whereProductsAreApprovedFilter($fundsQuery, $product->id);
 
+        if (Gate::allows('showFunds', [$product, $product->organization])) {
+            $append = [
+                'has_chats' => $product->fund_provider_chats()->exists(),
+                'unseen_messages' => FundProviderChatMessage::whereIn(
+                    'fund_provider_chat_id', $product->fund_provider_chats()->pluck('id')
+                )->where([
+                    'provider_seen' => false
+                ])->count(),
+            ];
+        } else {
+            $append = [];
+        }
+
         return collect($product)->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
             'organization_id'
-        ])->merge([
+        ])->merge($append)->merge([
             'description_html' => resolve('markdown')->convertToHtml(
                 $product->description
             ),

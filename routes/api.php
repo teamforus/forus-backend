@@ -205,12 +205,6 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
 
     });
 
-    $router->get('/status', function() {
-        return [
-            'status' => 'ok'
-        ];
-    });
-
     $router->resource('medias', 'Api\MediaController', [
         'only' => ['index', 'show', 'store', 'destroy'],
         'parameters' => [
@@ -230,6 +224,8 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         $router->post('files/validate', 'Api\FileController@storeValidate');
     }
 });
+
+$router->get('/status', 'Api\StatusController@getStatus');
 
 if (env('APP_DEBUG', false) == true && env('APP_ENV') == 'dev') {
     $router->group(['middleware' => ['api.auth']], function() use ($router) {

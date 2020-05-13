@@ -21,7 +21,7 @@ class ProductQuery
                 $builder->whereIn('fund_id', (array) $fund_id);
             });
 
-            $builder->orWhereHas('organization.organization_funds', function(
+            $builder->orWhereHas('organization.fund_providers', function(
                 Builder $builder
             ) use ($fund_id) {
                 $builder->where([
