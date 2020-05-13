@@ -10,3 +10,5 @@ languages:
   test:
     include:
       - /app/.*
+    exclude:
+      - /app/Http/.*
