@@ -1,14 +1,9 @@
 component_depth: 1
 languages:
 - name: php
-  production:
-    exclude:
-      - /app/.*\.php
-      - /routes/api-platform.php
-      - /resources/lang/nl/geo_ip/countries.php
-      - /resources/lang/nl/validation.php
-      - /app/Http/Controllers/Api/Platform/Organizations/Funds/FundProviderController.php
-      
-  test:
-    include:
-      - /app/.*\.php
+
+exclude:
+  - /routes/api-platform.php
+  - /resources/lang/nl/geo_ip/countries.php
+  - /resources/lang/nl/validation.php
+  - /app/Http/Controllers/Api/Platform/Organizations/Funds/FundProviderController.php
