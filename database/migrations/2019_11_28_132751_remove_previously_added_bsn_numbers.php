@@ -9,7 +9,7 @@ class RemovePreviouslyAddedBsnNumbers extends Migration
     /**
      * Run the migrations.
      *
-     * @return void
+     * @throws Exception
      */
     public function up()
     {
@@ -17,7 +17,7 @@ class RemovePreviouslyAddedBsnNumbers extends Migration
 
         App\Services\Forus\Record\Models\Record::where([
             'record_type_id' => $recordRepo->getTypeIdByKey('bsn')
-        ])->delete();
+        ])->forceDelete();
     }
 
     /**
