@@ -4,8 +4,7 @@ languages:
   production:
     exclude:
       - /app/.*
-      - /tests/.*
       
   test:
     include:
-      - /tests/.*
+      - /app/.*
