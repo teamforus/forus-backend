@@ -1,21 +1,3 @@
 component_depth: 1
 languages:
 - name: php
-  production:
-    exclude:
-      - /app/.*
-      - /routes/api-platform.php
-      - /database/.*
-      - /config/.*
-      - /resources/.*
-      - /routes/.*
-      - /bootstrap/app.php
-      
-  test:
-    include:
-      - /app/.*
-    exclude:
-      - /app/Http/.*
-      - /app/Services/.*
-      - /app/Rules/.*
-      - /app/Models/.*
