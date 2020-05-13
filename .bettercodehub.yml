@@ -1,5 +1,5 @@
 component_depth: 1
 languages:
-- php
+- name: php
 exclude:
 - /app/.*
