@@ -6,6 +6,7 @@ languages:
       - /app/.*
       - /routes/api-platform.php
       - /database/.*
+      - /config/.*
       
   test:
     include:
