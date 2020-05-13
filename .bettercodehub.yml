@@ -4,7 +4,7 @@ languages:
   production:
     exclude:
       - /app/.*
-      - /routes/.*
+      - /routes/api-platform.php
       
   test:
     include:
