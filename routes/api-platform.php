@@ -178,8 +178,8 @@ $router->group([
     );
 
     $router->post('/digid', 'DigIdController@start');
-    $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
-    $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
+    $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
+    $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
 
     $router->resource(
         'provider-invitations',

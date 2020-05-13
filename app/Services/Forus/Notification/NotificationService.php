@@ -836,8 +836,6 @@ class NotificationService
      * @param string $fund_name
      * @param string $notification_amount
      * @param string $budget_left
-     * @param string $iban
-     * @param string $top_up_code
      * @return bool
      */
     public function fundBalanceWarning(
@@ -847,9 +845,7 @@ class NotificationService
         string $sponsor_name,
         string $fund_name,
         string $notification_amount,
-        string $budget_left,
-        string $iban,
-        string $top_up_code
+        string $budget_left
     ): bool {
         return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
@@ -857,8 +853,6 @@ class NotificationService
             $notification_amount,
             $budget_left,
             $link,
-            $iban,
-            $top_up_code,
             $emailFrom
         ));
     }

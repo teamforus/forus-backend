@@ -16,29 +16,30 @@ return [
     */
     
     'providers'              => [
-		'provider' => 'Aanbieder',
-		'email' => 'e-mail',
-		'phone' => 'telefoonnummer',
+        'provider' => 'Aanbieder',
+        'email' => 'e-mail',
+        'phone' => 'telefoonnummer',
         'categories' => 'categoriën',
         'kvk' => 'kvk',
         'state' => 'status',
-	'allow_budget' => 'Geaccepteerd: budget',
-	'allow_products' => 'Geaccepteerd: aanbiedingen',
-	'allow_some_products' => 'Geaccepteerd: specifieke aanbiedingen',
+    'allow_budget' => 'Geaccepteerd: budget',
+    'allow_products' => 'Geaccepteerd: aanbiedingen',
+    'allow_some_products' => 'Geaccepteerd: specifieke aanbiedingen',
     ],
-	
+    
     'fund_requests'              => [
-		'bsn' => 'Burgerservicenummer',
-		'fund_name' => 'Fondsnaam',
-		'status' => 'Status',
+        'bsn' => 'Burgerservicenummer',
+        'fund_name' => 'Fondsnaam',
+        'status' => 'Status',
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
-    ],	
+    ],    
 
     'voucher_transactions'    => [
-		'amount' => 'bedrag',
-		'date' => 'datum',
-		'fund' => 'fonds',
+        'id' => 'ID',
+        'amount' => 'bedrag',
+        'date' => 'datum',
+        'fund' => 'fonds',
         'provider' => 'aanbieder',
         'state' => 'status',
         'state-values' => [

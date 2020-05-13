@@ -352,7 +352,10 @@ class IdentityFallbackController extends Controller
         );
 
         if ($isMobile) {
-            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
+            return view()->make('pages.auth.deep_link', array_merge([
+                'type' => 'email_sign_in',
+                'exchangeToken' => $emailToken
+            ], compact('redirectUrl')));
         }
 
         return redirect($redirectUrl);

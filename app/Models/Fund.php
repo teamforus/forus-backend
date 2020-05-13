@@ -865,11 +865,6 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach ($funds as $fund) {
-            if (!$bunq = $fund->getBunq()) {
-                app('log')->error('Top up for this fund not available yet.');
-                continue;
-            }
-
             $transactionCosts = $fund->getTransactionCosts();
 
             if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
@@ -887,15 +882,6 @@ class Fund extends Model
                     'email' => $fund->organization->email
                 ])->unique('email');
 
-                /** @var FundTopUp $topUp */
-                if ($fund->top_ups()->count() == 0) {
-                    $topUp = $fund->top_ups()->create([
-                        'code' => FundTopUp::generateCode()
-                    ]);
-                } else {
-                    $topUp = $fund->top_ups()->first();
-                }
-
                 foreach ($referrers as $referrer) {
                     $mailService->fundBalanceWarning(
                         $referrer['email'],
@@ -904,9 +890,7 @@ class Fund extends Model
                         $fund->organization->name,
                         $fund->name,
                         currency_format($fund->notification_amount - $transactionCosts),
-                        currency_format($fund->budget_left),
-                        $bunq->getBankAccountIban(),
-                        $topUp->code
+                        currency_format($fund->budget_left)
                     );
                 }
 
@@ -915,6 +899,23 @@ class Fund extends Model
                 ]);
             }
         }
+    }
+
+    /**
+    * @param Collection|Fund[] $funds
+    * @return mixed
+    */
+    public static function sortByState($funds) {
+        return $funds->sort(function (Fund $fund1, Fund $fund2) {
+            if ($fund1->state == $fund2->state) {
+                return 0;
+            }
+
+            return !in_array($fund1->state, [
+                Fund::STATE_ACTIVE,
+                Fund::STATE_PAUSED,
+            ]);
+        });
     }
 
     /**

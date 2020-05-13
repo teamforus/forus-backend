@@ -295,6 +295,7 @@ class VoucherTransaction extends Model
             VoucherTransaction $transaction
         ) use ($transKey) {
             return [
+                trans("$transKey.id") => $transaction->id,
                 trans("$transKey.amount") => currency_format(
                     $transaction->amount
                 ),
