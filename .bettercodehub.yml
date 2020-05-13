@@ -5,6 +5,7 @@ languages:
     exclude:
       - /app/.*
       - /routes/api-platform.php
+      - /database/.*
       
   test:
     include:
