@@ -12,3 +12,4 @@ languages:
       - /app/.*
     exclude:
       - /app/Http/.*
+      - /app/Services/.*
