@@ -1,5 +1,11 @@
 component_depth: 1
 languages:
 - name: php
-exclude:
-- /app/.*
+  production:
+    exclude:
+      - /app/.*
+      - /tests/.*
+      
+  test:
+    include:
+      - /tests/.*
