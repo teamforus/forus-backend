@@ -4,7 +4,6 @@ languages:
   production:
     exclude:
       - /app/.*
-      - /database/.*
       
   test:
     include:
