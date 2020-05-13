@@ -9,6 +9,7 @@ languages:
       - /config/.*
       - /resources/.*
       - /routes/.*
+      - /bootstrap/app.php
       
   test:
     include:
@@ -16,3 +17,5 @@ languages:
     exclude:
       - /app/Http/.*
       - /app/Services/.*
+      - /app/Rules/.*
+      - /app/Models/.*
