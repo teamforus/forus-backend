@@ -7,7 +7,7 @@ languages:
       - /routes/api-platform.php
       - /database/.*
       - /config/.*
-      - /recources/.*
+      - /resources/.*
       
   test:
     include:
