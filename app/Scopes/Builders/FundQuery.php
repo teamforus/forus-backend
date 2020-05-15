@@ -45,6 +45,19 @@ class FundQuery
 
     /**
      * @param Builder $query
+     * @param array|int $implementation_id
+     * @return Builder
+     */
+    public static function whereImplementationIdFilter(Builder $query, $implementation_id) {
+        return $query->whereHas('fund_config', function(
+            Builder $builder
+        ) use ($implementation_id) {
+            $builder->whereIn('implementation_id', (array) $implementation_id);
+        });
+    }
+
+    /**
+     * @param Builder $query
      * @param $organization_id
      * @return Builder
      */

@@ -16,12 +16,18 @@ class ImplementationResource extends JsonResource
      */
     public function toArray($request)
     {
+        /** @var Implementation $implementation **/
         if (is_null($implementation = $this->resource)) {
             return null;
         }
 
-        return collect($this->resource)->only([
-            'id', 'key', 'name', 'url_webshop'
-        ])->toArray();
+        return $implementation->only([
+            'id', 'key', 'name', 'url_webshop', 'title',
+            'description', 'has_more_info_url',
+            'more_info_url', 'description_steps',
+            'digid_app_id', 'digid_shared_secret',
+            'digid_a_select_server', 'digid_enabled',
+            'email_from_address', 'email_from_name'
+        ]);
     }
 }

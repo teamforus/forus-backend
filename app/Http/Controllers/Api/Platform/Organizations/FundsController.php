@@ -12,9 +12,11 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
+use App\Scopes\Builders\FundQuery;
 use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -24,26 +26,41 @@ use Illuminate\Support\Facades\DB;
 class FundsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     *  Display a listing of the resource.
      *
+     * @param Request $request
      * @param Organization $organization
-     * @return string
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        Request $request,
         Organization $organization
     ) {
         $this->authorize('viewAny', [Fund::class, $organization]);
 
-        if (auth()->id()) {
-            return FundResource::collection(Fund::sortByState($organization->funds));
+        $query = Fund::query()->where(
+            'organization_id', $organization->id
+        );
+
+        if ($q = $request->input('q')) {
+            $query = FundQuery::whereQueryFilter($query, $q);
         }
 
-        return FundResource::collection(
-            Fund::sortByState($organization->funds()->where([
+        if ($implementation_id = $request->input('implementation_id')) {
+            $query = FundQuery::whereImplementationIdFilter(
+                $query,
+                $implementation_id
+            );
+        }
+
+        if (!auth()->id()) {
+            $query->where([
                 'public' => true
-            ])->get())
-        );
+            ]);
+        }
+
+        return FundResource::collection(Fund::sortByState($query->get()));
     }
 
     /**
