@@ -24,7 +24,7 @@ class FinanceRequest extends FormRequest
     public function rules()
     {
         return [
-            'type'  => 'required|in:quarter,month,week,all',
+            'type'  => 'required|in:year,quarter,month,week,all',
             'nth'   => 'numeric',
             'year'  => 'required|date_format:Y',
         ];

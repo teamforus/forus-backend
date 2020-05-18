@@ -32,7 +32,7 @@ class FundApplicableRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        if (!empty($this->organization->organization_funds()->where(
+        if (!empty($this->organization->fund_providers()->where(
             'fund_id', $value
         )->first())) {
             $this->message = trans(

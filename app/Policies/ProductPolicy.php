@@ -76,6 +76,20 @@ class ProductPolicy
     }
 
     /**
+     * @param $identity_address
+     * @param Product $product
+     * @param Organization $organization
+     * @return bool
+     */
+    public function showFunds(
+        $identity_address,
+        Product $product,
+        Organization $organization
+    ) {
+        return $this->update($identity_address, $product, $organization);
+    }
+
+    /**
      * @return bool
      */
     public function showPublic() {

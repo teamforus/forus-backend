@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\BunqMeTab;
 use App\Models\Employee;
+use App\Models\FundProviderChat;
+use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderInvitation;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
@@ -17,6 +19,8 @@ use App\Models\VoucherTransaction;
 use App\Policies\BunqMeTabPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
+use App\Policies\FundProviderChatMessagePolicy;
+use App\Policies\FundProviderChatPolicy;
 use App\Policies\FundProviderInvitationPolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
@@ -62,9 +66,11 @@ class AuthServiceProvider extends ServiceProvider
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
+        FundProviderChat::class         => FundProviderChatPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
+        FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,
     ];
 

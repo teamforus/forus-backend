@@ -596,16 +596,20 @@ class Fund extends Model
 
         if ($request->has('tag')) {
             $query->whereHas('tags', function(Builder $query) use ($request) {
-                return $query->where('key', $request->get('tag'));
+                return $query->where('key', $request->input('tag'));
             });
         }
 
         if ($request->has('organization_id')) {
-            $query->where('organization_id', $request->get('organization_id'));
+            $query->where('organization_id', $request->input('organization_id'));
         }
 
         if ($request->has('fund_id')) {
-            $query->where('id', $request->get('fund_id'));
+            $query->where('id', $request->input('fund_id'));
+        }
+
+        if ($request->has('q') && !empty($q = $request->input('q'))) {
+            $query->where('name', 'LIKE', "%{$q}%");
         }
 
         return $query;

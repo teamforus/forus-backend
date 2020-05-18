@@ -444,10 +444,66 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
+        'organizations.funds.providers.chats',
+        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChatsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'providers' => 'fund_provider',
+            'chats' => 'fund_provider_chats',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.providers.chats.messages',
+        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChats\FundProviderChatMessagesController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'providers' => 'fund_provider',
+            'chats' => 'fund_provider_chats',
+            'messages' => 'fund_provider_chat_messages'
+        ]
+    ]);
+
+    $router->resource(
         'organizations.products',
         "Api\Platform\Organizations\ProductsController", [
         'only' => [
             'index', 'show', 'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.products.funds',
+        "Api\Platform\Organizations\Products\FundsController", [
+        'only' => [
+            'index', 'show', 'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.products.chats',
+        "Api\Platform\Organizations\Products\FundProviderChatsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'chats' => 'fund_provider_chats',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.products.chats.messages',
+        "Api\Platform\Organizations\Products\FundProviderChats\FundProviderChatMessagesController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'chats' => 'fund_provider_chats',
+            'messages' => 'fund_provider_chat_messages'
         ]
     ]);
 
