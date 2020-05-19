@@ -6,6 +6,7 @@ use App\Events\Funds\FundCreated;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
@@ -16,7 +17,6 @@ use App\Scopes\Builders\FundQuery;
 use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,13 +28,13 @@ class FundsController extends Controller
     /**
      *  Display a listing of the resource.
      *
-     * @param Request $request
+     * @param IndexFundRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Request $request,
+        IndexFundRequest $request,
         Organization $organization
     ) {
         $this->authorize('viewAny', [Fund::class, $organization]);

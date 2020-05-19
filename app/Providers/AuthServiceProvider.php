@@ -10,6 +10,7 @@ use App\Models\FundProviderInvitation;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Models\Implementation;
 use App\Models\Office;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
@@ -25,6 +26,7 @@ use App\Policies\FundProviderInvitationPolicy;
 use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
+use App\Policies\ImplementationPolicy;
 use App\Policies\MediaPolicy;
 use App\Policies\PrevalidationPolicy;
 use App\Policies\OfficePolicy;
@@ -66,6 +68,7 @@ class AuthServiceProvider extends ServiceProvider
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
+        Implementation::class           => ImplementationPolicy::class,
         FundProviderChat::class         => FundProviderChatPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,

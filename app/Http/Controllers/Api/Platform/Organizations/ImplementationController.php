@@ -24,6 +24,7 @@ class ImplementationController extends Controller
         Organization $organization
     ) {
         $this->authorize('show', $organization);
+        $this->authorize('viewAny', [Implementation::class, $organization]);
 
         $query = Implementation::query();
         if ($q = $request->input('q')) {
@@ -50,6 +51,7 @@ class ImplementationController extends Controller
         Implementation $implementation
     ) {
         $this->authorize('show', $organization);
+        $this->authorize('view', [$implementation, $organization]);
 
         return new ImplementationResource($implementation);
     }
@@ -69,8 +71,15 @@ class ImplementationController extends Controller
         Implementation $implementation
     ) {
         $this->authorize('show', $organization);
+        $this->authorize('update', [$implementation, $organization]);
 
-        $implementation->update($request->all());
+        $implementation->update($request->only([
+            'email_from_address', 'email_from_name',
+            'title', 'description', 'has_more_info_url',
+            'more_info_url', 'description_steps',
+            'digid_app_id', 'digid_shared_secret',
+            'digid_a_select_server', 'digid_enabled'
+        ]));
 
         return new ImplementationResource($implementation);
     }
