@@ -3,24 +3,27 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\IndexImplementationRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationCmsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailRequest;
 use App\Http\Resources\ImplementationResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
-use Illuminate\Http\Request;
 
 class ImplementationController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
+     * @param IndexImplementationRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Request $request,
+        IndexImplementationRequest $request,
         Organization $organization
     ) {
         $this->authorize('show', $organization);
@@ -59,14 +62,63 @@ class ImplementationController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
+     * @param UpdateImplementationCmsRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
      * @return ImplementationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function update(
-        Request $request,
+    public function updateCms(
+        UpdateImplementationCmsRequest $request,
+        Organization $organization,
+        Implementation $implementation
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('update', [$implementation, $organization]);
+
+        $implementation->update($request->only([
+            'title', 'description', 'has_more_info_url',
+            'more_info_url', 'description_steps',
+        ]));
+
+        return new ImplementationResource($implementation);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateImplementationDigiDRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @return ImplementationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateDigiD(
+        UpdateImplementationDigiDRequest $request,
+        Organization $organization,
+        Implementation $implementation
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('update', [$implementation, $organization]);
+
+        $implementation->update($request->only([
+            'digid_app_id', 'digid_shared_secret', 'digid_a_select_server'
+        ]));
+
+        return new ImplementationResource($implementation);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateImplementationEmailRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @return ImplementationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateEmail(
+        UpdateImplementationEmailRequest $request,
         Organization $organization,
         Implementation $implementation
     ) {
@@ -75,10 +127,6 @@ class ImplementationController extends Controller
 
         $implementation->update($request->only([
             'email_from_address', 'email_from_name',
-            'title', 'description', 'has_more_info_url',
-            'more_info_url', 'description_steps',
-            'digid_app_id', 'digid_shared_secret',
-            'digid_a_select_server', 'digid_enabled'
         ]));
 
         return new ImplementationResource($implementation);
