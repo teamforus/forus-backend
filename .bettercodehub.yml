@@ -1,4 +1,4 @@
-component_depth: 7
+component_depth: 1
 languages:
 - name: php
 
@@ -7,5 +7,3 @@ exclude:
   - /resources/lang/nl/geo_ip/countries.php
   - /resources/lang/nl/validation.php
   - /app/Http/Controllers/Api/Platform/Organizations/Funds/FundProviderController.php
-  - /app/Models/.*
-  - /database/migrations/.*
