@@ -1,16 +1,12 @@
 component_depth: 1
 languages:
 - name: php
-  production:
-    exclude:
-      - /bootstrap/.*
-      - /config/.*
-      - /database/.*
-      - /public/.*
-      - /resources/.*
-      - /routes/.*
-      - /storage/.*    
-  test:
-    include:
-      - /tests/.*
-      - /app/.*
+
+exclude:
+  - /bootstrap/.*
+  - /config/.*
+  - /database/.*
+  - /public/.*
+  - /resources/.*
+  - /routes/.*
+  - /storage/.*    
