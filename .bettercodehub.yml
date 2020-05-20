@@ -3,7 +3,10 @@ languages:
 - name: php
 
 exclude:
-  - /routes/api-platform.php
-  - /resources/lang/nl/geo_ip/countries.php
-  - /resources/lang/nl/validation.php
-  - /app/Http/Controllers/Api/Platform/Organizations/Funds/FundProviderController.php
+  - /bootstrap/.*
+  - /config/.*
+  - /database/.*
+  - /public/.*
+  - /resources/.*
+  - /routes/.*
+  - /storage/.*    
