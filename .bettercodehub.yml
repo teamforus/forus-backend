@@ -14,5 +14,5 @@ exclude:
   - /app/Mail/Forus/.*
   - /app/Mail/Vouchers/.*
   - /app/Services/Forus/Notification/.*
-  - /app/Http/Controllers/Api/Platform/.*
+  - /app/Http/Controllers/Api/.*
   
