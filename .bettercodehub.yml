@@ -15,4 +15,7 @@ exclude:
   - /app/Mail/Vouchers/.*
   - /app/Services/Forus/Notification/.*
   - /app/Http/Controllers/Api/Platform/.*
+  - /app/Policies/FundRequestClarificationPolicy.php
+  - /app/Http/Controllers/Api/IdentityController.php
+  - /app/Http/Controllers/Api/IdentityFallbackController.php
   
