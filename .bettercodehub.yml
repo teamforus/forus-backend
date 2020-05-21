@@ -9,4 +9,5 @@ exclude:
   - /public/.*
   - /resources/.*
   - /routes/.*
-  - /storage/.*    
+  - /storage/.*
+  - /app/Mail/Funds/.*
