@@ -15,4 +15,5 @@ exclude:
   - /app/Http/Controllers/Api/IdentityController.php
   - /app/Http/Controllers/Api/IdentityFallbackController.php
   - /app/Services/Forus/Notification/.*
+  - /app/Mail/Funds/.*
   
