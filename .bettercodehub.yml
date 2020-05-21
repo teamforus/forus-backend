@@ -11,4 +11,7 @@ exclude:
   - /routes/.*
   - /storage/.*
   - /app/Mail/Funds/.*
+  - /app/Mail/Forus/.*
+  - /app/Mail/Vouchers/.*
   - /app/Services/Forus/Notification/.*
+  
