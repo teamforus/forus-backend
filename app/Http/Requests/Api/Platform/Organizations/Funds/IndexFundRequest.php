@@ -25,6 +25,11 @@ class IndexFundRequest extends FormRequest
     {
         return [
             'q' => 'nullable|string|max:100',
+            'tag' => 'nullable|string|exists:tags,key',
+            'fund_id' => 'nullable|exists:funds,id',
+            'per_page' => 'numeric|between:1,100',
+            'organization_id' => 'nullable|exists:organizations,id',
+            'implementation_id' => 'nullable|exists:implementations,id',
         ];
     }
 }

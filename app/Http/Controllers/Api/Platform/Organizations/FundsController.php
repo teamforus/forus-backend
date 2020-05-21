@@ -38,21 +38,7 @@ class FundsController extends Controller
         Organization $organization
     ) {
         $this->authorize('viewAny', [Fund::class, $organization]);
-
-        $query = Fund::query()->where(
-            'organization_id', $organization->id
-        );
-
-        if ($q = $request->input('q')) {
-            $query = FundQuery::whereQueryFilter($query, $q);
-        }
-
-        if ($implementation_id = $request->input('implementation_id')) {
-            $query = FundQuery::whereImplementationIdFilter(
-                $query,
-                $implementation_id
-            );
-        }
+        $query = Fund::search($request, $organization->funds()->getQuery());
 
         if (!auth()->id()) {
             $query->where([
@@ -60,7 +46,9 @@ class FundsController extends Controller
             ]);
         }
 
-        return FundResource::collection(Fund::sortByState($query->get()));
+        return FundResource::collection(FundQuery::sortByState($query, [
+            'active', 'waiting', 'paused', 'closed'
+        ])->paginate($request->input('per_page')));
     }
 
     /**

@@ -84,7 +84,8 @@ class Implementation extends Model
     ];
 
     protected $casts = [
-        'digid_enabled' => 'boolean'
+        'digid_enabled' => 'boolean',
+        'has_more_info_url' => 'boolean',
     ];
 
     const FRONTEND_WEBSHOP = 'webshop';
@@ -178,7 +179,7 @@ class Implementation extends Model
     }
 
     /**
-     * @return EloquentBuilder
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function fund_configs() {
         return $this->hasMany(FundConfig::class);

@@ -7,12 +7,13 @@ use App\Http\Requests\Api\Platform\Organizations\Implementations\IndexImplementa
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationCmsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailRequest;
-use App\Http\Resources\ImplementationResource;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationRequest;
+use App\Http\Resources\ImplementationPrivateResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
 
-class ImplementationController extends Controller
+class ImplementationsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -29,16 +30,18 @@ class ImplementationController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [Implementation::class, $organization]);
 
-        $query = Implementation::query();
+        $query = ImplementationQuery::whereOrganizationIdFilter(
+            Implementation::query(),
+            $organization->id
+        );
+
         if ($q = $request->input('q')) {
             $query = ImplementationQuery::whereQueryFilter($query, $q);
         }
 
-        return ImplementationResource::collection(
-            ImplementationQuery::whereOrganizationIdFilter(
-                $query, $organization->id
-            )->paginate($request->input('per_page'))
-        );
+        return ImplementationPrivateResource::collection($query->paginate(
+            $request->input('per_page')
+        ));
     }
 
     /**
@@ -46,7 +49,7 @@ class ImplementationController extends Controller
      *
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationResource
+     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
@@ -56,20 +59,20 @@ class ImplementationController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('view', [$implementation, $organization]);
 
-        return new ImplementationResource($implementation);
+        return new ImplementationPrivateResource($implementation);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param UpdateImplementationCmsRequest $request
+     * @param UpdateImplementationRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return ImplementationResource
+     * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function updateCms(
-        UpdateImplementationCmsRequest $request,
+    public function update(
+        UpdateImplementationRequest $request,
         Organization $organization,
         Implementation $implementation
     ) {
@@ -79,56 +82,10 @@ class ImplementationController extends Controller
         $implementation->update($request->only([
             'title', 'description', 'has_more_info_url',
             'more_info_url', 'description_steps',
-        ]));
-
-        return new ImplementationResource($implementation);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param UpdateImplementationDigiDRequest $request
-     * @param Organization $organization
-     * @param Implementation $implementation
-     * @return ImplementationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function updateDigiD(
-        UpdateImplementationDigiDRequest $request,
-        Organization $organization,
-        Implementation $implementation
-    ) {
-        $this->authorize('show', $organization);
-        $this->authorize('update', [$implementation, $organization]);
-
-        $implementation->update($request->only([
+            'email_from_address', 'email_from_name',
             'digid_app_id', 'digid_shared_secret', 'digid_a_select_server'
         ]));
 
-        return new ImplementationResource($implementation);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param UpdateImplementationEmailRequest $request
-     * @param Organization $organization
-     * @param Implementation $implementation
-     * @return ImplementationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function updateEmail(
-        UpdateImplementationEmailRequest $request,
-        Organization $organization,
-        Implementation $implementation
-    ) {
-        $this->authorize('show', $organization);
-        $this->authorize('update', [$implementation, $organization]);
-
-        $implementation->update($request->only([
-            'email_from_address', 'email_from_name',
-        ]));
-
-        return new ImplementationResource($implementation);
+        return new ImplementationPrivateResource($implementation);
     }
 }

@@ -311,22 +311,13 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    $router->post(
-        'organizations/{organization}/implementations/{implementation}/update-cms',
-        "Api\Platform\Organizations\ImplementationController@updateCms");
-
-    $router->post(
-        'organizations/{organization}/implementations/{implementation}/update-email',
-        "Api\Platform\Organizations\ImplementationController@updateEmail");
-
-    $router->post(
-        'organizations/{organization}/implementations/{implementation}/update-digid',
-        "Api\Platform\Organizations\ImplementationController@updateDigiD");
-
     $router->resource(
         'organizations/{organization}/implementations',
-        "Api\Platform\Organizations\ImplementationController"
-    );
+        "Api\Platform\Organizations\ImplementationsController", [
+        'only' => [
+            'index', 'show', 'update'
+        ],
+    ]);
 
     $router->resource(
         'organizations/{organization}/provider-invitations',

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Notification\NotificationService;
@@ -609,7 +610,14 @@ class Fund extends Model
         }
 
         if ($request->has('q') && !empty($q = $request->input('q'))) {
-            $query->where('name', 'LIKE', "%{$q}%");
+            $query = FundQuery::whereQueryFilter($query, $q);
+        }
+
+        if ($request->has('implementation_id')) {
+            $query = FundQuery::whereImplementationIdFilter(
+                $query,
+                $request->input('implementation_id')
+            );
         }
 
         return $query;
@@ -919,23 +927,6 @@ class Fund extends Model
                 ]);
             }
         }
-    }
-
-    /**
-    * @param Collection|Fund[] $funds
-    * @return mixed
-    */
-    public static function sortByState($funds) {
-        return $funds->sort(function (Fund $fund1, Fund $fund2) {
-            if ($fund1->state == $fund2->state) {
-                return 0;
-            }
-
-            return !in_array($fund1->state, [
-                Fund::STATE_ACTIVE,
-                Fund::STATE_PAUSED,
-            ]);
-        });
     }
 
     /**

@@ -80,4 +80,18 @@ class FundQuery
     public static function whereQueryFilter(Builder $query, string $q) {
         return $query->where('name', 'LIKE', printf('%%s%', $q));
     }
+
+    /**
+     * @param Builder $query
+     * @param array $states
+     * @return Builder
+     */
+    public static function sortByState(Builder $query, array $states)
+    {
+        foreach ($states as $state) {
+            $query->orderByRaw('`funds`.`state` = ? DESC', [$state]);
+        }
+
+        return $query;
+    }
 }
