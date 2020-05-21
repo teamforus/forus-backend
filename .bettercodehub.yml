@@ -11,6 +11,7 @@ exclude:
   - /routes/.*
   - /storage/.*
   - /app/Policies/FundRequestClarificationPolicy.php
+  - /app/Http/Controllers/Api/Platform/.*
   - /app/Http/Controllers/Api/IdentityController.php
   - /app/Http/Controllers/Api/IdentityFallbackController.php
   - /app/Services/Forus/Notification/.*
