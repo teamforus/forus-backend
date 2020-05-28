@@ -115,6 +115,10 @@ class FundProviderController extends Controller
             ]);
         }
 
+        if ($request->input('dismissed')) {
+            $disable_products = $fundProvider->products->pluck('id')->toArray();
+        }
+
         if (is_array($enable_products)) {
             $fundProvider->approveProducts($enable_products);
         }
