@@ -386,6 +386,9 @@ class Implementation extends Model
                 'title', 'description', 'has_more_info_url',
                 'more_info_url', 'description_steps',
             ])->toArray(), [
+                'description_html' => resolve('markdown')->convertToHtml(
+                    $implementation['description'] ?? ''
+                ),
                 'description_steps_html' => resolve('markdown')->convertToHtml(
                     $implementation['description_steps'] ?? ''
                 ),
