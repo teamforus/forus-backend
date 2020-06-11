@@ -13,26 +13,41 @@ class EmployeeUpdated
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     protected $employee;
+    protected $previous_roles;
 
     /**
      * Create a new event instance.
      *
-     * EmployeeCreated constructor.
+     * EmployeeUpdated constructor.
      * @param Employee $employee
+     * @param array $previous_roles
      */
-    public function __construct(Employee $employee)
-    {
+    public function __construct(
+        Employee $employee,
+        array $previous_roles
+    ) {
         $this->employee = $employee;
+        $this->previous_roles = $previous_roles;
     }
 
     /**
-     * Get the voucher
+     * Get target user
      *
      * @return Employee
      */
     public function getEmployee()
     {
         return $this->employee;
+    }
+
+    /**
+     * Get employee roles before update
+     *
+     * @return array
+     */
+    public function getPreviousRoles()
+    {
+        return $this->previous_roles;
     }
 
     /**

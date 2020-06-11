@@ -3,6 +3,9 @@
 namespace App\Listeners;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationCreated;
+use App\Models\FundRequest;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
+use App\Services\EventLogService\Facades\EventLog;
 use Illuminate\Events\Dispatcher;
 
 class FundRequestClarificationSubscriber
@@ -28,6 +31,14 @@ class FundRequestClarificationSubscriber
 
         $webshopUrl = $fundRequest->fund->fund_config->
             implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL');
+
+        $eventLog = $fundRequest->log(FundRequest::EVENT_CLARIFICATION_REQUESTED, [
+            'fund' => $fundRequest->fund,
+            'fund_request' => $fundRequest,
+            'fund_request_clarification' => $clarification,
+        ]);
+
+        IdentityFundRequestFeedbackRequestedNotification::send($eventLog);
 
         $this->notificationService->sendFundRequestClarificationToRequester(
             $this->recordService->primaryEmailByAddress($identity_address),

@@ -3,6 +3,12 @@
 namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
+use App\Mail\Digest\DigestProviderFundsMail;
+use App\Mail\Digest\DigestProviderMail;
+use App\Mail\Digest\DigestProviderProductsMail;
+use App\Mail\Digest\DigestSponsorMail;
+use App\Mail\Digest\DigestValidatorMail;
+use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\FundRequests\FundRequestCreatedMail;
 use App\Mail\FundRequests\FundRequestClarificationRequestedMail;
 use App\Mail\FundRequests\FundRequestRecordDeclinedMail;
@@ -17,6 +23,7 @@ use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderInvitedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\Funds\Forus\ForusFundCreated;
+use App\Mail\MailBodyBuilder;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
 use App\Mail\User\IdentityEmailVerificationMail;
@@ -37,6 +44,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Notification;
+use function Sodium\compare;
 
 /**
  * Class MailService
@@ -44,10 +52,10 @@ use Illuminate\Support\Facades\Notification;
  */
 class NotificationService
 {
-    const TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
-    const TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
+    public const TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
+    public const TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
 
-    const TYPES = [
+    public const TYPES = [
         self::TYPE_PUSH_IOS,
         self::TYPE_PUSH_ANDROID,
     ];
@@ -89,8 +97,8 @@ class NotificationService
         $identity_address,
         string $type,
         string $token
-    ) {
-        if (!in_array($type, self::TYPES)) {
+    ): bool {
+        if (!in_array($type, self::TYPES, true)) {
             return false;
         }
 
@@ -112,7 +120,7 @@ class NotificationService
         string $token,
         string $type = null,
         $identity_address = null
-    ) {
+    ): void {
         $query = NotificationToken::where(compact('token'));
 
         if ($type) {
@@ -140,7 +148,7 @@ class NotificationService
         string $title,
         string $body,
         string $key = null
-    ) {
+    ): bool {
         if ($this->isPushUnsubscribable($key) &&
             $this->isPushUnsubscribed($identity_address, $key)) {
             return false;
@@ -192,7 +200,7 @@ class NotificationService
         string $sponsor_name,
         string $fund_name,
         string $sponsor_dashboard_link
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new ProviderAppliedMail(
             $provider_name,
             $sponsor_name,
@@ -230,7 +238,7 @@ class NotificationService
         string $fund_end_date,
         string $from_fund_name,
         string $invitation_link
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new ProviderInvitedMail(
             $provider_name,
             $sponsor_name,
@@ -780,7 +788,7 @@ class NotificationService
         ?EmailFrom $emailFrom,
         string $orgName,
         string $confirmationLink
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new EmployeeAddedMail(
             $orgName,
             config('app.name'),
@@ -813,7 +821,7 @@ class NotificationService
         string $sponsor_phone,
         string $sponsor_email,
         string $webshopLink
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new FundExpiredMail(
             $fund_name,
             $sponsor_name,
@@ -874,6 +882,61 @@ class NotificationService
     }
 
     /**
+     * Send sponsor daily digest
+     *
+     * @param string $email
+     * @param array $data
+     * @return bool|null
+     */
+    public function dailyDigestSponsor(string $email, array $data): ?bool {
+        return $this->sendMail($email, new DigestSponsorMail($data));
+    }
+
+    /**
+     * Send provider daily digest
+     *
+     * @param string $email
+     * @param array $data
+     * @return bool|null
+     */
+    public function dailyDigestProviderProducts(string $email, array $data): ?bool {
+        return $this->sendMail($email, new DigestProviderProductsMail($data));
+    }
+
+    /**
+     * Send provider daily digest
+     *
+     * @param string $email
+     * @param array $data
+     * @return bool|null
+     */
+    public function dailyDigestProviderFunds(string $email, array $data): ?bool {
+        return $this->sendMail($email, new DigestProviderFundsMail($data));
+    }
+
+    /**
+     * Send validator daily digest
+     *
+     * @param string $email
+     * @param MailBodyBuilder $emailBody
+     * @return bool|null
+     */
+    public function dailyDigestValidator(string $email, MailBodyBuilder $emailBody): ?bool {
+        return $this->sendMail($email, new DigestValidatorMail(compact('emailBody')));
+    }
+
+    /**
+     * Send requester daily digest
+     *
+     * @param string $email
+     * @param array $data
+     * @return bool|null
+     */
+    public function dailyDigestRequester(string $email, array $data): ?bool {
+        return $this->sendMail($email, new DigestRequesterMail($data));
+    }
+
+    /**
      * Send the mail and check for failure
      *
      * @param $email
@@ -921,7 +984,7 @@ class NotificationService
      * @return bool
      * @throws \Exception
      */
-    protected function isUnsubscribed(string $email, Mailable $mailable) {
+    protected function isUnsubscribed(string $email, Mailable $mailable): bool {
         $mailClass = get_class($mailable);
 
         return $this->notificationRepo->isMailUnsubscribable($mailClass) && (
@@ -939,7 +1002,7 @@ class NotificationService
      * @param string $key
      * @return bool
      */
-    protected function isPushUnsubscribable(string $key) {
+    protected function isPushUnsubscribable(string $key): bool {
         return $this->notificationRepo->isPushNotificationUnsubscribable($key);
     }
 
@@ -950,7 +1013,7 @@ class NotificationService
      * @param string $key
      * @return bool
      */
-    protected function isPushUnsubscribed(string $identity_address, string $key) {
+    protected function isPushUnsubscribed(string $identity_address, string $key): bool {
         return $this->notificationRepo->isPushNotificationUnsubscribed(
             $identity_address,
             $key
@@ -963,8 +1026,7 @@ class NotificationService
      * @param string $mailName
      * @return bool
      */
-    private function checkFailure(string $mailName): bool
-    {
+    private function checkFailure(string $mailName): bool {
         if (!$this->mailer->failures()) {
             return true;
         }
@@ -980,8 +1042,7 @@ class NotificationService
      * @param string|null $message
      * @return void
      */
-    private function logFailure(?string $message)
-    {
+    private function logFailure(?string $message): void {
         logger()->error(sprintf(
             'Error sending notification: `%s`',
             $message

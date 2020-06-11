@@ -11,6 +11,7 @@ namespace App\Models;
  * @property string|null $bunq_transaction_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\FundTopUp $fund_top_up
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction query()
@@ -31,7 +32,7 @@ class FundTopUpTransaction extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    protected function fund_top_up() {
+    function fund_top_up() {
         return $this->belongsTo(FundTopUp::class);
     }
 }

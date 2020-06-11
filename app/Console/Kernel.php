@@ -5,10 +5,18 @@ namespace App\Console;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
+use App\Console\Commands\CheckProductExpirationCommand;
+use App\Console\Commands\CheckVoucherExpirationCommand;
 use App\Console\Commands\MediaCleanupCommand;
 use App\Console\Commands\MediaRegenerateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
+use App\Console\Commands\SendDigestMailCommand;
+use App\Console\Commands\SendProviderFundsDailyDigestCommand;
+use App\Console\Commands\SendProviderProductsDailyDigestCommand;
+use App\Console\Commands\SendRequesterWeeklyDigestCommand;
+use App\Console\Commands\SendSponsorDailyDigestCommand;
+use App\Console\Commands\SendValidatorDailyDigestCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -38,6 +46,22 @@ class Kernel extends ConsoleKernel
 
         // provider invitations
         UpdateFundProviderInvitationExpireStateCommand::class,
+
+        // product expiration
+        CheckProductExpirationCommand::class,
+
+        // voucher expiration
+        CheckVoucherExpirationCommand::class,
+
+        // voucher expiration
+        // SendDigestMailCommand::class,
+
+        // send digest
+        SendProviderProductsDailyDigestCommand::class,
+        SendProviderFundsDailyDigestCommand::class,
+        SendRequesterWeeklyDigestCommand::class,
+        SendValidatorDailyDigestCommand::class,
+        SendSponsorDailyDigestCommand::class,
     ];
 
     /**
@@ -69,6 +93,28 @@ class Kernel extends ConsoleKernel
         $schedule->command('digid:session-clean')
             ->everyMinute()->withoutOverlapping()->onOneServer();
 
+        $schedule->command('forus.product.expiration:check')
+            ->daily()->withoutOverlapping()->onOneServer();
+
+        /**
+         * Digests
+         */
+        $schedule->command('forus.digest.validator:send')
+            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
+        $schedule->command('forus.digest.provider_funds:send')
+            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
+        $schedule->command('forus.digest.provider_products:send')
+            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
+        $schedule->command('forus.digest.sponsor:send')
+            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
+        $schedule->command('forus.digest.requester:send')
+            ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
+
         // use cron to send email/notifications
         if (env('QUEUE_USE_CRON', false)) {
             $schedule->command('queue:work --queue=' . env('EMAIL_QUEUE_NAME', 'emails'))
@@ -88,6 +134,7 @@ class Kernel extends ConsoleKernel
     {
         $this->load(__DIR__.'/Commands');
 
+        /** @noinspection PhpIncludeInspection */
         require base_path('routes/console.php');
     }
 }

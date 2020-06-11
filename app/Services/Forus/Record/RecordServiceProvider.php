@@ -21,7 +21,7 @@ class RecordServiceProvider extends ServiceProvider
     public function register()
     {
         if (env('SERVICE_RECORDS_URL')) {
-            $this->app->bind(IRecordRepo::class, function() {
+            $this->app->bind(IRecordRepo::class, static function() {
                 return new RecordIpfsRepo(env('SERVICE_RECORDS_URL'));
             });
         } else {
@@ -29,7 +29,7 @@ class RecordServiceProvider extends ServiceProvider
         }
 
 
-        $this->app->singleton('forus.services.record', function () {
+        $this->app->singleton('forus.services.record', static function () {
             return app(IRecordRepo::class);
         });
     }

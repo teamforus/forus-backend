@@ -146,6 +146,6 @@ class IdentityEmailsController extends Controller
             'verified' => 1
         ]);
 
-        return view()->make('messages.email-verified');
+        return view('messages.email-verified');
     }
 }

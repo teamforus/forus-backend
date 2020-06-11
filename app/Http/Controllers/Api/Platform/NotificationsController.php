@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\Notifications\IndexCountNotificationsRequest;
+use App\Http\Requests\Api\Platform\Notifications\IndexNotificationsRequest;
+use App\Models\Notification;
+use \Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Platfrom\Notifications\UpdateNotificationPreferencesRequest;
-use App\Services\Forus\Notification\Interfaces\INotificationRepo;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Http\JsonResponse;
+use App\Http\Resources\NotificationResource;
+use App\Scopes\Builders\EventLogQuery;
+use App\Services\Forus\Identity\Models\Identity;
 
 /**
  * Class NotificationsController
@@ -14,63 +17,20 @@ use Illuminate\Http\JsonResponse;
  */
 class NotificationsController extends Controller
 {
-    private $notificationRepo;
-    private $recordRepo;
-
     /**
-     * NotificationsController constructor.
-     * @param INotificationRepo $notificationServiceRepo
-     * @param IRecordRepo $recordRepo
+     * @param IndexNotificationsRequest $request
+     * @return AnonymousResourceCollection
      */
-    public function __construct(
-        INotificationRepo $notificationServiceRepo,
-        IRecordRepo $recordRepo
-    ) {
-        $this->notificationRepo = $notificationServiceRepo;
-        $this->recordRepo = $recordRepo;
-    }
+    public function index(
+        IndexNotificationsRequest $request
+    ): AnonymousResourceCollection {
+        $identity = Identity::findByAddress(auth_address()) or abort(403);
 
-    /**
-     * Get identity notification preferences
-     * @return JsonResponse
-     * @throws \Exception
-     */
-    public function index(): JsonResponse {
-        $id = auth()->id();
+        $notifications = Notification::paginateFromRequest($request, $identity);
+        $total_unseen = Notification::totalUnseenFromRequest($request, $identity);
 
-        $email = $this->recordRepo->primaryEmailByAddress($id);
-        $email_unsubscribed = $this->notificationRepo->isEmailUnsubscribed($email);
-        $preferences = $this->notificationRepo->getNotificationPreferences($id);
-
-        return response()->json([
-            'data' => compact('email_unsubscribed', 'preferences', 'email')
-        ]);
-    }
-
-    /**
-     * @param UpdateNotificationPreferencesRequest $request
-     * @return JsonResponse
-     */
-    public function update(
-        UpdateNotificationPreferencesRequest $request
-    ): JsonResponse {
-        $id = auth()->id();
-        $email = $this->recordRepo->primaryEmailByAddress($id);
-
-        if ($request->input('email_unsubscribed')) {
-            $this->notificationRepo->unsubscribeEmail($email);
-        } else {
-            $this->notificationRepo->reSubscribeEmail($email);
-        }
-
-        $email_unsubscribed = $this->notificationRepo->isEmailUnsubscribed($email);
-        $preferences = $request->input('preferences', []);
-        $preferences = $this->notificationRepo->updateIdentityPreferences(
-            $id, $preferences
-        );
-
-        return response()->json([
-            'data' => compact('email_unsubscribed', 'preferences', 'email')
+        return NotificationResource::collection($notifications)->additional([
+            'meta' => compact('total_unseen'),
         ]);
     }
 }

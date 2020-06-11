@@ -32,6 +32,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereValue($value)
  * @mixin \Eloquent
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static bool|null forceDelete()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record onlyTrashed()
+ * @method static bool|null restore()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereDeletedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withoutTrashed()
  */
 class Record extends Model
 {

@@ -17,7 +17,6 @@ use App\Http\Controllers\Controller;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 
 class VouchersController extends Controller
 {

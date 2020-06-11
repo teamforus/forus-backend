@@ -36,14 +36,14 @@ class DependencyRule implements Rule
             return false;
         }
 
-        if (count($value) == 0) {
+        if (count($value) === 0) {
             return true;
         }
 
 
         foreach ($value as $dependency) {
-            if (!in_array($dependency, $this->dependencies)) {
-                array_push($invalidDependencies, $dependency);
+            if (!in_array($dependency, $this->dependencies, true)) {
+                $invalidDependencies[] = $dependency;
             }
         }
 
@@ -64,7 +64,7 @@ class DependencyRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return $this->responseMessage ?? 'Invalid input.';
     }

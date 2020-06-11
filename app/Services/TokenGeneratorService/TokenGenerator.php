@@ -9,10 +9,10 @@ class TokenGenerator
      * @param int $block_count
      * @return string
      */
-    public function generate($block_length, $block_count = 1)
+    public function generate($block_length, $block_count = 1): string
     {
-        return collect(range(0, $block_count - 1))->map(function() use ($block_length) {
-            return bin2hex(openssl_random_pseudo_bytes($block_length / 2));
+        return collect(range(0, $block_count - 1))->map(static function() use ($block_length) {
+            return bin2hex(random_bytes($block_length / 2));
         })->implode('-');
     }
 
@@ -21,7 +21,8 @@ class TokenGenerator
      *
      * @return string
      */
-    public function address(){
+    public function address(): string
+    {
         return '0x' . $this->generate(40);
     }
 }

@@ -4,6 +4,11 @@ namespace App\Listeners;
 
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Models\FundRequest;
+use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
+use App\Notifications\Organizations\FundRequests\FundRequestResolvedRequesterNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use Illuminate\Events\Dispatcher;
 
 class FundRequestSubscriber
@@ -53,6 +58,15 @@ class FundRequestSubscriber
                 $fund->urlWebshop()
             );
         }
+
+        $event = $fundRequest->log(FundRequest::EVENT_CREATED, [
+            'fund' => $fundRequest->fund,
+            'sponsor' => $fundRequest->fund->organization,
+            'fund_request' => $fundRequest,
+        ]);
+
+        FundRequestCreatedValidatorNotification::send($event);
+        IdentityFundRequestCreatedNotification::send($event);
     }
 
     public function onFundRequestResolved(FundRequestResolved $fundCreated) {
@@ -66,6 +80,28 @@ class FundRequestSubscriber
             $fundRequest->fund->name,
             $fundRequest->fund->urlWebshop()
         );
+
+        $stateEvent = [
+            FundRequest::EVENT_APPROVED => FundRequest::STATE_APPROVED,
+            FundRequest::EVENT_DECLINED => FundRequest::STATE_DECLINED,
+            FundRequest::EVENT_APPROVED_PARTLY => FundRequest::STATE_APPROVED_PARTLY,
+        ][$fundRequest->state] ?? null;
+
+        if ($stateEvent) {
+            $fundRequest->log($stateEvent, [
+                'fund' => $fundRequest->fund,
+                'sponsor' => $fundRequest->fund->organization,
+                'fund_request' => $fundRequest,
+            ]);
+        }
+
+        $eventLog = $fundRequest->log(FundRequest::EVENT_RESOLVED, [
+            'fund' => $fundRequest->fund,
+            'sponsor' => $fundRequest->fund->organization,
+            'fund_request' => $fundRequest,
+        ]);
+
+        IdentityFundRequestResolvedNotification::send($eventLog);
     }
 
     /**

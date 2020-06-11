@@ -39,12 +39,12 @@ namespace App\Models;
  */
 class BunqMeTab extends Model
 {
-    const STATUS_PAID = 'PAID';
-    const STATUS_EXPIRED = 'EXPIRED';
-    const STATUS_CANCELED = 'CANCELED';
-    const STATUS_WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT';
+    public const STATUS_PAID = 'PAID';
+    public const STATUS_EXPIRED = 'EXPIRED';
+    public const STATUS_CANCELED = 'CANCELED';
+    public const STATUS_WAITING_FOR_PAYMENT = 'WAITING_FOR_PAYMENT';
 
-    const STATUSES = [
+    public const STATUSES = [
         self::STATUS_PAID,
         self::STATUS_EXPIRED,
         self::STATUS_CANCELED,

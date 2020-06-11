@@ -76,12 +76,12 @@ class Implementation extends Model
         'digid_enabled' => 'boolean'
     ];
 
-    const FRONTEND_WEBSHOP = 'webshop';
-    const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
-    const FRONTEND_PROVIDER_DASHBOARD = 'provider';
-    const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
+    public const FRONTEND_WEBSHOP = 'webshop';
+    public const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
+    public const FRONTEND_PROVIDER_DASHBOARD = 'provider';
+    public const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
 
-    const FRONTEND_KEYS = [
+    public const FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
         self::FRONTEND_SPONSOR_DASHBOARD,
         self::FRONTEND_PROVIDER_DASHBOARD,
@@ -141,11 +141,13 @@ class Implementation extends Model
     /**
      * @return Implementation|null
      */
-    public static function activeModel() {
+    public static function activeModel(): ?Implementation
+    {
         return self::findModelByKey(self::activeKey());
     }
 
-    public static function general_urls() {
+    public static function general_urls(): array
+    {
         return [
             'url_webshop'   => config('forus.front_ends.webshop'),
             'url_sponsor'   => config('forus.front_ends.panel-sponsor'),
@@ -304,12 +306,12 @@ class Implementation extends Model
     public function autoValidationEnabled() {
         $oneActiveFund = $this->funds()->where([
                 'state' => Fund::STATE_ACTIVE
-            ])->count() == 1;
+            ])->count() === 1;
 
         $oneActiveFundWithAutoValidation = $this->funds()->where([
                 'state' => Fund::STATE_ACTIVE,
                 'auto_requests_validation' => true
-            ])->whereNotNull('default_validator_employee_id')->count() == 1;
+            ])->whereNotNull('default_validator_employee_id')->count() === 1;
 
         return $oneActiveFund && $oneActiveFundWithAutoValidation;
     }
@@ -456,7 +458,7 @@ class Implementation extends Model
     /**
      * @return EmailFrom
      */
-    public static function emailFrom() {
+    public static function emailFrom(): EmailFrom {
         if ($activeModel = self::activeModel()) {
             return $activeModel->getEmailFrom();
         }
@@ -467,7 +469,7 @@ class Implementation extends Model
     /**
      * @return EmailFrom
      */
-    public function getEmailFrom() {
+    public function getEmailFrom(): EmailFrom {
         return new EmailFrom(
             $this->email_from_address ?: config('mail.from.address'),
             $this->email_from_name ?: config('mail.from.name')

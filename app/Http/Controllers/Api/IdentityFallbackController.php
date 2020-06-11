@@ -327,13 +327,13 @@ class IdentityFallbackController extends Controller
             abort(404);
         }
 
-        list($implementation, $frontend) = explode('_', $source);
+        [$implementation, $frontend] = explode('_', $source);
 
-        $isMobile = in_array($source, config('forus.clients.mobile'));
+        $isMobile = in_array($source, config('forus.clients.mobile'), true);
 
         if ($isMobile) {
             $sourceUrl = config('forus.front_ends.app-me_app');
-        } else if ($implementation == 'general') {
+        } else if ($implementation === 'general') {
             $sourceUrl = Implementation::general_urls()['url_' . $frontend];
         } else {
             $sourceUrl = Implementation::query()->where([
@@ -346,13 +346,13 @@ class IdentityFallbackController extends Controller
             http_build_query(array_filter([
                 'token' => $emailToken,
                 'target' => $request->input('target', null)
-            ], function($var) {
+            ], static function($var) {
                 return !empty($var);
             }))
         );
 
         if ($isMobile) {
-            return view()->make('pages.auth.deep_link', array_merge([
+            return view('pages.auth.deep_link', array_merge([
                 'type' => 'email_sign_in',
                 'exchangeToken' => $emailToken
             ], compact('redirectUrl')));
@@ -422,7 +422,7 @@ class IdentityFallbackController extends Controller
                 http_build_query(compact('token'))
             );
 
-            return view()->make('pages.auth.deep_link', compact('redirectUrl'));
+            return view('pages.auth.deep_link', compact('redirectUrl'));
         }
 
         return abort(404);

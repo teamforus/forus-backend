@@ -45,7 +45,7 @@ class FundRequestsExport implements FromCollection, WithHeadings
      */
     public function headings(): array
     {
-        return $this->data->map(function ($row) {
+        return $this->data->map(static function ($row) {
             return array_keys($row);
         })->flatten()->unique()->toArray();
     }

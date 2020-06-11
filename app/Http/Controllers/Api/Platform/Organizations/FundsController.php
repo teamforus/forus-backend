@@ -379,7 +379,7 @@ class FundsController extends Controller
      *
      * @param Organization $organization
      * @param Fund $fund
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
@@ -392,6 +392,6 @@ class FundsController extends Controller
         $fund->fund_formula_products()->delete();
         $fund->delete();
 
-        return compact('success');
+        return response()->json([], 200);
     }
 }

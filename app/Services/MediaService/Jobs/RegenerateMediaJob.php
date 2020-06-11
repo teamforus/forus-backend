@@ -36,7 +36,7 @@ class RegenerateMediaJob implements ShouldQueue
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function handle()
+    public function handle(): void
     {
         media()->regenerateMedia(
             $this->mediaConfig,

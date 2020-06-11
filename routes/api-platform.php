@@ -19,7 +19,7 @@ $router = resolve('router');
  */
 $router->group([
     'middleware' => []
-], function() use ($router) {
+], static function() use ($router) {
     $router->resource(
         'product-categories',
         "Api\Platform\ProductCategoryController", [
@@ -660,6 +660,14 @@ $router->group(['middleware' => [
         'Api\Platform\DevicesController@deletePush'
     );
 
-    $router->get('notifications', 'Api\Platform\NotificationsController@index');
-    $router->patch('notifications', 'Api\Platform\NotificationsController@update');
+    $router->resource(
+        'notifications',
+        "Api\Platform\NotificationsController", [
+        'only' => [
+            'index'
+        ]
+    ]);
+
+    $router->get('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@index');
+    $router->patch('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@update');
 });

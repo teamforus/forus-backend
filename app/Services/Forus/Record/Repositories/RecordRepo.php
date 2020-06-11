@@ -492,21 +492,21 @@ class RecordRepo implements IRecordRepo
             ]));
         }
 
-        if ($typeKey == 'primary_email' && Record::query()->where([
+        if ($typeKey === 'primary_email' && Record::query()->where([
                 'identity_address' => $identityAddress,
                 'record_type_id' => $this->getTypeIdByKey('primary_email'),
             ])->count() > 0) {
             abort(403,'record.exceptions.primary_email_already_exists');
         }
 
-        if ($typeKey == 'bsn') {
+        if ($typeKey === 'bsn') {
             abort(403,'record.exceptions.bsn_record_cant_be_created');
         }
 
         /** @var Record $record */
         $record = Record::create([
             'identity_address' => $identityAddress,
-            'order' => $order ? $order : 0,
+            'order' => $order ?: 0,
             'value' => $value,
             'record_type_id' => $typeId,
             'record_category_id' => $recordCategoryId,
