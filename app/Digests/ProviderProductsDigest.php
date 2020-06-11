@@ -55,20 +55,35 @@ class ProviderProductsDigest
         }
 
         foreach ($logsProductsReserved as $logsProductReserved) {
-            $emailBodyProducts->h3("Your product has been reserved with {$logsProductReserved[0]['fund_name']}");
+            $emailBodyProducts->h3(sprintf(
+                "Your product has been reserved with %s",
+                $logsProductReserved[0]['fund_name']
+            ));
+
             $logsProductReserved = $logsProductReserved->groupBy('product_id');
 
             foreach ($logsProductReserved as $_logsProductReserved) {
-                $emailBodyProducts->text(
-                    "- {$_logsProductReserved[0]['product_name']} - {$_logsProductReserved->count()} reservation(s)\n" .
-                    "The last day the customer can pick up the reservation is {$_logsProductReserved[0]['fund_end_date_locale']}"
-                );
+                $emailBodyProducts->text(sprintf(
+                    "- %s - %s reservation(s)\nThe last day the customer can pick up the reservation is %s",
+                    $_logsProductReserved[0]['product_name'],
+                    $_logsProductReserved->count(),
+                    $_logsProductReserved[0]['fund_end_date_locale']
+                ));
             }
         }
 
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1("Overview: {$totalProducts} new product(s) reserved {$organization->name}");
-        $emailBody->text("Beste {$organization->name},\nEr are {$totalProducts} products reserved today.");
+        $emailBody->h1(sprintf(
+            "Overview: %s new product(s) reserved %s",
+            $totalProducts,
+            $organization->name
+        ));
+
+        $emailBody->text(sprintf(
+            "Beste %s,\nEr are %s products reserved today.",
+            $organization->name,
+            $totalProducts
+        ));
 
         $emailBody = $emailBody->merge($emailBodyProducts)->space()->button_primary(
             Implementation::general_urls()['url_provider'],

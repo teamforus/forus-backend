@@ -44,7 +44,7 @@ class SponsorDigest
     ): void {
         $emailBody = new MailBodyBuilder();
         $emailBody->h1("Update: New applications for your funds");
-        $emailBody->text("Beste {$organization->name},", ["margin_less"]);
+        $emailBody->text(sprintf("Beste %s,", $organization->name), ["margin_less"]);
 
         [$emailBodyApplications, $total_applications] = $this->getApplicationsEmailBody($organization);
         [$emailBodyProductsAdded, $total_products_added] = $this->getProductsAddedEmailBody($organization);
@@ -100,11 +100,6 @@ class SponsorDigest
         $total_applications = array_sum(array_pluck($applyEvents, '1'));
 
         if ($total_applications > 0) {
-            $emailBody->text(sprintf(
-                "Er zijn %s notificaties die betrekking hebben tot uw organisatie.",
-                $total_applications
-            ));
-
             /** @var Fund $fund */
             /** @var int $countEvents */
             /** @var EventLog[]|Collection $eventLogs */
@@ -159,7 +154,7 @@ class SponsorDigest
                 ), ['margin_less']);
 
                 $emailBody->text(sprintf(
-                    "%s product(s) added that areeligible for %s}.",
+                    "%s product(s) added that areeligible for %s.",
                     $countEvents,
                     $fund->name
                 ));
@@ -168,7 +163,12 @@ class SponsorDigest
 
                 /** @var array $event_item */
                 foreach ($eventLogsByProvider as $event_items) {
-                    $emailBody->h5("{$event_items[0]['provider_name']} (" . count($event_items) . " product(s))", ['margin_less']);
+                    $emailBody->h5(sprintf(
+                        "%s (%s product(s))",
+                        $event_items[0]['provider_name'],
+                        count($event_items)
+                    ), ['margin_less']);
+
                     $emailBody->text("- " . implode("\n- ", array_map(static function ($data) {
                         return $data['product_name'] . ' €' . $data['product_price_locale'];
                     }, $event_items->toArray())));
@@ -205,11 +205,18 @@ class SponsorDigest
             /** @var int $countEvents */
             /** @var EventLog[]|Collection $eventLogs */
             foreach ($events as [$fund, $countEvents, $eventLogs]) {
-                $emailBody->h3("{$countEvents} new replies on your feedback of {$fund->name}");
+                $emailBody->h3(sprintf(
+                    "%s new replies on your feedback of %s",
+                    $countEvents,
+                    $fund->name
+                ));
                 $logsByProvider = $eventLogs->pluck('data')->groupBy('provider_id');
 
                 foreach ($logsByProvider as $logs) {
-                    $emailBody->h5("New message(s) from {$logs[0]['provider_name']}", ['margin_less']);
+                    $emailBody->h5(sprintf(
+                        "New message(s) from %s",
+                        $logs[0]['provider_name']
+                    ), ['margin_less']);
                     $logsByProduct = collect($logs)->groupBy('product_id');
 
                     foreach ($logsByProduct as $_logsByProduct) {

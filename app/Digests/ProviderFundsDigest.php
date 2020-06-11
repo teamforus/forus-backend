@@ -110,11 +110,16 @@ class ProviderFundsDigest
         $logsApprovedBudget = $query->get()->pluck('data');
 
         if ($logsApprovedBudget->count() > 0) {
-            $mailBody->h3("Your application have been approved for {$logsApprovedBudget->count()} fund(s) to scan vouchers");
+            $mailBody->h3(sprintf(
+                "Your application have been approved for %s fund(s) to scan vouchers",
+                $logsApprovedBudget->count()
+            ));
+
             $mailBody->text(sprintf(
                 "This means you can scan budget vouchers for people who bla bla.\nYou have been approved for:\n- %s",
                 implode("\n- ", $logsApprovedBudget->pluck('fund_name')->toArray())
             ));
+
             $mailBody->text("There specific rights for each fund assigned to your organization.\nPlease check the dashboard to see full context.");
             $mailBody->separator();
         }
@@ -140,7 +145,11 @@ class ProviderFundsDigest
         $logsApprovedProducts = $query->get()->pluck('data');
 
         if ($logsApprovedProducts->count() > 0) {
-            $mailBody->h3("Your application have been approved for {$logsApprovedProducts->count()} fund(s) to sell product vouchers");
+            $mailBody->h3(sprintf(
+                "Your application have been approved for %s fund(s) to sell product vouchers",
+                $logsApprovedProducts->count()
+            ));
+
             $mailBody->text(sprintf(
                 "This means you can have your products on their webshop and sell directly online.\nYou have been approved for:\n- %s",
                 implode("\n- ", $logsApprovedProducts->pluck('fund_name')->toArray())
@@ -168,7 +177,11 @@ class ProviderFundsDigest
         $logsRejectedBudget = $query->get()->pluck('data');
 
         if ($logsRejectedBudget->count() > 0) {
-            $mailBody->h3("Your application has been rejected for {$logsRejectedBudget->count()} fund(s) to scan vouchers");
+            $mailBody->h3(sprintf(
+                "Your application has been rejected for %s fund(s) to scan vouchers",
+                $logsRejectedBudget->count()
+            ));
+
             $mailBody->text(sprintf(
                 "This means your application for these funds have been changed:\n - %s",
                 implode("\n- ", $logsRejectedBudget->pluck('fund_name')->toArray())
@@ -200,7 +213,11 @@ class ProviderFundsDigest
         $logsRejectedProducts = $query->get()->pluck('data');
 
         if ($logsRejectedProducts->count() > 0) {
-            $mailBody->h3("Your application has been rejected for {$logsRejectedProducts->count()} fund(s) to scan product vouchers");
+            $mailBody->h3(sprintf(
+                "Your application has been rejected for %s fund(s) to scan product vouchers",
+                $logsRejectedProducts->count()
+            ));
+
             $mailBody->text(sprintf(
                 "This means can not scan product vouchers for these funds anymore:\n- %s",
                 implode("\n- ", $logsRejectedProducts->pluck('fund_name')->toArray())
@@ -213,9 +230,7 @@ class ProviderFundsDigest
             if ($fundsWithSomeProducts->count() > 0) {
                 $mailBody->text(sprintf(
                     "For these funds you still have some products approved:\n- %s",
-                    implode("\n- ", Fund::whereKey(
-                        $fundsWithSomeProducts
-                    )->pluck('name')->toArray())
+                    implode("\n- ", Fund::whereKey($fundsWithSomeProducts)->pluck('name')->toArray())
                 ));
             }
 
@@ -275,20 +290,30 @@ class ProviderFundsDigest
         $logsProductsFeedback = $logsProductsFeedback->groupBy('product_id');
 
         if ($logsProductsFeedback->count() > 0) {
-            $mailBody->h3("Feedback on {$logsProductsFeedback->count()} of your product(s)");
-            $mailBody->text("You got feedback on {$logsProductsFeedback->count()} of your products");
+            $mailBody->h3(sprintf(
+                "Feedback on %s of your product(s)",
+                $logsProductsFeedback->count()
+            ));
+
+            $mailBody->text(sprintf(
+                "You got feedback on %s of your products",
+                $logsProductsFeedback->count()
+            ));
 
             foreach ($logsProductsFeedback as $logsProductFeedback) {
-                $mailBody->h5(
-                    "New messages on {$logsProductFeedback[0]['product_name']} for €{$logsProductFeedback[0]['product_price_locale']} ",
-                    ['margin_less']
-                );
+                $mailBody->h5(sprintf(
+                    "New messages on %s for €%s",
+                    $logsProductFeedback[0]['product_name'],
+                    $logsProductFeedback[0]['product_price_locale']
+                ), ['margin_less']);
 
                 foreach ($logsProductFeedback->groupBy('fund_id') as $logsProductFeedbackLog) {
-                    $mailBody->text(
-                        "- {$logsProductFeedbackLog[0]['sponsor_name']} - has sent {$logsProductFeedbackLog->count()} message(s)" .
-                        " on your application for {$logsProductFeedbackLog[0]['fund_name']}.\n"
-                    );
+                    $mailBody->text(sprintf(
+                        "- %s - has sent %s message(s) on your application for %s.\n",
+                        $logsProductFeedbackLog[0]['sponsor_name'],
+                        $logsProductFeedbackLog->count(),
+                        $logsProductFeedbackLog[0]['fund_name']
+                    ));
                 }
             }
 
@@ -307,7 +332,6 @@ class ProviderFundsDigest
     ) {
         return $organization->lastDigestOfType('provider_funds')->created_at ?? now()->subDay();
     }
-
 
     protected function updateLastDigest(Organization $organization): void {
         $organization->digests()->create([
