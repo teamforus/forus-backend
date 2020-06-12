@@ -5,21 +5,21 @@ namespace App\Console\Commands;
 use App\Digests\ValidatorDigest;
 use Illuminate\Console\Command;
 
-class SendRequesterWeeklyDigestCommand extends Command
+class SendValidatorDigestCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'forus.digest.requester:send';
+    protected $signature = 'forus.digest.validator:send';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send weekly requester digest.';
+    protected $description = 'Send validator digest.';
 
     /**
      * Execute the console command.

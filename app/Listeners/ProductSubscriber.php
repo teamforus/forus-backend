@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\Funds\FundProductAddedEvent;
 use App\Events\Funds\FundProductApprovedEvent;
+use App\Events\Funds\FundProductRevokedEvent;
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductCreated;
 use App\Events\Products\ProductExpired;
@@ -133,6 +134,8 @@ class ProductSubscriber
     public function onProductRevoked(ProductRevoked $productRevoked): void {
         $fund = $productRevoked->getFund();
         $product = $productRevoked->getProduct();
+
+        FundProductRevokedEvent::dispatch($fund, $product);
 
         ProductReservedNotification::send($product->log(Product::EVENT_REVOKED, [
             'product' => $product,

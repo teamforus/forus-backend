@@ -3,10 +3,11 @@
 
 namespace App\Digests;
 
+use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Voucher;
+use App\Models\Implementation;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
@@ -70,8 +71,39 @@ class RequesterDigest
                 'GA NAAR HET WEBSHOP'
             );
 
-            $notificationService->dailyDigestRequester($identity->email, compact('emailBody'));
+            $notificationService->sendDigest(
+                $identity->email,
+                new DigestRequesterMail(compact('emailBody'))
+            );
         }
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $targetEvent
+     * @param array $otherEvents
+     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Collection
+     */
+    protected function getEvents(
+        Fund $fund,
+        string $targetEvent,
+        array $otherEvents
+    ) {
+        $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
+
+        $logsApprovedBudget = $query->whereIn('event', $otherEvents)->where(
+            'created_at', '>=', $this->getFundDigestTime($fund)
+        )->get()->groupBy('loggable_id');
+
+        return $logsApprovedBudget->filter(static function(
+            Collection $group
+        ) use ($targetEvent) {
+            $group = $group->sortBy('created_at');
+            return ($group->first()->event === $group->last()->event) &&
+                $group->last()->event === $targetEvent;
+        })->map(static function(Collection $group) {
+            return $group->sortBy('created_at')->last();
+        })->flatten(1)->pluck('data');
     }
 
     /**
@@ -83,9 +115,10 @@ class RequesterDigest
         $self = $this;
 
         return $funds->reduce(static function($array, Fund $fund) use ($self) {
-            $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
-            $events = $query->where('event', Fund::EVENT_PROVIDER_APPROVED_BUDGET)->pluck('data');
-            $query->where('created_at', '>=', $self->getFundDigestTime($fund));
+            $events = $self->getEvents($fund, Fund::EVENT_PROVIDER_APPROVED_BUDGET, [
+                Fund::EVENT_PROVIDER_APPROVED_BUDGET,
+                Fund::EVENT_PROVIDER_REVOKED_BUDGET
+            ]);
 
             if ($events->count() > 0) {
                 $array[$fund->id] = new MailBodyBuilder();
@@ -120,9 +153,12 @@ class RequesterDigest
         $self = $this;
 
         return $funds->reduce(static function($array, Fund $fund) use ($self) {
-            $query = EventLog::eventsOfTypeQuery(Fund::class, $fund->id);
-            $events = $query->where('event', Fund::EVENT_PRODUCT_APPROVED)->pluck('data');
-            $query->where('created_at', '>=', $self->getFundDigestTime($fund));
+            $events = $self->getEvents($fund, Fund::EVENT_PRODUCT_APPROVED, [
+                Fund::EVENT_PRODUCT_APPROVED,
+                Fund::EVENT_PRODUCT_REVOKED
+            ])->merge($self->getEvents($fund, Fund::EVENT_PRODUCT_ADDED, [
+                Fund::EVENT_PRODUCT_ADDED
+            ]));
 
             if ($events->count() > 0) {
                 $productEventsByProvider = $events->groupBy('provider_id');

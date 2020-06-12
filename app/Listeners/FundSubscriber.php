@@ -9,6 +9,7 @@ use App\Events\Funds\FundCreated;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundProductAddedEvent;
 use App\Events\Funds\FundProductApprovedEvent;
+use App\Events\Funds\FundProductRevokedEvent;
 use App\Events\Funds\FundProviderApplied;
 use App\Events\Funds\FundProviderChatMessage;
 use App\Events\Funds\FundProviderChatMessageEvent;
@@ -52,7 +53,7 @@ class FundSubscriber
     /**
      * @param FundCreated $event
      */
-    public function onFundCreated(FundCreated $event) {
+    public function onFundCreated(FundCreated $event): void {
         $fund = $event->getFund();
 
         FundCreatedNotification::send($fund->log(Fund::EVENT_CREATED, [
@@ -73,7 +74,7 @@ class FundSubscriber
     /**
      * @param FundStartedEvent $event
      */
-    public function onFundStarted(FundStartedEvent $event) {
+    public function onFundStarted(FundStartedEvent $event): void {
         $fund = $event->getFund();
 
         FundStartedNotification::send($fund->log(Fund::EVENT_FUND_STARTED, compact('fund')));
@@ -92,7 +93,7 @@ class FundSubscriber
     /**
      * @param FundExpiringEvent $event
      */
-    public function onFundExpiring(FundExpiringEvent $event) {
+    public function onFundExpiring(FundExpiringEvent $event): void {
         $fund = $event->getFund();
 
         FundExpiringNotification::send($fund->log(Fund::EVENT_FUND_EXPIRING, compact('fund')));
@@ -111,7 +112,7 @@ class FundSubscriber
     /**
      * @param FundEndedEvent $event
      */
-    public function onFundEnded(FundEndedEvent $event) {
+    public function onFundEnded(FundEndedEvent $event): void {
         $fund = $event->getFund();
 
         FundEndedNotification::send($fund->log(Fund::EVENT_FUND_ENDED, compact('fund')));
@@ -141,7 +142,7 @@ class FundSubscriber
             'identity_address'
         )->pluck('identity_address')->unique();
 
-        $emails = $identities->map(function($identity_address) {
+        $emails = $identities->map(static function($identity_address) {
             return record_repo()->primaryEmailByAddress($identity_address);
         });
 
@@ -161,7 +162,7 @@ class FundSubscriber
     /**
      * @param FundProviderApplied $event
      */
-    public function onFundProviderApplied(FundProviderApplied $event) {
+    public function onFundProviderApplied(FundProviderApplied $event): void {
         $fundProvider = $event->getFundProvider();
         $fund = $fundProvider->fund;
 
@@ -178,7 +179,7 @@ class FundSubscriber
             $fund->organization->identity_address
         )->unique();
 
-        $identities = $identities->mapWithKeys(function ($identityAddress) {
+        $identities = $identities->mapWithKeys(static function ($identityAddress) {
             return [
                 $identityAddress => resolve(
                     'forus.services.record'
@@ -201,7 +202,7 @@ class FundSubscriber
     /**
      * @param FundProviderChatMessageEvent $event
      */
-    public function onFundProviderChatMessage(FundProviderChatMessageEvent $event) {
+    public function onFundProviderChatMessage(FundProviderChatMessageEvent $event): void {
         FundProviderChatMessageNotification::send(
             $event->getFund()->log(Fund::EVENT_PROVIDER_REPLIED, [
                 'fund' => $event->getFund(),
@@ -214,7 +215,7 @@ class FundSubscriber
     /**
      * @param FundBalanceLowEvent $event
      */
-    public function onFundBalanceLow(FundBalanceLowEvent $event) {
+    public function onFundBalanceLow(FundBalanceLowEvent $event): void {
         $fund = $event->getFund();
 
         BalanceLowNotification::send($fund->log(Fund::EVENT_BALANCE_LOW, [
@@ -230,7 +231,7 @@ class FundSubscriber
     /**
      * @param FundBalanceSuppliedEvent $event
      */
-    public function onFundBalanceSupplied(FundBalanceSuppliedEvent $event) {
+    public function onFundBalanceSupplied(FundBalanceSuppliedEvent $event): void {
         $fund = $event->getFund();
         $transaction = $event->getTransaction();
 
@@ -246,29 +247,45 @@ class FundSubscriber
     /**
      * @param FundProductAddedEvent $event
      */
-    public function onFundProductAdded(FundProductAddedEvent $event) {
+    public function onFundProductAdded(FundProductAddedEvent $event): void {
         $fund = $event->getFund();
         $product = $event->getProduct();
 
-        $event = $fund->log(Fund::EVENT_PRODUCT_ADDED, [
+        $eventLog = $fund->log(Fund::EVENT_PRODUCT_ADDED, [
             'fund' => $fund,
             'product' => $product,
             'provider' => $product->organization,
         ]);
 
-        FundProductAddedNotification::send($event);
-        IdentityRequesterProductAddedNotification::send($event);
+        FundProductAddedNotification::send($eventLog);
+        IdentityRequesterProductAddedNotification::send($eventLog);
     }
 
     /**
      * @param FundProductApprovedEvent $event
      */
-    public function onFundProductApproved(FundProductApprovedEvent $event) {
+    public function onFundProductApproved(FundProductApprovedEvent $event): void {
         $fund = $event->getFund();
         $product = $event->getProduct();
 
         IdentityRequesterProductApprovedNotification::send(
             $fund->log(Fund::EVENT_PRODUCT_APPROVED, [
+                'fund' => $fund,
+                'product' => $product,
+                'provider' => $product->organization,
+            ])
+        );
+    }
+
+    /**
+     * @param FundProductRevokedEvent $event
+     */
+    public function onFundProductRevoked(FundProductRevokedEvent $event): void {
+        $fund = $event->getFund();
+        $product = $event->getProduct();
+
+        IdentityRequesterProductApprovedNotification::send(
+            $fund->log(Fund::EVENT_PRODUCT_REVOKED, [
                 'fund' => $fund,
                 'product' => $product,
                 'provider' => $product->organization,
@@ -294,5 +311,6 @@ class FundSubscriber
 
         $events->listen(FundProductAddedEvent::class, '\App\Listeners\FundSubscriber@onFundProductAdded');
         $events->listen(FundProductApprovedEvent::class, '\App\Listeners\FundSubscriber@onFundProductApproved');
+        $events->listen(FundProductRevokedEvent::class, '\App\Listeners\FundSubscriber@onFundProductRevoked');
     }
 }

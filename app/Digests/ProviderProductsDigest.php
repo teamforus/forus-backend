@@ -3,13 +3,13 @@
 
 namespace App\Digests;
 
+use App\Mail\Digest\BaseDigestMail;
+use App\Mail\Digest\DigestProviderProductsMail;
 use App\Mail\MailBodyBuilder;
-use App\Models\Employee;
 use App\Models\Product;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
@@ -18,22 +18,15 @@ use Illuminate\Support\Collection;
  * Class ValidatorDigest
  * @package App\Digests
  */
-class ProviderProductsDigest
+class ProviderProductsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    /**
-     * @param NotificationService $notificationService
-     */
-    public function handle(NotificationService $notificationService): void
-    {
-        /** @var Organization[] $organizations */
-        $organizations = Organization::whereHas('fund_providers')->get();
-
-        foreach ($organizations as $organization) {
-            $this->handleOrganizationDigest($organization, $notificationService);
-        }
-    }
+    protected $requiredRelation = 'fund_providers';
+    protected $digestKey = 'provider_products';
+    protected $employeePermissions = [
+        'manage_provider_funds'
+    ];
 
     /**
      * @param Organization $organization
@@ -108,43 +101,11 @@ class ProviderProductsDigest
     }
 
     /**
-     * @param Organization $organization
      * @param MailBodyBuilder $emailBody
-     * @param NotificationService $notificationService
+     * @return BaseDigestMail
      */
-    protected function sendOrganizationDigest(
-        Organization $organization,
-        MailBodyBuilder $emailBody,
-        NotificationService $notificationService
-    ): void {
-        /** @var Employee[] $employees */
-        $employees = $organization->employeesWithPermissions('manage_provider_funds');
-
-        foreach ($employees as $employee) {
-            if ($identity = Identity::findByAddress($employee->identity_address)) {
-                $notificationService->dailyDigestProviderProducts($identity->email, compact('emailBody'));
-            }
-        }
-
-        $this->updateLastDigest($organization);
-    }
-
-    /**
-     * @param Organization $organization
-     * @return \Carbon\Carbon|\Illuminate\Support\Carbon
-     */
-    public function getOrganizationDigestTime(
-        Organization $organization
-    ) {
-        return $organization->lastDigestOfType('provider_products')->created_at ?? now()->subDay();
-    }
-
-    /**
-     * @param Organization $organization
-     */
-    protected function updateLastDigest(Organization $organization): void {
-        $organization->digests()->create([
-            'type' => 'provider_products'
-        ]);
+    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
+    {
+        return new DigestProviderProductsMail(compact('emailBody'));
     }
 }

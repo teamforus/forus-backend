@@ -4,6 +4,7 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
+use Illuminate\Mail\Mailable;
 
 /**
  * Class ProviderAppliedMail
@@ -34,7 +35,7 @@ class ProviderInvitedMail extends ImplementationMail
         string $invitation_link,
         ?EmailFrom $emailFrom
     ) {
-        parent::__construct($emailFrom);
+        $this->setMailFrom($emailFrom);
         $this->provider_name            = $provider_name;
         $this->sponsor_name             = $sponsor_name;
         $this->sponsor_phone            = $sponsor_phone;
@@ -46,9 +47,9 @@ class ProviderInvitedMail extends ImplementationMail
         $this->invitation_link          = $invitation_link;
     }
 
-    public function build(): ImplementationMail
+    public function build(): Mailable
     {
-        return parent::build()
+        return $this->buildBase()
             ->subject(mail_trans('provider_invitation.title', [
                 'sponsor_name' => $this->sponsor_name,
                 'fund_name' => $this->fund_name

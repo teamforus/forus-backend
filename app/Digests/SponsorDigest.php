@@ -3,13 +3,13 @@
 
 namespace App\Digests;
 
+use App\Mail\Digest\BaseDigestMail;
+use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\MailBodyBuilder;
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
@@ -18,21 +18,15 @@ use Illuminate\Support\Collection;
  * Class RequesterDigest
  * @package App\Digests
  */
-class SponsorDigest
+class SponsorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    /**
-     * @param NotificationService $notificationService
-     */
-    public function handle(NotificationService $notificationService): void
-    {
-        $organizations = Organization::whereHas('funds')->get();
-
-        foreach ($organizations as $organization) {
-            $this->handleOrganizationDigest($organization, $notificationService);
-        }
-    }
+    protected $requiredRelation = 'funds';
+    protected $digestKey = 'sponsor';
+    protected $employeePermissions = [
+        'manage_providers'
+    ];
 
     /**
      * @param Organization $organization
@@ -67,16 +61,6 @@ class SponsorDigest
         );
 
         $this->sendOrganizationDigest($organization, $emailBody, $notificationService);
-    }
-
-    /**
-     * @param Organization $organization
-     * @return \Carbon\Carbon|\Illuminate\Support\Carbon
-     */
-    public function getOrganizationDigestTime(
-        Organization $organization
-    ) {
-        return $organization->lastDigestOfType('sponsor')->created_at ?? now()->subDay();
     }
 
     /**
@@ -236,22 +220,12 @@ class SponsorDigest
         return [$emailBody, $total_messages];
     }
 
-    private function sendOrganizationDigest(
-        Organization $organization,
-        MailBodyBuilder $emailBody,
-        NotificationService $notificationService
-    ): void {
-        /** @var Employee[] $employees */
-        $employees = $organization->employeesWithPermissions('manage_providers');
-
-        foreach ($employees as $employee) {
-            if ($identity = Identity::findByAddress($employee->identity_address)) {
-                $notificationService->dailyDigestSponsor($identity->email, compact('emailBody'));
-            }
-        }
-
-        $organization->digests()->create([
-            'type' => 'sponsor'
-        ]);
+    /**
+     * @param MailBodyBuilder $emailBody
+     * @return BaseDigestMail
+     */
+    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
+    {
+        return new DigestSponsorMail(compact('emailBody'));
     }
 }

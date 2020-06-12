@@ -12,11 +12,11 @@ use App\Console\Commands\MediaRegenerateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
 use App\Console\Commands\SendDigestMailCommand;
-use App\Console\Commands\SendProviderFundsDailyDigestCommand;
-use App\Console\Commands\SendProviderProductsDailyDigestCommand;
-use App\Console\Commands\SendRequesterWeeklyDigestCommand;
-use App\Console\Commands\SendSponsorDailyDigestCommand;
-use App\Console\Commands\SendValidatorDailyDigestCommand;
+use App\Console\Commands\SendProviderFundsDigestCommand;
+use App\Console\Commands\SendProviderProductsDigestCommand;
+use App\Console\Commands\SendRequesterDigestCommand;
+use App\Console\Commands\SendSponsorDigestCommand;
+use App\Console\Commands\SendValidatorDigestCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -57,11 +57,11 @@ class Kernel extends ConsoleKernel
         // SendDigestMailCommand::class,
 
         // send digest
-        SendProviderProductsDailyDigestCommand::class,
-        SendProviderFundsDailyDigestCommand::class,
-        SendRequesterWeeklyDigestCommand::class,
-        SendValidatorDailyDigestCommand::class,
-        SendSponsorDailyDigestCommand::class,
+        SendProviderProductsDigestCommand::class,
+        SendProviderFundsDigestCommand::class,
+        SendRequesterDigestCommand::class,
+        SendValidatorDigestCommand::class,
+        SendSponsorDigestCommand::class,
     ];
 
     /**

@@ -659,23 +659,15 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         string $validationUuid,
         int $organization_id = null
-    ) {
-        /** @var
-         * Identity $identity
-         */
-        $validation = RecordValidation::query()->where(
-            'uuid', $validationUuid
-        )->first();
-
-        $identity = Identity::query()->where([
-            'address' => $identityAddress
-        ])->first();
+    ): bool {
+        $validation = RecordValidation::whereUuid($validationUuid)->first();
+        $identity = Identity::whereAddress($identityAddress)->first();
 
         if (!$identity || $validation->identity_address) {
             return false;
         }
 
-        return !!$validation->update([
+        return (bool) $validation->update([
             'identity_address' => $identity->address,
             'organization_id' => $organization_id,
             'state' => 'approved'
@@ -691,23 +683,15 @@ class RecordRepo implements IRecordRepo
     public function declineValidationRequest(
         string $identityAddress,
         string $validationUuid
-    ) {
-        /** @var
-         * Identity $identity
-         */
-        $validation = RecordValidation::query()->where(
-            'uuid', $validationUuid
-        )->first();
-
-        $identity = Identity::query()->where([
-            'address' => $identityAddress
-        ])->first();
+    ): bool {
+        $validation = RecordValidation::whereUuid($validationUuid)->first();
+        $identity = Identity::whereAddress($identityAddress)->first();
 
         if (!$identity || $validation->identity_address) {
             return false;
         }
 
-        return !!$validation->update([
+        return (bool)$validation->update([
             'identity_address' => $identity->address,
             'state' => 'declined'
         ]);

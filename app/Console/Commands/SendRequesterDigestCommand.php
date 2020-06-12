@@ -2,24 +2,24 @@
 
 namespace App\Console\Commands;
 
-use App\Digests\ProviderFundsDigest;
+use App\Digests\RequesterDigest;
 use Illuminate\Console\Command;
 
-class SendProviderFundsDailyDigestCommand extends Command
+class SendRequesterDigestCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'forus.digest.provider_funds:send';
+    protected $signature = 'forus.digest.requester:send';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send daily provider funds digest.';
+    protected $description = 'Send requester digest.';
 
     /**
      * Execute the console command.
@@ -28,6 +28,6 @@ class SendProviderFundsDailyDigestCommand extends Command
      */
     public function handle(): void
     {
-        ProviderFundsDigest::dispatchNow();
+        RequesterDigest::dispatchNow();
     }
 }

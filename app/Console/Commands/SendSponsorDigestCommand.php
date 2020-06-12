@@ -2,24 +2,24 @@
 
 namespace App\Console\Commands;
 
-use App\Digests\ValidatorDigest;
+use App\Digests\SponsorDigest;
 use Illuminate\Console\Command;
 
-class SendValidatorDailyDigestCommand extends Command
+class SendSponsorDigestCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'forus.digest.validator:send';
+    protected $signature = 'forus.digest.sponsor:send';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send daily validator digest.';
+    protected $description = 'Send sponsor digest.';
 
     /**
      * Execute the console command.
@@ -28,6 +28,6 @@ class SendValidatorDailyDigestCommand extends Command
      */
     public function handle(): void
     {
-        ValidatorDigest::dispatchNow();
+        SponsorDigest::dispatchNow();
     }
 }

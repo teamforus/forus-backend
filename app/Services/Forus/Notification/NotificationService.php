@@ -3,16 +3,17 @@
 namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
+use App\Mail\Digest\BaseDigestMail;
 use App\Mail\Digest\DigestProviderFundsMail;
 use App\Mail\Digest\DigestProviderMail;
 use App\Mail\Digest\DigestProviderProductsMail;
 use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Digest\DigestRequesterMail;
-use App\Mail\FundRequests\FundRequestCreatedMail;
-use App\Mail\FundRequests\FundRequestClarificationRequestedMail;
-use App\Mail\FundRequests\FundRequestRecordDeclinedMail;
-use App\Mail\FundRequests\FundRequestResolvedMail;
+use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
+use App\Mail\Funds\FundRequestRecords\FundRequestRecordDeclinedMail;
+use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
+use App\Mail\Funds\FundRequests\FundRequestResolvedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundClosed;
 use App\Mail\Funds\FundClosedProvider;
@@ -22,13 +23,13 @@ use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderInvitedMail;
 use App\Mail\Funds\ProviderRejectedMail;
-use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\MailBodyBuilder;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
 use App\Mail\User\IdentityEmailVerificationMail;
 use App\Mail\Vouchers\AssignedVoucherMail;
-use App\Mail\Vouchers\FundStatisticsMail;
+use App\Mail\Forus\FundStatisticsMail;
+use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductReservedUserMail;
@@ -44,7 +45,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Notification;
-use function Sodium\compare;
 
 /**
  * Class MailService
@@ -444,7 +444,7 @@ class NotificationService
         string $fund_name,
         string $organization_name
     ) {
-        return $this->sendMail($email, new ForusFundCreated(
+        return $this->sendMail($email, new ForusFundCreatedMail(
             $fund_name,
             $organization_name,
             $emailFrom
@@ -882,58 +882,14 @@ class NotificationService
     }
 
     /**
-     * Send sponsor daily digest
+     * Send digest
      *
      * @param string $email
-     * @param array $data
+     * @param BaseDigestMail $mailable
      * @return bool|null
      */
-    public function dailyDigestSponsor(string $email, array $data): ?bool {
-        return $this->sendMail($email, new DigestSponsorMail($data));
-    }
-
-    /**
-     * Send provider daily digest
-     *
-     * @param string $email
-     * @param array $data
-     * @return bool|null
-     */
-    public function dailyDigestProviderProducts(string $email, array $data): ?bool {
-        return $this->sendMail($email, new DigestProviderProductsMail($data));
-    }
-
-    /**
-     * Send provider daily digest
-     *
-     * @param string $email
-     * @param array $data
-     * @return bool|null
-     */
-    public function dailyDigestProviderFunds(string $email, array $data): ?bool {
-        return $this->sendMail($email, new DigestProviderFundsMail($data));
-    }
-
-    /**
-     * Send validator daily digest
-     *
-     * @param string $email
-     * @param MailBodyBuilder $emailBody
-     * @return bool|null
-     */
-    public function dailyDigestValidator(string $email, MailBodyBuilder $emailBody): ?bool {
-        return $this->sendMail($email, new DigestValidatorMail(compact('emailBody')));
-    }
-
-    /**
-     * Send requester daily digest
-     *
-     * @param string $email
-     * @param array $data
-     * @return bool|null
-     */
-    public function dailyDigestRequester(string $email, array $data): ?bool {
-        return $this->sendMail($email, new DigestRequesterMail($data));
+    public function sendDigest(string $email, BaseDigestMail $mailable): ?bool {
+        return $this->sendMail($email, $mailable);
     }
 
     /**
@@ -1043,9 +999,11 @@ class NotificationService
      * @return void
      */
     private function logFailure(?string $message): void {
-        logger()->error(sprintf(
-            'Error sending notification: `%s`',
-            $message
-        ));
+        if ($logger = logger()) {
+            $logger->error(sprintf(
+                'Error sending notification: `%s`',
+                $message
+            ));
+        }
     }
 }

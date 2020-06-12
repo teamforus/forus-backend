@@ -289,7 +289,7 @@ interface IRecordRepo {
         string $identityAddress,
         string $validationUuid,
         int $organization_id = null
-    );
+    ): bool;
 
     /**
      * Decline validation request
@@ -300,5 +300,5 @@ interface IRecordRepo {
     public function declineValidationRequest(
         string $identityAddress,
         string $validationUuid
-    );
+    ): bool;
 }

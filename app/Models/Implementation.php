@@ -11,6 +11,7 @@ use App\Services\MediaService\MediaService;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 /**
  * App\Models\Implementation
@@ -182,11 +183,11 @@ class Implementation extends Model
     public static function queryFundsByState($states) {
         $states = (array) $states;
 
-        if (self::activeKey() == 'general') {
+        if (self::activeKey() === 'general') {
             return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
-        return Fund::query()->whereIn('id', function(QueryBuilder $query) {
+        return Fund::query()->whereIn('id', static function(QueryBuilder $query) {
             $query->select('fund_id')->from('fund_configs')->where([
                 'implementation_id' => Implementation::query()->where([
                     'key' => self::activeKey()
@@ -198,7 +199,7 @@ class Implementation extends Model
     /**
      * @return \Illuminate\Support\Collection
      */
-    public static function activeFunds() {
+    public static function activeFunds(): Collection {
         return self::activeFundsQuery()->get();
     }
 

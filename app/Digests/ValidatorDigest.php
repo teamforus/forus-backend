@@ -3,14 +3,14 @@
 
 namespace App\Digests;
 
+use App\Mail\Digest\BaseDigestMail;
+use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\MailBodyBuilder;
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
@@ -19,21 +19,15 @@ use Illuminate\Support\Collection;
  * Class ValidatorDigest
  * @package App\Digests
  */
-class ValidatorDigest
+class ValidatorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    /**
-     * @param NotificationService $notificationService
-     */
-    public function handle(NotificationService $notificationService): void
-    {
-        $organizations = Organization::whereHas('funds')->get();
-
-        foreach ($organizations as $organization) {
-            $this->handleOrganizationDigest($organization, $notificationService);
-        }
-    }
+    protected $requiredRelation = "funds";
+    protected $digestKey = "validator";
+    protected $employeePermissions = [
+        'validate_records'
+    ];
 
     /**
      * @param Organization $organization
@@ -82,16 +76,6 @@ class ValidatorDigest
 
     /**
      * @param Organization $organization
-     * @return \Carbon\Carbon|\Illuminate\Support\Carbon
-     */
-    public function getOrganizationDigestTime(
-        Organization $organization
-    ) {
-        return $organization->lastDigestOfType('validator')->created_at ?? now()->subDay();
-    }
-
-    /**
-     * @param Organization $organization
      * @return Collection
      */
     public function getOrganizationFundRequestEvents(
@@ -113,26 +97,11 @@ class ValidatorDigest
     }
 
     /**
-     * @param Organization $organization
      * @param MailBodyBuilder $emailBody
-     * @param NotificationService $notificationService
+     * @return BaseDigestMail
      */
-    protected function sendOrganizationDigest(
-        Organization $organization,
-        MailBodyBuilder $emailBody,
-        NotificationService $notificationService
-    ): void {
-        /** @var Employee[] $employees */
-        $employees = $organization->employeesWithPermissions('validate_records');
-
-        foreach ($employees as $employee) {
-            if ($identity = Identity::findByAddress($employee->identity_address)) {
-                $notificationService->dailyDigestValidator($identity->email, $emailBody);
-            }
-        }
-
-        $organization->digests()->create([
-            'type' => 'validator'
-        ]);
+    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
+    {
+        return new DigestValidatorMail(compact('emailBody'));
     }
 }

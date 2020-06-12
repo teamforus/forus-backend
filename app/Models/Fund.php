@@ -141,6 +141,7 @@ class Fund extends Model
     public const EVENT_FUND_ENDED = 'fund_ended';
     public const EVENT_PRODUCT_ADDED = 'fund_product_added';
     public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
+    public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
 
     public const STATE_ACTIVE = 'active';
@@ -841,7 +842,7 @@ class Fund extends Model
     /**
      * @return void
      */
-    public static function notifyAboutReachedNotificationAmount()
+    public static function notifyAboutReachedNotificationAmount(): void
     {
         /** @var NotificationService $mailService */
         $mailService = resolve('forus.services.notification');

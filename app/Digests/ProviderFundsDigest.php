@@ -3,38 +3,32 @@
 
 namespace App\Digests;
 
+use App\Mail\Digest\BaseDigestMail;
+use App\Mail\Digest\DigestProviderFundsMail;
 use App\Mail\MailBodyBuilder;
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Product;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Services\EventLogService\Models\EventLog;
-use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Collection;
 
 /**
  * Class ValidatorDigest
  * @package App\Digests
  */
-class ProviderFundsDigest
+class ProviderFundsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    /**
-     * @param NotificationService $notificationService
-     */
-    public function handle(NotificationService $notificationService): void
-    {
-        /** @var Organization[] $organizations */
-        $organizations = Organization::whereHas('fund_providers')->get();
-
-        foreach ($organizations as $organization) {
-            $this->handleOrganizationDigest($organization, $notificationService);
-        }
-    }
+    protected $requiredRelation = 'fund_providers';
+    protected $digestKey = 'provider_funds';
+    protected $employeePermissions = [
+        'manage_provider_funds'
+    ];
 
     /**
      * @param Organization $organization
@@ -70,26 +64,31 @@ class ProviderFundsDigest
 
     /**
      * @param Organization $organization
-     * @param MailBodyBuilder $emailBody
-     * @param NotificationService $notificationService
+     * @param string $targetEvent
+     * @param array $otherEvents
+     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Collection
      */
-    protected function sendOrganizationDigest(
+    protected function getEvents(
         Organization $organization,
-        MailBodyBuilder $emailBody,
-        NotificationService $notificationService
-    ): void {
-        /** @var Employee[] $employees */
-        $employees = $organization->employeesWithPermissions('manage_provider_funds');
+        string $targetEvent,
+        array $otherEvents
+    ) {
+        $logsApprovedBudget = EventLog::eventsOfTypeQuery(
+            FundProvider::class,
+            $organization->fund_providers()->pluck('id')->toArray()
+        )->whereIn('event', $otherEvents)->where(
+            'created_at', '>=', $this->getOrganizationDigestTime($organization)
+        )->get()->groupBy('loggable_id');
 
-        foreach ($employees as $employee) {
-            if ($identity = Identity::findByAddress($employee->identity_address)) {
-                $notificationService->dailyDigestProviderFunds($identity->email, [
-                    'emailBody' => $emailBody
-                ]);
-            }
-        }
-
-        $this->updateLastDigest($organization);
+        return $logsApprovedBudget->filter(static function(
+            Collection $group
+        ) use ($targetEvent) {
+            $group = $group->sortBy('created_at');
+            return ($group->first()->event === $group->last()->event) &&
+                $group->last()->event === $targetEvent;
+        })->map(static function(Collection $group) {
+            return $group->sortBy('created_at')->last();
+        })->flatten(1)->pluck('data');
     }
 
     /**
@@ -100,14 +99,12 @@ class ProviderFundsDigest
         Organization $organization
     ): MailBodyBuilder {
         $mailBody = new MailBodyBuilder();
-
-        $query = EventLog::eventsOfTypeQuery(
-            FundProvider::class,
-            $organization->fund_providers()->pluck('id')->toArray()
-        )->where('event', FundProvider::EVENT_APPROVED_BUDGET);
-        $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
-
-        $logsApprovedBudget = $query->get()->pluck('data');
+        $logsApprovedBudget = $this->getEvents(
+            $organization,
+            FundProvider::EVENT_APPROVED_BUDGET, [
+            FundProvider::EVENT_APPROVED_BUDGET,
+            FundProvider::EVENT_REVOKED_BUDGET
+        ]);
 
         if ($logsApprovedBudget->count() > 0) {
             $mailBody->h3(sprintf(
@@ -135,14 +132,12 @@ class ProviderFundsDigest
         Organization $organization
     ): MailBodyBuilder {
         $mailBody = new MailBodyBuilder();
-
-        $query = EventLog::eventsOfTypeQuery(
-            FundProvider::class,
-            $organization->fund_providers()->pluck('id')->toArray()
-        )->where('event', FundProvider::EVENT_APPROVED_PRODUCTS);
-        $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
-
-        $logsApprovedProducts = $query->get()->pluck('data');
+        $logsApprovedProducts = $this->getEvents(
+            $organization,
+            FundProvider::EVENT_APPROVED_PRODUCTS, [
+            FundProvider::EVENT_APPROVED_PRODUCTS,
+            FundProvider::EVENT_REVOKED_PRODUCTS
+        ]);
 
         if ($logsApprovedProducts->count() > 0) {
             $mailBody->h3(sprintf(
@@ -167,14 +162,12 @@ class ProviderFundsDigest
         Organization $organization
     ): MailBodyBuilder {
         $mailBody = new MailBodyBuilder();
-
-        $query = EventLog::eventsOfTypeQuery(
-            FundProvider::class,
-            $organization->fund_providers()->pluck('id')->toArray()
-        )->where('event', FundProvider::EVENT_REVOKED_BUDGET);
-        $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
-
-        $logsRejectedBudget = $query->get()->pluck('data');
+        $logsRejectedBudget = $this->getEvents(
+            $organization,
+            FundProvider::EVENT_REVOKED_BUDGET, [
+            FundProvider::EVENT_APPROVED_BUDGET,
+            FundProvider::EVENT_REVOKED_BUDGET
+        ]);
 
         if ($logsRejectedBudget->count() > 0) {
             $mailBody->h3(sprintf(
@@ -203,14 +196,12 @@ class ProviderFundsDigest
         Organization $organization
     ): MailBodyBuilder {
         $mailBody = new MailBodyBuilder();
-
-        $query = EventLog::eventsOfTypeQuery(
-            FundProvider::class,
-            $organization->fund_providers()->pluck('id')->toArray()
-        )->where('event', FundProvider::EVENT_REVOKED_PRODUCTS);
-        $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
-
-        $logsRejectedProducts = $query->get()->pluck('data');
+        $logsRejectedProducts = $this->getEvents(
+            $organization,
+            FundProvider::EVENT_REVOKED_PRODUCTS, [
+            FundProvider::EVENT_APPROVED_PRODUCTS,
+            FundProvider::EVENT_REVOKED_PRODUCTS
+        ]);
 
         if ($logsRejectedProducts->count() > 0) {
             $mailBody->h3(sprintf(
@@ -249,7 +240,6 @@ class ProviderFundsDigest
         Organization $organization
     ): MailBodyBuilder {
         $mailBody = new MailBodyBuilder();
-
         $query = EventLog::eventsOfTypeQuery(
             Product::class,
             $organization->products()->pluck('id')->toArray()
@@ -324,18 +314,11 @@ class ProviderFundsDigest
     }
 
     /**
-     * @param Organization $organization
-     * @return \Carbon\Carbon|\Illuminate\Support\Carbon
+     * @param MailBodyBuilder $emailBody
+     * @return BaseDigestMail
      */
-    public function getOrganizationDigestTime(
-        Organization $organization
-    ) {
-        return $organization->lastDigestOfType('provider_funds')->created_at ?? now()->subDay();
-    }
-
-    protected function updateLastDigest(Organization $organization): void {
-        $organization->digests()->create([
-            'type' => 'provider_funds'
-        ]);
+    protected function getDigestMailable(MailBodyBuilder $emailBody): BaseDigestMail
+    {
+        return new DigestProviderFundsMail(compact('emailBody'));
     }
 }
