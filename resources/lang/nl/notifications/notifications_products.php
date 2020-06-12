@@ -14,8 +14,8 @@ return [
     ],
     // todo: translate
     'revoked' => [
-        'title' => ':product_name has ben removed :fund_name.',
-        'description' => ':product_name has ben removed from :fund_name by :sponsor_name',
+        'title' => ':product_name is verwijderd :fund_name.',
+        'description' => ':product_name is verwijderd uit :fund_name door :sponsor_name',
     ],
     'expired' => [
         'title' => 'Aanbieding :product_name is verlopen.',

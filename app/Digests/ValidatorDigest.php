@@ -54,14 +54,14 @@ class ValidatorDigest extends BaseOrganizationDigest
 
         foreach ($events as $event) {
             $emailBody->h3(sprintf(
-                "%s new validation requests for %s",
+                "%s nieuwe aanvragen voor %s",
                 $event['eventsCount'],
                 $event['fund']->name
             ));
 
             $emailBody->text(sprintf(
-                "You have %s new validation requests waiting for your on your dashboard.\n" .
-                "Please go to your dashboard to check out the applications and accept the sequesters.",
+                "U heeft %s nieuwe aanvragen wachtende op uw dashboard.\n" .
+                "Ga naar het dashboard om deze aanvragen goed te keuren.",
                 $event['eventsCount']
             ))->space();
         }

@@ -42,7 +42,7 @@ class RequesterDigest
             $identity = $identityFunds['identity'];
 
             $emailBody = new MailBodyBuilder();
-            $emailBody->h1('Update: New offers on webshop');
+            $emailBody->h1('Update: Nieuwe aanbod op de webshop');
 
             foreach ($identityFunds['funds'] as $fundId) {
                 if (isset($fundsProvidersBody[$fundId])) {
@@ -123,7 +123,7 @@ class RequesterDigest
             if ($events->count() > 0) {
                 $array[$fund->id] = new MailBodyBuilder();
                 $array[$fund->id]->h3(sprintf(
-                    "%s has approved %s new provider(s) for %s",
+                    "%s zijn goedgekeurd %s nieuwe aanbieder(s) voor %s",
                     $fund->organization->name,
                     $events->count(),
                     $fund->name
@@ -134,8 +134,8 @@ class RequesterDigest
                 })->toArray();
 
                 $array[$fund->id]->text(sprintf(
-                    "You can now spend your budget voucher at these new shop(s):%s" .
-                    "\n\nPlease check the webshop for full context of the new provider(s).",
+                    "Uw kunt uw tegoed bij de volgende nieuwe aanbieders: %s" .
+                    "\n\nBekijk de webshop voor de volledige context en status.",
                     implode("\n", $text)
                 ));
             }
@@ -165,7 +165,7 @@ class RequesterDigest
 
                 $array[$fund->id] = new MailBodyBuilder();
                 $array[$fund->id]->h3(sprintf(
-                    "%s has approved %s new product(s) for %s",
+                    "%s zijn geaccepteerd met %s nieuwe product(en) voor %s",
                     $fund->organization->name,
                     $events->count(),
                     $fund->name

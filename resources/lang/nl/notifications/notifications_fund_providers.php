@@ -2,12 +2,12 @@
 
 return [
     'sponsor_message' => [
-        'title' => 'New chat message.',
+        'title' => 'Nieuw chat bericht.',
         'description' =>
-            'You have a new chat message from sponsor ":sponsor_name" related to ":product_name".'
+            'U heeft een nieuwe chat bericht van ":sponsor_name" over ":product_name".'
     ],
     'fund_expiring' => [
-        'title' => ':fund_name is verloopt bijna.',
+        'title' => ':fund_name verloopt bijna.',
         'description' =>
             ':fund_name loopt van :start_date: tot :end_date_minus1: en verloopt dus bijna.'
     ],

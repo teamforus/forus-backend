@@ -108,16 +108,16 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         if ($logsApprovedBudget->count() > 0) {
             $mailBody->h3(sprintf(
-                "Your application have been approved for %s fund(s) to scan vouchers",
+                "Uw aanmelding voor %s fonds(en) is goedgekeurd om tegoeden te scannen.",
                 $logsApprovedBudget->count()
             ));
 
             $mailBody->text(sprintf(
-                "This means you can scan budget vouchers for people who bla bla.\nYou have been approved for:\n- %s",
+                "Dit betekent dat u vanaf nu tegoeden kunt scannen en kunt afschrijven. \nU bent goedgekeurt voor:\n- %s",
                 implode("\n- ", $logsApprovedBudget->pluck('fund_name')->toArray())
             ));
 
-            $mailBody->text("There specific rights for each fund assigned to your organization.\nPlease check the dashboard to see full context.");
+            $mailBody->text("Er zijn specifieke rechten aan u toegekend per fonds.\nBekijk het dashboard voor de volledige context.");
             $mailBody->separator();
         }
 
@@ -141,12 +141,12 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         if ($logsApprovedProducts->count() > 0) {
             $mailBody->h3(sprintf(
-                "Your application have been approved for %s fund(s) to sell product vouchers",
+                "Uw aanmelding voor %s fondsen is goedgekeurd met al uw producten.",
                 $logsApprovedProducts->count()
             ));
 
             $mailBody->text(sprintf(
-                "This means you can have your products on their webshop and sell directly online.\nYou have been approved for:\n- %s",
+                "Dit betekent dat uw producten in de webshop staan voor de volgende fondsen:\n- %s",
                 implode("\n- ", $logsApprovedProducts->pluck('fund_name')->toArray())
             ))->separator();
         }
@@ -171,17 +171,16 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         if ($logsRejectedBudget->count() > 0) {
             $mailBody->h3(sprintf(
-                "Your application has been rejected for %s fund(s) to scan vouchers",
+                "Uw aanmelding voor %s fonds(en) is geweigerd om tegoeden te scannen.",
                 $logsRejectedBudget->count()
             ));
 
             $mailBody->text(sprintf(
-                "This means your application for these funds have been changed:\n - %s",
+                "Dit betekent dat uw aanmelding voor de volgende fondsen is gewijzigd:\n - %s",
                 implode("\n- ", $logsRejectedBudget->pluck('fund_name')->toArray())
             ));
 
-            $mailBody->text("Please check your dashboard for the current status.");
-            $mailBody->text("There specific rights for each fund assigned to your organization.\nPlease check the dashboard to see full context.");
+            $mailBody->text("Er zijn specifieke rechten aan u toegekend.\nBekijk het dashboard voor de huidige status.");
             $mailBody->separator();
         }
 
@@ -205,12 +204,12 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         if ($logsRejectedProducts->count() > 0) {
             $mailBody->h3(sprintf(
-                "Your application has been rejected for %s fund(s) to scan product vouchers",
+                "Uw aanmeldingen voor %s fondsen zijn geweigerd om producten in de webshop te plaatsen.",
                 $logsRejectedProducts->count()
             ));
 
             $mailBody->text(sprintf(
-                "This means can not scan product vouchers for these funds anymore:\n- %s",
+                "Dit betekent dat u voor de volgende fondsen geen producten meer in de webshop kunt plaatsen:\n- %s",
                 implode("\n- ", $logsRejectedProducts->pluck('fund_name')->toArray())
             ));
 
@@ -220,12 +219,12 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
             if ($fundsWithSomeProducts->count() > 0) {
                 $mailBody->text(sprintf(
-                    "For these funds you still have some products approved:\n- %s",
+                    "Voor deze fondsen staan nog specifieke producten in de webshop:\n- %s",
                     implode("\n- ", Fund::whereKey($fundsWithSomeProducts)->pluck('name')->toArray())
                 ));
             }
 
-            $mailBody->text("Please check your dashboard for more details.");
+            $mailBody->text("Bekijk het dashboard voor de volledige context en huidige status.");
             $mailBody->separator();
         }
 
@@ -249,8 +248,8 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         $logsProductsApproved = $query->get()->pluck('data');
 
         if ($logsProductsApproved->count() > 0) {
-            $mailBody->h3("Some of your products have been individually accepted for these funds.");
-            $mailBody->text("There specific rights for each fund assigned to your organization. \nPlease check the dashboard to see full context\n");
+            $mailBody->h3("Een aantal van uw producten zijn goedgekeurd voor fondsen.");
+            $mailBody->text("Voor elk fonds zijn specifieke rechten aan u toegekend. \nBekijk het dashboard voor de volledige context en status.\n");
 
             foreach ($logsProductsApproved->groupBy('fund_id') as $logsProductApproved) {
                 $mailBody->h5($logsProductApproved[0]['fund_name'], ['margin_less']);
@@ -281,25 +280,25 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         if ($logsProductsFeedback->count() > 0) {
             $mailBody->h3(sprintf(
-                "Feedback on %s of your product(s)",
+                "Feedback op %s product(en)",
                 $logsProductsFeedback->count()
             ));
 
             $mailBody->text(sprintf(
-                "You got feedback on %s of your products",
+                "U heeft feedback ontvangen op %s product(en).",
                 $logsProductsFeedback->count()
             ));
 
             foreach ($logsProductsFeedback as $logsProductFeedback) {
                 $mailBody->h5(sprintf(
-                    "New messages on %s for €%s",
+                    "Nieuwe berichten op %s voor €%s",
                     $logsProductFeedback[0]['product_name'],
                     $logsProductFeedback[0]['product_price_locale']
                 ), ['margin_less']);
 
                 foreach ($logsProductFeedback->groupBy('fund_id') as $logsProductFeedbackLog) {
                     $mailBody->text(sprintf(
-                        "- %s - has sent %s message(s) on your application for %s.\n",
+                        "- %s - heeft %s bericht(en) gestuurd op uw aanmelding voor %s.\n",
                         $logsProductFeedbackLog[0]['sponsor_name'],
                         $logsProductFeedbackLog->count(),
                         $logsProductFeedbackLog[0]['fund_name']

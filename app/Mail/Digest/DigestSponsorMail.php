@@ -11,6 +11,6 @@ class DigestSponsorMail extends BaseDigestMail
      */
     public function build(): self
     {
-        return $this->view('emails.mail-digest')->subject('DAILY SPONSOR DIGEST');
+        return $this->view('emails.mail-digest')->subject('Digest: Aanmeldingsnotificaties');
     }
 }

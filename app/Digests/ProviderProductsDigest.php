@@ -49,7 +49,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
 
         foreach ($logsProductsReserved as $logsProductReserved) {
             $emailBodyProducts->h3(sprintf(
-                "Your product has been reserved with %s",
+                "Uw product is gereserveerd met %s",
                 $logsProductReserved[0]['fund_name']
             ));
 
@@ -57,7 +57,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
 
             foreach ($logsProductReserved as $_logsProductReserved) {
                 $emailBodyProducts->text(sprintf(
-                    "- %s - %s reservation(s)\nThe last day the customer can pick up the reservation is %s",
+                    "- %s - %s reservering(en)\nDe laatste dag dat de klant uw product kan ophalen is %s",
                     $_logsProductReserved[0]['product_name'],
                     $_logsProductReserved->count(),
                     $_logsProductReserved[0]['fund_end_date_locale']
@@ -67,13 +67,13 @@ class ProviderProductsDigest extends BaseOrganizationDigest
 
         $emailBody = new MailBodyBuilder();
         $emailBody->h1(sprintf(
-            "Overview: %s new product(s) reserved %s",
+            "Overzicht: %s nieuwe product(en) gereserveerd %s",
             $totalProducts,
             $organization->name
         ));
 
         $emailBody->text(sprintf(
-            "Beste %s,\nEr are %s products reserved today.",
+            "Beste %s,\nEr zijn %s product(en) gereserveerd vandaag.",
             $organization->name,
             $totalProducts
         ));

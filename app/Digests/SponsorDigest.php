@@ -89,12 +89,12 @@ class SponsorDigest extends BaseOrganizationDigest
             /** @var EventLog[]|Collection $eventLogs */
             foreach ($applyEvents as [$fund, $countEvents, $eventLogs]) {
                 $emailBody->h3(sprintf(
-                    "New provider applications for %s",
+                    "Nieuwe aanbieders hebben zich aangemeld %s",
                     $fund->name
                 ), ['margin_less']);
 
                 $emailBody->text(sprintf(
-                    "%s provider(s) applied for being accepted for %s\n- %s",
+                    "%s aanbieder(s) hebben zich aangemeld voor %s\n- %s",
                     $countEvents,
                     $fund->name,
                     $eventLogs->pluck('data.provider_name')->implode("\n- ")
@@ -133,12 +133,12 @@ class SponsorDigest extends BaseOrganizationDigest
             /** @var EventLog[]|Collection $eventLogs */
             foreach ($events as [$fund, $countEvents, $eventLogs]) {
                 $emailBody->h3(sprintf(
-                    "New products added for %s webshop.",
+                    "Nieuwe product(en) voor %s webshop.",
                     $fund->name
                 ), ['margin_less']);
 
                 $emailBody->text(sprintf(
-                    "%s product(s) added that areeligible for %s.",
+                    "%s product(en) zijn toegevoegd aan %s.",
                     $countEvents,
                     $fund->name
                 ));
@@ -148,7 +148,7 @@ class SponsorDigest extends BaseOrganizationDigest
                 /** @var array $event_item */
                 foreach ($eventLogsByProvider as $event_items) {
                     $emailBody->h5(sprintf(
-                        "%s (%s product(s))",
+                        "%s (%s product(en))",
                         $event_items[0]['provider_name'],
                         count($event_items)
                     ), ['margin_less']);
@@ -190,7 +190,7 @@ class SponsorDigest extends BaseOrganizationDigest
             /** @var EventLog[]|Collection $eventLogs */
             foreach ($events as [$fund, $countEvents, $eventLogs]) {
                 $emailBody->h3(sprintf(
-                    "%s new replies on your feedback of %s",
+                    "%s nieuwe reacties op de feedback die gegeven is op %s",
                     $countEvents,
                     $fund->name
                 ));
@@ -198,14 +198,14 @@ class SponsorDigest extends BaseOrganizationDigest
 
                 foreach ($logsByProvider as $logs) {
                     $emailBody->h5(sprintf(
-                        "New message(s) from %s",
+                        "Nieuwe berichten van %s",
                         $logs[0]['provider_name']
                     ), ['margin_less']);
                     $logsByProduct = collect($logs)->groupBy('product_id');
 
                     foreach ($logsByProduct as $_logsByProduct) {
                         $emailBody->text(sprintf(
-                            "- %s has sent %s message(s) on %s.",
+                            "- %s heeft %s nieuwe bericht(en) gestuurd over %s.",
                             $_logsByProduct[0]['provider_name'],
                             count($logsByProduct),
                             $_logsByProduct[0]['product_name']
