@@ -28,7 +28,7 @@ class RequesterDigest
      */
     public function handle(NotificationService $notificationService): void
     {
-        $funds = Fund::whereState(Fund::STATE_ACTIVE)->get();
+        $funds = Fund::whereState(Fund::STATE_ACTIVE)->get()->keyBy('id');
 
         $fundsProvidersBody = collect($this->buildFundProvidersMailBody($funds));
         $fundsProductsBody = collect($this->buildFundProductsMailBody($funds));
@@ -47,6 +47,13 @@ class RequesterDigest
             foreach ($identityFunds['funds'] as $fundId) {
                 if (isset($fundsProvidersBody[$fundId])) {
                     $emailBody = $emailBody->merge($fundsProvidersBody[$fundId]);
+
+                    if (isset($funds[$fundId]->fund_config->implementation)) {
+                        $emailBody->button_primary(
+                            $funds[$fundId]->fund_config->implementation->urlWebshop(),
+                            'GA NAAR HET WEBSHOP'
+                        )->space();
+                    }
                 }
             }
 
@@ -57,24 +64,23 @@ class RequesterDigest
             foreach ($identityFunds['funds'] as $fundId) {
                 if (isset($fundsProductsBody[$fundId])) {
                     $emailBody = $emailBody->merge($fundsProductsBody[$fundId]);
+
+                    if (isset($funds[$fundId]->fund_config->implementation)) {
+                        $emailBody->button_primary(
+                            $funds[$fundId]->fund_config->implementation->urlWebshop(),
+                            'GA NAAR HET WEBSHOP'
+                        )->space();
+                    }
                 }
             }
 
-            if ($emailBody->count() === 1) {
-                continue;
+            if ($emailBody->count() > 1) {
+                $emailBody->pop();
+                $notificationService->sendDigest(
+                    $identity->email,
+                    new DigestRequesterMail(compact('emailBody'))
+                );
             }
-
-            $emailBody->space();
-
-            $emailBody->button_primary(
-                Implementation::general_urls()['url_validator'],
-                'GA NAAR HET WEBSHOP'
-            );
-
-            $notificationService->sendDigest(
-                $identity->email,
-                new DigestRequesterMail(compact('emailBody'))
-            );
         }
     }
 
@@ -223,7 +229,7 @@ class RequesterDigest
     public function getFundDigestTime(
         Fund $fund
     ) {
-        return $fund->lastDigestOfType('requester')->created_at ?? now()->subDay();
+        return $fund->lastDigestOfType('requester')->created_at ?? now()->subWeek();
     }
 
     /**

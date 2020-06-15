@@ -205,4 +205,13 @@ class MailBodyBuilder
 
         return new MailBodyBuilder($body);
     }
+
+    /**
+     * @return $this
+     */
+    public function pop(): MailBodyBuilder
+    {
+        array_pop($this->mailBody);
+        return $this;
+    }
 }
