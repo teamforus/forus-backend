@@ -312,6 +312,14 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
+        'organizations/{organization}/implementations',
+        "Api\Platform\Organizations\ImplementationsController", [
+        'only' => [
+            'index', 'show', 'update'
+        ],
+    ]);
+
+    $router->resource(
         'organizations/{organization}/provider-invitations',
         'Api\Platform\Organizations\FundProviderInvitationsController', [
         'only' => [

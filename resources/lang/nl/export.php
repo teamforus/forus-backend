@@ -46,5 +46,12 @@ return [
             'success' => 'voltooid', 
             'pending' => 'in afwachting',
         ]
+    ],
+
+    'prevalidations'   => [
+        'code'      => 'code',
+        'used'      => 'Geactiveerd',
+        'used_yes'  => 'Ja',
+        'used_no'   => 'Nee'
     ]
 ];

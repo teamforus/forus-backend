@@ -39,5 +39,10 @@ class RolesTableSeeder extends Seeder
             'key' => 'operation_officer',
             'name' => 'Kassa',
         ]);
+
+        Role::create([
+            'key' => 'implementation_manager',
+            'name' => 'Implementatie manager',
+        ]);
     }
 }

@@ -191,6 +191,8 @@ class Prevalidation extends Model
      * @return \Illuminate\Support\Collection
      */
     public static function export(Request $request) {
+        $transKey = "export.prevalidations";
+
         $query = self::search($request);
 
         $query->update([
@@ -199,9 +201,11 @@ class Prevalidation extends Model
 
         return $query->with([
             'prevalidation_records.record_type.translations'
-        ])->get()->map(function(Prevalidation $prevalidation) {
+        ])->get()->map(function(Prevalidation $prevalidation) use ($transKey)  {
             return collect([
-                'code' => $prevalidation->uid
+                trans("$transKey.code") => $prevalidation->uid,
+                trans("$transKey.used") => $prevalidation->state == self::STATE_USED ?
+                    trans("$transKey.used_yes") : trans("$transKey.used_no"),
             ])->merge($prevalidation->prevalidation_records->filter(function($record) {
                 return strpos($record->record_type->key, '_eligible') === false;
             })->pluck(
