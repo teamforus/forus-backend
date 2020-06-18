@@ -57,7 +57,7 @@ abstract class BaseOrganizationDigest
      * @return \Carbon\Carbon|\Illuminate\Support\Carbon
      */
     public function getOrganizationDigestTime(Organization $organization) {
-        return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subMonth();
+        return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subDay();
     }
 
     /**

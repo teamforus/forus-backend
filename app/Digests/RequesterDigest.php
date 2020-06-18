@@ -220,7 +220,7 @@ class RequesterDigest
     public function getFundDigestTime(
         Fund $fund
     ) {
-        return $fund->lastDigestOfType('requester')->created_at ?? now()->subMonth();
+        return $fund->lastDigestOfType('requester')->created_at ?? now()->subWeek();
     }
 
     /**
