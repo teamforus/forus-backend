@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Identity;
 
+use App\Http\Requests\Api\Records\IndexRecordsRequest;
 use App\Http\Requests\Api\Records\RecordStoreRequest;
 use App\Http\Requests\Api\Records\RecordUpdateRequest;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
@@ -12,7 +13,7 @@ class RecordController extends Controller
 {
     private $recordRepo;
 
-    const HIDDEN_RECORD_TYPES = [
+    public const HIDDEN_RECORD_TYPES = [
         'bsn'
     ];
 
@@ -28,17 +29,18 @@ class RecordController extends Controller
 
     /**
      * Get list records
-     * @param Request $request
+     * @param IndexRecordsRequest $request
      * @return array
      */
-    public function index(Request $request)
+    public function index(IndexRecordsRequest $request): array
     {
         return array_values(array_filter($this->recordRepo->recordsList(
             auth_address(),
             $request->get('type', null),
-            $request->get('record_category_id', null)
-        ), function($record) {
-            return !in_array($record['key'], self::HIDDEN_RECORD_TYPES);
+            $request->get('record_category_id', null),
+            (bool) $request->get('deleted', false)
+        ), static function($record) {
+            return !in_array($record['key'], self::HIDDEN_RECORD_TYPES, true);
         }));
     }
 
@@ -63,7 +65,7 @@ class RecordController extends Controller
      * Validate records store request
      * @param RecordStoreRequest $request
      */
-    public function storeValidate(RecordStoreRequest $request) {}
+    public function storeValidate(RecordStoreRequest $request): void {}
 
     /**
      * Get record
@@ -72,13 +74,10 @@ class RecordController extends Controller
      */
     public function show(
         int $recordId
-    ) {
-        $record = $this->recordRepo->recordGet(
-            auth_address(),
-            $recordId
-        );
+    ): array {
+        $record = $this->recordRepo->recordGet(auth_address(), $recordId, true);
 
-        if (empty($record) || in_array($record['key'], self::HIDDEN_RECORD_TYPES)) {
+        if (empty($record) || in_array($record['key'], self::HIDDEN_RECORD_TYPES, true)) {
             abort(404, trans('records.codes.404'));
         }
 
@@ -95,7 +94,7 @@ class RecordController extends Controller
     public function update(
         RecordUpdateRequest $request,
         int $recordId
-    ) {
+    ): array {
         $identity = auth_address();
 
         if (empty($this->recordRepo->recordGet(
@@ -118,7 +117,7 @@ class RecordController extends Controller
      * Validate records update request
      * @param RecordUpdateRequest $request
      */
-    public function updateValidate(RecordUpdateRequest $request) {}
+    public function updateValidate(RecordUpdateRequest $request): void {}
 
     /**
      * Delete record
@@ -128,7 +127,7 @@ class RecordController extends Controller
      */
     public function destroy(
         int $recordId
-    ) {
+    ): array {
         $identity = auth_address();
 
         if (empty($this->recordRepo->recordGet(
@@ -152,7 +151,7 @@ class RecordController extends Controller
      */
     public function sort(
         Request $request
-    ) {
+    ): array {
         $this->recordRepo->recordsSort(
             auth_address(),
             collect($request->get('records', []))->toArray()
