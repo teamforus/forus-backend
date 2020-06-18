@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Digests;
 
 use App\Mail\Digest\BaseDigestMail;
@@ -37,8 +36,10 @@ class SponsorDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1("Update: New applications for your funds");
-        $emailBody->text(sprintf("Beste %s,", $organization->name), ["margin_less"]);
+        $emailBody->h1(trans('digests/sponsor.title'));
+        $emailBody->text(trans('digests/sponsor.greetings', [
+            'organization_name' => $organization->name
+        ]), ["margin_less"]);
 
         [$emailBodyApplications, $total_applications] = $this->getApplicationsEmailBody($organization);
         [$emailBodyProductsAdded, $total_products_added] = $this->getProductsAddedEmailBody($organization);
@@ -57,7 +58,7 @@ class SponsorDigest extends BaseOrganizationDigest
 
         $emailBody->button_primary(
             Implementation::general_urls()['url_validator'],
-            'GA NAAR HET DASHBOARD'
+            trans('digests/sponsor.dashboard_button')
         );
 
         $this->sendOrganizationDigest($organization, $emailBody, $notificationService);
@@ -78,7 +79,7 @@ class SponsorDigest extends BaseOrganizationDigest
             $query->where('event', Fund::EVENT_PROVIDER_APPLIED);
             $query->where('created_at', '>=', $this->getOrganizationDigestTime($organization));
 
-            $applyEvents[] = [$fund, $query->count(), $query->get()];
+            $applyEvents[] = [$fund, $query->count(), $query->pluck('data')];
         }
 
         $total_applications = array_sum(array_pluck($applyEvents, '1'));
@@ -86,19 +87,17 @@ class SponsorDigest extends BaseOrganizationDigest
         if ($total_applications > 0) {
             /** @var Fund $fund */
             /** @var int $countEvents */
-            /** @var EventLog[]|Collection $eventLogs */
+            /** @var array[]|Collection $eventLogs */
             foreach ($applyEvents as [$fund, $countEvents, $eventLogs]) {
-                $emailBody->h3(sprintf(
-                    "Nieuwe aanbieders hebben zich aangemeld %s",
-                    $fund->name
-                ), ['margin_less']);
+                $emailBody->h3(trans('digests/sponsor.providers_header', [
+                    'fund_name' => $fund->name,
+                ]), ['margin_less']);
 
-                $emailBody->text(sprintf(
-                    "%s aanbieder(s) hebben zich aangemeld voor %s\n- %s",
-                    $countEvents,
-                    $fund->name,
-                    $eventLogs->pluck('data.provider_name')->implode("\n- ")
-                ));
+                $emailBody->text(trans_choice('digests/sponsor.providers', $countEvents, [
+                    'fund_name' => $fund->name,
+                    'providers_count' => $countEvents,
+                    'providers_list' => $eventLogs->pluck('provider_name')->implode("\n- "),
+                ]));
             }
         }
 
@@ -132,29 +131,28 @@ class SponsorDigest extends BaseOrganizationDigest
             /** @var int $countEvents */
             /** @var EventLog[]|Collection $eventLogs */
             foreach ($events as [$fund, $countEvents, $eventLogs]) {
-                $emailBody->h3(sprintf(
-                    "Nieuwe product(en) voor %s webshop.",
-                    $fund->name
-                ), ['margin_less']);
+                $emailBody->h3(trans('digests/sponsor.products.header', [
+                    'fund_name' => $fund->name,
+                ]), ['margin_less']);
 
-                $emailBody->text(sprintf(
-                    "%s product(en) zijn toegevoegd aan %s.",
-                    $countEvents,
-                    $fund->name
-                ));
+                $emailBody->text(trans_choice('digests/sponsor.products.details', $countEvents, [
+                    'fund_name' => $fund->name,
+                    'products_count' => $countEvents,
+                ]));
 
                 $eventLogsByProvider = $eventLogs->pluck('data')->groupBy('provider_id');
 
                 /** @var array $event_item */
                 foreach ($eventLogsByProvider as $event_items) {
-                    $emailBody->h5(sprintf(
-                        "%s (%s product(en))",
-                        $event_items[0]['provider_name'],
-                        count($event_items)
-                    ), ['margin_less']);
+                    $emailBody->h5(trans_choice(
+                        'digests/sponsor.products.provider',
+                        count($event_items), [
+                        'provider_name' => $event_items[0]['provider_name'],
+                        'products_count' => count($event_items)
+                    ]), ['margin_less']);
 
                     $emailBody->text("- " . implode("\n- ", array_map(static function ($data) {
-                        return $data['product_name'] . ' €' . $data['product_price_locale'];
+                        return trans('digests/sponsor.products.item', $data);
                     }, $event_items->toArray())));
                 }
             }
@@ -189,27 +187,25 @@ class SponsorDigest extends BaseOrganizationDigest
             /** @var int $countEvents */
             /** @var EventLog[]|Collection $eventLogs */
             foreach ($events as [$fund, $countEvents, $eventLogs]) {
-                $emailBody->h3(sprintf(
-                    "%s nieuwe reacties op de feedback die gegeven is op %s",
-                    $countEvents,
-                    $fund->name
-                ));
+                $emailBody->h3(trans_choice('digests/sponsor.feedback_header', $countEvents, [
+                    'count_messages' => $countEvents,
+                    'fund_name' => $fund->name,
+                ]));
+
                 $logsByProvider = $eventLogs->pluck('data')->groupBy('provider_id');
 
                 foreach ($logsByProvider as $logs) {
-                    $emailBody->h5(sprintf(
-                        "Nieuwe berichten van %s",
-                        $logs[0]['provider_name']
-                    ), ['margin_less']);
                     $logsByProduct = collect($logs)->groupBy('product_id');
+                    $emailBody->h5(trans("digests/sponsor.feedback_item_header", $logs[0]), [
+                        'margin_less'
+                    ]);
 
                     foreach ($logsByProduct as $_logsByProduct) {
-                        $emailBody->text(sprintf(
-                            "- %s heeft %s nieuwe bericht(en) gestuurd over %s.",
-                            $_logsByProduct[0]['provider_name'],
-                            count($logsByProduct),
-                            $_logsByProduct[0]['product_name']
-                        ));
+                        $emailBody->text(trans_choice('digests/sponsor.feedback_item', count(
+                            $logsByProduct
+                        ), array_merge([
+                            'count_messages' => count($logsByProduct)
+                        ], $_logsByProduct[0])));
                     }
                 }
 

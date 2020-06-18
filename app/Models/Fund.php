@@ -13,6 +13,7 @@ use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
+use App\Services\Forus\Notification\EmailFrom;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
@@ -898,10 +899,6 @@ class Fund extends Model
                         currency_format($fund->budget_left)
                     );
                 }
-
-                $fund->update([
-                    'notified_at' => now()
-                ]);
             }
         }
     }
@@ -1193,5 +1190,13 @@ class Fund extends Model
         }
 
         return $topUp;
+    }
+
+    /**
+     * @return EmailFrom
+     */
+    public function getEmailFrom() {
+        return $this->fund_config->implementation->getEmailFrom() ??
+            EmailFrom::createDefault();
     }
 }

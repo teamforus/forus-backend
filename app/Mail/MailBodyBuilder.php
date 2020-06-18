@@ -214,4 +214,12 @@ class MailBodyBuilder
         array_pop($this->mailBody);
         return $this;
     }
+
+    /**
+     * @return MailBodyBuilder
+     */
+    public static function create(): MailBodyBuilder
+    {
+        return new self();
+    }
 }

@@ -5,11 +5,13 @@ namespace App\Notifications\Identities;
 use App\Notifications\BaseNotification;
 use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Channels\MailChannel;
 use Illuminate\Support\Collection;
 
 abstract class BaseIdentityNotification extends BaseNotification
 {
     protected $scope = self::SCOPE_WEBSHOP;
+    protected $sendMail = false;
 
     /**
      * Get identities which are eligible for the notification
@@ -24,6 +26,18 @@ abstract class BaseIdentityNotification extends BaseNotification
     }
 
     /**
+     * @param mixed $notifiable
+     * @return array
+     */
+    public function via($notifiable): array
+    {
+        return [
+            'database',
+            ($this->sendMail ?? false) ? MailChannel::class : null,
+        ];
+    }
+
+    /**
      * @param Model $loggable
      * @return array
      * @throws \Exception
@@ -34,12 +48,12 @@ abstract class BaseIdentityNotification extends BaseNotification
             'organization_id' => null
         ];
     }
+
     /**
-     * @param mixed $notifiable
-     * @return array|string[]
+     * Get the mail representation of the notification.
+     *
+     * @param Identity $identity
+     * @return void
      */
-    public function via($notifiable): array
-    {
-        return ['database'];
-    }
+    public function toMail(Identity $identity) {}
 }

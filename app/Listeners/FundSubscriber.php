@@ -164,39 +164,14 @@ class FundSubscriber
      */
     public function onFundProviderApplied(FundProviderApplied $event): void {
         $fundProvider = $event->getFundProvider();
-        $fund = $fundProvider->fund;
 
         FundProviderAppliedNotification::send(
-            $fund->log(Fund::EVENT_PROVIDER_APPLIED, [
-                'fund' => $fund,
+            $fundProvider->fund->log(Fund::EVENT_PROVIDER_APPLIED, [
+                'fund' => $fundProvider->fund,
+                'sponsor' => $fundProvider->fund->organization,
                 'provider' => $fundProvider->organization,
             ])
         );
-
-        $identities = $fund->organization->employeesOfRoleQuery([
-            'admin', 'policy_officer'
-        ])->pluck('identity_address')->push(
-            $fund->organization->identity_address
-        )->unique();
-
-        $identities = $identities->mapWithKeys(static function ($identityAddress) {
-            return [
-                $identityAddress => resolve(
-                    'forus.services.record'
-                )->primaryEmailByAddress($identityAddress)
-            ];
-        });
-
-        foreach ($identities as $identityAddress => $identityEmail) {
-            $this->notificationService->providerApplied(
-                $identityEmail,
-                Implementation::emailFrom(),
-                $fundProvider->organization->name,
-                $fund->organization->name,
-                $fund->name,
-                $fund->urlSponsorDashboard()
-            );
-        }
     }
 
     /**
@@ -220,6 +195,7 @@ class FundSubscriber
 
         BalanceLowNotification::send($fund->log(Fund::EVENT_BALANCE_LOW, [
             'fund' => $fund,
+            'sponsor' => $fund->organization,
         ], [
             'fund_budget_left' => currency_format($fund->budget_left),
             'fund_budget_left_locale' => currency_format_locale($fund->budget_left),

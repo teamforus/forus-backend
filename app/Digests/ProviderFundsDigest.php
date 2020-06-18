@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Digests;
 
 use App\Mail\Digest\BaseDigestMail;
@@ -39,7 +38,9 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $mailBody = new MailBodyBuilder();
-        $mailBody->h1("Update: huidige status van uw aanmelding met {$organization->name}");
+        $mailBody->h1(trans('digests/provider_funds.title', [
+            'provider_name' => $organization->name,
+        ]));
 
         $mailBody = $mailBody->merge(
             $this->getOrganizationBudgetApprovalMailBody($organization),
@@ -57,7 +58,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         $mailBody->space()->button_primary(
             Implementation::general_urls()['url_provider'],
-            'GA NAAR HET DASHBOARD'
+            trans('digests/provider_funds.dashboard_button')
         );
         $this->sendOrganizationDigest($organization, $mailBody, $notificationService);
     }
@@ -107,17 +108,20 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         ]);
 
         if ($logsApprovedBudget->count() > 0) {
-            $mailBody->h3(sprintf(
-                "Uw aanmelding voor %s fonds(en) is goedgekeurd om tegoeden te scannen.",
-                $logsApprovedBudget->count()
+            $count_funds = $logsApprovedBudget->count();
+            $mailBody->h3(trans_choice(
+                "digests/provider_funds.budget_approved.title",
+                $count_funds,
+                compact('count_funds')
             ));
 
-            $mailBody->text(sprintf(
-                "Dit betekent dat u vanaf nu tegoeden kunt scannen en kunt afschrijven. \nU bent goedgekeurt voor:\n- %s",
-                implode("\n- ", $logsApprovedBudget->pluck('fund_name')->toArray())
-            ));
+            $mailBody->text(trans_choice(
+                'digests/provider_funds.budget_approved.funds_list',
+                    $logsApprovedBudget->count()
+                ) . "\n- %s" . $logsApprovedBudget->pluck('fund_name')->implode("\n- ")
+            );
 
-            $mailBody->text("Er zijn specifieke rechten aan u toegekend per fonds.\nBekijk het dashboard voor de volledige context.");
+            $mailBody->text(trans('digests/provider_funds.budget_approved.details'));
             $mailBody->separator();
         }
 
@@ -140,15 +144,18 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         ]);
 
         if ($logsApprovedProducts->count() > 0) {
-            $mailBody->h3(sprintf(
-                "Uw aanmelding voor %s fondsen is goedgekeurd met al uw producten.",
-                $logsApprovedProducts->count()
+            $count_funds = $logsApprovedProducts->count();
+            $mailBody->h3(trans_choice(
+                "digests/provider_funds.products_approved.title",
+                $count_funds,
+                compact('count_funds')
             ));
 
-            $mailBody->text(sprintf(
-                "Dit betekent dat uw producten in de webshop staan voor de volgende fondsen:\n- %s",
-                implode("\n- ", $logsApprovedProducts->pluck('fund_name')->toArray())
-            ))->separator();
+            $mailBody->text(trans_choice(
+                'digests/provider_funds.products_approved.funds_list',
+                $logsApprovedProducts->count()
+                ) . "\n- %s" . $logsApprovedProducts->pluck('fund_name')->implode("\n- ")
+            )->separator();
         }
 
         return $mailBody;
@@ -170,17 +177,20 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         ]);
 
         if ($logsRejectedBudget->count() > 0) {
-            $mailBody->h3(sprintf(
-                "Uw aanmelding voor %s fonds(en) is geweigerd om tegoeden te scannen.",
+            $count_funds = $logsRejectedBudget->count();
+            $mailBody->h3(trans_choice(
+                "digests/provider_funds.budget_revoked.title",
+                $count_funds,
+                compact('count_funds')
+            ));
+
+            $mailBody->text(trans_choice(
+                'digests/provider_funds.budget_revoked.funds_list',
                 $logsRejectedBudget->count()
-            ));
+                ) . "\n - " . $logsRejectedBudget->pluck('fund_name')->implode("\n- ")
+            );
 
-            $mailBody->text(sprintf(
-                "Dit betekent dat uw aanmelding voor de volgende fondsen is gewijzigd:\n - %s",
-                implode("\n- ", $logsRejectedBudget->pluck('fund_name')->toArray())
-            ));
-
-            $mailBody->text("Er zijn specifieke rechten aan u toegekend.\nBekijk het dashboard voor de huidige status.");
+            $mailBody->text(trans('digests/provider_funds.budget_revoked.details'));
             $mailBody->separator();
         }
 
@@ -203,28 +213,31 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         ]);
 
         if ($logsRejectedProducts->count() > 0) {
-            $mailBody->h3(sprintf(
-                "Uw aanmeldingen voor %s fondsen zijn geweigerd om producten in de webshop te plaatsen.",
-                $logsRejectedProducts->count()
-            ));
+            $count_funds = $logsRejectedProducts->count();
+            $mailBody->h3(sprintf(trans_choice(
+                'digests/provider_funds.products_revoked.title',
+                $count_funds,
+                compact('count_funds')
+            )));
 
-            $mailBody->text(sprintf(
-                "Dit betekent dat u voor de volgende fondsen geen producten meer in de webshop kunt plaatsen:\n- %s",
-                implode("\n- ", $logsRejectedProducts->pluck('fund_name')->toArray())
-            ));
+            $mailBody->text(trans_choice(
+                'digests/provider_funds.products_revoked.funds_list',
+                $logsRejectedProducts->count()
+                ) . "\n- " . $logsRejectedProducts->pluck('fund_name')->implode("\n- "));
 
             $fundsWithSomeProducts = $organization->fund_providers()->whereKey(
                 $logsRejectedProducts->pluck('fund_id')->unique()->toArray()
             )->whereHas('fund_provider_products')->pluck('fund_id')->unique();
+            $fundsWithSomeProducts = Fund::whereKey($fundsWithSomeProducts)->pluck('name');
 
             if ($fundsWithSomeProducts->count() > 0) {
-                $mailBody->text(sprintf(
-                    "Voor deze fondsen staan nog specifieke producten in de webshop:\n- %s",
-                    implode("\n- ", Fund::whereKey($fundsWithSomeProducts)->pluck('name')->toArray())
-                ));
+                $mailBody->text(trans_choice(
+                    'digests/provider_funds.products_revoked.funds_list_individual',
+                    $fundsWithSomeProducts->toArray()
+                    ) . "\n- " . $fundsWithSomeProducts->implode("\n- "));
             }
 
-            $mailBody->text("Bekijk het dashboard voor de volledige context en huidige status.");
+            $mailBody->text(trans('digests/provider_funds.products_revoked.details'));
             $mailBody->separator();
         }
 
@@ -248,14 +261,14 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         $logsProductsApproved = $query->get()->pluck('data');
 
         if ($logsProductsApproved->count() > 0) {
-            $mailBody->h3("Een aantal van uw producten zijn goedgekeurd voor fondsen.");
-            $mailBody->text("Voor elk fonds zijn specifieke rechten aan u toegekend. \nBekijk het dashboard voor de volledige context en status.\n");
+            $mailBody->h3(trans("digests/provider_funds.individual_products.title"));
+            $mailBody->text(trans("digests/provider_funds.individual_products.details"));
 
             foreach ($logsProductsApproved->groupBy('fund_id') as $logsProductApproved) {
                 $mailBody->h5($logsProductApproved[0]['fund_name'], ['margin_less']);
                 $mailBody->text(implode("\n", array_map(static function($log) {
-                        return sprintf("- %s voor €%s", $log['product_name'], $log['product_price_locale']);
-                    }, $logsProductApproved->toArray())) . "\n");
+                    return trans('digests/provider_funds.individual_products.product', $log);
+                }, $logsProductApproved->toArray())) . "\n");
             }
 
             $mailBody->separator();
@@ -279,29 +292,28 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         $logsProductsFeedback = $logsProductsFeedback->groupBy('product_id');
 
         if ($logsProductsFeedback->count() > 0) {
-            $mailBody->h3(sprintf(
-                "Feedback op %s product(en)",
-                $logsProductsFeedback->count()
+            $count_products = $logsProductsFeedback->count();
+            $mailBody->h3(trans_choice('digests/provider_funds.feedback.title',
+                $count_products,
+                compact('count_products')
             ));
-
-            $mailBody->text(sprintf(
-                "U heeft feedback ontvangen op %s product(en).",
-                $logsProductsFeedback->count()
+            $mailBody->text(trans_choice('digests/provider_funds.feedback.details',
+                $count_products,
+                compact('count_products')
             ));
 
             foreach ($logsProductsFeedback as $logsProductFeedback) {
-                $mailBody->h5(sprintf(
-                    "Nieuwe berichten op %s voor €%s",
-                    $logsProductFeedback[0]['product_name'],
-                    $logsProductFeedback[0]['product_price_locale']
+                $mailBody->h5(trans(
+                    'digests/provider_funds.feedback.product_title',
+                    $logsProductFeedback[0]
                 ), ['margin_less']);
 
                 foreach ($logsProductFeedback->groupBy('fund_id') as $logsProductFeedbackLog) {
-                    $mailBody->text(sprintf(
-                        "- %s - heeft %s bericht(en) gestuurd op uw aanmelding voor %s.\n",
-                        $logsProductFeedbackLog[0]['sponsor_name'],
-                        $logsProductFeedbackLog->count(),
-                        $logsProductFeedbackLog[0]['fund_name']
+                    $count_messages = $logsProductFeedbackLog->count();
+                    $mailBody->text(trans_choice(
+                        'digests/provider_funds.feedback.product_details',
+                        $count_messages,
+                        array_merge($logsProductFeedback[0], compact('count_messages'))
                     ));
                 }
             }

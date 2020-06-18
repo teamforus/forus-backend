@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Digests;
 
 use App\Mail\Digest\BaseDigestMail;
@@ -38,37 +37,38 @@ class ValidatorDigest extends BaseOrganizationDigest
         NotificationService $notificationService
     ): void {
         $events = $this->getOrganizationFundRequestEvents($organization);
-        $total_requests = $events->sum('eventsCount');
+        $total_requests = $events->sum('count_requests');
 
         if ($total_requests === 0) {
             return;
         }
 
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1(sprintf("Update: %s new validation requests", $total_requests));
-        $emailBody->text(sprintf(
-            "Beste %s,\n Er zijn %s notificaties die betrekking hebben tot uw organisatie.",
-            $organization->name,
-            $total_requests
-        ))->space();
+        $emailBody->h1(trans_choice('digests/validator.title', $total_requests, [
+            'count_requests' => $total_requests
+        ]));
+        $emailBody->text(trans_choice('digests/validator.greetings', $total_requests, [
+            'organization_name' => $organization->name,
+            'count_requests' => $total_requests,
+        ]))->space();
 
         foreach ($events as $event) {
-            $emailBody->h3(sprintf(
-                "%s nieuwe aanvragen voor %s",
-                $event['eventsCount'],
-                $event['fund']->name
+            $emailBody->h3(trans_choice(
+                "digests/validator.fund_header",
+                $event['count_requests'],
+                $event
             ));
 
-            $emailBody->text(sprintf(
-                "U heeft %s nieuwe aanvragen wachtende op uw dashboard.\n" .
-                "Ga naar het dashboard om deze aanvragen goed te keuren.",
-                $event['eventsCount']
+            $emailBody->text(trans_choice(
+                "digests/validator.fund_details",
+                $event['count_requests'],
+                $event
             ))->space();
         }
 
         $emailBody->button_primary(
             Implementation::general_urls()['url_validator'],
-            'GA NAAR HET DASHBOARD'
+            trans('digests/validator.dashboard_button')
         );
 
         $this->sendOrganizationDigest($organization, $emailBody, $notificationService);
@@ -91,7 +91,8 @@ class ValidatorDigest extends BaseOrganizationDigest
 
             return [
                 'fund' => $fund,
-                'eventsCount' => $query->count(),
+                'fund_name' => $fund->name,
+                'count_requests' => $query->count(),
             ];
         });
     }

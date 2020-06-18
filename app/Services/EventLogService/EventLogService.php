@@ -107,6 +107,7 @@ class EventLogService implements IEventLogService
         return [
             'provider_id' => $provider->id,
             'provider_name' => $provider->name,
+            'provider_phone' => $provider->phone,
         ];
     }
 
@@ -118,6 +119,7 @@ class EventLogService implements IEventLogService
         return [
             'sponsor_id' => $provider->id,
             'sponsor_name' => $provider->name,
+            'sponsor_phone' => $provider->phone,
         ];
     }
 

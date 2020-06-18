@@ -13,18 +13,6 @@ use Illuminate\Events\Dispatcher;
 
 class FundRequestSubscriber
 {
-    protected $recordService;
-    protected $notificationService;
-
-    /**
-     * FundRequestSubscriber constructor.
-     */
-    public function __construct()
-    {
-        $this->recordService = resolve('forus.services.record');
-        $this->notificationService = resolve('forus.services.notification');
-    }
-
     /**
      * @param FundRequestCreated $fundRequestCreated
      * @throws \Exception
@@ -34,8 +22,6 @@ class FundRequestSubscriber
     ) {
         $fund = $fundRequestCreated->getFund();
         $fundRequest = $fundRequestCreated->getFundRequest();
-        $identity_address = $fundRequest->identity_address;
-
         $recordRepo = resolve('forus.services.record');
 
         // assign fund request to default validator
@@ -50,13 +36,6 @@ class FundRequestSubscriber
             !empty($recordRepo->bsnByAddress($fundRequest->identity_address))
         ) {
             $fundRequest->approve();
-        } else {
-            $this->notificationService->newFundRequestCreated(
-                $this->recordService->primaryEmailByAddress($identity_address),
-                $fund->fund_config->implementation->getEmailFrom(),
-                $fund->name,
-                $fund->urlWebshop()
-            );
         }
 
         $event = $fundRequest->log(FundRequest::EVENT_CREATED, [
@@ -71,15 +50,6 @@ class FundRequestSubscriber
 
     public function onFundRequestResolved(FundRequestResolved $fundCreated) {
         $fundRequest = $fundCreated->getFundRequest();
-        $identity_address = $fundRequest->identity_address;
-
-        $this->notificationService->fundRequestResolved(
-            $this->recordService->primaryEmailByAddress($identity_address),
-            $fundRequest->fund->fund_config->implementation->getEmailFrom(),
-            $fundRequest->state,
-            $fundRequest->fund->name,
-            $fundRequest->fund->urlWebshop()
-        );
 
         $stateEvent = [
             FundRequest::EVENT_APPROVED => FundRequest::STATE_APPROVED,

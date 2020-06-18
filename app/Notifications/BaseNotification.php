@@ -19,7 +19,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public const SCOPE_VALIDATOR = 'validator';
 
     protected $key;
-    protected $eventId;
+    protected $eventLog;
     protected $scope = null;
     protected $meta = [];
 
@@ -27,14 +27,14 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * Create a new notification instance.
      *
      * BaseNotification constructor.
-     * @param $eventId
+     * @param EventLog $eventLog
      * @param array $meta
      */
-    public function __construct($eventId, array $meta = [])
+    public function __construct(EventLog $eventLog, array $meta = [])
     {
         $this->queue = config('forus.notifications.notifications_queue_name');
         $this->meta = array_merge($this->meta, $meta);
-        $this->eventId = $eventId;
+        $this->eventLog = $eventLog;
     }
 
     /**
@@ -55,7 +55,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         return array_merge([
             'key' => $this->key,
             'scope' => $this->scope,
-            'event_id' => $this->eventId,
+            'event_id' => $this->eventLog,
         ], $this->meta);
     }
 
@@ -70,7 +70,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         try {
             \Illuminate\Support\Facades\Notification::send(
                 static::eligibleIdentities($event->loggable),
-                new static($event->id, static::getMeta($event->loggable))
+                new static($event, static::getMeta($event->loggable))
             );
         } catch (\Exception $exception) {
             if ($logger = logger()) {

@@ -4,26 +4,14 @@ namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
 use App\Mail\Digest\BaseDigestMail;
-use App\Mail\Digest\DigestProviderFundsMail;
 use App\Mail\Digest\DigestProviderMail;
-use App\Mail\Digest\DigestProviderProductsMail;
-use App\Mail\Digest\DigestSponsorMail;
-use App\Mail\Digest\DigestValidatorMail;
-use App\Mail\Digest\DigestRequesterMail;
-use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
 use App\Mail\Funds\FundRequestRecords\FundRequestRecordDeclinedMail;
-use App\Mail\Funds\FundRequests\FundRequestCreatedMail;
-use App\Mail\Funds\FundRequests\FundRequestResolvedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundClosed;
 use App\Mail\Funds\FundClosedProvider;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
-use App\Mail\Funds\ProviderAppliedMail;
-use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderInvitedMail;
-use App\Mail\Funds\ProviderRejectedMail;
-use App\Mail\MailBodyBuilder;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
 use App\Mail\User\IdentityEmailVerificationMail;
@@ -183,31 +171,15 @@ class NotificationService
     }
 
     /**
-     * Notify sponsor that new provider applied to his fund
-     *
      * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $provider_name
-     * @param string $sponsor_name
-     * @param string $fund_name
-     * @param string $sponsor_dashboard_link
+     * @param Mailable $param
      * @return bool|null
      */
-    public function providerApplied(
+    public function sendMailNotification(
         string $email,
-        ?EmailFrom $emailFrom,
-        string $provider_name,
-        string $sponsor_name,
-        string $fund_name,
-        string $sponsor_dashboard_link
-    ): ?bool {
-        return $this->sendMail($email, new ProviderAppliedMail(
-            $provider_name,
-            $sponsor_name,
-            $fund_name,
-            $sponsor_dashboard_link,
-            $emailFrom
-        ));
+        Mailable $param
+    ) {
+        return $this->sendMail($email, $param);
     }
 
     /**
@@ -254,107 +226,6 @@ class NotificationService
     }
 
     /**
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $provider_name
-     * @param string $sponsor_name
-     * @param string $provider_dashboard_link
-     * @return bool|null
-     */
-    public function providerApproved(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $provider_name,
-        string $sponsor_name,
-        string $provider_dashboard_link
-    ) {
-        return $this->sendMail($email, new ProviderApprovedMail(
-            $fund_name,
-            $provider_name,
-            $sponsor_name,
-            $provider_dashboard_link,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify provider that his request to apply for fund was rejected
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $provider_name
-     * @param string $sponsor_name
-     * @param string $phone_number
-     * @return bool|null
-     */
-    public function providerRejected(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $provider_name,
-        string $sponsor_name,
-        string $phone_number
-    ) {
-        return $this->sendMail($email, new ProviderRejectedMail(
-            $fund_name,
-            $provider_name,
-            $sponsor_name,
-            $phone_number,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user that new fund request was created
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $webshop_link
-     * @return bool|null
-     */
-    public function newFundRequestCreated(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $webshop_link
-    ) {
-        return $this->sendMail($email, new FundRequestCreatedMail(
-            $fund_name,
-            $webshop_link,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user that fund request resolved
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $requestStatus
-     * @param string $fundName
-     * @param string $webshopLink
-     * @return bool|null
-     */
-    public function fundRequestResolved(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $requestStatus,
-        string $fundName,
-        string $webshopLink
-    ) {
-        return $this->sendMail($email, new FundRequestResolvedMail(
-            $requestStatus,
-            $fundName,
-            $webshopLink,
-            $emailFrom
-        ));
-    }
-
-    /**
      * Notify user that fund request record declined
      *
      * @param string $email
@@ -374,34 +245,6 @@ class NotificationService
         return $this->sendMail($email, new FundRequestRecordDeclinedMail(
             $fundName,
             $rejectionNote,
-            $webshopLink,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user that new fund request clarification requested
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fundName
-     * @param string $question
-     * @param string $webshopClarificationLink
-     * @param string $webshopLink
-     * @return bool|null
-     */
-    public function sendFundRequestClarificationToRequester(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fundName,
-        string $question,
-        string $webshopClarificationLink,
-        string $webshopLink
-    ) {
-        return $this->sendMail($email, new FundRequestClarificationRequestedMail(
-            $fundName,
-            $question,
-            $webshopClarificationLink,
             $webshopLink,
             $emailFrom
         ));

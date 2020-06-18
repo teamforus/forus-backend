@@ -1,13 +1,11 @@
 <?php
 
-
 namespace App\Digests;
 
 use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\MailBodyBuilder;
 use App\Models\Fund;
 use App\Models\Voucher;
-use App\Models\Implementation;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\NotificationService;
@@ -42,7 +40,7 @@ class RequesterDigest
             $identity = $identityFunds['identity'];
 
             $emailBody = new MailBodyBuilder();
-            $emailBody->h1('Update: Nieuwe aanbod op de webshop');
+            $emailBody->h1(trans('digests/requester.title'));
 
             foreach ($identityFunds['funds'] as $fundId) {
                 if (isset($fundsProvidersBody[$fundId])) {
@@ -51,7 +49,7 @@ class RequesterDigest
                     if (isset($funds[$fundId]->fund_config->implementation)) {
                         $emailBody->button_primary(
                             $funds[$fundId]->fund_config->implementation->urlWebshop(),
-                            'GA NAAR HET WEBSHOP'
+                            trans('digests/requester.button_webshop')
                         )->space();
                     }
                 }
@@ -68,7 +66,7 @@ class RequesterDigest
                     if (isset($funds[$fundId]->fund_config->implementation)) {
                         $emailBody->button_primary(
                             $funds[$fundId]->fund_config->implementation->urlWebshop(),
-                            'GA NAAR HET WEBSHOP'
+                            trans('digests/requester.button_webshop')
                         )->space();
                     }
                 }
@@ -127,23 +125,18 @@ class RequesterDigest
             ]);
 
             if ($events->count() > 0) {
-                $array[$fund->id] = new MailBodyBuilder();
-                $array[$fund->id]->h3(sprintf(
-                    "%s zijn goedgekeurd %s nieuwe aanbieder(s) voor %s",
-                    $fund->organization->name,
-                    $events->count(),
-                    $fund->name
-                ));
+                $array[$fund->id] = MailBodyBuilder::create();
+                $array[$fund->id]->h3(trans_choice(
+                    'digests/requester.providers.title', $events->count(), [
+                        'count_providers' => $events->count(),
+                        'sponsor_name' => $fund->organization->name,
+                        'fund_name' => $fund->name
+                    ]));
 
-                $text = $events->map(static function(array $data) {
-                    return "\n- " . $data['provider_name'];
-                })->toArray();
-
-                $array[$fund->id]->text(sprintf(
-                    "Uw kunt uw tegoed bij de volgende nieuwe aanbieders: %s" .
-                    "\n\nBekijk de webshop voor de volledige context en status.",
-                    implode("\n", $text)
-                ));
+                $array[$fund->id]->text(trans(
+                    'digests/requester.providers.description', [
+                        'providers_list' => $events->pluck('provider_name')->implode("\n- ")
+                    ]));
             }
 
             return $array;
@@ -170,20 +163,18 @@ class RequesterDigest
                 $productEventsByProvider = $events->groupBy('provider_id');
 
                 $array[$fund->id] = new MailBodyBuilder();
-                $array[$fund->id]->h3(sprintf(
-                    "%s zijn geaccepteerd met %s nieuwe product(en) voor %s",
-                    $fund->organization->name,
-                    $events->count(),
-                    $fund->name
-                ));
+                $array[$fund->id]->h3(trans_choice(
+                    'digests/requester.products.title', $events->count(), [
+                    'count_products' => $events->count(),
+                    'sponsor_name' => $fund->organization->name,
+                    'fund_name' => $fund->name
+                ]));
 
                 foreach ($productEventsByProvider as $productEventByProvider) {
                     $array[$fund->id]->h5($productEventByProvider[0]['provider_name']);
                     $textList = $productEventByProvider->map(static function(array $data) {
-                        return sprintf("- %s voor €%s", $data['product_name'], $data['product_price_locale']
-                        );
+                        return trans('digests/requester.products.price', $data);
                     })->toArray();
-
                     $array[$fund->id]->text(implode("\n", $textList) . "\n");
                 }
             }
@@ -229,7 +220,7 @@ class RequesterDigest
     public function getFundDigestTime(
         Fund $fund
     ) {
-        return $fund->lastDigestOfType('requester')->created_at ?? now()->subWeek();
+        return $fund->lastDigestOfType('requester')->created_at ?? now()->subMonth();
     }
 
     /**

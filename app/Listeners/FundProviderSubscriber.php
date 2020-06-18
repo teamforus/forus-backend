@@ -41,17 +41,6 @@ class FundProviderSubscriber
      */
     public function onApprovedBudget(FundProviderApprovedBudget $event): void {
         $fundProvider = $event->getFundProvider();
-        $implementation = $fundProvider->fund->fund_config->implementation;
-
-        $this->notificationService->providerApproved(
-            $fundProvider->organization->email,
-            $implementation->getEmailFrom(),
-            $fundProvider->fund->name,
-            $fundProvider->organization->name,
-            $fundProvider->fund->organization->name,
-            $fundProvider->fund->urlProviderDashboard()
-        );
-
         $transData =  [
             "fund_name" => $fundProvider->fund->name,
             "sponsor_phone" => $fundProvider->organization->phone
@@ -85,7 +74,6 @@ class FundProviderSubscriber
      */
     public function onApprovedProducts(FundProviderApprovedProducts $event): void {
         $fundProvider = $event->getFundProvider();
-
         $providerEventLog = $fundProvider->log(FundProvider::EVENT_APPROVED_PRODUCTS, [
             'provider' => $fundProvider->organization,
             'sponsor' => $fundProvider->fund->organization,
@@ -107,17 +95,6 @@ class FundProviderSubscriber
      */
     public function onRevokedBudget(FundProviderRevokedBudget $event): void {
         $fundProvider = $event->getFundProvider();
-        $implementation = $fundProvider->fund->fund_config->implementation;
-
-        $this->notificationService->providerRejected(
-            $fundProvider->organization->email,
-            $implementation->getEmailFrom(),
-            $fundProvider->fund->name,
-            $fundProvider->organization->name,
-            $fundProvider->fund->organization->name,
-            $fundProvider->fund->organization->phone
-        );
-
         $eventLog = $fundProvider->log(FundProvider::EVENT_REVOKED_BUDGET, [
             'provider' => $fundProvider->organization,
             'fund' => $fundProvider->fund,
@@ -136,7 +113,6 @@ class FundProviderSubscriber
      */
     public function onRevokedProducts(FundProviderRevokedProducts $event): void {
         $fundProvider = $event->getFundProvider();
-
         $eventLog = $fundProvider->log(FundProvider::EVENT_REVOKED_PRODUCTS, [
             'provider' => $fundProvider->organization,
             'fund' => $fundProvider->fund,
@@ -156,8 +132,6 @@ class FundProviderSubscriber
     public function onSponsorMessage(FundProviderSponsorChatMessage $event): void {
         $chat = $event->getChat();
         $fundProvider = $chat->fund_provider;
-
-
         $eventLog = $fundProvider->log(FundProvider::EVENT_SPONSOR_MESSAGE, [
             'product' => $chat->product,
             'provider' => $fundProvider->organization,

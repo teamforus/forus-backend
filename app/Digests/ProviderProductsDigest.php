@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Digests;
 
 use App\Mail\Digest\BaseDigestMail;
@@ -48,39 +47,36 @@ class ProviderProductsDigest extends BaseOrganizationDigest
         }
 
         foreach ($logsProductsReserved as $logsProductReserved) {
-            $emailBodyProducts->h3(sprintf(
-                "Uw product is gereserveerd met %s",
-                $logsProductReserved[0]['fund_name']
-            ));
+            $emailBodyProducts->h3(trans('digests/provider_products.fund_title', [
+                'fund_name' => $logsProductReserved[0]['fund_name'],
+            ]));
 
             $logsProductReserved = $logsProductReserved->groupBy('product_id');
 
             foreach ($logsProductReserved as $_logsProductReserved) {
-                $emailBodyProducts->text(sprintf(
-                    "- %s - %s reservering(en)\nDe laatste dag dat de klant uw product kan ophalen is %s",
-                    $_logsProductReserved[0]['product_name'],
-                    $_logsProductReserved->count(),
-                    $_logsProductReserved[0]['fund_end_date_locale']
+                $count_reservations = $_logsProductReserved->count();
+                $emailBodyProducts->text(trans_choice(
+                    'digests/provider_products.fund_products',
+                    $count_reservations,
+                    array_merge($_logsProductReserved[0], compact('count_reservations'))
                 ));
             }
         }
 
         $emailBody = new MailBodyBuilder();
-        $emailBody->h1(sprintf(
-            "Overzicht: %s nieuwe product(en) gereserveerd %s",
-            $totalProducts,
-            $organization->name
-        ));
+        $emailBody->h1(trans_choice("digests/provider_products.title", $totalProducts, [
+            'provider_name' => $organization->name,
+            'count_products' => $totalProducts,
+        ]));
 
-        $emailBody->text(sprintf(
-            "Beste %s,\nEr zijn %s product(en) gereserveerd vandaag.",
-            $organization->name,
-            $totalProducts
-        ));
+        $emailBody->text(trans_choice("digests/provider_products.greetings", $totalProducts, [
+            'provider_name' => $organization->name,
+            'count_products' => $totalProducts,
+        ]));
 
         $emailBody = $emailBody->merge($emailBodyProducts)->space()->button_primary(
             Implementation::general_urls()['url_provider'],
-            'GA NAAR HET DASHBOARD'
+            trans('digests/provider_products.dashboard_button')
         );
 
         $this->sendOrganizationDigest($organization, $emailBody, $notificationService);

@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Digests;
-
 
 use App\Mail\Digest\BaseDigestMail;
 use App\Mail\MailBodyBuilder;
@@ -59,7 +57,7 @@ abstract class BaseOrganizationDigest
      * @return \Carbon\Carbon|\Illuminate\Support\Carbon
      */
     public function getOrganizationDigestTime(Organization $organization) {
-        return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subDay();
+        return $organization->lastDigestOfType($this->digestKey)->created_at ?? now()->subMonth();
     }
 
     /**
