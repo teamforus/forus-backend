@@ -181,24 +181,28 @@ interface IRecordRepo {
      * @param string $identityAddress
      * @param null $type
      * @param null $categoryId
+     * @param bool $deleted
      * @return mixed
      */
     public function recordsList(
         string $identityAddress,
         $type = null,
-        $categoryId = null
+        $categoryId = null,
+        bool $deleted = false
     );
 
     /**
      * Get identity record
      * @param string $identityAddress
      * @param mixed $recordId
+     * @param bool $withTrashed
      * @return array
      */
     public function recordGet(
         string $identityAddress,
-        $recordId
-    );
+        $recordId,
+        bool $withTrashed = false
+    ): ?array;
 
     /**
      * Add new record to identity
