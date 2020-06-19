@@ -6,6 +6,10 @@ use App\Events\Employees\EmployeeCreated;
 use App\Events\Employees\EmployeeDeleted;
 use App\Events\Employees\EmployeeUpdated;
 use App\Models\Employee;
+use App\Models\Role;
+use App\Notifications\Identities\Employee\IdentityChangedEmployeeRolesNotification;
+use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
+use App\Notifications\Identities\Employee\IdentityRemovedEmployeeNotification;
 use Illuminate\Events\Dispatcher;
 
 class EmployeeSubscriber
@@ -27,9 +31,15 @@ class EmployeeSubscriber
      * @throws \Exception
      */
     public function onEmployeeCreated(EmployeeCreated $employeeCreated) {
+        log_debug('onEmployeeCreated');
         $employee = $employeeCreated->getEmployee();
 
-        $this->updateValidatorEmployee($employee);
+        $event = $employee->log(Employee::EVENT_CREATED, [
+            'employee' => $employee,
+            'organization' => $employee->organization,
+        ]);
+
+        IdentityAddedEmployeeNotification::send($event);
 
         $transData = [
             "org_name" => $employee->organization->name,
@@ -49,7 +59,32 @@ class EmployeeSubscriber
      * @throws \Exception
      */
     public function onEmployeeUpdated(EmployeeUpdated $employeeUpdated) {
-        $this->updateValidatorEmployee($employeeUpdated->getEmployee());
+        $employee = $employeeUpdated->getEmployee();
+        $currentRoles = $employee->roles->pluck('key')->toArray();
+        $previousRoles = $employeeUpdated->getPreviousRoles();
+
+        $removedRoles = array_filter($previousRoles, function($role) use ($currentRoles) {
+            return !in_array($role, $currentRoles);
+        });
+
+        $newRoles = array_filter($currentRoles, function($role) use ($previousRoles) {
+            return !in_array($role, $previousRoles);
+        });
+
+        $removedRoles = Role::whereIn('key', $removedRoles)->get();
+        $assignedRoles = Role::whereIn('key', $newRoles)->get();
+
+        if ($removedRoles->count() > 0 || $assignedRoles->count() > 0) {
+            $event = $employee->log(Employee::EVENT_UPDATED, [
+                'employee' => $employee,
+                'organization' => $employee->organization,
+            ], [
+                'employee_roles_removed' => $removedRoles->pluck('name')->join(', '),
+                'employee_roles_assigned' => $removedRoles->pluck('name')->join(', '),
+            ]);
+
+            IdentityChangedEmployeeRolesNotification::send($event);
+        }
     }
 
     /**
@@ -58,6 +93,13 @@ class EmployeeSubscriber
      */
     public function onEmployeeDeleted(EmployeeDeleted $employeeDeleted) {
         $employee = $employeeDeleted->getEmployee();
+
+        $event = $employee->log(Employee::EVENT_DELETED, [
+            'employee' => $employee,
+            'organization' => $employee->organization,
+        ]);
+
+        IdentityRemovedEmployeeNotification::send($event);
 
         $transData = [
             "org_name" => $employee->organization->name
@@ -70,12 +112,6 @@ class EmployeeSubscriber
             $employee->identity_address, $title, $body, 'employee.deleted'
         );
     }
-
-    /**
-     * @param Employee $employee
-     * @throws \Exception
-     */
-    private function updateValidatorEmployee(Employee $employee) {}
 
     /**
      * The events dispatcher

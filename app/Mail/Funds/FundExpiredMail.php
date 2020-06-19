@@ -4,6 +4,7 @@ namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
+use Illuminate\Mail\Mailable;
 
 /**
  * Class FundExpiredMail
@@ -29,7 +30,7 @@ class FundExpiredMail extends ImplementationMail
         string $shopImplementationUrl,
         ?EmailFrom $emailFrom
     ) {
-        parent::__construct($emailFrom);
+        $this->setMailFrom($emailFrom);
 
         $this->fundName = $fundName;
         $this->sponsorName = $sponsorName;
@@ -40,7 +41,7 @@ class FundExpiredMail extends ImplementationMail
         $this->shopImplementationUrl = $shopImplementationUrl;
     }
 
-    public function build(): ImplementationMail
+    public function build(): Mailable
     {
         $data = [
             'fund_name' => $this->fundName,
@@ -52,7 +53,7 @@ class FundExpiredMail extends ImplementationMail
             'shop_implementation_url' => $this->shopImplementationUrl
         ];
 
-        return parent::build()
+        return $this->buildBase()
             ->subject(mail_trans('fund_expires.title', $data))
             ->view('emails.funds.fund_expires', $data);
     }

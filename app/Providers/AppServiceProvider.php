@@ -7,6 +7,9 @@ use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
 use App\Media\RecordCategoryIconMediaConfig;
+use App\Models\FundProvider;
+use App\Models\FundRequest;
+use App\Observers\FundProviderObserver;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
 use App\Models\Employee;
@@ -27,7 +30,6 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      *
      * @throws \App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException
-     * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */
     public function boot()
     {
@@ -41,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
             'voucher'           => Voucher::class,
             'product'           => Product::class,
             'employees'         => Employee::class,
+            'fund_request'      => FundRequest::class,
+            'fund_provider'     => FundProvider::class,
             'organization'      => Organization::class,
             'product_category'  => ProductCategory::class,
         ]);
@@ -52,6 +56,8 @@ class AppServiceProvider extends ServiceProvider
             new OrganizationLogoMediaConfig(),
             new RecordCategoryIconMediaConfig(),
         ]);
+
+        FundProvider::observe(FundProviderObserver::class);
     }
 
     /**

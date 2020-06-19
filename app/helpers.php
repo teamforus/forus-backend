@@ -62,7 +62,7 @@ if (!function_exists('format_date')) {
      */
     function format_date($date, string $format = 'short_date_time') {
         try {
-            if (gettype($date) == 'short_date_time') {
+            if (is_string($date)) {
                 $date = new Carbon($date);
             }
 
@@ -70,7 +70,7 @@ if (!function_exists('format_date')) {
                 config("forus.formats.$format") ?: $format
             );
         } catch (Throwable $throwable) {
-            return gettype($date) == 'string' ? $date : null;
+            return is_string($date) ? $date : null;
         }
     }
 }
@@ -83,7 +83,7 @@ if (!function_exists('format_datetime_locale')) {
      */
     function format_datetime_locale($date, string $format = 'short_date_time_locale') {
         try {
-            if (gettype($date) == 'short_date_time_locale') {
+            if (is_string($date)) {
                 $date = new Carbon($date);
             }
 
@@ -91,7 +91,7 @@ if (!function_exists('format_datetime_locale')) {
                 config("forus.formats.$format") ?: $format
             );
         } catch (Throwable $throwable) {
-            return gettype($date) == 'string' ? $date : null;
+            return is_string($date) ? $date : null;
         }
     }
 }
@@ -107,7 +107,7 @@ if (!function_exists('format_date_locale')) {
         string $format = 'short_date_locale'
     ) {
         try {
-            if (gettype($date) == 'string') {
+            if (is_string($date)) {
                 $date = new Carbon($date);
             }
 
@@ -115,7 +115,7 @@ if (!function_exists('format_date_locale')) {
                 config("forus.formats.$format") ?: $format
             );
         } catch (Throwable $throwable) {
-            return gettype($date) == 'string' ? $date : null;
+            return is_string($date) ? $date : null;
         }
     }
 }
@@ -139,7 +139,7 @@ if (!function_exists('currency_format_locale')) {
      * @return string
      */
     function currency_format_locale($number) {
-        return ($number % 1 == 0 ? intval($number) : currency_format($number)) . ',-';
+        return ($number % 1 === 0 ? (int) $number : currency_format($number)) . ',-';
     }
 }
 
@@ -159,7 +159,7 @@ if (!function_exists('rule_number_format')) {
         $thousands_sep = ''
     ) {
         return number_format(
-            floatval(is_numeric($number) ? $number : 0),
+            (float) (is_numeric($number) ? $number : 0),
             $decimals,
             $dec_point,
             $thousands_sep
@@ -176,7 +176,7 @@ if (!function_exists('authorize')) {
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     function authorize($ability, $arguments = []) {
-        $normalizeGuessedAbilityName = function ($ability) {
+        $normalizeGuessedAbilityName = static function ($ability) {
             $map = [
                 'show' => 'view',
                 'create' => 'create',
@@ -189,7 +189,7 @@ if (!function_exists('authorize')) {
             return $map[$ability] ?? $ability;
         };
 
-        $parseAbilityAndArguments = function ($ability, $arguments)  use ($normalizeGuessedAbilityName) {
+        $parseAbilityAndArguments = static function ($ability, $arguments)  use ($normalizeGuessedAbilityName) {
             if (is_string($ability) && strpos($ability, '\\') === false) {
                 return [$ability, $arguments];
             }
@@ -199,7 +199,7 @@ if (!function_exists('authorize')) {
             return [$normalizeGuessedAbilityName($method), $ability];
         };
 
-        list($ability, $arguments) = $parseAbilityAndArguments($ability, $arguments);
+        [$ability, $arguments] = $parseAbilityAndArguments($ability, $arguments);
 
         return app(Gate::class)->authorize($ability, $arguments);
     }
@@ -290,12 +290,14 @@ if (!function_exists('mail_config')) {
         string $default = null,
         string $implementation = null
     ) {
-        $implementation = $implementation ?: Implementation::activeKey();
+        $implementationKey = $implementation ?: Implementation::activeKey();
         $configKey = "forus.mails.implementations.%s.$key";
 
-        if (config()->has(sprintf($configKey, $implementation))) {
-            return config()->get(sprintf($configKey, $implementation));
-        } elseif (config()->has(sprintf($configKey, 'general'))) {
+        if (config()->has(sprintf($configKey, $implementationKey))) {
+            return config()->get(sprintf($configKey, $implementationKey));
+        }
+
+        if (config()->has(sprintf($configKey, 'general'))) {
             return config()->get(sprintf($configKey, 'general'));
         }
 
@@ -327,7 +329,7 @@ if (!function_exists('str_terminal_color')) {
             'white' => '37',
         ];
 
-        $color = isset($colors[$color]) ? $colors[$color] : $colors['white'];
+        $color = $colors[$color] ?? $colors['white'];
 
         return "\033[{$color}m{$text}\033[0m";
     }
@@ -372,7 +374,7 @@ if (!function_exists('record_types_cached')) {
         float $minutes = 1,
         bool $reset = false
     ) {
-        return cache_optional('record_types', function() {
+        return cache_optional('record_types', static function() {
             return (array) resolve('forus.services.record')->getRecordTypes();
         }, $minutes, null, $reset);
     }
@@ -436,10 +438,12 @@ if (!function_exists('log_debug')) {
      * @param array $context
      */
     function log_debug($message, array $context = []) {
-        logger()->debug(
-            is_string($message) ? $message : json_pretty($message),
-            $context
-        );
+        if (!is_null($logger = logger())) {
+            $logger->debug(
+                is_string($message) ? $message : json_pretty($message),
+                $context
+            );
+        }
     }
 }
 
@@ -455,11 +459,11 @@ if (!function_exists('api_dependency_requested')) {
         \Illuminate\Http\Request $request = null,
         bool $default = true
     ) {
-        $request = $request ?? request();
-        $dependency = $request->input('dependency', null);
+        $requestData = $request ?? request();
+        $dependency = $requestData->input('dependency', null);
 
         if (is_array($dependency)) {
-            return in_array($key, $dependency);
+            return in_array($key, $dependency, true);
         }
 
         return $default;
@@ -497,12 +501,12 @@ if (!function_exists('url_extend_get_params')) {
      * @return string
      */
     function url_extend_get_params(string $url, array $params = []) {
-        $url = explode('?', rtrim($url, '/'));
+        $urlData = explode('?', rtrim($url, '/'));
 
         $urlParams = [];
-        parse_str($url[1] ?? "", $urlParams);
+        parse_str($urlData[1] ?? "", $urlParams);
 
-        return sprintf("%s?%s", rtrim($url[0], '/'), http_build_query(array_merge(
+        return sprintf("%s?%s", rtrim($urlData[0], '/'), http_build_query(array_merge(
             $params, $urlParams
         )));
     }

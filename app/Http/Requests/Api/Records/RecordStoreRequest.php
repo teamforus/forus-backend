@@ -29,8 +29,8 @@ class RecordStoreRequest extends FormRequest
         $type = request()->get('type');
         $valueRules = ['required'];
 
-        if ($type == 'email' || $type == 'primary_email') {
-            array_push($valueRules, 'email:strict,dns');
+        if ($type === 'email' || $type === 'primary_email') {
+            $valueRules[] = 'email:strict,dns';
         }
 
         return [

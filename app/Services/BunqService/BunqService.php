@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\BunqService;
 
+use App\Events\Funds\FundBalanceSuppliedEvent;
 use App\Models\Fund;
 use App\Models\FundTopUp;
 use App\Models\VoucherTransaction;
@@ -56,7 +57,7 @@ class BunqService
      * @param bool $bunqUseSandbox
      * @throws \Exception
      */
-    function __construct(
+    public function __construct(
         $fundId,
         $bunqKey,
         $bunqAllowedIp = [],
@@ -451,10 +452,12 @@ class BunqService
                     }
 
                     try {
-                        $topUp->transactions()->create([
+                        $transaction = $topUp->transactions()->firstOrCreate([
                             'bunq_transaction_id' => $payment->getId(),
                             'amount' => $payment->getAmount()->getValue()
                         ]);
+
+                        FundBalanceSuppliedEvent::dispatch($transaction);
                     } catch (\Exception $exception) {
                         resolve('log')->error($exception->getMessage());
                     }
@@ -482,9 +485,9 @@ class BunqService
      * @return array
      * @throws \Exception
      */
-    private static function _getIdealIssuers($sandbox = false) {
+    private static function _getIdealIssuers($sandbox = false): array {
         $data = (new Client())->get(
-            join('', [
+            implode('', [
                 ForusBunqMeTabRequest::getApiUrl($sandbox),
                 "bunqme-merchant-directory-ideal"
             ]), [
@@ -495,7 +498,7 @@ class BunqService
             ]
         );
 
-        if ($data->getStatusCode() == 200) {
+        if ($data->getStatusCode() === 200) {
             try {
                 return json_decode(
                     $data->getBody()->getContents()
@@ -510,7 +513,7 @@ class BunqService
             }
         }
 
-        throw new \Exception(
+        throw new \RuntimeException(
             "Error while parsing iDEAL issuers list.\n" .
             "Api response code: " . $data->getStatusCode(), 503
         );
@@ -521,7 +524,9 @@ class BunqService
      * @return \Illuminate\Support\Collection
      * @throws \Exception
      */
-    public static function updateIdealIssuers(bool $sandbox) {
+    public static function updateIdealIssuers(
+        bool $sandbox
+    ): \Illuminate\Support\Collection {
         $issuers = collect(self::_getIdealIssuers($sandbox));
 
         BunqIdealIssuer::query()

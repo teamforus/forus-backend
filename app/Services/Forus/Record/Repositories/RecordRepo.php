@@ -501,21 +501,21 @@ class RecordRepo implements IRecordRepo
             ]));
         }
 
-        if ($typeKey == 'primary_email' && Record::query()->where([
+        if ($typeKey === 'primary_email' && Record::query()->where([
                 'identity_address' => $identityAddress,
                 'record_type_id' => $this->getTypeIdByKey('primary_email'),
             ])->count() > 0) {
             abort(403,'record.exceptions.primary_email_already_exists');
         }
 
-        if ($typeKey == 'bsn') {
+        if ($typeKey === 'bsn') {
             abort(403,'record.exceptions.bsn_record_cant_be_created');
         }
 
         /** @var Record $record */
         $record = Record::create([
             'identity_address' => $identityAddress,
-            'order' => $order ? $order : 0,
+            'order' => $order ?: 0,
             'value' => $value,
             'record_type_id' => $typeId,
             'record_category_id' => $recordCategoryId,
@@ -668,23 +668,15 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         string $validationUuid,
         int $organization_id = null
-    ) {
-        /** @var
-         * Identity $identity
-         */
-        $validation = RecordValidation::query()->where(
-            'uuid', $validationUuid
-        )->first();
-
-        $identity = Identity::query()->where([
-            'address' => $identityAddress
-        ])->first();
+    ): bool {
+        $validation = RecordValidation::whereUuid($validationUuid)->first();
+        $identity = Identity::whereAddress($identityAddress)->first();
 
         if (!$identity || $validation->identity_address) {
             return false;
         }
 
-        return !!$validation->update([
+        return (bool) $validation->update([
             'identity_address' => $identity->address,
             'organization_id' => $organization_id,
             'state' => 'approved'
@@ -700,23 +692,15 @@ class RecordRepo implements IRecordRepo
     public function declineValidationRequest(
         string $identityAddress,
         string $validationUuid
-    ) {
-        /** @var
-         * Identity $identity
-         */
-        $validation = RecordValidation::query()->where(
-            'uuid', $validationUuid
-        )->first();
-
-        $identity = Identity::query()->where([
-            'address' => $identityAddress
-        ])->first();
+    ): bool {
+        $validation = RecordValidation::whereUuid($validationUuid)->first();
+        $identity = Identity::whereAddress($identityAddress)->first();
 
         if (!$identity || $validation->identity_address) {
             return false;
         }
 
-        return !!$validation->update([
+        return (bool)$validation->update([
             'identity_address' => $identity->address,
             'state' => 'declined'
         ]);

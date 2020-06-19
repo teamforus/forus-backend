@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Data\VoucherExportData;
+use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -60,13 +62,29 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereReturnable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  */
 class Voucher extends Model
 {
-    const TYPE_BUDGET = 'regular';
-    const TYPE_PRODUCT = 'product';
+    use HasLogs;
 
-    const TYPES = [
+    public const EVENT_CREATED_BUDGET = 'created_budget';
+    public const EVENT_CREATED_PRODUCT = 'created_product';
+    public const EVENT_SHARED = 'shared';
+    public const EVENT_EXPIRED_BUDGET = 'expired';
+    public const EVENT_EXPIRED_PRODUCT = 'expired';
+    public const EVENT_EXPIRING_SOON_BUDGET = 'expiring_soon_budget';
+    public const EVENT_EXPIRING_SOON_PRODUCT = 'expiring_soon_product';
+    public const EVENT_ASSIGNED = 'assigned';
+
+    public const EVENT_TRANSACTION = 'transaction';
+    public const EVENT_TRANSACTION_PRODUCT = 'transaction_product';
+
+    public const TYPE_BUDGET = 'regular';
+    public const TYPE_PRODUCT = 'product';
+
+    public const TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_PRODUCT,
     ];
@@ -189,9 +207,10 @@ class Voucher extends Model
      *
      * @return bool
      */
-    public function getUsedAttribute() {
-        return $this->type == 'product' ? $this->transactions->count() > 0 :
-            $this->amount_available_cached == 0;
+    public function getUsedAttribute(): bool
+    {
+        return $this->type === 'product' ? $this->transactions->count() > 0 :
+            $this->amount_available_cached === 0;
     }
 
     /**
@@ -263,18 +282,19 @@ class Voucher extends Model
             'need_confirmation' => false
         ])->first();
 
-        if ($voucherToken->voucher->type == 'product') {
+        $voucher = $voucherToken->voucher;
+        $implementation = $voucher->fund->fund_config->implementation;
 
+        if ($voucher->type == 'product') {
             $recordRepo = resolve('forus.services.record');
             $primaryEmail = $recordRepo->primaryEmailByAddress(auth()->id());
-
-            $product_name = $voucherToken->voucher->product->name;
+            $productName = $voucher->product->name;
 
             $notificationService->shareProductVoucher(
-                $voucherToken->voucher->product->organization->email,
-                $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
+                $voucher->product->organization->email,
+                $implementation->getEmailFrom(),
                 $primaryEmail,
-                $product_name,
+                $productName,
                 $voucherToken->address,
                 $reason
             );
@@ -282,13 +302,15 @@ class Voucher extends Model
             if ($sendCopyToUser) {
                 $notificationService->shareProductVoucher(
                     $primaryEmail,
-                    $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
+                    $implementation->getEmailFrom(),
                     $primaryEmail,
-                    $product_name,
+                    $productName,
                     $voucherToken->address,
                     $reason
                 );
             }
+
+            ProductVoucherShared::dispatch($voucher, $reason);
         }
     }
 
@@ -515,7 +537,7 @@ class Voucher extends Model
             $product->expire_at
         ) ? $product->expire_at : $this->fund->end_date;
 
-        $voucher = Voucher::create([
+        $voucher = self::create([
             'identity_address'  => auth_address(),
             'parent_id'         => $this->id,
             'fund_id'           => $this->fund_id,
@@ -535,8 +557,7 @@ class Voucher extends Model
      * @param $exportType
      * @return string
      */
-    public static function zipVouchers(Collection $vouchers, $exportType)
-    {
+    public static function zipVouchers(Collection $vouchers, $exportType): string {
         $vouchersData = [];
         $token_generator = resolve('token_generator');
         $zipPath = storage_path('vouchers-export');
@@ -545,15 +566,15 @@ class Voucher extends Model
             $zipFile = sprintf('%s/%s.zip', $zipPath, $token_generator->generate(64));
         } while (file_exists($zipFile));
 
-        if (!file_exists($zipPath)) {
-            mkdir($zipPath, 0777, true);
+        if (!file_exists($zipPath) && !mkdir($zipPath, 0777, true) && !is_dir($zipPath)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $zipPath));
         }
 
-        $fp = fopen('php://temp/maxmemory:1048576', 'w');
+        $fp = fopen('php://temp/maxmemory:1048576', 'wb');
         $zip = new \ZipArchive();
         $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
-        if ($exportType == 'png') {
+        if ($exportType === 'png') {
             $zip->addEmptyDir('images');
         }
 
@@ -561,9 +582,9 @@ class Voucher extends Model
             $voucherData = new VoucherExportData($voucher);
 
             fputcsv($fp, (array) $voucherData->getName());
-            array_push($vouchersData, $voucherData);
+            $vouchersData[] = $voucherData;
 
-            if ($exportType == 'png') {
+            if ($exportType === 'png') {
                 $zip->addFromString(
                     sprintf("images/%s.png", $voucherData->getName()),
                     make_qr_code('voucher', $voucher->token_without_confirmation->address)
@@ -571,7 +592,7 @@ class Voucher extends Model
             }
         }
 
-        if ($exportType == 'pdf') {
+        if ($exportType === 'pdf') {
             $pdf = resolve('dompdf.wrapper');
             $pdf->loadView('pdf.vouchers_export', compact('vouchersData'));
             $zip->addFromString('qr_codes.pdf', $pdf->output());

@@ -20,19 +20,16 @@ class ImplementationMail extends Mailable
     protected $emailFrom;
 
     /**
-     * ImplementationMail constructor.
      * @param EmailFrom|null $emailFrom
      */
-    public function __construct(
-        ?EmailFrom $emailFrom
-    ) {
+    public function setMailFrom(?EmailFrom $emailFrom): void {
         $this->emailFrom = $emailFrom;
     }
 
     /**
-     * @return ImplementationMail
+     * @return Mailable
      */
-    public function build(): ImplementationMail
+    public function buildBase(): Mailable
     {
         return $this->from(
             $this->emailFrom->getEmail(),

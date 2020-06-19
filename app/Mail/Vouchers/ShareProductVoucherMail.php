@@ -4,6 +4,7 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
+use Illuminate\Mail\Mailable;
 
 /**
  * Class ShareProductMail
@@ -23,17 +24,16 @@ class ShareProductVoucherMail extends ImplementationMail
         string $reason,
         ?EmailFrom $emailFrom
     ) {
-        parent::__construct($emailFrom);
-
+        $this->setMailFrom($emailFrom);;
         $this->requesterMail = $requesterMail;
         $this->productName = $productName;
         $this->qrToken = $qrToken;
         $this->reason = $reason;
     }
 
-    public function build(): ImplementationMail
+    public function build(): Mailable
     {
-        return parent::build()
+        return $this->buildBase()
             ->subject(mail_trans('share_product.title', [
                 'requester_email' => $this->requesterMail
             ]))

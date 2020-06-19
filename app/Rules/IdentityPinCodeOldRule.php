@@ -4,6 +4,11 @@ namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 
+/**
+ * Class IdentityPinCodeOldRule
+ * @property string $message
+ * @package App\Rules
+ */
 class IdentityPinCodeOldRule implements Rule
 {
     protected $proxyIdentity;
@@ -54,7 +59,7 @@ class IdentityPinCodeOldRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return $this->message;
     }

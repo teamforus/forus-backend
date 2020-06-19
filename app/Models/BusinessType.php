@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 
 /**
@@ -71,7 +72,7 @@ class BusinessType extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function organizations() {
+    public function organizations(): HasMany {
        return $this->hasMany(Organization::class);
     }
 
@@ -83,7 +84,7 @@ class BusinessType extends Model
         $query = self::query();
 
         if ($request->input('used', false)) {
-            $query->whereHas('organizations.supplied_funds_approved', function(
+            $query->whereHas('organizations.supplied_funds_approved', static function(
                 Builder $builder
             ) {
                 $builder->whereIn(
