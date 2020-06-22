@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 /**
  * App\Models\Implementation
@@ -219,7 +218,7 @@ class Implementation extends Model
     /**
      * @return \Illuminate\Support\Collection
      */
-    public static function activeFunds(): Collection {
+    public static function activeFunds() {
         return self::activeFundsQuery()->get();
     }
 
