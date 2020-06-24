@@ -13,6 +13,6 @@
     }
   ],
   "composer": {
-    "enabled": false
+    "enabled": true
   }
 }

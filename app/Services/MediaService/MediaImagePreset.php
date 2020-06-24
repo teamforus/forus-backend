@@ -125,6 +125,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $storagePath
      * @param Media $media
      * @return \Illuminate\Database\Eloquent\Model|mixed
+     * @throws \Exception
      */
     public function makePresetModel(
         string $sourcePath,
@@ -150,7 +151,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
                 $image = $image->fit($this->width, $this->height);
             }
 
-            if ($format != 'png' || !$this->allow_transparency) {
+            if ($format !== 'png' || !$this->allow_transparency) {
                 $image = \Image::canvas(
                     $image->width(),
                     $image->height(),
@@ -178,7 +179,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $storagePath
      * @param MediaPreset $presetModel
      * @param Media $media
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Model|mixed
+     * @throws \Exception
      */
     public function copyPresetModel(
         Filesystem $storage,

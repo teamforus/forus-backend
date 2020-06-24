@@ -11,6 +11,8 @@ class ClientTypeMiddleware
      * @var array
      */
     private $except = [
+        'digidResolve',
+        'digidRedirect',
         'emailSignUpRedirect',
         'emailSignInRedirect',
     ];
@@ -40,7 +42,7 @@ class ClientTypeMiddleware
     /**
      * @return array
      */
-    private function availableTypes() {
+    private function availableTypes(): array {
         return array_filter(array_flatten(config('forus.clients')));
     }
 

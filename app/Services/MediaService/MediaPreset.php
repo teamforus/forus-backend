@@ -22,7 +22,7 @@ abstract class MediaPreset
 
     /**
      * Media preset format
-     * @var bool
+     * @var string
      */
     public $format = 'jpg';
 
@@ -54,14 +54,15 @@ abstract class MediaPreset
      * @param string $path
      * @param string $ext
      * @return string
+     * @throws \Exception
      */
     protected function makeUniqueFileNme(
         Filesystem $storage,
         string $path,
         string $ext
-    ) {
+    ): string {
         do {
-            $name = bin2hex(openssl_random_pseudo_bytes(64 / 2));
+            $name = bin2hex(random_bytes(64 / 2));
         } while($storage->exists(sprintf('%s/%s.%s', $path, $name, $ext)));
 
         return $name;
@@ -72,12 +73,14 @@ abstract class MediaPreset
      * @param string $storagePath
      * @param string|null $extension
      * @return string
+     * @throws \Exception
      */
     public function makeUniquePath(
         Filesystem $storage,
         string $storagePath,
         string $extension = null
-    ) {
+    ): string
+    {
         $extension = $extension ?: $this->format;
 
         return str_start(sprintf(

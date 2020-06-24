@@ -3,6 +3,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 
 class FundProviderQuery
@@ -88,5 +89,38 @@ class FundProviderQuery
                 $builder->doesntHave('fund_provider_products');
             });
         });
+    }
+
+    /**
+     * @param Builder $query
+     * @param string $q
+     * @return Builder
+     */
+    public static function queryFilter(Builder $query, string $q = '') {
+        return $query->whereHas('organization', function(Builder $builder) use ($q) {
+            return $builder->where('name', 'LIKE', "%{$q}%")
+                ->orWhere('kvk', 'LIKE', "%{$q}%")
+                ->orWhere('email', 'LIKE', "%{$q}%")
+                ->orWhere('phone', 'LIKE', "%{$q}%");
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @param array|string|int $fund_id
+     * @return Builder|\Illuminate\Database\Query\Builder
+     */
+    public static function sortByRevenue(
+        Builder $query,
+        $fund_id
+    ) {
+        return $query->select('*')->selectSub(VoucherTransaction::selectRaw(
+            'sum(`voucher_transactions`.`amount`)'
+        )->whereColumn(
+            'voucher_transactions.organization_id',
+            'fund_providers.organization_id'
+        )->whereHas('voucher', function(Builder $builder) use ($fund_id) {
+            $builder->whereIn('fund_id', (array) $fund_id);
+        }), 'usage')->orderBy('usage', 'DESC');
     }
 }

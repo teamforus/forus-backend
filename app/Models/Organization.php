@@ -5,9 +5,15 @@ namespace App\Models;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Services\EventLogService\Traits\HasDigests;
+use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -41,6 +47,8 @@ use Illuminate\Http\Request;
  * @property-read int|null $external_validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
+ * @property-read int|null $fund_providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
@@ -95,12 +103,16 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $digests
+ * @property-read int|null $digests_count
  */
 class Organization extends Model
 {
-    use HasMedia, HasTags;
+    use HasMedia, HasTags, HasLogs, HasDigests;
 
-    const GENERIC_KVK = 00000000;
+    public const GENERIC_KVK = 00000000;
 
     /**
      * The attributes that are mass assignable.
@@ -164,14 +176,14 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function funds() {
+    public function funds(): HasMany {
         return $this->hasMany(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function products() {
+    public function products(): HasMany {
         return $this->hasMany(Product::class);
     }
 
@@ -197,35 +209,35 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function offices() {
+    public function offices(): HasMany {
         return $this->hasMany(Office::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function business_type() {
+    public function business_type(): BelongsTo {
         return $this->belongsTo(BusinessType::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function voucher_transactions() {
+    public function voucher_transactions(): HasMany {
         return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function funds_voucher_transactions() {
+    public function funds_voucher_transactions(): HasManyThrough {
         return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function fund_requests() {
+    public function fund_requests(): HasManyThrough {
         return $this->hasManyThrough(FundRequest::class, Fund::class);
     }
 
@@ -277,11 +289,11 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function supplied_funds_approved_products() {
+    public function supplied_funds_approved_products(): BelongsToMany {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+        )->where(static function(\Illuminate\Database\Eloquent\Builder $builder) {
             $builder->where('fund_providers.allow_products', true);
         });
     }
@@ -289,10 +301,9 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function organization_funds() {
+    public function fund_providers(): HasMany {
         return $this->hasMany(FundProvider::class);
     }
-
     /**
      * Get organization logo
      * @return MorphOne

@@ -82,19 +82,7 @@ class EmployeesController extends Controller
         $target = $request->input('target', null);
         $identity_address = $this->recordRepo->identityAddressByEmail($email);
 
-        if ($identity_address) {
-            if ($organization->employees()->where([
-                    'identity_address' => $identity_address
-                ])->count() > 0) {
-                return response([
-                    "errors" => [
-                        "email" => [trans("validation.employee_already_exists", [
-                            'attribute' => 'email'
-                        ])]
-                    ]
-                ], 422);
-            }
-        } else {
+        if (!$identity_address) {
             $identity_address = $this->identityRepo->makeByEmail($email);
             $identityProxy = $this->identityRepo->makeIdentityPoxy($identity_address);
             $clientType = client_type('general');
@@ -119,7 +107,7 @@ class EmployeesController extends Controller
             'identity_address' => $identity_address
         ]);
 
-        $employee->roles()->sync($request->input(['roles']));
+        $employee->roles()->sync($request->input('roles'));
 
         EmployeeCreated::dispatch($employee);
 
@@ -161,9 +149,10 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('update', [$employee, $organization]);
 
+        $previousRoles = $employee->roles()->pluck('key');
         $employee->roles()->sync($request->input('roles', []));
 
-        EmployeeUpdated::dispatch($employee);
+        EmployeeUpdated::dispatch($employee, $previousRoles->toArray());
 
         return new EmployeeResource($employee);
     }
@@ -182,8 +171,8 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('destroy', [$employee, $organization]);
 
-        $employee->delete();
-
         EmployeeDeleted::broadcast($employee);
+
+        $employee->delete();
     }
 }

@@ -349,7 +349,7 @@ class FundRequestPolicy
         }
 
         // deleting requests is forbidden
-        return !empty($identity_address) && !empty($request) && false;
+        return false;
     }
 
     /**

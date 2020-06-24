@@ -19,7 +19,7 @@ $router = resolve('router');
  */
 $router->group([
     'middleware' => []
-], function() use ($router) {
+], static function() use ($router) {
     $router->resource(
         'product-categories',
         "Api\Platform\ProductCategoryController", [
@@ -189,8 +189,8 @@ $router->group([
     );
 
     $router->post('/digid', 'DigIdController@start');
-    $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect');
-    $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve');
+    $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
+    $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
 
     $router->resource(
         'provider-invitations',
@@ -325,6 +325,14 @@ $router->group(['middleware' => [
         'parameters' => [
             'transactions' => 'demo_token',
         ]
+    ]);
+
+    $router->resource(
+        'organizations/{organization}/implementations',
+        "Api\Platform\Organizations\ImplementationsController", [
+        'only' => [
+            'index', 'show', 'update'
+        ],
     ]);
 
     $router->resource(
@@ -488,10 +496,66 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
+        'organizations.funds.providers.chats',
+        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChatsController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'providers' => 'fund_provider',
+            'chats' => 'fund_provider_chats',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.providers.chats.messages',
+        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChats\FundProviderChatMessagesController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'providers' => 'fund_provider',
+            'chats' => 'fund_provider_chats',
+            'messages' => 'fund_provider_chat_messages'
+        ]
+    ]);
+
+    $router->resource(
         'organizations.products',
         "Api\Platform\Organizations\ProductsController", [
         'only' => [
             'index', 'show', 'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.products.funds',
+        "Api\Platform\Organizations\Products\FundsController", [
+        'only' => [
+            'index', 'show', 'store', 'update', 'destroy'
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.products.chats',
+        "Api\Platform\Organizations\Products\FundProviderChatsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'chats' => 'fund_provider_chats',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.products.chats.messages',
+        "Api\Platform\Organizations\Products\FundProviderChats\FundProviderChatMessagesController", [
+        'only' => [
+            'index', 'show', 'store'
+        ],
+        'parameters' => [
+            'chats' => 'fund_provider_chats',
+            'messages' => 'fund_provider_chat_messages'
         ]
     ]);
 
@@ -659,6 +723,14 @@ $router->group(['middleware' => [
         'Api\Platform\DevicesController@deletePush'
     );
 
-    $router->get('notifications', 'Api\Platform\NotificationsController@index');
-    $router->patch('notifications', 'Api\Platform\NotificationsController@update');
+    $router->resource(
+        'notifications',
+        "Api\Platform\NotificationsController", [
+        'only' => [
+            'index'
+        ]
+    ]);
+
+    $router->get('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@index');
+    $router->patch('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@update');
 });

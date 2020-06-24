@@ -4,6 +4,11 @@ namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 
+/**
+ * Class IdentityPinCodeRule
+ * @property string $message
+ * @package App\Rules
+ */
 class IdentityPinCodeRule implements Rule
 {
     private $message;
@@ -26,7 +31,7 @@ class IdentityPinCodeRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         if (empty($value)) {
             $this->message = trans('validation.required');
@@ -52,7 +57,7 @@ class IdentityPinCodeRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return $this->message;
     }

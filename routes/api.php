@@ -37,7 +37,7 @@ $router->group([], function() use ($router) {
                 $router->get('/email/exchange/{emailToken}', 'Api\IdentityController@emailTokenExchange');
 
                 // sign up, email confirmation
-                $router->get('/confirmation/redirect/{exchangeToken}', 'Api\IdentityController@emailConfirmationRedirect')->name('emailSignUpRedirect');;
+                $router->get('/confirmation/redirect/{exchangeToken}', 'Api\IdentityController@emailConfirmationRedirect')->name('emailSignUpRedirect');
                 $router->get('/confirmation/exchange/{exchangeToken}', 'Api\IdentityController@emailConfirmationExchange');
 
                 $router->get('/check-token', 'Api\IdentityController@checkToken');
@@ -205,12 +205,6 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
 
     });
 
-    $router->get('/status', function() {
-        return [
-            'status' => 'ok'
-        ];
-    });
-
     $router->resource('medias', 'Api\MediaController', [
         'only' => ['index', 'show', 'store', 'destroy'],
         'parameters' => [
@@ -230,6 +224,8 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         $router->post('files/validate', 'Api\FileController@storeValidate');
     }
 });
+
+$router->get('/status', 'Api\StatusController@getStatus');
 
 if (env('APP_DEBUG', false) == true && env('APP_ENV') == 'dev') {
     $router->group(['middleware' => ['api.auth']], function() use ($router) {

@@ -9,9 +9,20 @@ use App\Models\ProductCategory;
 use App\Models\Office;
 use App\Models\Fund;
 use App\Models\Product;
+use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
+use App\Events\Funds\FundCreated;
+use App\Events\Funds\FundEndedEvent;
+use App\Events\Funds\FundStartedEvent;
+use App\Events\Funds\FundBalanceLowEvent;
+use App\Events\Funds\FundBalanceSuppliedEvent;
+use App\Events\Funds\FundProviderApplied;
 use App\Services\Forus\Record\Models\RecordType;
+use App\Events\Products\ProductCreated;
+use App\Events\FundProviders\FundProviderApprovedBudget;
+use App\Events\FundProviders\FundProviderApprovedProducts;
+use App\Events\VoucherTransactions\VoucherTransactionCreated;
 
 /**
  * Class LoremDbSeeder
@@ -21,8 +32,6 @@ class LoremDbSeeder extends Seeder
     private $tokenGenerator;
     private $identityRepo;
     private $recordRepo;
-    private $mailService;
-    private $baseIdentity;
     private $productCategories;
     private $primaryEmail;
 
@@ -46,7 +55,6 @@ class LoremDbSeeder extends Seeder
         $this->tokenGenerator = resolve('token_generator');
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
-        $this->mailService = resolve('forus.services.notification');
 
         $this->countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
         $this->countValidators = config('forus.seeders.lorem_db_seeder.validators_count');
@@ -55,11 +63,11 @@ class LoremDbSeeder extends Seeder
         $this->primaryEmail = config('forus.seeders.lorem_db_seeder.default_email');
     }
 
-    private function disableEmails() {
+    private function disableEmails(): void {
         config()->set('mail.disable', true);
     }
 
-    private function enableEmails() {
+    private function enableEmails(): void {
         config()->set('mail.disable', false);
     }
 
@@ -68,28 +76,28 @@ class LoremDbSeeder extends Seeder
      *
      * @throws Exception
      */
-    public function run()
+    public function run(): void
     {
         $this->disableEmails();
 
         $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
-        $this->baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
+        $baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
         $this->success("Identity created!");
 
         $this->info("Making Sponsors!");
-        $this->makeSponsors($this->baseIdentity);
+        $this->makeSponsors($baseIdentity);
         $this->success("Sponsors created!");
 
         $this->info("Making Providers!");
-        $this->makeProviders($this->baseIdentity, $this->countProviders);
+        $this->makeProviders($baseIdentity, $this->countProviders);
         $this->success("Providers created!");
 
         $this->info("Making Validators!");
-        $this->makeExternalValidators($this->baseIdentity, $this->countValidators);
+        $this->makeExternalValidators($baseIdentity, $this->countValidators);
         $this->success("Validators created!");
 
-        $this->applyFunds($this->baseIdentity);
+        $this->applyFunds($baseIdentity);
 
         $this->info("Making other implementations!");
         $this->makeOtherImplementations(array_diff(
@@ -128,16 +136,17 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param string $identity_address
+     * @throws Exception
      */
     public function makeSponsors(
         string $identity_address
-    ) {
+    ): void {
         $self = $this;
 
-        $organizations = collect($this->implementationsWithFunds)->map(function(
-            $implementation
-        ) use ($self, $identity_address) {
-            return $self->makeOrganization($implementation, $identity_address);
+        $organizations = collect(
+            $this->implementationsWithFunds
+        )->map(static function($implementation) use ($self, $identity_address) {
+            return $self->makeOrganization($implementation, $identity_address, []);
         });
 
         foreach ($organizations as $organization) {
@@ -169,39 +178,63 @@ class LoremDbSeeder extends Seeder
     /**
      * @param string $identity_address
      * @param int $count
+     * @throws Exception
      */
     public function makeProviders(
         string $identity_address,
         int $count = 10
-    ) {
-        $organizations = $this->makeOrganizations("Provider", $identity_address,  $count);
+    ): void {
+        $organizations = $this->makeOrganizations(
+            "Provider", 
+            $identity_address,
+            $count,
+            [],
+            $this->config('provider_offices_count')
+        );
 
         foreach (collect($organizations)->random(ceil(count($organizations) / 2)) as $organization) {
             /** @var Fund[] $funds */
             $funds = Fund::get()->random(3);
 
             foreach ($funds as $fund) {
-                $fund->providers()->create([
+                /** @var FundProvider $provider */
+                $provider = $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'allow_budget'      => !![rand(0, 2)],
-                    'allow_products'    => !![rand(0, 2)]
+                    'allow_budget'      => (bool) random_int(0, 2),
+                    'allow_products'    => (bool) random_int(0, 2)
                 ]);
+
+                FundProviderApplied::dispatch($provider);
             }
         }
 
         foreach ($organizations as $organization) {
-            $this->makeOffices($organization, rand(1, 2));
-            $this->makeProducts($organization, rand(2, 4));
+            $this->makeProducts($organization, $this->config('provider_products_count'));
         }
 
         foreach (Fund::get() as $fund) {
             $providers = Organization::with('products')->pluck('id');
 
-            if ($fund->provider_organizations_approved()->count() == 0) {
-                $fund->provider_organizations_approved()->create([
+            if ($fund->provider_organizations_approved()->count() === 0) {
+                $provider = $fund->providers()->create([
                     'organization_id'   => $providers->random(),
-                    'state'             => 'approved',
+                    'allow_products'    => true,
+                    'allow_budget'      => true,
                 ]);
+
+                FundProviderApplied::dispatch($provider);
+            }
+        }
+
+        foreach (Fund::get() as $fund) {
+            foreach ($fund->providers as $fundProvider) {
+                if ($fundProvider->allow_budget) {
+                    FundProviderApprovedBudget::dispatch($fundProvider);
+                }
+
+                if ($fundProvider->allow_products) {
+                    FundProviderApprovedProducts::dispatch($fundProvider);
+                }
             }
         }
     }
@@ -209,6 +242,7 @@ class LoremDbSeeder extends Seeder
     /**
      * @param string $identity_address
      * @param int $count
+     * @throws Exception
      */
     public function makeExternalValidators(
         string $identity_address,
@@ -228,20 +262,23 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param string $identity_address
+     * @throws Exception
      */
-    public function applyFunds(string $identity_address)
+    public function applyFunds(string $identity_address): void
     {
         /** @var Prevalidation[] $prevalidations */
         $prevalidations = Prevalidation::query()->where([
             'state' => 'pending',
             'identity_address' => $identity_address
-        ])->get()->groupBy('fund_id')->map(function(\Illuminate\Support\Collection $arr) {
+        ])->get()->groupBy('fund_id')->map(static function(
+            \Illuminate\Support\Collection $arr
+        ) {
             return $arr->first();
         });
 
         foreach ($prevalidations as $prevalidation) {
             foreach($prevalidation->prevalidation_records as $record) {
-                if ($record->record_type->key == 'bsn') {
+                if ($record->record_type->key === 'bsn') {
                     continue;
                 }
 
@@ -279,15 +316,17 @@ class LoremDbSeeder extends Seeder
             ]);
 
             while ($voucher->amount_available > ($voucher->amount / 2)) {
-                $voucher->transactions()->create([
-                    'amount' => rand(
-                        intval(config('forus.seeders.lorem_db_seeder.voucher_transaction_min')),
-                        intval(config('forus.seeders.lorem_db_seeder.voucher_transaction_max'))
+                $transaction = $voucher->transactions()->create([
+                    'amount' => random_int(
+                        (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_min'),
+                        (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_max')
                     ),
                     'product_id' => null,
                     'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
                 ]);
+
+                VoucherTransactionCreated::dispatch($transaction);
             }
         }
     }
@@ -298,22 +337,28 @@ class LoremDbSeeder extends Seeder
      * @param int $count
      * @param array $fields
      * @return Organization[]
+     * @param int $offices_count
+     * @return array
+     * @throws Exception
      */
     public function makeOrganizations(
         string $prefix,
         string $identity_address,
         int $count = 1,
-        array $fields = []
-    ) {
+        array $fields = [],
+        int $offices_count = 0
+    ): array
+    {
         $out = [];
         $nth= 1;
 
         while ($count-- > 0) {
-            array_push($out, $this->makeOrganization(
+            $out[] = $this->makeOrganization(
                 sprintf('%s #%s', $prefix, $nth++),
                 $identity_address,
-                $fields
-            ));
+                $fields,
+                $offices_count
+            );
         }
 
         return $out;
@@ -323,12 +368,15 @@ class LoremDbSeeder extends Seeder
      * @param string $name
      * @param string $identity_address
      * @param array $fields
+     * @param int $offices_count
      * @return Organization|\Illuminate\Database\Eloquent\Model
+     * @throws Exception
      */
     public function makeOrganization(
         string $name,
         string $identity_address,
-        array $fields = []
+        array $fields = [],
+        int $offices_count = 0
     ) {
         $organization = Organization::create(
             collect(collect([
@@ -350,8 +398,7 @@ class LoremDbSeeder extends Seeder
 
         OrganizationCreated::dispatch($organization);
 
-        $organization->offices()->delete();
-        $this->makeOffices($organization, rand(2, 3));
+        $this->makeOffices($organization, $offices_count);
 
         return $organization;
     }
@@ -361,16 +408,17 @@ class LoremDbSeeder extends Seeder
      * @param int $count
      * @param array $fields
      * @return array
+     * @throws Exception
      */
     public function makeOffices(
         Organization $organization,
         int $count = 1,
         array $fields = []
-    ) {
+    ): array {
         $out = [];
 
         while ($count-- > 0) {
-            array_push($out, $this->makeOffice($organization, $fields));
+            $out[] = $this->makeOffice($organization, $fields);
         }
 
         return $out;
@@ -380,17 +428,18 @@ class LoremDbSeeder extends Seeder
      * @param Organization $organization
      * @param array $fields
      * @return Office
+     * @throws Exception
      */
     public function makeOffice(
         Organization $organization,
         array $fields = []
-    ) {
+    ): Office {
         $office = Office::create(array_merge([
             'organization_id'   => $organization->id,
             'address'           => 'Osloweg 131, 9723BK, Groningen',
             'phone'             => '0123456789',
-            'lon'               => 6.606065989043237 + (rand(-1000, 1000) / 10000),
-            'lat'               => 53.21694230132835 + (rand(-1000, 1000) / 10000),
+            'lon'               => 6.606065989043237 + (random_int(-1000, 1000) / 10000),
+            'lat'               => 53.21694230132835 + (random_int(-1000, 1000) / 10000),
             'parsed'            => true
         ], $fields));
 
@@ -410,6 +459,7 @@ class LoremDbSeeder extends Seeder
      * @param bool $active
      * @param array $fields
      * @return Fund|\Illuminate\Database\Eloquent\Model
+     * @throws Exception
      */
     public function makeFund(
         Organization $organization,
@@ -419,21 +469,32 @@ class LoremDbSeeder extends Seeder
         $flag = false;
 
         do {
-            $fundName = $organization->name . ($flag ? (' - ' . rand(0, 999)) : '');
+            $fundName = $organization->name . ($flag ? (' - ' . random_int(0, 999)) : '');
             $flag = true;
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
         $fund = $organization->createFund(array_merge([
-            'name'          => $fundName,
-            'start_date'    => Carbon::now()->format('Y-m-d'),
-            'end_date'      => Carbon::now()->addDays(60)->format('Y-m-d'),
-            'state'         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING
+            'name'                  => $fundName,
+            'start_date'            => Carbon::now()->format('Y-m-d'),
+            'end_date'              => Carbon::now()->addDays(60)->format('Y-m-d'),
+            'state'                 => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
+            'notification_amount'   => 10000
         ], $fields));
 
-        $fund->top_up_model->transactions()->create([
+        $transaction = $fund->top_up_model->transactions()->create([
             'bunq_transaction_id' => "XXXX",
             'amount' => 100000
         ]);
+
+        FundCreated::dispatch($fund);
+        FundBalanceLowEvent::dispatch($fund);
+        FundBalanceSuppliedEvent::dispatch($transaction);
+
+        if ($active) {
+            FundStartedEvent::dispatch($fund);
+            FundEndedEvent::dispatch($fund);
+            FundStartedEvent::dispatch($fund);
+        }
 
         return $fund;
     }
@@ -490,7 +551,7 @@ class LoremDbSeeder extends Seeder
         Implementation $implementation,
         string $key,
         array $fields = []
-    ) {
+    ): void {
         $fund->fund_config()->create(collect([
             'implementation_id'     => $implementation->id,
             'key'                   => $key,
@@ -505,7 +566,7 @@ class LoremDbSeeder extends Seeder
         $eligibility_key = sprintf("%s %s eligible", $fund->name, date('Y'));
         $criteria = config('forus.seeders.lorem_db_seeder.funds_criteria');
 
-        if ($fund->id == 1) {
+        if ($fund->id === 1) {
             /** @var RecordType $recordType */
             $recordType = RecordType::firstOrCreate([
                 'key'       => str_slug($eligibility_key, '_'),
@@ -514,12 +575,12 @@ class LoremDbSeeder extends Seeder
                 'name'      => $eligibility_key,
             ]);
 
-            array_push($criteria, [
-                'record_type_key'   => $recordType->key,
-                'operator'          => '=',
-                'value'             => 'Ja',
-            ]);
-        } elseif ($fund->id == 2) {
+            $criteria[] = [
+                'record_type_key' => $recordType->key,
+                'operator' => '=',
+                'value' => 'Ja',
+            ];
+        } elseif ($fund->id === 2) {
             /** @var RecordType $recordType */
             $recordType = RecordType::firstOrCreate([
                 'key'       => str_slug($eligibility_key . '_nth', '_'),
@@ -528,11 +589,11 @@ class LoremDbSeeder extends Seeder
                 'name'      => $eligibility_key . ' nth',
             ]);
 
-            array_push($criteria, [
-                'record_type_key'   => $recordType->key,
-                'operator'          => '>',
-                'value'             => '0',
-            ]);
+            $criteria[] = [
+                'record_type_key' => $recordType->key,
+                'operator' => '>',
+                'value' => '0',
+            ];
         }
 
         $fund->criteria()->createMany($criteria);
@@ -552,26 +613,26 @@ class LoremDbSeeder extends Seeder
         string $identity_address,
         Fund $fund,
         array $records = []
-    ) {
+    ): void {
         $recordTypes = collect(
             $this->recordRepo->getRecordTypes()
         )->pluck('id', 'key');
 
-        collect($records)->map(function($record) use ($fund, $recordTypes) {
+        collect($records)->map(static function($record) use ($recordTypes) {
             $record = collect($record);
 
-            return $record->map(function($value, $key) use ($recordTypes) {
-                $record_type_id = isset($recordTypes[$key]) ? $recordTypes[$key] : null;
+            return $record->map(static function($value, $key) use ($recordTypes) {
+                $record_type_id = $recordTypes[$key] ?? null;
 
-                if (!$record_type_id || $key == 'primary_email') {
+                if (!$record_type_id || $key === 'primary_email') {
                     return false;
                 }
 
                 return compact('record_type_id', 'value');
-            })->filter(function($value) {
-                return !!$value;
+            })->filter(static function($value) {
+                return (bool) $value;
             })->values();
-        })->filter(function($records) {
+        })->filter(static function($records) {
             return collect($records)->count();
         })->map(function($records) use ($fund, $identity_address) {
             do {
@@ -601,27 +662,28 @@ class LoremDbSeeder extends Seeder
      * @param array $records
      * @param callable|null $primaryKeyGenerator
      * @return array
+     * @throws Exception
      */
     public function generatePrevalidationData(
         string $primaryKey,
         int $count = 10,
         array $records = [],
         callable $primaryKeyGenerator = null
-    ) {
+    ): array {
         $out = [];
 
         while ($count-- > 0) {
             do {
-                $primaryKeyValue = is_callable($primaryKeyGenerator) ? $primaryKeyGenerator() : rand(100000, 999999);
+                $primaryKeyValue = is_callable($primaryKeyGenerator) ? $primaryKeyGenerator() : random_int(100000, 999999);
             } while (collect($out)->pluck($primaryKey)->search($primaryKeyValue) !== false);
 
-            array_push($out, collect($records)->merge([
-                $primaryKey     => $primaryKeyValue,
-                'children_nth'  => rand(3, 5),
-                'gender'        => 'Female',
-                'net_worth'     => rand(3, 6) * 100,
-            ])->toArray());
-        };
+            $out[] = collect($records)->merge([
+                $primaryKey => $primaryKeyValue,
+                'children_nth' => random_int(3, 5),
+                'gender' => 'Female',
+                'net_worth' => random_int(3, 6) * 100,
+            ])->toArray();
+        }
 
         return $out;
     }
@@ -631,16 +693,17 @@ class LoremDbSeeder extends Seeder
      * @param int $count
      * @param array $fields
      * @return array
+     * @throws Exception
      */
     public function makeProducts(
         Organization $organization,
         int $count = 5,
         array $fields = []
-    ) {
+    ): array {
         $out = [];
 
         while ($count-- > 0) {
-            array_push($out, $this->makeProduct($organization, $fields));
+            $out[] = $this->makeProduct($organization, $fields);
         }
 
         return $out;
@@ -650,23 +713,24 @@ class LoremDbSeeder extends Seeder
      * @param Organization $organization
      * @param array $fields
      * @return Product
+     * @throws Exception
      */
     public function makeProduct(
         Organization $organization,
         array $fields = []
-    ) {
+    ): Product {
         do {
-            $name = 'Product #' . rand(100000, 999999);
+            $name = 'Product #' . random_int(100000, 999999);
         } while(Product::query()->where('name', $name)->count() > 0);
 
-        $price = rand(1, 20);
-        $old_price = rand($price, 50);
-        $total_amount = rand(1, 10) * 10;
+        $price = random_int(1, 20);
+        $old_price = random_int($price, 50);
+        $total_amount = random_int(1, 10) * 10;
         $sold_out = false;
-        $expire_at = Carbon::now()->addDays(rand(20, 60));
+        $expire_at = Carbon::now()->addDays(random_int(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
 
-        return $product = Product::create(
+        $product = Product::create(
             collect(array_merge(compact(
                 'name', 'price', 'old_price', 'total_amount', 'sold_out',
                 'expire_at', 'product_category_id'
@@ -677,39 +741,45 @@ class LoremDbSeeder extends Seeder
                 'expire_at'
             ]))->toArray()
         );
+
+        ProductCreated::dispatch($product);
+
+        return $product;
     }
 
-
-    public function makeOtherImplementations($implementations) {
+    public function makeOtherImplementations($implementations): void {
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);
         }
     }
 
     /**
-     * @param string $msg
+     * @param $key
+     * @param null $default
+     * @return \Illuminate\Config\Repository|mixed
      */
-    public function info(
-        string $msg
-    ) {
-        echo "\e[0;34m{$msg}\e[0m\n";;
+    public function config($key, $default = null) {
+        return config(sprintf('forus.seeders.lorem_db_seeder.%s', $key), $default);
     }
 
     /**
      * @param string $msg
      */
-    public function success(
-        string $msg
-    ) {
-        echo "\e[0;32m{$msg}\e[0m\n";;
+    public function info(string $msg): void {
+        echo "\e[0;34m{$msg}\e[0m\n";
     }
 
     /**
      * @param string $msg
      */
-    public function error(
-        string $msg
-    ) {
-        echo "\e[0;31m{$msg}\e[0m\n";;
+    public function success(string $msg): void {
+        echo "\e[0;32m{$msg}\e[0m\n";
+    }
+
+    /**
+     * @param string $msg
+     */
+    public function error(string $msg): void {
+        echo "\e[0;31m{$msg}\e[0m\n";
     }
 }

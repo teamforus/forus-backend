@@ -6,6 +6,8 @@ use App\Models\BunqMeTab;
 use App\Models\Fund;
 use App\Models\Employee;
 use App\Models\FundProvider;
+use App\Models\FundProviderChat;
+use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderInvitation;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
@@ -75,6 +77,14 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('fund_provider', function ($id) {
             return FundProvider::find($id) ?? abort(404);
+        });
+
+        $router->bind('fund_provider_chats', function ($id) {
+            return FundProviderChat::find($id) ?? abort(404);
+        });
+
+        $router->bind('fund_provider_chat_messages', function ($id) {
+            return FundProviderChatMessage::find($id) ?? abort(404);
         });
 
         $router->bind('identity_email', function ($id) {

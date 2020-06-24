@@ -4,11 +4,11 @@ namespace App\Models;
 
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
-use App\Services\MediaService\MediaConfig;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
@@ -23,11 +23,17 @@ use Illuminate\Http\Request;
  * @property string $url_sponsor
  * @property string $url_provider
  * @property string $url_validator
+ * @property string $title
+ * @property string $description
+ * @property string $more_info_url
+ * @property string $description_steps
+ * @property boolean $has_more_info_url
  * @property string $url_app
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $digid_enabled
  * @property string $digid_env
+ * @property Collection|FundConfig[] $fund_configs
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
@@ -60,12 +66,17 @@ use Illuminate\Http\Request;
  * @property string|null $email_from_name
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromName($value)
+ * @property-read int|null $fund_configs_count
  */
 class Implementation extends Model
 {
+    protected $perPage = 20;
+
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
-        'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name'
+        'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
+        'title', 'description', 'has_more_info_url', 'more_info_url', 'description_steps',
+        'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
     ];
 
     protected $hidden = [
@@ -74,15 +85,16 @@ class Implementation extends Model
     ];
 
     protected $casts = [
-        'digid_enabled' => 'boolean'
+        'digid_enabled' => 'boolean',
+        'has_more_info_url' => 'boolean',
     ];
 
-    const FRONTEND_WEBSHOP = 'webshop';
-    const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
-    const FRONTEND_PROVIDER_DASHBOARD = 'provider';
-    const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
+    public const FRONTEND_WEBSHOP = 'webshop';
+    public const FRONTEND_SPONSOR_DASHBOARD = 'sponsor';
+    public const FRONTEND_PROVIDER_DASHBOARD = 'provider';
+    public const FRONTEND_VALIDATOR_DASHBOARD = 'validator';
 
-    const FRONTEND_KEYS = [
+    public const FRONTEND_KEYS = [
         self::FRONTEND_WEBSHOP,
         self::FRONTEND_SPONSOR_DASHBOARD,
         self::FRONTEND_PROVIDER_DASHBOARD,
@@ -142,11 +154,13 @@ class Implementation extends Model
     /**
      * @return Implementation|null
      */
-    public static function activeModel() {
+    public static function activeModel(): ?Implementation
+    {
         return self::findModelByKey(self::activeKey());
     }
 
-    public static function general_urls() {
+    public static function general_urls(): array
+    {
         return [
             'url_webshop'   => config('forus.front_ends.webshop'),
             'url_sponsor'   => config('forus.front_ends.panel-sponsor'),
@@ -168,6 +182,13 @@ class Implementation extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_configs() {
+        return $this->hasMany(FundConfig::class);
+    }
+
+    /**
      * @return EloquentBuilder
      */
     public static function activeFundsQuery() {
@@ -181,11 +202,11 @@ class Implementation extends Model
     public static function queryFundsByState($states) {
         $states = (array) $states;
 
-        if (self::activeKey() == 'general') {
+        if (self::activeKey() === 'general') {
             return Fund::query()->has('fund_config')->whereIn('state', $states);
         }
 
-        return Fund::query()->whereIn('id', function(QueryBuilder $query) {
+        return Fund::query()->whereIn('id', static function(QueryBuilder $query) {
             $query->select('fund_id')->from('fund_configs')->where([
                 'implementation_id' => Implementation::query()->where([
                     'key' => self::activeKey()
@@ -305,12 +326,12 @@ class Implementation extends Model
     public function autoValidationEnabled() {
         $oneActiveFund = $this->funds()->where([
                 'state' => Fund::STATE_ACTIVE
-            ])->count() == 1;
+            ])->count() === 1;
 
         $oneActiveFundWithAutoValidation = $this->funds()->where([
                 'state' => Fund::STATE_ACTIVE,
                 'auto_requests_validation' => true
-            ])->whereNotNull('default_validator_employee_id')->count() == 1;
+            ])->whereNotNull('default_validator_employee_id')->count() === 1;
 
         return $oneActiveFund && $oneActiveFundWithAutoValidation;
     }
@@ -362,6 +383,18 @@ class Implementation extends Model
             $config['fronts'] = $implementation->only([
                 'url_webshop', 'url_sponsor', 'url_provider',
                 'url_validator', 'url_app'
+            ]);
+
+            $config['settings'] = array_merge($implementation->only([
+                'title', 'description', 'has_more_info_url',
+                'more_info_url', 'description_steps',
+            ])->toArray(), [
+                'description_html' => resolve('markdown')->convertToHtml(
+                    $implementation['description'] ?? ''
+                ),
+                'description_steps_html' => resolve('markdown')->convertToHtml(
+                    $implementation['description_steps'] ?? ''
+                ),
             ]);
 
             $config['map'] = [
@@ -457,7 +490,7 @@ class Implementation extends Model
     /**
      * @return EmailFrom
      */
-    public static function emailFrom() {
+    public static function emailFrom(): EmailFrom {
         if ($activeModel = self::activeModel()) {
             return $activeModel->getEmailFrom();
         }
@@ -468,7 +501,7 @@ class Implementation extends Model
     /**
      * @return EmailFrom
      */
-    public function getEmailFrom() {
+    public function getEmailFrom(): EmailFrom {
         return new EmailFrom(
             $this->email_from_address ?: config('mail.from.address'),
             $this->email_from_name ?: config('mail.from.name')

@@ -6,6 +6,7 @@ use App\Events\FundRequests\FundRequestResolved;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -47,15 +48,26 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  */
 class FundRequest extends Model
 {
-    const STATE_PENDING = 'pending';
-    const STATE_APPROVED = 'approved';
-    const STATE_DECLINED = 'declined';
-    const STATE_APPROVED_PARTLY = 'approved_partly';
+    use HasLogs;
 
-    const STATES = [
+    public const EVENT_CREATED = 'created';
+    public const EVENT_RESOLVED = 'resolved';
+    public const EVENT_APPROVED = 'approved';
+    public const EVENT_DECLINED = 'declined';
+    public const EVENT_APPROVED_PARTLY = 'approved_partly';
+    public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
+
+    public const STATE_PENDING = 'pending';
+    public const STATE_APPROVED = 'approved';
+    public const STATE_DECLINED = 'declined';
+    public const STATE_APPROVED_PARTLY = 'approved_partly';
+
+    public const STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,

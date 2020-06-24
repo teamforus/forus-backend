@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Http\Requests\Api\Platform\Organizations\Offices\IndexOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\StoreOfficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Offices\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
@@ -24,16 +25,20 @@ class OfficesController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param IndexOfficeRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        IndexOfficeRequest $request,
         Organization $organization
-    ) {
+    ): \Illuminate\Http\Resources\Json\AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
-        return OfficeResource::collection($organization->offices);
+        return OfficeResource::collection($organization->offices()->paginate(
+            $request->input('per_page')
+        ));
     }
 
     /**
@@ -47,7 +52,7 @@ class OfficesController extends Controller
     public function store(
         StoreOfficeRequest $request,
         Organization $organization
-    ) {
+    ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('store', [Office::class, $organization]);
 
@@ -64,23 +69,23 @@ class OfficesController extends Controller
         );
 
         $schedules = collect($request->input('schedule', []))->filter(
-            function($val, $key) {
-                return in_array($key, range(0, 6));
+            static function($val, $key) {
+                return in_array($key, range(0, 6), false);
             }
-        )->map(function($schedule) {
-            if ($schedule['start_time'] == 'null') {
+        )->map(static function($schedule) {
+            if ($schedule['start_time'] === 'null') {
                 $schedule['start_time'] = null;
             }
 
-            if ($schedule['end_time'] == 'null') {
+            if ($schedule['end_time'] === 'null') {
                 $schedule['end_time'] = null;
             }
 
-            if ($schedule['break_start_time'] == 'null') {
+            if ($schedule['break_start_time'] === 'null') {
                 $schedule['break_start_time'] = null;
             }
 
-            if ($schedule['break_end_time'] == 'null') {
+            if ($schedule['break_end_time'] === 'null') {
                 $schedule['break_end_time'] = null;
             }
 
@@ -102,7 +107,7 @@ class OfficesController extends Controller
             $office->update($coordinates);
         }
 
-        if ($media instanceof Media && $media->type == 'office_photo') {
+        if ($media instanceof Media && $media->type === 'office_photo') {
             $office->attachMedia($media);
         }
 
@@ -118,7 +123,7 @@ class OfficesController extends Controller
     public function show(
         Organization $organization,
         Office $office
-    ) {
+    ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('show', [$office, $organization]);
 
@@ -138,7 +143,7 @@ class OfficesController extends Controller
         UpdateOfficeRequest $request,
         Organization $organization,
         Office $office
-    ) {
+    ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$office, $organization]);
 
@@ -149,29 +154,28 @@ class OfficesController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        /** @var Office $office */
         $office->update(
             $request->only(['name', 'address', 'phone', 'email'])
         );
 
         $schedules = collect($request->input('schedule', []))->filter(
-            function($val, $key) {
-                return in_array($key, range(0, 6));
+            static function($val, $key) {
+                return in_array($key, range(0, 6), false);
             }
-        )->map(function($schedule) {
-            if ($schedule['start_time'] == 'null') {
+        )->map(static function($schedule) {
+            if ($schedule['start_time'] === 'null') {
                 $schedule['start_time'] = null;
             }
 
-            if ($schedule['end_time'] == 'null') {
+            if ($schedule['end_time'] === 'null') {
                 $schedule['end_time'] = null;
             }
 
-            if ($schedule['break_start_time'] == 'null') {
+            if ($schedule['break_start_time'] === 'null') {
                 $schedule['break_start_time'] = null;
             }
 
-            if ($schedule['break_end_time'] == 'null') {
+            if ($schedule['break_end_time'] === 'null') {
                 $schedule['break_end_time'] = null;
             }
 
@@ -194,7 +198,7 @@ class OfficesController extends Controller
             $office->update($coordinates);
         }
 
-        if ($media instanceof Media && $media->type == 'office_photo') {
+        if ($media instanceof Media && $media->type === 'office_photo') {
             $office->attachMedia($media);
         }
 
@@ -206,7 +210,7 @@ class OfficesController extends Controller
      *
      * @param Organization $organization
      * @param Office $office
-     * @return array
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
@@ -218,6 +222,6 @@ class OfficesController extends Controller
 
         $office->delete();
 
-        return [];
+        return response('', 200);
     }
 }

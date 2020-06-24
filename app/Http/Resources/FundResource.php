@@ -43,12 +43,13 @@ class FundResource extends Resource
             int $carry,
             Organization $organization
         ) {
-            return $carry + ($organization->employees->count() + 1);
+            return $carry + $organization->employees->count();
         }, 0);
 
         if (Gate::allows('funds.showFinances', [$fund, $organization])) {
             $financialData = [
-                'sponsor_count'             => $sponsorCount,
+                'sponsor_count'                => $sponsorCount,
+                'provider_organizations_count' => $fund->provider_organizations_approved->count(),
                 'provider_employees_count'  => $providersEmployeeCount,
                 'requester_count'           => $fund->vouchers->where(
                     'parent_id', '=', null
@@ -104,7 +105,7 @@ class FundResource extends Resource
         if ($organization->identityCan(auth()->id(), 'validate_records')) {
             $data = array_merge($data, [
                 'csv_primary_key' => $fund->fund_config->csv_primary_key ?? '',
-                'csv_required_keys' => $fund->requiredPrevalidationKeys()
+                'csv_required_keys' => $fund->requiredPrevalidationKeys()->toArray()
             ]);
         }
 

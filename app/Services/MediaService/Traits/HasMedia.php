@@ -16,20 +16,27 @@ trait HasMedia
 {
     /**
      * @param Media $media
+     * @return $this
      */
     public function attachMedia(Media $media) {
-        $mediaConfig = MediaService::getMediaConfig($media->type);
+        try {
+            $mediaConfig = MediaService::getMediaConfig($media->type);
 
-        if ($mediaConfig->getType() == MediaConfig::TYPE_SINGLE) {
-            $this->medias->each(function($media) {
-                resolve('media')->unlink($media);
-            });
+            if ($mediaConfig->getType() == MediaConfig::TYPE_SINGLE) {
+                $this->medias->each(function($media) {
+                    resolve('media')->unlink($media);
+                });
+            }
+
+            $media->update([
+                'mediable_type' => $this->getMorphClass(),
+                'mediable_id'   => $this->id,
+            ]);
+        } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
         }
 
-        $media->update([
-            'mediable_type' => $this->getMorphClass(),
-            'mediable_id'   => $this->id,
-        ]);
+        return $this;
     }
 
     /**

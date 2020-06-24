@@ -3,6 +3,7 @@
 namespace App\Services\Forus\Record\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Services\Forus\Record\Models\Record
@@ -13,16 +14,21 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $record_category_id
  * @property string $value
  * @property int $order
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\Forus\Record\Models\RecordCategory|null $record_category
  * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordValidation[] $validations
  * @property-read int|null $validations_count
+ * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newQuery()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record query()
+ * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereOrder($value)
@@ -30,10 +36,21 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereRecordTypeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereValue($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withoutTrashed()
  * @mixin \Eloquent
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static bool|null forceDelete()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record onlyTrashed()
+ * @method static bool|null restore()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereDeletedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withoutTrashed()
  */
 class Record extends Model
 {
+    use SoftDeletes;
+
     /**
      * The attributes that are mass assignable.
      *

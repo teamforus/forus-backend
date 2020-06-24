@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
+use App\Events\Funds\FundProviderApplied;
 use App\Http\Requests\Api\Platform\Organizations\Provider\StoreFundProviderRequest;
 use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
 use App\Http\Resources\FundResource;
@@ -34,13 +35,13 @@ class FundProviderController extends Controller
         $query = Implementation::queryFundsByState([
             Fund::STATE_ACTIVE, Fund::STATE_PAUSED
         ])->whereNotIn(
-            'id', $organization->organization_funds()->pluck(
+            'id', $organization->fund_providers()->pluck(
             'fund_id'
         )->toArray());
 
         return FundResource::collection(Fund::search(
             $request, $query
-        )->latest()->get());
+        )->latest()->paginate($request->input('per_page', 10)));
     }
 
     /**
@@ -59,19 +60,19 @@ class FundProviderController extends Controller
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
         $state = $request->input('state', false);
-        $organization_funds = $organization->organization_funds();
+        $fund_providers = $organization->fund_providers();
 
         if ($state) {
-            $organization_funds->where('state', $state);
+            $fund_providers->where('state', $state);
         }
 
         return FundProviderResource::collection(
-            $organization_funds->get()
+            $fund_providers->get()
         );
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Apply as provider to fund
      *
      * @param StoreFundProviderRequest $request
      * @param Organization $organization
@@ -85,37 +86,12 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
-        $notificationService = resolve('forus.services.notification');
-
         /** @var FundProvider $fundProvider */
-        $fundProvider = $organization->organization_funds()->firstOrCreate($request->only([
-            'fund_id'
-        ]));
+        $fundProvider = $organization->fund_providers()->firstOrCreate(
+            $request->only('fund_id')
+        );
 
-        $identities = $fundProvider->fund->organization->employeesOfRoleQuery([
-            'admin', 'policy_officer'
-        ])->pluck('identity_address')->push(
-            $fundProvider->fund->organization->identity_address
-        )->unique();
-
-        $identities = $identities->mapWithKeys(function ($identityAddress) {
-            return [
-                $identityAddress => resolve(
-                    'forus.services.record'
-                )->primaryEmailByAddress($identityAddress)
-            ];
-        });
-
-        foreach ($identities as $identityAddress => $identityEmail) {
-            $notificationService->providerApplied(
-                $identityEmail,
-                Implementation::emailFrom(),
-                $fundProvider->organization->name,
-                $fundProvider->fund->organization->name,
-                $fundProvider->fund->name,
-                config('forus.front_ends.panel-sponsor')
-            );
-        }
+        FundProviderApplied::dispatch($fundProvider);
 
         return new FundProviderResource($fundProvider);
     }

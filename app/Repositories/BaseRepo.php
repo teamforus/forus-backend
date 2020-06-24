@@ -24,7 +24,7 @@ abstract class BaseRepo implements IBaseRepo
      * @return mixed|void
      */
     public function unlinkAll() {
-        $this->model->all()->each(function($model) {
+        $this->model->all()->each(static function($model) {
             /**
              * @var Model $model
              */

@@ -6,7 +6,8 @@ return [
 
     // count of providers to be generated
     'providers_count'           => env('DB_SEED_PROVIDERS', 5),
-    'validators_count'           => env('DB_SEED_VALIDATORS', 10),
+    'provider_offices_count'    => env('DB_SEED_PROVIDER_OFFICES', 2),
+    'provider_products_count'   => env('DB_SEED_PROVIDER_PRODUCTS', 4),
 
     // amount in generated vouchers
     'voucher_amount'            => env('DB_SEED_VOUCHER_AMOUNT', 600),

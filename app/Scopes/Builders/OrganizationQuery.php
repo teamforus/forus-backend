@@ -70,7 +70,7 @@ class OrganizationQuery
     ) {
         return self::whereHasPermissions(
             $query, $identity_address,'scan_vouchers'
-        )->whereHas('organization_funds', function(
+        )->whereHas('fund_providers', function(
             Builder $builder
         ) use ($voucher) {
             if ($voucher->type == Voucher::TYPE_PRODUCT) {

@@ -7,12 +7,14 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
+use App\Scopes\Builders\FundQuery;
 use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,24 +27,29 @@ use Illuminate\Support\Facades\DB;
 class FundsController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     *  Display a listing of the resource.
      *
+     * @param IndexFundRequest $request
      * @param Organization $organization
-     * @return string
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
+        IndexFundRequest $request,
         Organization $organization
     ) {
         $this->authorize('viewAny', [Fund::class, $organization]);
+        $query = Fund::search($request, $organization->funds()->getQuery());
 
-        if (auth()->id()) {
-            return FundResource::collection($organization->funds);
+        if (!auth()->id()) {
+            $query->where([
+                'public' => true
+            ]);
         }
 
-        return FundResource::collection($organization->funds()->where([
-            'public' => true
-        ])->get());
+        return FundResource::collection(FundQuery::sortByState($query, [
+            'active', 'waiting', 'paused', 'closed'
+        ])->paginate($request->input('per_page')));
     }
 
     /**
@@ -417,7 +424,7 @@ class FundsController extends Controller
      *
      * @param Organization $organization
      * @param Fund $fund
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
@@ -430,6 +437,6 @@ class FundsController extends Controller
         $fund->fund_formula_products()->delete();
         $fund->delete();
 
-        return compact('success');
+        return response()->json([], 200);
     }
 }

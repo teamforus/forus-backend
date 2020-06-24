@@ -15,6 +15,7 @@ namespace App\Models;
  * @property string|null $csv_primary_key
  * @property int $subtract_transaction_costs
  * @property bool $is_configured
+ * @property Fund $fund
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Implementation|null $implementation
@@ -62,5 +63,12 @@ class FundConfig extends Model
      */
     public function implementation() {
         return $this->belongsTo(Implementation::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function fund() {
+        return $this->belongsTo(Fund::class);
     }
 }

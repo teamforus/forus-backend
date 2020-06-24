@@ -105,12 +105,12 @@ class FundPolicy
         Fund $fund
     ) {
         if (empty($identity_address) &&
-            !in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED])
+            !in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED], true)
         ) {
             return false;
         }
 
-        if (!$fund->fund_formulas()->count() > 0) {
+        if ($fund->fund_formulas()->count() === 0) {
             return $this->deny(trans('fund.no_formula'));
         }
 
@@ -122,7 +122,7 @@ class FundPolicy
         }
 
         // Check criteria
-        $invalidCriteria = $fund->criteria->filter(function(
+        $invalidCriteria = $fund->criteria->filter(static function(
             FundCriterion $criterion
         ) use (
             $identity_address, $fund
@@ -133,7 +133,7 @@ class FundPolicy
 
             return (collect([$record])->where(
                 'value', $criterion->operator, $criterion->value
-                )->count() == 0);
+                )->count() === 0);
         });
 
         if ($invalidCriteria->count() > 0) {
@@ -177,7 +177,7 @@ class FundPolicy
     ) {
         return $organization->identityCan($identity_address, [
             'manage_funds'
-        ]) && $fund->state == Fund::STATE_WAITING;
+        ]) && $fund->state === Fund::STATE_WAITING;
     }
 
     /**

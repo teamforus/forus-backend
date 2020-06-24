@@ -25,6 +25,15 @@ class IndexFundsRequest extends FormRequest
     public function rules()
     {
         return [
+            'per_page'        => [
+                'nullable',
+                'numeric',
+                'between:1,100',
+            ],
+            'q'               => [
+                'nullable',
+                'string',
+            ],
             'tag'             => [
                 'nullable',
                 'string',

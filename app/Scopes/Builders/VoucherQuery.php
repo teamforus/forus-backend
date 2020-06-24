@@ -12,7 +12,7 @@ class VoucherQuery
      * @param Builder $builder
      * @param string $identity_address
      * @param $fund_id
-     * @param null $organization_id     Provider organization id
+     * @param null $organization_id Provider organization id
      * @return Builder
      */
     public static function whereProductVouchersCanBeScannedForFundBy(
@@ -35,7 +35,7 @@ class VoucherQuery
                     $builder, $identity_address, 'scan_vouchers'
                 );
 
-                $builder->whereHas('organization_funds', function(
+                $builder->whereHas('fund_providers', function(
                     Builder $builder
                 ) use ($fund_id) {
                     FundProviderQuery::whereApprovedForFundsFilter(

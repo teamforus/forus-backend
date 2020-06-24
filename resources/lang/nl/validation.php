@@ -194,6 +194,5 @@ return [
         'end_date' => 'einddatum',
         'value' => "waarde",
     ],
-    'owner_cant_be_employee' => 'De aanbieder kan niet toegevoegd worden als medewerker',
-
+    'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
 ];

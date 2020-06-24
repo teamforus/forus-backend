@@ -59,4 +59,56 @@ class FundQuery
             });
         });
     }
+
+    /**
+     * @param Builder $query
+     * @param $implementation_id
+     * @return Builder
+     */
+    public static function whereImplementationIdFilter(Builder $query, $implementation_id) {
+        return $query->whereHas('fund_config', function(
+            Builder $builder
+        ) use ($implementation_id) {
+            $builder->whereIn('implementation_id', (array) $implementation_id);
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @param $organization_id
+     * @return Builder
+     */
+    public static function whereHasProviderFilter(
+        Builder $query,
+        $organization_id
+    ) {
+        return $query->whereHas('providers.organization', function(
+            Builder $builder
+        ) use ($organization_id) {
+            $builder->whereIn('organizations.id', (array) $organization_id);
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @param string $q
+     * @return Builder
+     */
+    public static function whereQueryFilter(Builder $query, string $q) {
+        return $query->where('name', 'LIKE', "%${$q}%");
+    }
+
+    /**
+     * @param Builder $query
+     * @param array $states
+     * @return Builder
+     */
+    public static function sortByState(Builder $query, array $states)
+    {
+        foreach ($states as $state) {
+            $query->orderByRaw('`funds`.`state` = ? DESC', [$state]);
+        }
+
+        return $query;
+    }
 }

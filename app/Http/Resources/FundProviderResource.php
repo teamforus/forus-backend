@@ -43,8 +43,13 @@ class FundProviderResource extends Resource
                 ->pluck('product_id'),
             'products_count_all'    => $fundProvider->organization->products->count(),
             'fund'                  => new FundResource($fundProvider->fund),
-            'organization'          => new OrganizationWithPrivateResource(
+            'organization'          => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization
+            ))->toArray($request), [
+                'iban' => $fundProvider->organization->iban
+            ]),
+            'employees' => EmployeeResource::collection(
+                $fundProvider->organization->employees
             ),
         ])->toArray();
     }

@@ -2,14 +2,22 @@
 
 namespace App\Models;
 
+use App\Events\Funds\FundBalanceLowEvent;
+use App\Events\Funds\FundEndedEvent;
+use App\Events\Funds\FundExpiringEvent;
+use App\Events\Funds\FundStartedEvent;
 use App\Events\Vouchers\VoucherCreated;
+use App\Services\EventLogService\Traits\HasDigests;
+use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundRequestQuery;
+use App\Scopes\Builders\FundQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
+use App\Services\Forus\Notification\EmailFrom;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
@@ -61,7 +69,10 @@ use Illuminate\Http\Request;
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
+ * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
@@ -95,7 +106,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $top_up_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp $top_up_model
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -121,14 +131,30 @@ use Illuminate\Http\Request;
  */
 class Fund extends Model
 {
-    use HasMedia, HasTags;
+    use HasMedia, HasTags, HasLogs, HasDigests;
 
-    const STATE_ACTIVE = 'active';
-    const STATE_CLOSED = 'closed';
-    const STATE_PAUSED = 'paused';
-    const STATE_WAITING = 'waiting';
+    public const EVENT_CREATED = 'created';
+    public const EVENT_PROVIDER_APPLIED = 'provider_applied';
+    public const EVENT_PROVIDER_REPLIED = 'provider_replied';
+    public const EVENT_PROVIDER_APPROVED_PRODUCTS = 'provider_approved_products';
+    public const EVENT_PROVIDER_APPROVED_BUDGET = 'provider_approved_budget';
+    public const EVENT_PROVIDER_REVOKED_PRODUCTS = 'provider_revoked_products';
+    public const EVENT_PROVIDER_REVOKED_BUDGET = 'provider_revoked_budget';
+    public const EVENT_BALANCE_LOW = 'balance_low';
+    public const EVENT_BALANCE_SUPPLIED = 'balance_supplied';
+    public const EVENT_FUND_STARTED = 'fund_started';
+    public const EVENT_FUND_ENDED = 'fund_ended';
+    public const EVENT_PRODUCT_ADDED = 'fund_product_added';
+    public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
+    public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const EVENT_FUND_EXPIRING = 'fund_expiring';
 
-    const STATES = [
+    public const STATE_ACTIVE = 'active';
+    public const STATE_CLOSED = 'closed';
+    public const STATE_PAUSED = 'paused';
+    public const STATE_WAITING = 'waiting';
+
+    public const STATES = [
         self::STATE_ACTIVE,
         self::STATE_CLOSED,
         self::STATE_PAUSED,
@@ -599,16 +625,27 @@ class Fund extends Model
 
         if ($request->has('tag')) {
             $query->whereHas('tags', function(Builder $query) use ($request) {
-                return $query->where('key', $request->get('tag'));
+                return $query->where('key', $request->input('tag'));
             });
         }
 
         if ($request->has('organization_id')) {
-            $query->where('organization_id', $request->get('organization_id'));
+            $query->where('organization_id', $request->input('organization_id'));
         }
 
         if ($request->has('fund_id')) {
-            $query->where('id', $request->get('fund_id'));
+            $query->where('id', $request->input('fund_id'));
+        }
+
+        if ($request->has('q') && !empty($q = $request->input('q'))) {
+            $query = FundQuery::whereQueryFilter($query, $q);
+        }
+
+        if ($request->has('implementation_id')) {
+            $query = FundQuery::whereImplementationIdFilter(
+                $query,
+                $request->input('implementation_id')
+            );
         }
 
         return $query;
@@ -697,52 +734,27 @@ class Fund extends Model
             ->whereDate('start_date', '<=', now())
             ->get();
 
-        /** @var self $fund */
         foreach($funds as $fund) {
             if ($fund->start_date->startOfDay()->isPast() &&
                 $fund->state == self::STATE_PAUSED) {
                 $fund->changeState(self::STATE_ACTIVE);
+                FundStartedEvent::dispatch($fund);
+            }
+
+            $expirationNotified = $fund->logs()->where([
+                'event' => Fund::EVENT_FUND_EXPIRING
+            ])->exists();
+
+            if (!$expirationNotified &&
+                $fund->end_date->endOfDay()->clone()->subDays(14)->isPast() &&
+                $fund->state != self::STATE_CLOSED) {
+                FundExpiringEvent::dispatch($fund);
             }
 
             if ($fund->end_date->endOfDay()->isPast() &&
                 $fund->state != self::STATE_CLOSED) {
-
                 $fund->changeState(self::STATE_CLOSED);
-
-                /** @var NotificationService $mailService */
-                $mailService = resolve('forus.services.notification');
-
-                foreach ($fund->provider_organizations_approved as $organization) {
-                    $mailService->fundClosedProvider(
-                        $organization->email,
-                        $fund->fund_config->implementation->getEmailFrom(),
-                        $fund->name,
-                        $fund->end_date,
-                        $organization->name,
-                        $fund->fund_config->implementation->url_provider ?? env('PANEL_PROVIDER_URL')
-                    );
-                }
-
-                $identities = $fund->vouchers->filter(function(Voucher $voucher) {
-                    return $voucher->identity_address;
-                })->pluck('identity_address');
-                $recordService = resolve('forus.services.record');
-
-                $emails = $identities->map(function($identity_address) use ($recordService) {
-                    return $recordService->primaryEmailByAddress($identity_address);
-                });
-
-                foreach ($emails as $email) {
-                    $mailService->fundClosed(
-                        $email,
-                        $fund->fund_config->implementation->getEmailFrom(),
-                        $fund->name,
-                        $fund->end_date,
-                        $fund->organization->email,
-                        $fund->organization->name,
-                        $fund->fund_config->implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL')
-                    );
-                }
+                FundEndedEvent::dispatch($fund);
             }
         }
     }
@@ -842,7 +854,7 @@ class Fund extends Model
     /**
      * @return void
      */
-    public static function notifyAboutReachedNotificationAmount()
+    public static function notifyAboutReachedNotificationAmount(): void
     {
         /** @var NotificationService $mailService */
         $mailService = resolve('forus.services.notification');
@@ -868,14 +880,11 @@ class Fund extends Model
 
         /** @var self $fund */
         foreach ($funds as $fund) {
-            if (!$bunq = $fund->getBunq()) {
-                app('log')->error('Top up for this fund not available yet.');
-                continue;
-            }
-
             $transactionCosts = $fund->getTransactionCosts();
 
             if ($fund->budget_left - $transactionCosts <= $fund->notification_amount) {
+                FundBalanceLowEvent::dispatch($fund);
+
                 $referrers = $fund->organization->employeesOfRole('finance');
                 $referrers = $referrers->pluck('identity_address');
                 $referrers = $referrers->push(
@@ -890,15 +899,6 @@ class Fund extends Model
                     'email' => $fund->organization->email
                 ])->unique('email');
 
-                /** @var FundTopUp $topUp */
-                if ($fund->top_ups()->count() == 0) {
-                    $topUp = $fund->top_ups()->create([
-                        'code' => FundTopUp::generateCode()
-                    ]);
-                } else {
-                    $topUp = $fund->top_ups()->first();
-                }
-
                 foreach ($referrers as $referrer) {
                     $mailService->fundBalanceWarning(
                         $referrer['email'],
@@ -907,15 +907,9 @@ class Fund extends Model
                         $fund->organization->name,
                         $fund->name,
                         currency_format($fund->notification_amount - $transactionCosts),
-                        currency_format($fund->budget_left),
-                        $bunq->getBankAccountIban(),
-                        $topUp->code
+                        currency_format($fund->budget_left)
                     );
                 }
-
-                $fund->update([
-                    'notified_at' => now()
-                ]);
             }
         }
     }
@@ -1205,7 +1199,7 @@ class Fund extends Model
     }
 
     /**
-     * @return FundTopUp
+     * @return \App\Models\FundTopUp
      */
     public function getTopUpModelAttribute()
     {
@@ -1248,7 +1242,9 @@ class Fund extends Model
         ])->get();
 
         foreach ($fundRequests as $fundRequest) {
-            $fundRequest->resignEmployee();
+            foreach ($validatorOrganization->employees as $employee) {
+                $fundRequest->resignEmployee($employee);
+            }
 
             foreach ($fundRequest->clarifications as $clarification) {
                 foreach ($clarification->files as $file) {
@@ -1266,5 +1262,13 @@ class Fund extends Model
                 'state' => FundRequestRecord::STATE_PENDING
             ]);
         }
+    }
+
+    /**
+     * @return EmailFrom
+     */
+    public function getEmailFrom() {
+        return $this->fund_config->implementation->getEmailFrom() ??
+            EmailFrom::createDefault();
     }
 }
