@@ -311,6 +311,18 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/update-cms',
+        "Api\Platform\Organizations\ImplementationsController@updateCms");
+
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/update-email',
+        "Api\Platform\Organizations\ImplementationsController@updateEmail");
+
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/update-digid',
+        "Api\Platform\Organizations\ImplementationsController@updateDigiD");
+
     $router->resource(
         'organizations/{organization}/implementations',
         "Api\Platform\Organizations\ImplementationsController", [
