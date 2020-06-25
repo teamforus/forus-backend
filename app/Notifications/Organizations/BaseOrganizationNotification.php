@@ -49,8 +49,6 @@ abstract class BaseOrganizationNotification extends BaseNotification
             ));
         }
 
-        print(json_pretty(static::$permissions));
-
         return static::$permissions;
     }
 
