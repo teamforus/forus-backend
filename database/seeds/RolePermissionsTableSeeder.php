@@ -22,7 +22,8 @@ class RolePermissionsTableSeeder extends Seeder
                 "manage_funds", "manage_providers", "manage_products",
                 "manage_offices", "view_finances", "validate_records",
                 "scan_vouchers", "manage_provider_funds", "manage_vouchers",
-                "manage_employees", "manage_organization", "manage_implementation"
+                "manage_employees", "manage_organization",
+                "manage_implementation", "manage_implementation_cms"
             ],
             "finance" => [
                 "view_finances", "manage_vouchers",
@@ -39,6 +40,9 @@ class RolePermissionsTableSeeder extends Seeder
             ],
             "implementation_manager" => [
                 "view_funds", "manage_implementation"
+            ],
+            "implementation_cms_manager" => [
+                "view_funds", "manage_implementation_cms"
             ]
         ];
 
