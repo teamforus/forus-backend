@@ -1,21 +1,4 @@
-component_depth: 1
-languages:
-- name: php
 
-exclude:
-  - /bootstrap/.*
-  - /config/.*
-  - /database/.*
-  - /public/.*
-  - /resources/.*
-  - /routes/.*
-  - /storage/.*
-  - /app/Services/Forus/Notification/.*
-  - /app/Mail/Funds/.*
-  - /app/Policies/FundRequestClarificationPolicy.php
-  - /app/Http/Controllers/Api/Platform/.*
-  - /app/Http/Controllers/Api/IdentityController.php
-  - /app/Http/Controllers/Api/IdentityFallbackController.php
 
 
   
