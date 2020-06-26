@@ -22,11 +22,9 @@ class ImplementationPolicy
         $identity_address,
         Organization $organization
     ) {
-        return $organization->identityCan(
-            $identity_address,
-            ['manage_implementation', 'manage_implementation_cms'],
-            false
-        );
+        return $organization->identityCan($identity_address, [
+            'manage_implementation', 'manage_implementation_cms'
+        ], false);
     }
 
     /**
@@ -42,7 +40,13 @@ class ImplementationPolicy
         Implementation $implementation,
         Organization $organization
     ) {
-        return $this->updateCMS($identity_address, $implementation, $organization);
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity_address, [
+            'manage_implementation', 'manage_implementation_cms'
+        ], false);
     }
 
     /**
@@ -58,15 +62,11 @@ class ImplementationPolicy
         Implementation $implementation,
         Organization $organization
     ) {
-        if (!$this->checkIntegrity($implementation, $organization)){
+        if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
 
-        return $organization->identityCan(
-            $identity_address,
-            ['manage_implementation', 'manage_implementation_cms'],
-            false
-        );
+        return $organization->identityCan($identity_address, 'manage_implementation_cms');
     }
 
     /**
@@ -82,14 +82,11 @@ class ImplementationPolicy
         Implementation $implementation,
         Organization $organization
     ) {
-        if (!$this->checkIntegrity($implementation, $organization)){
+        if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
 
-        return $organization->identityCan(
-            $identity_address,
-            'manage_implementation'
-        );
+        return $organization->identityCan($identity_address, 'manage_implementation');
     }
 
     /**
@@ -105,14 +102,11 @@ class ImplementationPolicy
         Implementation $implementation,
         Organization $organization
     ) {
-        if (!$this->checkIntegrity($implementation, $organization)){
+        if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
 
-        return $organization->identityCan(
-            $identity_address,
-            'manage_implementation'
-        );
+        return $organization->identityCan($identity_address, 'manage_implementation');
     }
 
     /**

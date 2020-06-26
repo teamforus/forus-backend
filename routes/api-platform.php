@@ -304,30 +304,30 @@ $router->group(['middleware' => [
         'demo/transactions',
         "Api\Platform\Vouchers\DemoTransactionController", [
         'only' => [
-            'store', 'show', 'update'
+            'store', 'show', 'update',
         ],
         'parameters' => [
             'transactions' => 'demo_token',
         ]
     ]);
 
-    $router->post(
-        'organizations/{organization}/implementations/{implementation}/update-cms',
+    $router->patch(
+        'organizations/{organization}/implementations/{implementation}/cms',
         "Api\Platform\Organizations\ImplementationsController@updateCms");
 
-    $router->post(
-        'organizations/{organization}/implementations/{implementation}/update-email',
+    $router->patch(
+        'organizations/{organization}/implementations/{implementation}/email',
         "Api\Platform\Organizations\ImplementationsController@updateEmail");
 
-    $router->post(
-        'organizations/{organization}/implementations/{implementation}/update-digid',
+    $router->patch(
+        'organizations/{organization}/implementations/{implementation}/digid',
         "Api\Platform\Organizations\ImplementationsController@updateDigiD");
 
     $router->resource(
         'organizations/{organization}/implementations',
         "Api\Platform\Organizations\ImplementationsController", [
         'only' => [
-            'index', 'show', 'update'
+            'index', 'show',
         ],
     ]);
 
@@ -335,7 +335,7 @@ $router->group(['middleware' => [
         'organizations/{organization}/provider-invitations',
         'Api\Platform\Organizations\FundProviderInvitationsController', [
         'only' => [
-            'index', 'show', 'update'
+            'index', 'show', 'update',
         ],
         'parameters' => [
             'provider-invitations' => 'fund_provider_invitations'

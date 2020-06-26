@@ -23,10 +23,11 @@ class ImplementationPrivateResource extends JsonResource
             return null;
         }
 
+        /** @var Organization $organization */
         $organization = OrganizationQuery::whereImplementationIdFilter(
             Organization::query(),
             $implementation->id
-        )->first();
+        )->first() or abort(403);
 
         $data = $implementation->only([
             'id', 'key', 'name', 'url_webshop', 'title',

@@ -39,7 +39,8 @@ class RolePermissionsTableSeeder extends Seeder
                 "scan_vouchers"
             ],
             "implementation_manager" => [
-                "view_funds", "manage_implementation"
+                "view_funds", "manage_implementation",
+                "manage_implementation_cms"
             ],
             "implementation_cms_manager" => [
                 "view_funds", "manage_implementation_cms"
