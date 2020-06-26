@@ -7,7 +7,6 @@ use App\Http\Requests\Api\Platform\Organizations\Implementations\IndexImplementa
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationCmsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailRequest;
-use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationRequest;
 use App\Http\Resources\ImplementationPrivateResource;
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -65,25 +64,71 @@ class ImplementationsController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param UpdateImplementationRequest $request
+     * @param UpdateImplementationCmsRequest $request
      * @param Organization $organization
      * @param Implementation $implementation
      * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function update(
-        UpdateImplementationRequest $request,
+    public function updateCMS(
+        UpdateImplementationCmsRequest $request,
         Organization $organization,
         Implementation $implementation
     ) {
         $this->authorize('show', $organization);
-        $this->authorize('update', [$implementation, $organization]);
+        $this->authorize('updateCMS', [$implementation, $organization]);
 
         $implementation->update($request->only([
             'title', 'description', 'has_more_info_url',
             'more_info_url', 'description_steps',
-            'email_from_address', 'email_from_name',
+        ]));
+
+        return new ImplementationPrivateResource($implementation);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateImplementationDigiDRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @return ImplementationPrivateResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateDigiD(
+        UpdateImplementationDigiDRequest $request,
+        Organization $organization,
+        Implementation $implementation
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('updateDigiD', [$implementation, $organization]);
+
+        $implementation->update($request->only([
             'digid_app_id', 'digid_shared_secret', 'digid_a_select_server'
+        ]));
+
+        return new ImplementationPrivateResource($implementation);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateImplementationEmailRequest $request
+     * @param Organization $organization
+     * @param Implementation $implementation
+     * @return ImplementationPrivateResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateEmail(
+        UpdateImplementationEmailRequest $request,
+        Organization $organization,
+        Implementation $implementation
+    ) {
+        $this->authorize('show', $organization);
+        $this->authorize('updateEmail', [$implementation, $organization]);
+
+        $implementation->update($request->only([
+            'email_from_address', 'email_from_name'
         ]));
 
         return new ImplementationPrivateResource($implementation);
