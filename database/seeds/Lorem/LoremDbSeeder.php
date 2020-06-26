@@ -61,10 +61,12 @@ class LoremDbSeeder extends Seeder
 
     private function disableEmails(): void {
         config()->set('mail.disable', true);
+        config()->set('queue.default', 'sync');
     }
 
     private function enableEmails(): void {
         config()->set('mail.disable', false);
+        config()->set('queue.default', env('QUEUE_DRIVER', 'sync'));
     }
 
     /**

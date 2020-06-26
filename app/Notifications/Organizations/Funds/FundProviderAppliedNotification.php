@@ -5,7 +5,6 @@ namespace App\Notifications\Organizations\Funds;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Models\Fund;
 use App\Services\Forus\Identity\Models\Identity;
-use Illuminate\Notifications\Channels\MailChannel;
 
 /**
  * Class FundProviderAppliedNotification
