@@ -22,6 +22,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected $eventLog;
     protected $scope = null;
     protected $meta = [];
+    protected $sendMail = false;
 
     /**
      * Create a new notification instance.
@@ -40,10 +41,18 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
      * @return array
      */
-    abstract public function via($notifiable): array;
+    public function via(): array
+    {
+        $channels = ['database'];
+
+        if ($this->sendMail) {
+            $channels[] = MailChannel::class;
+        }
+
+        return $channels;
+    }
 
     /**
      * Serialize and save the notification in the database
@@ -55,7 +64,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         return array_merge([
             'key' => $this->key,
             'scope' => $this->scope,
-            'event_id' => $this->eventLog,
+            'event_id' => $this->eventLog->id,
         ], $this->meta);
     }
 
