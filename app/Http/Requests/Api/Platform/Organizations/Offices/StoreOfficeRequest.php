@@ -26,7 +26,7 @@ class StoreOfficeRequest extends BaseOfficeRequest
             'phone' => '',
             'email' => 'nullable|email:strict,dns',
             'address' => 'required',
-            'schedule' => 'required|array',
+            'schedule' => 'present|array',
             'schedule.*' => 'required|array',
             'schedule.*.week_day' => 'required|numeric:between:0,6',
             'schedule.*.start_time' => [

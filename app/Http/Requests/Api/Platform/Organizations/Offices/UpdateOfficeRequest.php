@@ -26,7 +26,7 @@ class UpdateOfficeRequest extends BaseOfficeRequest
             'phone' => '',
             'address' => 'required',
             'email' => 'nullable|email:strict,dns',
-            'schedule' => 'required|array',
+            'schedule' => 'present|array',
             'schedule.*' => 'required|array',
             'schedule.*.week_day' => 'required|numeric:between:0,6',
             'schedule.*.start_time' => [
