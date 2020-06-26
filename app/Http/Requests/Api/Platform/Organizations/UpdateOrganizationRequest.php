@@ -42,7 +42,7 @@ class UpdateOrganizationRequest extends FormRequest
         ): Rule::unique('organizations', 'kvk');
 
         return [
-            'name'                  => 'required|between:2,200',
+            'name'                  => 'required|between:2,64',
             'iban'                  => ['required', new IbanRule()],
             'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',
