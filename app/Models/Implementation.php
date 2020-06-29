@@ -8,6 +8,7 @@ use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
@@ -22,11 +23,17 @@ use Illuminate\Http\Request;
  * @property string $url_sponsor
  * @property string $url_provider
  * @property string $url_validator
+ * @property string $title
+ * @property string $description
+ * @property string $more_info_url
+ * @property string $description_steps
+ * @property boolean $has_more_info_url
  * @property string $url_app
  * @property float|null $lon
  * @property float|null $lat
  * @property bool $digid_enabled
  * @property string $digid_env
+ * @property Collection|FundConfig[] $fund_configs
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
@@ -62,9 +69,13 @@ use Illuminate\Http\Request;
  */
 class Implementation extends Model
 {
+    protected $perPage = 20;
+
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
-        'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name'
+        'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
+        'title', 'description', 'has_more_info_url', 'more_info_url', 'description_steps',
+        'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
     ];
 
     protected $hidden = [
@@ -73,7 +84,8 @@ class Implementation extends Model
     ];
 
     protected $casts = [
-        'digid_enabled' => 'boolean'
+        'digid_enabled' => 'boolean',
+        'has_more_info_url' => 'boolean',
     ];
 
     const FRONTEND_WEBSHOP = 'webshop';
@@ -164,6 +176,13 @@ class Implementation extends Model
      */
     public static function isValidKey($key) {
         return self::implementationKeysAvailable()->search($key) !== false;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_configs() {
+        return $this->hasMany(FundConfig::class);
     }
 
     /**
@@ -361,6 +380,18 @@ class Implementation extends Model
             $config['fronts'] = $implementation->only([
                 'url_webshop', 'url_sponsor', 'url_provider',
                 'url_validator', 'url_app'
+            ]);
+
+            $config['settings'] = array_merge($implementation->only([
+                'title', 'description', 'has_more_info_url',
+                'more_info_url', 'description_steps',
+            ])->toArray(), [
+                'description_html' => resolve('markdown')->convertToHtml(
+                    $implementation['description'] ?? ''
+                ),
+                'description_steps_html' => resolve('markdown')->convertToHtml(
+                    $implementation['description_steps'] ?? ''
+                ),
             ]);
 
             $config['map'] = [
