@@ -40,7 +40,7 @@ class UserLoginMail extends ImplementationMail
         } else if (strpos($source, '_validator') !== false) {
             $platform = 'het dashboard';
         } else if (strpos($source, '_website') !== false) {
-            $platform = 'het website';
+            $platform = 'de website';
         } else if (strpos($source, 'me_app') !== false) {
             $platform = 'Me';
         }

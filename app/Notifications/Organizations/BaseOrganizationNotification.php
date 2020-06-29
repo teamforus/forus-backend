@@ -6,14 +6,12 @@ use App\Models\Organization;
 use App\Notifications\BaseNotification;
 use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Channels\MailChannel;
 use Illuminate\Support\Collection;
 
 abstract class BaseOrganizationNotification extends BaseNotification
 {
     protected $scope;
     protected $organization_id;
-    protected $sendMail = false;
 
     /**
      * Permissions required to get the notification
@@ -21,18 +19,6 @@ abstract class BaseOrganizationNotification extends BaseNotification
      * @var array
      */
     protected static $permissions = [];
-
-    /**
-     * @param mixed $notifiable
-     * @return array
-     */
-    public function via($notifiable): array
-    {
-        return [
-            'database',
-            ($this->sendMail ?? false) ? MailChannel::class : null,
-        ];
-    }
 
     /**
      * Get the permissions required for the identity to receive the notification
@@ -48,8 +34,6 @@ abstract class BaseOrganizationNotification extends BaseNotification
                 static::class
             ));
         }
-
-        print(json_pretty(static::$permissions));
 
         return static::$permissions;
     }
