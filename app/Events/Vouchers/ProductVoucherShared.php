@@ -15,19 +15,24 @@ class ProductVoucherShared
 
     private $voucher;
     private $message;
+    private $sendCopyToUser;
 
     /**
      * Create a new event instance.
      *
+     * ProductVoucherShared constructor.
      * @param Voucher $voucher
      * @param $message
+     * @param $sendCopyToUser
      */
     public function __construct(
         Voucher $voucher,
-        $message
+        $message,
+        $sendCopyToUser
     ) {
         $this->voucher = $voucher;
         $this->message = $message;
+        $this->sendCopyToUser = $sendCopyToUser;
     }
 
     /**

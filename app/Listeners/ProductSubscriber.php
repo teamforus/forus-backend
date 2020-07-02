@@ -98,10 +98,13 @@ class ProductSubscriber
             'fund' => $voucher->fund,
             'product' => $product,
             'provider' => $product->organization,
+            'voucher'  => $voucher
+        ], [
+            'voucher_token_address' => $voucher->tokens()->where([
+                'need_confirmation' => false
+            ])->first()->address,
+            'provider_email' => $product->organization->email
         ]));
-
-        $product->sendProductReservedEmail($voucher);
-        $product->sendProductReservedUserEmail($voucher);
     }
 
     /**

@@ -275,42 +275,15 @@ class Voucher extends Model
      * @param bool $sendCopyToUser
      */
     public function shareVoucherEmail(string $reason, $sendCopyToUser = false) {
-        $notificationService = resolve('forus.services.notification');
-
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
         ])->first();
 
         $voucher = $voucherToken->voucher;
-        $implementation = $voucher->fund->fund_config->implementation;
 
         if ($voucher->type == 'product') {
-            $recordRepo = resolve('forus.services.record');
-            $primaryEmail = $recordRepo->primaryEmailByAddress(auth()->id());
-            $productName = $voucher->product->name;
-
-            $notificationService->shareProductVoucher(
-                $voucher->product->organization->email,
-                $implementation->getEmailFrom(),
-                $primaryEmail,
-                $productName,
-                $voucherToken->address,
-                $reason
-            );
-
-            if ($sendCopyToUser) {
-                $notificationService->shareProductVoucher(
-                    $primaryEmail,
-                    $implementation->getEmailFrom(),
-                    $primaryEmail,
-                    $productName,
-                    $voucherToken->address,
-                    $reason
-                );
-            }
-
-            ProductVoucherShared::dispatch($voucher, $reason);
+            ProductVoucherShared::dispatch($voucher, $reason, $sendCopyToUser);
         }
     }
 

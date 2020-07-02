@@ -445,34 +445,6 @@ class NotificationService
     }
 
     /**
-     * Send voucher by email
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $requester_email
-     * @param string $product_name
-     * @param string $qr_token
-     * @param string $reason
-     * @return bool|null
-     */
-    public function shareProductVoucher(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $requester_email,
-        string $product_name,
-        string $qr_token,
-        string $reason
-    ) {
-        return $this->sendMail($email, new ShareProductVoucherMail(
-            $requester_email,
-            $product_name,
-            $qr_token,
-            $reason,
-            $emailFrom
-        ));
-    }
-
-    /**
      * Send restore identity link to address email
      *
      * @param string $email
@@ -490,89 +462,6 @@ class NotificationService
         return $this->sendMail($email, new UserLoginMail(
             $link,
             $source,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * New transaction was made send current voucher balance
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $current_budget
-     * @return bool|null
-     */
-    public function sendVoucherAmountLeftEmail(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $current_budget
-    ) {
-        return $this->sendMail($email, new PaymentSuccessMail(
-            $fund_name,
-            $current_budget,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify provider that a product was reserved and customer will come by
-     * in shop to pickup the product or service.
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $product_name
-     * @param string $expiration_date
-     * @return bool|null
-     */
-    public function productReserved(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $product_name,
-        string $expiration_date
-    ) {
-        return $this->sendMail($email, new ProductReservedMail(
-            $product_name,
-            $expiration_date,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify provider that a product was reserved and customer will come by
-     * in shop to pickup the product or service.
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $product_name
-     * @param string $product_price
-     * @param string $provider_phone
-     * @param string $provider_email
-     * @param string $qr_token
-     * @param string $provider_organization_name
-     * @param string $expire_at_minus_1_day
-     * @return bool|null
-     */
-    public function productReservedUser(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $product_name,
-        string $product_price,
-        string $provider_phone,
-        string $provider_email,
-        string $qr_token,
-        string $provider_organization_name,
-        string $expire_at_minus_1_day
-    ) {
-        return $this->sendMail($email, new ProductReservedUserMail(
-            $product_name,
-            $product_price,
-            $provider_phone,
-            $provider_email,
-            $qr_token,
-            $provider_organization_name,
-            $expire_at_minus_1_day,
             $emailFrom
         ));
     }
@@ -613,27 +502,6 @@ class NotificationService
         string $confirmationLink
     ) {
         return $this->sendMail($email, new EmailActivationMail(
-            config('app.name'),
-            $confirmationLink,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * @param string $orgName
-     * @param string $email
-     * @param string $confirmationLink
-     * @param EmailFrom|null $emailFrom
-     * @return bool|null
-     */
-    public function sendEmailEmployeeAdded(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $orgName,
-        string $confirmationLink
-    ): ?bool {
-        return $this->sendMail($email, new EmployeeAddedMail(
-            $orgName,
             config('app.name'),
             $confirmationLink,
             $emailFrom

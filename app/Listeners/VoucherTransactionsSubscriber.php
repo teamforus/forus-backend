@@ -32,12 +32,12 @@ class VoucherTransactionsSubscriber
 
             IdentityProductVoucherTransactionNotification::send($eventLog);
         } else {
-            $voucher->sendEmailAvailableAmount();
             $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION, [
-                'fund' => $voucher->fund,
-                'voucher' => $voucher,
-                'sponsor' => $voucher->fund->organization,
-                'provider' => $transaction->provider,
+                'fund'        => $voucher->fund,
+                'voucher'     => $voucher,
+                'sponsor'     => $voucher->fund->organization,
+                'transaction' => $transaction,
+                'provider'    => $transaction->provider,
             ]);
 
             IdentityVoucherTransactionNotification::send($eventLog);
