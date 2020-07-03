@@ -15,6 +15,7 @@ class AddRoleTranslationTable extends Migration
     {
         Schema::create('role_translations', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('name', 60);
             $table->string('description', 200);
             $table->unsignedInteger('role_id');
             $table->string('locale', 3);

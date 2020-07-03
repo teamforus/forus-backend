@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class RoleTranslation extends Model
 {
+    public $timestamps = false;
+
+    protected $fillable = [
+        'name', 'description', 'locale'
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */

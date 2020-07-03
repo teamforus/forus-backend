@@ -30,7 +30,7 @@ class Role extends Model
     use Translatable;
 
     protected $fillable = [
-        'key', 'name'
+        'key'
     ];
 
     public $timestamps = false;
@@ -41,7 +41,7 @@ class Role extends Model
      * @var array
      */
     public $translatedAttributes = [
-        'description'
+        'name', 'description'
     ];
 
     public function employees() {
