@@ -603,17 +603,19 @@ class NotificationService
      * Send email confirmation link
      *
      * @param string $email
+     * @param string $source
      * @param EmailFrom|null $emailFrom
      * @param string $confirmationLink
      * @return bool|null
      */
     public function sendEmailConfirmationLink(
         string $email,
+        string $source,
         ?EmailFrom $emailFrom,
         string $confirmationLink
     ) {
         return $this->sendMail($email, new EmailActivationMail(
-            config('app.name'),
+            $source,
             $confirmationLink,
             $emailFrom
         ));
