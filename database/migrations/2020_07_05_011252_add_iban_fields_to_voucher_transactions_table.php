@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class AddIbanFieldsToVoucherTransactionsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::table('voucher_transactions', function (Blueprint $table) {
+            $table->string('iban_from', 200)->nullable()->after('amount');
+            $table->string('iban_to', 200)->nullable()->after('iban_from');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::table('voucher_transactions', function (Blueprint $table) {
+            $table->dropColumn('iban_from');
+            $table->dropColumn('iban_to');
+        });
+    }
+}

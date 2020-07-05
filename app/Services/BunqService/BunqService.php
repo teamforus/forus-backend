@@ -384,6 +384,9 @@ class BunqService
                     $amount = number_format($amount - .1, 2, '.', '');
                 }
 
+//                logger()->info('bunq from: '.print_r($bunq->getBankAccountIban(), true));
+//                logger()->info('bunq to: '.print_r($transaction->provider->iban, true));
+
                 $payment_id = $bunq->makePayment(
                     $amount,
                     $transaction->provider->iban,
@@ -463,6 +466,27 @@ class BunqService
                     }
                 }
             }
+        }
+    }
+
+    public static function updateVoucherTransactions() {
+        /** @var Collection[]|VoucherTransaction[] $voucher_transactions */
+        $voucher_transactions = VoucherTransaction::whereNull(
+            'iban_from'
+        )->orWhereNull(
+            'iban_to'
+        )->get();
+
+        foreach ($voucher_transactions as $voucher_transaction) {
+            if ($details = $voucher_transaction->getTransactionDetailsAttribute()) {
+                //Update voucher transaction iban_to and iban_from
+//                $voucher_transaction->update([
+//                    'iban_from' => $details->iban_from,
+//                    'iban_to'   => $details->iban_to,
+//                ]);
+            }
+
+            sleep(1);
         }
     }
 
