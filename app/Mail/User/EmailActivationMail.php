@@ -27,11 +27,11 @@ class EmailActivationMail extends ImplementationMail
         if (strpos($source, '_webshop') !== false) {
             $platform = 'de webshop';
         } else if (strpos($source, '_sponsor') !== false) {
-            $platform = 'het dashboard';
+            $platform = 'het aanmeldformulier voor sponsoren';
         } else if (strpos($source, '_provider') !== false) {
-            $platform = 'het dashboard';
+            $platform = 'het aanmeldformulier voor aanbieders';
         } else if (strpos($source, '_validator') !== false) {
-            $platform = 'het dashboard';
+            $platform = 'het aanmeldformulier voor validators';
         } else if (strpos($source, '_website') !== false) {
             $platform = 'de website';
         } else if (strpos($source, 'me_app') !== false) {
