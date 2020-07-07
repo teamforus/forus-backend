@@ -83,8 +83,7 @@ class OrganizationPolicy
         Fund $externalFund
     ) {
         if (!FundQuery::whereExternalValidatorFilter(
-            Fund::query(),
-            $organization->id
+            Fund::query(), $organization->id
         )->where('funds.id', $externalFund->id)->exists()) {
             return $this->deny("Invalid fund id.");
         }

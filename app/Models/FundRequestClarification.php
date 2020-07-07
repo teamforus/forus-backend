@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\FileService\Traits\HasFiles;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Models\FundRequestClarification
@@ -35,10 +36,10 @@ class FundRequestClarification extends Model
 {
     use HasFiles;
 
-    const STATE_PENDING = 'pending';
-    const STATE_ANSWERED = 'answered';
+    public const STATE_PENDING = 'pending';
+    public const STATE_ANSWERED = 'answered';
 
-    const STATES = [
+    public const STATES = [
         self::STATE_PENDING,
         self::STATE_ANSWERED,
     ];
@@ -51,7 +52,10 @@ class FundRequestClarification extends Model
         'answered_at'
     ];
 
-    public function fund_request_record() {
+    /**
+     * @return BelongsTo
+     */
+    public function fund_request_record(): BelongsTo {
         return $this->belongsTo(FundRequestRecord::class);
     }
 }

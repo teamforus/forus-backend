@@ -15,7 +15,6 @@ use Illuminate\Events\Dispatcher;
 class EmployeeSubscriber
 {
     private $mailService;
-    private $recordService;
 
     /**
      * EmployeeSubscriber constructor.
@@ -23,15 +22,13 @@ class EmployeeSubscriber
     public function __construct()
     {
         $this->mailService = resolve('forus.services.notification');
-        $this->recordService = resolve('forus.services.record');
     }
 
     /**
      * @param EmployeeCreated $employeeCreated
      * @throws \Exception
      */
-    public function onEmployeeCreated(EmployeeCreated $employeeCreated) {
-        log_debug('onEmployeeCreated');
+    public function onEmployeeCreated(EmployeeCreated $employeeCreated): void {
         $employee = $employeeCreated->getEmployee();
 
         $event = $employee->log(Employee::EVENT_CREATED, [

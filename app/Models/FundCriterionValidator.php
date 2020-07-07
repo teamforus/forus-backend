@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Models\FundCriterionValidator
@@ -39,14 +40,14 @@ class FundCriterionValidator extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    function external_validator() {
+    public function external_validator(): BelongsTo {
         return $this->belongsTo(OrganizationValidator::class, 'organization_validator_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    function fund_criterion() {
+    public function fund_criterion(): BelongsTo {
         return $this->belongsTo(FundCriterion::class);
     }
 }

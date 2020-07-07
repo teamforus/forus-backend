@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 use App\Http\Requests\Api\Platform\Organizations\ExternalFunds\IndexExternalFundsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ExternalFunds\UpdateExternalFundRequest;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use \Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Resources\ExternalFundResource;
 use App\Models\Fund;
@@ -30,17 +31,16 @@ class ExternalFundsController extends Controller
     public function index(
         IndexExternalFundsRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewExternalFunds', [$organization]);
 
         /** @var LengthAwarePaginator $funds */
         $funds = FundQuery::whereExternalValidatorFilter(
-            Fund::query(),
-            $organization->id
+            Fund::query(), $organization->id
         )->paginate($request->input('per_page', 10));
 
-        $funds->getCollection()->transform(function(Fund $fund) use ($organization) {
+        $funds->getCollection()->transform(static function(Fund $fund) use ($organization) {
             $fund->setAttribute("external_validator", $organization);
             return $fund;
         });
@@ -61,7 +61,7 @@ class ExternalFundsController extends Controller
         UpdateExternalFundRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): ExternalFundResource {
         $this->authorize('update', $organization);
         $this->authorize('updateExternalFunds', [$organization, $fund]);
 
@@ -74,6 +74,14 @@ class ExternalFundsController extends Controller
             )->update([
                 'accepted' => $criterion['accepted'] ?? false
             ]);
+
+            if (!($criterion['accepted'] ?? false)) {
+                foreach ($organization->employees as $employee) {
+                    foreach ($criterionModel->fund->fund_requests as $fund_request) {
+                        $fund_request->resignEmployee($employee, $criterionModel);
+                    }
+                }
+            }
         }
 
         $fund->setAttribute('external_validator', $organization);

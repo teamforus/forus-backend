@@ -21,7 +21,7 @@ class FundResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         $fund               = $this->resource;
         $organization       = $fund->organization;
@@ -34,12 +34,12 @@ class FundResource extends Resource
 
         foreach ($fund->organization->external_validators as $external_validator) {
             $externalEmployees = $externalEmployees->merge(
-                $external_validator->employeesOfRole('validation')
+                $external_validator->employeesWithPermissions('validate_records')
             );
         }
 
         $providersEmployeeCount = $fund->provider_organizations_approved;
-        $providersEmployeeCount = $providersEmployeeCount->reduce(function (
+        $providersEmployeeCount = $providersEmployeeCount->reduce(static function (
             int $carry,
             Organization $organization
         ) {
@@ -85,13 +85,14 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck(
                 'product_id'
             ),
-            'validators' => $validators->merge(
+            // todo: remove?
+            /*'validators' => $validators->merge(
                 $externalEmployees
-            )->map(function(Employee $validator) {
+            )->map(static function(Employee $validator) {
                 return collect($validator)->only([
                     'identity_address'
-                ]);
-            }),
+                ])->unique();
+            }),*/
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
         ], $financialData);

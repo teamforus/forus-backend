@@ -41,6 +41,8 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read int|null $digests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $external_validators
@@ -55,13 +57,13 @@ use Illuminate\Http\Request;
  * @property-read int|null $funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
  * @property-read int|null $funds_voucher_transactions_count
- * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \App\Services\MediaService\Models\Media|null $logo
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $organization_funds
- * @property-read int|null $organization_funds_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $organization_validators
  * @property-read int|null $organization_validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
@@ -76,6 +78,8 @@ use Illuminate\Http\Request;
  * @property-read int|null $supplied_funds_approved_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $validated_organizations
+ * @property-read int|null $validated_organizations_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -103,10 +107,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
- * @property-read int|null $logs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $digests
- * @property-read int|null $digests_count
  */
 class Organization extends Model
 {
@@ -188,22 +188,26 @@ class Organization extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function external_validators() {
-        return $this->belongsToMany(
-            Organization::class,
-            OrganizationValidator::class,
-            'organization_id',
-            'validator_organization_id'
-        );
+    public function validated_organizations(): HasMany {
+        return $this->hasMany(OrganizationValidator::class, 'validator_organization_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function organization_validators() {
+    public function organization_validators(): HasMany {
         return $this->hasMany(OrganizationValidator::class);
+    }
+
+    public function external_validators(): BelongsToMany {
+        return $this->belongsToMany(
+            self::class,
+            OrganizationValidator::class,
+            'organization_id',
+            'validator_organization_id'
+        );
     }
 
     /**
@@ -345,7 +349,7 @@ class Organization extends Model
      * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function employeesWithPermissionsQuery($permission) {
-        return $this->employees()->whereHas('roles.permissions', function(
+        return $this->employees()->whereHas('roles.permissions', static function(
             \Illuminate\Database\Eloquent\Builder $query
         ) use ($permission) {
             $query->whereIn('permissions.key', (array) $permission);
@@ -369,13 +373,6 @@ class Organization extends Model
     }
 
     /**
-     * @return string
-     */
-    public function emailServiceId() {
-        return "organization_" . $this->id;
-    }
-
-    /**
      * Returns identity organization roles
      *
      * @param $identityAddress
@@ -393,7 +390,9 @@ class Organization extends Model
      * @param $identityAddress
      * @return \Illuminate\Support\Collection
      */
-    public function identityPermissions($identityAddress) {
+    public function identityPermissions(
+        $identityAddress
+    ): \Illuminate\Support\Collection {
         if (strcmp($identityAddress, $this->identity_address) === 0) {
             return Permission::allMemCached();
         }
@@ -405,21 +404,19 @@ class Organization extends Model
 
     /**
      * Check if identity is organization employee
-     * @param $identityAddress string
+     * @param $identity_address string
      * @return bool
      */
     public function isEmployee(
-        string $identityAddress = null
-    ) {
-        return $identityAddress && $this->employees()->whereIn(
-            'identity_address',
-            (array) $identityAddress
-        )->exists();
+        string $identity_address = null
+    ): bool {
+        return $identity_address &&
+            $this->employees()->whereIn('identity_address', (array) $identity_address)->exists();
     }
 
     /**
      * @param $identityAddress string
-     * @param $permissions
+     * @param array|string $permissions
      * @param $all boolean
      * @return bool
      */
@@ -427,7 +424,7 @@ class Organization extends Model
         string $identityAddress = null,
         $permissions = [],
         $all = true
-    ) {
+    ): bool {
         if (!$identityAddress) {
             return false;
         }
@@ -452,22 +449,21 @@ class Organization extends Model
         }
 
         // check if all the requirements are satisfied
-        return $identityPermissionKeys->intersect($permissions)->count() ==
-            count($permissions);
+        return $identityPermissionKeys->intersect($permissions)->count() === count($permissions);
     }
 
     /**
      * @param $identityAddress string
-     * @param $roles
+     * @param bool|array|string $roles
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function queryByIdentityRole (
         string $identityAddress,
         $roles = false
-    ) {
+    ): \Illuminate\Database\Eloquent\Builder {
         $roles = (array) $roles;
 
-        return Organization::query()->whereIn('id', function(Builder $query) use ($identityAddress, $roles) {
+        return self::query()->whereIn('id', function(Builder $query) use ($identityAddress, $roles) {
             $query->select(['organization_id'])->from((new Employee)->getTable())->where([
                 'identity_address' => $identityAddress
             ])->whereIn('id', function (Builder $query) use ($roles) {
@@ -480,23 +476,23 @@ class Organization extends Model
 
     /**
      * @param $identityAddress string
-     * @param $permissions
+     * @param string|array|bool $permissions
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function queryByIdentityPermissions (
         string $identityAddress,
         $permissions = false
-    ) {
+    ): \Illuminate\Database\Eloquent\Builder {
         // convert string to array
         if (is_string($permissions)) {
-            $permissions = [$permissions];
+            $permissions = (array) $permissions;
         }
 
         /**
          * Query all the organizations where identity_address has permissions
          * or is the creator
          */
-        return Organization::query()->where(function(\Illuminate\Database\Eloquent\Builder $builder) use (
+        return self::query()->where(static function(\Illuminate\Database\Eloquent\Builder $builder) use (
             $identityAddress, $permissions
         ) {
             return $builder->whereIn('id', function(Builder $query) use (
@@ -543,8 +539,9 @@ class Organization extends Model
     /**
      * @param Organization $validatorOrganization
      */
-    public function detachExternalValidator(Organization $validatorOrganization)
-    {
+    public function detachExternalValidator(
+        Organization $validatorOrganization
+    ): void {
         /** @var Fund[] $fundsAffected */
         $fundsAffected = FundQuery::whereExternalValidatorFilter(
             $this->funds()->getQuery(),
@@ -555,7 +552,18 @@ class Organization extends Model
             $fund->detachExternalValidator($validatorOrganization);
         }
 
+        $this->organization_validators()->where([
+            'validator_organization_id' => $validatorOrganization->id,
+        ])->delete();
+    }
 
-        $this->external_validators()->detach($validatorOrganization->id);
+    /**
+     * @param string $identity_address
+     * @return Model|Employee|null|object
+     */
+    public function findEmployee(
+        string $identity_address
+    ) {
+        return $this->employees()->where(compact('identity_address'))->first();
     }
 }

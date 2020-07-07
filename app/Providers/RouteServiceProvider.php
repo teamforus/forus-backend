@@ -39,153 +39,131 @@ class RouteServiceProvider extends ServiceProvider
 
     /**
      * Define your route model bindings, pattern filters, etc.
-     * 
+     *
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function boot()
     {
-
         parent::boot();
 
         $router = app()->make('router');
 
-        $router->bind('bunq_me_tab_paid', function ($value) {
+        $router->bind('bunq_me_tab_paid', static function ($value) {
             return BunqMeTab::query()->where([
                     'status' => 'PAID',
                     'id' => $value,
                 ])->first() ?? abort(404);
         });
 
-        $router->bind('prevalidation_uid', function ($value) {
+        $router->bind('prevalidation_uid', static function ($value) {
             return Prevalidation::query()->where([
-                    'uid' => $value,
-                    'state' => Prevalidation::STATE_PENDING
-                ])->first() ?? null;
+                'uid' => $value,
+                'state' => Prevalidation::STATE_PENDING
+            ])->first() ?? abort(404);
         });
 
-        $router->bind('organization', function ($id) {
-            return Organization::find($id) ?? abort(404);
+        $router->bind('organization', static function ($id) {
+            return Organization::findOrFail($id);
         });
 
-        $router->bind('validator_organization', function ($id) {
-            return Organization::whereIsValidator(true)->find($id) ?? abort(404);
+        $router->bind('validator_organization', static function ($id) {
+            return Organization::whereIsValidator(true)->findOrFail($id);
         });
 
-        $router->bind('fund', function ($id) {
-            return Fund::find($id) ?? abort(404);
+        $router->bind('fund', static function ($id) {
+            return Fund::findOrFail($id);
         });
 
-        $router->bind('fund_provider', function ($id) {
-            return FundProvider::find($id) ?? abort(404);
+        $router->bind('fund_provider', static function ($id) {
+            return FundProvider::findOrFail($id);
         });
 
-        $router->bind('fund_provider_chats', function ($id) {
-            return FundProviderChat::find($id) ?? abort(404);
+        $router->bind('fund_provider_chats', static function ($id) {
+            return FundProviderChat::findOrFail($id);
         });
 
-        $router->bind('fund_provider_chat_messages', function ($id) {
-            return FundProviderChatMessage::find($id) ?? abort(404);
+        $router->bind('fund_provider_chat_messages', static function ($id) {
+            return FundProviderChatMessage::findOrFail($id);
         });
 
-        $router->bind('identity_email', function ($id) {
-            return IdentityEmail::find($id) ?? abort(404);
+        $router->bind('identity_email', static function ($id) {
+            return IdentityEmail::findOrFail($id);
         });
 
-        $router->bind('identity_email_token', function ($id) {
-            return IdentityEmail::whereVerificationToken($id)->first() ?? abort(404);
+        $router->bind('identity_email_token', static function ($id) {
+            return IdentityEmail::whereVerificationToken($id)->firstOrFail();
         });
 
-        $router->bind('fund_provider_invitations', function ($id) {
-            return FundProviderInvitation::find($id) ?? abort(404);
+        $router->bind('fund_provider_invitations', static function ($id) {
+            return FundProviderInvitation::findOrFail($id);
         });
 
-        $router->bind('fund_provider_invitation_token', function ($value) {
-            return FundProviderInvitation::where([
-                'token' => $value
-                ])->first() ?? abort(404);
+        $router->bind('fund_provider_invitation_token', static function ($token) {
+            return FundProviderInvitation::where(compact('token'))->firstOrFail();
         });
 
-        $router->bind('configured_fund', function ($value) {
-            return Fund::query()->where([
-                    'id' => $value
-                ])->has('fund_config')->first() ?? abort(404);
+        $router->bind('configured_fund', static function ($value) {
+            return Fund::whereKey($value)->has('fund_config')->firstOrFail();
         });
 
-        $router->bind('voucher_token_address', function ($value) {
-            return VoucherToken::query()->where([
-                    'address' => $value
-                ])->first() ?? abort(404);
+        $router->bind('voucher_token_address', static function ($address) {
+            return VoucherToken::where(compact('address'))->firstOrFail();
         });
 
-        $router->bind('product_voucher_token_address', function ($value) {
-            return VoucherToken::query()->where([
-                    'address' => $value
-                ])->whereHas('voucher', function(Builder $builder) {
-                    $builder->whereNotNull('parent_id');
-                })->first() ?? abort(404);
+        $router->bind('product_voucher_token_address', static function ($address) {
+            return VoucherToken::whereAddress($address)->whereHas('voucher', static function(Builder $builder) {
+                $builder->whereNotNull('parent_id');
+            })->firstOrFail();
         });
 
-        $router->bind('budget_voucher_token_address', function ($value) {
-            return VoucherToken::query()->where([
-                    'address' => $value
-                ])->whereHas('voucher', function(Builder $builder) {
-                    $builder->whereNull('parent_id');
-                })->first() ?? abort(404);
+        $router->bind('budget_voucher_token_address', static function ($address) {
+            return VoucherToken::whereAddress($address)->whereHas('voucher', static function(Builder $builder) {
+                $builder->whereNull('parent_id');
+            })->firstOrFail();
         });
 
-        $router->bind('transaction_address', function ($value) {
-            return VoucherTransaction::query()->where([
-                    'address' => $value
-                ])->first() ?? abort(404);
+        $router->bind('transaction_address', static function ($address) {
+            return VoucherTransaction::whereAddress($address)->firstOrFail();
         });
 
-        $router->bind('voucher_id', function ($value) {
-            return Voucher::query()->where([
-                    'id' => $value
-                ])->first() ?? abort(404);
+        $router->bind('voucher_id', static function ($voucher_id) {
+            return Voucher::findOrFail($voucher_id);
         });
 
-        $router->bind('demo_token', function ($value) {
-            return DemoTransaction::query()->where([
-                    'token' => $value
-                ])->first() ?? abort(404);
+        $router->bind('demo_token', static function ($demo_token) {
+            return DemoTransaction::whereToken($demo_token)->firstOrFail();
         });
 
-        $router->bind('employee_id', function ($value) {
-            return Employee::query()->where([
-                'id' => $value
-                ])->first() ?? abort(404);
+        $router->bind('employee_id', static function ($employee_id) {
+            return Employee::findOrFail($employee_id);
         });
 
-        $router->bind('product_with_trashed', function ($value) {
-            return Product::query()->where([
-                    'id' => $value
-                ])->withTrashed()->first() ?? abort(404);
+        $router->bind('product_with_trashed', static function ($product_id) {
+            return Product::withTrashed()->findOrFail($product_id);
         });
 
-        $router->bind('fund_request', function ($id) {
-            return FundRequest::find($id) ?? abort(404);
+        $router->bind('fund_request', static function ($id) {
+            return FundRequest::findOrFail($id);
         });
 
-        $router->bind('fund_request_record', function ($id) {
-            return FundRequestRecord::find($id) ?? abort(404);
+        $router->bind('fund_request_record', static function ($id) {
+            return FundRequestRecord::findOrFail($id);
         });
 
-        $router->bind('fund_request_clarification', function ($id) {
-            return FundRequestClarification::find($id) ?? abort(404);
+        $router->bind('fund_request_clarification', static function ($id) {
+            return FundRequestClarification::findOrFail($id);
         });
 
-        $router->bind('digid_session_uid', function ($digid_session_uid) {
+        $router->bind('digid_session_uid', static function ($digid_session_uid) {
+            $sessionExpireTime = now()->subSeconds(DigIdSession::SESSION_EXPIRATION_TIME);
+
             return DigIdSession::where([
                 'state'         => DigIdSession::STATE_PENDING_AUTH,
                 'session_uid'   => $digid_session_uid,
-            ])->where(
-                'created_at', '>=', now()->subSeconds(
-                    DigIdSession::SESSION_EXPIRATION_TIME
-                ))->first() ?? abort(404);
+            ])->where('created_at', '>=', $sessionExpireTime)->firstOrFail();
         });
 
-        $router->bind('platform_config', function ($value) {
+        $router->bind('platform_config', static function ($value) {
             return Implementation::platformConfig($value);
         });
     }
@@ -195,7 +173,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function map()
+    public function map(): void
     {
         $this->mapApiRoutes();
 
@@ -211,7 +189,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function mapWebRoutes()
+    protected function mapWebRoutes(): void
     {
         Route::namespace($this->namespace)->middleware([
             'web'
@@ -225,7 +203,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function mapApiRoutes()
+    protected function mapApiRoutes(): void
     {
         Route::prefix('api/v1')->namespace(
             $this->namespace
@@ -238,6 +216,5 @@ class RouteServiceProvider extends ServiceProvider
         )->middleware([
             'api', 'implementation_key', 'client_key', 'forus_session'
         ])->group(base_path('routes/api-platform.php'));
-
     }
 }

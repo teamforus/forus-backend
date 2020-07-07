@@ -18,6 +18,8 @@ use App\Scopes\Builders\FundQuery;
 use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -37,7 +39,7 @@ class FundsController extends Controller
     public function index(
         IndexFundRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
         $query = Fund::search($request, $organization->funds()->getQuery());
 
@@ -63,7 +65,7 @@ class FundsController extends Controller
     public function store(
         StoreFundRequest $request,
         Organization $organization
-    ) {
+    ): FundResource {
         $this->authorize('show', $organization);
         $this->authorize('store', [Fund::class, $organization]);
 
@@ -89,18 +91,17 @@ class FundsController extends Controller
             'auto_requests_validation' => $auto_requests_validation
         ])));
 
-        if ($media instanceof Media && $media->type == 'fund_logo') {
+        if ($media instanceof Media && $media->type === 'fund_logo') {
             $fund->attachMedia($media);
         }
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
-            $fund->updateCriteria($request->input('criteria'));
+            $fund->syncCriteria($request->input('criteria'));
         }
 
-        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
-            if ($request->has('formula_products')) {
-                $fund->updateFormulaProducts($request->input('formula_products', []));
-            }
+        if (config('forus.features.dashboard.organizations.funds.formula_products') &&
+            $request->has('formula_products')) {
+            $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
         FundCreated::dispatch($fund);
@@ -119,7 +120,7 @@ class FundsController extends Controller
     public function show(
         Organization $organization,
         Fund $fund
-    ) {
+    ): FundResource {
         $this->authorize('show', [$fund, $organization]);
 
         return new FundResource($fund);
@@ -138,7 +139,7 @@ class FundsController extends Controller
         UpdateFundRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): FundResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$fund, $organization]);
 
@@ -155,7 +156,7 @@ class FundsController extends Controller
             !$request->input('default_validator_employee_id') ? null :
                 $request->input('auto_requests_validation');
 
-        if ($fund->state == Fund::STATE_WAITING) {
+        if ($fund->state === Fund::STATE_WAITING) {
             $params = array_merge($request->only([
                 'name', 'description', 'start_date', 'end_date',
                 'notification_amount', 'default_validator_employee_id'
@@ -173,12 +174,12 @@ class FundsController extends Controller
 
         $fund->update($params);
 
-        if ($media instanceof Media && $media->type == 'fund_logo') {
+        if ($media instanceof Media && $media->type === 'fund_logo') {
             $fund->attachMedia($media);
         }
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
-            $fund->updateCriteria($request->input('criteria'));
+            $fund->syncCriteria($request->input('criteria'));
         }
 
         if (config('forus.features.dashboard.organizations.funds.formula_products')) {
@@ -203,12 +204,12 @@ class FundsController extends Controller
         UpdateFundCriteriaRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): FundResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$fund, $organization]);
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
-            $fund->updateCriteria($request->input('criteria'));
+            $fund->syncCriteria($request->input('criteria'));
         }
 
         return new FundResource($fund);
@@ -406,13 +407,13 @@ class FundsController extends Controller
     /**
      * @param Organization $organization
      * @param Fund $fund
-     * @return mixed
+     * @return TopUpResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function topUp(
         Organization $organization,
         Fund $fund
-    ) {
+    ): TopUpResource {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
 
@@ -430,7 +431,7 @@ class FundsController extends Controller
     public function destroy(
         Organization $organization,
         Fund $fund
-    ) {
+    ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$fund, $organization]);
 

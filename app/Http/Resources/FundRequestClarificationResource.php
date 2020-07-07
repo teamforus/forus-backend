@@ -18,21 +18,15 @@ class FundRequestClarificationResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         return array_merge(array_only($this->resource->toArray(), [
             'id', 'question', 'answer', 'fund_request_record_id', 'state',
             'answered_at', 'created_at', 'updated_at',
         ]), [
-            'answered_at_locale' => format_datetime_locale(
-                $this->resource->answered_at
-            ),
-            'created_at_locale' => format_datetime_locale(
-                $this->resource->created_at
-            ),
-            'updated_at_locale' => format_datetime_locale(
-                $this->resource->updated_at
-            ),
+            'answered_at_locale' => format_datetime_locale($this->resource->answered_at),
+            'created_at_locale' => format_datetime_locale($this->resource->created_at),
+            'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'files' => FileResource::collection($this->resource->files),
         ]);
     }

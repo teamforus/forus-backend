@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\platform\Organizations\Products;
+namespace App\Http\Controllers\Api\Platform\Organizations\Products;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundsController extends Controller
 {
@@ -18,20 +19,20 @@ class FundsController extends Controller
      * @param IndexFundsRequest $request
      * @param Organization $organization
      * @param Product $product
-     * @return string
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
         IndexFundsRequest $request,
         Organization $organization,
         Product $product
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', [$organization]);
         $this->authorize('showFunds', [$product, $organization]);
 
         /** @var Fund[] $data */
         $data = FundQuery::whereHasProviderFilter(
-            Fund::search($request),
+            Fund::search($request, Fund::query()),
             $organization->id
         )->paginate(10);
 

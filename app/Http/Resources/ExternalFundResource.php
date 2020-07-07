@@ -21,7 +21,7 @@ class ExternalFundResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         $fund           = $this->resource;
         $organization   = $fund->getAttribute('external_validator');
@@ -34,7 +34,9 @@ class ExternalFundResource extends Resource
             'criteria' => FundCriteriaQuery::whereHasExternalValidatorFilter(
                 $fund->criteria()->getQuery(),
                 $organization->id
-            )->get()->map(function(FundCriterion $fundCriterion) use ($organization, $recordTypes) {
+            )->get()->map(static function(
+                FundCriterion $fundCriterion
+            ) use ($organization, $recordTypes) {
                 return [
                     'id' => $fundCriterion->id,
                     'name' => $recordTypes[$fundCriterion->record_type_key],

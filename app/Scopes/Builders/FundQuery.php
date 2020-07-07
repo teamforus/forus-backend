@@ -12,7 +12,7 @@ class FundQuery
      * @param Builder $query
      * @return Builder
      */
-    public static function whereActiveFilter(Builder $query) {
+    public static function whereActiveFilter(Builder $query): Builder {
         return $query->where([
             'state' => Fund::STATE_ACTIVE
         ])->where('end_date', '>', now());
@@ -23,19 +23,22 @@ class FundQuery
      * @param $product_id
      * @return Builder
      */
-    public static function whereProductsAreApprovedFilter(Builder $query, $product_id) {
-        return $query->whereHas('providers', function(
+    public static function whereProductsAreApprovedFilter(
+        Builder $query,
+        $product_id
+    ): Builder {
+        return $query->whereHas('providers', static function(
             Builder $builder
         ) use ($product_id) {
-            $builder->where(function(Builder $builder) use ($product_id) {
-                $builder->whereHas('organization.products', function(
+            $builder->where(static function(Builder $builder) use ($product_id) {
+                $builder->whereHas('organization.products', static function(
                     Builder $builder
                 ) use ($product_id) {
                     $builder->whereIn('products.id', (array) $product_id);
                 })->where('allow_products', true);
             });
 
-            $builder->orWhereHas('fund_provider_products', function(
+            $builder->orWhereHas('fund_provider_products', static function(
                 Builder $builder
             ) use ($product_id) {
                 $builder->whereIn('product_id', (array) $product_id);
@@ -46,13 +49,22 @@ class FundQuery
     /**
      * @param Builder $query
      * @param int|array $organization_id External validator organization id
+     * @param bool|null $accepted
      * @return Builder
      */
-    public static function whereExternalValidatorFilter(Builder $query, $organization_id) {
-        return $query->whereHas('criteria.fund_criterion_validators', function(
+    public static function whereExternalValidatorFilter(
+        Builder $query,
+        $organization_id,
+        ?bool $accepted = null
+    ): Builder {
+        return $query->whereHas('criteria.fund_criterion_validators', static function(
             Builder $builder
-        ) use ($organization_id) {
-            $builder->whereHas('external_validator.validator_organization', function(
+        ) use ($organization_id, $accepted) {
+            if (!is_null($accepted)) {
+                $builder->where(compact('accepted'));
+            }
+
+            $builder->whereHas('external_validator.validator_organization', static function(
                 Builder $builder
             ) use ($organization_id) {
                 $builder->whereIn('organizations.id', (array) $organization_id);
@@ -65,8 +77,11 @@ class FundQuery
      * @param $implementation_id
      * @return Builder
      */
-    public static function whereImplementationIdFilter(Builder $query, $implementation_id) {
-        return $query->whereHas('fund_config', function(
+    public static function whereImplementationIdFilter(
+        Builder $query,
+        $implementation_id
+    ): Builder {
+        return $query->whereHas('fund_config', static function(
             Builder $builder
         ) use ($implementation_id) {
             $builder->whereIn('implementation_id', (array) $implementation_id);
@@ -81,8 +96,8 @@ class FundQuery
     public static function whereHasProviderFilter(
         Builder $query,
         $organization_id
-    ) {
-        return $query->whereHas('providers.organization', function(
+    ): Builder {
+        return $query->whereHas('providers.organization', static function(
             Builder $builder
         ) use ($organization_id) {
             $builder->whereIn('organizations.id', (array) $organization_id);
@@ -94,7 +109,7 @@ class FundQuery
      * @param string $q
      * @return Builder
      */
-    public static function whereQueryFilter(Builder $query, string $q) {
+    public static function whereQueryFilter(Builder $query, string $q): Builder {
         return $query->where('name', 'LIKE', "%${$q}%");
     }
 
@@ -103,8 +118,7 @@ class FundQuery
      * @param array $states
      * @return Builder
      */
-    public static function sortByState(Builder $query, array $states)
-    {
+    public static function sortByState(Builder $query, array $states): Builder {
         foreach ($states as $state) {
             $query->orderByRaw('`funds`.`state` = ? DESC', [$state]);
         }

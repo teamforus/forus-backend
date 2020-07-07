@@ -15,11 +15,11 @@ class FundCriteriaValidatorQuery
     public static function whereHasExternalValidatorFilter(
         Builder $query,
         $organization_id
-    ) {
-        return $query->whereHas('external_validator', function(
+    ): Builder {
+        return $query->whereHas('external_validator', static function(
             Builder $builder
         ) use ($organization_id) {
-            $builder->whereHas('validator_organization', function(
+            $builder->whereHas('validator_organization', static function(
                 Builder $builder
             ) use ($organization_id) {
                 $builder->whereIn('organizations.id', (array) $organization_id);

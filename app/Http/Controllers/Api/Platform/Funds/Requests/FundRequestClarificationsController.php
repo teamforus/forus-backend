@@ -10,6 +10,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Http\Controllers\Controller;
 use App\Services\FileService\Models\File;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundRequestClarificationsController extends Controller
 {
@@ -26,8 +27,7 @@ class FundRequestClarificationsController extends Controller
         IndexFundRequestClarificationsRequest $request,
         Fund $fund,
         FundRequest $fundRequest
-    ) {
-
+    ): AnonymousResourceCollection {
         $this->authorize('viewAnyRequester', [
             FundRequestClarification::class, $fundRequest, $fund
         ]);
@@ -52,7 +52,7 @@ class FundRequestClarificationsController extends Controller
         Fund $fund,
         FundRequest $fundRequest,
         FundRequestClarification $fundRequestClarification
-    ) {
+    ): FundRequestClarificationResource {
         $this->authorize('viewRequester', [
             $fundRequestClarification, $fundRequest, $fund
         ]);
@@ -75,7 +75,7 @@ class FundRequestClarificationsController extends Controller
         Fund $fund,
         FundRequest $fundRequest,
         FundRequestClarification $fundRequestClarification
-    ) {
+    ): FundRequestClarificationResource {
         $this->authorize('update', [
             $fundRequestClarification, $fundRequest, $fund
         ]);

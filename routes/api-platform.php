@@ -383,41 +383,40 @@ $router->group(['middleware' => [
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
         $router->patch(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/assign',
-            "Api\Platform\Organizations\Funds\FundRequestsController@assign"
+            'organizations/{organization}/fund-requests/{fund_request}/assign',
+            "Api\Platform\Organizations\FundRequestsController@assign"
         );
 
         $router->patch(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/resign',
-            "Api\Platform\Organizations\Funds\FundRequestsController@resign"
+            'organizations/{organization}/fund-requests/{fund_request}/resign',
+            "Api\Platform\Organizations\FundRequestsController@resign"
         );
 
         $router->patch(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/approve',
-            "Api\Platform\Organizations\Funds\FundRequestsController@approve"
+            'organizations/{organization}/fund-requests/{fund_request}/approve',
+            "Api\Platform\Organizations\FundRequestsController@approve"
         );
 
         $router->patch(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/decline',
-            "Api\Platform\Organizations\Funds\FundRequestsController@decline"
+            'organizations/{organization}/fund-requests/{fund_request}/decline',
+            "Api\Platform\Organizations\FundRequestsController@decline"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/approve',
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@approve"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/decline',
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@decline"
         );
 
         $router->resource(
-            'organizations/{organization}/funds/{fund}/requests',
-            "Api\Platform\Organizations\Funds\FundRequestsController", [
+            'organizations/{organization}/fund-requests/{fund_request}/records',
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController", [
             'only' => [
-                'index', 'show'
-            ],
-            'parameters' => [
-                'requests' => 'fund_request',
-            ]
-        ]);
-
-        $router->resource(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/records',
-            "Api\Platform\Organizations\Funds\Requests\FundRequestRecordsController", [
-            'only' => [
-                'index', 'show', 'update'
+                'index', 'show',
             ],
             'parameters' => [
                 'records' => 'fund_request_record',
@@ -425,8 +424,8 @@ $router->group(['middleware' => [
         ]);
 
         $router->resource(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/clarifications',
-            "Api\Platform\Organizations\Funds\Requests\FundRequestClarificationsController", [
+            'organizations/{organization}/fund-requests/{fund_request}/clarifications',
+            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController", [
             'only' => [
                 'index', 'show', 'store'
             ],
@@ -436,15 +435,15 @@ $router->group(['middleware' => [
         ]);
 
         $router->get(
-            'organizations/{organization}/requests/export',
+            'organizations/{organization}/fund-requests/export',
             "Api\Platform\Organizations\FundRequestsController@export"
         );
 
         $router->resource(
-            'organizations/{organization}/requests',
+            'organizations/{organization}/fund-requests',
             "Api\Platform\Organizations\FundRequestsController", [
             'only' => [
-                'index', 'show'
+                'index', 'show',
             ],
             'parameters' => [
                 'requests' => 'fund_request',

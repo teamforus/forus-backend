@@ -30,18 +30,14 @@ class StoreFundRequest extends FormRequest
      */
     public function rules()
     {
-        $start_after = now()->addDays(5)->format('Y-m-d');
-        $criteriaEditable = config(
-            'forus.features.dashboard.organizations.funds.criteria');
-        $formulaProductsEditable = config(
-            'forus.features.dashboard.organizations.funds.formula_products');
+        $validators = $this->organization->organization_validators()->pluck('id');
+        $criteriaEditable = config('forus.features.dashboard.organizations.funds.criteria');
+        $formulaProductsEditable = config('forus.features.dashboard.organizations.funds.formula_products');
 
-        if ($this->organization) {
-            $availableValidators = $this->organization
-                ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
-        } else {
-            $availableValidators = [];
-        }
+        $availableValidators = $this->organization
+            ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
+
+        $start_after = now()->addDays(5)->format('Y-m-d');
 
         return array_merge([
             'name'                          => 'required|between:2,200',
@@ -63,6 +59,8 @@ class StoreFundRequest extends FormRequest
             'criteria.*.value'              => 'required|string|between:1,20',
             'criteria.*.show_attachment'    => 'nullable|boolean',
             'criteria.*.description'        => 'nullable|string|max:4000',
+            'criteria.*.validators'         => 'nullable|array',
+            'criteria.*.validators.*'       => Rule::in($validators->toArray())
         ] : [], $formulaProductsEditable ? [
             'formula_products'              => 'nullable|array',
             'formula_products.*'            => [

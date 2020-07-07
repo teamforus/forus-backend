@@ -19,22 +19,25 @@ class FundRequestsExport implements FromCollection, WithHeadings
      *
      * @param Request $request
      * @param Organization $organization
+     * @param string $identity_address
      */
     public function __construct(
         Request $request,
-        Organization $organization
+        Organization $organization,
+        string $identity_address
     ) {
         $this->request = $request;
 
         $this->data = FundRequest::exportSponsor(
             $this->request,
-            $organization
+            $organization,
+            $identity_address
         );
     }
 
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
+     */
     public function collection()
     {
         return $this->data;

@@ -2,12 +2,8 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
-use App\Models\Employee;
 use App\Models\FundRequest;
-use App\Scopes\Builders\EmployeeQuery;
-use App\Scopes\Builders\FundRequestRecordQuery;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 /**
  * Class UpdateFundRequestsRequest
@@ -21,7 +17,7 @@ class DeclineFundRequestsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -31,24 +27,10 @@ class DeclineFundRequestsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $fund_request = $this->fund_request;
-
-        $employeeAssignedRecords = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
-            $fund_request->records()->getQuery(),
-            auth_address()
-        );
-
         return [
-            'employee_id' => [
-                'nullable',
-                Rule::in($employeeAssignedRecords->pluck('validator_id')->toArray())
-            ],
-            'note' => [
-                'nullable',
-                'string:min5:1000'
-            ]
+            'note'  => 'nullable|string|between:0,2000'
         ];
     }
 }

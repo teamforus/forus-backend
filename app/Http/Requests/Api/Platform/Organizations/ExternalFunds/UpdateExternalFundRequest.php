@@ -22,7 +22,7 @@ class UpdateExternalFundRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -32,7 +32,7 @@ class UpdateExternalFundRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         if ($this->organization && $this->fund) {
             $criteria = FundCriteriaQuery::whereHasExternalValidatorFilter(

@@ -19,10 +19,29 @@ class FundCriterionResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
+        $criterion = $this->resource;
+        $fund = $this->resource->fund;
+
         $recordTypes = array_pluck(record_types_cached(), 'name', 'key');
         $external_validators = $this->resource->fund_criterion_validators;
+        $checkCriteria = $request->get('check_criteria', false);
+
+        if ($checkCriteria && auth_address()) {
+            $record = $fund::getTrustedRecordOfType(
+                auth_address(),
+                $criterion->record_type_key,
+                $criterion->fund,
+                $criterion
+            );
+
+            $is_valid = collect($record ? [$record] : [])->where(
+                'value', $criterion->operator, $criterion->value
+                )->count() > 0;
+        } else {
+            $is_valid = $checkCriteria ? false : null;
+        }
 
         return collect($this->resource)->only([
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
@@ -41,7 +60,8 @@ class FundCriterionResource extends Resource
                 ];
             })->toArray(),
             'record_type_name' => $recordTypes[$this->resource->record_type_key],
-            'show_attachment'  => $this->resource->show_attachment ? true : false,
+            'show_attachment' => $this->resource->show_attachment ? true : false,
+            'is_valid' => $is_valid
         ])->toArray();
     }
 }

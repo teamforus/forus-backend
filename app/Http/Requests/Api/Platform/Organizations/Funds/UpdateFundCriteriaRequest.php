@@ -33,30 +33,20 @@ class UpdateFundCriteriaRequest extends FormRequest
     public function rules()
     {
         $organization = $this->organization;
-        $validators = $organization->organization_validators()->pluck(
-            'organization_validators.id'
-        );
+        $validators = $organization->organization_validators()->pluck('id');
 
         return [
-            'criteria' => [
-                'present',
-                'array'
-            ],
-            'criteria.*.operator'          => 'required|in:=,<,>',
-            'criteria.*.record_type_key'   => [
+            'criteria'                      => 'present|array',
+            'criteria.*.operator'           => 'required|in:=,<,>',
+            'criteria.*.record_type_key'    => [
                 'required',
                 Rule::in(RecordType::query()->pluck('key')->toArray())
             ],
-            'criteria.*.value'             => 'required|string|between:1,10',
-            'criteria.*.show_attachment'   => 'nullable|boolean',
-            'criteria.*.description'       => 'nullable|string|max:4000',
-            'criteria.*.validators'         => [
-                'nullable',
-                'array'
-            ],
-            'criteria.*.validators.*.organization_id' => Rule::in(
-                $validators->toArray()
-            )
+            'criteria.*.value'              => 'required|string|between:1,10',
+            'criteria.*.show_attachment'    => 'nullable|boolean',
+            'criteria.*.description'        => 'nullable|string|max:4000',
+            'criteria.*.validators'         => 'nullable|array',
+            'criteria.*.validators.*'       => Rule::in($validators->toArray())
         ];
     }
 

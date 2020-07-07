@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Services\FileService\Traits\HasFiles;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\FundRequestRecord
@@ -43,11 +45,11 @@ class FundRequestRecord extends Model
 {
     use HasFiles;
 
-    const STATE_PENDING = 'pending';
-    const STATE_APPROVED = 'approved';
-    const STATE_DECLINED = 'declined';
+    public const STATE_PENDING = 'pending';
+    public const STATE_APPROVED = 'approved';
+    public const STATE_DECLINED = 'declined';
 
-    const STATES = [
+    public const STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
@@ -61,7 +63,7 @@ class FundRequestRecord extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund_request()
+    public function fund_request(): BelongsTo
     {
         return $this->belongsTo(FundRequest::class);
     }
@@ -69,7 +71,7 @@ class FundRequestRecord extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund_criterion()
+    public function fund_criterion(): BelongsTo
     {
         return $this->belongsTo(FundCriterion::class);
     }
@@ -77,7 +79,7 @@ class FundRequestRecord extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_request_clarifications()
+    public function fund_request_clarifications(): HasMany
     {
         return $this->hasMany(FundRequestClarification::class);
     }
@@ -85,31 +87,50 @@ class FundRequestRecord extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function employee()
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
 
     /**
      * @param string $state
+     * @param string|null $note
      * @return FundRequestRecord
      */
-    private function setState(string $state)
+    private function setState(string $state, ?string $note = null): FundRequestRecord
     {
-        return $this->updateModel(compact('state'));
+        return $this->updateModel(compact('state', 'note'));
     }
 
     /**
+     * @param string|null $note
+     * @param bool $resolveRequest
+     * @return $this
+     */
+    public function approve(string $note = null, $resolveRequest = true): self {
+        $this->setState(self::STATE_APPROVED, $note);
+        $this->makeValidation();
+
+        if ($resolveRequest && (
+            $this->fund_request->records_pending()->count() === 0)) {
+            $this->fund_request->approve($this->employee);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $note
      * @param bool $resolveRequest
      * @return $this
      * @throws \Exception
      */
-    public function approve($resolveRequest = true) {
-        $this->setState(self::STATE_APPROVED);
+    public function decline(string $note = null, $resolveRequest = true): self {
+        $this->setState(self::STATE_DECLINED, $note);
 
         if ($resolveRequest && (
             $this->fund_request->records_pending()->count() === 0)) {
-            $this->fund_request->approve();
+            $this->fund_request->decline($this->employee);
         }
 
         return $this;
@@ -118,7 +139,7 @@ class FundRequestRecord extends Model
     /**
      * @return $this
      */
-    public function makeValidation() {
+    public function makeValidation(): self {
         $recordService = service_record();
 
         $record = $recordService->recordCreate(
@@ -133,30 +154,10 @@ class FundRequestRecord extends Model
         );
 
         $recordService->approveValidationRequest(
-            $this->fund_request->employee->identity_address,
+            $this->employee->identity_address,
             $validationRequest['uuid'],
             $this->fund_request->fund->organization_id
         );
-
-        return $this;
-    }
-
-    /**
-     * @param string|null $note
-     * @param bool $resolveRequest
-     * @return $this
-     * @throws \Exception
-     */
-    public function decline(string $note = null, $resolveRequest = true) {
-        $this->update([
-            'note' => $note,
-            'state' => self::STATE_DECLINED,
-        ]);
-
-        if ($resolveRequest && (
-            $this->fund_request->records_pending()->count() == 0)) {
-            $this->fund_request->decline();
-        }
 
         return $this;
     }

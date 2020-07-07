@@ -19,7 +19,7 @@ class FundRequestSubscriber
      */
     public function onFundRequestCreated(
         FundRequestCreated $fundRequestCreated
-    ) {
+    ): void {
         $fund = $fundRequestCreated->getFund();
         $fundRequest = $fundRequestCreated->getFundRequest();
         $recordRepo = resolve('forus.services.record');

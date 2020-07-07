@@ -8,6 +8,8 @@ use App\Http\Requests\Api\Platform\Organizations\ValidatorOrganizations\StoreVal
 use App\Http\Resources\OrganizationValidatorResource;
 use App\Models\Organization;
 use App\Models\OrganizationValidator;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ValidatorOrganizationsController extends Controller
 {
@@ -22,8 +24,8 @@ class ValidatorOrganizationsController extends Controller
     public function index(
         IndexValidatorOrganizationsRequest $request,
         Organization $organization
-    ) {
-        $this->authorize('update', $organization);
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAny', $organization);
 
         return OrganizationValidatorResource::collection(
             $organization->organization_validators()->paginate(
@@ -43,8 +45,8 @@ class ValidatorOrganizationsController extends Controller
     public function show(
         Organization $organization,
         OrganizationValidator $organizationValidator
-    ) {
-        $this->authorize('update', $organization);
+    ): OrganizationValidatorResource {
+        $this->authorize('view', $organization);
         $this->authorize('view', $organizationValidator);
 
         return new OrganizationValidatorResource($organizationValidator);
@@ -59,7 +61,7 @@ class ValidatorOrganizationsController extends Controller
     public function store(
         StoreValidatorOrganizationsRequest $request,
         Organization $organization
-    ) {
+    ): OrganizationValidatorResource {
         $this->authorize('update', $organization);
 
         $validatorOrganization = $organization->organization_validators()->firstOrCreate([
@@ -78,7 +80,7 @@ class ValidatorOrganizationsController extends Controller
     public function destroy(
         Organization $organization,
         Organization $validatorOrganization
-    ) {
+    ): JsonResponse {
         $this->authorize('update', $organization);
 
         $organization->detachExternalValidator($validatorOrganization);
