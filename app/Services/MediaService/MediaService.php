@@ -351,7 +351,7 @@ class MediaService
         }
 
         if ($useQueue) {
-            RegenerateMediaJob::dispatch($mediaConfig, $media)->onQueue(
+            RegenerateMediaJob::dispatch($mediaConfig, $media, $mediaPresets)->onQueue(
                 config('media.queue_name')
             );
         }
@@ -378,12 +378,15 @@ class MediaService
      * @param MediaConfig $mediaConfig
      * @param Media|null $media
      * @param bool $fromQueue
+     * @param array $keepPresets
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \Exception
      */
     public function regenerateMedia(
         MediaConfig $mediaConfig,
         Media $media = null,
-        bool $fromQueue = false
+        bool $fromQueue = false,
+        array $keepPresets = []
     ): void {
         $sourcePresetName = $mediaConfig->getRegenerationPresetName();
         $medias = $this->model->newQuery()->where([
@@ -394,10 +397,16 @@ class MediaService
             $medias->where('id', $media->id);
         }
 
-        $newPresets = array_filter($mediaConfig->getPresets(), static function(
-            MediaPreset $mediaPreset
-        ) use ($sourcePresetName) {
-            return $mediaPreset->name !== $sourcePresetName;
+        $keepPresetsKeys = array_map(function(MediaPreset $preset) {
+            return $preset->name;
+        }, $keepPresets);
+
+        $keepPresetsKeys[] = $sourcePresetName;
+
+        $newPresets = array_filter($mediaConfig->getPresets(), function(
+            MediaPreset $preset
+        ) use ($keepPresetsKeys) {
+            return !in_array($preset->name, $keepPresetsKeys);
         });
 
         $newPresetsKeys = array_map(static function(MediaPreset $mediaPreset) {
@@ -414,17 +423,12 @@ class MediaService
                 ]), $mediaModel->id, $sourcePresetName));
             }
 
-            /** @var PresetModel[] $mediaSizes */
-            $presetModels = $mediaModel->presets()->where(
-                'key', '!=', $sourcePresetName
-            )->get();
+            /** @var \App\Services\MediaService\Models\MediaPreset[] $presetModels */
+            $presetModels = $mediaModel->presets()->whereIn('key', $newPresetsKeys)->get();
 
             foreach ($presetModels as $presetModel) {
                 $presetModel->unlink();
-
-                if (!in_array($presetModel->key, $newPresetsKeys, true)) {
-                    $presetModel->delete();
-                }
+                $presetModel->delete();
             }
 
             $this->makeMediaPresets($mediaModel, $mediaConfig, $newPresets, new TmpFile(

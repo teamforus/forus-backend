@@ -12,6 +12,10 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class RoleResource extends Resource
 {
+    public static $load = [
+        'translations'
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -21,7 +25,7 @@ class RoleResource extends Resource
     public function toArray($request)
     {
         return collect($this->resource)->only([
-            'id', 'key', 'name'
+            'id', 'key', 'name', 'description'
         ])->toArray();
     }
 }
