@@ -3,9 +3,7 @@
 namespace App\Models;
 
 use App\Events\FundRequests\FundRequestResolved;
-use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
-use App\Scopes\Builders\OrganizationQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -89,23 +87,20 @@ class FundRequest extends Model
      */
     public static function search(
         Request $request,
-        Organization $organization = null,
-        string $identity_address = null
+        Organization $organization,
+        string $identity_address
     ) {
         $query = self::query();
 
-        if ($organization && $identity_address) {
-            $internalFunds = $organization->funds()->pluck('id');
-            $externalFunds = FundQuery::whereExternalValidatorFilter(
-                Fund::query(),
-                OrganizationQuery::whereHasPermissions(
-                    Organization::query(), $identity_address, 'validate_records'
-                )->pluck('organizations.id')->toArray(),
-                true
-            )->pluck('funds.id');
-
-            $query->whereIn('fund_id', $externalFunds->merge($internalFunds)->unique());
-        }
+        $query->whereHas('records', static function(
+            Builder $builder
+        ) use ($organization, $identity_address) {
+            FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+                $builder,
+                $identity_address,
+                $organization->findEmployee($identity_address)->id
+            );
+        });
 
         if ($request->has('q') && $q = $request->input('q')) {
             $query->whereHas('fund', static function(Builder $builder) use ($q) {

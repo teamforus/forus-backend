@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\FileService\Traits\HasFiles;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -160,5 +161,40 @@ class FundRequestRecord extends Model
         );
 
         return $this;
+    }
+
+    /**
+     * @param $identity_address
+     * @param $employee_id
+     * @return bool
+     */
+    public function isValueReadable($identity_address, $employee_id): bool {
+        return FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            self::whereId($this->id), $identity_address, $employee_id
+        )->exists();
+    }
+
+    /**
+     * @param $identity_address
+     * @param $employee_id
+     * @return bool
+     */
+    public function isAssignable($identity_address, $employee_id): bool {
+        return FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            self::whereId($this->id)->whereDoesntHave('employee'),
+            $identity_address,
+            $employee_id
+        )->exists();
+    }
+
+    /**
+     * @param $identity_address
+     * @param $employee_id
+     * @return bool
+     */
+    public function isAssigned($identity_address, $employee_id): bool {
+        return FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            self::whereId($this->id), $identity_address, $employee_id
+        )->exists();
     }
 }
