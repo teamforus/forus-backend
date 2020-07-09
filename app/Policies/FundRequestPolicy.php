@@ -9,22 +9,10 @@ use App\Models\Organization;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Http\Request;
 
 class FundRequestPolicy
 {
     use HandlesAuthorization;
-
-    private $request;
-
-    /**
-     * FundRequestPolicy constructor.
-     * @param Request $request
-     */
-    public function __construct(Request $request)
-    {
-        $this->request = $request;
-    }
 
     /**
      * Determine whether the user can view the fundRequest.
@@ -192,7 +180,8 @@ class FundRequestPolicy
             $fundRequest->records()->where([
                 'state' => FundRequestRecord::STATE_PENDING
             ])->whereDoesntHave('employee')->getQuery(),
-            $identity_address
+            $identity_address,
+            $organization->findEmployee($identity_address)->id
         )->exists();
 
         if (!$hasRecordsAvailable) {
@@ -230,7 +219,8 @@ class FundRequestPolicy
 
         $hasRecordsAssigned = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
             $fundRequest->records()->getQuery(),
-            $identity_address
+            $identity_address,
+            $organization->findEmployee($identity_address)->id
         )->exists();
 
         if (!$hasRecordsAssigned) {
@@ -265,14 +255,12 @@ class FundRequestPolicy
             return $this->deny('fund_request.not_pending');
         }
 
-        $hasAvailableRecords = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
-            $fundRequest->records()->getQuery(),
-            $identity_address
-        )->exists();
-
-        // when request is assigned to employee,
         // only assigned employee is allowed to resolve the request
-        if (!$hasAvailableRecords) {
+        if (!FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            $fundRequest->records()->getQuery(),
+            $identity_address,
+            $organization->findEmployee($identity_address)->id
+        )->exists()) {
             return $this->deny('fund_request.not_assigned_employee');
         }
 

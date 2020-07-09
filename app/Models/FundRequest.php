@@ -83,14 +83,14 @@ class FundRequest extends Model
 
     /**
      * @param \Illuminate\Http\Request $request
-     * @param Organization|null $organization
-     * @param string|null $identity_address
+     * @param Organization $organization
+     * @param string $identity_address
      * @return FundRequest|\Illuminate\Database\Eloquent\Builder
      */
     public static function search(
         Request $request,
-        ?Organization $organization = null,
-        ?string $identity_address = null
+        Organization $organization = null,
+        string $identity_address = null
     ) {
         $query = self::query();
 
@@ -199,7 +199,7 @@ class FundRequest extends Model
             $record->decline($note, false);
         });
 
-        if ($this->records_pending()->count() === 0) {
+        if ($this->records_pending()->exists() === 0) {
             return $this->updateStateByRecords();
         }
 
@@ -235,11 +235,13 @@ class FundRequest extends Model
         $hasApproved = $countApproved > 0;
         $oldState = $this->state;
 
-        $this->update([
-            'state' => $allApproved ? self::STATE_APPROVED : (
-                $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED
-            )
-        ]);
+        if ($allApproved) {
+            $state = self::STATE_APPROVED;
+        } else {
+            $state = $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;
+        }
+
+        $this->update(compact('state'));
 
         if (($oldState !== $this->state) && ($this->state !== 'pending')) {
             FundRequestResolved::dispatch($this);

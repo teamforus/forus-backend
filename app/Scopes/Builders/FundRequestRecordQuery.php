@@ -10,16 +10,22 @@ class FundRequestRecordQuery
     /**
      * @param Builder $query
      * @param string|array $identity_address
+     * @param string|array $employee_id
      * @return Builder
      */
     public static function whereIdentityIsAssignedEmployeeFilter(
         Builder $query,
-        $identity_address
+        $identity_address,
+        $employee_id = null
     ): Builder {
         return $query->whereHas('employee', static function(
             Builder $builder
-        ) use ($identity_address) {
+        ) use ($identity_address, $employee_id) {
             $builder->whereIn('employees.identity_address', (array) $identity_address);
+
+            if (!is_null($employee_id)) {
+                $builder->whereIn('employees.id', (array) $employee_id);
+            }
         });
     }
 

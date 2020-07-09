@@ -14,6 +14,18 @@ use Illuminate\Http\Resources\Json\Resource;
 class ValidatorFundRequestResource extends Resource
 {
     /**
+     * @var string[]
+     */
+    public static $load = [
+        'fund.organization',
+        'fund.criteria',
+        'fund.fund_formulas',
+        'records.employee.organization',
+        'records.files',
+        'records.fund_request_clarifications',
+    ];
+
+    /**
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -36,7 +48,7 @@ class ValidatorFundRequestResource extends Resource
                 $this->resource->updated_at
             ),
             'records' => ValidatorFundRequestRecordResource::collection(
-                $fundRequest->records
+                $fundRequest->records->load(ValidatorFundRequestRecordResource::$load)
             ),
         ]);
     }

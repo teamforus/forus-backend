@@ -34,11 +34,9 @@ class FundRequestRecordsController extends Controller
             FundRequestRecord::class, $fundRequest, $organization
         ]);
 
-        return ValidatorFundRequestRecordResource::collection(
-            $fundRequest->records()->paginate(
-                $request->input('per_page')
-            )
-        );
+        return ValidatorFundRequestRecordResource::collection($fundRequest->records()->with(
+            ValidatorFundRequestRecordResource::$load
+        )->paginate($request->input('per_page')));
     }
 
     /**
@@ -59,7 +57,9 @@ class FundRequestRecordsController extends Controller
             $fundRequestClarification, $fundRequest, $organization
         ]);
 
-        return new ValidatorFundRequestRecordResource($fundRequestClarification);
+        return new ValidatorFundRequestRecordResource(
+            $fundRequestClarification->load(ValidatorFundRequestRecordResource::$load)
+        );
     }
 
     /**
@@ -85,7 +85,9 @@ class FundRequestRecordsController extends Controller
 
         $fundRequestRecord->approve($request->input('note'));
 
-        return new ValidatorFundRequestRecordResource($fundRequestRecord);
+        return new ValidatorFundRequestRecordResource(
+            $fundRequestRecord->load(ValidatorFundRequestRecordResource::$load)
+        );
     }
 
     /**
@@ -113,6 +115,8 @@ class FundRequestRecordsController extends Controller
             $request->input('note')
         ));
 
-        return new ValidatorFundRequestRecordResource($fundRequestRecord);
+        return new ValidatorFundRequestRecordResource(
+            $fundRequestRecord->load(ValidatorFundRequestRecordResource::$load)
+        );
     }
 }

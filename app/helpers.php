@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use \App\Services\Forus\Session\Services\Browser;
-use \Illuminate\Pagination\LengthAwarePaginator;
 
 if (!function_exists('auth_user')) {
     /**
@@ -25,11 +24,17 @@ if (!function_exists('auth_address')) {
     /**
      * Get the available user instance.
      *
+     * @param bool $abortOnFail
+     * @param int $errorCode
      * @return string|null
      */
-    function auth_address()
-    {
-        return auth()->user() ? auth()->user()->getAddress() : null;
+    function auth_address(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $auth = auth_model($abortOnFail, $errorCode);
+
+        return $auth && method_exists($auth, 'getAddress') ? $auth->getAddress() : null;
     }
 }
 
@@ -37,11 +42,37 @@ if (!function_exists('auth_proxy_id')) {
     /**
      * Get the available user instance.
      *
+     * @param bool $abortOnFail
+     * @param int $errorCode
      * @return string|null
      */
-    function auth_proxy_id()
-    {
-        return auth()->user() ? auth()->user()->getProxyId() : null;
+    function auth_proxy_id(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $auth = auth_model($abortOnFail, $errorCode);
+
+        return $auth && method_exists($auth, 'getProxyId') ? $auth->getProxyId() : null;
+    }
+}
+
+if (!function_exists('auth_model')) {
+    /**
+     * @param bool $abortOnFail
+     * @param int $errorCode
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    function auth_model(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $authUser = auth()->user();
+
+        if ($abortOnFail && (!$authUser || !method_exists($authUser, 'getProxyId'))) {
+            abort($errorCode);
+        }
+
+        return $authUser;
     }
 }
 

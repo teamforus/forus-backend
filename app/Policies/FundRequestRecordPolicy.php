@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
+use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -136,6 +137,15 @@ class FundRequestRecordPolicy
 
         if (!$organization->identityCan($identity_address, 'validate_records')) {
             return $this->deny('fund_requests.invalid_validator');
+        }
+
+        // only assigned employee is allowed to resolve the request
+        if (!FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            $request->records()->getQuery(),
+            $identity_address,
+            $organization->findEmployee($identity_address)->id
+        )->where('fund_request_records.id', $requestRecord->id)->exists()) {
+            return $this->deny('fund_request.not_assigned_employee');
         }
 
         return $requestRecord->employee &&

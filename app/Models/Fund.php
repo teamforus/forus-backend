@@ -1303,22 +1303,6 @@ class Fund extends Model
             foreach ($validatorOrganization->employees as $employee) {
                 $fundRequest->resignEmployee($employee);
             }
-
-            // todo: when to delete?
-            /*foreach ($fundRequest->clarifications as $clarification) {
-                foreach ($clarification->files as $file) {
-                    try {
-                        $file->unlink();
-                        $file->delete();
-                    } catch (\Exception $exception) {
-                        if ($logger = logger()) {
-                            $logger->error($exception->getMessage());
-                        }
-                    }
-                }
-            }
-
-            $fundRequest->clarifications()->delete();*/
         }
     }
 

@@ -6,6 +6,7 @@ use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\FileResource;
 use App\Http\Resources\FundRequestClarificationResource;
 use App\Models\FundRequestRecord;
+use App\Models\Organization;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -16,6 +17,10 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class ValidatorFundRequestRecordResource extends Resource
 {
+    public static $load = [
+        'employee', 'files', 'fund_request_clarifications'
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -24,21 +29,29 @@ class ValidatorFundRequestRecordResource extends Resource
      */
     public function toArray($request): array
     {
+        $identityAddress = auth_address();
         $recordTypes = collect(record_types_cached())->keyBy('key');
+
+        /** @var Organization $organization */
+        $organization = $request->route('organization') or abort(403);
+        $employee = $organization->findEmployee($identityAddress) or abort(403);
 
         $is_value_readable = FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
             FundRequestRecord::whereId($this->resource->id),
-            auth_address()
+            $identityAddress,
+            $employee->id
         )->exists();
 
         $is_assignable = FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
             FundRequestRecord::whereId($this->resource->id)->whereDoesntHave('employee'),
-            auth_address()
+            $identityAddress,
+            $employee->id
         )->exists();
 
         $is_assigned = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
             FundRequestRecord::whereId($this->resource->id),
-            auth_address()
+            $identityAddress,
+            $employee->id
         )->exists();
 
         $is_visible = $is_assignable || $is_assigned || $is_value_readable;

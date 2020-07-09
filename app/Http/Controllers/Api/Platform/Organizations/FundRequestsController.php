@@ -33,7 +33,9 @@ class FundRequestsController extends Controller
 
         return ValidatorFundRequestResource::collection(FundRequest::search(
             $request, $organization, auth_address()
-        )->paginate($request->input('per_page')));
+        )->with(ValidatorFundRequestResource::$load)->paginate(
+            $request->input('per_page'))
+        );
     }
 
     /**
