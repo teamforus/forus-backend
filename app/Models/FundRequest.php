@@ -199,7 +199,7 @@ class FundRequest extends Model
             $record->decline($note, false);
         });
 
-        if ($this->records_pending()->exists() === 0) {
+        if ($this->records_pending()->count() === 0) {
             return $this->updateStateByRecords();
         }
 
