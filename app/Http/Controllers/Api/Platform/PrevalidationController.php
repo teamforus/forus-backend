@@ -12,12 +12,13 @@ use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Traits\ThrottleWithMeta;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PrevalidationController extends Controller
 {
     use ThrottleWithMeta;
 
-    private $recordRepo;
     private $maxAttempts = 3;
     private $decayMinutes = 180;
 
@@ -25,7 +26,6 @@ class PrevalidationController extends Controller
      * RecordCategoryController constructor.
      */
     public function __construct() {
-        $this->recordRepo = resolve('forus.services.record');
         $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', $this->maxAttempts);
         $this->decayMinutes = env('ACTIVATION_CODE_DECAY', $this->decayMinutes);
     }
@@ -37,7 +37,7 @@ class PrevalidationController extends Controller
      */
     public function store(
         StorePrevalidationsRequest $request
-    ) {
+    ): PrevalidationResource {
         $this->authorize('store', Prevalidation::class);
 
         $prevalidations = Prevalidation::storePrevalidations(
@@ -55,12 +55,13 @@ class PrevalidationController extends Controller
      */
     public function storeCollection(
         UploadPrevalidationsRequest $request
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('store', Prevalidation::class);
 
         $prevalidations = Prevalidation::storePrevalidations(
             Fund::find($request->input('fund_id')),
-            $request->input('data')
+            $request->input('data', []),
+            $request->input('overwrite', [])
         );
 
         return PrevalidationResource::collection($prevalidations);
@@ -73,7 +74,7 @@ class PrevalidationController extends Controller
      */
     public function index(
         SearchPrevalidationsRequest $request
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('viewAny', Prevalidation::class);
 
         return PrevalidationResource::collection(Prevalidation::search(
@@ -90,7 +91,7 @@ class PrevalidationController extends Controller
      */
     public function export(
         SearchPrevalidationsRequest $request
-    ) {
+    ): BinaryFileResponse {
         $this->authorize('viewAny', Prevalidation::class);
 
         return resolve('excel')->download(
@@ -110,7 +111,7 @@ class PrevalidationController extends Controller
     public function redeem(
         RedeemPrevalidationRequest $request,
         Prevalidation $prevalidation = null
-    ) {
+    ): PrevalidationResource {
         if ($this->hasTooManyLoginAttempts($request)) {
             $this->responseWithThrottleMeta('to_many_attempts', $request);
         }
