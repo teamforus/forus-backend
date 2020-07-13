@@ -183,6 +183,7 @@ class FundRequest extends Model
     }
 
     /**
+     * Set all fund request records assigned to given employee as declined
      * @param Employee $employee
      * @param string|null $note
      * @return FundRequest|bool
@@ -191,17 +192,14 @@ class FundRequest extends Model
         $this->records_pending()->where([
             'employee_id' => $employee->id
         ])->each(static function(FundRequestRecord $record) use ($note) {
-            $record->decline($note, false);
+            $record->decline($note);
         });
-
-        if ($this->records_pending()->count() === 0) {
-            return $this->updateStateByRecords();
-        }
 
         return $this;
     }
 
     /**
+     * Set all fund request records assigned to given employee as approved
      * @param Employee $employee
      * @param string|null $note
      * @return $this
@@ -210,11 +208,28 @@ class FundRequest extends Model
         $this->records_pending()->where([
             'employee_id' => $employee->id
         ])->each(static function(FundRequestRecord $record) use ($note) {
-            $record->approve($note, false);
+            $record->approve($note);
         });
 
-        if ($this->records_pending()->count() === 0) {
-            return $this->updateStateByRecords();
+        return $this;
+    }
+
+    /**
+     * Resolve fund request by applying validations to requester
+     * from all approved fund request records and changes the status of
+     * the request accordingly
+     * @return $this
+     */
+    public function resolve(): self {
+        $records = $this->records()->whereHas('employee');
+        $records->where('state', '!=', self::STATE_PENDING);
+
+        $records->get()->each(static function(FundRequestRecord $record) {
+            $record->makeValidation();
+        });
+
+        if (!$this->records_pending()->exists()) {
+            $this->updateStateByRecords();
         }
 
         return $this;
@@ -246,6 +261,7 @@ class FundRequest extends Model
     }
 
     /**
+     * Assign all available pending fund request records to given employee
      * @param Employee $employee
      * @return $this
      */
@@ -264,6 +280,7 @@ class FundRequest extends Model
     }
 
     /**
+     * Remove all assigned fund request records from employee
      * @param Employee $employee
      * @param FundCriterion|null $fundCriterion
      * @return $this
@@ -273,7 +290,6 @@ class FundRequest extends Model
         ?FundCriterion $fundCriterion = null
     ): self {
         $query = $this->records()->where([
-            'state' => FundRequestRecord::STATE_PENDING,
             'employee_id' => $employee->id,
         ]);
 
@@ -282,13 +298,21 @@ class FundRequest extends Model
         }
 
         $query->update([
-            'employee_id' => null
+            'employee_id' => null,
+            'state' => FundRequestRecord::STATE_PENDING,
         ]);
+
+        if ($this->state === self::STATE_APPROVED_PARTLY && $this->records_pending()->exists()) {
+            $this->update([
+                'state' => self::STATE_PENDING
+            ]);
+        }
 
         return $this;
     }
 
     /**
+     * Prepare fund requests for exporting
      * @param Builder $builder
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
@@ -319,6 +343,7 @@ class FundRequest extends Model
     }
 
     /**
+     * Export fund requests
      * @param Request $request
      * @param Organization $organization
      * @param string $identity_address

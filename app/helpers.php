@@ -471,10 +471,7 @@ if (!function_exists('log_debug')) {
      */
     function log_debug($message, array $context = []) {
         if (!is_null($logger = logger())) {
-            $logger->debug(
-                is_string($message) ? $message : json_pretty($message),
-                $context
-            );
+            $logger->debug(is_string($message) ? $message : json_pretty($message), $context);
         }
     }
 }

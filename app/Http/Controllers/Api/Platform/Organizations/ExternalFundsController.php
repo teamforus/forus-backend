@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Requests\Api\Platform\Organizations\ExternalFunds\IndexExternalFundsRequest;
 use App\Http\Requests\Api\Platform\Organizations\ExternalFunds\UpdateExternalFundRequest;
+use App\Models\FundRequest;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use \Illuminate\Pagination\LengthAwarePaginator;
@@ -77,7 +78,13 @@ class ExternalFundsController extends Controller
 
             if (!($criterion['accepted'] ?? false)) {
                 foreach ($organization->employees as $employee) {
-                    foreach ($criterionModel->fund->fund_requests as $fund_request) {
+                    /** @var FundRequest[] $fund_requests */
+                    $fund_requests = $criterionModel->fund->fund_requests()->whereIn('state', [
+                        FundRequest::STATE_PENDING,
+                        FundRequest::STATE_APPROVED_PARTLY,
+                    ])->get();
+
+                    foreach ($fund_requests as $fund_request) {
                         $fund_request->resignEmployee($employee, $criterionModel);
                     }
                 }

@@ -94,6 +94,7 @@ class FundRequestRecord extends Model
     }
 
     /**
+     * Change fund request record state
      * @param string $state
      * @param string|null $note
      * @return FundRequestRecord
@@ -104,40 +105,38 @@ class FundRequestRecord extends Model
     }
 
     /**
+     * Approve fund request record
      * @param string|null $note
-     * @param bool $resolveRequest
      * @return $this
      */
-    public function approve(string $note = null, $resolveRequest = true): self {
+    public function approve(string $note = null): self {
         $this->setState(self::STATE_APPROVED, $note);
-        $this->makeValidation();
 
-        if ($resolveRequest && (
-            $this->fund_request->records_pending()->count() === 0)) {
-            $this->fund_request->approve($this->employee);
+        if (!$this->fund_request->records_pending()->exists()) {
+            $this->fund_request->resolve();
         }
 
         return $this;
     }
 
     /**
+     * Decline fund request record
      * @param string|null $note
-     * @param bool $resolveRequest
      * @return $this
      * @throws \Exception
      */
-    public function decline(string $note = null, $resolveRequest = true): self {
+    public function decline(string $note = null): self {
         $this->setState(self::STATE_DECLINED, $note);
 
-        if ($resolveRequest && (
-            $this->fund_request->records_pending()->count() === 0)) {
-            $this->fund_request->decline($this->employee);
+        if (!$this->fund_request->records_pending()->exists()) {
+            $this->fund_request->resolve();
         }
 
         return $this;
     }
 
     /**
+     * Make and validate records for requester
      * @return $this
      */
     public function makeValidation(): self {
@@ -164,6 +163,7 @@ class FundRequestRecord extends Model
     }
 
     /**
+     * Identity can see fund request record value
      * @param $identity_address
      * @param $employee_id
      * @return bool
@@ -175,6 +175,7 @@ class FundRequestRecord extends Model
     }
 
     /**
+     * Identity can assign fund request record to himself for validation
      * @param $identity_address
      * @param $employee_id
      * @return bool
@@ -188,6 +189,7 @@ class FundRequestRecord extends Model
     }
 
     /**
+     * Identity is assigned as validator for fund request record
      * @param $identity_address
      * @param $employee_id
      * @return bool

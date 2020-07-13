@@ -1183,7 +1183,13 @@ class Fund extends Model
                 ->external_validator->validator_organization;
 
             foreach ($validator_organization->employees as $employee) {
-                foreach ($this->fund_requests as $fund_request) {
+                /** @var FundRequest[] $fund_requests */
+                $fund_requests = $this->fund_requests()->whereIn('state', [
+                    FundRequest::STATE_PENDING,
+                    FundRequest::STATE_APPROVED_PARTLY,
+                ])->get();
+
+                foreach ($fund_requests as $fund_request) {
                     $fund_request->resignEmployee($employee, $criterionValidator->fund_criterion);
                 }
             }
@@ -1297,7 +1303,10 @@ class Fund extends Model
             Builder $builder
         ) use ($validatorOrganization) {
             $builder->where('organization_id', $validatorOrganization->id);
-        })->where('state', FundRequest::STATE_PENDING)->get();
+        })->where('state', [
+            FundRequest::STATE_PENDING,
+            FundRequest::STATE_APPROVED_PARTLY
+        ])->get();
 
         foreach ($fundRequests as $fundRequest) {
             foreach ($validatorOrganization->employees as $employee) {
