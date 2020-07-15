@@ -355,7 +355,7 @@ $router->group(['middleware' => [
         "Api\Platform\Organizations\FundsController@topUp");
 
     $router->patch(
-        'organizations/{organization}/funds/criteria/validate',
+        'organizations/{organization}/funds/{fund}/criteria/validate',
         "Api\Platform\Organizations\FundsController@updateCriteriaValidate");
 
     $router->patch(

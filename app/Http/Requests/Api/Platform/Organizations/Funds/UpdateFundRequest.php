@@ -61,6 +61,9 @@ class UpdateFundRequest extends FormRequest
             ],
         ] : [], $criteriaEditable ? [
             'criteria'                      => 'present|array',
+            'criteria.*.id'                 => [
+                'nullable', Rule::in($this->fund->criteria()->pluck('id'))
+            ],
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
             'criteria.*.value'              => 'required|string|between:1,20',

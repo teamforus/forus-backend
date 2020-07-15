@@ -47,6 +47,10 @@ class LoremDbSeeder extends Seeder
         'Zuidhorn', 'Nijmegen', 'Westerkwartier',
     ];
 
+    private $fundsWithCriteriaEditableAfterLaunch = [
+        'Zuidhorn', 'Nijmegen',
+    ];
+
     /**
      * LoremDbSeeder constructor.
      */
@@ -249,11 +253,11 @@ class LoremDbSeeder extends Seeder
     public function makeExternalValidators(
         string $identity_address,
         int $count = 10
-    ) {
+    ): void {
         $organizations = $this->makeOrganizations("Validator", $identity_address,  $count);
 
         foreach ($organizations as $key => $organization) {
-            $this->makeOffices($organization, rand(1, 2));
+            $this->makeOffices($organization, random_int(1, 2));
 
             $organization->update([
                 'is_validator' => true,
@@ -475,12 +479,15 @@ class LoremDbSeeder extends Seeder
             $flag = true;
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
+        $criteriaEditable = in_array($fundName, $this->fundsWithCriteriaEditableAfterLaunch);
+
         $fund = $organization->createFund(array_merge([
-            'name'                  => $fundName,
-            'start_date'            => Carbon::now()->format('Y-m-d'),
-            'end_date'              => Carbon::now()->addDays(60)->format('Y-m-d'),
-            'state'                 => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
-            'notification_amount'   => 10000
+            'name'                          => $fundName,
+            'criteria_editable_after_start' => $criteriaEditable,
+            'start_date'                    => Carbon::now()->format('Y-m-d'),
+            'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
+            'state'                         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
+            'notification_amount'           => 10000
         ], $fields));
 
         $transaction = $fund->top_up_model->transactions()->create([

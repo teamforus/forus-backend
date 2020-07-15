@@ -182,10 +182,9 @@ class FundsController extends Controller
             $fund->syncCriteria($request->input('criteria'));
         }
 
-        if (config('forus.features.dashboard.organizations.funds.formula_products')) {
-            if ($request->has('formula_products')) {
-                $fund->updateFormulaProducts($request->input('formula_products', []));
-            }
+        if (config('forus.features.dashboard.organizations.funds.formula_products') &&
+            $request->has('formula_products')) {
+            $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
         return new FundResource($fund);
@@ -218,16 +217,18 @@ class FundsController extends Controller
     /**
      * @param UpdateFundCriteriaRequest $request
      * @param Organization $organization
+     * @param Fund $fund
      * @return mixed
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function updateCriteriaValidate(
         UpdateFundCriteriaRequest $request,
-        Organization $organization
+        Organization $organization,
+        Fund $fund
     ) {
         $this->authorize('show', $organization);
 
-        return response()->json([], 200);
+        return response()->json([], $fund ? 200 : 403);
     }
 
     /**

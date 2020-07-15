@@ -42,6 +42,7 @@ use Illuminate\Http\Request;
  * @property string|null $description
  * @property string $state
  * @property bool $public
+ * @property bool $criteria_editable_after_start
  * @property float|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
@@ -57,27 +58,29 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read int|null $digests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
- * @property-read \App\Models\FundConfig $fund_config
+ * @property-read \App\Models\FundConfig|null $fund_config
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
+ * @property-read int|null $fund_request_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_request_records
- * @property-read int|null $fund_request_records_count
  * @property-read float $budget_left
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
  * @property-read \App\Models\FundTopUp $top_up_model
- * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \App\Services\MediaService\Models\Media|null $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
@@ -122,6 +125,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCriteriaEditableAfterStart($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
@@ -135,8 +139,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
- * @property-read int|null $digests_count
  */
 class Fund extends Model
 {
@@ -178,7 +180,8 @@ class Fund extends Model
     protected $fillable = [
         'organization_id', 'state', 'name', 'description', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
-        'default_validator_employee_id', 'auto_requests_validation'
+        'default_validator_employee_id', 'auto_requests_validation',
+        'criteria_editable_after_start'
     ];
 
     protected $hidden = [
@@ -188,6 +191,7 @@ class Fund extends Model
     protected $casts = [
         'public' => 'boolean',
         'auto_requests_validation' => 'boolean',
+        'criteria_editable_after_start' => 'boolean',
     ];
 
     /**
@@ -475,7 +479,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function employees_validators(): HasManyThrough {
+    public function employees_validators() {
         return $this->hasManyThrough(
             Employee::class,
             Organization::class,
@@ -1095,10 +1099,12 @@ class Fund extends Model
      */
     public function syncCriteria(array $criteria): self {
         // remove criteria not listed in the array
-        $this->criteria()->whereNotIn('id', array_filter(
-            array_pluck($criteria, 'id'), static function($id) {
-            return !empty($id);
-        }))->delete();
+        if ($this->criteriaIsEditable()) {
+            $this->criteria()->whereNotIn('id', array_filter(
+                array_pluck($criteria, 'id'), static function($id) {
+                return !empty($id);
+            }))->delete();
+        }
 
         foreach ($criteria as $criterion) {
             $this->syncCriterion($criterion);
@@ -1112,16 +1118,21 @@ class Fund extends Model
      * @param array $criterion
      */
     protected function syncCriterion(array $criterion): void {
+        /** @var FundCriterion $fundCriterion */
         $validators = $criterion['validators'] ?? null;
+        $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
+
+        if (!$fundCriterion && !$this->criteriaIsEditable()) {
+            return;
+        }
 
         /** @var FundCriterion|null $db_criteria */
-        $data_criterion = array_only($criterion, [
+        $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
             'description'
-        ]);
+        ] : ['show_attachment', 'description']);
 
-        /** @var FundCriterion $fundCriterion */
-        if ($fundCriterion = $this->criteria()->find($criterion['id'] ?? null)) {
+        if ($fundCriterion) {
             $fundCriterion->update($data_criterion);
         } else {
             $fundCriterion = $this->criteria()->create($data_criterion);
@@ -1273,6 +1284,14 @@ class Fund extends Model
         }
 
         return $topUp;
+    }
+
+    /**
+     * @return bool
+     */
+    public function criteriaIsEditable(): bool {
+        return ($this->state === self::STATE_WAITING) || (
+            ($this->state === self::STATE_ACTIVE) && $this->criteria_editable_after_start);
     }
 
     /**

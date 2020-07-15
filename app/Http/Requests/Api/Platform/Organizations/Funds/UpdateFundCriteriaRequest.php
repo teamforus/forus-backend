@@ -4,12 +4,12 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Models\Fund;
 use App\Models\Organization;
-use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
  * Class UpdateFundRequest
+ * @property null|Fund $fund
  * @property null|Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
@@ -20,7 +20,7 @@ class UpdateFundCriteriaRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -30,19 +30,19 @@ class UpdateFundCriteriaRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $organization = $this->organization;
         $validators = $organization->organization_validators()->pluck('id');
 
         return [
             'criteria'                      => 'present|array',
-            'criteria.*.operator'           => 'required|in:=,<,>',
-            'criteria.*.record_type_key'    => [
-                'required',
-                Rule::in(RecordType::query()->pluck('key')->toArray())
+            'criteria.*.id'                 => [
+                'nullable', Rule::in($this->fund->criteria()->pluck('id'))
             ],
-            'criteria.*.value'              => 'required|string|between:1,10',
+            'criteria.*.operator'           => 'required|in:=,<,>',
+            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
+            'criteria.*.value'              => 'required|string|between:1,20',
             'criteria.*.show_attachment'    => 'nullable|boolean',
             'criteria.*.description'        => 'nullable|string|max:4000',
             'criteria.*.validators'         => 'nullable|array',
@@ -54,7 +54,7 @@ class UpdateFundCriteriaRequest extends FormRequest
     {
         $keys = array_dot(array_keys($this->rules()));
 
-        return array_combine($keys, array_map(function($key) {
+        return array_combine($keys, array_map(static function($key) {
             $value = last(explode('.', $key));
             return trans_fb("validation.attributes." . $value, $value);
         }, $keys));

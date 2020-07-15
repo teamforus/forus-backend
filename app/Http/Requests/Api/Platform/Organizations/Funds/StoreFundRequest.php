@@ -54,6 +54,7 @@ class StoreFundRequest extends FormRequest
             ],
         ], $criteriaEditable ? [
             'criteria'                      => 'required|array',
+            'criteria.*.id'                 => ['nullable', Rule::in([])],
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
             'criteria.*.value'              => 'required|string|between:1,20',
