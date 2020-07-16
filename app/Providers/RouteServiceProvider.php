@@ -14,6 +14,7 @@ use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\PhysicalCard;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -108,9 +109,16 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('voucher_token_address', function ($value) {
+            /** @var PhysicalCard $physical_card_code */
+            $physical_card_code = PhysicalCard::query()->where([
+                'physical_card_code' => $value
+            ])->first();
+
             return VoucherToken::query()->where([
                     'address' => $value
-                ])->first() ?? abort(404);
+                ])->first() ?? $physical_card_code->voucher->tokens()->where(
+                    'need_confirmation', 1
+                )->first() ?? abort(404);
         });
 
         $router->bind('product_voucher_token_address', function ($value) {

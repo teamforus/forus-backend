@@ -279,6 +279,16 @@ $router->group(['middleware' => [
     });
 
     $router->post(
+        'vouchers/{voucher_token_address}/physical-cards',
+        "Api\Platform\Vouchers\PhysicalCardsController@storePhysicalCard"
+    );
+
+    $router->post(
+        'vouchers/{voucher_token_address}/physical-card-requests',
+        "Api\Platform\Vouchers\PhysicalCardsController@requestPhysicalCard"
+    );
+
+    $router->post(
         'vouchers/{voucher_token_address}/send-email',
         "Api\Platform\VouchersController@sendEmail"
     );

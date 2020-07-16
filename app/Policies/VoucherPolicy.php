@@ -180,6 +180,30 @@ class VoucherPolicy
      * @param string $identity_address
      * @param Voucher $voucher
      * @return bool
+     */
+    public function storePhysicalCard(
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return $this->sendEmail($identity_address, $voucher);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function requestPhysicalCard(
+        string $identity_address,
+        Voucher $voucher
+    ) {
+        return $this->sendEmail($identity_address, $voucher);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
      * @throws AuthorizationJsonException
      */
     public function useAsProvider(

@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
  * @property-read Carbon $last_active_day
  * @property-read \App\Models\Voucher|null $parent
  * @property-read \App\Models\Product|null $product
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read \App\Models\VoucherToken $token_with_confirmation
@@ -124,6 +125,13 @@ class Voucher extends Model
      */
     public function parent() {
         return $this->belongsTo(Voucher::class, 'parent_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function physical_cards() {
+        return $this->hasMany(PhysicalCard::class);
     }
 
     /**

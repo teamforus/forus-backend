@@ -74,6 +74,7 @@ class VoucherResource extends Resource
         }
 
         $urlWebShop = null;
+        $has_physical_cards = $fund->fund_config->has_physical_cards ?? false;
 
         if ($fund->fund_config &&
             $fund->fund_config->implementation) {
@@ -84,6 +85,7 @@ class VoucherResource extends Resource
             'id', 'name', 'state'
         ])->merge([
             'url_webshop' => $urlWebShop,
+            'has_physical_cards' => $has_physical_cards,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
             'start_date_locale' => format_datetime_locale($fund->start_date),
@@ -111,8 +113,10 @@ class VoucherResource extends Resource
             'expired' => $voucher->expired,
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'amount' => currency_format($amount),
-            'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
-            'address_printable' => $voucher->tokens->where('need_confirmation', 0)->first()->address,
+            'address' => $voucher->physical_cards->first()->physical_card_code ??
+                $voucher->tokens->where('need_confirmation', 1)->first()->address,
+            'address_printable' => $voucher->physical_cards->first()->physical_card_code ??
+                $voucher->tokens->where('need_confirmation', 0)->first()->address,
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'fund' => $fundResource,

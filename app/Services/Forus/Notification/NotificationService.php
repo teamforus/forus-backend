@@ -22,6 +22,7 @@ use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductReservedUserMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
+use App\Mail\Vouchers\RequestPhysicalCardMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Implementation;
@@ -468,6 +469,28 @@ class NotificationService
             $product_name,
             $qr_token,
             $reason,
+            $emailFrom
+        ));
+    }
+
+    /**
+     * Request a physical card
+     *
+     * @param string $email
+     * @param EmailFrom|null $emailFrom
+     * @param string $post_code
+     * @param string $house_number
+     * @return bool
+     */
+    public function requestPhysicalCard(
+        string $email,
+        ?EmailFrom $emailFrom,
+        string $post_code,
+        string $house_number
+    ): bool {
+        return $this->sendMail($email, new RequestPhysicalCardMail(
+            $post_code,
+            $house_number,
             $emailFrom
         ));
     }

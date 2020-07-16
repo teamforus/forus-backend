@@ -15,6 +15,7 @@ namespace App\Models;
  * @property string|null $csv_primary_key
  * @property int $subtract_transaction_costs
  * @property bool $is_configured
+ * @property bool $has_physical_cards
  * @property Fund $fund
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -42,8 +43,9 @@ class FundConfig extends Model
 
     protected $hidden = [
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
-        'formula_multiplier', 'is_configured', 'csv_primary_key', 
-        'subtract_transaction_costs', 'implementation_id', 'implementation'
+        'formula_multiplier', 'is_configured', 'has_physical_cards',
+        'csv_primary_key', 'subtract_transaction_costs',
+        'implementation_id', 'implementation'
     ];
 
     /**
