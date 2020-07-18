@@ -12,33 +12,16 @@ use Illuminate\Mail\Mailable;
  */
 class EmailActivationMail extends ImplementationMail
 {
-    private $platform;
+    private $clientType;
     private $link;
 
     public function __construct(
-        string $source,
+        string $clientType,
         string $link,
         ?EmailFrom $emailFrom
     ) {
         $this->setMailFrom($emailFrom);
-
-        $platform = '';
-
-        if (strpos($source, '_webshop') !== false) {
-            $platform = 'de webshop';
-        } else if (strpos($source, '_sponsor') !== false) {
-            $platform = 'het aanmeldformulier voor sponsoren';
-        } else if (strpos($source, '_provider') !== false) {
-            $platform = 'het aanmeldformulier voor aanbieders';
-        } else if (strpos($source, '_validator') !== false) {
-            $platform = 'het aanmeldformulier voor validators';
-        } else if (strpos($source, '_website') !== false) {
-            $platform = 'de website';
-        } else if (strpos($source, 'me_app') !== false) {
-            $platform = 'Me';
-        }
-
-        $this->platform = $platform;
+        $this->clientType = $clientType;
         $this->link = $link;
     }
 
@@ -47,8 +30,8 @@ class EmailActivationMail extends ImplementationMail
         return $this->buildBase()
             ->subject(mail_trans('email_activation.title'))
             ->view('emails.user.email_activation', [
-                'link'      => $this->link,
-                'platform'  => $this->platform
+                'link'          => $this->link,
+                'clientType'    => $this->clientType,
             ]);
     }
 }

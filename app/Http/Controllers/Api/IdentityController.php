@@ -69,7 +69,6 @@ class IdentityController extends Controller
         $primaryEmail = $request->input('email', $request->input(
             'records.primary_email'
         ));
-        $source = sprintf('%s_%s', $clientKey, $clientType);
 
         // build records list and remove bsn and primary_email
         $records = collect($request->input('records', []));
@@ -101,7 +100,7 @@ class IdentityController extends Controller
         // send confirmation email
         $this->mailService->sendEmailConfirmationLink(
             $primaryEmail,
-            $source,
+            $clientType,
             Implementation::emailFrom(),
             $confirmationLink
         );
