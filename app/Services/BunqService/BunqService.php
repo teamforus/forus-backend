@@ -384,9 +384,6 @@ class BunqService
                     $amount = number_format($amount - .1, 2, '.', '');
                 }
 
-//                logger()->info('bunq from: '.print_r($bunq->getBankAccountIban(), true));
-//                logger()->info('bunq to: '.print_r($transaction->provider->iban, true));
-
                 $payment_id = $bunq->makePayment(
                     $amount,
                     $transaction->provider->iban,
@@ -479,11 +476,10 @@ class BunqService
 
         foreach ($voucher_transactions as $voucher_transaction) {
             if ($details = $voucher_transaction->getTransactionDetailsAttribute()) {
-                //Update voucher transaction iban_to and iban_from
-//                $voucher_transaction->update([
-//                    'iban_from' => $details->iban_from,
-//                    'iban_to'   => $details->iban_to,
-//                ]);
+                $voucher_transaction->update([
+                    'iban_from' => $details->getAlias()->getIban(),
+                    'iban_to'   => $details->getCounterpartyAlias()->getIban(),
+                ]);
             }
 
             sleep(1);

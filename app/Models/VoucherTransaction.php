@@ -93,7 +93,7 @@ class VoucherTransaction extends Model
     }
 
     /**
-     * @return \Illuminate\Support\Collection|null
+     * @return \bunq\Model\Generated\Endpoint\Payment|null
      */
     public function getTransactionDetailsAttribute()
     {
@@ -105,7 +105,7 @@ class VoucherTransaction extends Model
                 ));
             }
 
-            return collect($bunq->paymentDetails($this->payment_id));
+            return $bunq->paymentDetails($this->payment_id);
         } catch (\Exception $e) {
             logger()->error(sprintf(
                 'BunqService: Could not process payment: %s' .
