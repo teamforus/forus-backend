@@ -108,7 +108,7 @@ class VoucherTransaction extends Model
             return $bunq->paymentDetails($this->payment_id);
         } catch (\Exception $e) {
             logger()->error(sprintf(
-                'BunqService: Could not process payment: %s' .
+                'BunqService: Could not process payment: %s',
                 $this->payment_id
             ));
         }
