@@ -32,16 +32,23 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
-        $query = Implementation::queryFundsByState([
+        $fundsQuery = Implementation::queryFundsByState([
             Fund::STATE_ACTIVE, Fund::STATE_PAUSED
         ])->whereNotIn(
             'id', $organization->fund_providers()->pluck(
             'fund_id'
         )->toArray());
 
+        $meta = [
+            'organizations' => $fundsQuery->get()->pluck('organization')->unique('id'),
+            'tags'          => $fundsQuery->get()->pluck('tags')->flatten()->unique('id')
+        ];
+
         return FundResource::collection(Fund::search(
-            $request, $query
-        )->latest()->paginate($request->input('per_page', 10)));
+            $request, $fundsQuery
+        )->latest()->paginate(
+            $request->input('per_page', 10))
+        )->additional(compact('meta'));
     }
 
     /**
