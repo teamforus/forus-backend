@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Update: Nieuwe aanbod op de webshop',
+    'title' => 'Update: Nieuw aanbod op de webshop',
     'providers' => [
         'title' => implode('|', [
             // singular
