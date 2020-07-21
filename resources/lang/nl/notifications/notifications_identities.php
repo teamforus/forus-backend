@@ -10,8 +10,8 @@ return [
         'description' => 'U bent verwijderd als een medewerker van :organization_name',
     ],
     'changed_employee_roles' => [
-        'title' => 'Rechten zijn aangepast voor :organization_name',
-        'description' => 'Aan uw profiel zijn nieuwe rollen toegekend namelijk :employee_roles voor organisatie :organization_name.',
+        'title' => 'Uw rechten als medewerker zijn aangepast voor :organization_name',
+        'description' => 'Aan uw profiel zijn de volgende rollen toegekend: employee_roles voor organisatie :organization_name.',
     ],
 
     // approved for budget
@@ -37,7 +37,7 @@ return [
     'requester_product_approved' => [
         'title' => ':product_name van :provider_name is beschikbaar voor :fund_name',
         'description' =>
-            ':product_name van :provider_name is toegevoegd aan de ' .
+            ':product_name van :provider_name is toegevoegd aan de '.
             'webshop en beschikbaar om te reserveren met tegoed van :fund_name.',
     ],
 
@@ -78,7 +78,7 @@ return [
         'title' => 'Aanvraag :fund_name aanvullen.',
         'description' =>
             'Uw aanvraag voor :fund_name is onvolledig. ' .
-            'De gemeente heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question',
+            ':sponsor_name heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question',
     ],
 
     // fund request resolved
