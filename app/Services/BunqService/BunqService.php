@@ -394,7 +394,9 @@ class BunqService
                 if (is_numeric($payment_id)) {
                     $transaction->forceFill([
                         'state'             => 'success',
-                        'payment_id'        => $payment_id
+                        'payment_id'        => $payment_id,
+                        'iban_from'         => $bunq->getBankAccountIban(),
+                        'iban_to'           => $transaction->provider->iban,
                     ])->save();
 
                     $transaction->sendPushBunqTransactionSuccess();
@@ -463,26 +465,6 @@ class BunqService
                     }
                 }
             }
-        }
-    }
-
-    public static function updateVoucherTransactions() {
-        /** @var Collection[]|VoucherTransaction[] $voucher_transactions */
-        $voucher_transactions = VoucherTransaction::whereNull(
-            'iban_from'
-        )->orWhereNull(
-            'iban_to'
-        )->get();
-
-        foreach ($voucher_transactions as $voucher_transaction) {
-            if ($details = $voucher_transaction->getTransactionDetailsAttribute()) {
-                $voucher_transaction->update([
-                    'iban_from' => $details->getAlias()->getIban(),
-                    'iban_to'   => $details->getCounterpartyAlias()->getIban(),
-                ]);
-            }
-
-            sleep(1);
         }
     }
 
