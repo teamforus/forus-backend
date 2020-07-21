@@ -40,7 +40,7 @@ return [
         'description' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.',
     ],
     'revoked_products' => [
-        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer geaccepteerd voor al uw aanbiedingen.',
-        'description' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer geaccepteerd voor al uw aanbiedingen.',
+        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om aanbiedingsvouchers te scannen.',
+        'description' => 'Aanmelding voor :fund_name is gewijzigd. Uw aanbiedingen zijn niet meer zichtbaar in de webshop.',
     ],
 ];
