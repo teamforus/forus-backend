@@ -12,9 +12,9 @@ return [
             ':fund_name loopt van :start_date: tot :end_date_minus1: en verloopt bijna.'
     ],
     'fund_ended' => [
-        'title' => ':fund_name is verloopt bijna.',
+        'title' => ':fund_name is verlopen.',
         'description' =>
-            ':fund_name liep van :start_date: tot :end_date_minus1: en is vanaf vandaag niet meer geldig.'.
+            ':fund_name liep van :start_date: tot :end_date_minus1: en is vanaf dit moment niet meer geldig.'.
             'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.'.
             'Kijk in uw dashboard of u zich voor een nieuw fonds kunt aanmelden.'
     ],
