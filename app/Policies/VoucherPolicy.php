@@ -60,22 +60,13 @@ class VoucherPolicy
         Organization $organization,
         Fund $fund
     ) {
-        if (!($this->viewAnySponsor($identity_address, $organization) &&
-            $fund->organization_id == $organization->id)) {
+        if (($fund->organization_id !== $organization->id) ||
+            !$this->viewAnySponsor($identity_address, $organization)) {
             $this->deny('no_permission_to_make_vouchers');
         }
 
-        if (!$organization->identityCan(
-            $identity_address, [
-            'manage_vouchers'
-        ])) {
+        if (!$organization->identityCan($identity_address, 'manage_vouchers')) {
             $this->deny('no_manage_vouchers_permission');
-        }
-
-        if ($organization->employees()->where([
-            'identity_address' => $identity_address
-            ])->count() === 0) {
-            $this->deny('has_to_be_employee');
         }
 
         return true;

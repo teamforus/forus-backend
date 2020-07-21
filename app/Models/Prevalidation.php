@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
  * App\Models\Prevalidation
@@ -65,7 +66,8 @@ class Prevalidation extends Model
      */
     protected $fillable = [
         'uid', 'identity_address', 'redeemed_by_address', 'state',
-        'fund_id', 'organization_id', 'exported',
+        'fund_id', 'organization_id', 'exported', 'json',
+        'records_hash', 'uid_hash',
     ];
 
     /**
@@ -131,7 +133,7 @@ class Prevalidation extends Model
      */
     public static function search(
         Request $request
-    ) {
+    ): Builder {
         $identity_address = auth_address();
 
         $q = $request->input('q', null);
@@ -274,100 +276,112 @@ class Prevalidation extends Model
      * @param Fund $fund
      * @param array $data
      * @param array $overwriteKeys
-     * @return Collection
+     * @return EloquentCollection
      */
     public static function storePrevalidations(
         Fund $fund,
         array $data,
         array $overwriteKeys = []
-    ): Collection {
-        $recordRepo = resolve('forus.services.record');
-        $auth_address = auth_address();
+    ): EloquentCollection {
+        $identity_address = auth_address();
         $primaryKeyName = $fund->fund_config->csv_primary_key;
 
-        $fundPrevalidationPrimaryKey = $recordRepo->getTypeIdByKey($primaryKeyName);
+        $recordTypes = array_pluck(record_types_cached(), 'id', 'key');
+        $fundPrevalidationPrimaryKey = $recordTypes[$primaryKeyName] ?? abort(500);
 
-        $existingPrevalidations = self::where([
-            'identity_address' => auth()->id(),
-            'fund_id' => $fund->id
-        ])->pluck('id');
-
-        $primaryKeyValues = PrevalidationRecord::whereIn(
-            'prevalidation_id', $existingPrevalidations
-        )->where([
+        // list existing uid from fund prevalidations
+        $existingPrimaryKeys = PrevalidationRecord::whereHas('prevalidation', static function(
+            Builder $builder
+        ) use ($identity_address, $fund) {
+            $builder->where([
+                'identity_address' => $identity_address,
+                'fund_id' => $fund->id,
+            ]);
+        })->where([
             'record_type_id' => $fundPrevalidationPrimaryKey,
         ])->pluck('value');
 
-        return collect($data)->map(static function($record) use (
-            $primaryKeyValues, $fund, $overwriteKeys, $recordRepo
+        /** @var array[] $data new pre validations and pre validations that have to be updated */
+        $data = array_filter(array_map(static function($record) use (
+            $existingPrimaryKeys, $fund, $overwriteKeys, $recordTypes
         ) {
             $primaryKey = $record[$fund->fund_config->csv_primary_key];
 
-            if ($primaryKeyValues->search($primaryKey) !== false &&
+            if ($existingPrimaryKeys->search($primaryKey) !== false &&
                 !in_array($primaryKey, $overwriteKeys, true)) {
                 return null;
             }
 
-            $records = collect($record)->map(static function($value, $key) use ($recordRepo) {
-                $record_type_id = $recordRepo->getTypeIdByKey($key);
+            return [
+                'primaryKey' => $primaryKey,
+                'record' => $record,
+                'records' => array_filter(array_map(static function($key) use ($recordTypes, $record) {
+                    return (!$recordTypes[$key] || $key === 'primary_email') ? false : [
+                        'record_type_id' => $recordTypes[$key],
+                        'value' => is_null($record[$key]) ? '' : $record[$key]
+                    ];
+                }, array_keys($record)), static function($value) {
+                    return (bool) $value;
+                }),
+            ];
+        }, $data), "is_array");
 
-                if (!$record_type_id || $key === 'primary_email') {
-                    return false;
-                }
-
-                if (is_null($value)) {
-                    $value = '';
-                }
-
-                return compact('record_type_id', 'value');
-            })->filter(static function($value) {
-                return (bool) $value;
-            })->toArray();
-
-            return compact('records', 'primaryKey');
-        })->filter(static function($records) {
-            return is_array($records);
-        })->map(static function(array $records) use (
-            $fund, $overwriteKeys, $auth_address, $fundPrevalidationPrimaryKey
+        /** @var Prevalidation[] $prevalidations Newly created and updated pre validations */
+        $prevalidations = array_map(static function(array $records) use (
+            $fund, $overwriteKeys, $identity_address, $fundPrevalidationPrimaryKey
         ) {
-            $primaryKey = $records['primaryKey'];
-
-            if (in_array($primaryKey, $overwriteKeys, true)) {
+            if (in_array($records['primaryKey'], $overwriteKeys, true)) {
                 /** @var Prevalidation $prevalidation */
                 $prevalidation = Prevalidation::where([
                     'state' => Prevalidation::STATE_PENDING,
                     'organization_id' => $fund->organization_id,
                     'fund_id' => $fund->id,
-                    'identity_address' => $auth_address
+                    'identity_address' => $identity_address
                 ])->whereHas('prevalidation_records', static function(
                     Builder $builder
-                ) use ($primaryKey, $fundPrevalidationPrimaryKey) {
+                ) use ($records, $fundPrevalidationPrimaryKey) {
                     $builder->where([
                         'record_type_id' => $fundPrevalidationPrimaryKey,
-                        'value' => $primaryKey,
+                        'value' => $records['primaryKey'],
                     ]);
                 })->first();
 
                 $prevalidation->prevalidation_records()->delete();
             } else {
-                do {
-                    $uid = token_generator()->generate(4, 2);
-                } while(Prevalidation::query()->where(compact('uid'))->exists());
-
                 /** @var Prevalidation $prevalidation */
                 $prevalidation = Prevalidation::create([
-                    'uid' => $uid,
+                    'uid' => token_generator_db(Prevalidation::query(), 'uid', 4, 2),
                     'state' => Prevalidation::STATE_PENDING,
                     'organization_id' => $fund->organization_id,
                     'fund_id' => $fund->id,
-                    'identity_address' => $auth_address
+                    'identity_address' => $identity_address
                 ]);
             }
 
             $prevalidation->prevalidation_records()->createMany($records['records']);
-            $prevalidation->load('prevalidation_records');
 
-            return $prevalidation;
-        });
+            return $prevalidation->updateHashes();
+        }, $data);
+
+        return new EloquentCollection($prevalidations);
+    }
+
+    /**
+     * @return $this
+     */
+    public function updateHashes(): Prevalidation {
+        $records = $this->prevalidation_records->pluck(
+            'value', 'record_type.key'
+        )->toArray();
+
+        $primaryKey = $records[$this->fund->fund_config->csv_primary_key];
+        ksort($records);
+
+        $this->update([
+            'uid_hash' => hash('sha256', $primaryKey),
+            'records_hash' => hash('sha256', json_encode($records)),
+        ]);
+
+        return $this;
     }
 }

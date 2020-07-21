@@ -18,13 +18,13 @@ class PrevalidationRecordResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        return collect($this->resource)->only([
-            'id', 'record_type_id', 'value'
-        ])->merge([
+        return array_merge($this->resource->only([
+            'id', 'record_type_id', 'value',
+        ]), [
             'key' => $this->resource->record_type->key,
             'name' => $this->resource->record_type->name,
-        ])->toArray();
+        ]);
     }
 }

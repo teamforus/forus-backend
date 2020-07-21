@@ -637,6 +637,11 @@ $router->group(['middleware' => [
         'Api\Platform\PrevalidationController@storeCollection'
     );
 
+    $router->post(
+        'prevalidations/collection/hash',
+        'Api\Platform\PrevalidationController@collectionHash'
+    );
+
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController', [
