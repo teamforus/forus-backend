@@ -9,7 +9,7 @@ return [
         'title' => 'Aanmelding met :product_name is goedgekeurd voor :fund_name.',
         'description' => implode([
             'Aanmelding voor :fund_name is goedgekeurd.',
-            'Uw specifieke aanbieding :product_name staat nu op de webshop van :sponsor_name.'
+            'Uw aanbieding :product_name staat nu op de webshop van :sponsor_name.'
         ], ' '),
     ],
     // todo: translate
