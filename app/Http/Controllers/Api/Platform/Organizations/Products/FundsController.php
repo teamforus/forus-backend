@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\platform\Organizations\Products;
+namespace App\Http\Controllers\Api\Platform\Organizations\Products;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;

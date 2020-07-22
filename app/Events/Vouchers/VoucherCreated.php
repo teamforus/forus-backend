@@ -13,17 +13,20 @@ class VoucherCreated
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     private $voucher;
+    private $notifyRequester;
 
     /**
      * Create a new event instance.
      *
-     * @param  Voucher $voucher
-     * @return void
+     * @param Voucher $voucher
+     * @param bool $notifyRequester
      */
     public function __construct(
-        Voucher $voucher
+        Voucher $voucher,
+        bool $notifyRequester = true
     ) {
         $this->voucher = $voucher;
+        $this->notifyRequester = $notifyRequester;
     }
 
     /**
@@ -44,5 +47,13 @@ class VoucherCreated
     public function broadcastOn()
     {
         return new PrivateChannel('channel-name');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNotifyRequester(): bool
+    {
+        return $this->notifyRequester;
     }
 }

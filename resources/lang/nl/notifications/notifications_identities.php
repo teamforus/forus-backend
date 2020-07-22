@@ -101,6 +101,13 @@ return [
         'description' => 'Een aanbiedingsvoucher is zojuist gebruikt om :product_name af te nemen.',
     ],
 
+    // product voucher reserved on webshop (voucher created)
+    'product_voucher_reserved' => [
+        'title' => 'You reserved :product_name.',
+        'description' =>
+            'You reserved :product_name from :provider_name.',
+    ],
+
     // product voucher shared to provider
     'product_voucher_shared' => [
         'title' => 'Aanbieding QR-code gedeeld met :provider_name.',
@@ -110,7 +117,6 @@ return [
     ],
 
     // product voucher is about to expire
-    // todo: add product details
     'voucher_expire_soon_product' => [
         'title' => ':fund_name verloopt binnenkort.',
         'description' => ':fund_name verloopt binnenkort.'
@@ -123,7 +129,6 @@ return [
     ],
 
     // product voucher expired
-    // todo: add product details
     'product_voucher_expired' => [
         'title' => 'Uw :fund_name-voucher is verlopen.',
         'description' => 'Uw :fund_name-voucher is verlopen.'

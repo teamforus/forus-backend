@@ -22,9 +22,7 @@ class EmployeeAddedMail extends ImplementationMail
         ?EmailFrom $emailFrom = null
     ) {
         $this->setMailFrom($emailFrom);
-
         $this->transData['data'] = $data;
-
     }
 
     /**

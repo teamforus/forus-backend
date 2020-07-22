@@ -22,13 +22,13 @@ class ProductVoucherShared
      *
      * ProductVoucherShared constructor.
      * @param Voucher $voucher
-     * @param $message
+     * @param string $message
      * @param $sendCopyToUser
      */
     public function __construct(
         Voucher $voucher,
-        $message,
-        $sendCopyToUser
+        string $message,
+        bool $sendCopyToUser
     ) {
         $this->voucher = $voucher;
         $this->message = $message;
@@ -40,7 +40,7 @@ class ProductVoucherShared
      *
      * @return Voucher
      */
-    public function getVoucher()
+    public function getVoucher(): Voucher
     {
         return $this->voucher;
     }
@@ -50,7 +50,7 @@ class ProductVoucherShared
      *
      * @return Product
      */
-    public function getProduct()
+    public function getProduct(): Product
     {
         return $this->voucher->product;
     }
@@ -58,11 +58,19 @@ class ProductVoucherShared
     /**
      * Get the share message product
      *
-     * @return Product
+     * @return string
      */
-    public function getMessage()
+    public function getMessage(): string
     {
         return $this->message;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSendCopyToUser(): bool
+    {
+        return $this->sendCopyToUser;
     }
 
     /**

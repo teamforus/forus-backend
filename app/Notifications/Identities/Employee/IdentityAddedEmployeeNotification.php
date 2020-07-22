@@ -9,29 +9,24 @@ use App\Services\Forus\Identity\Models\Identity;
 class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 {
     protected $key = 'notifications_identities.added_employee';
-    protected static $permissions = [
-        'manage_employees'
-    ];
+    protected $sendMail = true;
 
     /**
      * @param Identity $identity
-     * @return bool|null
      * @throws \Exception
      */
-    public function toMail(Identity $identity)
+    public function toMail(Identity $identity): void
     {
-        $identityProxy = resolve('forus.services.identity')->makeIdentityPoxy(
-            $identity->address
-        );
+        $client_type = $this->eventLog->data['client_type'] ?? client_type();
+        $implementation_key = $this->eventLog->data['implementation_key'] ?? implementation_key();
 
         $confirmationLink = sprintf(
-            "%s/confirmation/email/%s?%s",
-            rtrim(Implementation::active()['url_' . client_type('general')], '/'),
-            $identityProxy['exchange_token'],
-            http_build_query(compact('target'))
+            "%s/confirmation/email/%s",
+            rtrim(Implementation::byKey($implementation_key)['url_' . $client_type], '/'),
+            identity_repo()->makeIdentityPoxy($identity->address)['exchange_token']
         );
 
-        return resolve('forus.services.notification')->sendMailNotification(
+        notification_service()->sendMailNotification(
             $identity->primary_email->email,
             new EmployeeAddedMail(array_merge($this->eventLog->data, [
                 'confirmationLink' => $confirmationLink,

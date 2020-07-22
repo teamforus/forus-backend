@@ -15,10 +15,10 @@ class VoucherTransactionsSubscriber
      */
     public function onVoucherTransactionCreated(
         VoucherTransactionCreated $voucherTransactionEvent
-    ) {
+    ): void {
         $transaction = $voucherTransactionEvent->getVoucherTransaction();
         $voucher = $transaction->voucher;
-        $isProductTransaction = $voucher->type == Voucher::TYPE_PRODUCT;
+        $isProductTransaction = $voucher->type === Voucher::TYPE_PRODUCT;
 
         if ($isProductTransaction) {
             $voucher->product->updateSoldOutState();

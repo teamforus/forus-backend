@@ -17,32 +17,32 @@ class RolesTableSeeder extends Seeder
     {
         Role::create([
             'key' => 'admin',
-            'name' => 'Beheerder',
+            // 'name' => 'Beheerder',
         ]);
 
         Role::create([
             'key' => 'finance',
-            'name' => 'Financien',
+            // 'name' => 'Financien',
         ]);
 
         Role::create([
             'key' => 'validation',
-            'name' => 'Validator',
+            // 'name' => 'Validator',
         ]);
 
         Role::create([
             'key' => 'policy_officer',
-            'name' => 'Manager',
+            // 'name' => 'Manager',
         ]);
 
         Role::create([
             'key' => 'operation_officer',
-            'name' => 'Kassa',
+            // 'name' => 'Kassa',
         ]);
 
         Role::create([
             'key' => 'implementation_manager',
-            'name' => 'Implementatie manager',
+            // 'name' => 'Implementatie manager',
         ]);
     }
 }

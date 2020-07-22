@@ -20,7 +20,7 @@
     <br/>
     {{ mail_trans('product_reserved.deadline', [
         'price' => $product_price,
-        'expire_at_minus_1_day' => $expire_at_minus_1_day,
+        'expire_at_minus_1_day' => $expire_at_locale,
     ]) }}
     <br/>
     <br/>
