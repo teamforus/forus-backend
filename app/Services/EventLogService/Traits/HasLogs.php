@@ -30,7 +30,10 @@ trait HasLogs
             ));
         }, []);
 
-        $data = array_merge($meta, $raw_meta);
+        $data = array_merge([
+            'client_type' =>  client_type(),
+            'implementation_key' =>  implementation_key(),
+        ], $meta, $raw_meta);
 
         /** @var EventLog $eventLog */
         $eventLog = $this->logs()->create([

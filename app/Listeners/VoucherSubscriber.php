@@ -13,6 +13,7 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherAddedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherExpiredNotification;
+use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAddedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedNotification;
@@ -78,6 +79,10 @@ class VoucherSubscriber
             ]);
 
             IdentityProductVoucherAddedNotification::send($event);
+
+            if ($voucherCreated->isNotifyRequester()) {
+                IdentityProductVoucherReservedNotification::send($event);
+            }
         } else if ($voucher->identity_address) {
             $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
                 $voucher->identity_address
@@ -144,14 +149,14 @@ class VoucherSubscriber
         ProductVoucherShared $voucherShared
     ): void {
         $voucher = $voucherShared->getVoucher();
-        $message = $voucherShared->getMessage();
 
         $eventLog = $voucher->log(Voucher::EVENT_SHARED, [
             'voucher' => $voucher,
             'product' => $voucher->product,
             'provider' => $voucher->product->organization,
         ], [
-            'voucher_share_message' => $message
+            'voucher_share_message' => $voucherShared->getMessage(),
+            'voucher_share_send_copy' => $voucherShared->isSendCopyToUser(),
         ]);
 
         IdentityProductVoucherSharedNotification::send($eventLog);

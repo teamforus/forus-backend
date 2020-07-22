@@ -19,7 +19,7 @@ class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotificat
         'manage_provider_funds'
     ];
 
-    public function toMail(Identity $identity)
+    public function toMail(Identity $identity): void
     {
         /** @var FundProvider $fundProvider */
         $fundProvider = $this->eventLog->loggable;

@@ -11,7 +11,7 @@ class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundR
     protected $key = 'notifications_identities.fund_request_feedback_requested';
     protected $sendMail = true;
 
-    public function toMail(Identity $identity)
+    public function toMail(Identity $identity): void
     {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;

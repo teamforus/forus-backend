@@ -20,10 +20,6 @@ abstract class BaseIdentityFundNotification extends BaseIdentityNotification
     {
         $identities = $loggable->vouchers()->pluck('identity_address')->unique();
 
-        log_debug($identities);
-        log_debug($loggable->vouchers()->toSql());
-        log_debug($loggable->vouchers->toJson(JSON_PRETTY_PRINT));
-
         return Identity::whereIn('address', $identities->toArray())->get();
     }
 }

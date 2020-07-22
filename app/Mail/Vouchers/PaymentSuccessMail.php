@@ -12,29 +12,21 @@ use Illuminate\Mail\Mailable;
  */
 class PaymentSuccessMail extends ImplementationMail
 {
-    private $fundName;
-    private $currentBudget;
+    private $transData;
 
     public function __construct(
-        string $fundName,
-        string $currentBudget,
-        ?EmailFrom $emailFrom
+        array $data = [],
+        ?EmailFrom $emailFrom = null
     ) {
         $this->setMailFrom($emailFrom);
 
-        $this->fundName = $fundName;
-        $this->currentBudget = $currentBudget;
+        $this->transData['data'] = $data;
     }
 
     public function build(): Mailable
     {
         return $this->buildBase()
-            ->subject(mail_trans('payment_success.title', [
-                'fund_name' => $this->fundName
-            ]))
-            ->view('emails.vouchers.payment_success', [
-                'fund_name' => $this->fundName,
-                'current_budget' => $this->currentBudget
-            ]);
+            ->subject(mail_trans('payment_success.title', $this->transData['data']))
+            ->view('emails.vouchers.payment_success', $this->transData['data']);
     }
 }
