@@ -22,9 +22,9 @@ class ImplementationPolicy
         $identity_address,
         Organization $organization
     ) {
-        return $organization->identityCan(
-            $identity_address, 'manage_implementation'
-        );
+        return $organization->identityCan($identity_address, [
+            'manage_implementation', 'manage_implementation_cms'
+        ], false);
     }
 
     /**
@@ -40,7 +40,33 @@ class ImplementationPolicy
         Implementation $implementation,
         Organization $organization
     ) {
-        return $this->update($identity_address, $implementation, $organization);
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity_address, [
+            'manage_implementation', 'manage_implementation_cms'
+        ], false);
+    }
+
+    /**
+     * Determine whether the user can update the implementation CMS.
+     *
+     * @param $identity_address
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function updateCMS(
+        $identity_address,
+        Implementation $implementation,
+        Organization $organization
+    ) {
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity_address, 'manage_implementation_cms');
     }
 
     /**
@@ -51,19 +77,36 @@ class ImplementationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function update(
+    public function updateEmail(
         $identity_address,
         Implementation $implementation,
         Organization $organization
     ) {
-        if (!$this->checkIntegrity($implementation, $organization)){
+        if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
 
-        return $organization->identityCan(
-            $identity_address,
-            'manage_implementation'
-        );
+        return $organization->identityCan($identity_address, 'manage_implementation');
+    }
+
+    /**
+     * Determine whether the user can update the implementation.
+     *
+     * @param $identity_address
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     */
+    public function updateDigiD(
+        $identity_address,
+        Implementation $implementation,
+        Organization $organization
+    ) {
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity_address, 'manage_implementation');
     }
 
     /**

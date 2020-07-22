@@ -64,4 +64,17 @@ class OrganizationQuery
             }
         });
     }
+
+    /**
+     * @param Builder $query
+     * @param $implementation_id
+     * @return Builder
+     */
+    public static function whereImplementationIdFilter(Builder $query, $implementation_id) {
+        return $query->whereHas('funds.fund_config', function(
+            Builder $builder
+        ) use ($implementation_id) {
+            $builder->whereIn('implementation_id', (array) $implementation_id);
+        });
+    }
 }
