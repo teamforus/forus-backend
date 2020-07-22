@@ -36,16 +36,16 @@ class ScheduleRule implements Rule
         // both are valid format
         return (
                 preg_match($reg_ex, $value['start_time']) ||
-                $value['start_time'] == 'null'
+                $value['start_time'] === 'null'
             ) && (
                 preg_match($reg_ex, $value['end_time']) ||
-                $value['end_time'] == 'null'
+                $value['end_time'] === 'null'
             ) && (
                 preg_match($reg_ex, $value['break_start_time']) ||
-                $value['break_start_time'] == 'null'
+                $value['break_start_time'] === 'null'
             ) && (
                 preg_match($reg_ex, $value['break_end_time']) ||
-                $value['break_end_time'] == 'null'
+                $value['break_end_time'] === 'null'
             );
     }
 

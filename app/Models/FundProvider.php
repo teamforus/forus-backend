@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Events\Products\ProductApproved;
+use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderChatQuery;
+use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,11 +44,24 @@ use Carbon\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  */
 class FundProvider extends Model
 {
-    const STATE_APPROVED = 'approved';
-    const STATE_PENDING = 'pending';
+    use HasLogs;
+
+    public const EVENT_APPROVED_BUDGET = 'approved_budget';
+    public const EVENT_REVOKED_BUDGET = 'revoked_budget';
+    public const EVENT_APPROVED_PRODUCTS = 'approved_products';
+    public const EVENT_REVOKED_PRODUCTS = 'revoked_products';
+    public const EVENT_SPONSOR_MESSAGE = 'sponsor_message';
+    public const EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const EVENT_FUND_STARTED = 'fund_started';
+    public const EVENT_FUND_ENDED = 'fund_ended';
+
+    public const STATE_APPROVED = 'approved';
+    public const STATE_PENDING = 'pending';
 
     /**
      * The attributes that are mass assignable.
@@ -148,12 +164,13 @@ class FundProvider extends Model
 
             $dates = range_between_dates($startDate, $endDate);
         } elseif ($type == 'year') {
-            $startDate = Carbon::createFromDate($year, 1, 1)->startOfYear();
-            $endDate = Carbon::createFromDate($year, 1, 1)->endOfYear();
+            $startDate = Carbon::createFromDate($year, 1, 1)->startOfDay();
+            $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
 
             $dates->push($startDate);
-            $dates->push($startDate->copy()->addMonths(4));
-            $dates->push($startDate->copy()->addMonths(8));
+            $dates->push($startDate->copy()->addQuarters(1));
+            $dates->push($startDate->copy()->addQuarters(2));
+            $dates->push($startDate->copy()->addQuarters(3));
             $dates->push($endDate);
         } elseif ($type == 'all') {
             $firstTransaction = $fund->voucher_transactions()->where([
@@ -203,6 +220,10 @@ class FundProvider extends Model
                 "value" => 0
             ];
         });
+
+        if ($type == 'year') {
+            $dates->shift();
+        }
 
         $transactions = $fund->voucher_transactions()->where([
             'organization_id' => $this->organization_id
@@ -385,13 +406,14 @@ class FundProvider extends Model
      */
     public function approveProducts(array $products)
     {
+        $oldProducts = $this->products()->pluck('products.id')->toArray();
+        $newProducts = array_diff($products, $oldProducts);
+
         $this->products()->attach($products);
 
-        FundProviderChatQuery::whereProductFilter(
-            $this->fund_provider_chats()->getQuery(),
-            $products
-        )->get()->each(function(FundProviderChat $chat) {
-            $chat->addSystemMessage('Aanbieding geaccepteerd.', auth_address());
+        $newProducts = Product::whereIn('products.id', $newProducts)->get();
+        $newProducts->each(function(Product $product) {
+            ProductApproved::dispatch($product, $this->fund);
         });
 
         return $this;
@@ -403,7 +425,15 @@ class FundProvider extends Model
      */
     public function declineProducts(array $products)
     {
+        $oldProducts = $this->products()->pluck('products.id')->toArray();
+        $detachedProducts = array_intersect($oldProducts, $products);
+
         $this->products()->detach($products);
+
+        $detachedProducts = Product::whereIn('products.id', $detachedProducts)->get();
+        $detachedProducts->each(function(Product $product) {
+            ProductRevoked::dispatch($product, $this->fund);
+        });
 
         FundProviderChatQuery::whereProductFilter(
             $this->fund_provider_chats()->getQuery(),
@@ -413,5 +443,25 @@ class FundProvider extends Model
         });
 
         return $this;
+    }
+
+    /**
+     * @param Product $product
+     * @param string $message
+     * @param string $identity_address
+     * @return mixed
+     */
+    public function startChat(
+        Product $product,
+        string $message,
+        string $identity_address
+    ) {
+        /** @var FundProviderChat $chat */
+        $chat = $this->fund_provider_chats()->create([
+            'product_id' => $product->id,
+            'identity_address' => $identity_address,
+        ]);
+
+        return $chat->addSponsorMessage($message, $identity_address);
     }
 }

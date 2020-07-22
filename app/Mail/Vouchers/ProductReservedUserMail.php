@@ -4,6 +4,7 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
+use Illuminate\Mail\Mailable;
 
 /**
  * Class ProductReservedUserMail
@@ -29,7 +30,7 @@ class ProductReservedUserMail extends ImplementationMail
         string $expireAtMinus1Day,
         ?EmailFrom $emailFrom
     ) {
-        parent::__construct($emailFrom);
+        $this->setMailFrom($emailFrom);
 
         $this->productName = $productName;
         $this->productPrice = $productPrice;
@@ -40,9 +41,9 @@ class ProductReservedUserMail extends ImplementationMail
         $this->expire_at_minus_1_day = $expireAtMinus1Day;
     }
 
-    public function build(): ImplementationMail
+    public function build(): Mailable
     {
-        return parent::build()
+        return $this->buildBase()
             ->subject(mail_trans('product_reserved.title', [
                 'product_name' => $this->productName,
                 'provider_organization_name' => $this->provider_organization_name

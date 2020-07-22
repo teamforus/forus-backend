@@ -360,16 +360,18 @@ class RecordRepo implements IRecordRepo
      * @param string $identityAddress
      * @param string|null $type
      * @param integer|null $categoryId
+     * @param bool $deleted
      * @return array
      */
     public function recordsList(
         string $identityAddress,
         $type = null,
-        $categoryId = null
+        $categoryId = null,
+        bool $deleted = false
     ) {
-
         // Todo: validation state
-        $query = Record::query()->where([
+        $query = $deleted ? Record::onlyTrashed() : Record::query();
+        $query->where([
             'identity_address' => $identityAddress
         ])->with([
             'record_type'
@@ -416,6 +418,7 @@ class RecordRepo implements IRecordRepo
                 'order' => $record->order,
                 'key' => $record->record_type->key,
                 'name' => $record->record_type->name,
+                'deleted' => !is_null($record->deleted_at),
                 'record_category_id' => $record->record_category_id,
                 'validations' => $validations
             ];
@@ -426,17 +429,24 @@ class RecordRepo implements IRecordRepo
      * Get identity record
      * @param string $identityAddress
      * @param mixed $recordId
+     * @param bool $withTrashed
      * @return array
      */
     public function recordGet(
         string $identityAddress,
-        $recordId
-    ) {
+        $recordId,
+        bool $withTrashed = false
+    ): ?array {
         /** @var Record $record */
-        $record = Record::query()->where([
+        $query = $withTrashed ? Record::withTrashed() : Record::query();
+        $record = $query->where([
             'id' => $recordId,
             'identity_address' => $identityAddress,
         ])->first();
+
+        if (empty($record)) {
+            return null;
+        }
 
         $validations = $record->validations()->where([
             'state' => 'approved'
@@ -445,9 +455,7 @@ class RecordRepo implements IRecordRepo
             'organization_id'
         ])->distinct()->orderBy(
             'updated_at', 'DESC'
-        )->get()->load('organization')->map(function(
-            RecordValidation $validation
-        ) {
+        )->get()->load('organization')->map(function(RecordValidation $validation) {
             return $validation->setAttribute(
                 'email',
                 $validation->organization ? null :$this->primaryEmailByAddress(
@@ -457,15 +465,16 @@ class RecordRepo implements IRecordRepo
         })->toArray();
 
         // Todo: validation state
-        return $record ? [
+        return [
             'id' => $record->id,
-            'value' => $record->value,
-            'order' => $record->order,
             'key' => $record->record_type->key,
+            'value' => $record->value,
             'name' => $record->record_type->name,
+            'order' => $record->order,
+            'deleted' => !is_null($record->deleted_at),
             'record_category_id' => $record->record_category_id,
             'validations' => $validations
-        ] : null;
+        ];
     }
 
     /**
@@ -492,21 +501,21 @@ class RecordRepo implements IRecordRepo
             ]));
         }
 
-        if ($typeKey == 'primary_email' && Record::query()->where([
+        if ($typeKey === 'primary_email' && Record::query()->where([
                 'identity_address' => $identityAddress,
                 'record_type_id' => $this->getTypeIdByKey('primary_email'),
             ])->count() > 0) {
             abort(403,'record.exceptions.primary_email_already_exists');
         }
 
-        if ($typeKey == 'bsn') {
+        if ($typeKey === 'bsn') {
             abort(403,'record.exceptions.bsn_record_cant_be_created');
         }
 
         /** @var Record $record */
         $record = Record::create([
             'identity_address' => $identityAddress,
-            'order' => $order ? $order : 0,
+            'order' => $order ?: 0,
             'value' => $value,
             'record_type_id' => $typeId,
             'record_category_id' => $recordCategoryId,
@@ -659,23 +668,15 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         string $validationUuid,
         int $organization_id = null
-    ) {
-        /** @var
-         * Identity $identity
-         */
-        $validation = RecordValidation::query()->where(
-            'uuid', $validationUuid
-        )->first();
-
-        $identity = Identity::query()->where([
-            'address' => $identityAddress
-        ])->first();
+    ): bool {
+        $validation = RecordValidation::whereUuid($validationUuid)->first();
+        $identity = Identity::whereAddress($identityAddress)->first();
 
         if (!$identity || $validation->identity_address) {
             return false;
         }
 
-        return !!$validation->update([
+        return (bool) $validation->update([
             'identity_address' => $identity->address,
             'organization_id' => $organization_id,
             'state' => 'approved'
@@ -691,23 +692,15 @@ class RecordRepo implements IRecordRepo
     public function declineValidationRequest(
         string $identityAddress,
         string $validationUuid
-    ) {
-        /** @var
-         * Identity $identity
-         */
-        $validation = RecordValidation::query()->where(
-            'uuid', $validationUuid
-        )->first();
-
-        $identity = Identity::query()->where([
-            'address' => $identityAddress
-        ])->first();
+    ): bool {
+        $validation = RecordValidation::whereUuid($validationUuid)->first();
+        $identity = Identity::whereAddress($identityAddress)->first();
 
         if (!$identity || $validation->identity_address) {
             return false;
         }
 
-        return !!$validation->update([
+        return (bool)$validation->update([
             'identity_address' => $identity->address,
             'state' => 'declined'
         ]);

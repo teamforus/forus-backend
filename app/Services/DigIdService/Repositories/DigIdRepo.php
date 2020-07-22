@@ -8,27 +8,27 @@ use GuzzleHttp\Client;
 
 class DigIdRepo implements IDigIdRepo
 {
-    const DIGID_SUCCESS                     = '0000';
-    const DIGID_UNAVAILABLE                 = '0001';
-    const DIGID_TEMPORARY_UNAVAILABLE_1     = '0003';
-    const DIGID_VERIFICATION_FAILED_1       = '0004';
-    const DIGID_VERIFICATION_FAILED_2       = '0007';
-    const DIGID_ILLEGAL_REQUEST             = '0030';
-    const DIGID_ERROR_APP_ID                = '0032';
-    const DIGID_ERROR_ASELECT               = '0033';
-    const DIGID_CANCELLED                   = '0040';
-    const DIGID_BUSY                        = '0050';
-    const DIGID_INVALID_SESSION             = '0070';
-    const DIGID_WEBSERVICE_NOT_ACTIVE       = '0080';
-    const DIGID_WEBSERVICE_NOT_AUTHORISED   = '0099';
-    const DIGID_TEMPORARY_UNAVAILABLE_2     = '010c';
-    const DIGID_API_NOT_RESPONDING          = 'API_0000';
+    public const DIGID_SUCCESS                     = '0000';
+    public const DIGID_UNAVAILABLE                 = '0001';
+    public const DIGID_TEMPORARY_UNAVAILABLE_1     = '0003';
+    public const DIGID_VERIFICATION_FAILED_1       = '0004';
+    public const DIGID_VERIFICATION_FAILED_2       = '0007';
+    public const DIGID_ILLEGAL_REQUEST             = '0030';
+    public const DIGID_ERROR_APP_ID                = '0032';
+    public const DIGID_ERROR_ASELECT               = '0033';
+    public const DIGID_CANCELLED                   = '0040';
+    public const DIGID_BUSY                        = '0050';
+    public const DIGID_INVALID_SESSION             = '0070';
+    public const DIGID_WEBSERVICE_NOT_ACTIVE       = '0080';
+    public const DIGID_WEBSERVICE_NOT_AUTHORISED   = '0099';
+    public const DIGID_TEMPORARY_UNAVAILABLE_2     = '010c';
+    public const DIGID_API_NOT_RESPONDING          = 'API_0000';
 
-    const URL_API_SANDBOX = "https://was-preprod1.digid.nl/was/server";
-    const URL_API_PRODUCTION = "https://was.digid.nl/was/server";
+    public const URL_API_SANDBOX = "https://was-preprod1.digid.nl/was/server";
+    public const URL_API_PRODUCTION = "https://was.digid.nl/was/server";
 
-    const ENV_SANDBOX = "sandbox";
-    const ENV_PRODUCTION = "production";
+    public const ENV_SANDBOX = "sandbox";
+    public const ENV_PRODUCTION = "production";
 
     protected $app_id = null;
     protected $shared_secret = null;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -31,19 +32,31 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Employee withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Employee withoutTrashed()
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  */
 class Employee extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasLogs;
+
+    const EVENT_CREATED = 'created';
+    const EVENT_UPDATED = 'updated';
+    const EVENT_DELETED = 'deleted';
 
     protected $fillable = [
         'identity_address', 'organization_id'
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function organization() {
         return $this->belongsTo(Organization::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function roles() {
         return $this->belongsToMany(
             Role::class,
@@ -51,6 +64,10 @@ class Employee extends Model
         );
     }
 
+    /**
+     * @param string $role
+     * @return bool
+     */
     public function hasRole(string $role) {
         return $this->roles()->where('key', '=', $role)->count() > 0;
     }

@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Platform\SearchBusinessTypesRequest;
 use App\Http\Resources\BusinessTypeResource;
 use App\Models\BusinessType;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class BusinessTypeController extends Controller
 {
@@ -17,7 +18,7 @@ class BusinessTypeController extends Controller
      */
     public function index(
         SearchBusinessTypesRequest $request
-    ) {
+    ): AnonymousResourceCollection {
         return BusinessTypeResource::collection(BusinessType::search(
             $request
         )->with(
@@ -31,7 +32,7 @@ class BusinessTypeController extends Controller
      * @param BusinessType $businessType
      * @return BusinessTypeResource
      */
-    public function show(BusinessType $businessType)
+    public function show(BusinessType $businessType): BusinessTypeResource
     {
         return new BusinessTypeResource($businessType);
     }

@@ -3,25 +3,21 @@
 namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
-use App\Mail\FundRequests\FundRequestCreatedMail;
-use App\Mail\FundRequests\FundRequestClarificationRequestedMail;
-use App\Mail\FundRequests\FundRequestRecordDeclinedMail;
-use App\Mail\FundRequests\FundRequestResolvedMail;
+use App\Mail\Digest\BaseDigestMail;
+use App\Mail\Digest\DigestProviderMail;
+use App\Mail\Funds\FundRequestRecords\FundRequestRecordDeclinedMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundClosed;
 use App\Mail\Funds\FundClosedProvider;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
-use App\Mail\Funds\ProviderAppliedMail;
-use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderInvitedMail;
-use App\Mail\Funds\ProviderRejectedMail;
-use App\Mail\Funds\Forus\ForusFundCreated;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\EmployeeAddedMail;
 use App\Mail\User\IdentityEmailVerificationMail;
 use App\Mail\Vouchers\AssignedVoucherMail;
-use App\Mail\Vouchers\FundStatisticsMail;
+use App\Mail\Forus\FundStatisticsMail;
+use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductReservedUserMail;
@@ -44,10 +40,10 @@ use Illuminate\Support\Facades\Notification;
  */
 class NotificationService
 {
-    const TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
-    const TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
+    public const TYPE_PUSH_IOS = NotificationToken::TYPE_PUSH_IOS;
+    public const TYPE_PUSH_ANDROID = NotificationToken::TYPE_PUSH_ANDROID;
 
-    const TYPES = [
+    public const TYPES = [
         self::TYPE_PUSH_IOS,
         self::TYPE_PUSH_ANDROID,
     ];
@@ -89,8 +85,8 @@ class NotificationService
         $identity_address,
         string $type,
         string $token
-    ) {
-        if (!in_array($type, self::TYPES)) {
+    ): bool {
+        if (!in_array($type, self::TYPES, true)) {
             return false;
         }
 
@@ -112,7 +108,7 @@ class NotificationService
         string $token,
         string $type = null,
         $identity_address = null
-    ) {
+    ): void {
         $query = NotificationToken::where(compact('token'));
 
         if ($type) {
@@ -140,7 +136,7 @@ class NotificationService
         string $title,
         string $body,
         string $key = null
-    ) {
+    ): bool {
         if ($this->isPushUnsubscribable($key) &&
             $this->isPushUnsubscribed($identity_address, $key)) {
             return false;
@@ -175,31 +171,15 @@ class NotificationService
     }
 
     /**
-     * Notify sponsor that new provider applied to his fund
-     *
      * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $provider_name
-     * @param string $sponsor_name
-     * @param string $fund_name
-     * @param string $sponsor_dashboard_link
+     * @param Mailable $param
      * @return bool|null
      */
-    public function providerApplied(
+    public function sendMailNotification(
         string $email,
-        ?EmailFrom $emailFrom,
-        string $provider_name,
-        string $sponsor_name,
-        string $fund_name,
-        string $sponsor_dashboard_link
+        Mailable $param
     ) {
-        return $this->sendMail($email, new ProviderAppliedMail(
-            $provider_name,
-            $sponsor_name,
-            $fund_name,
-            $sponsor_dashboard_link,
-            $emailFrom
-        ));
+        return $this->sendMail($email, $param);
     }
 
     /**
@@ -230,7 +210,7 @@ class NotificationService
         string $fund_end_date,
         string $from_fund_name,
         string $invitation_link
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new ProviderInvitedMail(
             $provider_name,
             $sponsor_name,
@@ -241,107 +221,6 @@ class NotificationService
             $fund_end_date,
             $from_fund_name,
             $invitation_link,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $provider_name
-     * @param string $sponsor_name
-     * @param string $provider_dashboard_link
-     * @return bool|null
-     */
-    public function providerApproved(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $provider_name,
-        string $sponsor_name,
-        string $provider_dashboard_link
-    ) {
-        return $this->sendMail($email, new ProviderApprovedMail(
-            $fund_name,
-            $provider_name,
-            $sponsor_name,
-            $provider_dashboard_link,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify provider that his request to apply for fund was rejected
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $provider_name
-     * @param string $sponsor_name
-     * @param string $phone_number
-     * @return bool|null
-     */
-    public function providerRejected(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $provider_name,
-        string $sponsor_name,
-        string $phone_number
-    ) {
-        return $this->sendMail($email, new ProviderRejectedMail(
-            $fund_name,
-            $provider_name,
-            $sponsor_name,
-            $phone_number,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user that new fund request was created
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $webshop_link
-     * @return bool|null
-     */
-    public function newFundRequestCreated(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $webshop_link
-    ) {
-        return $this->sendMail($email, new FundRequestCreatedMail(
-            $fund_name,
-            $webshop_link,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user that fund request resolved
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $requestStatus
-     * @param string $fundName
-     * @param string $webshopLink
-     * @return bool|null
-     */
-    public function fundRequestResolved(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $requestStatus,
-        string $fundName,
-        string $webshopLink
-    ) {
-        return $this->sendMail($email, new FundRequestResolvedMail(
-            $requestStatus,
-            $fundName,
-            $webshopLink,
             $emailFrom
         ));
     }
@@ -366,34 +245,6 @@ class NotificationService
         return $this->sendMail($email, new FundRequestRecordDeclinedMail(
             $fundName,
             $rejectionNote,
-            $webshopLink,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify user that new fund request clarification requested
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fundName
-     * @param string $question
-     * @param string $webshopClarificationLink
-     * @param string $webshopLink
-     * @return bool|null
-     */
-    public function sendFundRequestClarificationToRequester(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fundName,
-        string $question,
-        string $webshopClarificationLink,
-        string $webshopLink
-    ) {
-        return $this->sendMail($email, new FundRequestClarificationRequestedMail(
-            $fundName,
-            $question,
-            $webshopClarificationLink,
             $webshopLink,
             $emailFrom
         ));
@@ -436,7 +287,7 @@ class NotificationService
         string $fund_name,
         string $organization_name
     ) {
-        return $this->sendMail($email, new ForusFundCreated(
+        return $this->sendMail($email, new ForusFundCreatedMail(
             $fund_name,
             $organization_name,
             $emailFrom
@@ -780,7 +631,7 @@ class NotificationService
         ?EmailFrom $emailFrom,
         string $orgName,
         string $confirmationLink
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new EmployeeAddedMail(
             $orgName,
             config('app.name'),
@@ -813,7 +664,7 @@ class NotificationService
         string $sponsor_phone,
         string $sponsor_email,
         string $webshopLink
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new FundExpiredMail(
             $fund_name,
             $sponsor_name,
@@ -874,6 +725,17 @@ class NotificationService
     }
 
     /**
+     * Send digest
+     *
+     * @param string $email
+     * @param BaseDigestMail $mailable
+     * @return bool|null
+     */
+    public function sendDigest(string $email, BaseDigestMail $mailable): ?bool {
+        return $this->sendMail($email, $mailable);
+    }
+
+    /**
      * Send the mail and check for failure
      *
      * @param $email
@@ -921,7 +783,7 @@ class NotificationService
      * @return bool
      * @throws \Exception
      */
-    protected function isUnsubscribed(string $email, Mailable $mailable) {
+    protected function isUnsubscribed(string $email, Mailable $mailable): bool {
         $mailClass = get_class($mailable);
 
         return $this->notificationRepo->isMailUnsubscribable($mailClass) && (
@@ -939,7 +801,7 @@ class NotificationService
      * @param string $key
      * @return bool
      */
-    protected function isPushUnsubscribable(string $key) {
+    protected function isPushUnsubscribable(string $key): bool {
         return $this->notificationRepo->isPushNotificationUnsubscribable($key);
     }
 
@@ -950,7 +812,7 @@ class NotificationService
      * @param string $key
      * @return bool
      */
-    protected function isPushUnsubscribed(string $identity_address, string $key) {
+    protected function isPushUnsubscribed(string $identity_address, string $key): bool {
         return $this->notificationRepo->isPushNotificationUnsubscribed(
             $identity_address,
             $key
@@ -963,8 +825,7 @@ class NotificationService
      * @param string $mailName
      * @return bool
      */
-    private function checkFailure(string $mailName): bool
-    {
+    private function checkFailure(string $mailName): bool {
         if (!$this->mailer->failures()) {
             return true;
         }
@@ -980,11 +841,12 @@ class NotificationService
      * @param string|null $message
      * @return void
      */
-    private function logFailure(?string $message)
-    {
-        logger()->error(sprintf(
-            'Error sending notification: `%s`',
-            $message
-        ));
+    private function logFailure(?string $message): void {
+        if ($logger = logger()) {
+            $logger->error(sprintf(
+                'Error sending notification: `%s`',
+                $message
+            ));
+        }
     }
 }

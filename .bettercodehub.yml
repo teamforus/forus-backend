@@ -5,4 +5,7 @@ exclude:
 - /resources/lang/.*
 - /config/.*
 - /bootstrap/.*
+- /routes/.*
+- /database/.*
+- /config/.*
 - .*/_ide_helper\.php

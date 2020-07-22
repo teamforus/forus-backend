@@ -2,7 +2,12 @@
 
 namespace App\Services\Forus\Identity\Models;
 
+use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Services\Forus\Identity\Models\Identity
@@ -17,10 +22,15 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityEmail[] $emails
  * @property-read int|null $emails_count
+ * @property-read string $email
  * @property-read \App\Services\Forus\Identity\Models\IdentityEmail $initial_email
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Services\Forus\Identity\Models\DatabaseNotification[] $notifications
+ * @property-read int|null $notifications_count
  * @property-read \App\Services\Forus\Identity\Models\IdentityEmail $primary_email
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityProxy[] $proxies
  * @property-read int|null $proxies_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read int|null $vouchers_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity query()
@@ -36,6 +46,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Identity extends Model
 {
+    use Notifiable;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -46,16 +58,25 @@ class Identity extends Model
     ];
 
     /**
+     * @var string[]
+     */
+    protected $hidden = [
+        'pin_code', 'passphrase', 'private_key', 'public_key'
+    ];
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function emails() {
+    public function emails(): HasMany
+    {
         return $this->hasMany(IdentityEmail::class, 'identity_address', 'address');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function primary_email() {
+    public function primary_email(): HasOne
+    {
         return $this->hasOne(IdentityEmail::class, 'identity_address', 'address')->where([
             'primary' => true
         ]);
@@ -64,7 +85,8 @@ class Identity extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function initial_email() {
+    public function initial_email(): HasOne
+    {
         return $this->hasOne(IdentityEmail::class, 'identity_address', 'address')->where([
             'initial' => true
         ]);
@@ -73,8 +95,36 @@ class Identity extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function proxies() {
+    public function proxies(): HasMany
+    {
         return $this->hasMany(IdentityProxy::class, 'identity_address', 'address');
+    }
+
+    /**
+     * Get the entity's notifications.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function notifications(): MorphMany
+    {
+        return $this->morphMany(DatabaseNotification::class, 'notifiable')
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(Voucher::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @param $address
+     * @return Identity|\Illuminate\Database\Eloquent\Builder|Model|object|null
+     */
+    public static function findByAddress($address) {
+        return self::whereAddress($address)->first();
     }
 
     /**
@@ -98,5 +148,21 @@ class Identity extends Model
         ]));
 
         return $identityEmail;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEmailAttribute(): string
+    {
+        return $this->primary_email->email;
+    }
+
+    /**
+     * @return string
+     */
+    public function routeNotificationForMail(): string
+    {
+        return $this->email;
     }
 }
