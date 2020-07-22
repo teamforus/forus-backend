@@ -217,7 +217,7 @@ class Voucher extends Model
      * @return Carbon|\Illuminate\Support\Carbon
      */
     public function getLastActiveDayAttribute() {
-        return $this->type == 'product' ?
+        return $this->type === 'product' ?
             $this->product->expire_at : $this->expire_at->subDay();
     }
 
@@ -232,7 +232,7 @@ class Voucher extends Model
             'need_confirmation' => false
         ])->first();
 
-        if ($voucherToken->voucher->type == 'product') {
+        if ($voucherToken->voucher->type === 'product') {
             $fund_product_name = $voucherToken->voucher->product->name;
         } else {
             $fund_product_name = $voucherToken->voucher->fund->name;
@@ -271,70 +271,23 @@ class Voucher extends Model
     }
 
     /**
-     * @param string $reason
+     * @param string $message
      * @param bool $sendCopyToUser
      */
-    public function shareVoucherEmail(string $reason, $sendCopyToUser = false) {
-        $notificationService = resolve('forus.services.notification');
-
+    public function shareVoucherEmail(
+        string $message,
+        bool $sendCopyToUser = false
+    ): void {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
         ])->first();
 
         $voucher = $voucherToken->voucher;
-        $implementation = $voucher->fund->fund_config->implementation;
 
-        if ($voucher->type == 'product') {
-            $recordRepo = resolve('forus.services.record');
-            $primaryEmail = $recordRepo->primaryEmailByAddress(auth()->id());
-            $productName = $voucher->product->name;
-
-            $notificationService->shareProductVoucher(
-                $voucher->product->organization->email,
-                $implementation->getEmailFrom(),
-                $primaryEmail,
-                $productName,
-                $voucherToken->address,
-                $reason
-            );
-
-            if ($sendCopyToUser) {
-                $notificationService->shareProductVoucher(
-                    $primaryEmail,
-                    $implementation->getEmailFrom(),
-                    $primaryEmail,
-                    $productName,
-                    $voucherToken->address,
-                    $reason
-                );
-            }
-
-            ProductVoucherShared::dispatch($voucher, $reason);
+        if ($voucher->type === 'product') {
+            ProductVoucherShared::dispatch($voucher, $message, $sendCopyToUser);
         }
-    }
-
-    /**
-     * @return void
-     */
-    public function sendEmailAvailableAmount()
-    {
-        if (!$this->identity_address) {
-            return;
-        }
-
-        $amount = $this->parent ? $this->parent->amount_available : $this->amount_available;
-        $fund_name = $this->fund->name;
-        $email = resolve('forus.services.record')->primaryEmailByAddress(
-            $this->identity_address
-        );
-
-        resolve('forus.services.notification')->sendVoucherAmountLeftEmail(
-            $email,
-            $this->fund->fund_config->implementation->getEmailFrom(),
-            $fund_name,
-            $amount
-        );
     }
 
     /**

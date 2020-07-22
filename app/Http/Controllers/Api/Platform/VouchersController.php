@@ -10,6 +10,7 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
 use App\Services\Forus\Record\Repositories\RecordRepo;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class VouchersController extends Controller
 {
@@ -24,7 +25,7 @@ class VouchersController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index() {
+    public function index(): AnonymousResourceCollection {
         $this->authorize('viewAny', Voucher::class);
 
         return VoucherResource::collection(Voucher::query()->where([

@@ -15,7 +15,7 @@ class MailChannel extends \Illuminate\Notifications\Channels\MailChannel
      * @param  \Illuminate\Notifications\Notification  $notification
      * @return void
      */
-    public function send($notifiable, Notification $notification)
+    public function send($notifiable, Notification $notification): void
     {
         $notification->toMail($notifiable);
     }

@@ -25,7 +25,7 @@ class ScheduleRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        $reg_ex = "/(2[0-3]|[01][0-9]):([0-5][0-9])/";
+        $reg_ex = "/(2[0-3]|[01][\d]):([0-5][\d])/";
 
         if (!isset($value['start_time']) || !isset($value['end_time']) ||
             !isset($value['break_start_time']) || !isset($value['break_end_time'])

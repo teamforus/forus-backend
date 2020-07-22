@@ -11,7 +11,7 @@ class IdentityFundRequestResolvedNotification extends BaseIdentityFundRequestNot
     protected $key = 'notifications_identities.fund_request_resolved';
     protected $sendMail = true;
 
-    public function toMail(Identity $identity)
+    public function toMail(Identity $identity): void
     {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;

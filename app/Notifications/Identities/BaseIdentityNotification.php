@@ -12,18 +12,6 @@ abstract class BaseIdentityNotification extends BaseNotification
     protected $scope = self::SCOPE_WEBSHOP;
 
     /**
-     * Get identities which are eligible for the notification
-     *
-     * @param Identity $loggable
-     * @return \Illuminate\Support\Collection
-     * @throws \Exception
-     */
-    public static function eligibleIdentities($loggable): Collection
-    {
-        return collect($loggable);
-    }
-
-    /**
      * @param Model $loggable
      * @return array
      * @throws \Exception
@@ -41,5 +29,5 @@ abstract class BaseIdentityNotification extends BaseNotification
      * @param Identity $identity
      * @return void
      */
-    public function toMail(Identity $identity) {}
+    public function toMail(Identity $identity): void {}
 }
