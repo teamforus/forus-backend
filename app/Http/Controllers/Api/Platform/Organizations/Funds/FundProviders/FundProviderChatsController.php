@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders;
 
+use App\Events\FundProviders\FundProviderSponsorChatMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats\IndexFundProviderChatRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats\StoreFundProviderChatRequest;
@@ -9,8 +10,8 @@ use App\Http\Resources\FundProviderChatResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundProviderChat;
-use App\Models\FundProviderChatMessage;
 use App\Models\Organization;
+use App\Models\Product;
 
 class FundProviderChatsController extends Controller
 {
@@ -73,13 +74,15 @@ class FundProviderChatsController extends Controller
             FundProviderChat::class, $fundProvider, $fund, $organization
         ]);
 
-        /** @var FundProviderChatMessage $message */
-        $message = $fundProvider->fund_provider_chats()->create([
-            'product_id' => $request->input('product_id'),
-            'identity_address' => auth_address(),
-        ])->addSponsorMessage($request->input('message'), auth_address());
+        $chatMessage = $fundProvider->startChat(
+            Product::find($request->input('product_id')),
+            $request->input('message'),
+            auth_address()
+        );
 
-        return new FundProviderChatResource($message->fund_provider_chat);
+        FundProviderSponsorChatMessage::dispatch($chatMessage);
+
+        return new FundProviderChatResource($chatMessage->fund_provider_chat);
     }
 
     /**

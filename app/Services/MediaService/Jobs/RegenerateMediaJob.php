@@ -13,8 +13,20 @@ class RegenerateMediaJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * @var MediaConfig
+     */
     protected $mediaConfig;
+
+    /**
+     * @var Media|null
+     */
     protected $media;
+
+    /**
+     * @var Media[]|null
+     */
+    protected $keepPresets;
 
     /**
      * Create a new job instance.
@@ -22,13 +34,16 @@ class RegenerateMediaJob implements ShouldQueue
      * RegenerateMediaJob constructor.
      * @param MediaConfig $mediaConfig
      * @param Media|null $media
+     * @param Media[]|null $keepPresets
      */
     public function __construct(
         MediaConfig $mediaConfig,
-        Media $media = null
+        Media $media = null,
+        $keepPresets = []
     ) {
         $this->mediaConfig = $mediaConfig;
         $this->media = $media;
+        $this->keepPresets = $keepPresets;
     }
 
     /**
@@ -36,12 +51,13 @@ class RegenerateMediaJob implements ShouldQueue
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function handle()
+    public function handle(): void
     {
         media()->regenerateMedia(
             $this->mediaConfig,
             $this->media,
-            true
+            true,
+            $this->keepPresets
         );
     }
 }

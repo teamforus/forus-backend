@@ -21,18 +21,10 @@ class NotificationsTokensImportCommand extends Command
     protected $description = 'Import apn and fcm tokens from csv file.';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct() {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      */
-    public function handle() {
+    public function handle(): void
+    {
         $csvPath = $this->argument('csv_path');
         $notificationService = resolve('forus.services.notification');
 
@@ -43,9 +35,9 @@ class NotificationsTokensImportCommand extends Command
 
         $tokens = [];
 
-        if (($h = fopen("{$csvPath}", "r")) !== FALSE) {
+        if (($h = fopen((string) $csvPath, 'rb')) !== FALSE) {
             while (($data = fgetcsv($h, 1000, ",")) !== FALSE) {
-                array_push($tokens, $data);
+                $tokens[] = $data;
             }
 
             fclose($h);
@@ -58,7 +50,7 @@ class NotificationsTokensImportCommand extends Command
 
         $header = array_first($tokens);
 
-        if ($header[0] != 'type' || $header[1] != 'identity_address' || $header[2] != 'token') {
+        if ($header[0] !== 'type' || $header[1] !== 'identity_address' || $header[2] !== 'token') {
             $this->error(sprintf("File '%s': wrong format!", $csvPath));
             $this->info("Correct format: 'type,identity_address,token'");
             exit();
@@ -70,7 +62,7 @@ class NotificationsTokensImportCommand extends Command
         $tokens = array_slice($tokens, 1);
 
         foreach ($tokens as $tokenRowKey => $tokenRow) {
-            list($type, $identity_address, $token) = $tokenRow;
+            [$type, $identity_address, $token] = $tokenRow;
 
             try {
                 $notificationService->storeNotificationToken($identity_address, $type, $token);

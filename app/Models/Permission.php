@@ -31,7 +31,7 @@ class Permission extends Model
      * @return Permission[]|\Illuminate\Database\Eloquent\Collection|null
      */
     public static function allMemCached() {
-        return self::$memCache ? self::$memCache : self::all();
+        return self::$memCache ?: self::all();
     }
 
     /**

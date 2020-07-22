@@ -22,24 +22,15 @@ class NotifyAboutReachedNotificationFundAmount extends Command
     protected $description = 'Check if budget left reached notification amount';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
+     * @param Fund $fund
      * @return void
      */
-    public function handle()
+    public function handle(Fund $fund): void
     {
         try {
-            Fund::notifyAboutReachedNotificationAmount();
+            $fund::notifyAboutReachedNotificationAmount();
         } catch (\Exception $e) {}
     }
 }

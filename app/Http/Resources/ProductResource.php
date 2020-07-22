@@ -76,7 +76,7 @@ class ProductResource extends Resource
             'sold_amount' => $product->countSold(),
             'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
-            'old_price' => currency_format($product->old_price),
+            'old_price' => $product->old_price ? currency_format($product->old_price) : null,
             'expire_at' => $product->expire_at->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($product->expire_at),
             'expired' => $product->expired,

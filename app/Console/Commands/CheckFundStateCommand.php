@@ -22,24 +22,15 @@ class CheckFundStateCommand extends Command
     protected $description = 'Check fund state';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
+     * @param Fund $fund
      * @return void
      */
-    public function handle()
+    public function handle(Fund $fund): void
     {
         try {
-            Fund::checkStateQueue();
+            $fund::checkStateQueue();
         } catch (\Exception $e) {}
     }
 }

@@ -33,7 +33,7 @@ class OfficesController extends Controller
     public function index(
         IndexOfficeRequest $request,
         Organization $organization
-    ) {
+    ): \Illuminate\Http\Resources\Json\AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
         return OfficeResource::collection($organization->offices()->paginate(
@@ -52,7 +52,7 @@ class OfficesController extends Controller
     public function store(
         StoreOfficeRequest $request,
         Organization $organization
-    ) {
+    ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('store', [Office::class, $organization]);
 
@@ -76,7 +76,7 @@ class OfficesController extends Controller
             $office->update($coordinates);
         }
 
-        if ($media instanceof Media && $media->type == 'office_photo') {
+        if ($media instanceof Media && $media->type === 'office_photo') {
             $office->attachMedia($media);
         }
 
@@ -92,7 +92,7 @@ class OfficesController extends Controller
     public function show(
         Organization $organization,
         Office $office
-    ) {
+    ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('show', [$office, $organization]);
 
@@ -112,7 +112,7 @@ class OfficesController extends Controller
         UpdateOfficeRequest $request,
         Organization $organization,
         Office $office
-    ) {
+    ): OfficeResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$office, $organization]);
 
@@ -132,7 +132,7 @@ class OfficesController extends Controller
             $office->update($coordinates);
         }
 
-        if ($media instanceof Media && $media->type == 'office_photo') {
+        if ($media instanceof Media && $media->type === 'office_photo') {
             $office->attachMedia($media);
         }
 
@@ -144,7 +144,7 @@ class OfficesController extends Controller
      *
      * @param Organization $organization
      * @param Office $office
-     * @return array
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
@@ -156,6 +156,6 @@ class OfficesController extends Controller
 
         $office->delete();
 
-        return [];
+        return response('', 200);
     }
 }

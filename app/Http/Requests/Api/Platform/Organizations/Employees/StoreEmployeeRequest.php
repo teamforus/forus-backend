@@ -2,9 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
+use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\NotIn;
 
+/**
+ * Class StoreEmployeeRequest
+ * @property Organization $organization
+ * @package App\Http\Requests\Api\Platform\Organizations\Employees
+ */
 class StoreEmployeeRequest extends FormRequest
 {
     /**
@@ -24,14 +30,18 @@ class StoreEmployeeRequest extends FormRequest
      */
     public function rules()
     {
-        $recordRepo = resolve('forus.services.record');
-        $primaryEmail = $recordRepo->primaryEmailByAddress(auth()->id());
+        $employees = $this->organization->employees->pluck('identity_address');
+        $employees->push($this->organization->identity_address);
+
+        $emails = $employees->map(function($identity_address) {
+            return record_repo()->primaryEmailByAddress($identity_address);
+        })->toArray();
 
         return [
             'email'     => [
                 'required',
                 'email:strict,dns',
-                new NotIn([$primaryEmail]),
+                new NotIn($emails),
             ],
             'roles'     => 'present|array',
             'roles.*'   => 'exists:roles,id',
@@ -45,7 +55,7 @@ class StoreEmployeeRequest extends FormRequest
     public function messages()
     {
         return [
-            'email.not_in' => trans('validation.owner_cant_be_employee')
+            'email.not_in' => trans('validation.employee_already_exists')
         ];
     }
 }

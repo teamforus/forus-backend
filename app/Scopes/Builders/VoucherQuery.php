@@ -12,7 +12,7 @@ class VoucherQuery
      * @param Builder $builder
      * @param string $identity_address
      * @param $fund_id
-     * @param null $organization_id     Provider organization id
+     * @param null $organization_id Provider organization id
      * @return Builder
      */
     public static function whereProductVouchersCanBeScannedForFundBy(

@@ -252,10 +252,12 @@ class MediaService
 
     /**
      * @return string
+     * @throws \Exception
      */
-    protected function makeUniqueUid() {
+    protected function makeUniqueUid(): string
+    {
         do {
-            $uid = bin2hex(openssl_random_pseudo_bytes(64 / 2));
+            $uid = bin2hex(random_bytes(64 / 2));
         } while($this->model->newQuery()->where(compact('uid'))->exists());
 
         return $uid;
@@ -349,7 +351,7 @@ class MediaService
         }
 
         if ($useQueue) {
-            RegenerateMediaJob::dispatch($mediaConfig, $media)->onQueue(
+            RegenerateMediaJob::dispatch($mediaConfig, $media, $mediaPresets)->onQueue(
                 config('media.queue_name')
             );
         }
@@ -376,13 +378,16 @@ class MediaService
      * @param MediaConfig $mediaConfig
      * @param Media|null $media
      * @param bool $fromQueue
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\Exception
+     * @param array $keepPresets
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \Exception
      */
     public function regenerateMedia(
         MediaConfig $mediaConfig,
         Media $media = null,
-        bool $fromQueue = false
-    ) {
+        bool $fromQueue = false,
+        array $keepPresets = []
+    ): void {
         $sourcePresetName = $mediaConfig->getRegenerationPresetName();
         $medias = $this->model->newQuery()->where([
             'type' => $mediaConfig->getName()
@@ -392,42 +397,41 @@ class MediaService
             $medias->where('id', $media->id);
         }
 
-        $medias = $medias->get();
+        $keepPresetsKeys = array_map(function(MediaPreset $preset) {
+            return $preset->name;
+        }, $keepPresets);
+
+        $keepPresetsKeys[] = $sourcePresetName;
 
         $newPresets = array_filter($mediaConfig->getPresets(), function(
-            MediaPreset $mediaPreset
-        ) use ($sourcePresetName) {
-            return $mediaPreset->name != $sourcePresetName;
+            MediaPreset $preset
+        ) use ($keepPresetsKeys) {
+            return !in_array($preset->name, $keepPresetsKeys);
         });
 
-        $newPresetsKeys = array_map(function(MediaPreset $mediaPreset) {
+        $newPresetsKeys = array_map(static function(MediaPreset $mediaPreset) {
             return $mediaPreset->name;
         }, $newPresets);
 
-        foreach ($medias as $media) {
-            $source = $media->findPreset($sourcePresetName);
+        foreach ($medias->get() as $mediaModel) {
+            $source = $mediaModel->findPreset($sourcePresetName);
 
             if (!$source) {
-                throw new \Exception(sprintf(join([
+                throw new \RuntimeException(sprintf(join([
                     "Could not regenerate files for media \"%s\".\n",
                     "Source preset \"%s\" is missing.\n"
-                ]), $media->id, $sourcePresetName));
+                ]), $mediaModel->id, $sourcePresetName));
             }
 
-            /** @var PresetModel[] $mediaSizes */
-            $presetModels = $media->presets()->where(
-                'key', '!=', $sourcePresetName
-            )->get();
+            /** @var \App\Services\MediaService\Models\MediaPreset[] $presetModels */
+            $presetModels = $mediaModel->presets()->whereIn('key', $newPresetsKeys)->get();
 
             foreach ($presetModels as $presetModel) {
                 $presetModel->unlink();
-
-                if (!in_array($presetModel->key, $newPresetsKeys)) {
-                    $presetModel->delete();
-                }
+                $presetModel->delete();
             }
 
-            $this->makeMediaPresets($media, $mediaConfig, $newPresets, new TmpFile(
+            $this->makeMediaPresets($mediaModel, $mediaConfig, $newPresets, new TmpFile(
                 $this->storage()->get($source->path)
             ), null, $fromQueue);
         }
@@ -446,7 +450,7 @@ class MediaService
         bool $forceRegenerate = false
     ) {
         $type = $type ?? $media->type;
-        $copyFiles = $type == $media->type;
+        $copyFiles = $type === $media->type;
 
         if (!$forceRegenerate && $copyFiles) {
             return $this->cloneMediaCopy($media);

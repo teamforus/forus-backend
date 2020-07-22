@@ -217,6 +217,8 @@ return [
         App\Services\DigIdService\DigIdServiceProvider::class,
         App\Services\Forus\Session\SessionServiceProvider::class,
         Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
+
+        App\Services\EventLogService\EventLogServiceProvider::class,
     ],
 
     /*
