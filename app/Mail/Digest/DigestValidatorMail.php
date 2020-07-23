@@ -11,6 +11,6 @@ class DigestValidatorMail extends BaseDigestMail
      */
     public function build(): self
     {
-        return $this->view('emails.mail-digest')->subject('Digest: nieuwe aanvragen');
+        return $this->view('emails.mail-digest')->subject('Update: Nieuwe aanvragen');
     }
 }
