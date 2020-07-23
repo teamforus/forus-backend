@@ -25,7 +25,7 @@ class FundResource extends Resource
     {
         $fund               = $this->resource;
         $organization       = $fund->organization;
-        $sponsorCount       = $organization->employees->count() + 1;
+        $sponsorCount       = $organization->employees->count();
         $validators         = $organization->employeesWithPermissionsQuery([
             'validate_records'
         ])->get();
