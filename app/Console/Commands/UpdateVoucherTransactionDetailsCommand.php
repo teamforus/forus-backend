@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Services\BunqService\BunqService;
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Collection;
 
 use App\Models\Fund;
 use App\Models\VoucherTransaction;
@@ -16,7 +16,8 @@ class UpdateVoucherTransactionDetailsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'forus.digest.voucher_transactions:update';
+    protected $signature = 'forus.bunq.voucher_transactions:update
+                            {fund_id : fund id to process.}';
 
     /**
      * The console command description.
@@ -26,40 +27,25 @@ class UpdateVoucherTransactionDetailsCommand extends Command
     protected $description = 'Updates voucher transaction details';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
-     * @return mixed
+     * return void
      */
-    public function handle()
+    public function handle() : void
     {
-        /** @var Collection|Fund[] $funds */
-        $funds = Fund::whereHas('vouchers.transactions', static function(
-            Builder $builder
-        ) {
-            $builder->whereNull('iban_from');
-            $builder->orWhereNull('iban_to');
-        })->get();
-
-        foreach ($funds as $fund) {
-            self::updateTransactionDetailsForFund($fund);
+        if (!is_numeric($this->argument('fund_id'))) {
+            $this->error("Invalid argument `fund_id`\n");
+            exit();
         }
+
+        $this->processTransactionDetailsForFund(Fund::findOrFail((int)($this->argument('fund_id'))));
     }
 
     /**
      * @param Fund $fund
      * @return VoucherTransaction|Builder|\Illuminate\Database\Query\Builder
      */
-    public static function getUnprocessedTransactionsForFund(Fund $fund) {
+    private function getTransactionsWithoutIbanForFund(Fund $fund) {
         return VoucherTransaction::whereHas('voucher', static function(
             Builder $builder
         ) use ($fund) {
@@ -68,31 +54,71 @@ class UpdateVoucherTransactionDetailsCommand extends Command
     }
 
     /**
+     * @param $voucher_transactions
      * @param Fund $fund
+     * @param BunqService $bunq
+     * @return array
      */
-    public static function updateTransactionDetailsForFund(Fund $fund) {
-        if (!$bunq = $fund->getBunq()) {
-            return;
-        }
-
-        $voucher_transactions = self::getUnprocessedTransactionsForFund($fund);
+    private function updateTransactionDetails($voucher_transactions, Fund $fund, BunqService $bunq) : array {
+        $failed_transactions = [];
 
         /** @var VoucherTransaction $transaction */
-        foreach ($voucher_transactions as $transaction) {
+        foreach ($voucher_transactions as $index => $transaction) {
+            if (!$transaction->payment_id) {
+                echo sprintf("Missing payment_id for transaction %s\n", $index);
+                continue;
+            }
+
             try {
                 if ($payment_details = $bunq->paymentDetails($transaction->payment_id)) {
-                    $transaction->forceFill([
-                        'iban_from' => $payment_details->getAlias()->getIban(),
-                        'iban_to'   => $payment_details->getCounterpartyAlias()->getIban(),
-                    ])->save();
+                    $transaction->update([
+                        'iban_from'     => $payment_details->getAlias()->getIban(),
+                        'iban_to'       => $payment_details->getCounterpartyAlias()->getIban(),
+                        'payment_time'  => $payment_details->getCreated()
+                    ]);
+
+                    echo sprintf("Transaction %d processed for fund %s\n", $index + 1, $fund->name);
                 }
 
                 sleep(1);
             } catch (\Exception $e) {
-                logger()->error(sprintf(
-                    'Could not process payment: %s', $transaction->payment_id
-                ));
+                $failed_transactions[] = $transaction->payment_id;
+                echo sprintf("Could not process payment %s\n", $transaction->payment_id);
             }
+        }
+
+        echo sprintf("All transactions processed for fund %s ", $fund->name);
+
+        return $failed_transactions;
+    }
+
+    /**
+     * @param Fund $fund
+     * return void
+     */
+    private function processTransactionDetailsForFund(Fund $fund) : void {
+        if (!$bunq = $fund->getBunq()) {
+            echo sprintf("Could not get bunq context for fund %s\n", $fund->name);
+            return;
+        }
+
+        $voucher_transactions = $this->getTransactionsWithoutIbanForFund($fund);
+
+        if (!$voucher_transactions->count()) {
+            echo sprintf("No unprocessed transactions for fund %s\n", $fund->name);
+            return;
+        }
+
+        echo sprintf("Processing %d transactions for fund %s\n", $voucher_transactions->count(), $fund->name);
+
+        $failed_transactions = $this->updateTransactionDetails($voucher_transactions, $fund, $bunq);
+
+        if (!count($failed_transactions)) {
+            echo "(no failed transactions)\n";
+        } else {
+            echo sprintf("(%d failed transactions for payments %s)\n",
+                count($failed_transactions), implode(', ', $failed_transactions)
+            );
         }
     }
 }

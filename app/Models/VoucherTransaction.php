@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
  * @property string $state
  * @property string $iban_from
  * @property string $iban_to
+ * @property Carbon $payment_time
  * @property string|null $last_attempt_at
  * @property-read mixed $transaction_details
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
@@ -56,8 +57,8 @@ class VoucherTransaction extends Model
      */
     protected $fillable = [
         'voucher_id', 'organization_id', 'product_id', 'address',
-        'amount', 'state', 'payment_id', 'attempts',
-        'last_attempt_at', 'iban_from', 'iban_to'
+        'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
+        'iban_from', 'iban_to', 'payment_time'
     ];
 
     protected $hidden = [
@@ -90,30 +91,6 @@ class VoucherTransaction extends Model
      */
     public function notes() {
         return $this->hasMany(VoucherTransactionNote::class);
-    }
-
-    /**
-     * @return \bunq\Model\Generated\Endpoint\Payment|null
-     */
-    public function getTransactionDetailsAttribute()
-    {
-        try {
-            if (!$bunq = $this->voucher->fund->getBunq()) {
-                logger()->error(sprintf(
-                    'BunqService: Could not make bunq instance: %s!',
-                    $this->id
-                ));
-            }
-
-            return $bunq->paymentDetails($this->payment_id);
-        } catch (\Exception $e) {
-            logger()->error(sprintf(
-                'BunqService: Could not process payment: %s',
-                $this->payment_id
-            ));
-        }
-
-        return null;
     }
 
     /**

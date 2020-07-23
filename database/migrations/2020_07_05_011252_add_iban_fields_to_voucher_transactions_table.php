@@ -16,6 +16,7 @@ class AddIbanFieldsToVoucherTransactionsTable extends Migration
         Schema::table('voucher_transactions', function (Blueprint $table) {
             $table->string('iban_from', 200)->nullable()->after('amount');
             $table->string('iban_to', 200)->nullable()->after('iban_from');
+            $table->timestamp('payment_time')->nullable()->after('iban_to');
         });
     }
 
@@ -29,6 +30,7 @@ class AddIbanFieldsToVoucherTransactionsTable extends Migration
         Schema::table('voucher_transactions', function (Blueprint $table) {
             $table->dropColumn('iban_from');
             $table->dropColumn('iban_to');
+            $table->dropColumn('payment_time');
         });
     }
 }
