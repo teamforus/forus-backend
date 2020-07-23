@@ -11,6 +11,6 @@ class DigestProviderFundsMail extends BaseDigestMail
      */
     public function build(): self
     {
-        return $this->view('emails.mail-digest')->subject('Nieuwe notificaties omtrent aangesloten fondsen');
+        return $this->view('emails.mail-digest')->subject('Update: Huidige status van uw aanmelding');
     }
 }
