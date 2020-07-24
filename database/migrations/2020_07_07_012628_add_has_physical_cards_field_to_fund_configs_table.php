@@ -14,7 +14,7 @@ class AddHasPhysicalCardsFieldToFundConfigsTable extends Migration
     public function up()
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->boolean('has_physical_cards')->default(false)
+            $table->boolean('allow_physical_cards')->default(false)
                 ->after('subtract_transaction_costs');
         });
     }
@@ -27,7 +27,7 @@ class AddHasPhysicalCardsFieldToFundConfigsTable extends Migration
     public function down()
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('has_physical_cards');
+            $table->dropColumn('allow_physical_cards');
         });
     }
 }

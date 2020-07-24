@@ -67,6 +67,11 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromName($value)
  * @property-read int|null $fund_configs_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionSteps($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereHasMoreInfoUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereMoreInfoUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereTitle($value)
  */
 class Implementation extends Model
 {

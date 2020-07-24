@@ -27,6 +27,7 @@ use Illuminate\Notifications\DatabaseNotification as DatabaseNotificationModel;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\DatabaseNotification whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\DatabaseNotification whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $notifiable
  */
 class DatabaseNotification extends DatabaseNotificationModel
 {}

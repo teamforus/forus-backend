@@ -16,8 +16,7 @@ class CreatePhysicalCardsTable extends Migration
         Schema::create('physical_cards', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('voucher_id');
-            $table->string('physical_card_code', 50)->nullable();
-
+            $table->string('code', 50)->unique();
             $table->timestamps();
 
             $table->foreign('voucher_id')->references('id')

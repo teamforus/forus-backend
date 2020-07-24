@@ -280,12 +280,12 @@ $router->group(['middleware' => [
 
     $router->post(
         'vouchers/{voucher_token_address}/physical-cards',
-        "Api\Platform\Vouchers\PhysicalCardsController@storePhysicalCard"
+        "Api\Platform\Vouchers\PhysicalCardsController@store"
     );
 
     $router->post(
-        'vouchers/{voucher_token_address}/physical-card-requests',
-        "Api\Platform\Vouchers\PhysicalCardsController@requestPhysicalCard"
+        'vouchers/{voucher_token_address}/physical-cards/request',
+        "Api\Platform\Vouchers\PhysicalCardsController@request"
     );
 
     $router->post(

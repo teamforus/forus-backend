@@ -108,17 +108,17 @@ class RouteServiceProvider extends ServiceProvider
                 ])->has('fund_config')->first() ?? abort(404);
         });
 
-        $router->bind('voucher_token_address', function ($value) {
-            /** @var PhysicalCard $physical_card_code */
-            $physical_card_code = PhysicalCard::query()->where([
-                'physical_card_code' => $value
-            ])->first();
+        $router->bind('voucher_token_address', static function ($value) {
+            /** @var PhysicalCard $code */
+            $code = PhysicalCard::whereHas('voucher.fund.fund_config', static function (
+                Builder $builder
+            ) {
+                $builder->where('allow_physical_cards', '-', true);
+            })->where('code', $value)->first();
 
-            return VoucherToken::query()->where([
-                    'address' => $value
-                ])->first() ?? $physical_card_code->voucher->tokens()->where(
-                    'need_confirmation', 1
-                )->first() ?? abort(404);
+            return VoucherToken::whereAddress($value)->first() ??
+                $code->voucher->token_without_confirmation ??
+                abort(404);
         });
 
         $router->bind('product_voucher_token_address', function ($value) {

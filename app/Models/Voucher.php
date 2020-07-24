@@ -10,6 +10,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 
 /**
@@ -65,6 +66,7 @@ use Illuminate\Http\Request;
  * @mixin \Eloquent
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
+ * @property-read int|null $physical_cards_count
  */
 class Voucher extends Model
 {
@@ -130,7 +132,7 @@ class Voucher extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function physical_cards() {
+    public function physical_cards(): HasMany {
         return $this->hasMany(PhysicalCard::class);
     }
 
@@ -262,7 +264,7 @@ class Voucher extends Model
      */
     public function assignedVoucherEmail(
         string $email = null
-    ) {
+    ): void {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false

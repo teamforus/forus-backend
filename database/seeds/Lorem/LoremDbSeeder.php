@@ -46,6 +46,10 @@ class LoremDbSeeder extends Seeder
         'Zuidhorn', 'Nijmegen', 'Westerkwartier',
     ];
 
+    private $fundsWithPhysicalCards = [
+        'Nijmegen',
+    ];
+
     /**
      * LoremDbSeeder constructor.
      */
@@ -527,7 +531,8 @@ class LoremDbSeeder extends Seeder
             'key'                   => $key,
             'bunq_sandbox'          => true,
             'csv_primary_key'       => 'uid',
-            'is_configured'         => true
+            'is_configured'         => true,
+            'allow_physical_cards'  => in_array($fund->name, $this->fundsWithPhysicalCards),
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'

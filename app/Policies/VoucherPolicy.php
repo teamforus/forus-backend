@@ -179,25 +179,39 @@ class VoucherPolicy
     /**
      * @param string $identity_address
      * @param Voucher $voucher
-     * @return bool
+     * @return bool|null
+     * @throws AuthorizationJsonException
      */
     public function storePhysicalCard(
         string $identity_address,
         Voucher $voucher
-    ) {
-        return $this->sendEmail($identity_address, $voucher);
+    ): ?bool {
+        if (!$voucher->fund->fund_config->allow_physical_cards) {
+            $this->deny("physical_cards_not_allowed");
+        }
+
+        if ($voucher->physical_cards()->exists()) {
+            $this->deny("physical_card_already_attached");
+        }
+
+        if ($voucher->type !== $voucher::TYPE_BUDGET) {
+            $this->deny("only_budget_vouchers");
+        }
+
+        return $this->show($identity_address, $voucher);
     }
 
     /**
      * @param string $identity_address
      * @param Voucher $voucher
-     * @return bool
+     * @return bool|null
+     * @throws AuthorizationJsonException
      */
     public function requestPhysicalCard(
         string $identity_address,
         Voucher $voucher
-    ) {
-        return $this->sendEmail($identity_address, $voucher);
+    ): ?bool {
+        return $this->storePhysicalCard($identity_address, $voucher);
     }
 
     /**
@@ -218,11 +232,11 @@ class VoucherPolicy
         }
 
         // fund needs to be active
-        if ($voucher->fund->state != Fund::STATE_ACTIVE) {
+        if ($voucher->fund->state !== Fund::STATE_ACTIVE) {
             $this->deny('fund_not_active');
         }
 
-        if ($voucher->type == 'regular') {
+        if ($voucher->type === 'regular') {
             $providersApproved = $fund->providers()->where([
                 'allow_budget' => true,
             ])->pluck('organization_id');
