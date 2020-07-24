@@ -1018,7 +1018,7 @@ class Fund extends Model
             'fund_id'
         ));
 
-        VoucherCreated::dispatch($voucher);
+        VoucherCreated::dispatch($voucher, false);
 
         return $voucher;
     }

@@ -28,12 +28,12 @@ class StoreEmployeeRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $employees = $this->organization->employees->pluck('identity_address');
         $employees->push($this->organization->identity_address);
 
-        $emails = $employees->map(function($identity_address) {
+        $emails = $employees->map(static function($identity_address) {
             return record_repo()->primaryEmailByAddress($identity_address);
         })->toArray();
 
@@ -52,7 +52,10 @@ class StoreEmployeeRequest extends FormRequest
         ];
     }
 
-    public function messages()
+    /**
+     * @return array
+     */
+    public function messages(): array
     {
         return [
             'email.not_in' => trans('validation.employee_already_exists')

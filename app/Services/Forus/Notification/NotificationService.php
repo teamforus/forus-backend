@@ -13,17 +13,12 @@ use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
 use App\Mail\Funds\ProviderInvitedMail;
 use App\Mail\User\EmailActivationMail;
-use App\Mail\User\EmployeeAddedMail;
 use App\Mail\User\IdentityEmailVerificationMail;
 use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Mail\Forus\ForusFundCreatedMail;
-use App\Mail\Vouchers\PaymentSuccessMail;
-use App\Mail\Vouchers\ProductReservedMail;
-use App\Mail\Vouchers\ProductReservedUserMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
-use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
@@ -174,16 +169,17 @@ class NotificationService
     /**
      * @param string $email
      * @param Mailable $param
-     * @return bool|null
+     * @return bool
      */
     public function sendMailNotification(
         string $email,
         Mailable $param
-    ) {
+    ): bool {
         return $this->sendMail($email, $param);
     }
 
     /**
+     * todo: has to be migrated
      * Invite provider to new fund
      *
      * @param string $email
@@ -197,7 +193,7 @@ class NotificationService
      * @param string $fund_end_date
      * @param string $from_fund_name
      * @param string $invitation_link
-     * @return bool|null
+     * @return bool
      */
     public function providerInvited(
         string $email,
@@ -211,7 +207,7 @@ class NotificationService
         string $fund_end_date,
         string $from_fund_name,
         string $invitation_link
-    ): ?bool {
+    ): bool {
         return $this->sendMail($email, new ProviderInvitedMail(
             $provider_name,
             $sponsor_name,
@@ -227,6 +223,7 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Notify user that fund request record declined
      *
      * @param string $email
@@ -234,7 +231,7 @@ class NotificationService
      * @param string|null $rejectionNote
      * @param string $fundName
      * @param string $webshopLink
-     * @return bool|null
+     * @return bool
      */
     public function fundRequestRecordDeclined(
         string $email,
@@ -242,7 +239,7 @@ class NotificationService
         ?string $rejectionNote,
         string $fundName,
         string $webshopLink
-    ) {
+    ): bool {
         return $this->sendMail($email, new FundRequestRecordDeclinedMail(
             $fundName,
             $rejectionNote,
@@ -252,20 +249,21 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Notify providers that new fund was started
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $sponsor_name
-     * @return bool|null
+     * @return bool
      */
     public function newFundStarted(
         string $email,
         ?EmailFrom $emailFrom,
         string $fund_name,
         string $sponsor_name
-    ) {
+    ): bool {
         return $this->sendMail($email, new FundStartedMail(
             $fund_name,
             $sponsor_name,
@@ -274,20 +272,21 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Notify company that new fund was created
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $organization_name
-     * @return bool|null
+     * @return bool
      */
     public function newFundCreatedNotifyForus(
         string $email,
         ?EmailFrom $emailFrom,
         string $fund_name,
         string $organization_name
-    ) {
+    ): bool {
         return $this->sendMail($email, new ForusFundCreatedMail(
             $fund_name,
             $organization_name,
@@ -296,6 +295,7 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Notify users that fund was closed
      *
      * @param string $email
@@ -305,7 +305,7 @@ class NotificationService
      * @param string $fund_contact
      * @param string $sponsor_name
      * @param string $webshop_link
-     * @return bool|null
+     * @return bool
      */
     public function fundClosed(
         string $email,
@@ -315,7 +315,7 @@ class NotificationService
         string $fund_contact,
         string $sponsor_name,
         string $webshop_link
-    ) {
+    ): bool {
         return $this->sendMail($email, new FundClosed(
             $fund_name,
             $fund_end_date,
@@ -327,6 +327,7 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Notify providers that fund was closed
      *
      * @param string $email
@@ -344,7 +345,7 @@ class NotificationService
         string $fund_end_date,
         string $sponsor_name,
         string $dashboard_link
-    ) {
+    ): ?bool {
         return $this->sendMail($email, new FundClosedProvider(
             $fund_name,
             $fund_end_date,
@@ -355,6 +356,7 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Send number of fund users
      *
      * @param string $email
@@ -364,7 +366,7 @@ class NotificationService
      * @param int $sponsor_amount
      * @param int $provider_amount
      * @param int $requester_amount
-     * @return bool|null
+     * @return bool
      */
     public function sendFundUserStatisticsReport(
         string $email,
@@ -374,7 +376,7 @@ class NotificationService
         int $sponsor_amount,
         int $provider_amount,
         int $requester_amount
-    ) {
+    ): bool {
         return $this->sendMail($email, new FundStatisticsMail(
             $fund_name,
             $sponsor_name,
@@ -387,6 +389,7 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Send voucher by email
      *
      * @param string $email
@@ -418,6 +421,7 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Send assigned voucher to email
      *
      * @param string $email
@@ -441,34 +445,6 @@ class NotificationService
             $qr_token,
             $voucher_amount,
             $voucher_expire_minus_day,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Send voucher by email
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $requester_email
-     * @param string $product_name
-     * @param string $qr_token
-     * @param string $reason
-     * @return bool|null
-     */
-    public function shareProductVoucher(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $requester_email,
-        string $product_name,
-        string $qr_token,
-        string $reason
-    ) {
-        return $this->sendMail($email, new ShareProductVoucherMail(
-            $requester_email,
-            $product_name,
-            $qr_token,
-            $reason,
             $emailFrom
         ));
     }
@@ -502,14 +478,14 @@ class NotificationService
      * @param EmailFrom|null $emailFrom
      * @param string $link
      * @param string $source
-     * @return bool|null
+     * @return bool
      */
     public function loginViaEmail(
         string $email,
         ?EmailFrom $emailFrom,
         string $link,
         string $source
-    ) {
+    ): bool {
         return $this->sendMail($email, new UserLoginMail(
             $link,
             $source,
@@ -518,103 +494,21 @@ class NotificationService
     }
 
     /**
-     * New transaction was made send current voucher balance
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param string $current_budget
-     * @return bool|null
-     */
-    public function sendVoucherAmountLeftEmail(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $fund_name,
-        string $current_budget
-    ) {
-        return $this->sendMail($email, new PaymentSuccessMail(
-            $fund_name,
-            $current_budget,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify provider that a product was reserved and customer will come by
-     * in shop to pickup the product or service.
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $product_name
-     * @param string $expiration_date
-     * @return bool|null
-     */
-    public function productReserved(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $product_name,
-        string $expiration_date
-    ) {
-        return $this->sendMail($email, new ProductReservedMail(
-            $product_name,
-            $expiration_date,
-            $emailFrom
-        ));
-    }
-
-    /**
-     * Notify provider that a product was reserved and customer will come by
-     * in shop to pickup the product or service.
-     *
-     * @param string $email
-     * @param EmailFrom|null $emailFrom
-     * @param string $product_name
-     * @param string $product_price
-     * @param string $provider_phone
-     * @param string $provider_email
-     * @param string $qr_token
-     * @param string $provider_organization_name
-     * @param string $expire_at_minus_1_day
-     * @return bool|null
-     */
-    public function productReservedUser(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $product_name,
-        string $product_price,
-        string $provider_phone,
-        string $provider_email,
-        string $qr_token,
-        string $provider_organization_name,
-        string $expire_at_minus_1_day
-    ) {
-        return $this->sendMail($email, new ProductReservedUserMail(
-            $product_name,
-            $product_price,
-            $provider_phone,
-            $provider_email,
-            $qr_token,
-            $provider_organization_name,
-            $expire_at_minus_1_day,
-            $emailFrom
-        ));
-    }
-
-    /**
+     * todo: has to be migrated
      * Notify provider that a product was sold out.
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
      * @param string $product_name
      * @param string $sponsor_dashboard_url
-     * @return bool|null
+     * @return bool
      */
     public function productSoldOut(
         string $email,
         ?EmailFrom $emailFrom,
         string $product_name,
         string $sponsor_dashboard_url
-    ) {
+    ): bool {
         return $this->sendMail($email, new ProductSoldOutMail(
             $product_name,
             $sponsor_dashboard_url,
@@ -628,13 +522,13 @@ class NotificationService
      * @param string $email
      * @param EmailFrom|null $emailFrom
      * @param string $confirmationLink
-     * @return bool|null
+     * @return bool
      */
     public function sendEmailConfirmationLink(
         string $email,
         ?EmailFrom $emailFrom,
         string $confirmationLink
-    ) {
+    ): bool {
         return $this->sendMail($email, new EmailActivationMail(
             config('app.name'),
             $confirmationLink,
@@ -643,27 +537,7 @@ class NotificationService
     }
 
     /**
-     * @param string $orgName
-     * @param string $email
-     * @param string $confirmationLink
-     * @param EmailFrom|null $emailFrom
-     * @return bool|null
-     */
-    public function sendEmailEmployeeAdded(
-        string $email,
-        ?EmailFrom $emailFrom,
-        string $orgName,
-        string $confirmationLink
-    ): ?bool {
-        return $this->sendMail($email, new EmployeeAddedMail(
-            $orgName,
-            config('app.name'),
-            $confirmationLink,
-            $emailFrom
-        ));
-    }
-
-    /**
+     * todo: has to be migrated
      * Notify user that voucher is about to expire
      *
      * @param string $email
@@ -675,7 +549,7 @@ class NotificationService
      * @param string $sponsor_phone
      * @param string $sponsor_email
      * @param string $webshopLink
-     * @return bool|null
+     * @return bool
      */
     public function voucherExpireSoon(
         string $email,
@@ -687,7 +561,7 @@ class NotificationService
         string $sponsor_phone,
         string $sponsor_email,
         string $webshopLink
-    ): ?bool {
+    ): bool {
         return $this->sendMail($email, new FundExpiredMail(
             $fund_name,
             $sponsor_name,
@@ -701,6 +575,7 @@ class NotificationService
     }
 
     /**
+     * todo: has to be migrated
      * Fund balance reached the threshold set in preferences
      *
      * @param string $email
@@ -763,7 +638,7 @@ class NotificationService
      *
      * @param $email
      * @param Mailable $mailable
-     * @return bool|null
+     * @return bool
      */
     private function sendMail($email, Mailable $mailable): bool {
         if (config()->get('mail.disable', false)) {
