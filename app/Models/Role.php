@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Astrotomic\Translatable\Translatable;
+
 /**
  * App\Models\Role
  *
@@ -14,6 +16,7 @@ namespace App\Models;
  * @property-read int|null $permissions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RolePermission[] $role_permissions
  * @property-read int|null $role_permissions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RoleTranslation[] $translations
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role query()
@@ -24,11 +27,22 @@ namespace App\Models;
  */
 class Role extends Model
 {
+    use Translatable;
+
     protected $fillable = [
-        'key', 'name'
+        'key'
     ];
 
     public $timestamps = false;
+
+    /**
+     * The attributes that are translatable.
+     *
+     * @var array
+     */
+    public $translatedAttributes = [
+        'name', 'description'
+    ];
 
     public function employees() {
         return $this->belongsToMany(Employee::class, (

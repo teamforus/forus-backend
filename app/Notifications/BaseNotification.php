@@ -20,7 +20,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
 
     protected $key;
     protected $eventLog;
-    protected $scope = null;
+    protected $scope;
     protected $meta = [];
     protected $sendMail = false;
 

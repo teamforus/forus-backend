@@ -9,13 +9,13 @@ return [
     'fund_expiring' => [
         'title' => ':fund_name verloopt bijna.',
         'description' =>
-            ':fund_name loopt van :start_date: tot :end_date_minus1: en verloopt dus bijna.'
+            ':fund_name loopt van :start_date: tot :end_date_minus1: en verloopt bijna.'
     ],
     'fund_ended' => [
-        'title' => ':fund_name is verloopt bijna.',
+        'title' => ':fund_name is verlopen.',
         'description' =>
-            ':fund_name liep van :start_date: tot :end_date_minus1: en is vanaf vandaag niet meer geldig. ' .
-            ' Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. ' .
+            ':fund_name liep van :start_date: tot :end_date_minus1: en is vanaf dit moment niet meer geldig.'.
+            'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.'.
             'Kijk in uw dashboard of u zich voor een nieuw fonds kunt aanmelden.'
     ],
     'fund_started' => [
@@ -27,20 +27,20 @@ return [
         'title' => 'Aanmelding voor :fund_name is goedgekeurd.',
         'description' =>
             'Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbiedingen kan leveren aan klanten die recht hebben op :fund_name. ' .
-            'Al uw aanbiedingen staan nu op de webshop.',
+            'Uw aanbiedingen worden vanaf nu zichtbaar in de webshop.',
     ],
     'approved_products' => [
         'title' => 'Aanmelding voor :fund_name is goedgekeurd.',
         'description' =>
             'Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbiedingen kan leveren aan klanten die recht hebben op :fund_name. ' .
-            'Al uw aanbiedingen staan nu op de webshop.',
+            'Al uw aanbiedingen staan nu in de webshop.',
     ],
     'revoked_budget' => [
-        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer geaccepteerd voor het scannen van tegoeden.',
-        'description' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer geaccepteerd voor het scannen van tegoeden.',
+        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.',
+        'description' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.',
     ],
     'revoked_products' => [
-        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer geaccepteerd voor al uw aanbiedingen.',
-        'description' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer geaccepteerd voor al uw aanbiedingen.',
+        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om aanbiedingsvouchers te scannen.',
+        'description' => 'Aanmelding voor :fund_name is gewijzigd. Uw aanbiedingen zijn niet meer zichtbaar in de webshop.',
     ],
 ];

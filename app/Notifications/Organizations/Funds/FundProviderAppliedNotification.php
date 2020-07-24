@@ -24,7 +24,7 @@ class FundProviderAppliedNotification extends BaseFundsNotification {
      * @param Identity $identity
      * @return void
      */
-    public function toMail(Identity $identity) {
+    public function toMail(Identity $identity): void {
         /** @var Fund $fund */
         $fund = $this->eventLog->loggable;
 

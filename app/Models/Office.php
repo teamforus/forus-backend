@@ -110,4 +110,27 @@ class Office extends Model
             'type' => 'office_photo'
         ]);
     }
+
+    /**
+     * @param array|null $schedules
+     * @return $this
+     */
+    public function updateSchedule(?array $schedules = [])
+    {
+        $this->schedules()->whereNotIn('week_day', array_pluck(
+            $schedules, 'week_day'
+        ))->delete();
+
+        foreach ($schedules as $schedule) {
+            $this->schedules()->firstOrCreate(
+                array_only($schedule, 'week_day')
+            )->update(array_merge(array_fill_keys([
+                'start_time', 'end_time', 'break_start_time', 'break_end_time',
+            ], null), $schedule));
+        }
+
+        $this->load('schedules');
+
+        return $this;
+    }
 }

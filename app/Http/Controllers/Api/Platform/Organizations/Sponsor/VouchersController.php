@@ -129,11 +129,9 @@ class VouchersController extends Controller
             $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
 
             if (!$product_id) {
-                $voucher = $fund->makeVoucher(
-                    $identity, $amount, $expires_at, $note);
+                $voucher = $fund->makeVoucher($identity, $amount, $expires_at, $note);
             } else {
-                $voucher = $fund->makeProductVoucher(
-                    $identity, $product_id, $expires_at, $note);
+                $voucher = $fund->makeProductVoucher($identity, $product_id, $expires_at, $note);
             }
 
             return $voucher->updateModel(compact('employee_id'));

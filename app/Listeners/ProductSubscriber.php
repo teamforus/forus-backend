@@ -98,10 +98,8 @@ class ProductSubscriber
             'fund' => $voucher->fund,
             'product' => $product,
             'provider' => $product->organization,
+            'voucher'  => $voucher
         ]));
-
-        $product->sendProductReservedEmail($voucher);
-        $product->sendProductReservedUserEmail($voucher);
     }
 
     /**

@@ -10,7 +10,6 @@ use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
-use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
@@ -79,27 +78,10 @@ class EmployeesController extends Controller
         $this->authorize('store', [Employee::class, $organization]);
 
         $email = $request->input('email');
-        $target = $request->input('target', null);
         $identity_address = $this->recordRepo->identityAddressByEmail($email);
 
         if (!$identity_address) {
             $identity_address = $this->identityRepo->makeByEmail($email);
-            $identityProxy = $this->identityRepo->makeIdentityPoxy($identity_address);
-            $clientType = client_type('general');
-
-            $confirmationLink = sprintf(
-                "%s/confirmation/email/%s?%s",
-                rtrim(Implementation::active()['url_' . $clientType], '/'),
-                $identityProxy['exchange_token'],
-                http_build_query(compact('target'))
-            );
-
-            $this->notificationRepo->sendEmailEmployeeAdded(
-                $email,
-                Implementation::emailFrom(),
-                $organization->name,
-                $confirmationLink
-            );
         }
 
         /** @var Employee $employee */

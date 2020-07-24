@@ -10,8 +10,8 @@ return [
         'description' => 'U bent verwijderd als een medewerker van :organization_name',
     ],
     'changed_employee_roles' => [
-        'title' => 'Rechten zijn aangepast voor :organization_name',
-        'description' => 'Aan uw profiel zijn nieuwe rollen toegekend namelijk :employee_roles voor organisatie :organization_name.',
+        'title' => 'Uw rechten als medewerker zijn aangepast voor :organization_name',
+        'description' => 'Aan uw profiel zijn de volgende rollen toegekend: employee_roles voor organisatie :organization_name.',
     ],
 
     // approved for budget
@@ -37,7 +37,7 @@ return [
     'requester_product_approved' => [
         'title' => ':product_name van :provider_name is beschikbaar voor :fund_name',
         'description' =>
-            ':product_name van :provider_name is toegevoegd aan de ' .
+            ':product_name van :provider_name is toegevoegd aan de '.
             'webshop en beschikbaar om te reserveren met tegoed van :fund_name.',
     ],
 
@@ -78,7 +78,7 @@ return [
         'title' => 'Aanvraag :fund_name aanvullen.',
         'description' =>
             'Uw aanvraag voor :fund_name is onvolledig. ' .
-            'De gemeente heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question',
+            ':sponsor_name heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question',
     ],
 
     // fund request resolved
@@ -101,6 +101,13 @@ return [
         'description' => 'Een aanbiedingsvoucher is zojuist gebruikt om :product_name af te nemen.',
     ],
 
+    // product voucher reserved on webshop (voucher created)
+    'product_voucher_reserved' => [
+        'title' => 'You reserved :product_name.',
+        'description' =>
+            'You reserved :product_name from :provider_name.',
+    ],
+
     // product voucher shared to provider
     'product_voucher_shared' => [
         'title' => 'Aanbieding QR-code gedeeld met :provider_name.',
@@ -110,7 +117,6 @@ return [
     ],
 
     // product voucher is about to expire
-    // todo: add product details
     'voucher_expire_soon_product' => [
         'title' => ':fund_name verloopt binnenkort.',
         'description' => ':fund_name verloopt binnenkort.'
@@ -123,7 +129,6 @@ return [
     ],
 
     // product voucher expired
-    // todo: add product details
     'product_voucher_expired' => [
         'title' => 'Uw :fund_name-voucher is verlopen.',
         'description' => 'Uw :fund_name-voucher is verlopen.'

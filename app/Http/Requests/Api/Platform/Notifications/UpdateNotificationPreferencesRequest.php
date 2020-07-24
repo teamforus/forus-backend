@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platfrom\Notifications;
+namespace App\Http\Requests\Api\Platform\Notifications;
 
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use Illuminate\Foundation\Http\FormRequest;
