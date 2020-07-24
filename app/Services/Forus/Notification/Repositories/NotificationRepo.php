@@ -15,7 +15,6 @@ use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
-use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
@@ -47,7 +46,6 @@ class NotificationRepo implements INotificationRepo
         'funds.provider_approved' => ProviderApprovedMail::class,
         'funds.provider_rejected' => ProviderRejectedMail::class,
         'funds.product_sold_out' => ProductSoldOutMail::class,
-        'funds.product_reserved' => ProductReservedMail::class,
         'funds.fund_expires' => FundExpiredMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
 

@@ -12,8 +12,8 @@ return [
     'balance_low' => [
         'title' => 'Het budget ":fund_name" heeft de ingestelde aanvul-herinneringsgrens overschreden.',
         'description' =>
-            'Het budget van het ":fund_name" fonds lager is dan €:fund_notification_amount. ' .
-            'Het budget op het ":fund_name" is momenteel €:fund_budget_left.',
+            'Het budget ":fund_name" is lager dan €:fund_notification_amount. ' .
+            'Het budget ":fund_name" is momenteel €:fund_budget_left.',
     ],
     'balance_supplied' => [
         'title' => 'Het budget voor ":fund_name" is opgehoogd.',

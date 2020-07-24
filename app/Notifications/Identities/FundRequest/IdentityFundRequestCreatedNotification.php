@@ -15,17 +15,17 @@ class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNoti
      * @param Identity $identity
      * @return void
      */
-    public function toMail(Identity $identity)
+    public function toMail(Identity $identity): void
     {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;
         $fund = $fundRequest->fund;
 
-        if ($fundRequest->state != $fundRequest::STATE_PENDING) {
+        if ($fundRequest->state !== $fundRequest::STATE_PENDING) {
             return;
         }
 
-        resolve('forus.services.notification')->sendMailNotification(
+        notification_service()->sendMailNotification(
             $identity->primary_email->email,
             new FundRequestCreatedMail(
                 $this->eventLog->data['fund_name'],

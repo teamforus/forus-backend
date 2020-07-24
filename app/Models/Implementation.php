@@ -150,8 +150,7 @@ class Implementation extends Model
      * @param $key
      * @return \Illuminate\Support\Collection
      */
-    public static function byKey($key): \Illuminate\Support\Collection
-    {
+    public static function byKey($key) {
         if ($key === 'general') {
             return collect(self::general_urls());
         }
@@ -505,10 +504,13 @@ class Implementation extends Model
     }
 
     /**
+     * @param string|null $key
      * @return EmailFrom
      */
-    public static function emailFrom(): EmailFrom {
-        if ($activeModel = self::activeModel()) {
+    public static function emailFrom(
+        ?string $key = null
+    ): EmailFrom {
+        if ($activeModel = ($key ? self::findModelByKey($key) : self::activeModel())) {
             return $activeModel->getEmailFrom();
         }
 

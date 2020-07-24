@@ -8,32 +8,21 @@ use Illuminate\Mail\Mailable;
 
 class EmployeeAddedMail extends ImplementationMail
 {
-    private $orgName;
-    private $platform;
-    private $confirmationLink;
-    private $link;
+    private $transData;
 
     /**
      * Create a new message instance.
      *
      * EmployeeAddedMail constructor.
-     * @param string $orgName
-     * @param string $platform
-     * @param string $confirmationLink
+     * @param array $data
      * @param EmailFrom|null $emailFrom
      */
     public function __construct(
-        string $orgName,
-        string $platform,
-        string $confirmationLink,
-        ?EmailFrom $emailFrom
+        array $data = [],
+        ?EmailFrom $emailFrom = null
     ) {
         $this->setMailFrom($emailFrom);
-
-        $this->orgName = $orgName;
-        $this->platform = $platform;
-        $this->confirmationLink = $confirmationLink;
-        $this->link = 'https://www.forus.io/DL';
+        $this->transData['data'] = $data;
     }
 
     /**
@@ -44,13 +33,7 @@ class EmployeeAddedMail extends ImplementationMail
     public function build(): Mailable
     {
         return $this->buildBase()
-            ->subject(mail_trans('email_employee.title', [
-                'orgName' => $this->orgName
-            ]))
-            ->view('emails.user.employee_added', [
-                'confirmationLink' => $this->confirmationLink,
-                'orgName' => $this->orgName,
-                'link'    => $this->link,
-            ]);
+            ->subject(mail_trans('email_employee.title', $this->transData['data']))
+            ->view('emails.user.employee_added', $this->transData['data']);
     }
 }

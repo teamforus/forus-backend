@@ -669,6 +669,16 @@ if (!function_exists('identity_repo')) {
     }
 }
 
+if (!function_exists('notification_service')) {
+    /**
+     * @return \App\Services\Forus\Notification\NotificationService|\Illuminate\Contracts\Foundation\Application|mixed
+     */
+    function notification_service()
+    {
+        return resolve('forus.services.notification');
+    }
+}
+
 if (!function_exists('query_with_trashed')) {
     /**
      * @param Builder|\Illuminate\Database\Eloquent\SoftDeletes|\Illuminate\Database\Eloquent\Relations\Relation $builder

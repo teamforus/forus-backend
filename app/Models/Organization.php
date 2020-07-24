@@ -500,7 +500,7 @@ class Organization extends Model
             ) {
                 $query->select(['organization_id'])->from((new Employee)->getTable())->where([
                     'identity_address' => $identityAddress
-                ])->whereIn('id', function (Builder $query) use ($permissions) {
+                ])->whereNull('deleted_at')->whereIn('id', function (Builder $query) use ($permissions) {
                     $query->select('employee_id')->from(
                         (new EmployeeRole)->getTable()
                     )->whereIn('role_id', function (Builder $query) use ($permissions) {

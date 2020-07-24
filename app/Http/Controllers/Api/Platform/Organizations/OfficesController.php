@@ -68,38 +68,7 @@ class OfficesController extends Controller
             $request->only(['name', 'address', 'phone', 'email'])
         );
 
-        $schedules = collect($request->input('schedule', []))->filter(
-            static function($val, $key) {
-                return in_array($key, range(0, 6), false);
-            }
-        )->map(static function($schedule) {
-            if ($schedule['start_time'] === 'null') {
-                $schedule['start_time'] = null;
-            }
-
-            if ($schedule['end_time'] === 'null') {
-                $schedule['end_time'] = null;
-            }
-
-            if ($schedule['break_start_time'] === 'null') {
-                $schedule['break_start_time'] = null;
-            }
-
-            if ($schedule['break_end_time'] === 'null') {
-                $schedule['break_end_time'] = null;
-            }
-
-            return $schedule;
-        });
-
-        foreach ($schedules as $week_day => $schedule) {
-            $office->schedules()->create(array_merge(
-                $schedule,
-                compact('week_day')
-            ));
-        }
-
-        $office->load('schedules');
+        $office->updateSchedule($request->input('schedule', []));
 
         if ($coordinates = $this->geocodeService->getCoordinates(
             $office->address
@@ -154,43 +123,8 @@ class OfficesController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        $office->update(
-            $request->only(['name', 'address', 'phone', 'email'])
-        );
-
-        $schedules = collect($request->input('schedule', []))->filter(
-            static function($val, $key) {
-                return in_array($key, range(0, 6), false);
-            }
-        )->map(static function($schedule) {
-            if ($schedule['start_time'] === 'null') {
-                $schedule['start_time'] = null;
-            }
-
-            if ($schedule['end_time'] === 'null') {
-                $schedule['end_time'] = null;
-            }
-
-            if ($schedule['break_start_time'] === 'null') {
-                $schedule['break_start_time'] = null;
-            }
-
-            if ($schedule['break_end_time'] === 'null') {
-                $schedule['break_end_time'] = null;
-            }
-
-            return $schedule;
-        });
-
-        $office->schedules()->whereNotIn(
-            'week_day', $schedules->keys()->toArray()
-        )->delete();
-
-        foreach ($schedules as $week_day => $schedule) {
-            $office->schedules()->firstOrCreate(
-                compact('week_day')
-            )->update($schedule);
-        }
+        $office->update($request->only(['name', 'address', 'phone', 'email']));
+        $office->updateSchedule($request->input('schedule', []));
 
         if ($coordinates = $this->geocodeService->getCoordinates(
             $office->address

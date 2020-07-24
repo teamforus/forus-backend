@@ -107,6 +107,7 @@ class EventLogService implements IEventLogService
         return [
             'provider_id' => $provider->id,
             'provider_name' => $provider->name,
+            'provider_email' => $provider->email,
             'provider_phone' => $provider->phone,
         ];
     }
@@ -171,9 +172,7 @@ class EventLogService implements IEventLogService
             'voucher_amount' => currency_format($voucher->amount_available),
             'voucher_amount_locale' => currency_format_locale($voucher->amount_available),
             'voucher_expire_date' => $voucher->last_active_day->format('Y-m-d'),
-            'voucher_expire_date_locale' => format_date_locale(
-                $voucher->last_active_day
-            ),
+            'voucher_expire_date_locale' => format_date_locale($voucher->last_active_day),
         ];
     }
 
