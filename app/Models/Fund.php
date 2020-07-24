@@ -819,7 +819,7 @@ class Fund extends Model
 
         foreach($funds as $fund) {
             $organization = $fund->organization;
-            $sponsorCount = $organization->employees->count() + 1;
+            $sponsorCount = $organization->employees->count();
 
             $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(), $fund->id
@@ -827,7 +827,7 @@ class Fund extends Model
 
             $providerCount = $providersQuery->get()->map(function ($fundProvider){
                 /** @var FundProvider $fundProvider */
-                return $fundProvider->organization->employees->count() + 1;
+                return $fundProvider->organization->employees->count();
             })->sum();
 
             if ($fund->state == self::STATE_ACTIVE) {
