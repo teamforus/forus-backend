@@ -633,7 +633,7 @@ class NotificationService
             $notificationPreferencesLink = sprintf(
                 '%s/%s',
                 rtrim(Implementation::active()['url_sponsor'], '/'),
-                'email/preferences');
+                'preferences/notifications');
 
             /** @var Queueable|Mailable $message */
             $message = $mailable->with(compact(
