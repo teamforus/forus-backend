@@ -118,7 +118,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
             $mailBody->text(trans_choice(
                 'digests/provider_funds.budget_approved.funds_list',
                     $logsApprovedBudget->count()
-                ) . "\n- %s" . $logsApprovedBudget->pluck('fund_name')->implode("\n- ")
+                ) . "\n- " . $logsApprovedBudget->pluck('fund_name')->implode("\n- ")
             );
 
             $mailBody->text(trans('digests/provider_funds.budget_approved.details'));
@@ -154,7 +154,7 @@ class ProviderFundsDigest extends BaseOrganizationDigest
             $mailBody->text(trans_choice(
                 'digests/provider_funds.products_approved.funds_list',
                 $logsApprovedProducts->count()
-                ) . "\n- %s" . $logsApprovedProducts->pluck('fund_name')->implode("\n- ")
+                ) . "\n- " . $logsApprovedProducts->pluck('fund_name')->implode("\n- ")
             )->separator();
         }
 
