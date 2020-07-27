@@ -74,6 +74,7 @@ return array(
         'app/Services/Forus/Record/Models',
         'app/Services/Forus/Session/Models',
         'app/Services/DigIdService/Models',
+        'app/Services/EventLogService/Models',
     ),
 
 

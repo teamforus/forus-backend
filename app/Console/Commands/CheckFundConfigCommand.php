@@ -22,24 +22,15 @@ class CheckFundConfigCommand extends Command
     protected $description = 'Check if fund is configured.';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
+     * @param Fund $fund
      * @return void
      */
-    public function handle()
+    public function handle(Fund $fund): void
     {
         try {
-            Fund::checkConfigStateQueue();
+            $fund::checkConfigStateQueue();
         } catch (\Exception $e) {}
     }
 }

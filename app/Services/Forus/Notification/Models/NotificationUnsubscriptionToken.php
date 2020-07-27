@@ -33,7 +33,8 @@ class NotificationUnsubscriptionToken extends Model
      * @param string $email
      * @return NotificationUnsubscriptionToken
      */
-    public static function makeToken(string $email) {
+    public static function makeToken(string $email): NotificationUnsubscriptionToken
+    {
         do {
             $token = resolve('token_generator')->generate(200);
         } while (self::findByToken($token, false));
@@ -46,10 +47,11 @@ class NotificationUnsubscriptionToken extends Model
      *
      * @param string $token
      * @param bool $onlyActive
-     * @return NotificationUnsubscriptionToken|\Illuminate\Database\Eloquent\Model|null
+     * @return null|self|Model
      */
-    public static function findByToken(string $token, bool $onlyActive = true) {
-        $token = self::where(compact('token'));
+    public static function findByToken(string $token, bool $onlyActive = true): ?self
+    {
+        $token = self::query()->where(compact('token'));
 
         if ($onlyActive) {
             $token->where('created_at', '>' , now()->subDays(7));

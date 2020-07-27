@@ -4,6 +4,7 @@ namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
+use Illuminate\Mail\Mailable;
 
 /**
  * Class PaymentSuccessMail
@@ -11,29 +12,21 @@ use App\Services\Forus\Notification\EmailFrom;
  */
 class PaymentSuccessMail extends ImplementationMail
 {
-    private $fundName;
-    private $currentBudget;
+    private $transData;
 
     public function __construct(
-        string $fundName,
-        string $currentBudget,
-        ?EmailFrom $emailFrom
+        array $data = [],
+        ?EmailFrom $emailFrom = null
     ) {
-        parent::__construct($emailFrom);
+        $this->setMailFrom($emailFrom);
 
-        $this->fundName = $fundName;
-        $this->currentBudget = $currentBudget;
+        $this->transData['data'] = $data;
     }
 
-    public function build(): ImplementationMail
+    public function build(): Mailable
     {
-        return parent::build()
-            ->subject(mail_trans('payment_success.title', [
-                'fund_name' => $this->fundName
-            ]))
-            ->view('emails.vouchers.payment_success', [
-                'fund_name' => $this->fundName,
-                'current_budget' => $this->currentBudget
-            ]);
+        return $this->buildBase()
+            ->subject(mail_trans('payment_success.title', $this->transData['data']))
+            ->view('emails.vouchers.payment_success', $this->transData['data']);
     }
 }

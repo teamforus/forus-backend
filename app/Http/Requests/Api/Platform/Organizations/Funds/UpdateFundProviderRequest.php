@@ -42,6 +42,13 @@ class UpdateFundProviderRequest extends FormRequest
                 Rule::exists('products', 'id')->where(
                     'organization_id', $fundProvider->organization_id
                 )
+            ],
+            'disable_products' => 'nullable|array',
+            'disable_products.*' => [
+                'required',
+                Rule::exists('products', 'id')->where(
+                    'organization_id', $fundProvider->organization_id
+                )
             ]
         ];
     }

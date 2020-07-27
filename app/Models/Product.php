@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Events\Products\ProductSoldOut;
 use App\Scopes\Builders\ProductQuery;
+use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
@@ -70,10 +72,20 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  */
 class Product extends Model
 {
-    use HasMedia, SoftDeletes;
+    use HasMedia, SoftDeletes, HasLogs;
+
+    const EVENT_CREATED = 'created';
+    const EVENT_SOLD_OUT = 'sold_out';
+    const EVENT_EXPIRED = 'expired';
+    const EVENT_RESERVED = 'reserved';
+
+    const EVENT_APPROVED = 'approved';
+    const EVENT_REVOKED = 'revoked';
 
     /**
      * The attributes that are mass assignable.
@@ -232,10 +244,12 @@ class Product extends Model
     public function updateSoldOutState() {
         if (!$this->unlimited_stock) {
             $totalProducts = $this->countReserved() + $this->countSold();
+            $sold_out = $totalProducts >= $this->total_amount;
+            $this->update(compact('sold_out'));
 
-            $this->update([
-                'sold_out' => $totalProducts >= $this->total_amount
-            ]);
+            if ($sold_out) {
+                broadcast(new ProductSoldOut($this));
+            }
         }
     }
 
@@ -311,54 +325,14 @@ class Product extends Model
      * Send product sold out email to provider
      * @return void
      */
-    public function sendSoldOutEmail() {
+    public function sendSoldOutEmail(): void
+    {
         $mailService = resolve('forus.services.notification');
         $mailService->productSoldOut(
             $this->organization->email,
             Implementation::emailFrom(),
             $this->name,
             Implementation::active()['url_provider']
-        );
-    }
-
-    /**
-     * Send product reserved email to provider
-     * @param Voucher $voucher
-     * @return void
-     */
-    public function sendProductReservedEmail(Voucher $voucher) {
-        $mailService = resolve('forus.services.notification');
-        $mailService->productReserved(
-            $this->organization->email,
-            Implementation::emailFrom(),
-            $this->name,
-            format_date_locale($voucher->expire_at)
-        );
-    }
-
-    /**
-     * Send product reserved email to user
-     * @param Voucher $voucher
-     * * @return void
-     */
-    public function sendProductReservedUserEmail(Voucher $voucher) {
-        if (!$voucher->identity_address) {
-            return;
-        }
-
-        $mailService = resolve('forus.services.notification');
-        $recordService = resolve('forus.services.record');
-
-        $mailService->productReservedUser(
-            $recordService->primaryEmailByAddress($voucher->identity_address),
-            $voucher->fund->fund_config->implementation->getEmailFrom(),
-            $this->name,
-            $this->price,
-            $this->organization->phone,
-            $this->organization->email,
-            $voucher->token_without_confirmation->address,
-            $this->organization->name,
-            format_date_locale($voucher->expire_at->subDay())
         );
     }
 }

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Products\FundProviderChats;
 
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Events\Funds\FundProviderChatMessageEvent;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats\StoreFundProviderChatMessageRequest;
 use App\Http\Resources\FundProviderChatMessageResource;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
@@ -27,7 +30,7 @@ class FundProviderChatMessagesController extends Controller
         Organization $organization,
         Product $product,
         FundProviderChat $fundProviderChat
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', [$organization]);
         $this->authorize('showFunds', [$product, $organization]);
 
@@ -47,7 +50,7 @@ class FundProviderChatMessagesController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param StoreFundProviderChatMessageRequest $request
      * @param Organization $organization
      * @param Product $product
      * @param FundProviderChat $fundProviderChat
@@ -55,11 +58,11 @@ class FundProviderChatMessagesController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
-        Request $request,
+        StoreFundProviderChatMessageRequest $request,
         Organization $organization,
         Product $product,
         FundProviderChat $fundProviderChat
-    ) {
+    ): FundProviderChatMessageResource {
         $this->authorize('show', [$organization]);
         $this->authorize('showFunds', [$product, $organization]);
 
@@ -67,12 +70,14 @@ class FundProviderChatMessagesController extends Controller
             FundProviderChatMessage::class, $fundProviderChat, $product, $organization
         ]);
 
-        return new FundProviderChatMessageResource(
-            $fundProviderChat->addProviderMessage(
-                $request->input('message'),
-                auth_address()
-            )
+        $chatMessage = $fundProviderChat->addProviderMessage(
+            $request->input('message'),
+            auth_address()
         );
+
+        FundProviderChatMessageEvent::dispatch($chatMessage);
+
+        return new FundProviderChatMessageResource($chatMessage);
     }
 
     /**
@@ -90,7 +95,7 @@ class FundProviderChatMessagesController extends Controller
         Product $product,
         FundProviderChat $fundProviderChat,
         FundProviderChatMessage $fundProviderChatMessage
-    ) {
+    ): FundProviderChatMessageResource {
         $this->authorize('show', [$organization]);
         $this->authorize('showFunds', [$product, $organization]);
 

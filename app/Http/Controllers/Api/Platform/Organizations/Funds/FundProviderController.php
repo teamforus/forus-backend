@@ -10,7 +10,6 @@ use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsR
 use App\Http\Resources\FundProviderResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
@@ -79,7 +78,6 @@ class FundProviderController extends Controller
 
         return new FundProviderResource($organizationFund);
     }
-
     /**
      * Update the specified resource in storage.
      *
@@ -102,8 +100,8 @@ class FundProviderController extends Controller
             $fundProvider, $organization, $fund
         ]);
 
-        $enable_products = $request->input('enable_products', null);
-        $disable_products = $request->input('disable_products', null);
+        $enable_products = $request->input('enable_products');
+        $disable_products = $request->input('disable_products');
 
         $fundProvider->update($request->only([
             'dismissed', 'allow_products', 'allow_budget',
@@ -127,44 +125,14 @@ class FundProviderController extends Controller
             $fundProvider->declineProducts($disable_products);
         }
 
-        $fundProvider->updateModel([
+        $fundProvider->update([
             'allow_some_products' => $fundProvider->products()->count() > 0
         ]);
 
-        $mailService = resolve('forus.services.notification');
-
-        if ($request->has('allow_budget') &&
-            $request->input('allow_budget')) {
-            $mailService->providerApproved(
-                $fundProvider->organization->email,
-                Implementation::emailFrom(),
-                $fundProvider->fund->name,
-                $fundProvider->organization->name,
-                $fundProvider->fund->organization->name,
-                Implementation::active()['url_provider']
-            );
-
-            $transData =  [
-                "fund_name" => $fundProvider->fund->name,
-                "sponsor_phone" => $fundProvider->organization->phone
-            ];
-
-            $mailService->sendPushNotification(
-                $fundProvider->organization->identity_address,
-                trans('push.providers.accepted.title', $transData),
-                trans('push.providers.accepted.body', $transData),
-                'funds.provider_approved'
-            );
-        } elseif ($request->has('allow_budget') &&
-            !$request->input('allow_budget')) {
-            $mailService->providerRejected(
-                $fundProvider->organization->email,
-                Implementation::emailFrom(),
-                $fundProvider->fund->name,
-                $fundProvider->organization->name,
-                $fundProvider->fund->organization->name,
-                $fundProvider->fund->organization->phone
-            );
+        if ($fundProvider->allow_budget || $fundProvider->allow_products) {
+            $fundProvider->update([
+                'dismissed' => false
+            ]);
         }
 
         return new FundProviderResource($fundProvider);
@@ -222,7 +190,6 @@ class FundProviderController extends Controller
             )->paginate()
         );
     }
-
 
     /**
      * @param IndexTransactionsRequest $request

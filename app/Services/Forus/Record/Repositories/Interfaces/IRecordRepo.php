@@ -181,24 +181,28 @@ interface IRecordRepo {
      * @param string $identityAddress
      * @param null $type
      * @param null $categoryId
+     * @param bool $deleted
      * @return mixed
      */
     public function recordsList(
         string $identityAddress,
         $type = null,
-        $categoryId = null
+        $categoryId = null,
+        bool $deleted = false
     );
 
     /**
      * Get identity record
      * @param string $identityAddress
      * @param mixed $recordId
+     * @param bool $withTrashed
      * @return array
      */
     public function recordGet(
         string $identityAddress,
-        $recordId
-    );
+        $recordId,
+        bool $withTrashed = false
+    ): ?array;
 
     /**
      * Add new record to identity
@@ -289,7 +293,7 @@ interface IRecordRepo {
         string $identityAddress,
         string $validationUuid,
         int $organization_id = null
-    );
+    ): bool;
 
     /**
      * Decline validation request
@@ -300,5 +304,5 @@ interface IRecordRepo {
     public function declineValidationRequest(
         string $identityAddress,
         string $validationUuid
-    );
+    ): bool;
 }

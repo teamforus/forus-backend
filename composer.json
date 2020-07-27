@@ -11,6 +11,7 @@
         "ext-json": "*",
         "ext-openssl": "*",
         "ext-zip": "*",
+        "ext-fileinfo": "*",
         "astrotomic/laravel-translatable": "11.8.*",
         "aws/aws-sdk-php": "3.133.44",
         "barryvdh/laravel-dompdf": "^0.8.6",

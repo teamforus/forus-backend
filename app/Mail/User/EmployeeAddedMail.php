@@ -4,35 +4,25 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
+use Illuminate\Mail\Mailable;
 
 class EmployeeAddedMail extends ImplementationMail
 {
-    private $orgName;
-    private $platform;
-    private $confirmationLink;
-    private $link;
+    private $transData;
 
     /**
      * Create a new message instance.
      *
      * EmployeeAddedMail constructor.
-     * @param string $orgName
-     * @param string $platform
-     * @param string $confirmationLink
+     * @param array $data
      * @param EmailFrom|null $emailFrom
      */
     public function __construct(
-        string $orgName,
-        string $platform,
-        string $confirmationLink,
-        ?EmailFrom $emailFrom
+        array $data = [],
+        ?EmailFrom $emailFrom = null
     ) {
-        parent::__construct($emailFrom);
-
-        $this->orgName = $orgName;
-        $this->platform = $platform;
-        $this->confirmationLink = $confirmationLink;
-        $this->link = 'https://www.forus.io/DL';
+        $this->setMailFrom($emailFrom);
+        $this->transData['data'] = $data;
     }
 
     /**
@@ -40,16 +30,10 @@ class EmployeeAddedMail extends ImplementationMail
      *
      * @return $this
      */
-    public function build(): ImplementationMail
+    public function build(): Mailable
     {
-        return parent::build()
-            ->subject(mail_trans('email_employee.title', [
-                'orgName' => $this->orgName
-            ]))
-            ->view('emails.user.employee_added', [
-                'confirmationLink' => $this->confirmationLink,
-                'orgName' => $this->orgName,
-                'link'    => $this->link,
-            ]);
+        return $this->buildBase()
+            ->subject(mail_trans('email_employee.title', $this->transData['data']))
+            ->view('emails.user.employee_added', $this->transData['data']);
     }
 }

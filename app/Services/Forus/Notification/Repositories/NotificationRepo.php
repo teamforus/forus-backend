@@ -3,6 +3,10 @@
 namespace App\Services\Forus\Notification\Repositories;
 
 use App\Mail\Auth\UserLoginMail;
+use App\Mail\Digest\DigestProviderFundsMail;
+use App\Mail\Digest\DigestProviderProductsMail;
+use App\Mail\Digest\DigestRequesterMail;
+use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
@@ -11,7 +15,6 @@ use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
-use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
@@ -43,13 +46,19 @@ class NotificationRepo implements INotificationRepo
         'funds.provider_approved' => ProviderApprovedMail::class,
         'funds.provider_rejected' => ProviderRejectedMail::class,
         'funds.product_sold_out' => ProductSoldOutMail::class,
-        'funds.product_reserved' => ProductReservedMail::class,
         'funds.fund_expires' => FundExpiredMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
 
         // Authorization emails
         'auth.user_login' => UserLoginMail::class,
         'auth.email_activation' => EmailActivationMail::class,
+
+        // Digests
+        'digest.daily_sponsor' => DigestSponsorMail::class,
+        'digest.daily_validator' => DigestRequesterMail::class,
+        'digest.daily_requester' => DigestRequesterMail::class,
+        'digest.daily_provider_funds' => DigestProviderFundsMail::class,
+        'digest.daily_provider_products' => DigestProviderProductsMail::class,
     ];
 
     /**
@@ -243,9 +252,7 @@ class NotificationRepo implements INotificationRepo
         string $token,
         bool $active = true
     ): ?string {
-        $token = NotificationUnsubscriptionToken::findByToken($token, $active);
-
-        return $token ? $token->email : null;
+        return NotificationUnsubscriptionToken::findByToken($token, $active)->email ?? null;
     }
 
     /**
@@ -259,7 +266,7 @@ class NotificationRepo implements INotificationRepo
         $identity_address = $identityAddress;
 
         $mailKeys = collect();
-        foreach (self::mailTypeKeys() as $mailKey) {
+        foreach ($this->mailTypeKeys() as $mailKey) {
             $mailKeys->push((object)[
                 'value' => $mailKey,
                 'type'  => 'email'
@@ -280,7 +287,7 @@ class NotificationRepo implements INotificationRepo
             'identity_address', 'subscribed'
         ))->pluck('key')->values();
 
-        return $keys->map(function($key) use ($unsubscribedKeys) {
+        return $keys->map(static function($key) use ($unsubscribedKeys) {
             return [
                 'key'  => $key->value,
                 'type' => $key->type,
@@ -299,7 +306,7 @@ class NotificationRepo implements INotificationRepo
         array $data
     ): Collection {
         $data_keys = array_keys(array_pluck($data, 'subscribed', 'key'));
-        $preference_keys = self::allPreferenceKeys();
+        $preference_keys = $this->allPreferenceKeys();
 
         foreach ($data as $setting) {
             if (array_intersect($preference_keys, $data_keys)) {

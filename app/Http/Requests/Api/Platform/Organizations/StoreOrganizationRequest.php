@@ -32,7 +32,7 @@ class StoreOrganizationRequest extends FormRequest
         $kvkGeneric = $kvk == Organization::GENERIC_KVK;
 
         return [
-            'name'                  => 'required|between:2,200',
+            'name'                  => 'required|between:2,64',
             'iban'                  => ['required', new IbanRule()],
             'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',
