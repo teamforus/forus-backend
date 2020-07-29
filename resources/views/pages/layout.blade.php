@@ -6,7 +6,7 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <title>{{ config('app.name') }}</title>
         <link rel="stylesheet" href="{{ asset('assets/dist/bundle/css/bundle.min.css') }}">
-        <link rel="stylesheet" href="{{ asset('/assets/css/style.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('/assets/css/style.min.css?time=' . time()) }}">
     </head>
 <body>
     @yield('content')

@@ -1007,13 +1007,14 @@ class Fund extends Model
         Carbon $expire_at = null,
         string $note = null
     ) {
-        $amount = 0;
+        $amount = Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
+        $returnable = false;
 
         $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note', 'product_id',
-            'fund_id'
+            'identity_address', 'amount', 'expire_at', 'note',
+            'product_id','fund_id', 'returnable'
         ));
 
         VoucherCreated::dispatch($voucher, false);
