@@ -611,17 +611,19 @@ class Fund extends Model
 
     /**
      * @param Request $request
-     * @param Builder|null $query
+     * @param Builder $query
      * @return Builder
      */
     public static function search(
         Request $request,
         Builder $query = null
     ) {
-        $query = $query ?: self::query();
+        if (is_null($query)) {
+            $query = self::query()->newQuery();
+        }
 
         if ($request->has('tag')) {
-            $query->whereHas('tags', function(Builder $query) use ($request) {
+            $query->whereHas('tags', static function(Builder $query) use ($request) {
                 return $query->where('key', $request->input('tag'));
             });
         }

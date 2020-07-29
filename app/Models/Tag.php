@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+
 /**
  * App\Models\Tag
  *
  * @property int $id
  * @property string $name
  * @property string $key
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read int|null $funds_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Tag newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Tag newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Tag query()
@@ -26,4 +30,14 @@ class Tag extends Model
     protected $fillable = [
         'name', 'key'
     ];
+
+    /**
+     * Get all of the funds that are assigned this tag.
+     *
+     * @return MorphToMany
+     */
+    public function funds(): MorphToMany
+    {
+        return $this->morphedByMany(Fund::class, 'taggable');
+    }
 }
