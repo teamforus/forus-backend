@@ -21,6 +21,9 @@ use Illuminate\Http\Request;
  * @property int|null $payment_id
  * @property int $attempts
  * @property string $state
+ * @property string $iban_from
+ * @property string $iban_to
+ * @property Carbon $payment_time
  * @property string|null $last_attempt_at
  * @property-read mixed $transaction_details
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
@@ -53,8 +56,9 @@ class VoucherTransaction extends Model
      * @var array
      */
     protected $fillable = [
-        'voucher_id', 'organization_id', 'product_id', 'address', 'amount',
-        'state', 'payment_id', 'attempts', 'last_attempt_at'
+        'voucher_id', 'organization_id', 'product_id', 'address',
+        'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
+        'iban_from', 'iban_to', 'payment_time'
     ];
 
     protected $hidden = [
@@ -87,16 +91,6 @@ class VoucherTransaction extends Model
      */
     public function notes() {
         return $this->hasMany(VoucherTransactionNote::class);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getTransactionDetailsAttribute()
-    {
-        return collect($this->voucher->fund->getBunq()->paymentDetails(
-            $this->payment_id
-        ));
     }
 
     /**
