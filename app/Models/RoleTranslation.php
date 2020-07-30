@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
- * Class RoleTranslation
+/** Class RoleTranslation
  *
  * @package App\Models
  * @property int $id
