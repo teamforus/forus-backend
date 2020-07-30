@@ -394,10 +394,15 @@ class BunqService
                 if (is_numeric($payment_id)) {
                     $transaction->forceFill([
                         'state'             => 'success',
-                        'payment_id'        => $payment_id
+                        'payment_id'        => $payment_id,
+                        'iban_from'         => $bunq->getBankAccountIban(),
+                        'iban_to'           => $transaction->provider->iban,
+                        'payment_time'      => $bunq->paymentDetails($payment_id)->getCreated()
                     ])->save();
 
                     $transaction->sendPushBunqTransactionSuccess();
+
+                    sleep(1);
                 } else {
                     logger()->error(sprintf(
                         'BunqService: invalid payment_id for transaction: %s!',

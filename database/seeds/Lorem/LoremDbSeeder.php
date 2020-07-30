@@ -12,15 +12,13 @@ use App\Models\Product;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
-use App\Services\Forus\Record\Models\RecordType;
-
 use App\Events\Funds\FundCreated;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundBalanceLowEvent;
 use App\Events\Funds\FundBalanceSuppliedEvent;
 use App\Events\Funds\FundProviderApplied;
-
+use App\Services\Forus\Record\Models\RecordType;
 use App\Events\Products\ProductCreated;
 use App\Events\FundProviders\FundProviderApprovedBudget;
 use App\Events\FundProviders\FundProviderApprovedProducts;
@@ -37,6 +35,9 @@ class LoremDbSeeder extends Seeder
     private $productCategories;
     private $primaryEmail;
 
+    private $countProviders;
+    private $countValidators;
+
     private $implementations = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Berkelland',
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
@@ -44,6 +45,10 @@ class LoremDbSeeder extends Seeder
 
     private $implementationsWithFunds = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier',
+    ];
+
+    private $fundsWithCriteriaEditableAfterLaunch = [
+        'Zuidhorn', 'Nijmegen',
     ];
 
     private $fundsWithPhysicalCards = [
@@ -58,6 +63,9 @@ class LoremDbSeeder extends Seeder
         $this->tokenGenerator = resolve('token_generator');
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
+
+        $this->countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
+        $this->countValidators = config('forus.seeders.lorem_db_seeder.validators_count');
 
         $this->productCategories = ProductCategory::all();
         $this->primaryEmail = config('forus.seeders.lorem_db_seeder.default_email');
@@ -81,7 +89,6 @@ class LoremDbSeeder extends Seeder
     public function run(): void
     {
         $this->disableEmails();
-        $countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
 
         $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
@@ -93,8 +100,12 @@ class LoremDbSeeder extends Seeder
         $this->success("Sponsors created!");
 
         $this->info("Making Providers!");
-        $this->makeProviders($baseIdentity, $countProviders);
+        $this->makeProviders($baseIdentity, $this->countProviders);
         $this->success("Providers created!");
+
+        $this->info("Making Validators!");
+        $this->makeExternalValidators($baseIdentity, $this->countValidators);
+        $this->success("Validators created!");
 
         $this->applyFunds($baseIdentity);
 
@@ -184,6 +195,7 @@ class LoremDbSeeder extends Seeder
         int $count = 10
     ): void {
         $organizations = $this->makeOrganizations(
+            "Provider", 
             $identity_address,
             $count,
             [],
@@ -234,6 +246,27 @@ class LoremDbSeeder extends Seeder
                     FundProviderApprovedProducts::dispatch($fundProvider);
                 }
             }
+        }
+    }
+
+    /**
+     * @param string $identity_address
+     * @param int $count
+     * @throws Exception
+     */
+    public function makeExternalValidators(
+        string $identity_address,
+        int $count = 10
+    ): void {
+        $organizations = $this->makeOrganizations("Validator", $identity_address,  $count);
+
+        foreach ($organizations as $key => $organization) {
+            $this->makeOffices($organization, random_int(1, 2));
+
+            $organization->update([
+                'is_validator' => true,
+                'validator_auto_accept_funds' => $key <= ($this->countValidators / 2),
+            ]);
         }
     }
 
@@ -309,14 +342,17 @@ class LoremDbSeeder extends Seeder
     }
 
     /**
+     * @param string $prefix
      * @param string $identity_address
      * @param int $count
      * @param array $fields
+     * @return Organization[]
      * @param int $offices_count
      * @return array
      * @throws Exception
      */
     public function makeOrganizations(
+        string $prefix,
         string $identity_address,
         int $count = 1,
         array $fields = [],
@@ -328,7 +364,7 @@ class LoremDbSeeder extends Seeder
 
         while ($count-- > 0) {
             $out[] = $this->makeOrganization(
-                'Provider #' . $nth++,
+                sprintf('%s #%s', $prefix, $nth++),
                 $identity_address,
                 $fields,
                 $offices_count
@@ -447,12 +483,15 @@ class LoremDbSeeder extends Seeder
             $flag = true;
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
+        $criteriaEditable = in_array($fundName, $this->fundsWithCriteriaEditableAfterLaunch);
+
         $fund = $organization->createFund(array_merge([
-            'name'                  => $fundName,
-            'start_date'            => Carbon::now()->format('Y-m-d'),
-            'end_date'              => Carbon::now()->addDays(60)->format('Y-m-d'),
-            'state'                 => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
-            'notification_amount'   => 10000
+            'name'                          => $fundName,
+            'criteria_editable_after_start' => $criteriaEditable,
+            'start_date'                    => Carbon::now()->format('Y-m-d'),
+            'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
+            'state'                         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
+            'notification_amount'           => 10000
         ], $fields));
 
         $transaction = $fund->top_up_model->transactions()->create([

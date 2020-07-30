@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use App\Events\FundRequests\FundRequestResolved;
+use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Http\Request;
 
 /**
@@ -13,7 +17,6 @@ use Illuminate\Http\Request;
  *
  * @property int $id
  * @property int $fund_id
- * @property int|null $employee_id
  * @property string $identity_address
  * @property string $note
  * @property string $state
@@ -25,7 +28,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $clarifications_answered_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $clarifications_pending
  * @property-read int|null $clarifications_pending_count
- * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
@@ -79,21 +81,29 @@ class FundRequest extends Model
 
     /**
      * @param \Illuminate\Http\Request $request
-     * @param Organization|null $organization
+     * @param Organization $organization
+     * @param string $identity_address
      * @return FundRequest|\Illuminate\Database\Eloquent\Builder
      */
     public static function search(
         Request $request,
-        Organization $organization = null
+        Organization $organization,
+        string $identity_address
     ) {
         $query = self::query();
 
-        if ($organization) {
-            $query->whereIn('fund_id', $organization->funds()->pluck('id'));
-        }
+        $query->whereHas('records', static function(
+            Builder $builder
+        ) use ($organization, $identity_address) {
+            FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+                $builder,
+                $identity_address,
+                $organization->findEmployee($identity_address)->id
+            );
+        });
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $query->whereHas('fund', function(Builder $builder) use ($q) {
+            $query->whereHas('fund', static function(Builder $builder) use ($q) {
                 $builder->where('name', 'LIKE', "%$q%");
             });
         }
@@ -104,23 +114,15 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund()
+    public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function employee()
-    {
-        return $this->belongsTo(Employee::class);
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records()
+    public function records(): HasMany
     {
         return $this->hasMany(FundRequestRecord::class);
     }
@@ -128,16 +130,17 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function clarifications()
-    {
-        return $this->hasManyThrough(FundRequestClarification::class, FundRequestRecord::class);
+    public function clarifications(): HasManyThrough {
+        return $this->hasManyThrough(
+            FundRequestClarification::class,
+            FundRequestRecord::class
+        );
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records_approved()
-    {
+    public function records_approved(): HasMany {
         return $this->records()->where([
             'fund_request_records.state' => FundRequestRecord::STATE_APPROVED
         ]);
@@ -146,8 +149,7 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records_declined()
-    {
+    public function records_declined(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_records.state' => FundRequestRecord::STATE_DECLINED
         ]);
@@ -156,8 +158,7 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records_pending()
-    {
+    public function records_pending(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_records.state' => FundRequestRecord::STATE_PENDING
         ]);
@@ -166,8 +167,7 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function clarifications_pending()
-    {
+    public function clarifications_pending(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_clarifications.state' => FundRequestClarification::STATE_PENDING
         ]);
@@ -176,90 +176,84 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function clarifications_answered()
-    {
+    public function clarifications_answered(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_clarifications.state' => FundRequestClarification::STATE_ANSWERED
         ]);
     }
 
     /**
+     * Set all fund request records assigned to given employee as declined
+     * @param Employee $employee
      * @param string|null $note
-     * @return FundRequest
-     * @throws \Exception
+     * @return FundRequest|bool
      */
-    public function decline(string $note = null) {
-        if (!$this->employee_id) {
-            throw new \Exception("No employee assigned.", 403);
-        }
-
-        foreach ($this->records_pending as $record) {
-            $record->decline($note, false);
-        }
-
-        $this->records_approved()->each(function(FundRequestRecord $record) {
-            $record->makeValidation();
+    public function decline(Employee $employee, string $note = null) {
+        $this->records_pending()->where([
+            'employee_id' => $employee->id
+        ])->each(static function(FundRequestRecord $record) use ($note) {
+            $record->decline($note);
         });
 
-        return $this->updateStateByRecords()->updateModel([
-            'note' => $note,
-        ]);
+        return $this;
     }
 
     /**
-     * @return FundRequest
-     * @throws \Exception
+     * Set all fund request records assigned to given employee as approved
+     * @param Employee $employee
+     * @param string|null $note
+     * @return $this
      */
-    public function approve() {
-        if (!$this->employee_id) {
-            throw new \Exception("No employee assigned.", 403);
-        }
-
-        $this->records_pending()->each(function(FundRequestRecord $record) {
-            $record->approve(false);
+    public function approve(Employee $employee, string $note = null): self {
+        $this->records_pending()->where([
+            'employee_id' => $employee->id
+        ])->each(static function(FundRequestRecord $record) use ($note) {
+            $record->approve($note);
         });
 
-        $this->records_approved()->each(function(FundRequestRecord $record) {
-            $record->makeValidation();
-        });
-
-        return $this->updateStateByRecords();
+        return $this;
     }
 
     /**
-     * @param string $state
-     * @param string|null $note
-     * @return $this|FundRequest
-     * @throws \Exception
+     * Resolve fund request by applying validations to requester
+     * from all approved fund request records and changes the status of
+     * the request accordingly
+     * @return $this
      */
-    public function resolve(string $state, string $note = null)
-    {
-        switch ($state) {
-            case self::STATE_APPROVED: {
-                return $this->approve();
-            } break;
-            case self::STATE_DECLINED: {
-                return $this->decline($note);
-            } break;
+    public function resolve(): self {
+        $records = $this->records()->whereHas('employee');
+        $records->where('state', '!=', self::STATE_PENDING);
+
+        $records->get()->each(static function(FundRequestRecord $record) {
+            $record->makeValidation();
+        });
+
+        if (!$this->records_pending()->exists()) {
+            $this->updateStateByRecords();
         }
 
         return $this;
     }
 
-    public function updateStateByRecords() {
+    /**
+     * @return $this
+     */
+    public function updateStateByRecords(): FundRequest {
         $countAll = $this->records()->count();
         $countApproved = $this->records_approved()->count();
-        $allApproved = $countAll == $countApproved;
+        $allApproved = $countAll === $countApproved;
         $hasApproved = $countApproved > 0;
         $oldState = $this->state;
 
-        $this->update([
-            'state' => $allApproved ? self::STATE_APPROVED : (
-                $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED
-            )
-        ]);
+        if ($allApproved) {
+            $state = self::STATE_APPROVED;
+        } else {
+            $state = $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;
+        }
 
-        if (($oldState !== $this->state) && ($this->state != 'pending')) {
+        $this->update(compact('state'));
+
+        if (($oldState !== $this->state) && ($this->state !== 'pending')) {
             FundRequestResolved::dispatch($this);
         }
 
@@ -267,25 +261,58 @@ class FundRequest extends Model
     }
 
     /**
+     * Assign all available pending fund request records to given employee
      * @param Employee $employee
-     * @return FundRequest
+     * @return $this
      */
-    public function assignEmployee(Employee $employee) {
-        return $this->updateModel([
+    public function assignEmployee(Employee $employee): self {
+        FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            $this->records()->where([
+                'state' => FundRequestRecord::STATE_PENDING,
+            ])->getQuery(),
+            $employee->identity_address,
+            $employee->id
+        )->whereDoesntHave('employee')->update([
             'employee_id' => $employee->id
         ]);
+
+        return $this;
     }
 
     /**
-     * @return FundRequest
+     * Remove all assigned fund request records from employee
+     * @param Employee $employee
+     * @param FundCriterion|null $fundCriterion
+     * @return $this
      */
-    public function resignEmployee() {
-        return $this->updateModel([
-            'employee_id' => null
+    public function resignEmployee(
+        Employee $employee,
+        ?FundCriterion $fundCriterion = null
+    ): self {
+        $query = $this->records()->where([
+            'employee_id' => $employee->id,
         ]);
+
+        if (!is_null($fundCriterion)) {
+            $query->where('fund_criterion_id', $fundCriterion->id);
+        }
+
+        $query->update([
+            'employee_id' => null,
+            'state' => FundRequestRecord::STATE_PENDING,
+        ]);
+
+        if ($this->state === self::STATE_APPROVED_PARTLY && $this->records_pending()->exists()) {
+            $this->update([
+                'state' => self::STATE_PENDING
+            ]);
+        }
+
+        return $this;
     }
 
     /**
+     * Prepare fund requests for exporting
      * @param Builder $builder
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
@@ -294,8 +321,8 @@ class FundRequest extends Model
         $recordRepo = resolve('forus.services.record');
 
         return $builder->with([
-            'employee', 'fund'
-        ])->get()->map(function(
+            'records.employee', 'fund'
+        ])->get()->map(static function(
             FundRequest $fundRequest
         ) use ($transKey, $recordRepo) {
             return [
@@ -304,22 +331,29 @@ class FundRequest extends Model
                 ),
                 trans("$transKey.fund_name") => $fundRequest->fund->name,
                 trans("$transKey.status") => $fundRequest->state,
-                trans("$transKey.validator") => $fundRequest->employee ?
-                    $recordRepo->primaryEmailByAddress($fundRequest->employee->identity_address) : null,
+                trans("$transKey.validator") => $fundRequest->records->filter()->pluck('employee')->count() > 0 ?
+                    $fundRequest->records->pluck('employee')->filter()->map(static function(
+                        Employee $employee
+                    ) use ($recordRepo) {
+                        return $recordRepo->primaryEmailByAddress($employee->identity_address);
+                    })->unique()->join(', ') : null,
                 trans("$transKey.created_at") => $fundRequest->created_at,
             ];
         })->values();
     }
 
     /**
+     * Export fund requests
      * @param Request $request
      * @param Organization $organization
+     * @param string $identity_address
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
     public static function exportSponsor(
         Request $request,
-        Organization $organization
+        Organization $organization,
+        string $identity_address
     ) {
-        return self::exportTransform(self::search($request, $organization));
+        return self::exportTransform(self::search($request, $organization, $identity_address));
     }
 }

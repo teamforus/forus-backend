@@ -18,6 +18,7 @@ use App\Console\Commands\SendRequesterDigestCommand;
 use App\Console\Commands\SendSponsorDigestCommand;
 use App\Console\Commands\SendValidatorDigestCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
+use App\Console\Commands\UpdateVoucherTransactionDetailsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -62,6 +63,9 @@ class Kernel extends ConsoleKernel
         SendRequesterDigestCommand::class,
         SendValidatorDigestCommand::class,
         SendSponsorDigestCommand::class,
+
+        // voucher transaction details
+        UpdateVoucherTransactionDetailsCommand::class,
     ];
 
     /**

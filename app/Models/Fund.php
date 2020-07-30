@@ -10,7 +10,10 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
+use App\Scopes\Builders\FundCriteriaQuery;
+use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
@@ -22,6 +25,11 @@ use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 
@@ -34,6 +42,7 @@ use Illuminate\Http\Request;
  * @property string|null $description
  * @property string $state
  * @property bool $public
+ * @property bool $criteria_editable_after_start
  * @property float|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
@@ -49,17 +58,21 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read int|null $digests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
- * @property-read \App\Models\FundConfig $fund_config
+ * @property-read \App\Models\FundConfig|null $fund_config
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
+ * @property-read int|null $fund_request_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read float $budget_left
@@ -67,7 +80,7 @@ use Illuminate\Http\Request;
  * @property-read float $budget_used
  * @property-read float $budget_validated
  * @property-read \App\Models\FundTopUp $top_up_model
- * @property-read \App\Services\MediaService\Models\Media $logo
+ * @property-read \App\Services\MediaService\Models\Media|null $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
@@ -112,6 +125,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCriteriaEditableAfterStart($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
@@ -168,7 +182,8 @@ class Fund extends Model
     protected $fillable = [
         'organization_id', 'state', 'name', 'description', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
-        'default_validator_employee_id', 'auto_requests_validation'
+        'default_validator_employee_id', 'auto_requests_validation',
+        'criteria_editable_after_start'
     ];
 
     protected $hidden = [
@@ -178,6 +193,7 @@ class Fund extends Model
     protected $casts = [
         'public' => 'boolean',
         'auto_requests_validation' => 'boolean',
+        'criteria_editable_after_start' => 'boolean',
     ];
 
     /**
@@ -194,14 +210,14 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization() {
+    public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function products() {
+    public function products(): BelongsToMany {
         return $this->belongsToMany(
             Product::class,
             'fund_products'
@@ -211,7 +227,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function criteria() {
+    public function criteria(): HasMany {
         return $this->hasMany(FundCriterion::class);
     }
 
@@ -219,7 +235,7 @@ class Fund extends Model
      * Get fund logo
      * @return MorphOne
      */
-    public function logo() {
+    public function logo(): MorphOne {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'fund_logo'
         ]);
@@ -228,29 +244,29 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function vouchers() {
+    public function vouchers(): HasMany {
         return $this->hasMany(Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function voucher_transactions() {
+    public function voucher_transactions(): HasManyThrough {
         return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function providers() {
+    public function providers(): HasMany {
         return $this->hasMany(FundProvider::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function providers_approved() {
-        return $this->hasMany(FundProvider::class)->where(function(Builder $builder) {
+    public function providers_approved(): HasMany {
+        return $this->hasMany(FundProvider::class)->where(static function(Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
             $builder->orWhere('allow_some_products', true);
@@ -260,14 +276,14 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function provider_invitations() {
+    public function provider_invitations(): HasMany {
         return $this->hasMany(FundProviderInvitation::class, 'from_fund_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function providers_allowed_products() {
+    public function providers_allowed_products(): HasMany {
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => true
         ]);
@@ -276,7 +292,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function providers_declined_products() {
+    public function providers_declined_products(): HasMany {
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false
         ]);
@@ -285,42 +301,49 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function top_ups() {
+    public function top_ups(): HasMany {
         return $this->hasMany(FundTopUp::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function default_validator_employee() {
+    public function default_validator_employee(): BelongsTo {
         return $this->belongsTo(Employee::class, 'default_validator_employee_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function top_up_transactions() {
+    public function top_up_transactions(): HasManyThrough {
         return $this->hasManyThrough(FundTopUpTransaction::class, FundTopUp::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_requests() {
+    public function fund_requests(): HasMany {
         return $this->hasMany(FundRequest::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function fund_request_records(): HasManyThrough {
+        return $this->hasManyThrough(FundRequestRecord::class, FundRequest::class);
     }
 
     /**
      * @return float
      */
-    public function getBudgetValidatedAttribute() {
+    public function getBudgetValidatedAttribute(): float {
         return 0;
     }
 
     /**
      * @return float
      */
-    public function getBudgetTotalAttribute() {
+    public function getBudgetTotalAttribute(): float {
         return round(array_sum([
             $this->top_up_transactions->sum('amount'),
             $this->bunq_me_tabs_paid->sum('amount')
@@ -330,32 +353,37 @@ class Fund extends Model
     /**
      * @return float
      */
-    public function getBudgetUsedAttribute() {
+    public function getBudgetUsedAttribute(): float {
         return round($this->voucher_transactions->sum('amount'), 2);
     }
 
     /**
      * @return float
      */
-    public function getBudgetLeftAttribute() {
+    public function getBudgetLeftAttribute(): float {
         return round($this->budget_total - $this->budget_used, 2);
     }
 
-    public function getFundId() {
+    /**
+     * @return int
+     */
+    public function getFundId(): int {
         return $this->id;
     }
 
-    public function getServiceCosts(): float
-    {
+    /**
+     * @return float
+     */
+    public function getServiceCosts(): float {
         return $this->getTransactionCosts();
     }
 
-    public function getTransactionCosts (): float
-    {
+    /**
+     * @return float
+     */
+    public function getTransactionCosts (): float {
         if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
-            return $this
-                    ->voucher_transactions()
-                    ->count() * 0.10;
+            return $this->voucher_transactions()->count() * 0.10;
         }
 
         return 0.0;
@@ -364,11 +392,11 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function provider_organizations_approved() {
+    public function provider_organizations_approved(): BelongsToMany {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where(function(Builder $builder) {
+        )->where(static function(Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
             $builder->orWhere('allow_some_products', true);
@@ -378,11 +406,11 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function provider_organizations_approved_budget() {
+    public function provider_organizations_approved_budget(): BelongsToMany {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where(function(Builder $builder) {
+        )->where(static function(Builder $builder) {
             $builder->where('allow_budget', true);
         });
     }
@@ -390,11 +418,11 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function provider_organizations_approved_products() {
+    public function provider_organizations_approved_products(): BelongsToMany {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where(function(Builder $builder) {
+        )->where(static function(Builder $builder) {
             $builder->where('allow_products', true);
         });
     }
@@ -402,7 +430,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function provider_organizations_declined() {
+    public function provider_organizations_declined(): BelongsToMany {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
@@ -416,7 +444,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function provider_organizations_pending() {
+    public function provider_organizations_pending(): BelongsToMany {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
@@ -429,7 +457,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function provider_organizations() {
+    public function provider_organizations(): BelongsToMany {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
@@ -439,7 +467,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function employees() {
+    public function employees(): HasManyThrough {
         return $this->hasManyThrough(
             Employee::class,
             Organization::class,
@@ -461,7 +489,7 @@ class Fund extends Model
             'organization_id',
             'organization_id',
             'id'
-        )->whereHas('roles.permissions', function(Builder $builder) {
+        )->whereHas('roles.permissions', static function(Builder $builder) {
             $builder->where('key', 'validate_records');
         });
     }
@@ -469,28 +497,28 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function fund_config() {
+    public function fund_config(): HasOne {
         return $this->hasOne(FundConfig::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_formulas() {
+    public function fund_formulas(): HasMany {
         return $this->hasMany(FundFormula::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_formula_products() {
+    public function fund_formula_products(): HasMany {
         return $this->hasMany(FundFormulaProduct::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function formula_products() {
+    public function formula_products(): HasManyThrough {
         return $this->hasManyThrough(
             Product::class,
             FundFormulaProduct::class,
@@ -502,14 +530,14 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function bunq_me_tabs() {
+    public function bunq_me_tabs(): HasMany {
         return $this->hasMany(BunqMeTab::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function bunq_me_tabs_paid() {
+    public function bunq_me_tabs_paid(): HasMany {
         return $this->hasMany(BunqMeTab::class)->where([
             'status' => 'PAID'
         ]);
@@ -518,7 +546,8 @@ class Fund extends Model
     /**
      * @return array|null
      */
-    public function getBunqKey() {
+    public function getBunqKey(): ?array
+    {
         if (!$this->fund_config) {
             return null;
         }
@@ -531,27 +560,24 @@ class Fund extends Model
     }
 
     /**
-     * @param Fund $fund
      * @param string $identity_address
-     * @param string $recordType
-     * @param Organization|null $organization
+     * @param Fund $fund
+     * @param string $record_type
+     * @param FundCriterion $criterion
      * @return mixed
      */
     public static function getTrustedRecordOfType(
-        Fund $fund,
         string $identity_address,
-        string $recordType,
-        Organization $organization = null
+        string $record_type,
+        Fund $fund,
+        FundCriterion $criterion = null
     ) {
+        $organization = $fund->organization;
         $recordRepo = resolve('forus.services.record');
-        $trustedIdentities = $fund->validatorEmployees();
+        $trustedIdentities = $fund->validatorEmployees($criterion);
+        $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, []);
 
-        /** @var FundCriterion $criterion */
-        $recordsOfType = collect($recordRepo->recordsList(
-            $identity_address, $recordType, null
-        ));
-
-        $validRecordsOfType = $recordsOfType->map(function($record) use (
+        $validRecordsOfType = collect($recordsOfType)->map(static function($record) use (
             $trustedIdentities, $organization
         ) {
             $validations = collect($record['validations'])->whereIn(
@@ -568,9 +594,9 @@ class Fund extends Model
             return array_merge($record, [
                 'validations' => $validations->sortByDesc('created_at')
             ]);
-        })->filter(function($record) {
+        })->filter(static function($record) {
             return count($record['validations']) > 0;
-        })->sortByDesc(function($record) {
+        })->sortByDesc(static function($record) {
             return $record['validations'][0]['created_at'];
         });
 
@@ -584,22 +610,21 @@ class Fund extends Model
      */
     public static function amountForIdentity(Fund $fund, $identityAddress)
     {
-        if ($fund->fund_formulas->count() == 0 &&
-            $fund->fund_formula_products->pluck('price')->sum() == 0) {
+        if ($fund->fund_formulas->count() === 0 &&
+            $fund->fund_formula_products->pluck('price')->sum() === 0) {
             return 0;
         }
 
-        return $fund->fund_formulas->map(function(FundFormula $formula) use (
+        return $fund->fund_formulas->map(static function(FundFormula $formula) use (
                 $fund, $identityAddress
             ) {
                 switch ($formula->type) {
                     case 'fixed': return $formula->amount; break;
                     case 'multiply': {
                         $record = self::getTrustedRecordOfType(
-                            $fund,
                             $identityAddress,
                             $formula->record_type_key,
-                            $fund->organization
+                            $fund
                         );
 
                         return is_numeric(
@@ -613,17 +638,19 @@ class Fund extends Model
 
     /**
      * @param Request $request
-     * @param Builder|null $query
+     * @param Builder $query
      * @return Builder
      */
     public static function search(
         Request $request,
-        Builder $query = null
+        Builder $query
     ) {
-        $query = $query ?: self::query();
+        if (is_null($query)) {
+            $query = self::query()->newQuery();
+        }
 
         if ($request->has('tag')) {
-            $query->whereHas('tags', function(Builder $query) use ($request) {
+            $query->whereHas('tags', static function(Builder $query) use ($request) {
                 return $query->where('key', $request->input('tag'));
             });
         }
@@ -659,8 +686,8 @@ class Fund extends Model
             return null;
         }
 
-        if($fundFormula->filter(function (FundFormula $formula){
-            return $formula->type != 'fixed';
+        if($fundFormula->filter(static function (FundFormula $formula){
+            return $formula->type !== 'fixed';
         })->count()){
             return null;
         }
@@ -686,7 +713,10 @@ class Fund extends Model
         );
     }
 
-    public static function configuredFunds () {
+    /**
+     * @return Fund[]|Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function configuredFunds() {
         try {
             return static::query()->whereHas('fund_config')->get();
         } catch (\Exception $exception) {
@@ -697,7 +727,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Support\Collection
      */
-    public function requiredPrevalidationKeys() {
+    public function requiredPrevalidationKeys(): \Illuminate\Support\Collection {
         return collect(collect()->merge(
             $this->fund_config ? [$this->fund_config->csv_primary_key] : []
         )->merge(
@@ -713,7 +743,7 @@ class Fund extends Model
      * @param string $state
      * @return $this
      */
-    public function changeState(string $state) {
+    public function changeState(string $state): self {
         if (in_array($state, self::STATES)) {
             $this->update(compact('state'));
         }
@@ -724,34 +754,32 @@ class Fund extends Model
     /**
      * Update fund state by the start and end dates
      */
-    public static function checkStateQueue() {
+    public static function checkStateQueue(): void {
         /** @var Collection|Fund[] $funds */
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query) {
+            ->whereHas('fund_config', static function (Builder $query) {
                 return $query->where('is_configured', true);
             })
             ->whereDate('start_date', '<=', now())
             ->get();
 
         foreach($funds as $fund) {
-            if ($fund->start_date->startOfDay()->isPast() &&
-                $fund->state == self::STATE_PAUSED) {
+            if ($fund->state === self::STATE_PAUSED &&
+                $fund->start_date->startOfDay()->isPast()) {
                 $fund->changeState(self::STATE_ACTIVE);
                 FundStartedEvent::dispatch($fund);
             }
 
             $expirationNotified = $fund->logs()->where([
-                'event' => Fund::EVENT_FUND_EXPIRING
+                'event' => self::EVENT_FUND_EXPIRING
             ])->exists();
 
-            if (!$expirationNotified &&
-                $fund->end_date->endOfDay()->clone()->subDays(14)->isPast() &&
-                $fund->state != self::STATE_CLOSED) {
+            if (!$expirationNotified && $fund->state !== self::STATE_CLOSED &&
+                $fund->end_date->endOfDay()->clone()->subDays(14)->isPast()) {
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if ($fund->end_date->endOfDay()->isPast() &&
-                $fund->state != self::STATE_CLOSED) {
+            if ($fund->state !== self::STATE_CLOSED && $fund->end_date->endOfDay()->isPast()) {
                 $fund->changeState(self::STATE_CLOSED);
                 FundEndedEvent::dispatch($fund);
             }
@@ -761,13 +789,13 @@ class Fund extends Model
     /**
      * @return void
      */
-    public static function checkConfigStateQueue()
+    public static function checkConfigStateQueue(): void
     {
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query) {
+            ->whereHas('fund_config', static function (Builder $query) {
                 return $query->where('is_configured', true);
             })
-            ->where('state', Fund::STATE_WAITING)
+            ->where('state', self::STATE_WAITING)
             ->whereDate('start_date', '>', now())
             ->get();
 
@@ -803,20 +831,16 @@ class Fund extends Model
      * @param string $email
      * @return void
      */
-    public static function sendUserStatisticsReport(string $email)
-    {
+    public static function sendUserStatisticsReport(string $email): void {
         /** @var Collection|Fund[] $funds */
-        $funds = self::query()->whereHas('fund_config', function (
-            Builder $query
-        ) {
+        $funds = self::query()->whereHas('fund_config', static function (Builder $query) {
             return $query->where('is_configured', true);
         })->whereIn('state', [
-            self::STATE_ACTIVE,
-            self::STATE_PAUSED,
+            self::STATE_ACTIVE, self::STATE_PAUSED
         ])->get();
 
-        if ($funds->count() == 0) {
-            return null;
+        if ($funds->count() === 0) {
+            return;
         }
 
         foreach($funds as $fund) {
@@ -827,12 +851,12 @@ class Fund extends Model
                 FundProvider::query(), $fund->id
             );
 
-            $providerCount = $providersQuery->get()->map(function ($fundProvider){
+            $providerCount = $providersQuery->get()->map(static function ($fundProvider){
                 /** @var FundProvider $fundProvider */
                 return $fundProvider->organization->employees->count() + 1;
             })->sum();
 
-            if ($fund->state == self::STATE_ACTIVE) {
+            if ($fund->state === self::STATE_ACTIVE) {
                 $requesterCount = $fund->vouchers()->whereNull('parent_id')->count();
             } else {
                 $requesterCount = 0;
@@ -862,10 +886,10 @@ class Fund extends Model
         $recordRepo = resolve('forus.services.record');
 
         $funds = self::query()
-            ->whereHas('fund_config', function (Builder $query){
+            ->whereHas('fund_config', static function (Builder $query){
                 return $query->where('is_configured', true);
             })
-            ->where(function (Builder $query){
+            ->where(static function (Builder $query){
                 return $query->whereNull('notified_at')
                     ->orWhereDate('notified_at', '<=', now()->subDays(
                         7
@@ -888,7 +912,7 @@ class Fund extends Model
                 $referrers = $referrers->pluck('identity_address');
                 $referrers = $referrers->push(
                     $fund->organization->identity_address
-                )->map(function ($identity) use ($recordRepo) {
+                )->map(static function ($identity) use ($recordRepo) {
                     return [
                         'identity' => $identity,
                         'email' => $recordRepo->primaryEmailByAddress($identity),
@@ -917,40 +941,34 @@ class Fund extends Model
      * @param float $amount
      * @param string $description
      * @param string|null $issuer
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return \Illuminate\Database\Eloquent\Model|BunqMeTab
      * @throws \Exception
      */
     public function makeBunqMeTab(
         float $amount,
         string $description = '',
         string $issuer = null
-    ) {
-        $tabRequest = $this->getBunq()->makeBunqMeTabRequest(
-            $amount,
-            $description
-        );
-
+    ): BunqMeTab {
+        $tabRequest = $this->getBunq()->makeBunqMeTabRequest($amount, $description);
         $bunqMeTab = $tabRequest->getBunqMeTab();
-        $amount = $bunqMeTab->getBunqmeTabEntry()->getAmountInquired();
+        $amountInquired = $bunqMeTab->getBunqmeTabEntry()->getAmountInquired();
         $description = $bunqMeTab->getBunqmeTabEntry()->getDescription();
         $issuer_auth_url = null;
 
-
-        if (env('BUNQ_IDEAL_USE_ISSUERS', true) && $issuer) {
-            $issuer_auth_url = $tabRequest->makeIdealIssuerRequest(
-                $issuer
-            )->getUrl();
+        if ($issuer && env('BUNQ_IDEAL_USE_ISSUERS', true)) {
+            $request = $tabRequest->makeIdealIssuerRequest($issuer);
+            $issuer_auth_url = $request ? $request->getUrl() : null;
         }
 
         return $this->bunq_me_tabs()->create([
             'bunq_me_tab_id'            => $bunqMeTab->getId(),
             'status'                    => $bunqMeTab->getStatus(),
             'monetary_account_id'       => $bunqMeTab->getMonetaryAccountId(),
-            'amount'                    => $amount->getValue(),
+            'amount'                    => $amountInquired->getValue(),
             'description'               => $description,
             'uuid'                      => $tabRequest->getUuid(),
             'share_url'                 => $tabRequest->getShareUrl(),
-            'issuer_authentication_url' => $issuer_auth_url
+            'issuer_authentication_url' => $issuer_auth_url,
         ]);
     }
 
@@ -1001,14 +1019,14 @@ class Fund extends Model
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param string|null $note
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return Voucher
      */
     public function makeProductVoucher(
         string $identity_address = null,
         int $product_id = null,
         Carbon $expire_at = null,
         string $note = null
-    ) {
+    ): Voucher {
         $amount = 0;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
@@ -1024,13 +1042,32 @@ class Fund extends Model
     }
 
     /**
-     * @param bool $force_fetch
+     * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(bool $force_fetch = true) {
-        return ($force_fetch ? $this->employees_validators() :
-            $this->employees_validators)
-            ->pluck('employees.identity_address')->toArray();
+    public function validatorEmployees(
+        ?FundCriterion $fundCriterion = null
+    ): array {
+        $employees = $this->employees_validators()->pluck('employees.identity_address');
+        $externalEmployees = [];
+
+        /** @var Organization[] $external_validators */
+        $external_validators = $fundCriterion ? (
+            $this->organization->external_validators()->whereIn(
+                'organizations.id',
+                $fundCriterion->external_validator_organizations->pluck(
+                    'validator_organization_id'
+                )->toArray()
+            )->get()
+        ) : $this->organization->external_validators;
+
+        foreach ($external_validators as $external_validator) {
+            $externalEmployees[] = $external_validator->employeesWithPermissions(
+                'validate_records'
+            )->pluck('identity_address')->toArray();
+        }
+
+        return array_merge($employees->toArray(), array_flatten($externalEmployees, 1));
     }
 
     /**
@@ -1038,8 +1075,10 @@ class Fund extends Model
      * @param array $records
      * @return FundRequest
      */
-    public function makeFundRequest(string $identity_address, array $records)
-    {
+    public function makeFundRequest(
+        string $identity_address,
+        array $records
+    ): FundRequest {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->fund_requests()->create(compact(
             'identity_address'
@@ -1058,57 +1097,125 @@ class Fund extends Model
     }
 
     /**
-     * Store criteria for newly created fund
-     * @param array $criteria
-     * @return $this
-     */
-    public function makeCriteria(array $criteria)
-    {
-        $this->criteria()->createMany(array_map(function($criterion) {
-            return array_only($criterion, [
-                'record_type_key', 'operator', 'value', 'show_attachment',
-                'description'
-            ]);
-        }, $criteria));
-
-        return $this;
-    }
-
-    /**
      * Update criteria for existing fund
      * @param array $criteria
      * @return $this
      */
-    public function updateCriteria(array $criteria)
-    {
-        $this->criteria()->whereNotIn('id', array_filter(
-            array_pluck($criteria, 'id'), function($id) {
-            return !empty($id);
-        }))->delete();
+    public function syncCriteria(array $criteria): self {
+        // remove criteria not listed in the array
+        if ($this->criteriaIsEditable()) {
+            $this->criteria()->whereNotIn('id', array_filter(
+                array_pluck($criteria, 'id'), static function($id) {
+                return !empty($id);
+            }))->delete();
+        }
 
         foreach ($criteria as $criterion) {
-            /** @var FundCriterion|null $db_criteria */
-            $data_criteria = array_only($criterion, [
-                'record_type_key', 'operator', 'value', 'show_attachment',
-                'description'
-            ]);
-
-            if ($db_criteria = $this->criteria()->find($criterion['id'] ?? null)) {
-                $db_criteria->update($data_criteria);
-            } else {
-                $this->criteria()->create($data_criteria);
-            }
+            $this->syncCriterion($criterion);
         }
 
         return $this;
     }
 
     /**
+     * Update existing or create new fund criterion
+     * @param array $criterion
+     */
+    protected function syncCriterion(array $criterion): void {
+        /** @var FundCriterion $fundCriterion */
+        $validators = $criterion['validators'] ?? null;
+        $fundCriterion = $this->criteria()->find($criterion['id'] ?? null);
+
+        if (!$fundCriterion && !$this->criteriaIsEditable()) {
+            return;
+        }
+
+        /** @var FundCriterion|null $db_criteria */
+        $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
+            'record_type_key', 'operator', 'value', 'show_attachment',
+            'description'
+        ] : ['show_attachment', 'description']);
+
+        if ($fundCriterion) {
+            $fundCriterion->update($data_criterion);
+        } else {
+            $fundCriterion = $this->criteria()->create($data_criterion);
+        }
+
+        if (is_array($validators)) {
+            $this->syncCriterionValidators($fundCriterion, $validators);
+        }
+    }
+
+    /**
+     * Update fund criterion validators
+     * @param FundCriterion $criterion
+     * @param array $externalValidators
+     */
+    protected function syncCriterionValidators(
+        FundCriterion $criterion,
+        array $externalValidators
+    ): void {
+        $fund = $this;
+        $currentValidators = [];
+
+        /** @var OrganizationValidator[] $validators */
+        $validators = array_map(static function($organization_validator_id) use ($fund) {
+            return $fund->organization->organization_validators()->where([
+                'organization_validators.id' => $organization_validator_id
+            ])->first();
+        }, array_unique(array_values($externalValidators)));
+
+        foreach ($validators as $organizationValidator) {
+            $currentValidators[] = $criterion->fund_criterion_validators()->firstOrCreate([
+                'organization_validator_id' => $organizationValidator->id
+            ], [
+                'accepted' => $organizationValidator->validator_organization
+                    ->validator_auto_accept_funds
+            ])->getKey();
+        }
+
+        /** @var FundCriterionValidator[]|Collection $criterionValidators */
+        $criterionValidators = $criterion->fund_criterion_validators()->whereNotIn(
+            'fund_criterion_validators.id', $currentValidators
+        )->get();
+
+        $this->resignCriterionValidators($criterionValidators);
+
+        $criterion->fund_criterion_validators()->whereIn(
+            'fund_criterion_validators.id',
+            $criterionValidators->pluck('id')->toArray()
+        )->delete();
+    }
+
+    /**
+     * Resign fund request record employees be criterion validator
+     * @param FundCriterionValidator[]|Collection $criterionValidators
+     */
+    protected function resignCriterionValidators($criterionValidators): void {
+        foreach ($criterionValidators as $criterionValidator) {
+            $validator_organization = $criterionValidator
+                ->external_validator->validator_organization;
+
+            foreach ($validator_organization->employees as $employee) {
+                /** @var FundRequest[] $fund_requests */
+                $fund_requests = $this->fund_requests()->whereIn('state', [
+                    FundRequest::STATE_PENDING,
+                    FundRequest::STATE_APPROVED_PARTLY,
+                ])->get();
+
+                foreach ($fund_requests as $fund_request) {
+                    $fund_request->resignEmployee($employee, $criterionValidator->fund_criterion);
+                }
+            }
+        }
+    }
+
+    /**
      * @param array $productIds
      * @return $this
      */
-    public function updateFormulaProducts(array $productIds)
-    {
+    public function updateFormulaProducts(array $productIds): self {
         /** @var Collection|Product[] $products */
         $products = Product::whereIn('id', $productIds)->get();
 
@@ -1163,16 +1270,14 @@ class Fund extends Model
      * @param string $uri
      * @return mixed|string
      */
-    public function urlValidatorDashboard(string $uri = "/")
-    {
+    public function urlValidatorDashboard(string $uri = "/"): string {
         return $this->fund_config->implementation->urlValidatorDashboard($uri);
     }
 
     /**
      * @return \App\Models\FundTopUp
      */
-    public function getTopUpModelAttribute()
-    {
+    public function getTopUpModelAttribute(): FundTopUp {
         /** @var FundTopUp $topUp */
         if ($this->top_ups()->count() > 0) {
             $topUp = $this->top_ups()->first();
@@ -1186,9 +1291,57 @@ class Fund extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function criteriaIsEditable(): bool {
+        return ($this->state === self::STATE_WAITING) || (
+            ($this->state === self::STATE_ACTIVE) && $this->criteria_editable_after_start);
+    }
+
+    /**
+     * @param Organization $validatorOrganization
+     */
+    public function detachExternalValidator(
+        Organization $validatorOrganization
+    ): void {
+        /** @var FundCriterion[] $fundCriteria */
+        $fundCriteria = FundCriteriaQuery::whereHasExternalValidatorFilter(
+            $this->criteria()->getQuery(),
+            $validatorOrganization->id
+        )->get();
+
+        // delete validator organization from all fund criteria
+        foreach ($fundCriteria as $criterion) {
+            FundCriteriaValidatorQuery::whereHasExternalValidatorFilter(
+                $criterion->fund_criterion_validators()->getQuery(),
+                $validatorOrganization->id
+            )->delete();
+        }
+
+        /**
+          All pending fund requests which have records assigned to external validator employees
+         * @var FundRequest[] $fundRequests
+         */
+        $fundRequests = FundRequest::whereHas('records.employee', static function(
+            Builder $builder
+        ) use ($validatorOrganization) {
+            $builder->where('organization_id', $validatorOrganization->id);
+        })->where('state', [
+            FundRequest::STATE_PENDING,
+            FundRequest::STATE_APPROVED_PARTLY
+        ])->get();
+
+        foreach ($fundRequests as $fundRequest) {
+            foreach ($validatorOrganization->employees as $employee) {
+                $fundRequest->resignEmployee($employee);
+            }
+        }
+    }
+
+    /**
      * @return EmailFrom
      */
-    public function getEmailFrom() {
+    public function getEmailFrom(): EmailFrom {
         return $this->fund_config->implementation->getEmailFrom() ??
             EmailFrom::createDefault();
     }

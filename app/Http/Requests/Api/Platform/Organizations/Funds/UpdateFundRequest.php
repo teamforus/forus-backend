@@ -3,12 +3,14 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Models\Fund;
+use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
  * Class UpdateFundRequest
  * @property null|Fund $fund
+ * @property null|Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
 class UpdateFundRequest extends FormRequest
@@ -30,27 +32,19 @@ class UpdateFundRequest extends FormRequest
      */
     public function rules()
     {
-        $criteriaEditable = config(
-            'forus.features.dashboard.organizations.funds.criteria');
+        $validators = $this->organization->organization_validators()->pluck('id');
+        $criteriaEditable = config('forus.features.dashboard.organizations.funds.criteria');
+        $formulaProductsEditable = config('forus.features.dashboard.organizations.funds.formula_products');
 
-        $formulaProductsEditable = config(
-            'forus.features.dashboard.organizations.funds.formula_products');
-
-        if ($this->fund) {
-            $availableValidators = $this->fund->organization
-                ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
-        } else {
-            $availableValidators = [];
-        }
+        $availableValidators = $this->organization
+            ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
 
         return array_merge([
-            'name'                  => 'required|between:2,200',
-            'description'           => 'nullable|string|max:140',
-            'notification_amount'   => 'nullable|numeric',
+            'name'                      => 'required|between:2,200',
+            'description'               => 'nullable|string|max:140',
+            'notification_amount'       => 'nullable|numeric',
         ], [
-            'auto_requests_validation' => [
-                'nullable', 'boolean'
-            ],
+            'auto_requests_validation'  => 'nullable|boolean',
             'default_validator_employee_id' => [
                 'nullable', Rule::in($availableValidators)
             ],
@@ -66,12 +60,17 @@ class UpdateFundRequest extends FormRequest
                 'after:start_date'
             ],
         ] : [], $criteriaEditable ? [
-            'criteria'                      => 'required|array',
+            'criteria'                      => 'present|array',
+            'criteria.*.id'                 => [
+                'nullable', Rule::in($this->fund->criteria()->pluck('id'))
+            ],
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
             'criteria.*.value'              => 'required|string|between:1,20',
             'criteria.*.show_attachment'    => 'nullable|boolean',
             'criteria.*.description'        => 'nullable|string|max:4000',
+            'criteria.*.validators'         => 'nullable|array',
+            'criteria.*.validators.*'       => Rule::in($validators->toArray())
         ] : [], $formulaProductsEditable ? [
             'formula_products'              => 'nullable|array',
             'formula_products.*'            => [

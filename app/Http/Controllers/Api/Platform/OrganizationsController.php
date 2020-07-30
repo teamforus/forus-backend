@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
@@ -28,9 +29,9 @@ class OrganizationsController extends Controller
         $this->authorize('viewAny', Organization::class);
 
         return OrganizationResource::collection(
-            Organization::queryByIdentityPermissions(auth_address())->with(
+            Organization::searchQuery($request)->with(
                 OrganizationResource::load($request)
-            )->get()
+            )->paginate($request->input('per_page', 10))
         );
     }
 
@@ -138,11 +139,29 @@ class OrganizationsController extends Controller
     ) {
         $this->authorize('update', $organization);
 
-        $organization->update(collect($request->only([
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'business_type_id',
-        ]))->toArray());
+        ])));
 
-        OrganizationUpdated::dispatch($organization);
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateOrganizationRolesRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateRoles(
+        UpdateOrganizationRolesRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('update', $organization);
+
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+            'is_sponsor', 'is_provider', 'is_validator',
+            'validator_auto_accept_funds'
+        ])));
 
         return new OrganizationResource($organization);
     }

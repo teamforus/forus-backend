@@ -30,7 +30,7 @@ class FundRequestEvent
      *
      * @return FundRequest
      */
-    public function getFundRequest()
+    public function getFundRequest(): FundRequest
     {
         return $this->fundRequest;
     }
@@ -40,7 +40,7 @@ class FundRequestEvent
      *
      * @return Fund
      */
-    public function getFund()
+    public function getFund(): Fund
     {
         return $this->fundRequest->fund;
     }
