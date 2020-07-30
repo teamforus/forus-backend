@@ -19,7 +19,7 @@ class FundRequestSubscriber
      */
     public function onFundRequestCreated(
         FundRequestCreated $fundRequestCreated
-    ) {
+    ): void {
         $fund = $fundRequestCreated->getFund();
         $fundRequest = $fundRequestCreated->getFundRequest();
         $recordRepo = resolve('forus.services.record');
@@ -32,10 +32,9 @@ class FundRequestSubscriber
         // auto approve request if required
         if ($fund->default_validator_employee &&
             $fund->auto_requests_validation &&
-            $fundRequest->employee &&
             !empty($recordRepo->bsnByAddress($fundRequest->identity_address))
         ) {
-            $fundRequest->approve();
+            $fundRequest->approve($fund->default_validator_employee);
         }
 
         $event = $fundRequest->log(FundRequest::EVENT_CREATED, [

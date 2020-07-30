@@ -18,22 +18,17 @@ class FundRequestRecordResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-
         $recordTypes = collect(record_types_cached())->keyBy('key');
 
-        return array_merge(array_only($this->resource->toArray(), [
-            'id', 'value', 'state', 'record_type_key', 'fund_request_id',
-            'created_at', 'updated_at',
+        return array_merge($this->resource->toArray(), array_merge([
+            'id', 'state', 'record_type_key', 'fund_request_id',
+            'created_at', 'updated_at', 'employee_id', 'value',
         ]), [
+            'record_type' => $recordTypes[$this->resource->record_type_key],
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
-            'record_type' => $recordTypes[$this->resource->record_type_key],
-            'files' => FileResource::collection($this->resource->files),
-            'clarifications' => FundRequestClarificationResource::collection(
-                $this->resource->fund_request_clarifications
-            ),
         ]);
     }
 }

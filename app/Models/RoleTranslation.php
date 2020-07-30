@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * Class RoleTranslation
+/** Class RoleTranslation
  *
  * @package App\Models
  * @property int $id
@@ -35,7 +35,7 @@ class RoleTranslation extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function role() {
+    public function role(): BelongsTo {
         return $this->belongsTo(Role::class);
     }
 }

@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Seeder;
 
+use App\Models\Role;
+
 class RoleTranslationTableSeeder extends Seeder
 {
     /**
@@ -11,9 +13,8 @@ class RoleTranslationTableSeeder extends Seeder
      */
     public function run()
     {
-        $roles = \App\Models\Role::get();
+        $roles = Role::get();
 
-        /** @var \App\Models\Role $role */
         foreach ($roles as $role) {
             $role->translations()->create([
                 'name'      => $this->getRoleNameByKey($role->key),

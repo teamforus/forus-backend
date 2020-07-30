@@ -12,6 +12,7 @@ use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Services\BunqService\BunqService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundsController extends Controller
 {
@@ -21,11 +22,12 @@ class FundsController extends Controller
      * @param IndexFundsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(IndexFundsRequest $request)
-    {
+    public function index(
+        IndexFundsRequest $request
+    ): AnonymousResourceCollection {
         return FundResource::collection(Fund::search(
             $request,
-            $request->input('state') == 'active_and_closed' ?
+            $request->input('state') === 'active_and_closed' ?
             Implementation::queryFundsByState([
                 Fund::STATE_CLOSED,
                 Fund::STATE_ACTIVE,
@@ -38,11 +40,14 @@ class FundsController extends Controller
      * Display the specified resource.
      *
      * @param Fund $fund
-     * @return FundResource|void
+     * @return FundResource
      */
-    public function show(Fund $fund)
-    {
-        if (!in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED, Fund::STATE_CLOSED])) {
+    public function show(Fund $fund): FundResource {
+        if (!in_array($fund->state, [
+            Fund::STATE_ACTIVE,
+            Fund::STATE_PAUSED,
+            Fund::STATE_CLOSED
+        ], true)) {
             abort(404);
         }
 
@@ -58,7 +63,7 @@ class FundsController extends Controller
      */
     public function apply(
         Fund $fund
-    ) {
+    ): VoucherResource {
         $this->authorize('apply', $fund);
 
         return new VoucherResource(
@@ -68,9 +73,9 @@ class FundsController extends Controller
 
     /**
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return AnonymousResourceCollection
      */
-    public function idealIssuers(Fund $fund) {
+    public function idealIssuers(Fund $fund): AnonymousResourceCollection {
         $allowIssuers = env('BUNQ_IDEAL_USE_ISSUERS', true);
 
         return BunqIdealIssuerResource::collection(
@@ -89,7 +94,7 @@ class FundsController extends Controller
     public function idealMakeRequest(
         StoreIdealBunqMeRequestRequest $request,
         Fund $fund
-    ) {
+    ): BunqMeIdealRequestResource {
         $this->authorize('idealRequest', $fund);
 
         return new BunqMeIdealRequestResource($fund->makeBunqMeTab(

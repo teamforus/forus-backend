@@ -54,6 +54,8 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory withTranslation()
  * @mixin \Eloquent
+ * @method static \Kalnoy\Nestedset\Collection|static[] all($columns = ['*'])
+ * @method static \Kalnoy\Nestedset\Collection|static[] get($columns = ['*'])
  */
 class ProductCategory extends Model
 {

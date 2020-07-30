@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
 use Gate;
@@ -21,17 +20,15 @@ class FundResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        $fund               = $this->resource;
-        $organization       = $fund->organization;
-        $sponsorCount       = $organization->employees->count() + 1;
-        $validators         = $organization->employeesWithPermissionsQuery([
-            'validate_records'
-        ])->get();
+        $fund = $this->resource;
+        $organization = $fund->organization;
+        $sponsorCount = $organization->employees->count() + 1;
+        $validators = $organization->employeesWithPermissionsQuery('validate_records')->get();
 
         $providersEmployeeCount = $fund->provider_organizations_approved;
-        $providersEmployeeCount = $providersEmployeeCount->reduce(function (
+        $providersEmployeeCount = $providersEmployeeCount->reduce(static function (
             int $carry,
             Organization $organization
         ) {
@@ -68,28 +65,19 @@ class FundResource extends Resource
             'start_date_locale' => format_date_locale($fund->start_date),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($organization),
-            'criteria' => FundCriterionResource::collection(
-                $fund->criteria
-            ),
-            'formulas' => FundFormulaResource::collection(
-                $fund->fund_formulas
-            ),
-            'formula_products' => $fund->fund_formula_products->pluck(
-                'product_id'
-            ),
-            'validators' => $validators->map(function(Employee $validator) {
-                return collect($validator)->only([
-                    'identity_address'
-                ]);
-            }),
+            'criteria' => FundCriterionResource::collection($fund->criteria),
+            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
+            'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
         ], $financialData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {
             $data = array_merge($data, $fund->only([
-                'default_validator_employee_id', 'auto_requests_validation'
-            ]));
+                'default_validator_employee_id', 'auto_requests_validation',
+            ]), [
+                'criteria_editable' => $fund->criteriaIsEditable(),
+            ]);
         }
 
         if ($organization->identityCan(auth()->id(), 'validate_records')) {
