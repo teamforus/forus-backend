@@ -89,15 +89,21 @@ class SponsorDigest extends BaseOrganizationDigest
             /** @var int $countEvents */
             /** @var array[]|Collection $eventLogs */
             foreach ($applyEvents as [$fund, $countEvents, $eventLogs]) {
-                $emailBody->h3(trans('digests/sponsor.providers_header', [
-                    'fund_name' => $fund->name,
-                ]), ['margin_less']);
+                if ($eventLogs->count() > 0) {
+                    $emailBody->h3(trans('digests/sponsor.providers_header', [
+                        'fund_name' => $fund->name,
+                    ]), ['margin_less']);
 
-                $emailBody->text(trans_choice('digests/sponsor.providers', $countEvents, [
-                    'fund_name' => $fund->name,
-                    'providers_count' => $countEvents,
-                    'providers_list' => $eventLogs->pluck('provider_name')->implode("\n- "),
-                ]));
+                    $emailBody->text(trans_choice('digests/sponsor.providers', $countEvents, [
+                        'fund_name' => $fund->name,
+                        'providers_count' => $countEvents,
+                        'providers_list' => $eventLogs->pluck('provider_name')->implode("\n- "),
+                    ]));
+                } else {
+                    $emailBody->h3(trans('digests/sponsor.providers_header_empty', [
+                        'fund_name' => $fund->name,
+                    ]), ['margin_less'])->text(trans('digests/sponsor.providers_empty'));
+                }
             }
         }
 

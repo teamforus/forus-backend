@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'subject' => 'Update: Huidige status van uw aanmelding',
     'title' => 'Update: Huidige status van uw aanmelding',
 
     'budget_approved' => [
