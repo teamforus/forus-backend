@@ -57,7 +57,7 @@ class SponsorDigest extends BaseOrganizationDigest
         );
 
         $emailBody->button_primary(
-            Implementation::general_urls()['url_validator'],
+            Implementation::general_urls()['url_sponsor'],
             trans('digests/sponsor.dashboard_button')
         );
 
