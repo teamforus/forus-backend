@@ -617,6 +617,30 @@ if (!function_exists('token_generator')) {
     }
 }
 
+if (!function_exists('token_generator_db')) {
+    /**
+     * @param Builder $builder
+     * @param string $column
+     * @param int $block_length
+     * @param int $block_count
+     * @return string
+     */
+    function token_generator_db(
+        Builder $builder,
+        string $column,
+        int $block_length,
+        int $block_count = 1
+    ) : string {
+        do {
+            $value = token_generator()->generate($block_length, $block_count);
+        } while($builder->newQuery()->where([
+            $column => $value
+        ])->exists());
+
+        return $value;
+    }
+}
+
 
 if (!function_exists('trans_fb')) {
     /**

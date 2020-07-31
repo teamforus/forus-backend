@@ -176,7 +176,9 @@ class LoremDbSeeder extends Seeder
             $this->makePrevalidations(
                 $fund->organization->identity_address,
                 $fund,
-                $this->generatePrevalidationData('bsn', 10)
+                $this->generatePrevalidationData($fund->fund_config->csv_primary_key, 10, [
+                    $fund->fund_config->key . '_eligible' => 'Ja',
+                ])
             );
         }
     }
@@ -654,14 +656,13 @@ class LoremDbSeeder extends Seeder
                 'uid' => $uid,
                 'state' => 'pending',
                 'fund_id' => $fund->id,
-                'identity_address' => $identity_address
+                'organization_id' => $fund->organization_id,
+                'identity_address' => $identity_address,
             ]);
 
-            foreach ($records as $record) {
-                $prevalidation->prevalidation_records()->create($record);
-            }
+            $prevalidation->prevalidation_records()->createMany($records);
 
-            return $prevalidation;
+            return $prevalidation->updateHashes();
         });
     }
 

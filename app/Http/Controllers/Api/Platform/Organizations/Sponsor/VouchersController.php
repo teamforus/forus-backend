@@ -68,7 +68,7 @@ class VouchersController extends Controller
     public function store(
         StoreVoucherRequest $request,
         Organization $organization
-    ) {
+    ): SponsorVoucherResource {
         $fund = Fund::find($request->post('fund_id'));
 
         $this->authorize('show', $organization);
@@ -78,15 +78,15 @@ class VouchersController extends Controller
         $email      = $request->input('email', false);
         $amount     = $request->input('amount', 0);
         $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
-        $expires_at = $request->input('expires_at', false);
-        $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
+        $expire_at = $request->input('expire_at', false);
+        $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
 
         if ($product_id = $request->input('product_id', false)) {
             $voucher = $fund->makeProductVoucher(
-                $identity, $product_id, $expires_at, $note);
+                $identity, $product_id, $expire_at, $note);
         } else {
             $voucher = $fund->makeVoucher(
-                $identity, $amount, $expires_at, $note);
+                $identity, $amount, $expire_at, $note);
         }
 
         if ($activation_code = $request->input('activation_code', false)) {
@@ -125,13 +125,13 @@ class VouchersController extends Controller
             $amount     = $voucher['amount'] ?? 0;
             $product_id = $voucher['product_id'] ?? false;
             $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
-            $expires_at = $voucher['expires_at'] ?? false;
-            $expires_at = $expires_at ? Carbon::parse($expires_at) : null;
+            $expire_at  = $voucher['expire_at'] ?? false;
+            $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
 
             if (!$product_id) {
-                $voucher = $fund->makeVoucher($identity, $amount, $expires_at, $note);
+                $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
             } else {
-                $voucher = $fund->makeProductVoucher($identity, $product_id, $expires_at, $note);
+                $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
             }
 
             return $voucher->updateModel(compact('employee_id'));
@@ -147,7 +147,7 @@ class VouchersController extends Controller
     public function storeValidate(
         StoreVoucherRequest $request,
         Organization $organization
-    ) {}
+    ): void {}
 
     /**
      * Validate store a newly created resource in storage.
@@ -158,7 +158,7 @@ class VouchersController extends Controller
     public function storeBatchValidate(
         StoreBatchVoucherRequest $request,
         Organization $organization
-    ) {}
+    ): void {}
 
     /**
      * Display the specified resource.

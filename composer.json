@@ -41,6 +41,7 @@
         "whichbrowser/parser": "^2.0.42"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.3",
         "filp/whoops": "^2.7",
         "fzaninotto/faker": "^1.9",
         "mockery/mockery": "^1.3",
