@@ -335,47 +335,4 @@ class Product extends Model
             Implementation::active()['url_provider']
         );
     }
-
-    /**
-     * Send product reserved email to provider
-     * @param Voucher $voucher
-     * @return void
-     */
-    public function sendProductReservedEmail(Voucher $voucher): void
-    {
-        $mailService = resolve('forus.services.notification');
-        $mailService->productReserved(
-            $this->organization->email,
-            Implementation::emailFrom(),
-            $this->name,
-            format_date_locale($voucher->expire_at)
-        );
-    }
-
-    /**
-     * Send product reserved email to user
-     * @param Voucher $voucher
-     * * @return void
-     */
-    public function sendProductReservedUserEmail(Voucher $voucher): void
-    {
-        if (!$voucher->identity_address) {
-            return;
-        }
-
-        $mailService = resolve('forus.services.notification');
-        $recordService = resolve('forus.services.record');
-
-        $mailService->productReservedUser(
-            $recordService->primaryEmailByAddress($voucher->identity_address),
-            $voucher->fund->fund_config->implementation->getEmailFrom(),
-            $this->name,
-            $this->price,
-            $this->organization->phone,
-            $this->organization->email,
-            $voucher->token_without_confirmation->address,
-            $this->organization->name,
-            format_date_locale($voucher->expire_at->subDay())
-        );
-    }
 }

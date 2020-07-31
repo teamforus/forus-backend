@@ -84,4 +84,12 @@ class File extends Model
     public function download() {
         return resolve('file')->download(ltrim($this->path, '/'));
     }
+
+    /**
+     * @return bool|null
+     * @throws \Exception
+     */
+    public function unlink() {
+        return resolve('file')->unlink($this);
+    }
 }

@@ -24,11 +24,17 @@ if (!function_exists('auth_address')) {
     /**
      * Get the available user instance.
      *
+     * @param bool $abortOnFail
+     * @param int $errorCode
      * @return string|null
      */
-    function auth_address()
-    {
-        return auth()->user() ? auth()->user()->getAddress() : null;
+    function auth_address(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $auth = auth_model($abortOnFail, $errorCode);
+
+        return $auth && method_exists($auth, 'getAddress') ? $auth->getAddress() : null;
     }
 }
 
@@ -36,11 +42,37 @@ if (!function_exists('auth_proxy_id')) {
     /**
      * Get the available user instance.
      *
+     * @param bool $abortOnFail
+     * @param int $errorCode
      * @return string|null
      */
-    function auth_proxy_id()
-    {
-        return auth()->user() ? auth()->user()->getProxyId() : null;
+    function auth_proxy_id(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $auth = auth_model($abortOnFail, $errorCode);
+
+        return $auth && method_exists($auth, 'getProxyId') ? $auth->getProxyId() : null;
+    }
+}
+
+if (!function_exists('auth_model')) {
+    /**
+     * @param bool $abortOnFail
+     * @param int $errorCode
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    function auth_model(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $authUser = auth()->user();
+
+        if ($abortOnFail && (!$authUser || !method_exists($authUser, 'getProxyId'))) {
+            abort($errorCode);
+        }
+
+        return $authUser;
     }
 }
 
@@ -439,10 +471,7 @@ if (!function_exists('log_debug')) {
      */
     function log_debug($message, array $context = []) {
         if (!is_null($logger = logger())) {
-            $logger->debug(
-                is_string($message) ? $message : json_pretty($message),
-                $context
-            );
+            $logger->debug(is_string($message) ? $message : json_pretty($message), $context);
         }
     }
 }
@@ -664,6 +693,16 @@ if (!function_exists('identity_repo')) {
     }
 }
 
+if (!function_exists('notification_service')) {
+    /**
+     * @return \App\Services\Forus\Notification\NotificationService|\Illuminate\Contracts\Foundation\Application|mixed
+     */
+    function notification_service()
+    {
+        return resolve('forus.services.notification');
+    }
+}
+
 if (!function_exists('query_with_trashed')) {
     /**
      * @param Builder|\Illuminate\Database\Eloquent\SoftDeletes|\Illuminate\Database\Eloquent\Relations\Relation $builder
@@ -674,7 +713,6 @@ if (!function_exists('query_with_trashed')) {
         return $builder->withTrashed();
     }
 }
-
 
 if (!function_exists('user_agent_data')) {
     /**

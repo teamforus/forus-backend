@@ -72,7 +72,7 @@ abstract class BaseOrganizationNotification extends BaseNotification
      * @param Identity $identity
      * @return void
      */
-    public function toMail(Identity $identity) {}
+    public function toMail(Identity $identity): void {}
 
     /**
      * Get the organization owner of the resource,

@@ -8,6 +8,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundRequestRecordsController extends Controller
 {
@@ -24,10 +25,9 @@ class FundRequestRecordsController extends Controller
         IndexFundRequestRecordsRequest $request,
         Fund $fund,
         FundRequest $fundRequest
-    ) {
-        $this->authorize('viewAnyRequester', [
-            FundRequestRecord::class, $fundRequest, $fund
-        ]);
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyAsRequester', [$fundRequest, $fund]);
+        $this->authorize('viewAnyAsRequester', [FundRequestRecord::class, $fundRequest, $fund]);
 
         return FundRequestRecordResource::collection(
             $fundRequest->records()->paginate(
@@ -49,10 +49,9 @@ class FundRequestRecordsController extends Controller
         Fund $fund,
         FundRequest $fundRequest,
         FundRequestRecord $fundRequestRecord
-    ) {
-        $this->authorize('viewRequester', [
-            $fundRequestRecord, $fundRequest, $fund
-        ]);
+    ): FundRequestRecordResource {
+        $this->authorize('viewAsRequester', [$fundRequest, $fund]);
+        $this->authorize('viewAsRequester', [$fundRequestRecord, $fundRequest, $fund]);
 
         return new FundRequestRecordResource($fundRequestRecord);
     }

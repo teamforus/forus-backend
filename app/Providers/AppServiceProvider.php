@@ -31,9 +31,9 @@ class AppServiceProvider extends ServiceProvider
      *
      * @throws \App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException
      */
-    public function boot()
+    public function boot(): void
     {
-        self::setLocale(config('app.locale'));
+        $this->setLocale(config('app.locale'));
 
         Schema::defaultStringLength(191);
 
@@ -65,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
      * @return false|string
      */
     public function setLocale(string $locale) {
-        if (strlen($locale) == 2) {
+        if (strlen($locale) === 2) {
             $locale .= '_' . strtoupper($locale);
         }
 

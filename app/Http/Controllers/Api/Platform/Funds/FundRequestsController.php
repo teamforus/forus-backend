@@ -9,6 +9,7 @@ use App\Http\Resources\FundRequestResource;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundRequestsController extends Controller
 {
@@ -20,11 +21,11 @@ class FundRequestsController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(IndexFundRequestsRequest $request, Fund $fund)
-    {
-        $this->authorize('viewAnyRequester', [
-            FundRequest::class, $fund
-        ]);
+    public function index(
+        IndexFundRequestsRequest $request,
+        Fund $fund
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyAsRequester', [FundRequest::class, $fund]);
 
         return FundRequestResource::collection($fund->fund_requests()->where([
             'identity_address' => auth_address()
@@ -41,11 +42,11 @@ class FundRequestsController extends Controller
      * @return FundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(StoreFundRequestRequest $request, Fund $fund)
-    {
-        $this->authorize('create', [
-            FundRequest::class, $fund
-        ]);
+    public function store(
+        StoreFundRequestRequest $request,
+        Fund $fund
+    ): FundRequestResource {
+        $this->authorize('createAsRequester', [FundRequest::class, $fund]);
 
         $fundRequest = $fund->makeFundRequest(
             auth_address(),
@@ -61,7 +62,10 @@ class FundRequestsController extends Controller
      * @param StoreFundRequestRequest $request
      * @param Fund $fund
      */
-    public function storeValidate(StoreFundRequestRequest $request, Fund $fund) {}
+    public function storeValidate(
+        StoreFundRequestRequest $request,
+        Fund $fund
+    ): void {}
 
     /**
      * Display the specified resource.
@@ -71,9 +75,8 @@ class FundRequestsController extends Controller
      * @return FundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Fund $fund, FundRequest $fundRequest)
-    {
-        $this->authorize('viewRequester', [$fundRequest, $fund]);
+    public function show(Fund $fund, FundRequest $fundRequest): FundRequestResource {
+        $this->authorize('viewAsRequester', [$fundRequest, $fund]);
 
         return new FundRequestResource($fundRequest);
     }

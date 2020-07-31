@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Update: huidige status van uw aanmelding met :provider_name',
+    'title' => 'Update: Huidige status van uw aanmelding',
 
     'budget_approved' => [
         'title' => implode('|', [
@@ -21,8 +21,8 @@ return [
 
     'products_approved' => [
         'title' => implode('|', [
-            'Uw aanmelding voor :count_funds fonds is goedgekeurd met al uw producten.',
-            'Uw aanmelding voor :count_funds fondsen is goedgekeurd met al uw producten.',
+            'Uw aanmelding voor :count_funds fonds is goedgekeurd met al uw aanbiedingen.',
+            'Uw aanmelding voor :count_funds fondsen is goedgekeurd met al uw aanbiedingen.',
         ]),
         'funds_list' => implode('|', [
             "Dit betekent dat uw producten in de webshop staan voor de volgende fonds:",
@@ -46,16 +46,16 @@ return [
 
     'products_revoked' => [
         'title' => implode('|', [
-            "Uw aanmeldingen voor :count_funds fonds zijn geweigerd om producten in de webshop te plaatsen.",
-            "Uw aanmeldingen voor :count_funds fondsen zijn geweigerd om producten in de webshop te plaatsen.",
+            "Uw aanmeldingen voor :count_funds fonds zijn geweigerd om aanbiedingen in de webshop te plaatsen.",
+            "Uw aanmeldingen voor :count_funds fondsen zijn geweigerd om aanbiedingen in de webshop te plaatsen.",
         ]),
         'funds_list' => implode('|', [
-            "Dit betekent dat u voor de volgende fonds geen producten meer in de webshop kunt plaatsen:",
-            "Dit betekent dat u voor de volgende fondsen geen producten meer in de webshop kunt plaatsen:",
+            "Dit betekent dat u voor het volgende fonds geen aanbiedingen meer in de webshop kunt plaatsen:",
+            "Dit betekent dat u voor de volgende fondsen geen aanbiedingen meer in de webshop kunt plaatsen:",
         ]),
         'funds_list_individual' => implode('|', [
-            "Voor deze fonds staan nog specifieke producten in de webshop:",
-            "Voor deze fondsen staan nog specifieke producten in de webshop:",
+            "Voor dit fonds staan nog specifieke aanbiedingen in de webshop:",
+            "Voor deze fondsen staan nog specifieke aanbiedingen in de webshop:",
         ]),
         'details' =>
             "Bekijk het dashboard voor de volledige context en huidige status.",
@@ -73,12 +73,12 @@ return [
 
     'feedback' => [
         'title' => implode('|', [
-            'Feedback op :count_products product',
-            'Feedback op :count_products producten',
+            'Feedback op :count_products aanbieding',
+            'Feedback op :count_products aanbiedingen',
         ]),
         'details' => implode('|', [
-            'U heeft feedback ontvangen op :count_products product.',
-            'U heeft feedback ontvangen op :count_products producten.',
+            'U heeft feedback ontvangen op :count_products aanbieding.',
+            'U heeft feedback ontvangen op :count_products aanbiedingen.',
         ]),
         'product_title' => "Nieuwe berichten op :product_name voor €:product_price_locale",
         'product_details' => implode('|', [

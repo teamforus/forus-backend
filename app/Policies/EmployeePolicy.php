@@ -98,6 +98,11 @@ class EmployeePolicy
         Employee $employee,
         Organization $organization
     ) {
+        // organization owner employee can't be edited
+        if ($employee->identity_address == $identity_address) {
+            return $this->deny("employees.cant_delete_yourself");
+        }
+
         return $this->update($identity_address, $employee, $organization);
     }
 }

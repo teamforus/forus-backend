@@ -15,7 +15,6 @@ use Illuminate\Events\Dispatcher;
 class EmployeeSubscriber
 {
     private $mailService;
-    private $recordService;
 
     /**
      * EmployeeSubscriber constructor.
@@ -23,34 +22,30 @@ class EmployeeSubscriber
     public function __construct()
     {
         $this->mailService = resolve('forus.services.notification');
-        $this->recordService = resolve('forus.services.record');
     }
 
     /**
      * @param EmployeeCreated $employeeCreated
      * @throws \Exception
      */
-    public function onEmployeeCreated(EmployeeCreated $employeeCreated) {
-        log_debug('onEmployeeCreated');
+    public function onEmployeeCreated(EmployeeCreated $employeeCreated): void {
         $employee = $employeeCreated->getEmployee();
 
-        $event = $employee->log(Employee::EVENT_CREATED, [
+        IdentityAddedEmployeeNotification::send($employee->log(Employee::EVENT_CREATED, [
             'employee' => $employee,
             'organization' => $employee->organization,
-        ]);
-
-        IdentityAddedEmployeeNotification::send($event);
+        ]));
 
         $transData = [
             "org_name" => $employee->organization->name,
             "role_name_list" => $employee->roles->implode('name', ', '),
         ];
 
-        $title = trans('push.access_levels.added.title', $transData);
-        $body = trans('push.access_levels.added.body', $transData);
-
         $this->mailService->sendPushNotification(
-            $employee->identity_address, $title, $body, 'employee.created'
+            $employee->identity_address,
+            trans('push.access_levels.added.title', $transData),
+            trans('push.access_levels.added.body', $transData),
+            'employee.created'
         );
     }
 
@@ -58,17 +53,18 @@ class EmployeeSubscriber
      * @param EmployeeUpdated $employeeUpdated
      * @throws \Exception
      */
-    public function onEmployeeUpdated(EmployeeUpdated $employeeUpdated) {
+    public function onEmployeeUpdated(EmployeeUpdated $employeeUpdated): void
+    {
         $employee = $employeeUpdated->getEmployee();
         $currentRoles = $employee->roles->pluck('key')->toArray();
         $previousRoles = $employeeUpdated->getPreviousRoles();
 
-        $removedRoles = array_filter($previousRoles, function($role) use ($currentRoles) {
-            return !in_array($role, $currentRoles);
+        $removedRoles = array_filter($previousRoles, static function($role) use ($currentRoles) {
+            return !in_array($role, $currentRoles, true);
         });
 
-        $newRoles = array_filter($currentRoles, function($role) use ($previousRoles) {
-            return !in_array($role, $previousRoles);
+        $newRoles = array_filter($currentRoles, static function($role) use ($previousRoles) {
+            return !in_array($role, $previousRoles, true);
         });
 
         $removedRoles = Role::whereIn('key', $removedRoles)->get();
@@ -91,7 +87,8 @@ class EmployeeSubscriber
      * @param EmployeeDeleted $employeeDeleted
      * @throws \Exception
      */
-    public function onEmployeeDeleted(EmployeeDeleted $employeeDeleted) {
+    public function onEmployeeDeleted(EmployeeDeleted $employeeDeleted): void
+    {
         $employee = $employeeDeleted->getEmployee();
 
         $event = $employee->log(Employee::EVENT_DELETED, [
@@ -118,7 +115,7 @@ class EmployeeSubscriber
      *
      * @param Dispatcher $events
      */
-    public function subscribe(Dispatcher $events)
+    public function subscribe(Dispatcher $events): void
     {
         $events->listen(
             EmployeeCreated::class,

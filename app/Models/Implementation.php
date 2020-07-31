@@ -9,6 +9,8 @@ use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
@@ -67,11 +69,19 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromName($value)
  * @property-read int|null $fund_configs_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionSteps($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereHasMoreInfoUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereMoreInfoUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereTitle($value)
  */
 class Implementation extends Model
 {
     protected $perPage = 20;
 
+    /**
+     * @var string[]
+     */
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
@@ -79,11 +89,17 @@ class Implementation extends Model
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
     ];
 
+    /**
+     * @var string[]
+     */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
         'digid_a_select_server'
     ];
 
+    /**
+     * @var string[]
+     */
     protected $casts = [
         'digid_enabled' => 'boolean',
         'has_more_info_url' => 'boolean',
@@ -102,9 +118,9 @@ class Implementation extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return HasManyThrough
      */
-    public function funds() {
+    public function funds(): HasManyThrough {
         return $this->hasManyThrough(
             Fund::class,
             FundConfig::class,
@@ -125,7 +141,8 @@ class Implementation extends Model
     /**
      * @return \Illuminate\Support\Collection
      */
-    public static function active() {
+    public static function active(): \Illuminate\Support\Collection
+    {
         return self::byKey(self::activeKey());
     }
 
@@ -134,7 +151,7 @@ class Implementation extends Model
      * @return \Illuminate\Support\Collection
      */
     public static function byKey($key) {
-        if ($key == 'general') {
+        if ($key === 'general') {
             return collect(self::general_urls());
         }
 
@@ -145,7 +162,8 @@ class Implementation extends Model
      * @param $key
      * @return Implementation|null
      */
-    public static function findModelByKey($key) {
+    public static function findModelByKey($key): ?Implementation
+    {
         /** @var Implementation|null $implementation */
         $implementation = self::query()->where(compact('key'))->first();
         return $implementation;
@@ -177,14 +195,14 @@ class Implementation extends Model
      * @param $key
      * @return bool
      */
-    public static function isValidKey($key) {
+    public static function isValidKey($key): bool {
         return self::implementationKeysAvailable()->search($key) !== false;
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_configs() {
+    public function fund_configs(): HasMany {
         return $this->hasMany(FundConfig::class);
     }
 
@@ -208,9 +226,9 @@ class Implementation extends Model
 
         return Fund::query()->whereIn('id', static function(QueryBuilder $query) {
             $query->select('fund_id')->from('fund_configs')->where([
-                'implementation_id' => Implementation::query()->where([
+                'implementation_id' => Implementation::where([
                     'key' => self::activeKey()
-                ])->first()->id
+                ])->pluck('id')->first()
             ]);
         })->whereIn('state', $states);
     }
@@ -218,14 +236,14 @@ class Implementation extends Model
     /**
      * @return \Illuminate\Support\Collection
      */
-    public static function activeFunds() {
+    public static function activeFunds(): \Illuminate\Support\Collection {
         return self::activeFundsQuery()->get();
     }
 
     /**
      * @return \Illuminate\Support\Collection
      */
-    public static function implementationKeysAvailable() {
+    public static function implementationKeysAvailable(): \Illuminate\Support\Collection {
         return self::query()->pluck('key')->merge([
             'general'
         ]);
@@ -234,8 +252,8 @@ class Implementation extends Model
     /**
      * @return \Illuminate\Support\Collection
      */
-    public static function keysAvailable () {
-        return self::implementationKeysAvailable()->map(function ($key) {
+    public static function keysAvailable (): \Illuminate\Support\Collection {
+        return self::implementationKeysAvailable()->map(static function ($key) {
             return [
                 $key . '_webshop',
                 $key . '_sponsor',
@@ -249,7 +267,7 @@ class Implementation extends Model
     /**
      * @return bool
      */
-    public function digidEnabled() {
+    public function digidEnabled(): bool {
         $digidConfigured =
             !empty($this->digid_app_id) &&
             !empty($this->digid_shared_secret) &&
@@ -262,8 +280,7 @@ class Implementation extends Model
      * @return DigIdRepo
      * @throws \App\Services\DigIdService\DigIdException
      */
-    public function getDigid()
-    {
+    public function getDigid(): DigIdRepo {
         return new DigIdRepo(
             $this->digid_env,
             $this->digid_app_id,
@@ -316,14 +333,16 @@ class Implementation extends Model
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      */
-    public function urlValidatorDashboard(string $uri = "/")
-    {
+    public function urlValidatorDashboard(string $uri = "/"): string {
         return http_resolve_url($this->url_validator ?? env('PANEL_VALIDATOR_URL'), $uri);
     }
 
-    public function autoValidationEnabled() {
+    /**
+     * @return bool
+     */
+    public function autoValidationEnabled(): bool {
         $oneActiveFund = $this->funds()->where([
                 'state' => Fund::STATE_ACTIVE
             ])->count() === 1;
@@ -337,7 +356,7 @@ class Implementation extends Model
     }
 
     public static function platformConfig($value) {
-        if (!Implementation::isValidKey(Implementation::activeKey())) {
+        if (!self::isValidKey(self::activeKey())) {
             return abort(403, 'unknown_implementation_key');
         }
 
@@ -354,12 +373,12 @@ class Implementation extends Model
         $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
 
         if (is_array($config)) {
-            $config['media'] = collect(MediaService::getMediaConfigs())->map(function(
+            $config['media'] = collect(MediaService::getMediaConfigs())->map(static function(
                 MediaImageConfig $mediaConfig
             ) {
                 return [
                     'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
-                    'size' => collect($mediaConfig->getPresets())->map(function(
+                    'size' => collect($mediaConfig->getPresets())->map(static function(
                         MediaPreset $mediaPreset
                     ) {
                         return $mediaPreset instanceof MediaImagePreset ? [
@@ -371,8 +390,8 @@ class Implementation extends Model
                 ];
             });
 
-            $implementation = Implementation::active();
-            $implementationModel = Implementation::activeModel();
+            $implementation = self::active();
+            $implementationModel = self::activeModel();
 
             $config['digid'] = $implementationModel ?
                 $implementationModel->digidEnabled() : false;
@@ -398,12 +417,8 @@ class Implementation extends Model
             ]);
 
             $config['map'] = [
-                'lon' => doubleval(
-                    $implementation['lon'] ?? config('forus.front_ends.map.lon')
-                ),
-                'lat' => doubleval(
-                    $implementation['lat'] ?? config('forus.front_ends.map.lat')
-                )
+                'lon' => (float) ($implementation['lon'] ?? config('forus.front_ends.map.lon')),
+                'lat' => (float) ($implementation['lat'] ?? config('forus.front_ends.map.lat'))
             ];
 
             $config['implementation_name'] = $implementation->get('name') ?: 'general';
@@ -414,13 +429,14 @@ class Implementation extends Model
 
     public static function searchProviders(Request $request) {
         $query = Organization::query();
+        $activeModel = self::activeModel();
 
-        if (Implementation::activeKey() != 'general') {
-            $funds = Implementation::activeModel()->funds()->where([
+        if ($activeModel && self::activeKey() !== 'general') {
+            $funds = $activeModel->funds()->where([
                 'state' => Fund::STATE_ACTIVE
             ])->pluck('fund_id');
 
-            $query->whereHas('supplied_funds_approved', function(
+            $query->whereHas('supplied_funds_approved', static function(
                 EloquentBuilder $builder
             ) use ($funds) {
                 $builder->whereIn('funds.id', $funds);
@@ -432,7 +448,7 @@ class Implementation extends Model
         if ($request->has('business_type_id') && (
             $business_type = $request->input('business_type_id'))
         ) {
-            $query->whereHas('business_type', function(
+            $query->whereHas('business_type', static function(
                 EloquentBuilder $builder
             ) use ($business_type) {
                 $builder->where('id', $business_type);
@@ -442,7 +458,7 @@ class Implementation extends Model
         if ($request->has('fund_id') && (
             $fund_id = $request->input('fund_id'))
         ) {
-            $query->whereHas('supplied_funds_approved', function(
+            $query->whereHas('supplied_funds_approved', static function(
                 EloquentBuilder $builder
             ) use ($fund_id) {
                 $builder->where('funds.id', $fund_id);
@@ -450,32 +466,32 @@ class Implementation extends Model
         }
 
         if ($request->has('q') && ($q = $request->input('q'))) {
-            $query->where(function(EloquentBuilder $builder) use ($q) {
+            $query->where(static function(EloquentBuilder $builder) use ($q) {
                 $like = '%' . $q . '%';
 
                 $builder->where('name', 'LIKE', $like);
 
-                $builder->orWhere(function(EloquentBuilder $builder) use ($like) {
+                $builder->orWhere(static function(EloquentBuilder $builder) use ($like) {
                     $builder->where('email_public', true);
                     $builder->where('email', 'LIKE', $like);
-                })->orWhere(function(EloquentBuilder $builder) use ($like) {
+                })->orWhere(static function(EloquentBuilder $builder) use ($like) {
                     $builder->where('phone_public', true);
                     $builder->where('phone', 'LIKE', $like);
-                })->orWhere(function(EloquentBuilder $builder) use ($like) {
+                })->orWhere(static function(EloquentBuilder $builder) use ($like) {
                     $builder->where('website_public', true);
                     $builder->where('website', 'LIKE', $like);
                 });
 
-                $builder->orWhereHas('business_type.translations', function(
+                $builder->orWhereHas('business_type.translations', static function(
                     EloquentBuilder $builder
                 ) use ($like) {
                     $builder->where('business_type_translations.name', 'LIKE', $like);
                 });
 
-                $builder->orWhereHas('offices', function(
+                $builder->orWhereHas('offices', static function(
                     EloquentBuilder $builder
                 ) use ($like) {
-                    $builder->where(function(EloquentBuilder $query) use ($like) {
+                    $builder->where(static function(EloquentBuilder $query) use ($like) {
                         $query->where(
                             'address','LIKE', $like
                         );
@@ -488,10 +504,13 @@ class Implementation extends Model
     }
 
     /**
+     * @param string|null $key
      * @return EmailFrom
      */
-    public static function emailFrom(): EmailFrom {
-        if ($activeModel = self::activeModel()) {
+    public static function emailFrom(
+        ?string $key = null
+    ): EmailFrom {
+        if ($activeModel = ($key ? self::findModelByKey($key) : self::activeModel())) {
             return $activeModel->getEmailFrom();
         }
 

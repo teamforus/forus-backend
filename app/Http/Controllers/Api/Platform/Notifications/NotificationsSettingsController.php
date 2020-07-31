@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Notifications;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Platfrom\Notifications\UpdateNotificationPreferencesRequest;
+use App\Http\Requests\Api\Platform\Notifications\UpdateNotificationPreferencesRequest;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\JsonResponse;

@@ -12,8 +12,11 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Database\Eloquent\Builder;
 
 class FundProviderController extends Controller
 {
@@ -28,20 +31,32 @@ class FundProviderController extends Controller
     public function availableFunds(
         IndexFundsRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
-        $query = Implementation::queryFundsByState([
+        $fundsQuery = Implementation::queryFundsByState([
             Fund::STATE_ACTIVE, Fund::STATE_PAUSED
-        ])->whereNotIn(
-            'id', $organization->fund_providers()->pluck(
-            'fund_id'
-        )->toArray());
+        ])->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
 
-        return FundResource::collection(Fund::search(
-            $request, $query
-        )->latest()->paginate($request->input('per_page', 10)));
+        $meta = [
+            'organizations' => Organization::whereHas('funds', static function(
+                Builder $builder
+            ) use ($fundsQuery) {
+                $builder->whereIn('id', $fundsQuery->pluck('id'));
+            })->select('id', 'name')->get()->map(static function(Organization $organization) {
+                return $organization->only('id', 'name');
+            }),
+            'tags' => Tag::whereHas('funds', static function(Builder $builder) use ($fundsQuery) {
+                return $builder->whereIn('funds.id', $fundsQuery->pluck('id'));
+            })->select('key', 'name')->get()->map(static function(Tag $tag) {
+                return $tag->only('key', 'name');
+            }),
+        ];
+
+        return FundResource::collection(Fund::search($request, $fundsQuery)->latest()->paginate(
+            $request->input('per_page', 10))
+        )->additional(compact('meta'));
     }
 
     /**
@@ -55,7 +70,7 @@ class FundProviderController extends Controller
     public function index(
         Request $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
@@ -82,7 +97,7 @@ class FundProviderController extends Controller
     public function store(
         StoreFundProviderRequest $request,
         Organization $organization
-    ) {
+    ): FundProviderResource {
         $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
@@ -107,7 +122,7 @@ class FundProviderController extends Controller
     public function show(
         Organization $organization,
         FundProvider $organizationFund
-    ) {
+    ): FundProviderResource {
         $this->authorize('show', $organization);
         $this->authorize('showProvider', [$organizationFund, $organization]);
 
@@ -127,7 +142,7 @@ class FundProviderController extends Controller
         UpdateFundProviderRequest $request,
         Organization $organization,
         FundProvider $organizationFund
-    ) {
+    ): FundProviderResource {
         $this->authorize('show', $organization);
         $this->authorize('updateProvider', [$organizationFund, $organization]);
 
