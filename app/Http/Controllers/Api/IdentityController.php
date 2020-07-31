@@ -100,6 +100,7 @@ class IdentityController extends Controller
         // send confirmation email
         $this->mailService->sendEmailConfirmationLink(
             $primaryEmail,
+            $clientType,
             Implementation::emailFrom(),
             $confirmationLink
         );

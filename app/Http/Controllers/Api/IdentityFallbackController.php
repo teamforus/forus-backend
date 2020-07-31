@@ -95,6 +95,7 @@ class IdentityFallbackController extends Controller
 
             $this->mailService->sendEmailConfirmationLink(
                 $primaryEmail,
+                $clientType,
                 Implementation::emailFrom(),
                 $confirmationLink
             );
@@ -108,7 +109,7 @@ class IdentityFallbackController extends Controller
         return collect($identityProxy)->only('access_token');
     }
 
-    /**
+    /**app/Mail/User/EmailActivationMail.php
      * @param IdentityStoreValidateEmailRequest $request
      * @return array
      * @throws \Exception

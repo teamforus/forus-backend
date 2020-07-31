@@ -497,17 +497,19 @@ class NotificationService
      * Send email confirmation link
      *
      * @param string $email
+     * @param string $clientType
      * @param EmailFrom|null $emailFrom
      * @param string $confirmationLink
      * @return bool
      */
     public function sendEmailConfirmationLink(
         string $email,
+        string $clientType,
         ?EmailFrom $emailFrom,
         string $confirmationLink
     ): bool {
         return $this->sendMail($email, new EmailActivationMail(
-            config('app.name'),
+            $clientType,
             $confirmationLink,
             $emailFrom
         ));
@@ -631,7 +633,7 @@ class NotificationService
             $notificationPreferencesLink = sprintf(
                 '%s/%s',
                 rtrim(Implementation::active()['url_sponsor'], '/'),
-                'email/preferences');
+                'preferences/notifications');
 
             /** @var Queueable|Mailable $message */
             $message = $mailable->with(compact(
