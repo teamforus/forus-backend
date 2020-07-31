@@ -30,7 +30,7 @@ class FundResource extends Resource
         ])->get();
 
         $providersEmployeeCount = $fund->provider_organizations_approved;
-        $providersEmployeeCount = $providersEmployeeCount->reduce(stat  ic function (
+        $providersEmployeeCount = $providersEmployeeCount->reduce(static function (
             int $carry,
             Organization $organization
         ) {
