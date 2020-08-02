@@ -45,7 +45,7 @@ class FundCriterionResource extends Resource
 
         return collect($this->resource)->only([
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
-            'description'
+            'description', 'title'
         ])->merge([
             'description_html' => resolve('markdown')->convertToHtml(
                 $this->resource->description
