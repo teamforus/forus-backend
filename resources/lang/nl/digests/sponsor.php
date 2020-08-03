@@ -1,8 +1,9 @@
 <?php
 
-// todo: remove comments when ready
 return [
+    'subject' => 'Update: Nieuwe aanmeldingen voor uw fondsen',
     'title' => 'Nieuwe aanmeldingen voor uw fondsen',
+
     'greetings' => 'Beste :organization_name,',
     'dashboard_button' => 'GA NAAR HET DASHBOARD',
 
@@ -12,6 +13,10 @@ return [
         ":providers_count aanbieder heeft zich aangemeld en wacht op goedkeuring.\n- :providers_list",
         ":providers_count aanbieders hebben zich aangemeld en wachten op goedkeuring.\n- :providers_list"
     ]),
+
+    // no new provider requests
+    'providers_header_empty' => 'Geen aanmeldingen voor :fund_name',
+    'providers_empty' => 'Er zijn geen nieuwe aanmeldingen voor dit fonds.',
 
     // new products requests
     'products' => [
