@@ -14,7 +14,7 @@ class AddDescriptionFieldToOrganizationsTable extends Migration
     public function up()
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->string('description', 100)->nullable()->after('name');
+            $table->string('description', 4096)->nullable()->after('name');
         });
     }
 
