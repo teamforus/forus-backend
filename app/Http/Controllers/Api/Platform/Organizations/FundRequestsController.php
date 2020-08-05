@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Exports\FundRequestsExport;
+use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\IndexFundRequestsRequest;
-use App\Http\Resources\FundRequestResource;
-use App\Models\FundRequest;
+use App\Http\Resources\Validator\ValidatorFundRequestResource;
 use App\Http\Controllers\Controller;
+use App\Exports\FundRequestsExport;
 use App\Models\Organization;
+use App\Models\FundRequest;
 
 class FundRequestsController extends Controller
 {
@@ -22,16 +26,115 @@ class FundRequestsController extends Controller
     public function index(
         IndexFundRequestsRequest $request,
         Organization $organization
-    ) {
-        $this->authorize('viewAnyValidatorForOrganization', [
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyAsValidator', [
             FundRequest::class, $organization
         ]);
 
-        return FundRequestResource::collection(
-            FundRequest::search($request, $organization)->paginate(
-                $request->input('per_page')
-            )
+        return ValidatorFundRequestResource::collection(FundRequest::search(
+            $request, $organization, auth_address()
+        )->with(ValidatorFundRequestResource::$load)->paginate(
+            $request->input('per_page'))
         );
+    }
+
+    /**
+     * Get fund request
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function show(
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('viewAsValidator', [$fundRequest, $organization]);
+
+        return new ValidatorFundRequestResource($fundRequest);
+    }
+
+    /**
+     * Assign fund request to employee
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function assign(
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('assignAsValidator', [$fundRequest, $organization]);
+
+        return new ValidatorFundRequestResource($fundRequest->assignEmployee(
+            $organization->findEmployee(auth_address())
+        ));
+    }
+
+    /**
+     * Resign employee from fund request
+     *
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function resign(
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('resignAsValidator', [$fundRequest, $organization]);
+
+        return new ValidatorFundRequestResource($fundRequest->resignEmployee(
+            $organization->findEmployee(auth_address())
+        ));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param ApproveFundRequestsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function approve(
+        ApproveFundRequestsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+
+        return new ValidatorFundRequestResource($fundRequest->approve(
+            $organization->findEmployee(auth_address()),
+            $request->input('note', '')
+        ));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param DeclineFundRequestsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function decline(
+        DeclineFundRequestsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+
+        return new ValidatorFundRequestResource($fundRequest->decline(
+            $organization->findEmployee(auth_address()),
+            $request->input('note', '')
+        ));
     }
 
     /**
@@ -46,33 +149,14 @@ class FundRequestsController extends Controller
     public function export(
         IndexFundRequestsRequest $request,
         Organization $organization
-    ) {
-        $this->authorize('viewAnyValidatorForOrganization', [
+    ): BinaryFileResponse {
+        $this->authorize('exportAnyAsValidator', [
             FundRequest::class, $organization
         ]);
 
         return resolve('excel')->download(
-            new FundRequestsExport($request, $organization),
+            new FundRequestsExport($request, $organization, auth_address()),
             date('Y-m-d H:i:s') . '.xls'
         );
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param Organization $organization
-     * @param FundRequest $fundRequest
-     * @return FundRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function show(
-        Organization $organization,
-        FundRequest $fundRequest
-    ) {
-        $this->authorize('viewRequester', [
-            $fundRequest, $fundRequest->fund, $organization
-        ]);
-
-        return new FundRequestResource($fundRequest);
     }
 }

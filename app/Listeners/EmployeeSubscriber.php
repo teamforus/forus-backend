@@ -28,8 +28,7 @@ class EmployeeSubscriber
      * @param EmployeeCreated $employeeCreated
      * @throws \Exception
      */
-    public function onEmployeeCreated(EmployeeCreated $employeeCreated): void
-    {
+    public function onEmployeeCreated(EmployeeCreated $employeeCreated): void {
         $employee = $employeeCreated->getEmployee();
 
         IdentityAddedEmployeeNotification::send($employee->log(Employee::EVENT_CREATED, [

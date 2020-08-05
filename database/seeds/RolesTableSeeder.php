@@ -47,7 +47,7 @@ class RolesTableSeeder extends Seeder
 
         Role::create([
             'key' => 'implementation_cms_manager',
-            'name' => 'Implementatie CMS manager',
+            // 'name' => 'Implementatie CMS manager',
         ]);
     }
 }

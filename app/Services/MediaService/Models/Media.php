@@ -39,6 +39,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @mixin \Eloquent
  * @property string $dominant_color
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereDominantColor($value)
+ * @property int $order
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOrder($value)
  */
 class Media extends Model
 {
@@ -49,7 +51,7 @@ class Media extends Model
      */
     protected $fillable = [
         'identity_address', 'original_name', 'mediable_id', 'mediable_type',
-        'type', 'ext', 'uid', 'dominant_color'
+        'type', 'ext', 'uid', 'dominant_color', 'order',
     ];
 
     /**

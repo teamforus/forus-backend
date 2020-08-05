@@ -16,9 +16,16 @@ class FundRequestRecordDeclinedMail extends ImplementationMail
     private $fundName;
     private $link;
 
+    /**
+     * FundRequestRecordDeclinedMail constructor.
+     * @param string $fundName
+     * @param string|null $rejectionNote
+     * @param string $link
+     * @param EmailFrom|null $emailFrom
+     */
     public function __construct(
         string $fundName,
-        string $rejectionNote,
+        ?string $rejectionNote,
         string $link,
         ?EmailFrom $emailFrom
     ) {

@@ -13,7 +13,7 @@ class UpdateNotificationPreferencesRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -26,7 +26,7 @@ class UpdateNotificationPreferencesRequest extends FormRequest
      */
     public function rules(
         INotificationRepo $notificationRepo
-    ) {
+    ): array {
         return [
             'email_unsubscribed'        => 'required|boolean',
             'preferences'               => 'nullable|array',

@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\FileService\Traits\HasFiles;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\FundRequestRecord
@@ -32,16 +35,22 @@ use App\Services\FileService\Traits\HasFiles;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereValue($value)
  * @mixin \Eloquent
+ * @property int|null $employee_id
+ * @property-read \App\Models\Employee|null $employee
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereEmployeeId($value)
+ * @property int|null $fund_criterion_id
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereFundCriterionId($value)
+ * @property-read \App\Models\FundCriterion|null $fund_criterion
  */
 class FundRequestRecord extends Model
 {
     use HasFiles;
 
-    const STATE_PENDING = 'pending';
-    const STATE_APPROVED = 'approved';
-    const STATE_DECLINED = 'declined';
+    public const STATE_PENDING = 'pending';
+    public const STATE_APPROVED = 'approved';
+    public const STATE_DECLINED = 'declined';
 
-    const STATES = [
+    public const STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
@@ -49,54 +58,88 @@ class FundRequestRecord extends Model
 
     protected $fillable = [
         'value', 'record_type_key', 'fund_request_id', 'record_type_id',
-        'identity_address', 'state', 'note',
+        'identity_address', 'state', 'note', 'employee_id', 'fund_criterion_id',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund_request()
+    public function fund_request(): BelongsTo
     {
         return $this->belongsTo(FundRequest::class);
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function fund_criterion(): BelongsTo
+    {
+        return $this->belongsTo(FundCriterion::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_request_clarifications()
+    public function fund_request_clarifications(): HasMany
     {
         return $this->hasMany(FundRequestClarification::class);
     }
 
     /**
-     * @param string $state
-     * @return FundRequestRecord
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    private function setState(string $state)
+    public function employee(): BelongsTo
     {
-        return $this->updateModel(compact('state'));
+        return $this->belongsTo(Employee::class);
     }
 
     /**
-     * @param bool $resolveRequest
-     * @return $this
-     * @throws \Exception
+     * Change fund request record state
+     * @param string $state
+     * @param string|null $note
+     * @return FundRequestRecord
      */
-    public function approve($resolveRequest = true) {
-        $this->setState(self::STATE_APPROVED);
+    private function setState(string $state, ?string $note = null): FundRequestRecord
+    {
+        return $this->updateModel(compact('state', 'note'));
+    }
 
-        if ($resolveRequest && (
-            $this->fund_request->records_pending()->count() === 0)) {
-            $this->fund_request->approve();
+    /**
+     * Approve fund request record
+     * @param string|null $note
+     * @return $this
+     */
+    public function approve(string $note = null): self {
+        $this->setState(self::STATE_APPROVED, $note);
+
+        if (!$this->fund_request->records_pending()->exists()) {
+            $this->fund_request->resolve();
         }
 
         return $this;
     }
 
     /**
+     * Decline fund request record
+     * @param string|null $note
+     * @return $this
+     * @throws \Exception
+     */
+    public function decline(string $note = null): self {
+        $this->setState(self::STATE_DECLINED, $note);
+
+        if (!$this->fund_request->records_pending()->exists()) {
+            $this->fund_request->resolve();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Make and validate records for requester
      * @return $this
      */
-    public function makeValidation() {
+    public function makeValidation(): self {
         $recordService = service_record();
 
         $record = $recordService->recordCreate(
@@ -111,7 +154,7 @@ class FundRequestRecord extends Model
         );
 
         $recordService->approveValidationRequest(
-            $this->fund_request->employee->identity_address,
+            $this->employee->identity_address,
             $validationRequest['uuid'],
             $this->fund_request->fund->organization_id
         );
@@ -120,22 +163,40 @@ class FundRequestRecord extends Model
     }
 
     /**
-     * @param string|null $note
-     * @param bool $resolveRequest
-     * @return $this
-     * @throws \Exception
+     * Identity can see fund request record value
+     * @param $identity_address
+     * @param $employee_id
+     * @return bool
      */
-    public function decline(string $note = null, $resolveRequest = true) {
-        $this->update([
-            'note' => $note,
-            'state' => self::STATE_DECLINED,
-        ]);
+    public function isValueReadable($identity_address, $employee_id): bool {
+        return FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            self::whereId($this->id), $identity_address, $employee_id
+        )->exists();
+    }
 
-        if ($resolveRequest && (
-            $this->fund_request->records_pending()->count() == 0)) {
-            $this->fund_request->decline();
-        }
+    /**
+     * Identity can assign fund request record to himself for validation
+     * @param $identity_address
+     * @param $employee_id
+     * @return bool
+     */
+    public function isAssignable($identity_address, $employee_id): bool {
+        return FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            self::whereId($this->id)->whereDoesntHave('employee'),
+            $identity_address,
+            $employee_id
+        )->exists();
+    }
 
-        return $this;
+    /**
+     * Identity is assigned as validator for fund request record
+     * @param $identity_address
+     * @param $employee_id
+     * @return bool
+     */
+    public function isAssigned($identity_address, $employee_id): bool {
+        return FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            self::whereId($this->id), $identity_address, $employee_id
+        )->exists();
     }
 }

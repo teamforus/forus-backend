@@ -18,7 +18,7 @@ class EmployeeResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         $employee = $this->resource;
         $recordRepo = resolve('forus.services.record');

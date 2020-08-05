@@ -29,7 +29,7 @@ class FundRequestRecordSubscriber
 
     public function onFundRequestRecordDeclined(
         FundRequestRecordDeclined $fundRequestRecordDeclined
-    ) {
+    ): void {
         $requestRecord = $fundRequestRecordDeclined->getFundRequestRecord();
         $fundRequest = $requestRecord->fund_request;
         $identity_address = $fundRequest->identity_address;
