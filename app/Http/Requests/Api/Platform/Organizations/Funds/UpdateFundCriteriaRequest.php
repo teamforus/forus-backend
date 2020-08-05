@@ -44,6 +44,7 @@ class UpdateFundCriteriaRequest extends FormRequest
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
             'criteria.*.value'              => 'required|string|between:1,20',
             'criteria.*.show_attachment'    => 'nullable|boolean',
+            'criteria.*.title'              => 'nullable|string|max:50',
             'criteria.*.description'        => 'nullable|string|max:4000',
             'criteria.*.validators'         => 'nullable|array',
             'criteria.*.validators.*'       => Rule::in($validators->toArray())

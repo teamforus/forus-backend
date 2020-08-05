@@ -1132,8 +1132,8 @@ class Fund extends Model
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description'
-        ] : ['show_attachment', 'description']);
+            'description', 'title'
+        ] : ['show_attachment', 'description', 'title']);
 
         if ($fundCriterion) {
             $fundCriterion->update($data_criterion);
