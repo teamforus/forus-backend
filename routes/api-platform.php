@@ -358,6 +358,10 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/funds/criteria/validate',
+        "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
+
     $router->get(
         'organizations/{organization}/funds/{fund}/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -373,6 +377,7 @@ $router->group(['middleware' => [
     $router->patch(
         'organizations/{organization}/funds/{fund}/criteria',
         "Api\Platform\Organizations\FundsController@updateCriteria");
+
 
     $router->resource(
         'organizations.funds',

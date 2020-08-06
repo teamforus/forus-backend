@@ -14,7 +14,7 @@ class AddTitleFieldToFundCriteriaTable extends Migration
     public function up()
     {
         Schema::table('fund_criteria', function (Blueprint $table) {
-            $table->string('title', 50)->nullable()->after('value');
+            $table->string('title', 100)->nullable()->after('value');
         });
     }
 
