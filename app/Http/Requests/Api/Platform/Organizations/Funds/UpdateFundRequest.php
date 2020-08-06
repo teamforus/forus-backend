@@ -20,7 +20,7 @@ class UpdateFundRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -30,14 +30,32 @@ class UpdateFundRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $validators = $this->organization->organization_validators()->pluck('id');
         $criteriaEditable = config('forus.features.dashboard.organizations.funds.criteria');
         $formulaProductsEditable = config('forus.features.dashboard.organizations.funds.formula_products');
 
+        $organization = $this->organization;
+        $validators = $organization->organization_validators()->pluck('id');
+
         $availableValidators = $this->organization
             ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
+
+
+        $criteriaRules = $criteriaEditable ? [
+            'criteria'                      => 'present|array',
+            'criteria.*.id'                 => [
+                'nullable', Rule::in($this->fund->criteria()->pluck('id'))
+            ],
+            'criteria.*.operator'           => 'required|in:=,<,>',
+            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
+            'criteria.*.value'              => 'required|string|between:1,20',
+            'criteria.*.show_attachment'    => 'nullable|boolean',
+            'criteria.*.title'              => 'nullable|string|max:100',
+            'criteria.*.description'        => 'nullable|string|max:4000',
+            'criteria.*.validators'         => 'nullable|array',
+            'criteria.*.validators.*'       => Rule::in($validators->toArray())
+        ] : [];
 
         return array_merge([
             'name'                      => 'required|between:2,200',
@@ -48,7 +66,7 @@ class UpdateFundRequest extends FormRequest
             'default_validator_employee_id' => [
                 'nullable', Rule::in($availableValidators)
             ],
-        ], ($this->fund && $this->fund->state == Fund::STATE_WAITING) ? [
+        ], ($this->fund && $this->fund->state === Fund::STATE_WAITING) ? [
             'start_date' => [
                 'required',
                 'date_format:Y-m-d',
@@ -59,19 +77,7 @@ class UpdateFundRequest extends FormRequest
                 'date_format:Y-m-d',
                 'after:start_date'
             ],
-        ] : [], $criteriaEditable ? [
-            'criteria'                      => 'present|array',
-            'criteria.*.id'                 => [
-                'nullable', Rule::in($this->fund->criteria()->pluck('id'))
-            ],
-            'criteria.*.operator'           => 'required|in:=,<,>',
-            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
-            'criteria.*.value'              => 'required|string|between:1,20',
-            'criteria.*.show_attachment'    => 'nullable|boolean',
-            'criteria.*.description'        => 'nullable|string|max:4000',
-            'criteria.*.validators'         => 'nullable|array',
-            'criteria.*.validators.*'       => Rule::in($validators->toArray())
-        ] : [], $formulaProductsEditable ? [
+        ] : [], $criteriaRules, $formulaProductsEditable ? [
             'formula_products'              => 'nullable|array',
             'formula_products.*'            => [
                 'required',
