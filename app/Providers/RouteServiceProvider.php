@@ -103,12 +103,12 @@ class RouteServiceProvider extends ServiceProvider
             return FundProviderInvitation::where(compact('token'))->firstOrFail();
         });
 
-        $router->bind('voucher_token_address', static function ($value) {
+        $router->bind('voucher_address_or_physical_code', static function ($value) {
             /** @var PhysicalCard $code */
             $code = PhysicalCard::whereHas('voucher.fund.fund_config', static function (
                 Builder $builder
             ) {
-                $builder->where('allow_physical_cards', '-', true);
+                $builder->where('allow_physical_cards', '=', true);
             })->where('code', $value)->first();
 
             return VoucherToken::whereAddress($value)->first() ??
@@ -117,7 +117,7 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('voucher_token_address', static function ($address) {
-            return VoucherToken::where(compact('address'))->firstOrFail();
+            return VoucherToken::whereAddress($address)->firstOrFail();
         });
 
         $router->bind('product_voucher_token_address', static function ($address) {

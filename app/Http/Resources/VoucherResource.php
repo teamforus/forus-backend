@@ -99,6 +99,8 @@ class VoucherResource extends Resource
             $voucher->transactions
         );
 
+        $physical_cards = $voucher->physical_cards()->first();
+
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'returnable'
         ])->merge([
@@ -122,7 +124,9 @@ class VoucherResource extends Resource
             'parent' => $voucher->parent ? collect($voucher->parent)->only([
                 'identity_address', 'fund_id', 'created_at'
             ]) : null,
-            'physical_card_linked' => $voucher->physical_cards()->exists(),
+            'physical_card' => $physical_cards ? $physical_cards->only([
+                'id', 'code'
+            ]) : false,
             'product_vouchers' => $voucher->product_vouchers ? collect(
                 $voucher->product_vouchers
             )->map(function($product_voucher) {

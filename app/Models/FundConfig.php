@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 /**
  * App\Models\FundConfig
  *
@@ -14,15 +16,16 @@ namespace App\Models;
  * @property int $bunq_sandbox
  * @property string|null $csv_primary_key
  * @property int $subtract_transaction_costs
- * @property bool $is_configured
  * @property bool $allow_physical_cards
- * @property Fund $fund
+ * @property bool $is_configured
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\Implementation|null $implementation
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereBunqAllowedIp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereBunqKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereBunqSandbox($value)
@@ -63,14 +66,14 @@ class FundConfig extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function implementation() {
+    public function implementation(): BelongsTo {
         return $this->belongsTo(Implementation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund() {
+    public function fund(): BelongsTo {
         return $this->belongsTo(Fund::class);
     }
 }

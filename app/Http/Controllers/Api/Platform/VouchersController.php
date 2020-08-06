@@ -47,7 +47,7 @@ class VouchersController extends Controller
 
         $product_id = $request->input('product_id');
         $voucher_address = $request->input('voucher_address');
-        $voucherToken = VoucherToken::whereAddress($voucher_address)->first();
+        $voucherToken = VoucherToken::whereAddress($voucher_address)->firstOrFail();
 
         $voucher = $voucherToken->voucher;
         $product = Product::find($product_id);
@@ -68,7 +68,7 @@ class VouchersController extends Controller
      */
     public function show(
         VoucherToken $voucherToken
-    ) {
+    ): VoucherResource {
         $this->authorize('show', $voucherToken->voucher);
 
         return new VoucherResource(

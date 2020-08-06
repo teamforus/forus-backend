@@ -4,12 +4,27 @@ namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PhysicalCardResource;
+use App\Models\PhysicalCard;
 use App\Models\VoucherToken;
 use App\Http\Requests\Api\Platform\Vouchers\StorePhysicalCardRequest;
-use App\Http\Requests\Api\Platform\Vouchers\RequestPhysicalCardRequest;
+use Illuminate\Http\Response;
 
 class PhysicalCardsController extends Controller
 {
+    private $requestsPerDay = 5;
+
+    /**
+     * PhysicalCardRequestsController constructor.
+     */
+    public function __construct()
+    {
+        $this->middleware(sprintf(
+            'throttle:%s,%s,physical_cards',
+            $this->requestsPerDay,
+            60 * 24
+        ))->only('store');
+    }
+
     /**
      * Link existing physical card to existing voucher
      * @param StorePhysicalCardRequest $request
@@ -29,29 +44,23 @@ class PhysicalCardsController extends Controller
     }
 
     /**
-     * Request a physical card
+     * Unlink physical card from voucher
      *
-     * @param RequestPhysicalCardRequest $request
      * @param VoucherToken $voucherToken
-     * @return \Illuminate\Http\JsonResponse
+     * @param PhysicalCard $physicalCard
+     * @return Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function request(
-        RequestPhysicalCardRequest $request,
-        VoucherToken $voucherToken
-    ): \Illuminate\Http\JsonResponse {
-        $this->authorize('requestPhysicalCard', $voucherToken->voucher);
+    public function destroy(
+        VoucherToken $voucherToken,
+        PhysicalCard $physicalCard
+    ): Response {
+        $this->authorize('show', $voucherToken->voucher);
 
-        // todo: Target email is unknown yet
-        /*resolve('forus.services.notification')->requestPhysicalCard(
-            '',
-            $voucherToken->voucher->fund->getEmailFrom(),
-            $request->input('post_code'),
-            $request->input('house_number')
-        );*/
+        $voucherToken->voucher->physical_cards()->where([
+            'id' => $physicalCard->id
+        ])->delete();
 
-        return response()->json([
-            'success' => true
-        ], 200);
+        return new Response('', 200);
     }
 }
