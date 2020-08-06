@@ -18,7 +18,7 @@ class StoreFundRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -28,9 +28,9 @@ class StoreFundRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $validators = $this->organization->organization_validators()->pluck('id');
+        $organization = $this->organization;
         $criteriaEditable = config('forus.features.dashboard.organizations.funds.criteria');
         $formulaProductsEditable = config('forus.features.dashboard.organizations.funds.formula_products');
 
@@ -38,6 +38,20 @@ class StoreFundRequest extends FormRequest
             ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
 
         $start_after = now()->addDays(5)->format('Y-m-d');
+        $validators = $organization->organization_validators()->pluck('id');
+
+        $criteriaRules = $criteriaEditable ? [
+            'criteria'                      => 'present|array',
+            'criteria.*.id'                 => ['nullable', Rule::in([])],
+            'criteria.*.operator'           => 'required|in:=,<,>',
+            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
+            'criteria.*.value'              => 'required|string|between:1,20',
+            'criteria.*.show_attachment'    => 'nullable|boolean',
+            'criteria.*.title'              => 'nullable|string|max:100',
+            'criteria.*.description'        => 'nullable|string|max:4000',
+            'criteria.*.validators'         => 'nullable|array',
+            'criteria.*.validators.*'       => Rule::in($validators->toArray())
+        ] : [];
 
         return array_merge([
             'name'                          => 'required|between:2,200',
@@ -52,18 +66,7 @@ class StoreFundRequest extends FormRequest
             'default_validator_employee_id' => [
                 'nullable', Rule::in($availableValidators)
             ],
-        ], $criteriaEditable ? [
-            'criteria'                      => 'required|array',
-            'criteria.*.id'                 => ['nullable', Rule::in([])],
-            'criteria.*.operator'           => 'required|in:=,<,>',
-            'criteria.*.record_type_key'    => 'required|exists:record_types,key',
-            'criteria.*.value'              => 'required|string|between:1,20',
-            'criteria.*.show_attachment'    => 'nullable|boolean',
-            'criteria.*.title'              => 'nullable|string|max:50',
-            'criteria.*.description'        => 'nullable|string|max:4000',
-            'criteria.*.validators'         => 'nullable|array',
-            'criteria.*.validators.*'       => Rule::in($validators->toArray())
-        ] : [], $formulaProductsEditable ? [
+        ], $criteriaRules, $formulaProductsEditable ? [
             'formula_products'              => 'nullable|array',
             'formula_products.*'            => [
                 'required',

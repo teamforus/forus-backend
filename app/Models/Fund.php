@@ -479,7 +479,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function employees_validators() {
+    public function employees_validators(): HasManyThrough {
         return $this->hasManyThrough(
             Employee::class,
             Organization::class,
@@ -559,9 +559,9 @@ class Fund extends Model
 
     /**
      * @param string $identity_address
-     * @param Fund $fund
      * @param string $record_type
-     * @param FundCriterion $criterion
+     * @param Fund $fund
+     * @param FundCriterion|null $criterion
      * @return mixed
      */
     public static function getTrustedRecordOfType(
@@ -617,7 +617,7 @@ class Fund extends Model
                 $fund, $identityAddress
             ) {
                 switch ($formula->type) {
-                    case 'fixed': return $formula->amount; break;
+                    case 'fixed': return $formula->amount;
                     case 'multiply': {
                         $record = self::getTrustedRecordOfType(
                             $identityAddress,
@@ -628,8 +628,8 @@ class Fund extends Model
                         return is_numeric(
                             $record['value']
                         ) ? $formula->amount * $record['value'] : 0;
-                    } break;
-                    default: return 0; break;
+                    }
+                    default: return 0;
                 }
             })->sum() + $fund->fund_formula_products->pluck('price')->sum();
     }
@@ -642,9 +642,11 @@ class Fund extends Model
     public static function search(
         Request $request,
         Builder $query
-    ) {
+    ): Builder {
         if (is_null($query)) {
-            $query = self::query()->newQuery();
+            /** @var Builder $newQuery */
+            $newQuery = self::query();
+            $query = $newQuery;
         }
 
         if ($request->has('tag')) {
@@ -1024,7 +1026,7 @@ class Fund extends Model
         int $product_id = null,
         Carbon $expire_at = null,
         string $note = null
-    ) {
+    ): Voucher {
         $amount = Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
