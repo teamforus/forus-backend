@@ -12,6 +12,7 @@ namespace App\Models;
  * @property string $value
  * @property bool $show_attachment
  * @property string $description
+ * @property string $title
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $external_validator_organizations
@@ -42,7 +43,7 @@ class FundCriterion extends Model
      */
     protected $fillable = [
         'fund_id', 'record_type_key', 'operator', 'value',
-        'show_attachment', 'description'
+        'show_attachment', 'description', 'title'
     ];
 
     protected $casts = [

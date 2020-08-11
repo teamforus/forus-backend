@@ -27,5 +27,5 @@
 
 @section('scripts')
     <script src="{{ asset('/assets/dist/bundle/js/bundle.min.js') }}"></script>
-    <script src="{{ asset('/assets/js/app.min.js') }}"></script>
+    <script src="{{ asset('/assets/js/app.min.js?time=' . time()) }}"></script>
 @endsection

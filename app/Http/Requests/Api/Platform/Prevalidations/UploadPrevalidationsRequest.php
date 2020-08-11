@@ -14,7 +14,7 @@ class UploadPrevalidationsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -24,20 +24,22 @@ class UploadPrevalidationsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
-    {
-        $fundsAvailable = Organization::queryByIdentityPermissions(
-            auth()->id(),
+    public function rules(): array {
+        $fundsAvailable = Organization::queryByIdentityPermissions(auth_address(), [
             'validate_records'
-        )->get()->pluck('funds')->flatten()->filter(function ($fund) {
-            return $fund->state != Fund::STATE_CLOSED;
+        ])->get()->pluck('funds')->flatten()->filter(static function (Fund $fund) {
+            return $fund->state !== Fund::STATE_CLOSED;
         })->pluck('id');
 
         return [
             'fund_id' => 'required|in:' . $fundsAvailable->implode(','),
-            'data' => ['required', 'array', new PrevalidationDataRule(
-                request()->input('fund_id')
-            )]
+            'data' => [
+                'required',
+                'array',
+                new PrevalidationDataRule($this->input('fund_id'))
+            ],
+            'overwrite' => 'nullable|array',
+            'overwrite.*' => 'required',
         ];
     }
 }

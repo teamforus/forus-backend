@@ -5,7 +5,7 @@
 @section('title', mail_trans('email_activation.title'))
 @section('header_image', mail_config('email_activation.header_image'))
 @section('html')
-    {{ mail_trans('email_activation.you_get_this_mail_because') }}
+    {{ mail_trans('email_activation.you_get_this_mail_because', ['platform' => mail_trans('email_activation.platforms.' . $clientType)]) }}
     <br/>
     <br/>
     {!! mail_trans('email_activation.confirmation_button', ['link' => $link]) !!}

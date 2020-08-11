@@ -9,11 +9,10 @@ use Illuminate\Validation\Rule;
 
 /**
  * Class UpdateFundRequest
- * @property null|Fund $fund
  * @property null|Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class UpdateFundCriteriaRequest extends FormRequest
+class StoreFundCriteriaRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -37,9 +36,7 @@ class UpdateFundCriteriaRequest extends FormRequest
 
         return [
             'criteria'                      => 'present|array',
-            'criteria.*.id'                 => [
-                'nullable', Rule::in($this->fund->criteria()->pluck('id'))
-            ],
+            'criteria.*.id'                 => ['nullable', Rule::in([])],
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
             'criteria.*.value'              => 'required|string|between:1,20',

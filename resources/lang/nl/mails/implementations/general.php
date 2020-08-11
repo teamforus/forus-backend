@@ -14,6 +14,6 @@ return [
     'team_fund' => 'Team :fund_name',
     'not_for_you' =>
         'Deze e-mail is verstuurd naar :email. Is deze mail niet aan u gericht? Klik dan '.
-        '<a href=":unsubscribeLink">hier</a>. Is deze mail wel aan u gericht maar wilt u zich afmelden voor dit soort berichten?'.
+        '<a href=":unsubscribeLink">hier</a>. Is deze mail wel aan u gericht maar wilt u zich afmelden voor dit soort berichten? '.
         'U kunt dit aangeven in uw <a href=":email_preferences_link">e-mailvoorkeuren</a>.'
 ];
