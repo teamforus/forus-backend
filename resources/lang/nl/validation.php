@@ -119,8 +119,8 @@ return [
     'unique_record'         => 'Het :attribute eigenschap is al gekozen.',
 
     'organization_fund'     => [
-        'wrong_categories'  => 'validation.organization_fund.wrong_categories',
-        'already_requested' => 'validation.organization_fund.already_requested',
+        'wrong_categories'  => 'Verkeerde categorieën.',
+        'already_requested' => 'U heeft dit al een keer aangevraagd.',
     ],
     /*
     |--------------------------------------------------------------------------
@@ -157,17 +157,17 @@ return [
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'business_type_id' => 'Organisatie type',
     'voucher' => [
-        'expired' => 'Deze voucher is niet meer geldig.',
-        'product_voucher_used' => 'De voucher voor deze aanbieding is al gebruikt!',
-        'provider_not_applied' => 'U mag deze voucher niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van deze voucher.',
-        'provider_pending' => 'U mag deze voucher niet scannen! Status voor aanmelding van het fonds van deze voucher is wachtend.',
-        'provider_declined' => 'U mag deze voucher niet scannen! Uw organisatie is geweigerd om deel te nemen aan het fonds. Zoek contact op met sponsor voor een reden.',
-        'fund_not_active' => 'U mag deze voucher nog niet scannen! Het fonds is niet actief.',
-        'not_enough_funds' => 'Onvoldoende tegoed op de voucher.',
+        'expired' => 'Dit tegoed is niet meer geldig.',
+        'product_voucher_used' => 'De reservering is al verzilverd!',
+        'provider_not_applied' => 'U mag dit tegoed niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van deze voucher.',
+        'provider_pending' => 'U mag dit tegoed niet scannen! Status voor aanmelding van het fonds van deze voucher is wachtend.',
+        'provider_declined' => 'U mag dit tegoed niet scannen! Uw organisatie is geweigerd om deel te nemen aan het fonds. Zoek contact op met sponsor voor een reden.',
+        'fund_not_active' => 'U mag dit tegoed nog niet scannen! Het fonds is niet actief.',
+        'not_enough_funds' => 'Onvoldoende saldo op het tegoed.',
     ],
     'attributes' => [
         'pin_code' => 'pincode',
-        'records' => 'Records',
+        'records' => 'Eigenschappen',
         'email' => 'e-mail',
         'primary_email' => 'e-mail',
         'records.primary_email' => 'e-mailadres',
@@ -180,7 +180,7 @@ return [
         'note' => 'notitie',
         'amount' => 'hoeveelheid',
         'product_categories' => 'categorieën',
-        'old_price' => 'oude prijs',
+        'old_price' => 'Orginele prijs',
         'description' => 'omschrijving',
         'price' => 'prijs',
         'total_amount' => 'aanbod',

@@ -43,9 +43,9 @@ return [
 
     // assigned through dashboard
     'identity_voucher_assigned' => [
-        'title' => ':fund_name-voucher is aan u toegekend.',
+        'title' => ':fund_name-tegoed is aan u toegekend.',
         'description' =>
-            'Hierbij ontvangt u uw :fund_name-voucher. De voucher heeft een waarde van ' .
+            'Hierbij ontvangt u uw :fund_name-tegoed. Het tegoed heeft een waarde van ' .
             '€ :voucher_amount en is geldig tot en met :voucher_expire_date_locale.',
     ],
 
@@ -53,15 +53,15 @@ return [
     'voucher_added' => [
         'title' => 'Er is een :fund_name tegoed aan u toegekend.',
         'description' =>
-            'Hierbij ontvangt u uw :fund_name-voucher. ' .
-            'De voucher heeft een waarde van €:voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
+            'Hierbij ontvangt u uw :fund_name-tegoed. ' .
+            'Het tegoed heeft een waarde van €:voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
     ],
 
     // bought from webshop
     'product_voucher_added' => [
-        'title' => 'Aanbieding :product_name bij :provider_name gereserveerd!',
+        'title' => 'Aanbod :product_name bij :provider_name gereserveerd!',
         'description' =>
-            'Aanbieding :product_name bij :provider_name gereserveerd! ' .
+            'Aanbod :product_name bij :provider_name gereserveerd! ' .
             'De reservering heeft een waarde van €:voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale',
     ],
 
@@ -89,16 +89,16 @@ return [
 
     // budget voucher transaction
     'voucher_transaction' => [
-        'title' => 'Er is een bedrag van uw :fund_name-voucher afgeschreven.',
+        'title' => 'Er is een bedrag van uw :fund_name-tegoed afgeschreven.',
         'description' =>
-            'Er is met uw voucher een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. ' .
+            'Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. ' .
             'Het huidige bedrag van uw \':fund_name\'-voucher is €:voucher_amount_locale.',
     ],
 
     // product voucher transaction
     'product_voucher_transaction' => [
-        'title' => 'Een aanbiedingsvoucher is zojuist gebruikt om :product_name af te nemen.',
-        'description' => 'Een aanbiedingsvoucher is zojuist gebruikt om :product_name af te nemen.',
+        'title' => 'Een reservering is zojuist gebruikt om :product_name af te nemen.',
+        'description' => 'Een reservering is zojuist gebruikt om :product_name af te nemen.',
     ],
 
     // product voucher reserved on webshop (voucher created)
@@ -110,9 +110,9 @@ return [
 
     // product voucher shared to provider
     'product_voucher_shared' => [
-        'title' => 'Aanbieding QR-code gedeeld met :provider_name.',
+        'title' => 'Aanbod QR-code gedeeld met :provider_name.',
         'description' =>
-            'U heeft de aanbieding gedeeld met :provider_name met het volgende bericht: ' .
+            'U heeft de aanbod gedeeld met :provider_name met het volgende bericht: ' .
             ':voucher_share_message',
     ],
 
@@ -130,13 +130,13 @@ return [
 
     // product voucher expired
     'product_voucher_expired' => [
-        'title' => 'Uw :fund_name-voucher is verlopen.',
-        'description' => 'Uw :fund_name-voucher is verlopen.'
+        'title' => 'Uw :fund_name-tegoed is verlopen.',
+        'description' => 'Uw :fund_name-tegoed is verlopen.'
     ],
 
     // budget voucher expired
     'budget_voucher_expired' => [
-        'title' => 'Uw :fund_name-voucher is verlopen.',
-        'description' => 'Uw :fund_name-voucher is verlopen.'
+        'title' => 'Uw :fund_name-tegoed is verlopen.',
+        'description' => 'Uw :fund_name-tegoed is verlopen.'
     ]
 ];

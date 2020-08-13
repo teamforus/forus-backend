@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'subject' => 'Update: Nieuwe aanbieding reserveringen',
+    'subject' => 'Update: Nieuwe reserveringen',
     'title' => implode('|', [
-        'Overzicht: :count_products nieuwe aanbieding reservering',
-        'Overzicht: :count_products nieuwe aanbieding reserveringen',
+        'Overzicht: :count_products nieuwe reservering',
+        'Overzicht: :count_products nieuwe reserveringen',
     ]),
     'greetings' => implode('|', [
         "Beste :provider_name,\nVandaag is er :count_products aanbieding gereserveerd.",
