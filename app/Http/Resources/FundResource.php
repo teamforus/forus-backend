@@ -50,7 +50,8 @@ class FundResource extends Resource
                     'total'     => currency_format($fund->budget_total),
                     'validated' => currency_format($fund->budget_validated),
                     'used'      => currency_format($fund->budget_used),
-                    'left'      => currency_format($fund->budget_left)
+                    'left'      => currency_format($fund->budget_left),
+                    'reserved'  => currency_format($fund->budget_reserved)
                 ]
             ];
         } else {
