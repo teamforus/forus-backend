@@ -31,13 +31,17 @@ class IndexOrganizationRequest extends FormRequest
     public function rules()
     {
         return [
-            'per_page'  => 'numeric|between:1,100',
+            'per_page'  => 'nullable|numeric|between:1,100',
             'role' => [
                 'nullable', 'string', 'exists:roles,key'
             ],
             'dependency' => ['nullable', new DependencyRule(
                 OrganizationResource::DEPENDENCIES
-            )]
+            )],
+            'is_employee'   => 'nullable|boolean',
+            'is_sponsor'    => 'nullable|boolean',
+            'is_provider'   => 'nullable|boolean',
+            'is_validator'  => 'nullable|boolean',
         ];
     }
 }

@@ -3,22 +3,25 @@
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Models\FundRequest;
+use App\Models\Organization;
+use App\Scopes\Builders\FundRequestRecordQuery;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
  * Class UpdateFundRequestsRequest
+ * @property Organization $organization
  * @property FundRequest $fund_request
  * @package App\Http\Requests\Api\Platform\Funds\FundRequests
  */
-class UpdateFundRequestsRequest extends FormRequest
+class ResignFundRequestsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -28,22 +31,20 @@ class UpdateFundRequestsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $organization = $this->fund_request->fund->organization;
-        $employees = $organization->employeesOfRole('validation');
+        $fund_request = $this->fund_request;
+
+        $employeeAssignedRecords = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            $fund_request->records()->getQuery(),
+            auth_address(true),
+            $this->organization->findEmployee(auth_address(true))->id
+        );
 
         return [
-            'state' => [
-                'nullable',
-                Rule::in([
-                    FundRequest::STATE_APPROVED,
-                    FundRequest::STATE_DECLINED,
-                ])
-            ],
             'employee_id' => [
                 'nullable',
-                Rule::in($employees->pluck('id')->toArray())
+                Rule::in($employeeAssignedRecords->pluck('employee_id')->toArray())
             ]
         ];
     }

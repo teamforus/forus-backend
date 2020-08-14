@@ -1,10 +1,8 @@
 <?php
-/**
- *
- */
 
 namespace App\Models\Traits;
 
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use App\Models\Tag;
 
 /**
@@ -14,7 +12,10 @@ use App\Models\Tag;
  */
 trait HasTags
 {
-    public function tags()
+    /**
+     * @return MorphToMany
+     */
+    public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }

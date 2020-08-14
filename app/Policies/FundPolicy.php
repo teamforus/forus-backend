@@ -29,7 +29,7 @@ class FundPolicy
     public function viewAny(
         $identity_address,
         Organization $organization
-    ) {
+    ): bool {
         return $organization->identityCan(
             $identity_address, [
                 'manage_funds', 'view_finances', 'view_funds',
@@ -45,7 +45,7 @@ class FundPolicy
     public function store(
         $identity_address,
         Organization $organization
-    ) {
+    ): bool {
         return $organization->identityCan(
             $identity_address,
             'manage_funds'
@@ -62,8 +62,8 @@ class FundPolicy
         $identity_address,
         Fund $fund,
         Organization $organization
-    ) {
-        if ($fund->organization_id != $organization->id) {
+    ): bool {
+        if ($fund->organization_id !== $organization->id) {
             return false;
         }
 
@@ -84,15 +84,12 @@ class FundPolicy
         $identity_address,
         Fund $fund,
         Organization $organization
-    ) {
-        if ($fund->organization_id != $organization->id) {
+    ): bool {
+        if ($fund->organization_id !== $organization->id) {
             return false;
         }
 
-        return $fund->organization->identityCan(
-            $identity_address,
-            'manage_funds'
-        );
+        return $fund->organization->identityCan($identity_address, 'manage_funds');
     }
 
     /**
@@ -104,10 +101,12 @@ class FundPolicy
         $identity_address,
         Fund $fund
     ) {
-        if (empty($identity_address) &&
-            !in_array($fund->state, [Fund::STATE_ACTIVE, Fund::STATE_PAUSED], true)
-        ) {
+        if (empty($identity_address)) {
             return false;
+        }
+
+        if ($fund->state !== $fund::STATE_ACTIVE) {
+            return $this->deny(trans('fund.state_' . $fund->state));
         }
 
         if ($fund->fund_formulas()->count() === 0) {
@@ -117,7 +116,7 @@ class FundPolicy
         // The same identity can't apply twice to the same fund
         if ($fund->vouchers()->where(
             'identity_address', $identity_address
-        )->count()) {
+        )->exists()) {
             return $this->deny(trans('fund.already_received'));
         }
 
@@ -128,7 +127,10 @@ class FundPolicy
             $identity_address, $fund
         ) {
             $record = Fund::getTrustedRecordOfType(
-                $fund, auth()->id(), $criterion->record_type_key, $fund->organization
+                $identity_address,
+                $criterion->record_type_key,
+                $fund,
+                $criterion
             );
 
             return (collect([$record])->where(
@@ -153,8 +155,8 @@ class FundPolicy
         $identity_address,
         Fund $fund,
         Organization $organization
-    ) {
-        if ($fund->organization_id != $organization->id) {
+    ): bool {
+        if ($fund->organization_id !== $organization->id) {
             return false;
         }
 
@@ -174,7 +176,11 @@ class FundPolicy
         $identity_address,
         Fund $fund,
         Organization $organization
-    ) {
+    ): bool {
+        if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
         return $organization->identityCan($identity_address, [
             'manage_funds'
         ]) && $fund->state === Fund::STATE_WAITING;
@@ -188,7 +194,7 @@ class FundPolicy
     public function idealRequest(
         $identity_address,
         Fund $fund
-    ) {
+    ): bool {
         // identity_address not required
         return $identity_address && $fund->public;
     }

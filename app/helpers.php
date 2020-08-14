@@ -24,11 +24,17 @@ if (!function_exists('auth_address')) {
     /**
      * Get the available user instance.
      *
+     * @param bool $abortOnFail
+     * @param int $errorCode
      * @return string|null
      */
-    function auth_address()
-    {
-        return auth()->user() ? auth()->user()->getAddress() : null;
+    function auth_address(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $auth = auth_model($abortOnFail, $errorCode);
+
+        return $auth && method_exists($auth, 'getAddress') ? $auth->getAddress() : null;
     }
 }
 
@@ -36,11 +42,37 @@ if (!function_exists('auth_proxy_id')) {
     /**
      * Get the available user instance.
      *
+     * @param bool $abortOnFail
+     * @param int $errorCode
      * @return string|null
      */
-    function auth_proxy_id()
-    {
-        return auth()->user() ? auth()->user()->getProxyId() : null;
+    function auth_proxy_id(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $auth = auth_model($abortOnFail, $errorCode);
+
+        return $auth && method_exists($auth, 'getProxyId') ? $auth->getProxyId() : null;
+    }
+}
+
+if (!function_exists('auth_model')) {
+    /**
+     * @param bool $abortOnFail
+     * @param int $errorCode
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    function auth_model(
+        $abortOnFail = false,
+        $errorCode = 403
+    ) {
+        $authUser = auth()->user();
+
+        if ($abortOnFail && (!$authUser || !method_exists($authUser, 'getProxyId'))) {
+            abort($errorCode);
+        }
+
+        return $authUser;
     }
 }
 
@@ -439,10 +471,7 @@ if (!function_exists('log_debug')) {
      */
     function log_debug($message, array $context = []) {
         if (!is_null($logger = logger())) {
-            $logger->debug(
-                is_string($message) ? $message : json_pretty($message),
-                $context
-            );
+            $logger->debug(is_string($message) ? $message : json_pretty($message), $context);
         }
     }
 }
@@ -588,6 +617,30 @@ if (!function_exists('token_generator')) {
     }
 }
 
+if (!function_exists('token_generator_db')) {
+    /**
+     * @param Builder $builder
+     * @param string $column
+     * @param int $block_length
+     * @param int $block_count
+     * @return string
+     */
+    function token_generator_db(
+        Builder $builder,
+        string $column,
+        int $block_length,
+        int $block_count = 1
+    ) : string {
+        do {
+            $value = token_generator()->generate($block_length, $block_count);
+        } while($builder->newQuery()->where([
+            $column => $value
+        ])->exists());
+
+        return $value;
+    }
+}
+
 
 if (!function_exists('trans_fb')) {
     /**
@@ -660,7 +713,6 @@ if (!function_exists('query_with_trashed')) {
         return $builder->withTrashed();
     }
 }
-
 
 if (!function_exists('user_agent_data')) {
     /**

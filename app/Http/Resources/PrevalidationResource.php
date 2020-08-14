@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Prevalidation;
+use App\Models\PrevalidationRecord;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -12,28 +13,28 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class PrevalidationResource extends Resource
 {
+    public static $load = [
+        'prevalidation_records.record_type.translations'
+    ];
+
     /**
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        $creatorFields = [];
+        $fields = array_merge([
+            'id', 'uid', 'records_hash', 'uid_hash', 'state', 'exported', 'fund_id',
+        ], auth()->id() === $this->resource->identity_address ? [
+            'created_at', 'identity_address'
+        ] : []);
 
-        if (auth()->id() == $this->resource->identity_address) {
-            $creatorFields = collect($this->resource)->only([
-                'fund_id', 'created_at', 'identity_address'
-            ]);
-        }
-
-        return collect($this->resource)->only([
-            'id', 'uid', 'state', 'exported', 'fund_id',
-        ])->merge($creatorFields)->merge([
+        return array_merge($this->resource->only($fields), [
             'records' => PrevalidationRecordResource::collection(
                 $this->resource->prevalidation_records->sortByDesc('record_type_id')
             )
-        ])->toArray();
+        ]);
     }
 }

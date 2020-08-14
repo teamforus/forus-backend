@@ -20,6 +20,7 @@ class CreateMediaTable extends Migration
 
             $table->string('type',20);
             $table->string('ext', 10);
+            $table->unsignedInteger('order')->default(0);
 
             $table->string('identity_address', 200)->default('');
 
