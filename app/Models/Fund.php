@@ -22,6 +22,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 
@@ -66,6 +67,7 @@ use Illuminate\Http\Request;
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
+ * @property-read float $budget_reserved
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read \App\Services\MediaService\Models\Media $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -231,6 +233,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function budget_vouchers(): HasMany {
+        return $this->hasMany(Voucher::class)->whereNull('parent_id');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function voucher_transactions() {
@@ -311,14 +320,14 @@ class Fund extends Model
     /**
      * @return float
      */
-    public function getBudgetValidatedAttribute() {
+    public function getBudgetValidatedAttribute(): float {
         return 0;
     }
 
     /**
      * @return float
      */
-    public function getBudgetTotalAttribute() {
+    public function getBudgetTotalAttribute(): float {
         return round(array_sum([
             $this->top_up_transactions->sum('amount'),
             $this->bunq_me_tabs_paid->sum('amount')
@@ -329,7 +338,7 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetUsedAttribute() {
-        return round($this->voucher_transactions->sum('amount'), 2);
+        return round($this->voucher_transactions()->sum('voucher_transactions.amount'), 2);
     }
 
     /**
@@ -339,8 +348,11 @@ class Fund extends Model
         return round($this->budget_total - $this->budget_used, 2);
     }
 
-    public function getFundId() {
-        return $this->id;
+    /**
+     * @return float
+     */
+    public function getBudgetReservedAttribute(): float {
+        return round($this->budget_vouchers()->sum('amount'), 2);
     }
 
     public function getServiceCosts(): float
