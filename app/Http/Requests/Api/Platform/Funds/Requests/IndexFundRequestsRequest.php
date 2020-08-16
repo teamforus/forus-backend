@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
+use App\Models\FundRequest;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IndexFundRequestsRequest extends FormRequest
 {
@@ -24,7 +26,23 @@ class IndexFundRequestsRequest extends FormRequest
     public function rules()
     {
         return [
-            'per_page' => 'numeric|between:1,100'
+            'per_page'      => 'numeric|between:1,100',
+            'state'         => 'nullable|in:' . join(',', FundRequest::STATES),
+            'assigned_to'   => 'nullable|string|max:100',
+            'from'          => 'nullable|date:Y-m-d',
+            'to'            => 'nullable|date:Y-m-d',
+            'sort_by'       => [
+                'nullable',
+                Rule::in([
+                    'created_at', 'note'
+                ])
+            ],
+            'sort_order'    => [
+                'nullable',
+                Rule::in([
+                    'asc', 'desc'
+                ])
+            ],
         ];
     }
 }
