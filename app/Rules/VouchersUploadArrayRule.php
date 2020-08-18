@@ -16,9 +16,7 @@ class VouchersUploadArrayRule implements Rule
      * VouchersUploadArrayRule constructor.
      * @param Fund $fund
      */
-    public function __construct(
-        Fund $fund = null
-    ) {
+    public function __construct(Fund $fund) {
         $this->fund = $fund;
     }
 
