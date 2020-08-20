@@ -126,18 +126,15 @@ class FundRequest extends Model
             $query->where('created_at', '<=', $to);
         }
 
-        if ($request->has('assigned_to') && $assigned_to = $request->input('assigned_to')) {
+        if ($request->has('employee_id') && $employee_id = $request->input('employee_id')) {
             /** @var Employee $employee */
-            $employee = Employee::where(
-                'identity_address',
-                $recordRepo->identityAddressByEmail($assigned_to)
-            )->first();
+            $employee = Employee::find($employee_id);
 
             $query->whereHas('records', static function(
                 Builder $builder
             ) use ($employee) {
                 FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
-                    $builder, $employee->identity_address ?? null, $employee->id ?? null
+                    $builder, $employee->identity_address, $employee->id
                 );
             });
         }

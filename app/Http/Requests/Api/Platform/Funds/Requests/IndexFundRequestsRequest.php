@@ -28,7 +28,7 @@ class IndexFundRequestsRequest extends FormRequest
         return [
             'per_page'      => 'numeric|between:1,100',
             'state'         => 'nullable|in:' . join(',', FundRequest::STATES),
-            'assigned_to'   => 'nullable|string|max:100',
+            'employee_id'   => 'nullable|exists:employees,id',
             'from'          => 'nullable|date:Y-m-d',
             'to'            => 'nullable|date:Y-m-d',
             'sort_by'       => [
