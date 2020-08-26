@@ -148,14 +148,13 @@ return [
     | of "email". This simply helps us make messages a little cleaner.
     |
     */
-
-    'attributes' => [
-        'pin_code' => "Pin code",
-        'records' => "Records",
-        'email' => "e-mail",
-        'primary_email' => 'e-mail',
-        'records.primary_email' => 'e-mail',
-    ],
+    'prevalidation_missing_required_keys' => 'The file does not contain all required fields.',
+    'prevalidation_invalid_record_key' => 'A field type included in the file does not exist.',
+    'validation.prevalidation_invalid_type_primary_email' => 'The primary email address field is a system field and cannot be used here.',
+    'validation.prevalidation_missing_primary_key' => 'The key field is missing from the file.',
+    'iban' => 'The IBAN-number is mandatory and must be valid.',
+    'kvk' => 'The KVK-number is mandatory and must be valid.',
+    'business_type_id' => 'Organization type',
     'voucher' => [
         'expired' => 'This voucher is expired',
         'product_voucher_used' => 'This product voucher is already used.',
@@ -165,5 +164,17 @@ return [
         'fund_not_active' => 'Your can not scan this voucher! The fund is not active (anymore).',
         'not_enough_funds' => 'Not enough credit on voucher.',
     ],
-
+    'product_voucher' => [
+        'product_not_found' => 'Invalid product id.',
+        'product_sold_out' => 'Product sold out.',
+        'not_enough_stock' => 'Not enough stock available for product :product_name.',
+    ],
+    'attributes' => [
+        'pin_code' => "Pin code",
+        'records' => "Records",
+        'email' => "e-mail",
+        'primary_email' => 'e-mail',
+        'records.primary_email' => 'e-mail',
+    ],
+    'employee_already_exists' => 'An employee with the same email address already exists.',
 ];

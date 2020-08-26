@@ -739,11 +739,15 @@ class LoremDbSeeder extends Seeder
         $sold_out = false;
         $expire_at = Carbon::now()->addDays(random_int(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
+        $description = implode(' ', [
+            "Ut aliquet nisi felis ipsum consectetuer a vulputate.",
+            "Integer montes nulla in montes venenatis."
+        ]);
 
         $product = Product::create(
             collect(array_merge(compact(
                 'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at', 'product_category_id'
+                'expire_at', 'product_category_id', 'description'
             ), [
                 'organization_id' => $organization->id
             ]))->merge(collect($fields)->only([
