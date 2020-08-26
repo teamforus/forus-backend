@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
  * @property bool $is_provider
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
+ * @property string $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -123,7 +124,7 @@ class Organization extends Model
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds'
+        'validator_auto_accept_funds', 'description'
     ];
 
     protected $casts = [
