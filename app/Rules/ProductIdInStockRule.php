@@ -43,7 +43,8 @@ class ProductIdInStockRule extends BaseRule
             return $this->rejectTrans('product_sold_out');
         }
 
-        if ($this->otherReservations &&
+        if (!$product->unlimited_stock &&
+            $this->otherReservations &&
             $product->stock_amount < $this->otherReservations[$product_id]) {
             return $this->rejectTrans('not_enough_stock', [
                 'product_name' => $product->name
