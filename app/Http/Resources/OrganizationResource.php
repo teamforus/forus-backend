@@ -70,7 +70,7 @@ class OrganizationResource extends Resource
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
             'email_public', 'phone_public', 'website_public',
             'is_sponsor', 'is_provider', 'is_validator',
-            'validator_auto_accept_funds'
+            'validator_auto_accept_funds', 'description'
         ])->merge(array_merge(
             $privateData,
             $ownerData

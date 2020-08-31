@@ -91,6 +91,7 @@ class FundRequest extends Model
         string $identity_address
     ) {
         $query = self::query();
+        $recordRepo = resolve('forus.services.record');
 
         $query->whereHas('records', static function(
             Builder $builder
@@ -103,12 +104,45 @@ class FundRequest extends Model
         });
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $query->whereHas('fund', static function(Builder $builder) use ($q) {
-                $builder->where('name', 'LIKE', "%$q%");
+            $query->where(function (Builder $query) use ($q, $recordRepo) {
+                $query->whereHas('fund', static function(Builder $builder) use ($q) {
+                    $builder->where('name', 'LIKE', "%$q%");
+                })->orWhere(
+                    'identity_address',
+                    $recordRepo->identityAddressByBsn($q)
+                );
             });
         }
 
-        return $query;
+        if ($request->has('state') && $state = $request->input('state')) {
+            $query->where('state', $state);
+        }
+
+        if ($request->has('from') && $from = $request->input('from')) {
+            $query->where('created_at', '>=', $from);
+        }
+
+        if ($request->has('to') && $to = $request->input('to')) {
+            $query->where('created_at', '<=', $to);
+        }
+
+        if ($request->has('employee_id') && $employee_id = $request->input('employee_id')) {
+            /** @var Employee $employee */
+            $employee = Employee::find($employee_id);
+
+            $query->whereHas('records', static function(
+                Builder $builder
+            ) use ($employee) {
+                FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+                    $builder, $employee->identity_address, $employee->id
+                );
+            });
+        }
+
+        return $query->orderBy(
+            $request->get('sort_by', 'created_at'),
+            $request->get('sort_order', 'DESC')
+        );
     }
 
     /**

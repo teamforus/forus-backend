@@ -3,13 +3,11 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
-use App\Models\Product;
+use App\Rules\ProductIdInStockRule;
 use App\Rules\ValidPrevalidationCodeRule;
 use App\Scopes\Builders\OrganizationQuery;
-use App\Scopes\Builders\ProductQuery;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\Eloquent\Builder;
 
 class StoreVoucherRequest extends FormRequest
 {
@@ -30,31 +28,16 @@ class StoreVoucherRequest extends FormRequest
      */
     public function rules(): array
     {
-        $fund = Fund::whereHas('organization', static function(Builder $builder) {
-            OrganizationQuery::whereHasPermissions($builder, auth_address(), [
-                'manage_vouchers'
-            ]);
-        })->findOrFail($this->input('fund_id'));
+        $validFunds = $this->validFundIds(auth_address());
+        $fund = Fund::query()->whereIn('id', $validFunds)->findOrFail($this->input('fund_id'));
 
-        $fundsId = Fund::whereHas('organization', static function(Builder $builder) {
-            OrganizationQuery::whereHasPermissions($builder, auth_address(), [
-                'manage_vouchers'
-            ]);
-        })->pluck('funds.id')->toArray();
-
-        $startDate = $fund->start_date->format('Y-m-d');
-        $endDate = $fund->end_date->format('Y-m-d');
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
-
-        $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $fund->id);
-        $validProducts = $productsQuery->pluck('id')->toArray();
 
         return [
             'fund_id'   => [
                 'required',
-                'exists:funds,id',
-                Rule::in($fundsId)
+                Rule::exists('funds', 'id')->whereIn('id', $validFunds)
             ],
             'email'     => 'nullable|email:strict,dns',
             'note'      => 'nullable|string|max:280',
@@ -63,20 +46,30 @@ class StoreVoucherRequest extends FormRequest
                 'between:.1,' . $max
             ],
             'expire_at' => [
-                'nullable', 'date_format:Y-m-d', 'after:' . $startDate, 'before_or_equal:' . $endDate,
+                'nullable',
+                'date_format:Y-m-d',
+                'after:' . $fund->start_date->format('Y-m-d'),
+                'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
             'activation_code' => [
                 'nullable', new ValidPrevalidationCodeRule($fund),
             ],
             'product_id' => [
-                'required_without_all:amount',
-                Rule::exists('products', 'id')->where(static function(
-                    \Illuminate\Database\Query\Builder $builder
-                ) use ($validProducts) {
-                    return $builder->whereIn('id', $validProducts);
-                }),
+                'required_without:vouchers.*.amount',
+                'exists:products,id',
+                new ProductIdInStockRule($fund)
             ],
         ];
+    }
+
+    /**
+     * @param $identity_address
+     * @return array
+     */
+    private function validFundIds($identity_address): array {
+        return Fund::whereHas('organization', static function($builder) use ($identity_address) {
+            OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_vouchers');
+        })->pluck('funds.id')->toArray();
     }
 
     /**
