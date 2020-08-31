@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * Class StoreVoucherTransactionRequest
- * @property VoucherToken $voucher_token_address
+ * @property VoucherToken $voucher_address_or_physical_code
  * @package App\Http\Requests\Api\Platform\Vouchers\Transactions
  */
 class StoreVoucherTransactionRequest extends FormRequest
@@ -37,7 +37,7 @@ class StoreVoucherTransactionRequest extends FormRequest
     public function rules(): array
     {
         // target voucher
-        $voucher = $this->voucher_token_address->voucher;
+        $voucher = $this->voucher_address_or_physical_code->voucher;
         $validOrganizations = $this->getValidOrganizations($voucher);
 
         $rules = [

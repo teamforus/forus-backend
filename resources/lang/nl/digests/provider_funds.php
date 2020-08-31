@@ -1,11 +1,12 @@
 <?php
 
 return [
+    'subject' => 'Update: Huidige status van uw aanmelding',
     'title' => 'Update: Huidige status van uw aanmelding',
 
     'budget_approved' => [
         'title' => implode('|', [
-            "Uw aanmelding voor :count_funds fond is goedgekeurd om tegoeden te scannen.",
+            "Uw aanmelding voor :count_funds fonds is goedgekeurd om tegoeden te scannen.",
             "Uw aanmelding voor :count_funds fonden is goedgekeurd om tegoeden te scannen.",
         ]),
         'funds_list' => implode('|', [

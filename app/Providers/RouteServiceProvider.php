@@ -14,6 +14,7 @@ use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\PhysicalCard;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -102,12 +103,21 @@ class RouteServiceProvider extends ServiceProvider
             return FundProviderInvitation::where(compact('token'))->firstOrFail();
         });
 
-        $router->bind('configured_fund', static function ($value) {
-            return Fund::whereKey($value)->has('fund_config')->firstOrFail();
+        $router->bind('voucher_address_or_physical_code', static function ($value) {
+            /** @var PhysicalCard $code */
+            $code = PhysicalCard::whereHas('voucher.fund.fund_config', static function (
+                Builder $builder
+            ) {
+                $builder->where('allow_physical_cards', '=', true);
+            })->where('code', $value)->first();
+
+            return VoucherToken::whereAddress($value)->first() ??
+                $code->voucher->token_without_confirmation ??
+                abort(404);
         });
 
         $router->bind('voucher_token_address', static function ($address) {
-            return VoucherToken::where(compact('address'))->firstOrFail();
+            return VoucherToken::whereAddress($address)->firstOrFail();
         });
 
         $router->bind('product_voucher_token_address', static function ($address) {

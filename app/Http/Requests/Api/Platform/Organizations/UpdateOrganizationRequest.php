@@ -43,6 +43,7 @@ class UpdateOrganizationRequest extends FormRequest
 
         return [
             'name'                  => 'required|between:2,64',
+            'description'           => 'nullable|string|max:4096',
             'iban'                  => ['required', new IbanRule()],
             'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',

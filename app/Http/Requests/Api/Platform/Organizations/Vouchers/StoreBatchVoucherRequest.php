@@ -3,10 +3,11 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
+use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
+use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\Query\Builder;
 
 class StoreBatchVoucherRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class StoreBatchVoucherRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -25,23 +26,19 @@ class StoreBatchVoucherRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $fund = Fund::find($this->input('fund_id'));
-        $endDate = $fund ? $fund->end_date->format('Y-m-d') : 'today';
+        $validFunds = $this->validFundIds(auth_address());
+        $fund = Fund::query()->whereIn('id', $validFunds)->findOrFail($this->input('fund_id'));
+
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
-        $providers = $fund ?
-            $fund->provider_organizations_approved->pluck('id') : collect();
-
-        $productIdRule = Rule::exists('products', 'id')->where(function (
-            Builder $query
-        ) use ($providers) {
-            $query->whereIn('organization_id', $providers->toArray());
-        });
 
         return [
-            'fund_id'   => 'required|exists:funds,id',
+            'fund_id'   => [
+                'required',
+                Rule::exists('funds', 'id')->whereIn('id', $validFunds)
+            ],
             'vouchers' => [
                 'required_without_all:amount,product_id',
                 new VouchersUploadArrayRule($fund),
@@ -52,13 +49,30 @@ class StoreBatchVoucherRequest extends FormRequest
                 'between:.1,' . $max,
             ],
             'vouchers.*.product_id' => [
-                'required_without:vouchers.*.amount', $productIdRule,
+                'required_without:vouchers.*.amount',
+                'exists:products,id',
+                new ProductIdInStockRule($fund, collect(
+                    $this->input('vouchers')
+                )->countBy('product_id')->toArray())
             ],
-            'vouchers.*.expires_at' => [
-                'nullable', 'date_format:Y-m-d', 'after:' . $endDate,
+            'vouchers.*.expire_at' => [
+                'nullable',
+                'date_format:Y-m-d',
+                'after:' . $fund->start_date->format('Y-m-d'),
+                'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
             'vouchers.*.note'       => 'nullable|string|max:280',
             'vouchers.*.email'      => 'nullable|email:strict,dns',
         ];
+    }
+
+    /**
+     * @param $identity_address
+     * @return array
+     */
+    private function validFundIds($identity_address): array {
+        return Fund::whereHas('organization', static function($builder) use ($identity_address) {
+            OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_vouchers');
+        })->pluck('funds.id')->toArray();
     }
 }

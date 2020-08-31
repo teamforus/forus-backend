@@ -264,7 +264,7 @@ $router->group(['middleware' => [
     // TODO: deprecated, remove in next releases
     if (!env('DISABLE_DEPRECATED_API', FALSE)) {
         $router->get(
-            'vouchers/{voucher_token_address}/provider',
+            'vouchers/{voucher_address_or_physical_code}/provider',
             "Api\Platform\Provider\VouchersController@show"
         );
     }
@@ -277,7 +277,7 @@ $router->group(['middleware' => [
                 'show'
             ],
             'parameters' => [
-                'vouchers' => 'voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
             ]
         ]);
 
@@ -288,7 +288,7 @@ $router->group(['middleware' => [
                 'index'
             ],
             'parameters' => [
-                'vouchers' => 'budget_voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
                 'product-vouchers' => 'product_voucher_token_address',
             ]
         ]);
@@ -318,6 +318,28 @@ $router->group(['middleware' => [
         ]);
     });
 
+    $router->resource(
+        'vouchers/{voucher_token_address}/physical-cards',
+        "Api\Platform\Vouchers\PhysicalCardsController", [
+        'only' => [
+            'store', 'destroy'
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
+
+    $router->resource(
+        'vouchers/{voucher_token_address}/physical-card-requests',
+        "Api\Platform\Vouchers\PhysicalCardRequestsController", [
+        'only' => [
+            'index', 'store', 'show'
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
+
     $router->post(
         'vouchers/{voucher_token_address}/send-email',
         "Api\Platform\VouchersController@sendEmail"
@@ -336,7 +358,7 @@ $router->group(['middleware' => [
             'index', 'show', 'store'
         ],
         'parameters' => [
-            'vouchers' => 'voucher_token_address',
+            'vouchers' => 'voucher_address_or_physical_code',
             'transactions' => 'transaction_address',
         ]
     ]);
@@ -383,6 +405,10 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/funds/criteria/validate',
+        "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
+
     $router->get(
         'organizations/{organization}/funds/{fund}/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -398,6 +424,7 @@ $router->group(['middleware' => [
     $router->patch(
         'organizations/{organization}/funds/{fund}/criteria',
         "Api\Platform\Organizations\FundsController@updateCriteria");
+
 
     $router->resource(
         'organizations.funds',
@@ -737,6 +764,11 @@ $router->group(['middleware' => [
     $router->post(
         'prevalidations/collection',
         'Api\Platform\PrevalidationController@storeCollection'
+    );
+
+    $router->post(
+        'prevalidations/collection/hash',
+        'Api\Platform\PrevalidationController@collectionHash'
     );
 
     $router->resource(

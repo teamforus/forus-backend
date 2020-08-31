@@ -22,10 +22,12 @@ class FundResource extends Resource
      */
     public function toArray($request): array
     {
-        $fund = $this->resource;
-        $organization = $fund->organization;
-        $sponsorCount = $organization->employees->count() + 1;
-        $validators = $organization->employeesWithPermissionsQuery('validate_records')->get();
+        $fund               = $this->resource;
+        $organization       = $fund->organization;
+        $sponsorCount       = $organization->employees->count();
+        $validators         = $organization->employeesWithPermissionsQuery([
+            'validate_records'
+        ])->get();
 
         $providersEmployeeCount = $fund->provider_organizations_approved;
         $providersEmployeeCount = $providersEmployeeCount->reduce(static function (

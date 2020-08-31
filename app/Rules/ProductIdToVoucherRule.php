@@ -35,7 +35,7 @@ class ProductIdToVoucherRule extends BaseRule
         $voucherToken = VoucherToken::whereAddress($this->voucherAddress)->first();
 
         // optional check for human readable output
-        if (!$this->voucherAddress || !$voucherToken ||  (!$voucher = $voucherToken->voucher)) {
+        if (!$this->voucherAddress || !$voucherToken || (!$voucher = $voucherToken->voucher)) {
             return $this->rejectTrans('voucher_id_required');
         }
 

@@ -11,6 +11,6 @@ class DigestRequesterMail extends BaseDigestMail
      */
     public function build(): self
     {
-        return $this->view('emails.mail-digest')->subject('Nieuw aanbod in de webshop!');
+        return $this->view('emails.mail-digest')->subject(trans('digests/requester.subject'));
     }
 }

@@ -18,6 +18,7 @@ use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
+use App\Mail\Vouchers\RequestPhysicalCardMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
@@ -449,6 +450,28 @@ class NotificationService
     }
 
     /**
+     * Request a physical card
+     *
+     * @param string $email
+     * @param EmailFrom|null $emailFrom
+     * @param string $post_code
+     * @param string $house_number
+     * @return bool
+     */
+    public function requestPhysicalCard(
+        string $email,
+        ?EmailFrom $emailFrom,
+        string $post_code,
+        string $house_number
+    ): bool {
+        return $this->sendMail($email, new RequestPhysicalCardMail(
+            $post_code,
+            $house_number,
+            $emailFrom
+        ));
+    }
+
+    /**
      * Send restore identity link to address email
      *
      * @param string $email
@@ -497,17 +520,19 @@ class NotificationService
      * Send email confirmation link
      *
      * @param string $email
+     * @param string $clientType
      * @param EmailFrom|null $emailFrom
      * @param string $confirmationLink
      * @return bool
      */
     public function sendEmailConfirmationLink(
         string $email,
+        string $clientType,
         ?EmailFrom $emailFrom,
         string $confirmationLink
     ): bool {
         return $this->sendMail($email, new EmailActivationMail(
-            config('app.name'),
+            $clientType,
             $confirmationLink,
             $emailFrom
         ));
@@ -631,7 +656,7 @@ class NotificationService
             $notificationPreferencesLink = sprintf(
                 '%s/%s',
                 rtrim(Implementation::active()['url_sponsor'], '/'),
-                'email/preferences');
+                'preferences/notifications');
 
             /** @var Queueable|Mailable $message */
             $message = $mailable->with(compact(

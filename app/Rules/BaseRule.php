@@ -3,21 +3,33 @@
 
 namespace App\Rules;
 
-
 use Illuminate\Contracts\Validation\Rule;
 
+/**
+ * Class BaseRule
+ * @package App\Rules
+ */
 abstract class BaseRule implements Rule
 {
     protected $messageTransPrefix = "";
     protected $message = "";
 
-    public function rejectTrans($messageKey) {
+    /**
+     * @param $messageKey
+     * @param array $replace
+     * @return bool
+     */
+    public function rejectTrans($messageKey, $replace = []): bool {
         return $this->rejectWithMessage(
-            trans($this->messageTransPrefix . $messageKey)
+            trans($this->messageTransPrefix . $messageKey, $replace)
         );
     }
 
-    public function rejectWithMessage($message) {
+    /**
+     * @param $message
+     * @return bool
+     */
+    public function rejectWithMessage($message): bool {
         $this->message = $message;
 
         return false;
@@ -28,8 +40,7 @@ abstract class BaseRule implements Rule
      *
      * @return string
      */
-    public function message()
-    {
+    public function message(): string {
         return $this->message;
     }
 }

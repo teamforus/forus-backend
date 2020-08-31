@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreated;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
@@ -212,6 +213,21 @@ class FundsController extends Controller
         }
 
         return new FundResource($fund);
+    }
+
+    /**
+     * @param StoreFundCriteriaRequest $request
+     * @param Organization $organization
+     * @return mixed
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function storeCriteriaValidate(
+        StoreFundCriteriaRequest $request,
+        Organization $organization
+    ) {
+        $this->authorize('show', $organization);
+
+        return response()->json([], 200);
     }
 
     /**

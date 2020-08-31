@@ -165,6 +165,11 @@ return [
         'fund_not_active' => 'U mag deze voucher nog niet scannen! Het fonds is niet actief.',
         'not_enough_funds' => 'Onvoldoende tegoed op de voucher.',
     ],
+    'product_voucher' => [
+        'product_not_found' => 'Invalid product id.',
+        'product_sold_out' => 'Product sold out.',
+        'not_enough_stock' => 'Not enough stock available for product :product_name.',
+    ],
     'attributes' => [
         'pin_code' => 'pincode',
         'records' => 'Records',

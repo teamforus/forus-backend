@@ -3,12 +3,11 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Models\Fund;
-use App\Models\Product;
+use App\Rules\ProductIdInStockRule;
 use App\Rules\ValidPrevalidationCodeRule;
-use App\Scopes\Builders\ProductQuery;
+use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\Query\Builder;
 
 class StoreVoucherRequest extends FormRequest
 {
@@ -17,7 +16,7 @@ class StoreVoucherRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -27,47 +26,56 @@ class StoreVoucherRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $fund_id = $this->input('fund_id');
-        $fund = Fund::find($fund_id);
+        $validFunds = $this->validFundIds(auth_address());
+        $fund = Fund::query()->whereIn('id', $validFunds)->findOrFail($this->input('fund_id'));
 
-        $endDate = $fund ? $fund->end_date->format('Y-m-d') : 'today';
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
 
-        $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $fund_id);
-        $validProducts = $productsQuery->pluck('id')->toArray();
-
         return [
-            'fund_id'   => 'required|exists:funds,id',
+            'fund_id'   => [
+                'required',
+                Rule::exists('funds', 'id')->whereIn('id', $validFunds)
+            ],
             'email'     => 'nullable|email:strict,dns',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
                 'required_without_all:product_id', 'numeric',
                 'between:.1,' . $max
             ],
-            'expires_at' => [
-                'nullable', 'date_format:Y-m-d', 'after:' . $endDate
+            'expire_at' => [
+                'nullable',
+                'date_format:Y-m-d',
+                'after:' . $fund->start_date->format('Y-m-d'),
+                'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
             'activation_code' => [
                 'nullable', new ValidPrevalidationCodeRule($fund),
             ],
             'product_id' => [
-                'required_without_all:amount',
-                Rule::exists('products', 'id')->where(function(
-                    Builder $builder
-                ) use ($validProducts) {
-                    return $builder->whereIn('id', $validProducts);
-                }),
+                'required_without:vouchers.*.amount',
+                'exists:products,id',
+                new ProductIdInStockRule($fund)
             ],
         ];
     }
 
     /**
+     * @param $identity_address
      * @return array
      */
-    public function messages() {
+    private function validFundIds($identity_address): array {
+        return Fund::whereHas('organization', static function($builder) use ($identity_address) {
+            OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_vouchers');
+        })->pluck('funds.id')->toArray();
+    }
+
+    /**
+     * @return array
+     */
+    public function messages(): array {
         return [
             'amount.between' => 'Er staat niet genoeg budget op het fonds. '.
                 'Het maximale tegoed van een voucher is €:max. '.

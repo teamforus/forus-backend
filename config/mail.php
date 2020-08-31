@@ -14,7 +14,7 @@ return [
     | from Seeder Classes.
     */
 
-    'disable' => false,
+    'disable' => env('MAIL_DISABLE', false),
 
     /*
     |--------------------------------------------------------------------------

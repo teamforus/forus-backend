@@ -51,6 +51,9 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereVoucherId($value)
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanTo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentTime($value)
  */
 class VoucherTransaction extends Model
 {

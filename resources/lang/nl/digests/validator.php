@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'subject' => 'Update: Nieuwe aanvragen',
     'title' => implode('|', [
         "Update: :count_requests nieuwe aanvraag",
         "Update: :count_requests nieuwe aanvragen",

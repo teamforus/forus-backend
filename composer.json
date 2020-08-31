@@ -13,7 +13,7 @@
         "ext-zip": "*",
         "ext-fileinfo": "*",
         "astrotomic/laravel-translatable": "11.8.*",
-        "aws/aws-sdk-php": "3.133.44",
+        "aws/aws-sdk-php": "3.151.2",
         "barryvdh/laravel-dompdf": "^0.8.6",
         "barryvdh/laravel-ide-helper": "^2.7",
         "bunq/sdk_php": "^1.13.1",
@@ -41,6 +41,7 @@
         "whichbrowser/parser": "^2.0.42"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.3",
         "filp/whoops": "^2.7",
         "fzaninotto/faker": "^1.9",
         "mockery/mockery": "^1.3",

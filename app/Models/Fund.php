@@ -141,6 +141,8 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereType($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read int|null $digests_count
  */
 class Fund extends Model
 {
@@ -489,7 +491,7 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function employees_validators() {
+    public function employees_validators(): HasManyThrough {
         return $this->hasManyThrough(
             Employee::class,
             Organization::class,
@@ -569,9 +571,9 @@ class Fund extends Model
 
     /**
      * @param string $identity_address
-     * @param Fund $fund
      * @param string $record_type
-     * @param FundCriterion $criterion
+     * @param Fund $fund
+     * @param FundCriterion|null $criterion
      * @return mixed
      */
     public static function getTrustedRecordOfType(
@@ -627,7 +629,7 @@ class Fund extends Model
                 $fund, $identityAddress
             ) {
                 switch ($formula->type) {
-                    case 'fixed': return $formula->amount; break;
+                    case 'fixed': return $formula->amount;
                     case 'multiply': {
                         $record = self::getTrustedRecordOfType(
                             $identityAddress,
@@ -638,8 +640,8 @@ class Fund extends Model
                         return is_numeric(
                             $record['value']
                         ) ? $formula->amount * $record['value'] : 0;
-                    } break;
-                    default: return 0; break;
+                    }
+                    default: return 0;
                 }
             })->sum() + $fund->fund_formula_products->pluck('price')->sum();
     }
@@ -652,9 +654,11 @@ class Fund extends Model
     public static function search(
         Request $request,
         Builder $query
-    ) {
+    ): Builder {
         if (is_null($query)) {
-            $query = self::query()->newQuery();
+            /** @var Builder $newQuery */
+            $newQuery = self::query();
+            $query = $newQuery;
         }
 
         if ($request->has('tag')) {
@@ -853,7 +857,7 @@ class Fund extends Model
 
         foreach($funds as $fund) {
             $organization = $fund->organization;
-            $sponsorCount = $organization->employees->count() + 1;
+            $sponsorCount = $organization->employees->count();
 
             $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(), $fund->id
@@ -861,7 +865,7 @@ class Fund extends Model
 
             $providerCount = $providersQuery->get()->map(static function ($fundProvider){
                 /** @var FundProvider $fundProvider */
-                return $fundProvider->organization->employees->count() + 1;
+                return $fundProvider->organization->employees->count();
             })->sum();
 
             if ($fund->state === self::STATE_ACTIVE) {
@@ -1035,13 +1039,14 @@ class Fund extends Model
         Carbon $expire_at = null,
         string $note = null
     ): Voucher {
-        $amount = 0;
+        $amount = Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
+        $returnable = false;
 
         $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note', 'product_id',
-            'fund_id'
+            'identity_address', 'amount', 'expire_at', 'note',
+            'product_id','fund_id', 'returnable'
         ));
 
         VoucherCreated::dispatch($voucher, false);
@@ -1141,8 +1146,8 @@ class Fund extends Model
         /** @var FundCriterion|null $db_criteria */
         $data_criterion = array_only($criterion, $this->criteriaIsEditable() ? [
             'record_type_key', 'operator', 'value', 'show_attachment',
-            'description'
-        ] : ['show_attachment', 'description']);
+            'description', 'title'
+        ] : ['show_attachment', 'description', 'title']);
 
         if ($fundCriterion) {
             $fundCriterion->update($data_criterion);
