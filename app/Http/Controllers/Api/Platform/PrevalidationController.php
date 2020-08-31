@@ -154,7 +154,7 @@ class PrevalidationController extends Controller
         $this->incrementLoginAttempts($request);
 
         if (!$prevalidation || !$prevalidation->exists()) {
-            $this->responseWithThrottleMeta('not_found', $request, 404);
+            $this->responseWithThrottleMeta('not_found', $request, 'prevalidations', 404);
         }
 
         $this->authorize('redeem', $prevalidation);

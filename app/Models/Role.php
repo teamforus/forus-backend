@@ -36,6 +36,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereTranslationLike($translationField, $value, $locale = null)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role withTranslation()
  * @mixin \Eloquent
+ * @property-read \App\Models\RoleTranslation $translation
+ * @property-read int|null $translations_count
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role listsTranslations($translationField)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role notTranslatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role orWhereTranslation($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role orWhereTranslationLike($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role orderByTranslation($translationField, $sortMethod = 'asc')
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role translated()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role translatedIn($locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereTranslationLike($translationField, $value, $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role withTranslation()
  */
 class Role extends Model
 {

@@ -7,6 +7,7 @@ use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
 use App\Console\Commands\CheckVoucherExpirationCommand;
+use App\Console\Commands\ExportPhysicalCardsRequestsCommand;
 use App\Console\Commands\MediaCleanupCommand;
 use App\Console\Commands\MediaRegenerateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
@@ -66,6 +67,7 @@ class Kernel extends ConsoleKernel
 
         // voucher transaction details
         UpdateVoucherTransactionDetailsCommand::class,
+        ExportPhysicalCardsRequestsCommand::class,
     ];
 
     /**
