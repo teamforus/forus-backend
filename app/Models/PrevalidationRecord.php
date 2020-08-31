@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\Forus\Record\Models\RecordType;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Models\PrevalidationRecord
@@ -38,14 +39,14 @@ class PrevalidationRecord extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function prevalidation() {
+    public function prevalidation(): BelongsTo {
         return $this->belongsTo(Prevalidation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function record_type() {
+    public function record_type(): BelongsTo {
         return $this->belongsTo(RecordType::class);
     }
 }

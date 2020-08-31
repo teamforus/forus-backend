@@ -9,7 +9,7 @@ return [
      |
      | Debugbar is enabled by default, when debug is set to true in app.php.
      | You can override the value by setting enable to true or false instead of null.
-     | 
+     |
      | You can provide an array of URI's that must be ignored (eg. 'api/*')
      |
      */
@@ -67,7 +67,7 @@ return [
      */
 
     'capture_ajax' => true,
-    'add_ajax_timing' => true,
+    'add_ajax_timing' => false,
 
     /*
      |--------------------------------------------------------------------------
@@ -79,7 +79,7 @@ return [
      |
      */
     'error_handler' => false,
-    
+
     /*
      |--------------------------------------------------------------------------
      | Clockwork integration
@@ -89,7 +89,7 @@ return [
      | Extension, without the server-side code. It uses Debugbar collectors instead.
      |
      */
-    'clockwork' => true,
+    'clockwork' => false,
 
     /*
      |--------------------------------------------------------------------------
@@ -102,19 +102,19 @@ return [
 
     'collectors' => [
         'phpinfo'         => true,  // Php version
-        'messages'        => false,  // Messages
+        'messages'        => true,  // Messages
         'time'            => true,  // Time Datalogger
         'memory'          => true,  // Memory usage
         'exceptions'      => true,  // Exception displayer
         'log'             => true,  // Logs from Monolog (merged in messages if enabled)
         'db'              => true,  // Show database (PDO) queries and bindings
-        'views'           => false,  // Views with their data
-        'route'           => false,  // Current route information
+        'views'           => true,  // Views with their data
+        'route'           => true,  // Current route information
         'auth'            => false, // Display Laravel authentication status
-        'gate'            => false, // Display Laravel Gate checks
-        'session'         => false,  // Display session data
-        'symfony_request' => false,  // Only one can be enabled..
-        'mail'            => false,  // Catch mail messages
+        'gate'            => true,  // Display Laravel Gate checks
+        'session'         => true,  // Display session data
+        'symfony_request' => true,  // Only one can be enabled..
+        'mail'            => true,  // Catch mail messages
         'laravel'         => false, // Laravel version and environment
         'events'          => false, // All events fired
         'default_request' => false, // Regular or special Symfony request logger
@@ -122,6 +122,7 @@ return [
         'files'           => false, // Show the included files
         'config'          => false, // Display config settings
         'cache'           => false, // Display cache events
+        'models'          => true,  // Display models
     ],
 
     /*
@@ -143,7 +144,7 @@ return [
             'timeline'          => false,  // Add the queries to the timeline
             'explain' => [                 // Show EXPLAIN output on queries
                 'enabled' => false,
-                'types' => ['SELECT'],     // ['SELECT', 'INSERT', 'UPDATE', 'DELETE']; for MySQL 5.6.3+
+                'types' => ['SELECT'],     // // workaround ['SELECT'] only. https://github.com/barryvdh/laravel-debugbar/issues/888 ['SELECT', 'INSERT', 'UPDATE', 'DELETE']; for MySQL 5.6.3+
             ],
             'hints'             => true,    // Show hints for common mistakes
         ],

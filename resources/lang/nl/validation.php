@@ -192,6 +192,7 @@ return [
         'state' => 'status',
         'start_date' => 'startdatum',
         'end_date' => 'einddatum',
+        'value' => "waarde",
     ],
     'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
 ];

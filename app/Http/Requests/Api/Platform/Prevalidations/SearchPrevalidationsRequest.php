@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Prevalidations;
 
 use App\Models\Organization;
+use App\Models\Prevalidation;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SearchPrevalidationsRequest extends FormRequest
 {
@@ -12,7 +14,7 @@ class SearchPrevalidationsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,7 +24,7 @@ class SearchPrevalidationsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $fundsAvailable = Organization::queryByIdentityPermissions(
             auth()->id(),
@@ -34,6 +36,10 @@ class SearchPrevalidationsRequest extends FormRequest
             'fund_id' => 'in:' . $fundsAvailable->implode(','),
             'from' => 'date_format:Y-m-d',
             'to' => 'date_format:Y-m-d',
+            'state' => [
+                'nullable', Rule::in(Prevalidation::STATES)
+            ],
+            'per_page' => 'nullable|numeric|between:1,2500',
             'exported' => 'boolean'
         ];
     }

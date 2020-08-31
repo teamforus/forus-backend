@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Seeder;
 
+use App\Models\Role;
+
 class RoleTranslationTableSeeder extends Seeder
 {
     /**
@@ -11,9 +13,8 @@ class RoleTranslationTableSeeder extends Seeder
      */
     public function run()
     {
-        $roles = \App\Models\Role::get();
+        $roles = Role::get();
 
-        /** @var \App\Models\Role $role */
         foreach ($roles as $role) {
             $role->translations()->create([
                 'name'      => $this->getRoleNameByKey($role->key),
@@ -28,12 +29,13 @@ class RoleTranslationTableSeeder extends Seeder
      */
     public function getRoleNameByKey(string $key) {
         return [
-            'admin'             => 'Beheerder',
-            'finance'           => 'Financien',
-            'validation'        => 'Validator',
-            'policy_officer'    => 'Manager',
-            'operation_officer' => 'Kassa',
-            'implementation_manager' => 'Implementatie manager',
+            'admin'                         => 'Beheerder',
+            'finance'                       => 'Financien',
+            'validation'                    => 'Validator',
+            'policy_officer'                => 'Manager',
+            'operation_officer'             => 'Kassa',
+            'implementation_manager'        => 'Implementatie manager',
+            'implementation_cms_manager'    => 'Implementatie CMS manager',
         ][$key];
     }
 }

@@ -423,7 +423,9 @@ class IdentityFallbackController extends Controller
                 http_build_query(compact('token'))
             );
 
-            return view('pages.auth.deep_link', compact('redirectUrl'));
+            return view('pages.auth.deep_link', array_merge([
+                'type' => 'email_confirmation'
+            ], compact('redirectUrl', 'exchangeToken')));
         }
 
         return abort(404);

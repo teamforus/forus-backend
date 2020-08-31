@@ -160,6 +160,17 @@ $router->group([
     ]);
 
     $router->resource(
+        'organizations.external-funds',
+        "Api\Platform\Organizations\ExternalFundsController", [
+        'only' => [
+            'index', 'update'
+        ],
+        'parameters' => [
+            'external-funds' => 'fund'
+        ]
+    ]);
+
+    $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
         'only' => [
@@ -211,6 +222,11 @@ $router->group(['middleware' => [
     $router->patch(
         'organizations/{organization}/update-business',
         "Api\Platform\OrganizationsController@updateBusinessType"
+    );
+
+    $router->patch(
+        'organizations/{organization}/roles',
+        "Api\Platform\OrganizationsController@updateRoles"
     );
 
     $router->resource(
@@ -342,6 +358,10 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/funds/criteria/validate',
+        "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
+
     $router->get(
         'organizations/{organization}/funds/{fund}/finances',
         "Api\Platform\Organizations\FundsController@finances");
@@ -349,6 +369,15 @@ $router->group(['middleware' => [
     $router->post(
         'organizations/{organization}/funds/{fund}/top-up',
         "Api\Platform\Organizations\FundsController@topUp");
+
+    $router->patch(
+        'organizations/{organization}/funds/{fund}/criteria/validate',
+        "Api\Platform\Organizations\FundsController@updateCriteriaValidate");
+
+    $router->patch(
+        'organizations/{organization}/funds/{fund}/criteria',
+        "Api\Platform\Organizations\FundsController@updateCriteria");
+
 
     $router->resource(
         'organizations.funds',
@@ -370,22 +399,41 @@ $router->group(['middleware' => [
     ]);
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
-        $router->resource(
-            'organizations/{organization}/funds/{fund}/requests',
-            "Api\Platform\Organizations\Funds\FundRequestsController", [
-            'only' => [
-                'index', 'show', 'update'
-            ],
-            'parameters' => [
-                'requests' => 'fund_request',
-            ]
-        ]);
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/assign',
+            "Api\Platform\Organizations\FundRequestsController@assign"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/resign',
+            "Api\Platform\Organizations\FundRequestsController@resign"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/approve',
+            "Api\Platform\Organizations\FundRequestsController@approve"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/decline',
+            "Api\Platform\Organizations\FundRequestsController@decline"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/approve',
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@approve"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/decline',
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@decline"
+        );
 
         $router->resource(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/records',
-            "Api\Platform\Organizations\Funds\Requests\FundRequestRecordsController", [
+            'organizations/{organization}/fund-requests/{fund_request}/records',
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController", [
             'only' => [
-                'index', 'show', 'update'
+                'index', 'show',
             ],
             'parameters' => [
                 'records' => 'fund_request_record',
@@ -393,8 +441,8 @@ $router->group(['middleware' => [
         ]);
 
         $router->resource(
-            'organizations/{organization}/funds/{fund}/requests/{fund_request}/clarifications',
-            "Api\Platform\Organizations\Funds\Requests\FundRequestClarificationsController", [
+            'organizations/{organization}/fund-requests/{fund_request}/clarifications',
+            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController", [
             'only' => [
                 'index', 'show', 'store'
             ],
@@ -404,15 +452,15 @@ $router->group(['middleware' => [
         ]);
 
         $router->get(
-            'organizations/{organization}/requests/export',
+            'organizations/{organization}/fund-requests/export',
             "Api\Platform\Organizations\FundRequestsController@export"
         );
 
         $router->resource(
-            'organizations/{organization}/requests',
+            'organizations/{organization}/fund-requests',
             "Api\Platform\Organizations\FundRequestsController", [
             'only' => [
-                'index', 'show'
+                'index', 'show',
             ],
             'parameters' => [
                 'requests' => 'fund_request',
@@ -536,6 +584,17 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
+        'organizations.validators',
+        "Api\Platform\Organizations\ValidatorOrganizationsController", [
+        'only' => [
+            'index', 'show', 'store', 'destroy'
+        ],
+        'parameters' => [
+            'validators' => 'validator_organization'
+        ]
+    ]);
+
+    $router->resource(
         'organizations.employees',
         "Api\Platform\Organizations\EmployeesController", [
         'only' => [
@@ -647,6 +706,11 @@ $router->group(['middleware' => [
     $router->post(
         'prevalidations/collection',
         'Api\Platform\PrevalidationController@storeCollection'
+    );
+
+    $router->post(
+        'prevalidations/collection/hash',
+        'Api\Platform\PrevalidationController@collectionHash'
     );
 
     $router->resource(

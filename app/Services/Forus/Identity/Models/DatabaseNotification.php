@@ -12,6 +12,7 @@ use Illuminate\Notifications\DatabaseNotification as DatabaseNotificationModel;
  * @property string $notifiable_type
  * @property int $notifiable_id
  * @property array $data
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $notifiable
  * @property \Illuminate\Support\Carbon|null $read_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -27,6 +28,9 @@ use Illuminate\Notifications\DatabaseNotification as DatabaseNotificationModel;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\DatabaseNotification whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\DatabaseNotification whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $notifiable
+ * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] all($columns = ['*'])
+ * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] get($columns = ['*'])
  */
 class DatabaseNotification extends DatabaseNotificationModel
 {}
