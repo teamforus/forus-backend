@@ -404,12 +404,21 @@ class FundProvider extends Model
      * @param array $products
      * @return $this
      */
-    public function approveProducts(array $products)
+    public function approveProducts(array $products): self
     {
-        $oldProducts = $this->products()->pluck('products.id')->toArray();
-        $newProducts = array_diff($products, $oldProducts);
+        $productIds = array_pluck($products, 'id');
+        $isTypeSubsidy = $this->fund->isTypeSubsidy();
 
-        $this->products()->attach($products);
+        $oldProducts = $this->products()->pluck('products.id')->toArray();
+        $newProducts = array_diff($productIds, $oldProducts);
+
+        foreach ($products as $product) {
+            $this->fund_provider_products()->firstOrCreate([
+                'product_id' => $product['id'],
+            ])->update($isTypeSubsidy ? array_only($product, [
+                'limit_total', 'limit_per_identity', 'amount'
+            ]) : []);
+        }
 
         $newProducts = Product::whereIn('products.id', $newProducts)->get();
         $newProducts->each(function(Product $product) {
@@ -423,12 +432,16 @@ class FundProvider extends Model
      * @param array $products
      * @return $this
      */
-    public function declineProducts(array $products)
+    public function declineProducts(array $products): self
     {
         $oldProducts = $this->products()->pluck('products.id')->toArray();
         $detachedProducts = array_intersect($oldProducts, $products);
 
-        $this->products()->detach($products);
+        $this->fund_provider_products()->whereHas('product', static function(
+            Builder $builder
+        ) use ($products) {
+            $builder->whereIn('products.id', $products);
+        })->delete();
 
         $detachedProducts = Product::whereIn('products.id', $detachedProducts)->get();
         $detachedProducts->each(function(Product $product) {
@@ -438,7 +451,7 @@ class FundProvider extends Model
         FundProviderChatQuery::whereProductFilter(
             $this->fund_provider_chats()->getQuery(),
             $products
-        )->get()->each(function(FundProviderChat $chat) {
+        )->get()->each(static function(FundProviderChat $chat) {
             $chat->addSystemMessage('Aanbieding afgewezen.', auth_address());
         });
 

@@ -27,7 +27,7 @@ class VoucherTransactionPolicy
      */
     public function viewAny(
         string $identity_address
-    ) {
+    ): bool {
         return !empty($identity_address);
     }
 
@@ -39,7 +39,7 @@ class VoucherTransactionPolicy
     public function viewAnySponsor(
         string $identity_address,
         Organization $organization = null
-    ) {
+    ): bool {
         if ($organization) {
             return $organization->identityCan(
                 $identity_address, 'view_finances'
@@ -57,7 +57,7 @@ class VoucherTransactionPolicy
     public function viewAnyProvider(
         string $identity_address,
         Organization $organization = null
-    ) {
+    ): bool {
         if ($organization) {
             return $organization->identityCan(
                 $identity_address, 'view_finances'
@@ -77,10 +77,10 @@ class VoucherTransactionPolicy
         string $identity_address,
         Fund $fund,
         Organization $organization
-    ) {
+    ): bool {
         // identity_address not required
         return isset($identity_address) && $fund->public && (
-            $fund->organization_id == $organization->id);
+            $fund->organization_id === $organization->id);
     }
 
     /**
@@ -91,10 +91,10 @@ class VoucherTransactionPolicy
     public function show(
         string $identity_address,
         VoucherTransaction $transaction
-    ) {
+    ): bool {
         return !empty($identity_address) && ((strcmp(
             $transaction->voucher->identity_address, $identity_address
-        ) == 0) || $transaction->voucher->fund->public);
+        ) === 0) || $transaction->voucher->fund->public);
     }
 
     /**
@@ -109,13 +109,13 @@ class VoucherTransactionPolicy
         VoucherTransaction $transaction,
         Organization $organization = null,
         Fund $fund = null
-    ) {
+    ): bool {
         if ($organization) {
-            if ($transaction->voucher->fund->organization_id != $organization->id) {
+            if ($transaction->voucher->fund->organization_id !== $organization->id) {
                 return false;
             }
 
-            if ($fund && ($transaction->voucher->fund_id != $fund->id)) {
+            if ($fund && ($transaction->voucher->fund_id !== $fund->id)) {
                 return false;
             }
         }
@@ -135,11 +135,9 @@ class VoucherTransactionPolicy
         string $identity_address,
         VoucherTransaction $transaction,
         Organization $organization = null
-    ) {
-        if ($organization) {
-            if ($transaction->organization_id != $organization->id) {
-                return false;
-            }
+    ): bool {
+        if ($organization && ($transaction->organization_id !== $organization->id)) {
+            return false;
         }
 
         return $transaction->provider->identityCan(
@@ -159,10 +157,10 @@ class VoucherTransactionPolicy
         VoucherTransaction $transaction,
         Fund $fund,
         Organization $organization
-    ) {
+    ): bool {
         // identity_address not required
         return isset($identity_address) && $fund->public && (
-            $fund->organization_id == $organization->id) && (
-                $transaction->voucher->fund_id == $fund->id);
+            $fund->organization_id === $organization->id) && (
+                $transaction->voucher->fund_id === $fund->id);
     }
 }

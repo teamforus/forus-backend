@@ -39,6 +39,10 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property string|null $uid_hash
+ * @property string|null $records_hash
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRecordsHash($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUidHash($value)
  */
 class Prevalidation extends Model
 {

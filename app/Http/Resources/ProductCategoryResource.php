@@ -22,7 +22,7 @@ class ProductCategoryResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         return $this->resource->only([
             'id', 'key', 'name', 'service', 'parent_id',

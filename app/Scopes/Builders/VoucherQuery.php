@@ -20,11 +20,11 @@ class VoucherQuery
         string $identity_address,
         $fund_id,
         $organization_id = null
-    ) {
-        return $builder->whereHas('product', function(Builder $builder) use (
+    ): Builder {
+        return $builder->whereHas('product', static function(Builder $builder) use (
             $fund_id, $identity_address, $organization_id
         ) {
-            $builder->whereHas('organization', function(Builder $builder) use (
+            $builder->whereHas('organization', static function(Builder $builder) use (
                 $fund_id, $identity_address, $organization_id
             ) {
                 if ($organization_id) {
@@ -35,7 +35,7 @@ class VoucherQuery
                     $builder, $identity_address, 'scan_vouchers'
                 );
 
-                $builder->whereHas('fund_providers', function(
+                $builder->whereHas('fund_providers', static function(
                     Builder $builder
                 ) use ($fund_id) {
                     FundProviderQuery::whereApprovedForFundsFilter(

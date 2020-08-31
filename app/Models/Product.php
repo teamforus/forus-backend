@@ -8,6 +8,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ use Illuminate\Http\Request;
  * @property int $product_category_id
  * @property string $name
  * @property string $description
+ * @property string $description_html
  * @property float $price
  * @property float|null $old_price
  * @property int $total_amount
@@ -163,7 +165,14 @@ class Product extends Model
         return $this->belongsToMany(
             FundProvider::class,
             'fund_provider_products'
-        );
+        )->whereNull('fund_provider_products.deleted_at');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_products(): HasMany {
+        return $this->hasMany(FundProviderProduct::class);
     }
 
     /**
@@ -256,9 +265,9 @@ class Product extends Model
     /**
      * @return Builder
      */
-    public static function searchQuery() {
-        $query = Product::query();
-        $activeFunds = Implementation::activeFunds()->pluck('id')->toArray();
+    public static function searchQuery(): Builder {
+        $query = self::query();
+        $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
 
         // only in stock and not expired
         $query = ProductQuery::inStockAndActiveFilter($query);
@@ -273,8 +282,17 @@ class Product extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function search(Request $request) {
+    public static function search(Request $request): Builder {
         $query = self::searchQuery()->orderBy('created_at', 'desc');
+
+        // filter by fund_type
+        if ($fund_type = $request->input('fund_type')) {
+            /** @var Builder $funds */
+            $funds = Implementation::activeFundsQuery()->where('type', '=', $fund_type);
+            $query = ProductQuery::approvedForFundsAndActiveFilter(
+                $query, $funds->pluck('id')->toArray()
+            );
+        }
 
         // filter by product_category_id
         if ($category_id = $request->input('product_category_id')) {
@@ -334,5 +352,12 @@ class Product extends Model
             $this->name,
             Implementation::active()['url_provider']
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescriptionHtmlAttribute(): string {
+        return resolve('markdown')->convertToHtml($this->description);
     }
 }

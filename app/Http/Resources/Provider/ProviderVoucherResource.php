@@ -21,21 +21,12 @@ use Illuminate\Http\Resources\Json\Resource;
 class ProviderVoucherResource extends Resource
 {
     /**
-     * ProviderVoucherResource constructor.
-     * @param VoucherToken|Voucher $resource
-     */
-    public function __construct($resource)
-    {
-        parent::__construct($resource);
-    }
-
-    /**
      * Transform the resource into an array.
      *
-     * @param Request $request
+     * @param Request|any $request
      * @return array|mixed|void|null
      */
-    public function toArray($request)
+    public function toArray($request): ?array
     {
         if ($this->resource instanceof VoucherToken) {
             $voucherToken = $this->resource;
@@ -64,14 +55,14 @@ class ProviderVoucherResource extends Resource
         $request,
         string $identityAddress,
         VoucherToken $voucherToken
-    ) {
+    ): array {
         $voucher = $voucherToken->voucher;
 
         $allowedOrganizations = OrganizationQuery::whereHasPermissionToScanVoucher(
-            Organization::query(),
-            $identityAddress,
-            $voucher
-        )->select('id', 'name')->get()->map(function($organization) {
+            Organization::query(), $identityAddress, $voucher
+        )->select([
+            'id', 'name'
+        ])->get()->map(static function($organization) {
             return collect($organization)->merge([
                 'logo' => new MediaCompactResource($organization->logo)
             ]);
@@ -95,7 +86,9 @@ class ProviderVoucherResource extends Resource
         ])->merge([
             'address' => $voucherToken->address,
             'type' => 'regular',
-            'amount' => currency_format($voucher->amount_available),
+            'amount' => currency_format(
+                $voucher->fund->type === $voucher->fund::TYPE_BUDGET ? $voucher->amount_available : 0
+            ),
             'fund' => $fundData,
             'allowed_organizations' => $allowedOrganizations,
         ])->merge(env('DISABLE_DEPRECATED_API') ? [] : [
@@ -116,7 +109,7 @@ class ProviderVoucherResource extends Resource
      */
     private function productVoucher(
         VoucherToken $voucherToken
-    ) {
+    ): array {
         $voucher = $voucherToken->voucher;
 
         return collect($voucher)->only([

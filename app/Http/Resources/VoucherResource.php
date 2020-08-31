@@ -81,7 +81,7 @@ class VoucherResource extends Resource
         }
 
         $fundResource = collect($fund)->only([
-            'id', 'name', 'state'
+            'id', 'name', 'state', 'type',
         ])->merge([
             'url_webshop' => $urlWebShop,
             'logo' => new MediaCompactResource($fund->logo),
@@ -94,9 +94,7 @@ class VoucherResource extends Resource
             ),
         ]);
 
-        $transactions = VoucherTransactionResource::collection(
-            $voucher->transactions
-        );
+        $transactions = VoucherTransactionResource::collection($voucher->transactions);
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'returnable'

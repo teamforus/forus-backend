@@ -32,6 +32,8 @@ namespace App\Models;
  * @property-read int|null $fund_criterion_validators_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $external_validator_organizations
  * @property-read int|null $external_validator_organizations_count
+ * @property string|null $title
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereTitle($value)
  */
 class FundCriterion extends Model
 {

@@ -393,6 +393,14 @@ class Implementation extends Model
             $implementation = self::active();
             $implementationModel = self::activeModel();
 
+            $config['has_budget_funds'] = self::activeFundsQuery()->where([
+                'type' => Fund::TYPE_BUDGET
+            ])->exists();
+
+            $config['has_subsidy_funds'] = self::activeFundsQuery()->where([
+                'type' => Fund::TYPE_SUBSIDIES
+            ])->exists();
+
             $config['digid'] = $implementationModel ?
                 $implementationModel->digidEnabled() : false;
 

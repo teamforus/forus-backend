@@ -64,13 +64,16 @@ class Office extends Model
         'schedules'
     ];
 
-    public static function search(Request $request)
+    public static function search(Request $request): Builder
     {
+        /** @var Builder $query */
         $query = self::query();
 
         // approved only
         if ($request->input('approved', false)) {
-            $query->whereHas('organization.fund_providers', function(Builder $builder) {
+            $query->whereHas('organization.fund_providers', static function(
+                Builder $builder
+            ) {
                 return FundProviderQuery::whereApprovedForFundsFilter(
                     $builder,
                     Implementation::activeFundsQuery()->pluck('id')->toArray()

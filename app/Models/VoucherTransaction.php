@@ -14,18 +14,18 @@ use Illuminate\Http\Request;
  * @property int $voucher_id
  * @property int $organization_id
  * @property int|null $product_id
+ * @property int|null $fund_provider_product_id
  * @property float $amount
+ * @property string|null $iban_from
+ * @property string|null $iban_to
+ * @property string|null $payment_time
  * @property string $address
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $payment_id
  * @property int $attempts
  * @property string $state
- * @property string $iban_from
- * @property string $iban_to
- * @property Carbon $payment_time
  * @property string|null $last_attempt_at
- * @property-read mixed $transaction_details
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
  * @property-read \App\Models\Product|null $product
@@ -38,10 +38,14 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAttempts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereFundProviderProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanTo($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereLastAttemptAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereUpdatedAt($value)
@@ -56,8 +60,8 @@ class VoucherTransaction extends Model
      * @var array
      */
     protected $fillable = [
-        'voucher_id', 'organization_id', 'product_id', 'address',
-        'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
+        'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
+        'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'payment_time'
     ];
 

@@ -41,6 +41,7 @@ use Illuminate\Http\Request;
  * @property string $name
  * @property string|null $description
  * @property string $state
+ * @property string $type
  * @property bool $public
  * @property bool $criteria_editable_after_start
  * @property float|null $notification_amount
@@ -138,6 +139,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereType($value)
  * @mixin \Eloquent
  */
 class Fund extends Model
@@ -172,6 +174,14 @@ class Fund extends Model
         self::STATE_WAITING,
     ];
 
+    public const TYPE_BUDGET = 'budget';
+    public const TYPE_SUBSIDIES = 'subsidies';
+
+    public const TYPES = [
+        self::TYPE_BUDGET,
+        self::TYPE_SUBSIDIES,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -181,7 +191,7 @@ class Fund extends Model
         'organization_id', 'state', 'name', 'description', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
-        'criteria_editable_after_start'
+        'criteria_editable_after_start', 'type',
     ];
 
     protected $hidden = [
@@ -1342,5 +1352,19 @@ class Fund extends Model
     public function getEmailFrom(): EmailFrom {
         return $this->fund_config->implementation->getEmailFrom() ??
             EmailFrom::createDefault();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeSubsidy(): bool {
+        return $this->type === $this::TYPE_SUBSIDIES;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeBudget(): bool {
+        return $this->type === $this::TYPE_BUDGET;
     }
 }

@@ -80,7 +80,9 @@ class OrganizationQuery
                 );
             } else {
                 FundProviderQuery::whereApprovedForFundsFilter(
-                    $builder, $voucher->fund_id, 'budget'
+                    $builder,
+                    $voucher->fund_id,
+                    $voucher->fund->isTypeBudget() ? 'budget' : 'subsidy'
                 );
             }
         });

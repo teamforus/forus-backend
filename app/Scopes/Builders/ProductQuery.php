@@ -10,7 +10,7 @@ class ProductQuery
 {
     /**
      * @param Builder $query
-     * @param $fund_id
+     * @param int|array $fund_id
      * @return Builder
      */
     public static function approvedForFundsFilter(Builder $query, $fund_id): Builder

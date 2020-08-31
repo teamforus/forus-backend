@@ -206,7 +206,7 @@ $router->group([
 
 $router->group(['middleware' => [
     'throttle:3'
-]], function() use ($router) {
+]], static function() use ($router) {
     $router->post(
         '/sms/send',
         'Api\Platform\SmsController@send'
@@ -218,7 +218,7 @@ $router->group(['middleware' => [
  */
 $router->group(['middleware' => [
     'api.auth',
-]], function() use ($router) {
+]], static function() use ($router) {
     $router->patch(
         'organizations/{organization}/update-business',
         "Api\Platform\OrganizationsController@updateBusinessType"
@@ -269,7 +269,7 @@ $router->group(['middleware' => [
         );
     }
 
-    $router->group(['prefix' => '/provider'], function() use ($router) {
+    $router->group(['prefix' => '/provider'], static function() use ($router) {
         $router->resource(
             'vouchers',
             "Api\Platform\Provider\VouchersController", [
@@ -292,6 +292,30 @@ $router->group(['middleware' => [
                 'product-vouchers' => 'product_voucher_token_address',
             ]
         ]);
+
+        $router->resource(
+            'vouchers.products',
+            "Api\Platform\Provider\Vouchers\ProductsController", [
+            'only' => [
+                'index', 'show'
+            ],
+            'parameters' => [
+                'vouchers' => 'budget_voucher_token_address',
+                'products' => 'products',
+            ]
+        ]);
+
+        $router->resource(
+            'vouchers.transactions',
+            "Api\Platform\Vouchers\TransactionsController", [
+            'only' => [
+                'store'
+            ],
+            'parameters' => [
+                'vouchers' => 'voucher_token_address',
+                'transactions' => 'transaction_address',
+            ]
+        ]);
     });
 
     $router->post(
@@ -304,6 +328,7 @@ $router->group(['middleware' => [
         "Api\Platform\VouchersController@shareVoucher"
     );
 
+    // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     $router->resource(
         'vouchers.transactions',
         "Api\Platform\Vouchers\TransactionsController", [
@@ -515,6 +540,17 @@ $router->group(['middleware' => [
         'parameters' => [
             'providers' => 'fund_provider',
             'chats' => 'fund_provider_chats',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.providers.products',
+        "Api\Platform\Organizations\Funds\FundProviders\ProductsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'providers' => 'fund_provider',
         ]
     ]);
 

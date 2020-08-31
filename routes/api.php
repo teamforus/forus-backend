@@ -17,13 +17,13 @@ $router = resolve('router');
 /**
  * No authorization required
  */
-$router->group([], function() use ($router) {
-    $router->group(['prefix' => '/identity'], function() use ($router) {
+Route::group([], static function() use ($router) {
+    $router->group(['prefix' => '/identity'], static function() use ($router) {
         if (env('DISABLE_DEPRECATED_API', false)) {
             $router->post('/', 'Api\IdentityController@store');
             $router->post('/validate/email', 'Api\IdentityController@storeValidateEmail');
 
-            $router->group(['prefix' => '/proxy'], function() use ($router) {
+            $router->group(['prefix' => '/proxy'], static function() use ($router) {
                 $router->post('/code', 'Api\IdentityController@proxyAuthorizationCode');
                 $router->post('/token', 'Api\IdentityController@proxyAuthorizationToken');
                 $router->post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
@@ -47,7 +47,7 @@ $router->group([], function() use ($router) {
             $router->post('/', 'Api\IdentityFallbackController@store');
             $router->post('/validate/email', 'Api\IdentityFallbackController@storeValidateEmail');
 
-            $router->group(['prefix' => '/proxy'], function() use ($router) {
+            $router->group(['prefix' => '/proxy'], static function() use ($router) {
                 $router->post('/code', 'Api\IdentityFallbackController@proxyAuthorizationCode');
                 $router->post('/token', 'Api\IdentityFallbackController@proxyAuthorizationToken');
                 $router->post('/email', 'Api\IdentityFallbackController@proxyAuthorizationEmailToken');
@@ -81,7 +81,7 @@ $router->group([], function() use ($router) {
         /**
          * Record types
          */
-        $router->group(['prefix' => '/record-types'], function() use ($router) {
+        $router->group(['prefix' => '/record-types'], static function() use ($router) {
             $router->get('/', 'Api\Identity\RecordTypeController@index');
         });
 
@@ -108,8 +108,8 @@ $router->group([], function() use ($router) {
 /**
  * Authorization required
  */
-$router->group(['middleware' => ['api.auth']], function() use ($router) {
-    $router->group(['prefix' => '/identity'], function() use ($router) {
+Route::group(['middleware' => ['api.auth']], static function() use ($router) {
+    $router->group(['prefix' => '/identity'], static function() use ($router) {
         $router->get('/', 'Api\IdentityController@getPublic');
         $router->resource('emails', 'Api\Identity\IdentityEmailsController', [
             'only' => ['index', 'show', 'store', 'destroy'],
@@ -124,10 +124,10 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             /**
              * Identity proxies
              */
-            $router->group(['prefix' => '/proxy'], function() use ($router) {
+            $router->group(['prefix' => '/proxy'], static function() use ($router) {
                 $router->delete('/', 'Api\IdentityController@proxyDestroy');
 
-                $router->group(['prefix' => '/authorize'], function() use ($router) {
+                $router->group(['prefix' => '/authorize'], static function() use ($router) {
                     $router->post('/code', 'Api\IdentityController@proxyAuthorizeCode');
                     $router->post('/token', 'Api\IdentityController@proxyAuthorizeToken');
                 });
@@ -141,10 +141,10 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
             /**
              * Identity proxies
              */
-            $router->group(['prefix' => '/proxy'], function() use ($router) {
+            $router->group(['prefix' => '/proxy'], static function() use ($router) {
                 $router->delete('/', 'Api\IdentityFallbackController@proxyDestroy');
 
-                $router->group(['prefix' => '/authorize'], function() use ($router) {
+                $router->group(['prefix' => '/authorize'], static function() use ($router) {
                     $router->post('/code', 'Api\IdentityFallbackController@proxyAuthorizeCode');
                     $router->post('/token', 'Api\IdentityFallbackController@proxyAuthorizeToken');
                 });
@@ -154,7 +154,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         /**
          * Record categories
          */
-        $router->group(['prefix' => '/record-categories'], function() use ($router) {
+        $router->group(['prefix' => '/record-categories'], static function() use ($router) {
             $router->get('/', 'Api\Identity\RecordCategoryController@index');
             $router->post('/', 'Api\Identity\RecordCategoryController@store');
             $router->patch('/sort', 'Api\Identity\RecordCategoryController@sort');
@@ -166,7 +166,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         /**
          * Record
          */
-        $router->group(['prefix' => '/records'], function() use ($router) {
+        $router->group(['prefix' => '/records'], static function() use ($router) {
             $router->get('/', 'Api\Identity\RecordController@index');
             $router->post('/', 'Api\Identity\RecordController@store');
             $router->post('/validate', 'Api\Identity\RecordController@storeValidate');
@@ -181,7 +181,7 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
         /**
          * Record validations
          */
-        $router->group(['prefix' => '/record-validations'], function() use ($router) {
+        $router->group(['prefix' => '/record-validations'], static function() use ($router) {
             $router->post('/', 'Api\Identity\RecordValidationController@store');
             $router->get('/{recordUuid}', 'Api\Identity\RecordValidationController@show');
             $router->patch('/{recordUuid}/approve', 'Api\Identity\RecordValidationController@approve');
@@ -225,13 +225,13 @@ $router->group(['middleware' => ['api.auth']], function() use ($router) {
     }
 });
 
-$router->get('/status', 'Api\StatusController@getStatus');
+Route::get('/status', 'Api\StatusController@getStatus');
 
-if (env('APP_DEBUG', false) == true && env('APP_ENV') == 'dev') {
-    $router->group(['middleware' => ['api.auth']], function() use ($router) {
+if (env('APP_DEBUG', false) === true && env('APP_ENV') === 'dev') {
+    Route::group(['middleware' => ['api.auth']], static function() use ($router) {
         $router->get('/debug', 'TestController@test');
     });
 
-    $router->get('/debug/{implementation}/{frontend}/proxy', 'TestController@proxy');
-    $router->get('/debug/{implementation}/{frontend}/assets/{all}', 'TestController@asset')->where(['all' => '.*']);
+    Route::get('/debug/{implementation}/{frontend}/proxy', 'TestController@proxy');
+    Route::get('/debug/{implementation}/{frontend}/assets/{all}', 'TestController@asset')->where(['all' => '.*']);
 }

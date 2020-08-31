@@ -39,12 +39,16 @@ class LoremDbSeeder extends Seeder
     private $countValidators;
 
     private $implementations = [
-        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Berkelland',
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
     ];
 
     private $implementationsWithFunds = [
-        'Zuidhorn', 'Nijmegen', 'Westerkwartier',
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas',
+    ];
+
+    private $subsidyFunds = [
+        'Stadjerspas',
     ];
 
     private $fundsWithCriteriaEditableAfterLaunch = [
@@ -206,8 +210,8 @@ class LoremDbSeeder extends Seeder
                 /** @var FundProvider $provider */
                 $provider = $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'allow_budget'      => (bool) random_int(0, 2),
-                    'allow_products'    => (bool) random_int(0, 2)
+                    'allow_budget'      => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
+                    'allow_products'    => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
                 ]);
 
                 FundProviderApplied::dispatch($provider);
@@ -224,8 +228,8 @@ class LoremDbSeeder extends Seeder
             if ($fund->provider_organizations_approved()->count() === 0) {
                 $provider = $fund->providers()->create([
                     'organization_id'   => $providers->random(),
-                    'allow_products'    => true,
-                    'allow_budget'      => true,
+                    'allow_products'    => $fund->isTypeBudget(),
+                    'allow_budget'      => $fund->isTypeBudget(),
                 ]);
 
                 FundProviderApplied::dispatch($provider);
@@ -321,7 +325,7 @@ class LoremDbSeeder extends Seeder
                 'need_confirmation' => false,
             ]);
 
-            while ($voucher->amount_available > ($voucher->amount / 2)) {
+            while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 2)) {
                 $transaction = $voucher->transactions()->create([
                     'amount' => random_int(
                         (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_min'),
@@ -487,7 +491,11 @@ class LoremDbSeeder extends Seeder
             'start_date'                    => Carbon::now()->format('Y-m-d'),
             'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
             'state'                         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
-            'notification_amount'           => 10000
+            'notification_amount'           => 10000,
+            'type'                          => in_array(
+                $fundName,
+                $this->subsidyFunds
+            ) ? Fund::TYPE_SUBSIDIES : Fund::TYPE_BUDGET,
         ], $fields));
 
         $transaction = $fund->top_up_model->transactions()->create([
@@ -606,11 +614,10 @@ class LoremDbSeeder extends Seeder
         }
 
         $fund->criteria()->createMany($criteria);
-
-        $fund->fund_formulas()->create([
-            'type'      => 'fixed',
-            'amount'    => config('forus.seeders.lorem_db_seeder.voucher_amount')
-        ]);
+        $fund->isTypeBudget() ? $fund->fund_formulas()->create([
+            'type' => 'fixed',
+            'amount' => config('forus.seeders.lorem_db_seeder.voucher_amount'),
+        ]) : null;
     }
 
     /**

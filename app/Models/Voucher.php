@@ -559,4 +559,19 @@ class Voucher extends Model
 
         return $zipFile;
     }
+
+    /**
+     * @param string $address
+     * @param string|null $identity_address
+     * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model
+     */
+    public static function findByAddress(string $address, ?string $identity_address = null) {
+        return self::whereHas(static function(Builder $builder) use ($address) {
+            $builder->where('address', $address);
+        })->where(static function(Builder $builder) use ($identity_address) {
+            if ($identity_address) {
+                $builder->where($identity_address, '=', $identity_address);
+            }
+        })->firstOrFail();
+    }
 }

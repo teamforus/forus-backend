@@ -2,8 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform;
 
+use App\Models\Fund;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Class SearchProductsRequest
+ * @package App\Http\Requests\Api\Platform
+ */
 class SearchProductsRequest extends FormRequest
 {
     /**
@@ -11,7 +16,7 @@ class SearchProductsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,14 +26,15 @@ class SearchProductsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'q'                     => 'nullable|string|max:100',
             'unlimited_stock'       => 'nullable|boolean',
             'per_page'              => 'nullable|numeric|max:1000',
             'fund_id'               => 'nullable|exists:funds,id',
-            'product_category_id'   => 'nullable|exists:product_categories,id'
+            'product_category_id'   => 'nullable|exists:product_categories,id',
+            'fund_type'             => 'nullable|in:' . implode(',', Fund::TYPES),
         ];
     }
 }
