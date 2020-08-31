@@ -80,6 +80,7 @@ use Illuminate\Http\Request;
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
+ * @property-read float $budget_reserved
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read \App\Services\MediaService\Models\Media|null $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -259,6 +260,13 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function budget_vouchers(): HasMany {
+        return $this->hasMany(Voucher::class)->whereNull('parent_id');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function voucher_transactions(): HasManyThrough {
@@ -363,8 +371,8 @@ class Fund extends Model
     /**
      * @return float
      */
-    public function getBudgetUsedAttribute(): float {
-        return round($this->voucher_transactions->sum('amount'), 2);
+    public function getBudgetUsedAttribute() {
+        return round($this->voucher_transactions()->sum('voucher_transactions.amount'), 2);
     }
 
     /**
@@ -375,10 +383,10 @@ class Fund extends Model
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getFundId(): int {
-        return $this->id;
+    public function getBudgetReservedAttribute(): float {
+        return round($this->budget_vouchers()->sum('amount'), 2);
     }
 
     /**
