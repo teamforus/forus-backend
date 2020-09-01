@@ -47,9 +47,7 @@ class VouchersController extends Controller
         $this->authorize('store', Voucher::class);
 
         $product = Product::find($request->input('product_id'));
-        $voucher = Voucher::findByAddress(
-            $request->input('voucher_address'), auth_address()
-        )->firstOrFail();
+        $voucher = Voucher::findByAddress($request->input('voucher_address'), auth_address());
 
         $this->authorize('reserve', [$product, $voucher]);
 

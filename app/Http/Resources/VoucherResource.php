@@ -39,10 +39,10 @@ class VoucherResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         $voucher = $this->resource;
         $fund = $this->resource->fund;
@@ -56,11 +56,11 @@ class VoucherResource extends Resource
         } elseif ($voucher->type === 'product') {
             $amount = $voucher->amount;
             $offices = $voucher->product->organization->offices;
-            $productResource = collect($voucher->product)->only([
+            $productResource = array_merge($voucher->product->only([
                 'id', 'name', 'description', 'price', 'old_price',
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
-            ])->merge([
+            ]), [
                 'product_category' => $voucher->product->product_category,
                 'expire_at' => $voucher->product->expire_at->format('Y-m-d'),
                 'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
@@ -68,7 +68,7 @@ class VoucherResource extends Resource
                 'organization' => new OrganizationBasicWithPrivateResource(
                     $voucher->product->organization
                 ),
-            ])->toArray();
+            ]);
         } else {
             exit(abort("Unknown voucher type!", 403));
         }
@@ -80,9 +80,9 @@ class VoucherResource extends Resource
             $urlWebShop = $fund->fund_config->implementation->url_webshop;
         }
 
-        $fundResource = collect($fund)->only([
+        $fundResource = array_merge($fund->only([
             'id', 'name', 'state', 'type',
-        ])->merge([
+        ]), [
             'url_webshop' => $urlWebShop,
             'logo' => new MediaCompactResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d H:i'),
@@ -98,10 +98,11 @@ class VoucherResource extends Resource
         $transactions = VoucherTransactionResource::collection($voucher->transactions);
 
         $physical_cards = $voucher->physical_cards()->first();
+        $product_vouchers = $voucher->product_vouchers;
 
-        return collect($voucher)->only([
+        return array_merge($voucher->only([
             'identity_address', 'fund_id', 'created_at', 'returnable'
-        ])->merge([
+        ]), [
             'expire_at' => [
                 'date' => $voucher->expire_at->format("Y-m-d H:i:s.00000"),
                 'timeZone' => $voucher->expire_at->timezone->getName(),
@@ -119,38 +120,41 @@ class VoucherResource extends Resource
             'fund' => $fundResource,
             'offices' => OfficeResource::collection($offices),
             'product' => $productResource,
-            'parent' => $voucher->parent ? collect($voucher->parent)->only([
-                'identity_address', 'fund_id', 'created_at'
+            'parent' => $voucher->parent ? array_merge($voucher->parent->only([
+                'identity_address', 'fund_id',
+            ]), [
+                'created_at' => $voucher->parent->created_at->format('Y-m-d H:i:s')
             ]) : null,
             'physical_card' => $physical_cards ? $physical_cards->only([
                 'id', 'code'
             ]) : false,
-            'product_vouchers' => $voucher->product_vouchers ? collect(
-                $voucher->product_vouchers
-            )->map(function($product_voucher) {
-                /** @var Voucher $product_voucher */
-                return collect($product_voucher)->only([
-                    'identity_address', 'fund_id', 'created_at', 'returnable',
-                ])->merge([
+            'product_vouchers' => $product_vouchers ? $product_vouchers->map(static function(
+                Voucher $product_voucher
+            ) {
+                return array_merge($product_voucher->only([
+                    'identity_address', 'fund_id', 'returnable',
+                ]), [
+                    'created_at' => $product_voucher->created_at->format('Y-m-d H:i:s'),
                     'created_at_locale' => format_datetime_locale($product_voucher->created_at),
-                    'address' => $product_voucher->tokens->where(
-                        'need_confirmation', 1)->first()->address,
+                    'address' => $product_voucher->token_with_confirmation->address,
                     'amount' => currency_format(
-                        $product_voucher->type == 'regular' ? $product_voucher->amount_available_cached : $product_voucher->amount
+                        $product_voucher->type === $product_voucher::TYPE_BUDGET ?
+                            $product_voucher->amount_available_cached :
+                            $product_voucher->amount
                     ),
                     'date' => $product_voucher->created_at->format('M d, Y'),
                     'date_time' => $product_voucher->created_at->format('M d, Y H:i'),
                     'timestamp' => $product_voucher->created_at->timestamp,
-                    'product' => collect($product_voucher->product)->only([
+                    'product' => array_merge($product_voucher->product->only([
                         'id', 'name', 'description', 'total_amount',
                         'sold_amount', 'product_category_id', 'organization_id'
-                    ])->merge([
+                    ]), [
                         'price' => currency_format($product_voucher->product->price),
                         'old_price' => currency_format($product_voucher->product->old_price),
                     ])
                 ]);
             })->values() : null,
             'transactions' => $transactions,
-        ])->toArray();
+        ]);
     }
 }

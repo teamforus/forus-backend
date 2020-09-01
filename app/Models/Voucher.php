@@ -438,7 +438,7 @@ class Voucher extends Model
         if ($request->has('q') && $q = $request->input('q')) {
             $identityRepo = resolve('forus.services.identity');
 
-            $query->where(function (Builder $query) use ($q, $identityRepo) {
+            $query->where(static function (Builder $query) use ($q, $identityRepo) {
                 $query->where('note', 'LIKE', "%{$q}%");
                 $query->orWhereIn(
                     'identity_address',
@@ -589,11 +589,11 @@ class Voucher extends Model
      * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model
      */
     public static function findByAddress(string $address, ?string $identity_address = null) {
-        return self::whereHas(static function(Builder $builder) use ($address) {
-            $builder->where('address', $address);
+        return self::whereHas('tokens', static function(Builder $builder) use ($address) {
+            $builder->where('address', '=', $address);
         })->where(static function(Builder $builder) use ($identity_address) {
             if ($identity_address) {
-                $builder->where($identity_address, '=', $identity_address);
+                $builder->where('identity_address', '=', $identity_address);
             }
         })->firstOrFail();
     }

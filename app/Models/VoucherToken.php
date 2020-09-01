@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 /**
  * App\Models\VoucherToken
  *
@@ -37,7 +39,7 @@ class VoucherToken extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function voucher() {
+    public function voucher(): BelongsTo {
         return $this->belongsTo(Voucher::class);
     }
 }

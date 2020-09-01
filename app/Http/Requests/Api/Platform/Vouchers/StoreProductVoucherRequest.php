@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Vouchers;
 
 use App\Models\Fund;
 use App\Models\Voucher;
+use App\Models\VoucherToken;
 use App\Rules\ProductIdToVoucherRule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,15 +35,15 @@ class StoreProductVoucherRequest extends FormRequest
             'voucher_address' => [
                 'required',
                 'exists:voucher_tokens,address',
-                Rule::in($identity_address ? Voucher::whereIdentityAddress(
-                    $identity_address
-                )->whereHas('fund', static function(Builder $builder) {
-                    $builder->where([
-                        'type' => Fund::TYPE_BUDGET
-                    ]);
-                })->where([
-                    'type' => Voucher::TYPE_BUDGET,
-                ])->pluck('address')->toArray() : [])
+                Rule::in($identity_address ? VoucherToken::whereHas('voucher', static function(
+                    Builder $query
+                ) use ($identity_address) {
+                    $query->where([
+                        'identity_address' => $identity_address,
+                    ])->whereHas('fund', static function(Builder $builder) {
+                        $builder->where('type', '=', Fund::TYPE_BUDGET);
+                    })->whereNull('product_id');
+                })->pluck('address')->toArray() : [])
             ],
             'product_id' => [
                 'required',

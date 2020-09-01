@@ -28,7 +28,7 @@ class AddEmployeeIdToVoucherTransactionsTable extends Migration
     public function down(): void
     {
         Schema::table('voucher_transactions', static function (Blueprint $table) {
-            $table->dropForeign('vouchers_employee_id_foreign');
+            $table->dropForeign('voucher_transactions_employee_id_foreign');
             $table->dropColumn('employee_id');
         });
     }
