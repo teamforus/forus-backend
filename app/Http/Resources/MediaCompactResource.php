@@ -16,7 +16,7 @@ class MediaCompactResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
     public function toArray($request): ?array

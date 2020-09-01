@@ -19,10 +19,10 @@ class BusinessTypeResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         return $this->resource->only([
             'id', 'key', 'name'

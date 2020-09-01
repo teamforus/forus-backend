@@ -1,17 +1,24 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Provider;
 
+use App\Http\Resources\MediaResource;
 use App\Models\VoucherTransaction;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Class VoucherTransactionResource
+ * Class ProviderVoucherTransactionEmployeeResource
  * @property VoucherTransaction $resource
- * @package App\Http\Resources
+ * @package App\Http\Resources\Provider
  */
-class VoucherTransactionResource extends Resource
+class ProviderVoucherTransactionEmployeeResource extends JsonResource
 {
+    public static $load = [
+        'voucher.fund.logo',
+        'provider.logo',
+        'product.photo',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -23,7 +30,7 @@ class VoucherTransactionResource extends Resource
         $transaction = $this->resource;
 
         return array_merge($transaction->only([
-            "id", "organization_id", "product_id", "address", "state", "payment_id",
+            "id", "organization_id", "product_id", "address", "state",
         ]), [
             'created_at' => $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : null,
             'updated_at' => $transaction->updated_at ? $transaction->updated_at->format('Y-m-d H:i:s') : null,
@@ -31,17 +38,25 @@ class VoucherTransactionResource extends Resource
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
 
             'amount' => currency_format($transaction->amount),
-            'timestamp' => $transaction->created_at->timestamp,
             "organization" => array_merge($transaction->provider->only([
                 "id", "name"
             ]), [
                 'logo' => new MediaResource($transaction->provider->logo),
             ]),
-            "product" => new ProductResource($transaction->product),
+            "product" => array_merge($transaction->product->only([
+                "id", "name", "organization_id",
+            ]), [
+                'photo' => new MediaResource($transaction->product->photo),
+            ]),
             "fund" => array_merge($transaction->voucher->fund->only([
-                "id", "name", "organization_id"
+                "id", "name", "organization_id",
             ]), [
                 'logo' => new MediaResource($transaction->voucher->fund->logo),
+                "organization" => array_merge($transaction->voucher->fund->organization->only([
+                    "id", "name"
+                ]), [
+                    'logo' => new MediaResource($transaction->voucher->fund->organization->logo),
+                ]),
             ]),
         ]);
     }

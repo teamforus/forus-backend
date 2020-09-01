@@ -6,7 +6,9 @@ use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
+use App\Models\Employee;
 use App\Models\FundProviderProduct;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
@@ -111,10 +113,16 @@ class TransactionsController extends Controller
             )->exists();
         }
 
+        /** @var Employee $employee */
+        $employee = Organization::findOrFail($organizationId)->employees()->where([
+            'identity_address' => auth_address(),
+        ])->firstOrFail();
+
         /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create(array_merge([
             'amount' => $amount,
             'product_id' => $product ? $product->id : null,
+            'employee_id' => $employee->id,
             'fund_provider_product_id' => $fundProviderProductId,
             'address' => token_generator()->address(),
             'organization_id' => $organizationId,

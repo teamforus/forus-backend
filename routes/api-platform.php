@@ -312,7 +312,18 @@ $router->group(['middleware' => [
                 'store'
             ],
             'parameters' => [
-                'vouchers' => 'voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
+                'transactions' => 'transaction_address',
+            ]
+        ]);
+
+        $router->resource(
+            'transactions',
+            "Api\Platform\Provider\TransactionsController", [
+            'only' => [
+                'index'
+            ],
+            'parameters' => [
                 'transactions' => 'transaction_address',
             ]
         ]);
