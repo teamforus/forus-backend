@@ -75,7 +75,7 @@ class ProviderVoucherResource extends Resource
         )->whereDoesntHave('transactions')->get();
 
         $fundData = collect($voucher->fund)->only([
-            'id', 'name', 'state'
+            'id', 'name', 'state', 'type',
         ])->merge([
             'organization'  => new OrganizationBasicResource($voucher->fund->organization),
             'logo'          => new MediaCompactResource($voucher->fund->logo)
