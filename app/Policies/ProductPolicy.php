@@ -135,11 +135,6 @@ class ProductPolicy
             return false;
         }
 
-        log_debug([ProductQuery::approvedForFundsAndActiveFilter(
-            Product::query(),
-            $voucher->fund_id
-        )/*->where('id', '=', $product->id)*/->get(), $product->id, $voucher->tokens]);
-
         // check validity
         return ProductQuery::approvedForFundsAndActiveFilter(
             Product::query(),

@@ -7,14 +7,12 @@ use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsR
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Employee;
-use App\Models\FundProviderProduct;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TransactionsController extends Controller
@@ -59,7 +57,6 @@ class TransactionsController extends Controller
         $needsReview = false;
         $voucher = $voucherToken->voucher;
         $note = $request->input('note', false);
-        $fundProviderProductId = null;
 
         if ($voucher->type === Voucher::TYPE_PRODUCT) {
             $amount = $voucher->amount;
@@ -92,16 +89,9 @@ class TransactionsController extends Controller
 
             if ($voucher->fund->isTypeSubsidy()) {
                 $product = Product::findOrFail($request->input('product_id'));
-
-                /** @var FundProviderProduct $fundProviderProduct */
-                $fundProviderProduct = $product->fund_provider_products()
-                    ->whereHas('fund_provider.fund', static function(
-                        Builder $builder
-                    ) use ($voucher) {
-                        $builder->where('funds.id', '=', $voucher->fund_id);
-                    })->firstOrFail();
-
+                $fundProviderProduct = $product->getSubsidyDetailsForFund($voucher->fund);
                 $fundProviderProductId = $fundProviderProduct->id;
+                $organizationId = $product->organization_id;
                 $amount = $fundProviderProduct->amount;
             }
         }
@@ -123,7 +113,7 @@ class TransactionsController extends Controller
             'amount' => $amount,
             'product_id' => $product ? $product->id : null,
             'employee_id' => $employee->id,
-            'fund_provider_product_id' => $fundProviderProductId,
+            'fund_provider_product_id' => $fundProviderProductId ?? null,
             'address' => token_generator()->address(),
             'organization_id' => $organizationId,
         ], $needsReview ? [

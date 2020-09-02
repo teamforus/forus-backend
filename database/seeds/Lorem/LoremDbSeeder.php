@@ -747,7 +747,8 @@ class LoremDbSeeder extends Seeder
 
         $price = random_int(1, 20);
         $old_price = random_int($price, 50);
-        $total_amount = random_int(1, 10) * 10;
+        $unlimited_stock = random_int(1, 10) < 3;
+        $total_amount = $unlimited_stock ? 0 : random_int(1, 10) * 10;
         $sold_out = false;
         $expire_at = Carbon::now()->addDays(random_int(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
@@ -756,23 +757,23 @@ class LoremDbSeeder extends Seeder
             "Integer montes nulla in montes venenatis."
         ]);
 
-        $product = Product::create(
-            collect(array_merge(compact(
-                'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at', 'product_category_id', 'description'
-            ), [
-                'organization_id' => $organization->id
-            ]))->merge(collect($fields)->only([
-                'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at'
-            ]))->toArray()
-        );
+        $product = Product::create(array_merge(compact(
+            'name', 'price', 'old_price', 'total_amount', 'sold_out',
+            'expire_at', 'product_category_id', 'description', 'unlimited_stock'
+        ), [
+            'organization_id' => $organization->id
+        ], array_only($fields, [
+            'name', 'price', 'old_price', 'total_amount', 'sold_out', 'expire_at'
+        ])));
 
         ProductCreated::dispatch($product);
 
         return $product;
     }
 
+    /**
+     * @param $implementations
+     */
     public function makeOtherImplementations($implementations): void {
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);

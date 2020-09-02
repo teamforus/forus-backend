@@ -3,6 +3,9 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\FundProvider;
+use App\Models\FundProviderProduct;
+use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -40,5 +43,37 @@ class FundProviderProductQuery
                 $builder->whereIn('vouchers.identity_address', (array) $identity_address);
             });
         }, '<', $limit_per_identity);
+    }
+
+    /**
+     * @param Builder $query
+     * @param Voucher $voucher
+     * @param null $organization_id
+     * @return Builder
+     */
+    public static function whereAvailableForVoucherFilter(
+        Builder $query,
+        Voucher $voucher,
+        $organization_id = null
+    ) {
+        $query = $query->whereHas('product', static function(
+            Builder $query
+        ) use ($voucher, $organization_id) {
+            $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
+                $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
+                    FundProvider::query(), $voucher->fund_id,'subsidy', $voucher->product_id
+                );
+
+                if ($organization_id) {
+                    $providersQuery->whereIn('organization_id', $organization_id);
+                }
+
+                $builder->whereIn('organization_id', $providersQuery->pluck('organization_id'));
+            });
+
+            return ProductQuery::approvedForFundsAndActiveFilter($query, $voucher->fund->id);
+        });
+
+        return FundProviderProductQuery::whereInLimitsFilter($query, $voucher->identity_address);
     }
 }

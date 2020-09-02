@@ -40,8 +40,8 @@ use Illuminate\Http\Request;
  * @property int $organization_id
  * @property string $name
  * @property string|null $description
- * @property string $state
  * @property string $type
+ * @property string $state
  * @property bool $public
  * @property bool $criteria_editable_after_start
  * @property float|null $notification_amount
@@ -52,6 +52,8 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $budget_vouchers
+ * @property-read int|null $budget_vouchers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
  * @property-read int|null $bunq_me_tabs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
@@ -77,10 +79,10 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read float $budget_left
+ * @property-read float $budget_reserved
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
- * @property-read float $budget_reserved
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read \App\Services\MediaService\Models\Media|null $logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -139,11 +141,9 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund wherePublic($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
- * @property-read int|null $digests_count
  */
 class Fund extends Model
 {

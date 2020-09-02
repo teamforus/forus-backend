@@ -6,8 +6,9 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
+use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\OrganizationQuery;
-use App\Scopes\Builders\ProductQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -36,52 +37,59 @@ class StoreVoucherTransactionRequest extends FormRequest
      */
     public function rules(): array
     {
-        // target voucher
         $voucher = $this->voucher_address_or_physical_code->voucher;
-        $validOrganizations = $this->getValidOrganizations($voucher);
+        $rules = $this->commonRules();
 
-        $rules = [
-            'note' => 'nullable|string|between:2,255',
-        ];
-
-        if ($voucher->type === $voucher::TYPE_BUDGET) {
-            $rules = array_merge($rules, [
-                'organization_id' => [
-                    'required',
-                    'exists:organizations,id',
-                    'in:' . $validOrganizations->implode(',')
-                ],
-            ]);
-        }
-
-        if ($voucher->type === $voucher::TYPE_BUDGET && !$voucher->fund->isTypeSubsidy()) {
-            $rules = array_merge($rules, [
-                'amount' => [
-                    'required',
-                    'numeric',
-                    'min:.02',
-                    'max:' . number_format($voucher->amount_available, 2, '.', ''),
-                ],
-            ]);
-        }
-
-        if ($voucher->fund->isTypeSubsidy()) {
+        if ($voucher->fund->isTypeBudget() && $voucher->type === $voucher::TYPE_BUDGET) {
+            $rules = array_merge($rules, $this->budgetVoucherRules($voucher));
+        } else if ($voucher->fund->isTypeSubsidy()) {
             $rules = array_merge($rules, [
                 'product_id' => [
                     'required',
                     'exists:products,id',
-                    Rule::in(ProductQuery::approvedForFundsAndActiveFilter(
-                        Product::query(), $voucher->fund_id
-                    )->where([
-                        'products.organization_id' => $this->input('organization_id')
-                    ])->pluck('products.id')->toArray()),
+                    Rule::in($this->getAvailableProductIds($voucher)),
                 ],
             ]);
+        } else {
+            throw new \RuntimeException("Invalid voucher type" ,403);
         }
 
         return $rules;
     }
 
+    /**
+     * @return string[]
+     */
+    private function commonRules() {
+        return [
+            'note' => 'nullable|string|between:2,255',
+        ];
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return \string[][]
+     */
+    private function budgetVoucherRules(Voucher $voucher) {
+        return [
+            'amount' => [
+                'required',
+                'numeric',
+                'min:.02',
+                'max:' . number_format($voucher->amount_available, 2, '.', ''),
+            ],
+            'organization_id' => [
+                'required',
+                'exists:organizations,id',
+                'in:' . $this->getValidOrganizations($voucher)->implode(',')
+            ],
+        ];
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return Collection
+     */
     private function getValidOrganizations(Voucher $voucher): Collection {
         return OrganizationQuery::whereHasPermissionToScanVoucher(
             Organization::query(),
@@ -90,6 +98,25 @@ class StoreVoucherTransactionRequest extends FormRequest
         )->pluck('organizations.id');
     }
 
+    /**
+     * @param $voucher
+     * @return array
+     */
+    private function getAvailableProductIds($voucher) {
+        return Product::query()->whereHas('fund_provider_products', function(
+            Builder $builder
+        ) use ($voucher) {
+            return FundProviderProductQuery::whereAvailableForVoucherFilter(
+                $builder, $voucher, Organization::queryByIdentityPermissions(auth_address(), [
+                    'scan_vouchers'
+                ])->pluck('id')
+            );
+        })->pluck('id')->toArray();
+    }
+
+    /**
+     * @return array
+     */
     public function messages(): array
     {
         return [

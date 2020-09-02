@@ -53,6 +53,9 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereVoucherId($value)
  * @mixin \Eloquent
+ * @property int|null $employee_id
+ * @property-read \App\Models\Employee|null $employee
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereEmployeeId($value)
  */
 class VoucherTransaction extends Model
 {

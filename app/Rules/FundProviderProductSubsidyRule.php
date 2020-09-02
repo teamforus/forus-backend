@@ -6,6 +6,10 @@ use App\Models\Product;
 use App\Models\FundProvider;
 use App\Scopes\Builders\ProductQuery;
 
+/**
+ * Class FundProviderProductSubsidyRule
+ * @package App\Rules
+ */
 class FundProviderProductSubsidyRule extends BaseRule
 {
     private $fundProvider;
@@ -58,7 +62,7 @@ class FundProviderProductSubsidyRule extends BaseRule
                 ]));
             }
 
-            if (!is_numeric($limit) || $product->stock_amount < $limit_per_identity) {
+            if (!is_numeric($limit_per_identity) || $product->stock_amount < $limit_per_identity) {
                 return $this->rejectWithMessage(trans('validation.max.numeric', [
                     'max' => $product->stock_amount,
                     'attribute' => trans('validation.attributes.limit_total_per_identity')

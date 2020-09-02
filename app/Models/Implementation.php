@@ -296,10 +296,10 @@ class Implementation extends Model
      */
     public function urlFrontend(string $frontend, string $uri = '') {
         switch ($frontend) {
-            case 'webshop': return $this->urlWebshop($uri); break;
-            case 'sponsor': return $this->urlSponsorDashboard($uri); break;
-            case 'provider': return $this->urlProviderDashboard($uri); break;
-            case 'validator': return $this->urlValidatorDashboard($uri); break;
+            case 'webshop': return $this->urlWebshop($uri);
+            case 'sponsor': return $this->urlSponsorDashboard($uri);
+            case 'provider': return $this->urlProviderDashboard($uri);
+            case 'validator': return $this->urlValidatorDashboard($uri);
         }
         return null;
     }
@@ -343,18 +343,19 @@ class Implementation extends Model
      * @return bool
      */
     public function autoValidationEnabled(): bool {
-        $oneActiveFund = $this->funds()->where([
-                'state' => Fund::STATE_ACTIVE
-            ])->count() === 1;
-
+        $oneActiveFund = $this->funds()->where(['state' => Fund::STATE_ACTIVE])->count() === 1;
         $oneActiveFundWithAutoValidation = $this->funds()->where([
-                'state' => Fund::STATE_ACTIVE,
-                'auto_requests_validation' => true
-            ])->whereNotNull('default_validator_employee_id')->count() === 1;
+            'state' => Fund::STATE_ACTIVE,
+            'auto_requests_validation' => true
+        ])->whereNotNull('default_validator_employee_id')->count() === 1;
 
         return $oneActiveFund && $oneActiveFundWithAutoValidation;
     }
 
+    /**
+     * @param $value
+     * @return array|\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed|void
+     */
     public static function platformConfig($value) {
         if (!self::isValidKey(self::activeKey())) {
             return abort(403, 'unknown_implementation_key');
@@ -362,79 +363,92 @@ class Implementation extends Model
 
         $ver = request()->input('ver');
 
-        if (preg_match('/[^a-z_\-0-9]/i', $value)) {
-            abort(403);
-        }
-
-        if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
+        if (preg_match('/[^a-z_\-0-9]/i', $value) || preg_match('/[^a-z_\-0-9]/i', $ver)) {
             abort(403);
         }
 
         $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
 
         if (is_array($config)) {
-            $config['media'] = collect(MediaService::getMediaConfigs())->map(static function(
-                MediaImageConfig $mediaConfig
-            ) {
-                return [
-                    'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
-                    'size' => collect($mediaConfig->getPresets())->map(static function(
-                        MediaPreset $mediaPreset
-                    ) {
-                        return $mediaPreset instanceof MediaImagePreset ? [
-                            $mediaPreset->width,
-                            $mediaPreset->height,
-                            $mediaPreset->preserve_aspect_ratio,
-                        ] : null;
-                    })
-                ];
-            });
-
             $implementation = self::active();
             $implementationModel = self::activeModel();
 
-            $config['has_budget_funds'] = self::activeFundsQuery()->where([
-                'type' => Fund::TYPE_BUDGET
-            ])->exists();
-
-            $config['has_subsidy_funds'] = self::activeFundsQuery()->where([
-                'type' => Fund::TYPE_SUBSIDIES
-            ])->exists();
-
-            $config['digid'] = $implementationModel ?
-                $implementationModel->digidEnabled() : false;
-
-            $config['auto_validation'] = $implementationModel &&
-                $implementationModel->autoValidationEnabled();
-
-            $config['fronts'] = $implementation->only([
-                'url_webshop', 'url_sponsor', 'url_provider',
-                'url_validator', 'url_app'
+            $config = array_merge($config, [
+                'media' => self::getPlatformMediaConfig(),
+                'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
+                'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+                'digid' => $implementationModel ? $implementationModel->digidEnabled() : false,
+                'auto_validation' => $implementationModel && $implementationModel->autoValidationEnabled(),
+                'settings' => self::getPlatformSettingsConfig($implementation),
+                'fronts' => $implementation->only([
+                    'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app'
+                ]),
+                'map' => [
+                    'lon' => (float) ($implementation['lon'] ?? config('forus.front_ends.map.lon')),
+                    'lat' => (float) ($implementation['lat'] ?? config('forus.front_ends.map.lat')),
+                ],
+                'implementation_name' => $implementation->get('name') ?: 'general',
             ]);
-
-            $config['settings'] = array_merge($implementation->only([
-                'title', 'description', 'has_more_info_url',
-                'more_info_url', 'description_steps',
-            ])->toArray(), [
-                'description_html' => resolve('markdown')->convertToHtml(
-                    $implementation['description'] ?? ''
-                ),
-                'description_steps_html' => resolve('markdown')->convertToHtml(
-                    $implementation['description_steps'] ?? ''
-                ),
-            ]);
-
-            $config['map'] = [
-                'lon' => (float) ($implementation['lon'] ?? config('forus.front_ends.map.lon')),
-                'lat' => (float) ($implementation['lat'] ?? config('forus.front_ends.map.lat'))
-            ];
-
-            $config['implementation_name'] = $implementation->get('name') ?: 'general';
         }
 
         return $config ?: [];
     }
 
+
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function hasFundsOfType(string $type): bool {
+        return self::activeFundsQuery()->where([
+            'type' => $type
+        ])->exists();
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection $implementation
+     * @return array
+     */
+    private static function getPlatformSettingsConfig($implementation) {
+        return array_merge($implementation->only([
+            'title', 'description', 'has_more_info_url',
+            'more_info_url', 'description_steps',
+        ])->toArray(), [
+            'description_html' => resolve('markdown')->convertToHtml(
+                $implementation['description'] ?? ''
+            ),
+            'description_steps_html' => resolve('markdown')->convertToHtml(
+                $implementation['description_steps'] ?? ''
+            ),
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    private static function getPlatformMediaConfig() {
+        return collect(
+            MediaService::getMediaConfigs()
+        )->map(static function(MediaImageConfig $mediaConfig) {
+            return [
+                'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
+                'size' => collect($mediaConfig->getPresets())->map(static function(
+                    MediaPreset $mediaPreset
+                ) {
+                    return $mediaPreset instanceof MediaImagePreset ? [
+                        $mediaPreset->width,
+                        $mediaPreset->height,
+                        $mediaPreset->preserve_aspect_ratio,
+                    ] : null;
+                })
+            ];
+        });
+    }
+
+    /**
+     * @param Request $request
+     * @return Organization|EloquentBuilder
+     */
     public static function searchProviders(Request $request) {
         $query = Organization::query();
         $activeModel = self::activeModel();

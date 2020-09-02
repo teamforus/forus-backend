@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
-use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Http\Resources\Json\Resource;
@@ -21,14 +20,10 @@ class ProductResource extends Resource
         'vouchers_reserved',
         'photo.presets',
         'product_category.translations',
-        // 'organization.product_categories.translations',
         'organization.offices.photo.presets',
         'organization.offices.schedules',
         'organization.offices.organization',
-        // 'organization.offices.organization.business_type.translations',
         'organization.offices.organization.logo.presets',
-        // 'organization.offices.organization.product_categories.translations',
-        // 'organization.supplied_funds_approved.logo',
         'organization.logo.presets',
         'organization.business_type.translations',
     ];
@@ -43,13 +38,8 @@ class ProductResource extends Resource
     {
         $product = $this->resource;
 
-        $funds = FundQuery::whereProductsAreApprovedFilter(FundQuery::whereActiveFilter(
-            Fund::query()
-        ), $product->id)->get();
-
         return array_merge($product->only([
-            'id', 'name', 'description', 'product_category_id', 'sold_out',
-            'organization_id'
+            'id', 'name', 'description', 'product_category_id', 'sold_out', 'organization_id'
         ]), [
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
@@ -66,47 +56,50 @@ class ProductResource extends Resource
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
             'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
             'deleted' => !is_null($product->deleted_at),
-
-            'funds' => $funds->map(static function(Fund $fund) use ($product) {
-                /** @var FundProviderProduct $fundProviderProduct */
-                $fundProviderProduct = $product->fund_provider_products()->whereHas('fund_provider.fund', static function(
-                    \Illuminate\Database\Eloquent\Builder $builder
-                ) use ($fund) {
-                    $builder->where([
-                        'fund_id' => $fund->id,
-                        'type' => $fund::TYPE_SUBSIDIES,
-                    ]);
-                })->first();
-
-                return [
-                    'id' => $fund->id,
-                    'name' => $fund->name,
-                    'logo' => new MediaResource($fund->logo),
-                    'type' => $fund->type,
-                    'limit_total' => $fundProviderProduct->limit_total ?? null,
-                    'limit_per_identity' => $fundProviderProduct->limit_per_identity ?? null,
-                    'limit_available' => $fundProviderProduct ?
-                        $fundProviderProduct->identityStockAvailable(auth_address()) : null,
-                    'price' => $fund->isTypeSubsidy() ? $product->price - $fundProviderProduct->amount : $product->price,
-                ];
-            })->values(),
-
-
-            // todo: optimize
-            'price_min' => $product->price - $product->fund_provider_products()->where([
-                'product_id' => $product->id,
-            ])->whereHas('fund_provider.fund', static function(\Illuminate\Database\Eloquent\Builder $builder) {
-                $builder->where('type', Fund::TYPE_SUBSIDIES);
-            })->max('amount'),
-            'price_max' => $product->price - $product->fund_provider_products()->where([
-                'product_id' => $product->id,
-            ])->whereHas('fund_provider.fund', static function(\Illuminate\Database\Eloquent\Builder $builder) {
-                $builder->where('type', Fund::TYPE_SUBSIDIES);
-            })->min('amount'),
-
+            'funds' => $this->getProductFunds($product),
+            'price_min' => currency_format($this->getProductSubsidyPrice($product, 'min')),
+            'price_max' => currency_format($this->getProductSubsidyPrice($product, 'max')),
             'photo' => new MediaResource($product->photo),
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category)
         ]);
+    }
+
+    /**
+     * @param Product $product
+     * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
+     */
+    private function getProductFunds(Product $product) {
+        return FundQuery::whereProductsAreApprovedAndActiveFilter(
+            Fund::query(), $product->id
+        )->get()->map(static function(Fund $fund) use ($product) {
+            $fundProviderProduct = $product->getSubsidyDetailsForFund($fund);
+
+            return array_merge([
+                'id' => $fund->id,
+                'name' => $fund->name,
+                'logo' => new MediaResource($fund->logo),
+                'type' => $fund->type,
+            ], $fund->isTypeSubsidy() ? [
+                'limit_total' => $fundProviderProduct->limit_total,
+                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
+                'limit_available' => $fundProviderProduct->identityStockAvailable(auth_address()),
+                'price' => $product->price - $fundProviderProduct->amount,
+            ] : []);
+        })->values();
+    }
+
+    /**
+     * todo: optimize
+     * @param Product $product
+     * @param string $type
+     * @return float
+     */
+    private function getProductSubsidyPrice(Product $product, $type = 'min'): float {
+        return $product->price - $product->fund_provider_products()->where([
+            'product_id' => $product->id,
+        ])->whereHas('fund_provider.fund', static function(Builder $builder) {
+            $builder->where('type', Fund::TYPE_SUBSIDIES);
+        })->$type('amount');
     }
 }

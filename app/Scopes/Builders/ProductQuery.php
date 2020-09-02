@@ -51,9 +51,11 @@ class ProductQuery
             )->pluck('id')->toArray();
         } elseif (is_array($product_category_id) && $andSubcategories) {
             foreach ($product_category_id as $_product_category_id) {
-                $productCategories = array_merge($productCategories, ProductCategory::descendantsAndSelf(
+                foreach (ProductCategory::descendantsAndSelf(
                     $_product_category_id
-                )->pluck('id')->toArray());
+                )->pluck('id') as $id) {
+                    $productCategories[] = $id;
+                }
             }
         }
 

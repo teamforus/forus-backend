@@ -22,7 +22,6 @@ use Illuminate\Http\Request;
  * @property int $product_category_id
  * @property string $name
  * @property string $description
- * @property string $description_html
  * @property float $price
  * @property float|null $old_price
  * @property int $total_amount
@@ -34,17 +33,22 @@ use Illuminate\Http\Request;
  * @property bool $sold_out
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
+ * @property-read int|null $fund_provider_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
+ * @property-read string $description_html
  * @property-read bool $expired
  * @property-read bool $is_offer
  * @property-read int $stock_amount
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read \App\Services\MediaService\Models\Media $photo
+ * @property-read \App\Services\MediaService\Models\Media|null $photo
  * @property-read \App\Models\ProductCategory $product_category
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
@@ -52,12 +56,10 @@ use Illuminate\Http\Request;
  * @property-read int|null $vouchers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers_reserved
  * @property-read int|null $vouchers_reserved_count
- * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newQuery()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product query()
- * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDescription($value)
@@ -75,8 +77,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
- * @property-read int|null $logs_count
  */
 class Product extends Model
 {
@@ -360,5 +360,23 @@ class Product extends Model
      */
     public function getDescriptionHtmlAttribute(): string {
         return resolve('markdown')->convertToHtml($this->description);
+    }
+
+    /**
+     * @param Fund $fund
+     * @return null|FundProviderProduct
+     */
+    public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct {
+        /** @var FundProviderProduct $fundProviderProduct */
+        $fundProviderProduct = $this->fund_provider_products()->whereHas(
+            'fund_provider.fund',
+            static function(Builder $builder) use ($fund) {
+            $builder->where([
+                'fund_id' => $fund->id,
+                'type' => $fund::TYPE_SUBSIDIES,
+            ]);
+        })->first();
+
+        return $fundProviderProduct;
     }
 }
