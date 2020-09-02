@@ -264,12 +264,12 @@ $router->group(['middleware' => [
     // TODO: deprecated, remove in next releases
     if (!env('DISABLE_DEPRECATED_API', FALSE)) {
         $router->get(
-            'vouchers/{voucher_token_address}/provider',
+            'vouchers/{voucher_address_or_physical_code}/provider',
             "Api\Platform\Provider\VouchersController@show"
         );
     }
 
-    $router->group(['prefix' => '/provider'], function() use ($router) {
+    $router->group(['prefix' => '/provider'], static function() use ($router) {
         $router->resource(
             'vouchers',
             "Api\Platform\Provider\VouchersController", [
@@ -277,7 +277,7 @@ $router->group(['middleware' => [
                 'show'
             ],
             'parameters' => [
-                'vouchers' => 'voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
             ]
         ]);
 
@@ -288,11 +288,33 @@ $router->group(['middleware' => [
                 'index'
             ],
             'parameters' => [
-                'vouchers' => 'budget_voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
                 'product-vouchers' => 'product_voucher_token_address',
             ]
         ]);
     });
+
+    $router->resource(
+        'vouchers/{voucher_token_address}/physical-cards',
+        "Api\Platform\Vouchers\PhysicalCardsController", [
+        'only' => [
+            'store', 'destroy'
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
+
+    $router->resource(
+        'vouchers/{voucher_token_address}/physical-card-requests',
+        "Api\Platform\Vouchers\PhysicalCardRequestsController", [
+        'only' => [
+            'index', 'store', 'show'
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
 
     $router->post(
         'vouchers/{voucher_token_address}/send-email',
@@ -311,7 +333,7 @@ $router->group(['middleware' => [
             'index', 'show', 'store'
         ],
         'parameters' => [
-            'vouchers' => 'voucher_token_address',
+            'vouchers' => 'voucher_address_or_physical_code',
             'transactions' => 'transaction_address',
         ]
     ]);

@@ -51,6 +51,10 @@ class LoremDbSeeder extends Seeder
         'Zuidhorn', 'Nijmegen',
     ];
 
+    private $fundsWithPhysicalCards = [
+        'Nijmegen',
+    ];
+
     /**
      * LoremDbSeeder constructor.
      */
@@ -568,7 +572,8 @@ class LoremDbSeeder extends Seeder
             'key'                   => $key,
             'bunq_sandbox'          => true,
             'csv_primary_key'       => 'uid',
-            'is_configured'         => true
+            'is_configured'         => true,
+            'allow_physical_cards'  => in_array($fund->name, $this->fundsWithPhysicalCards),
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'
@@ -739,11 +744,15 @@ class LoremDbSeeder extends Seeder
         $sold_out = false;
         $expire_at = Carbon::now()->addDays(random_int(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
+        $description = implode(' ', [
+            "Ut aliquet nisi felis ipsum consectetuer a vulputate.",
+            "Integer montes nulla in montes venenatis."
+        ]);
 
         $product = Product::create(
             collect(array_merge(compact(
                 'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at', 'product_category_id'
+                'expire_at', 'product_category_id', 'description'
             ), [
                 'organization_id' => $organization->id
             ]))->merge(collect($fields)->only([

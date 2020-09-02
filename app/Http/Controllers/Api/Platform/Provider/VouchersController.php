@@ -15,7 +15,7 @@ class VouchersController extends Controller
      */
     public function show(
         VoucherToken $voucherToken
-    ) {
+    ): ProviderVoucherResource {
         $this->authorize('useAsProvider', $voucherToken->voucher);
 
         return new ProviderVoucherResource($voucherToken);

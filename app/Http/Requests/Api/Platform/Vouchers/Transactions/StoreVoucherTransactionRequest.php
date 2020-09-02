@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Class StoreVoucherTransactionRequest
- * @property VoucherToken $voucher_token_address
+ * @property VoucherToken $voucher_address_or_physical_code
  * @package App\Http\Requests\Api\Platform\Vouchers\Transactions
  */
 class StoreVoucherTransactionRequest extends FormRequest
@@ -20,7 +20,7 @@ class StoreVoucherTransactionRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -30,10 +30,10 @@ class StoreVoucherTransactionRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         // target voucher
-        $voucher = $this->voucher_token_address->voucher;
+        $voucher = $this->voucher_address_or_physical_code->voucher;
 
         $validOrganizations = OrganizationQuery::whereHasPermissionToScanVoucher(
             Organization::query(),
@@ -41,7 +41,7 @@ class StoreVoucherTransactionRequest extends FormRequest
             $voucher
         )->pluck('organizations.id');
 
-        return array_merge($voucher->type == Voucher::TYPE_BUDGET ? [
+        return array_merge($voucher->type === Voucher::TYPE_BUDGET ? [
             'amount' => [
                 'required_without:product_id',
                 'numeric',

@@ -2,24 +2,26 @@
 
 namespace App\Rules;
 
+use App\Models\Fund;
 use App\Models\Product;
-use App\Models\VoucherToken;
 use App\Scopes\Builders\ProductQuery;
 
-class ProductIdToVoucherRule extends BaseRule
+class ProductIdInStockRule extends BaseRule
 {
     protected $messageTransPrefix = 'validation.product_voucher.';
-    private $voucherAddress;
+    private $fund;
+    private $otherReservations;
 
     /**
      * Create a new rule instance.
      *
-     * @param string $voucherAddress
-     * @return void
+     * @param Fund $fund
+     * @param array|null $otherReservations
      */
-    public function __construct($voucherAddress)
+    public function __construct(Fund $fund, array $otherReservations = null)
     {
-        $this->voucherAddress = $voucherAddress;
+        $this->fund = $fund;
+        $this->otherReservations = $otherReservations;
     }
 
     /**
@@ -32,25 +34,26 @@ class ProductIdToVoucherRule extends BaseRule
     public function passes($attribute, $product_id): bool
     {
         $product = Product::find($product_id);
-        $voucherToken = VoucherToken::whereAddress($this->voucherAddress)->first();
 
-        // optional check for human readable output
-        if (!$voucherToken || !$voucher = $voucherToken->voucher) {
-            return $this->rejectTrans('voucher_id_required');
+        if (!$product) {
+            return $this->rejectTrans('product_not_found');
         }
 
         if ($product->sold_out) {
             return $this->rejectTrans('product_sold_out');
         }
 
-        if ($product->price > $voucher->amount_available) {
-            return $this->rejectTrans('not_enough_voucher_funds');
+        if (!$product->unlimited_stock &&
+            $this->otherReservations &&
+            $product->stock_amount < $this->otherReservations[$product_id]) {
+            return $this->rejectTrans('not_enough_stock', [
+                'product_name' => $product->name
+            ]);
         }
 
         // check validity
         return ProductQuery::approvedForFundsAndActiveFilter(
-            Product::query(),
-            $voucher->fund_id
+            Product::query(), $this->fund->id
         )->where('id', $product->id)->exists();
     }
 }

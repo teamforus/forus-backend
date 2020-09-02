@@ -140,6 +140,8 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read int|null $digests_count
  */
 class Fund extends Model
 {

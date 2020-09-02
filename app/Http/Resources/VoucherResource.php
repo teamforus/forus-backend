@@ -47,13 +47,13 @@ class VoucherResource extends Resource
         $voucher = $this->resource;
         $fund = $this->resource->fund;
 
-        if ($voucher->type == 'regular') {
+        if ($voucher->type === 'regular') {
             $amount = $voucher->amount_available_cached;
             $offices = $voucher->fund->provider_organizations_approved->pluck(
                 'offices'
             )->flatten();
             $productResource = null;
-        } elseif ($voucher->type == 'product') {
+        } elseif ($voucher->type === 'product') {
             $amount = $voucher->amount;
             $offices = $voucher->product->organization->offices;
             $productResource = collect($voucher->product)->only([
@@ -92,11 +92,14 @@ class VoucherResource extends Resource
             'organization' => new OrganizationBasicWithPrivateResource(
                 $fund->organization
             ),
+            'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
         ]);
 
         $transactions = VoucherTransactionResource::collection(
             $voucher->transactions
         );
+
+        $physical_cards = $voucher->physical_cards()->first();
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at', 'returnable'
@@ -111,8 +114,8 @@ class VoucherResource extends Resource
             'expired' => $voucher->expired,
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'amount' => currency_format($amount),
-            'address' => $voucher->tokens->where('need_confirmation', 1)->first()->address,
-            'address_printable' => $voucher->tokens->where('need_confirmation', 0)->first()->address,
+            'address' => $voucher->token_with_confirmation->address,
+            'address_printable' => $voucher->token_without_confirmation->address,
             'timestamp' => $voucher->created_at->timestamp,
             'type' => $voucher->type,
             'fund' => $fundResource,
@@ -121,6 +124,9 @@ class VoucherResource extends Resource
             'parent' => $voucher->parent ? collect($voucher->parent)->only([
                 'identity_address', 'fund_id', 'created_at'
             ]) : null,
+            'physical_card' => $physical_cards ? $physical_cards->only([
+                'id', 'code'
+            ]) : false,
             'product_vouchers' => $voucher->product_vouchers ? collect(
                 $voucher->product_vouchers
             )->map(function($product_voucher) {
