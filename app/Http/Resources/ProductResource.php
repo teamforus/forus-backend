@@ -7,6 +7,7 @@ use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class ProductResource
@@ -84,6 +85,8 @@ class ProductResource extends Resource
                     'type' => $fund->type,
                     'limit_total' => $fundProviderProduct->limit_total ?? null,
                     'limit_per_identity' => $fundProviderProduct->limit_per_identity ?? null,
+                    'limit_available' => $fundProviderProduct ?
+                        $fundProviderProduct->identityStockAvailable(auth_address()) : null,
                     'price' => $fund->isTypeSubsidy() ? $product->price - $fundProviderProduct->amount : $product->price,
                 ];
             })->values(),

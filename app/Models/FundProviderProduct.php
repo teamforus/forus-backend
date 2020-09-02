@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -69,5 +70,26 @@ class FundProviderProduct extends Model
      */
     public function voucher_transactions(): HasMany {
         return $this->hasMany(VoucherTransaction::class);
+    }
+
+    /**
+     * @param string $identity_address
+     * @return int|null
+     */
+    public function identityStockAvailable(string $identity_address): ?int {
+        $limitAvailable = $this->fund_provider->fund->isTypeSubsidy() ? min(
+            $this->limit_per_identity,
+            $this->limit_total,
+            $this->product->stock_amount
+        ) : null;
+
+        if (is_null($limitAvailable)) {
+            return null;
+        }
+
+        return $limitAvailable - $this->voucher_transactions()->whereHas('voucher', static function(
+            Builder $builder) use ($identity_address) {
+            $builder->where('identity_address', '=', $identity_address);
+        })->count();
     }
 }
