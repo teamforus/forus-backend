@@ -113,8 +113,9 @@ class ProviderVoucherResource extends Resource
         $voucher = $voucherToken->voucher;
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at'
+            'identity_address', 'fund_id',
         ])->merge([
+            'created_at' => $voucher->created_at_string,
             'address' => $voucherToken->address,
             'type' => 'product',
             'product' => collect($voucher->product)->only([

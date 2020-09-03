@@ -50,14 +50,15 @@ class VoucherResource extends Resource
         $physical_cards = $voucher->physical_cards()->first();
 
         return array_merge($voucher->only([
-            'identity_address', 'fund_id', 'created_at', 'returnable'
+            'identity_address', 'fund_id', 'returnable'
         ]), $this->getBaseFields($voucher), [
+            'created_at' => $voucher->created_at_string,
             'expire_at' => [
                 'date' => $voucher->expire_at->format("Y-m-d H:i:s.00000"),
                 'timeZone' => $voucher->expire_at->timezone->getName(),
             ],
-            'last_active_day' => $voucher->last_active_day->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
+            'last_active_day' => $voucher->last_active_day->format('Y-m-d'),
             'last_active_day_locale' => format_date_locale($voucher->last_active_day),
             'expired' => $voucher->expired,
             'created_at_locale' => $voucher->created_at_string_locale,

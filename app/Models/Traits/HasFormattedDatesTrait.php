@@ -2,8 +2,6 @@
 
 namespace App\Models\Traits;
 
-use Carbon\Carbon;
-
 /**
  * Trait NodeTrait
  * @property string|null $created_at_string
@@ -25,7 +23,7 @@ trait HasFormattedDatesTrait
      * @return string|null
      */
     public function getCreatedAtStringLocaleAttribute(): ?string {
-        return $this->created_at ? format_date_locale($this->created_at) : null;
+        return $this->created_at ? format_datetime_locale($this->created_at) : null;
     }
 
     /**
@@ -39,6 +37,6 @@ trait HasFormattedDatesTrait
      * @return string|null
      */
     public function getUpdatedAtStringLocaleAttribute(): ?string {
-        return $this->updated_at ? format_date_locale($this->updated_at) : null;
+        return $this->updated_at ? format_datetime_locale($this->updated_at) : null;
     }
 }
