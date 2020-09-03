@@ -90,6 +90,7 @@ class FundRequest extends Model
         Organization $organization,
         string $identity_address
     ) {
+        /** @var Builder $query */
         $query = self::query();
         $recordRepo = resolve('forus.services.record');
 
@@ -256,7 +257,7 @@ class FundRequest extends Model
      */
     public function resolve(): self {
         $records = $this->records()->whereHas('employee');
-        $records->where('state', '!=', self::STATE_PENDING);
+        $records->where('state', '=', self::STATE_APPROVED);
 
         $records->get()->each(static function(FundRequestRecord $record) {
             $record->makeValidation();
