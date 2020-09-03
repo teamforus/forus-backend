@@ -13,7 +13,7 @@
         "ext-zip": "*",
         "ext-fileinfo": "*",
         "astrotomic/laravel-translatable": "11.8.*",
-        "aws/aws-sdk-php": "3.151.2",
+        "aws/aws-sdk-php": "3.151.5",
         "barryvdh/laravel-dompdf": "^0.8.6",
         "barryvdh/laravel-ide-helper": "^2.7",
         "bunq/sdk_php": "^1.13.1",
