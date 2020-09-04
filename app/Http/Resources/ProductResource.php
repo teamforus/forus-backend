@@ -73,17 +73,22 @@ class ProductResource extends Resource
         return FundQuery::whereProductsAreApprovedAndActiveFilter(
             Fund::query(), $product->id
         )->get()->map(static function(Fund $fund) use ($product) {
-            $fundProviderProduct = $product->getSubsidyDetailsForFund($fund);
+            $fundProviderProduct = $fund->isTypeSubsidy() ?
+                $product->getSubsidyDetailsForFund($fund) : null;
 
             return array_merge([
                 'id' => $fund->id,
                 'name' => $fund->name,
                 'logo' => new MediaResource($fund->logo),
                 'type' => $fund->type,
-            ], $fund->isTypeSubsidy() ? [
+            ], $fund->isTypeSubsidy() && $fundProviderProduct ? [
                 'limit_total' => $fundProviderProduct->limit_total,
                 'limit_per_identity' => $fundProviderProduct->limit_per_identity,
-                'limit_available' => $fundProviderProduct->identityStockAvailable(auth_address()),
+                'limit_available' => auth_address() ?
+                    $fundProviderProduct->stockAvailableForIdentity(auth_address()) : min(
+                        $fundProviderProduct->limit_total,
+                        $fundProviderProduct->limit_per_identity
+                    ),
                 'price' => $product->price - $fundProviderProduct->amount,
             ] : []);
         })->values();

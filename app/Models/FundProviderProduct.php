@@ -76,16 +76,14 @@ class FundProviderProduct extends Model
      * @param string $identity_address
      * @return int|null
      */
-    public function identityStockAvailable(string $identity_address): ?int {
-        $limitAvailable = $this->fund_provider->fund->isTypeSubsidy() ? min(
-            $this->limit_per_identity,
-            $this->limit_total,
-            $this->product->stock_amount
-        ) : null;
-
-        if (is_null($limitAvailable)) {
+    public function stockAvailableForIdentity(string $identity_address): ?int {
+        if (!$limitAvailable = $this->fund_provider->fund->isTypeSubsidy()) {
             return null;
         }
+
+        $limitAvailable = $this->product->unlimited_stock ?
+            min($this->limit_total, $this->limit_per_identity) :
+            min($this->limit_total, $this->limit_per_identity, $this->product->stock_amount);
 
         return $limitAvailable - $this->voucher_transactions()->whereHas('voucher', static function(
             Builder $builder) use ($identity_address) {
