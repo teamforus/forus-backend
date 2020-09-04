@@ -40,7 +40,7 @@ class StoreVoucherTransactionRequest extends FormRequest
         $voucher = $this->voucher_address_or_physical_code->voucher;
         $rules = $this->commonRules();
 
-        if ($voucher->fund->isTypeBudget() && $voucher->type === $voucher::TYPE_BUDGET) {
+        if ($voucher->type === $voucher::TYPE_BUDGET && $voucher->fund->isTypeBudget()) {
             $rules = array_merge($rules, $this->budgetVoucherRules($voucher));
         } else if ($voucher->fund->isTypeSubsidy()) {
             $rules = array_merge($rules, [
@@ -60,7 +60,8 @@ class StoreVoucherTransactionRequest extends FormRequest
     /**
      * @return string[]
      */
-    private function commonRules() {
+    private function commonRules(): array
+    {
         return [
             'note' => 'nullable|string|between:2,255',
         ];
@@ -70,7 +71,8 @@ class StoreVoucherTransactionRequest extends FormRequest
      * @param Voucher $voucher
      * @return \string[][]
      */
-    private function budgetVoucherRules(Voucher $voucher) {
+    private function budgetVoucherRules(Voucher $voucher): array
+    {
         return [
             'amount' => [
                 'required',
@@ -90,7 +92,8 @@ class StoreVoucherTransactionRequest extends FormRequest
      * @param Voucher $voucher
      * @return Collection
      */
-    private function getValidOrganizations(Voucher $voucher): Collection {
+    private function getValidOrganizations(Voucher $voucher): Collection
+    {
         return OrganizationQuery::whereHasPermissionToScanVoucher(
             Organization::query(),
             auth_address(),
@@ -102,14 +105,15 @@ class StoreVoucherTransactionRequest extends FormRequest
      * @param $voucher
      * @return array
      */
-    private function getAvailableProductIds($voucher) {
-        return Product::query()->whereHas('fund_provider_products', function(
+    private function getAvailableProductIds($voucher): array
+    {
+        return Product::query()->whereHas('fund_provider_products', static function(
             Builder $builder
         ) use ($voucher) {
             return FundProviderProductQuery::whereAvailableForVoucherFilter(
                 $builder, $voucher, Organization::queryByIdentityPermissions(auth_address(), [
                     'scan_vouchers'
-                ])->pluck('id')
+                ])->pluck('id')->toArray()
             );
         })->pluck('id')->toArray();
     }

@@ -4,7 +4,6 @@
 namespace App\Scopes\Builders;
 
 use App\Models\FundProvider;
-use App\Models\FundProviderProduct;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -55,8 +54,8 @@ class FundProviderProductQuery
         Builder $query,
         Voucher $voucher,
         $organization_id = null
-    ) {
-        $query = $query->whereHas('product', static function(
+    ): Builder {
+        $query->whereHas('product', static function(
             Builder $query
         ) use ($voucher, $organization_id) {
             $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
@@ -74,6 +73,6 @@ class FundProviderProductQuery
             return ProductQuery::approvedForFundsAndActiveFilter($query, $voucher->fund->id);
         });
 
-        return FundProviderProductQuery::whereInLimitsFilter($query, $voucher->identity_address);
+        return self::whereInLimitsFilter($query, $voucher->identity_address);
     }
 }

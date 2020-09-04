@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Vouchers\Products\IndexProductsRequest;
 use App\Http\Resources\Provider\ProviderSubsidyProductResource;
 use App\Models\FundProviderProduct;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\FundProviderProductQuery;
@@ -29,7 +30,11 @@ class ProductsController extends Controller
         $this->authorize('viewAnyPublic', Product::class);
 
         $query = FundProviderProductQuery::whereAvailableForVoucherFilter(
-            FundProviderProduct::query(), $voucherToken->voucher
+            FundProviderProduct::query(),
+            $voucherToken->voucher,
+            Organization::queryByIdentityPermissions(auth_address(), [
+                'scan_vouchers'
+            ])->pluck('id')->toArray()
         );
 
         return ProviderSubsidyProductResource::collection($query->with(
