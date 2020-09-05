@@ -40,13 +40,14 @@ class StoreBatchVoucherRequest extends FormRequest
                 Rule::exists('funds', 'id')->whereIn('id', $validFunds)
             ],
             'vouchers' => [
-                'required_without_all:amount,product_id',
+                'required',
                 new VouchersUploadArrayRule($fund),
             ],
             'vouchers.*' => 'required|array',
             'vouchers.*.amount' => [
-                'required_without:vouchers.*.product_id', 'numeric',
-                'between:.1,' . $max,
+                'required_without:vouchers.*.product_id',
+                'numeric',
+                'between:.1,' . currency_format($max),
             ],
             'vouchers.*.product_id' => [
                 'required_without:vouchers.*.amount',
