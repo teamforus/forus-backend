@@ -229,9 +229,13 @@ class LoremDbSeeder extends Seeder
         }
 
         foreach (Fund::get() as $fund) {
-            $providers = Organization::with('products')->pluck('id');
+            $providers = Organization::whereHas('products')->pluck('id');
 
             if ($fund->provider_organizations_approved()->count() === 0) {
+                do {
+                    $provider = $providers->random();
+                } while ($fund->providers()->where('organization_id', $provider)->exists());
+
                 $provider = $fund->providers()->create([
                     'organization_id'   => $providers->random(),
                     'allow_products'    => $fund->isTypeBudget(),
@@ -241,6 +245,25 @@ class LoremDbSeeder extends Seeder
                 FundProviderApplied::dispatch($provider);
             }
         }
+
+        Fund::whereType(Fund::TYPE_SUBSIDIES)->get()->each(static function(Fund $fund) {
+            $fund->providers()->get()->each(static function(FundProvider $provider) {
+                $fundProviderProducts = $provider->organization->products->random(
+                    ceil($provider->organization->products->count() / 2)
+                )->map(static function(Product $product) {
+                    return [
+                        'amount' => random_int(0, 10) < 7 ? $product->price / 2 : $product->price,
+                        'product_id' => $product->id,
+                        'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
+                        'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(
+                            max($product->stock_amount / 10, 1)
+                        ),
+                    ];
+                })->toArray();
+
+                $provider->fund_provider_products()->createMany($fundProviderProducts);
+            });
+        });
 
         foreach (Fund::get() as $fund) {
             foreach ($fund->providers as $fundProvider) {
@@ -394,23 +417,19 @@ class LoremDbSeeder extends Seeder
         array $fields = [],
         int $offices_count = 0
     ) {
-        $organization = Organization::create(
-            collect(collect([
-                'kvk' => '69599068',
-                'iban' => 'NL25BUNQ9900069099',
-                'phone' => '123456789',
-                'email' => $this->primaryEmail,
-                'phone_public' => true,
-                'email_public' => true,
-                'business_type_id' => BusinessType::pluck('id')->random(),
-            ])->merge($fields)->merge(
-                compact('name', 'identity_address')
-            )->only([
-                'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
-                'email_public', 'phone_public', 'website_public',
-                'identity_address', 'business_type_id'
-            ]))->toArray()
-        );
+        $organization = Organization::create(array_only(array_merge([
+            'kvk' => '69599068',
+            'iban' => 'NL25BUNQ9900069099',
+            'phone' => '123456789',
+            'email' => $this->primaryEmail,
+            'phone_public' => true,
+            'email_public' => true,
+            'business_type_id' => BusinessType::pluck('id')->random(),
+        ], $fields, compact('name', 'identity_address')), [
+            'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
+            'email_public', 'phone_public', 'website_public',
+            'identity_address', 'business_type_id'
+        ]));
 
         OrganizationCreated::dispatch($organization);
 

@@ -43,11 +43,11 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
             ]), [
                 'logo' => new MediaResource($transaction->provider->logo),
             ]),
-            "product" => array_merge($transaction->product->only([
+            "product" => $transaction->product ? array_merge($transaction->product->only([
                 "id", "name", "organization_id",
             ]), [
                 'photo' => new MediaResource($transaction->product->photo),
-            ]),
+            ]) : null,
             "fund" => array_merge($transaction->voucher->fund->only([
                 "id", "name", "organization_id",
             ]), [

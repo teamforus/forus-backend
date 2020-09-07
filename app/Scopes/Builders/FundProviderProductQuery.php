@@ -64,7 +64,7 @@ class FundProviderProductQuery
                 );
 
                 if ($organization_id) {
-                    $providersQuery->whereIn('organization_id', $organization_id);
+                    $providersQuery->whereIn('organization_id', (array) $organization_id);
                 }
 
                 $builder->whereIn('organization_id', $providersQuery->pluck('organization_id'));

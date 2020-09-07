@@ -29,12 +29,14 @@ class ProductsController extends Controller
         $this->authorize('useAsProvider', $voucherToken->voucher);
         $this->authorize('viewAnyPublic', Product::class);
 
+        $organizations = Organization::queryByIdentityPermissions(auth_address(), [
+            'scan_vouchers'
+        ])->pluck('id')->toArray();
+
         $query = FundProviderProductQuery::whereAvailableForVoucherFilter(
             FundProviderProduct::query(),
             $voucherToken->voucher,
-            Organization::queryByIdentityPermissions(auth_address(), [
-                'scan_vouchers'
-            ])->pluck('id')->toArray()
+            $request->input('organization_id', $organizations)
         );
 
         return ProviderSubsidyProductResource::collection($query->with(
