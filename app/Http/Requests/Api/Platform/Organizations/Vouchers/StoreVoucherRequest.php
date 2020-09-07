@@ -42,8 +42,9 @@ class StoreVoucherRequest extends FormRequest
             'email'     => 'nullable|email:strict,dns',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
-                'required_without_all:product_id', 'numeric',
-                'between:.1,' . $max
+                'required_without:product_id',
+                'numeric',
+                'between:.1,' . currency_format($max)
             ],
             'expire_at' => [
                 'nullable',
@@ -55,7 +56,7 @@ class StoreVoucherRequest extends FormRequest
                 'nullable', new ValidPrevalidationCodeRule($fund),
             ],
             'product_id' => [
-                'required_without:vouchers.*.amount',
+                'required_without:amount',
                 'exists:products,id',
                 new ProductIdInStockRule($fund)
             ],
