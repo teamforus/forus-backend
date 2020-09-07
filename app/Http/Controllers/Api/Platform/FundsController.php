@@ -25,15 +25,34 @@ class FundsController extends Controller
     public function index(
         IndexFundsRequest $request
     ): AnonymousResourceCollection {
-        return FundResource::collection(Fund::search(
+        $query = Fund::search(
             $request,
             $request->input('state') === 'active_and_closed' ?
-            Implementation::queryFundsByState([
-                Fund::STATE_CLOSED,
-                Fund::STATE_ACTIVE,
-            ]) :
-            Implementation::activeFundsQuery()
-        )->get());
+                Implementation::queryFundsByState([
+                    Fund::STATE_CLOSED,
+                    Fund::STATE_ACTIVE,
+                ]) :
+                Implementation::activeFundsQuery()
+        );
+
+        $meta = [
+            'organizations' => $query->with('organization')->get()->pluck(
+                'organization.name', 'organization.id'
+            )->map(function ($name, $id) {
+                return (object) [
+                    'id'   => $id,
+                    'name' => $name
+                ];
+            })->toArray()
+        ];
+
+        if ($per_page = $request->input('per_page', false)) {
+            return FundResource::collection(
+                $query->paginate($per_page)
+            )->additional(compact('meta'));
+        }
+
+        return FundResource::collection($query->get());
     }
 
     /**

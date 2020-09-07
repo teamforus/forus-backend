@@ -26,7 +26,7 @@ class UpdateImplementationCmsRequest extends FormRequest
         return [
             'has_more_info_url'     => 'nullable|boolean',
             'more_info_url'         => 'nullable|string|max:50',
-            'description_steps'     => 'nullable|string|max:4000',
+            'description_steps'     => 'nullable|string|max:10000',
             'title'                 => 'nullable|string|max:50',
             'description'           => 'nullable|string|max:4000',
         ];
