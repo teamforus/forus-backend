@@ -300,7 +300,7 @@ $router->group(['middleware' => [
                 'index', 'show'
             ],
             'parameters' => [
-                'vouchers' => 'budget_voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
                 'products' => 'products',
             ]
         ]);
