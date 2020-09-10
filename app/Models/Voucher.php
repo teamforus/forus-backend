@@ -6,6 +6,7 @@ use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Data\VoucherExportData;
+use App\Models\Traits\HasFormattedDatesTrait;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -71,10 +72,15 @@ use Illuminate\Http\Request;
  * @property-read int|null $physical_cards_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
  * @property-read int|null $physical_card_requests_count
+ * @property-read string|null $created_at_string
+ * @property-read string|null $created_at_string_locale
+ * @property-read string|null $updated_at_string
+ * @property-read string|null $updated_at_string_locale
  */
 class Voucher extends Model
 {
     use HasLogs;
+    use HasFormattedDatesTrait;
 
     public const EVENT_CREATED_BUDGET = 'created_budget';
     public const EVENT_CREATED_PRODUCT = 'created_product';
@@ -438,7 +444,7 @@ class Voucher extends Model
         if ($request->has('q') && $q = $request->input('q')) {
             $identityRepo = resolve('forus.services.identity');
 
-            $query->where(function (Builder $query) use ($q, $identityRepo) {
+            $query->where(static function (Builder $query) use ($q, $identityRepo) {
                 $query->where('note', 'LIKE', "%{$q}%");
                 $query->orWhereIn(
                     'identity_address',
@@ -581,5 +587,20 @@ class Voucher extends Model
         $zip->close();
 
         return $zipFile;
+    }
+
+    /**
+     * @param string $address
+     * @param string|null $identity_address
+     * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model
+     */
+    public static function findByAddress(string $address, ?string $identity_address = null) {
+        return self::whereHas('tokens', static function(Builder $builder) use ($address) {
+            $builder->where('address', '=', $address);
+        })->where(static function(Builder $builder) use ($identity_address) {
+            if ($identity_address) {
+                $builder->where('identity_address', '=', $identity_address);
+            }
+        })->firstOrFail();
     }
 }

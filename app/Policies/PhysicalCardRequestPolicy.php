@@ -21,11 +21,6 @@ class PhysicalCardRequestPolicy
         string $identity_address,
         Voucher $voucher
     ) {
-        log_debug([
-            $voucher,
-            $voucher->identity_address,
-            $identity_address
-        ]);
         return $voucher->identity_address === $identity_address;
     }
 

@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
+use Gate;
 use App\Models\Fund;
 use App\Models\Organization;
-use Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -14,7 +14,7 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class OrganizationResource extends Resource
 {
-    const DEPENDENCIES = [
+    public const DEPENDENCIES = [
         'logo',
         'funds',
         'funds_count',
@@ -22,7 +22,11 @@ class OrganizationResource extends Resource
         'permissions',
     ];
 
-    public static function load($request = null) {
+    /**
+     * @param null $request
+     * @return array
+     */
+    public static function load($request = null): array {
         $load = [];
 
         self::isRequested('logo', $request) && array_push($load, 'logo');
@@ -39,19 +43,19 @@ class OrganizationResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         $organization = $this->resource;
         $ownerData = [];
 
         if (Gate::allows('organizations.update', $organization)) {
-            $ownerData = collect($organization)->only([
+            $ownerData = $organization->only([
                 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
                 'phone_public', 'website_public'
-            ])->toArray();
+            ]);
         }
 
         // $logoDep = api_dependency_requested('logo', $request);
@@ -66,20 +70,18 @@ class OrganizationResource extends Resource
             'website' => $organization->website_public ? $organization->website ?? null: null,
         ];
         
-        return array_filter(array_merge(collect($organization)->only([
+        return array_filter(array_merge($organization->only([
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
             'email_public', 'phone_public', 'website_public',
             'is_sponsor', 'is_provider', 'is_validator',
             'validator_auto_accept_funds', 'description'
-        ])->merge(array_merge(
-            $privateData,
-            $ownerData
-        ))->toArray(), [
+        ]), $privateData,
+            $ownerData, [
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(
                 $organization->business_type
             ) : '_null_',
-            'funds' => $fundsDep ? $organization->funds->map(function(Fund $fund) {
+            'funds' => $fundsDep ? $organization->funds->map(static function(Fund $fund) {
                 return $fund->only([
                     'id', 'name'
                 ]);
@@ -88,7 +90,7 @@ class OrganizationResource extends Resource
             'permissions' => $permissionsCountDep ? $organization->identityPermissions(
                 auth()->id()
             )->pluck('key') : '_null_',
-        ]), function($item) {
+        ]), static function($item) {
             return $item !== '_null_';
         });
     }

@@ -14,10 +14,10 @@ class ProductIdToVoucherRule extends BaseRule
     /**
      * Create a new rule instance.
      *
-     * @param string $voucherAddress
+     * @param string|null $voucherAddress
      * @return void
      */
-    public function __construct($voucherAddress)
+    public function __construct(?string $voucherAddress)
     {
         $this->voucherAddress = $voucherAddress;
     }
@@ -25,7 +25,7 @@ class ProductIdToVoucherRule extends BaseRule
     /**
      * Determine if the validation rule passes.
      *
-     * @param  string  $attribute
+     * @param  string|any  $attribute
      * @param  mixed  $product_id
      * @return bool
      */
@@ -35,7 +35,7 @@ class ProductIdToVoucherRule extends BaseRule
         $voucherToken = VoucherToken::whereAddress($this->voucherAddress)->first();
 
         // optional check for human readable output
-        if (!$voucherToken || !$voucher = $voucherToken->voucher) {
+        if (!$this->voucherAddress || !$voucherToken || (!$voucher = $voucherToken->voucher)) {
             return $this->rejectTrans('voucher_id_required');
         }
 

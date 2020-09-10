@@ -44,12 +44,12 @@ class FundProviderController extends Controller
                 Builder $builder
             ) use ($fundsQuery) {
                 $builder->whereIn('id', $fundsQuery->pluck('id'));
-            })->select('id', 'name')->get()->map(static function(Organization $organization) {
+            })->select(['id', 'name'])->get()->map(static function(Organization $organization) {
                 return $organization->only('id', 'name');
             }),
             'tags' => Tag::whereHas('funds', static function(Builder $builder) use ($fundsQuery) {
                 return $builder->whereIn('funds.id', $fundsQuery->pluck('id'));
-            })->select('key', 'name')->get()->map(static function(Tag $tag) {
+            })->select(['key', 'name'])->get()->map(static function(Tag $tag) {
                 return $tag->only('key', 'name');
             }),
         ];

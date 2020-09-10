@@ -198,6 +198,8 @@ return [
         'start_date' => 'startdatum',
         'end_date' => 'einddatum',
         'value' => "waarde",
+        'limit_total' => "Totaal aanbod",
+        'limit_total_per_identity' => "Limiet per aanvrager",
     ],
     'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
 ];

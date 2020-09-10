@@ -2,8 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers;
 
+use App\Models\Fund;
+use App\Models\Voucher;
+use App\Models\VoucherToken;
 use App\Rules\ProductIdToVoucherRule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductVoucherRequest extends FormRequest
 {
@@ -12,7 +17,7 @@ class StoreProductVoucherRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,19 +27,28 @@ class StoreProductVoucherRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
+        $identity_address = auth_address();
+
         return [
-            'voucher_address'    => [
+            'voucher_address' => [
                 'required',
-                'exists:voucher_tokens,address'
+                'exists:voucher_tokens,address',
+                Rule::in($identity_address ? VoucherToken::whereHas('voucher', static function(
+                    Builder $query
+                ) use ($identity_address) {
+                    $query->where([
+                        'identity_address' => $identity_address,
+                    ])->whereHas('fund', static function(Builder $builder) {
+                        $builder->where('type', '=', Fund::TYPE_BUDGET);
+                    })->whereNull('product_id');
+                })->pluck('address')->toArray() : [])
             ],
-            'product_id'    => [
+            'product_id' => [
                 'required',
                 'exists:products,id',
-                new ProductIdToVoucherRule(
-                    request()->input('voucher_address')
-                )
+                new ProductIdToVoucherRule($this->input('voucher_address'))
             ],
         ];
     }

@@ -85,8 +85,8 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'state', 'start_date', 'end_date',
-            'notification_amount', 'default_validator_employee_id'
+            'name', 'description', 'state', 'start_date', 'end_date', 'type',
+            'notification_amount', 'default_validator_employee_id',
         ], [
             'state' => Fund::STATE_WAITING,
             'auto_requests_validation' => $auto_requests_validation

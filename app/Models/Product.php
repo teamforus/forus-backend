@@ -8,6 +8,8 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
@@ -31,17 +33,22 @@ use Illuminate\Http\Request;
  * @property bool $sold_out
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
+ * @property-read int|null $fund_provider_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
+ * @property-read string $description_html
  * @property-read bool $expired
  * @property-read bool $is_offer
  * @property-read int $stock_amount
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read \App\Services\MediaService\Models\Media $photo
+ * @property-read \App\Services\MediaService\Models\Media|null $photo
  * @property-read \App\Models\ProductCategory $product_category
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
@@ -49,12 +56,10 @@ use Illuminate\Http\Request;
  * @property-read int|null $vouchers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers_reserved
  * @property-read int|null $vouchers_reserved_count
- * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newQuery()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product query()
- * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDescription($value)
@@ -72,8 +77,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
- * @property-read int|null $logs_count
  */
 class Product extends Model
 {
@@ -159,11 +162,18 @@ class Product extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function fund_providers() {
+    public function fund_providers(): BelongsToMany {
         return $this->belongsToMany(
             FundProvider::class,
             'fund_provider_products'
-        );
+        )->whereNull('fund_provider_products.deleted_at');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_products(): HasMany {
+        return $this->hasMany(FundProviderProduct::class);
     }
 
     /**
@@ -256,9 +266,9 @@ class Product extends Model
     /**
      * @return Builder
      */
-    public static function searchQuery() {
-        $query = Product::query();
-        $activeFunds = Implementation::activeFunds()->pluck('id')->toArray();
+    public static function searchQuery(): Builder {
+        $query = self::query();
+        $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
 
         // only in stock and not expired
         $query = ProductQuery::inStockAndActiveFilter($query);
@@ -273,8 +283,17 @@ class Product extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function search(Request $request) {
+    public static function search(Request $request): Builder {
         $query = self::searchQuery()->orderBy('created_at', 'desc');
+
+        // filter by fund_type
+        if ($fund_type = $request->input('fund_type')) {
+            /** @var Builder $funds */
+            $funds = Implementation::activeFundsQuery()->where('type', '=', $fund_type);
+            $query = ProductQuery::approvedForFundsAndActiveFilter(
+                $query, $funds->pluck('id')->toArray()
+            );
+        }
 
         // filter by product_category_id
         if ($category_id = $request->input('product_category_id')) {
@@ -334,5 +353,30 @@ class Product extends Model
             $this->name,
             Implementation::active()['url_provider']
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescriptionHtmlAttribute(): string {
+        return resolve('markdown')->convertToHtml($this->description);
+    }
+
+    /**
+     * @param Fund $fund
+     * @return null|FundProviderProduct
+     */
+    public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct {
+        /** @var FundProviderProduct $fundProviderProduct */
+        $fundProviderProduct = $this->fund_provider_products()->whereHas(
+            'fund_provider.fund',
+            static function(Builder $builder) use ($fund) {
+            $builder->where([
+                'fund_id' => $fund->id,
+                'type' => $fund::TYPE_SUBSIDIES,
+            ]);
+        })->first();
+
+        return $fundProviderProduct;
     }
 }

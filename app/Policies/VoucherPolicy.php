@@ -223,29 +223,46 @@ class VoucherPolicy
         }
 
         // fund needs to be active
-        if ($voucher->fund->state !== Fund::STATE_ACTIVE) {
+        if ($voucher->fund->state !== $voucher->fund::STATE_ACTIVE) {
             $this->deny('fund_not_active');
         }
 
-        if ($voucher->type === 'regular') {
-            $providersApproved = $fund->providers()->where([
-                'allow_budget' => true,
-            ])->pluck('organization_id');
+        if ($voucher->fund->type === $voucher->fund::TYPE_BUDGET) {
+            if ($voucher->type === $voucher::TYPE_BUDGET) {
+                $providersApproved = $fund->providers()->where([
+                    'allow_budget' => true,
+                ])->pluck('organization_id');
 
-            $providersDeclined = $fund->providers()->where([
-                'allow_budget' => false,
-                'dismissed' => true,
-            ])->pluck('organization_id');
+                $providersDeclined = $fund->providers()->where([
+                    'allow_budget' => false,
+                    'dismissed' => true,
+                ])->pluck('organization_id');
 
-            $providersPending = $fund->providers()->where([
-                'allow_budget' => false,
-                'dismissed' => false,
-            ])->pluck('organization_id');
-        } else {
+                $providersPending = $fund->providers()->where([
+                    'allow_budget' => false,
+                    'dismissed' => false,
+                ])->pluck('organization_id');
+            } else {
+                $providersApproved = FundProviderQuery::whereApprovedForFundsFilter(
+                    FundProvider::query(),
+                    $voucher->fund_id,
+                    'product',
+                    $voucher->product_id
+                )->pluck('organization_id');
+
+                $providersDeclined = $fund->providers()->where([
+                    'dismissed' => true,
+                ])->pluck('organization_id')->diff($providersApproved)->values();
+
+                $providersPending = $fund->providers()->where([
+                    'dismissed' => false,
+                ])->pluck('organization_id')->diff($providersApproved)->values();
+            }
+        } elseif ($voucher->fund->type === $voucher->fund::TYPE_SUBSIDIES) {
             $providersApproved = FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(),
                 $voucher->fund_id,
-                'product',
+                'subsidy',
                 $voucher->product_id
             )->pluck('organization_id');
 
@@ -256,6 +273,9 @@ class VoucherPolicy
             $providersPending = $fund->providers()->where([
                 'dismissed' => false,
             ])->pluck('organization_id')->diff($providersApproved)->values();
+        } else {
+            $this->deny('unknown_fund_type');
+            return false;
         }
 
         $providersApplied = $fund->providers()->pluck('organization_id');
@@ -265,36 +285,38 @@ class VoucherPolicy
         )->pluck('id');
 
         // None of identity organizations applied to the fund
-        if ($providers->intersect($providersApplied)->count() == 0) {
+        if ($providers->intersect($providersApplied)->count() === 0) {
             $this->deny('provider_not_applied');
         }
 
         // No approved identity organizations but have pending
-        if ($providers->intersect($providersApproved)->count() == 0 &&
+        if ($providers->intersect($providersApproved)->count() === 0 &&
             $providers->intersect($providersPending)->count() > 0 ) {
             $this->deny('provider_pending');
         }
 
         // No approved identity organizations but have declines
-        if ($providers->intersect($providersApproved)->count() == 0 &&
+        if ($providers->intersect($providersApproved)->count() === 0 &&
             $providers->intersect($providersDeclined)->count() > 0 ) {
             $this->deny('provider_declined');
         }
 
         // No approved identity organizations but have pending
-        if ($voucher->type == Voucher::TYPE_BUDGET) {
+        if ($voucher->type === $voucher::TYPE_BUDGET) {
             return $providers->intersect($providersApproved)->count() > 0;
-        } else if ($voucher->type == Voucher::TYPE_PRODUCT) {
+        }
+
+        if ($voucher->type === $voucher::TYPE_PRODUCT) {
             // Product vouchers should have not transactions
-            if ($voucher->transactions()->count() > 0) {
+            if ($voucher->transactions()->exists()) {
                 $this->deny('product_voucher_used');
             }
 
             // The identity should be allowed to scan voucher for
             // the provider organization
-            return $voucher->product->organization->identityCan(
-                $identity_address, 'scan_vouchers'
-            );
+            return $voucher->product->organization->identityCan($identity_address, [
+                'scan_vouchers'
+            ]);
         }
 
         return false;
