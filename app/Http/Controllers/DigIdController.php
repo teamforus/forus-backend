@@ -12,27 +12,24 @@ use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\Request;
 
+/**
+ * Class DigIdController
+ * @package App\Http\Controllers
+ */
 class DigIdController extends Controller
 {
-    const AUTH_NOT_REQUIRED_REQUEST_TYPES = [
-        'auth'
-    ];
-
     /**
      * @param StartDigIdRequest $request
      * @return array|void
      */
     public function start(StartDigIdRequest $request)
     {
-        if (!in_array(
-            $request->input('request'),
-            self::AUTH_NOT_REQUIRED_REQUEST_TYPES)
-        ) {
+        if (!in_array($request->input('request'), (array) 'auth', true)) {
             $this->middleware('api.auth');
         }
 
         $digidSession = DigIdSession::createSession(
-            auth_address() ?? null,
+            auth_address(),
             Implementation::activeModel(),
             client_type(),
             self::makeFinalRedirectUrl($request),
@@ -44,7 +41,7 @@ class DigIdController extends Controller
             $digidSession->session_uid
         )));
 
-        if ($digidSession->state != DigIdSession::STATE_PENDING_AUTH) {
+        if ($digidSession->state !== DigIdSession::STATE_PENDING_AUTH) {
             return abort(503, 'Unable to handle the request at the moment.', [
                 'Error-Code' => strtolower('digid_' . $digidSession->digid_error_code),
             ]);
@@ -103,14 +100,11 @@ class DigIdController extends Controller
         }
 
         switch ($session->session_request) {
-            case 'auth': return $this->_resolveAuth(
-                $recordRepo, $identityRepo, $session
-            ); break;
-            case 'fund_request': return $this->_resolveFundRequest(
-                $recordRepo, $session
-            ); break;
-            default: return abort(503, 'Unknown session type.');
+            case 'auth': return $this->_resolveAuth($recordRepo, $identityRepo, $session);
+            case 'fund_request': return $this->_resolveFundRequest($recordRepo, $session);
         }
+
+        abort(503, 'Unknown session type.');
     }
 
     /**
@@ -135,12 +129,11 @@ class DigIdController extends Controller
         }
 
         $proxy = $identityRepo->makeAuthorizationShortTokenProxy();
-        $identityRepo->activateAuthorizationShortTokenProxy(
-            $identity, $proxy['exchange_token']
-        );
+        $identityRepo->activateAuthorizationShortTokenProxy($identity, $proxy['exchange_token']);
 
         return redirect(sprintf(
-            rtrim($session->session_final_url, '/') . '/auth-link?token=%s',
+            '%s/auth-link?token=%s',
+            rtrim($session->session_final_url, '/'),
             $proxy['exchange_token']
         ));
     }
@@ -190,19 +183,16 @@ class DigIdController extends Controller
      * @return bool|mixed|string
      */
     private static function makeFinalRedirectUrl(Request $request) {
-        switch ($request->input('request')) {
-            case "fund_request": {
-                $fund = Fund::find($request->input('fund_id'));
+        $implementationModel = Implementation::activeModel();
+        $fund = Fund::find($request->input('fund_id'));
 
-                return $fund->urlWebshop(sprintf(
-                    '/fund/%s/request',
-                    $fund->id
-                ));
-            } break;
-            case "auth": {
-                return Implementation::activeModel()->urlFrontend(client_type());
-            } break;
-            default: return false;
+        switch ($request->input('request')) {
+            case "fund_request": return $fund->urlWebshop(sprintf('/fund/%s/request', $fund->id));
+            case "auth": return $implementationModel ? $implementationModel->urlFrontend(
+                client_type()
+            ) : abort(404);
         }
+
+        return abort(404);
     }
 }

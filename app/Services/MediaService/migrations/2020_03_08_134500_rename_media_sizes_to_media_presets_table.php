@@ -10,7 +10,7 @@ class RenameMediaSizesToMediaPresetsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::rename('media_sizes', 'media_presets');
     }
@@ -20,7 +20,7 @@ class RenameMediaSizesToMediaPresetsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::rename('media_presets', 'media_sizes');
     }

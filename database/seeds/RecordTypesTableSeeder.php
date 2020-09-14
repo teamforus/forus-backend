@@ -118,5 +118,23 @@ class RecordTypesTableSeeder extends DatabaseSeeder
             'name'      => 'UID',
             'type'      => 'string',
         ]);
+
+        RecordType::create([
+            'key'       => 'bsn_hash',
+            'name'      => 'Partner BSN',
+            'type'      => 'string',
+        ]);
+
+        RecordType::create([
+            'key'       => 'partner_bsn',
+            'name'      => 'Partner BSN',
+            'type'      => 'number',
+        ]);
+
+        RecordType::create([
+            'key'       => 'partner_bsn_hash',
+            'name'      => 'Partner BSN',
+            'type'      => 'string',
+        ]);
     }
 }

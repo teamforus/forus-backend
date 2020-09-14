@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
@@ -12,7 +11,7 @@ use Illuminate\Contracts\Validation\Rule;
 abstract class BaseRule implements Rule
 {
     protected $messageTransPrefix = "";
-    protected $message = "";
+    protected $messageText = "";
 
     /**
      * @param $messageKey
@@ -30,7 +29,7 @@ abstract class BaseRule implements Rule
      * @return bool
      */
     public function rejectWithMessage($message): bool {
-        $this->message = $message;
+        $this->messageText = $message;
 
         return false;
     }
@@ -41,6 +40,6 @@ abstract class BaseRule implements Rule
      * @return string
      */
     public function message(): string {
-        return $this->message;
+        return $this->messageText;
     }
 }

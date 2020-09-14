@@ -6,9 +6,13 @@ use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Class MediaServiceProvider
+ * @package App\Services\MediaService
+ */
 class MediaServiceProvider extends ServiceProvider
 {
-    public function boot()
+    public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/migrations');
 
@@ -26,7 +30,7 @@ class MediaServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton('media', function () {
             return new MediaService();

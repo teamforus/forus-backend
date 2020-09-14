@@ -3,6 +3,7 @@
 namespace App\Services\Forus\Identity\Models;
 
 use App\Models\Voucher;
+use App\Services\Forus\Record\Models\Record;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -43,6 +44,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity wherePublicKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\Record[] $records
+ * @property-read int|null $records_count
  */
 class Identity extends Model
 {
@@ -117,6 +120,13 @@ class Identity extends Model
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function records(): HasMany {
+        return $this->hasMany(Record::class, 'identity_address', 'address');
     }
 
     /**

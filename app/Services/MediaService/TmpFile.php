@@ -10,7 +10,7 @@ namespace App\Services\MediaService;
  */
 class TmpFile
 {
-    private $resource = null;
+    private $resource;
 
     /**
      * TmpFile constructor.

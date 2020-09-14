@@ -324,6 +324,11 @@ class FundRequest extends Model
         Employee $employee,
         ?FundCriterion $fundCriterion = null
     ): self {
+        $this->records()->where([
+            'employee_id' => $employee->id,
+            'record_type_key' => 'partner_bsn'
+        ])->forceDelete();
+
         $query = $this->records()->where([
             'employee_id' => $employee->id,
         ]);

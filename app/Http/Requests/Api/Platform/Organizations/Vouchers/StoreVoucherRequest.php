@@ -32,7 +32,7 @@ class StoreVoucherRequest extends FormRequest
         $fund = Fund::query()->whereIn('id', $validFunds)->findOrFail($this->input('fund_id'));
 
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
-        $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
+        $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
 
         return [
             'fund_id'   => [

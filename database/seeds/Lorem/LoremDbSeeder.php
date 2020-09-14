@@ -3,6 +3,7 @@
 use App\Events\Organizations\OrganizationCreated;
 use App\Models\BusinessType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
 use App\Models\Organization;
 use App\Models\ProductCategory;
@@ -56,7 +57,7 @@ class LoremDbSeeder extends Seeder
     ];
 
     private $fundsWithPhysicalCards = [
-        'Nijmegen',
+        'Nijmegen', 'Stadjerspas',
     ];
 
     /**
@@ -184,7 +185,7 @@ class LoremDbSeeder extends Seeder
             $this->makePrevalidations(
                 $fund->organization->identity_address,
                 $fund,
-                $this->generatePrevalidationData($fund->fund_config->csv_primary_key, 10, [
+                $this->generatePrevalidationData($fund, 10, [
                     $fund->fund_config->key . '_eligible' => 'Ja',
                 ])
             );
@@ -305,13 +306,10 @@ class LoremDbSeeder extends Seeder
      */
     public function applyFunds(string $identity_address): void
     {
-        /** @var Prevalidation[] $prevalidations */
-        $prevalidations = Prevalidation::query()->where([
+        $prevalidations = Prevalidation::where([
             'state' => 'pending',
             'identity_address' => $identity_address
-        ])->get()->groupBy('fund_id')->map(static function(
-            \Illuminate\Support\Collection $arr
-        ) {
+        ])->get()->groupBy('fund_id')->map(static function(SupportCollection $arr) {
             return $arr->first();
         });
 
@@ -342,17 +340,7 @@ class LoremDbSeeder extends Seeder
                 'state' => 'used'
             ]);
 
-            $fund = $prevalidation->fund;
-
-            $voucher = $fund->makeVoucher($identity_address);
-            $voucher->tokens()->create([
-                'address'           => $this->tokenGenerator->address(),
-                'need_confirmation' => true,
-            ]);
-            $voucher->tokens()->create([
-                'address'           => $this->tokenGenerator->address(),
-                'need_confirmation' => false,
-            ]);
+            $voucher = $prevalidation->fund->makeVoucher($identity_address);
 
             while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 2)) {
                 $transaction = $voucher->transactions()->create([
@@ -550,6 +538,8 @@ class LoremDbSeeder extends Seeder
         string $key,
         string $name
     ) {
+        $requiredDigidImplementations = array_map("str_slug", $this->fundsWithPhysicalCards);
+
         return Implementation::create([
             'key'   => $key,
             'name'  => $name,
@@ -576,6 +566,7 @@ class LoremDbSeeder extends Seeder
             ),
 
             'digid_enabled'         => config('forus.seeders.lorem_db_seeder.digid_enabled'),
+            'digid_required'        => in_array($key, $requiredDigidImplementations, true),
             'digid_app_id'          => config('forus.seeders.lorem_db_seeder.digid_app_id'),
             'digid_shared_secret'   => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
             'digid_a_select_server' => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
@@ -594,6 +585,8 @@ class LoremDbSeeder extends Seeder
         string $key,
         array $fields = []
     ): void {
+        $hashBsn = in_array($fund->name, $this->fundsWithPhysicalCards, true);
+
         $fund->fund_config()->create(collect([
             'implementation_id'     => $implementation->id,
             'key'                   => $key,
@@ -601,6 +594,8 @@ class LoremDbSeeder extends Seeder
             'csv_primary_key'       => 'uid',
             'is_configured'         => true,
             'allow_physical_cards'  => in_array($fund->name, $this->fundsWithPhysicalCards),
+            'hash_bsn'              => $hashBsn,
+            'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'
@@ -640,10 +635,20 @@ class LoremDbSeeder extends Seeder
         }
 
         $fund->criteria()->createMany($criteria);
-        $fund->isTypeBudget() ? $fund->fund_formulas()->create([
+
+        $fund->fund_formulas()->create([
             'type' => 'fixed',
-            'amount' => config('forus.seeders.lorem_db_seeder.voucher_amount'),
-        ]) : null;
+            'amount' => $fund->isTypeBudget() ? config(
+                'forus.seeders.lorem_db_seeder.voucher_amount'
+            ): 0,
+        ]);
+
+        if ($fund->isTypeSubsidy()) {
+            $fund->fund_limit_multipliers()->create([
+                'record_type_key' => 'children_nth',
+                'multiplier' => 1,
+            ]);
+        }
     }
 
     /**
@@ -656,9 +661,7 @@ class LoremDbSeeder extends Seeder
         Fund $fund,
         array $records = []
     ): void {
-        $recordTypes = collect(
-            $this->recordRepo->getRecordTypes()
-        )->pluck('id', 'key');
+        $recordTypes = array_pluck($this->recordRepo->getRecordTypes(), 'id', 'key');
 
         collect($records)->map(static function($record) use ($recordTypes) {
             $record = collect($record);
@@ -679,9 +682,7 @@ class LoremDbSeeder extends Seeder
         })->map(function($records) use ($fund, $identity_address) {
             do {
                 $uid = $this->tokenGenerator->generate(4, 2);
-            } while(Prevalidation::query()->where(
-                'uid', $uid
-            )->count() > 0);
+            } while(Prevalidation::whereUid($uid)->exists());
 
             $prevalidation = Prevalidation::create([
                 'uid' => $uid,
@@ -698,32 +699,48 @@ class LoremDbSeeder extends Seeder
     }
 
     /**
-     * @param string $primaryKey
+     * @param Fund $fund
      * @param int $count
      * @param array $records
-     * @param callable|null $primaryKeyGenerator
      * @return array
      * @throws Exception
      */
     public function generatePrevalidationData(
-        string $primaryKey,
+        Fund $fund,
         int $count = 10,
-        array $records = [],
-        callable $primaryKeyGenerator = null
+        array $records = []
     ): array {
         $out = [];
+        // second prevalidation in list
+        $bsn_prevalidation_index = $count - 2;
+
+        // third prevalidation in list is partner for second prevalidation
+        $bsn_prevalidation_partner_index = $count - 3;
+
+        $csv_primary_key = $fund->fund_config->csv_primary_key;
+        $env_lorem_bsn = env('DB_SEED_PREVALIDATION_BSN', 900158086);
+        $partner_bsn = $this->randomFakeBsn();
 
         while ($count-- > 0) {
             do {
-                $primaryKeyValue = is_callable($primaryKeyGenerator) ? $primaryKeyGenerator() : random_int(100000, 999999);
-            } while (collect($out)->pluck($primaryKey)->search($primaryKeyValue) !== false);
+                $primaryKeyValue = random_int(100000, 999999);
+            } while (collect($out)->pluck($csv_primary_key)->search($primaryKeyValue) !== false);
 
-            $out[] = collect($records)->merge([
-                $primaryKey => $primaryKeyValue,
-                'children_nth' => random_int(3, 5),
+            $bsn_value = $count === $bsn_prevalidation_index ?
+                $env_lorem_bsn : $this->randomFakeBsn();
+
+            $bsn_value_partner = $count === $bsn_prevalidation_partner_index ?
+                $partner_bsn : $env_lorem_bsn;
+
+            $out[] = array_merge($records, [
+                $csv_primary_key => $primaryKeyValue,
                 'gender' => 'Female',
                 'net_worth' => random_int(3, 6) * 100,
-            ])->toArray();
+                'children_nth' => random_int(3, 5),
+            ], $fund->fund_config->hash_bsn ? [
+                'bsn_hash' => $fund->getHashedValue($bsn_value),
+                'partner_bsn_hash' => $fund->getHashedValue($bsn_value_partner),
+            ] : []);
         }
 
         return $out;
@@ -788,6 +805,24 @@ class LoremDbSeeder extends Seeder
         ProductCreated::dispatch($product);
 
         return $product;
+    }
+
+    /**
+     * @return int
+     */
+    private function randomFakeBsn(): int
+    {
+        static $randomBsn = [];
+
+        do {
+            try {
+                $bsn = random_int(100000000, 900000000);
+            } catch (Exception $e) {
+                $bsn = false;
+            }
+        } while ($bsn && in_array($bsn, $randomBsn, true));
+
+        return $randomBsn[] = $bsn;
     }
 
     /**

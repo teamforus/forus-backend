@@ -12,7 +12,7 @@ abstract class MediaPreset
      * Preset name
      * @var int
      */
-    public $name = null;
+    public $name;
 
     /**
      * Media final quality
@@ -29,13 +29,13 @@ abstract class MediaPreset
     /**
      * @var null|string
      */
-    public $queue = null;
+    public $queue;
 
     /**
      * MediaPreset constructor.
      * @param string $name
-     * @param string $format
-     * @param $quality
+     * @param string|null $format
+     * @param string $quality
      */
     public function __construct(
         string $name,

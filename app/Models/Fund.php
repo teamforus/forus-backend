@@ -17,6 +17,7 @@ use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
+use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
@@ -74,6 +75,8 @@ use Illuminate\Http\Request;
  * @property-read int|null $fund_formula_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_limit_multipliers
+ * @property-read int|null $fund_limit_multipliers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
@@ -371,7 +374,7 @@ class Fund extends Model
     /**
      * @return float
      */
-    public function getBudgetUsedAttribute() {
+    public function getBudgetUsedAttribute(): float {
         return round($this->voucher_transactions()->sum('voucher_transactions.amount'), 2);
     }
 
@@ -401,7 +404,7 @@ class Fund extends Model
      */
     public function getTransactionCosts (): float {
         if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
-            return $this->voucher_transactions()->count() * 0.10;
+            return $this->voucher_transactions()->where('amount', '>', '0')->count() * 0.10;
         }
 
         return 0.0;
@@ -529,6 +532,13 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function fund_limit_multipliers(): HasMany {
+        return $this->hasMany(FundLimitMultiplier::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function fund_formula_products(): HasMany {
         return $this->hasMany(FundFormulaProduct::class);
     }
@@ -622,36 +632,53 @@ class Fund extends Model
     }
 
     /**
-     * @param Fund $fund
-     * @param $identityAddress
+     * @param string|null $identityAddress
      * @return int|mixed
      */
-    public static function amountForIdentity(Fund $fund, $identityAddress)
+    public function amountForIdentity(?string $identityAddress)
     {
-        if ($fund->fund_formulas->count() === 0 &&
-            $fund->fund_formula_products->pluck('price')->sum() === 0) {
+        if ($this->fund_formulas->count() === 0 &&
+            $this->fund_formula_products->pluck('price')->sum() === 0) {
             return 0;
         }
 
-        return $fund->fund_formulas->map(static function(FundFormula $formula) use (
-                $fund, $identityAddress
-            ) {
-                switch ($formula->type) {
-                    case 'fixed': return $formula->amount;
-                    case 'multiply': {
-                        $record = self::getTrustedRecordOfType(
-                            $identityAddress,
-                            $formula->record_type_key,
-                            $fund
-                        );
+        return $this->fund_formulas->map(function(FundFormula $formula) use ($identityAddress) {
+            switch ($formula->type) {
+                case 'fixed': return $formula->amount;
+                case 'multiply': {
+                    $record = self::getTrustedRecordOfType(
+                        $identityAddress,
+                        $formula->record_type_key,
+                        $this
+                    );
 
-                        return is_numeric(
-                            $record['value']
-                        ) ? $formula->amount * $record['value'] : 0;
-                    }
-                    default: return 0;
+                    return is_numeric(
+                        $record['value']
+                    ) ? $formula->amount * $record['value'] : 0;
                 }
-            })->sum() + $fund->fund_formula_products->pluck('price')->sum();
+                default: return 0;
+            }
+        })->sum() + $this->fund_formula_products->pluck('price')->sum();
+    }
+
+    /**
+     * @param string|null $identityAddress
+     * @return int|mixed
+     */
+    public function multiplierForIdentity(?string $identityAddress) {
+        /** @var FundLimitMultiplier[]|Collection $multipliers */
+        $multipliers = $this->fund_limit_multipliers()->get();
+
+        if ($multipliers->count() === 0) {
+            return 1;
+        }
+
+        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress) {
+            return ((int) self::getTrustedRecordOfType(
+                $identityAddress,
+                $multiplier->record_type_key,
+                $this)['value']) * $multiplier->multiplier;
+        })->sum();
     }
 
     /**
@@ -1005,18 +1032,15 @@ class Fund extends Model
         Carbon $expire_at = null,
         string $note = null
     ) {
-        $amount = $voucherAmount ?: self::amountForIdentity(
-            $this,
-            $identity_address
-        );
-
+        $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
+        $limit_multiplier = $this->multiplierForIdentity($identity_address);
 
         $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note',
-            'fund_id', 'returnable'
+            'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
+            'returnable', 'limit_multiplier'
         ));
 
         VoucherCreated::dispatch($voucher);
@@ -1379,5 +1403,93 @@ class Fund extends Model
      */
     public function isTypeBudget(): bool {
         return $this->type === $this::TYPE_BUDGET;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHashingBsn(): bool {
+        return $this->fund_config->hash_bsn;
+    }
+
+    /**
+     * @param $value
+     * @return string|null
+     */
+    public function getHashedValue($value): ?string {
+        if (!$this->isHashingBsn()) {
+            return null;
+        }
+
+        return hash_hmac('sha256', $value, $this->fund_config->hash_bsn_salt);
+    }
+
+    /**
+     * TODO: refactoring!
+     * @param ?string $identity_address
+     * @return bool
+     */
+    public function isTakenByPartner(?string $identity_address): bool {
+        if (!$identity_address || !$identity = Identity::findByAddress($identity_address)) {
+            return false;
+        }
+
+        $auth_bsn = record_repo()->bsnByAddress($identity_address);
+        $auth_bsn_hash = self::getTrustedRecordOfType($identity_address, 'partner_bsn_hash', $this);
+
+
+        if ((!$auth_bsn && !$this->isHashingBsn()) && ($auth_bsn_hash && $this->isHashingBsn())) {
+            return false;
+        }
+
+        $value = $this->isHashingBsn() ? $this->getHashedValue($auth_bsn) : $auth_bsn;
+        $record_type_key = $this->isHashingBsn() ? 'bsn_hash' : 'bsn';
+        $record_type_id = record_repo()->getTypeIdByKey($record_type_key);
+
+        $record_type_key_partner = $this->isHashingBsn() ? 'partner_bsn_hash' : 'partner_bsn';
+        $record_type_id_partner = record_repo()->getTypeIdByKey($record_type_key_partner);
+
+        $partners = [$identity_address];
+
+        // you are partner
+        $partners = array_merge($partners, Identity::whereHas('records', function(
+            Builder $builder
+        ) use ($record_type_id_partner, $value, $identity, $record_type_id) {
+            $builder->where(function(Builder $builder) use ($record_type_id_partner, $value) {
+                $builder->where([
+                    'record_type_id' => $record_type_id_partner,
+                    'value' => $value,
+                ]);
+
+                $builder->whereHas('validations', function(Builder $builder) {
+                    $builder->whereIn('identity_address', $this->validatorEmployees());
+                });
+            });
+
+            $builder->orWhere(function(Builder $builder) use (
+                $identity, $record_type_id, $record_type_id_partner
+            ) {
+                $builder->where([
+                    'record_type_id' => $record_type_id,
+                ])->whereIn('value', $identity->records()->where([
+                    'record_type_id' => $record_type_id_partner,
+                ])->whereHas('validations', function(Builder $builder) {
+                    $builder->whereIn('identity_address', $this->validatorEmployees());
+                })->get()->pluck('value')->toArray());
+
+                $builder->whereHas('validations', function(Builder $builder) {
+                    $builder->whereIn('identity_address', $this->validatorEmployees());
+                });
+            });
+        })->pluck('address')->toArray());
+
+        $partners = array_values(array_diff($partners, [$identity_address]));
+
+
+        return self::whereHas('vouchers', function(Builder $builder) use ($partners) {
+            $builder->where([
+                'fund_id' => $this->id
+            ])->whereIn('identity_address', $partners);
+        })->exists();
     }
 }

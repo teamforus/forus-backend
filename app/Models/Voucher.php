@@ -6,7 +6,7 @@ use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Data\VoucherExportData;
-use App\Models\Traits\HasFormattedDatesTrait;
+use App\Models\Traits\HasFormattedTimestamps;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
  * @property int $fund_id
  * @property string|null $identity_address
  * @property float $amount
+ * @property int $limit_multiplier
  * @property bool $returnable
  * @property string|null $note
  * @property int|null $employee_id
@@ -34,19 +35,28 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Fund $fund
  * @property-read mixed $amount_available
  * @property-read mixed $amount_available_cached
+ * @property-read string|null $created_at_string
+ * @property-read string|null $created_at_string_locale
  * @property-read bool $expired
  * @property-read bool $has_transactions
  * @property-read bool $is_granted
+ * @property-read \Carbon|\Illuminate\Support\Carbon $last_active_day
  * @property-read string $type
+ * @property-read string|null $updated_at_string
+ * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
- * @property-read Carbon $last_active_day
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \App\Models\Voucher|null $parent
- * @property-read \App\Models\Product|null $product
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
+ * @property-read int|null $physical_card_requests_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PhysicalCard[] $physical_cards
+ * @property-read int|null $physical_cards_count
+ * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
- * @property-read \App\Models\VoucherToken $token_with_confirmation
- * @property-read \App\Models\VoucherToken $token_without_confirmation
+ * @property-read \App\Models\VoucherToken|null $token_with_confirmation
+ * @property-read \App\Models\VoucherToken|null $token_without_confirmation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherToken[] $tokens
  * @property-read int|null $tokens_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $transactions
@@ -61,26 +71,18 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereLimitMultiplier($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereParentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereReturnable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
- * @property-read int|null $logs_count
- * @property-read int|null $physical_cards_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
- * @property-read int|null $physical_card_requests_count
- * @property-read string|null $created_at_string
- * @property-read string|null $created_at_string_locale
- * @property-read string|null $updated_at_string
- * @property-read string|null $updated_at_string_locale
  */
 class Voucher extends Model
 {
     use HasLogs;
-    use HasFormattedDatesTrait;
+    use HasFormattedTimestamps;
 
     public const EVENT_CREATED_BUDGET = 'created_budget';
     public const EVENT_CREATED_PRODUCT = 'created_product';
@@ -108,8 +110,8 @@ class Voucher extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'identity_address', 'amount', 'product_id', 'parent_id',
-        'expire_at', 'note', 'employee_id', 'returnable',
+        'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
+        'parent_id', 'expire_at', 'note', 'employee_id', 'returnable',
     ];
 
     /**
@@ -136,7 +138,7 @@ class Voucher extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function parent(): BelongsTo {
-        return $this->belongsTo(Voucher::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     /**
@@ -174,7 +176,7 @@ class Voucher extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function product_vouchers(): HasMany {
-        return $this->hasMany(Voucher::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     /**
@@ -513,7 +515,7 @@ class Voucher extends Model
         float $price = null,
         $returnable = true
     ) {
-        $price = !$price && ($price !== 0) ? $product->price : $price;
+        $price = (float) (!$price && ($price !== 0) ? $product->price : $price);
 
         $voucherExpireAt = $this->fund->end_date->gt(
             $product->expire_at
@@ -590,6 +592,20 @@ class Voucher extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function isBudgetType(): bool {
+        return $this->type === self::TYPE_BUDGET;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProductType(): bool {
+        return $this->type === self::TYPE_PRODUCT;
+    }
+
+    /**
      * @param string $address
      * @param string|null $identity_address
      * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model
@@ -602,5 +618,18 @@ class Voucher extends Model
                 $builder->where('identity_address', '=', $identity_address);
             }
         })->firstOrFail();
+    }
+
+    /**
+     * @param $code_or_address
+     * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model|object|null
+     */
+    public static function findByAddressOrPhysicalCard($code_or_address)
+    {
+        return self::whereHas('fund.fund_config', static function (Builder $builder) {
+            $builder->where('allow_physical_cards', '=', true);
+        })->whereHas('physical_cards', static function (Builder $builder) use ($code_or_address) {
+            $builder->where('code', '=', $code_or_address);
+        })->first() ?: self::findByAddress($code_or_address);
     }
 }

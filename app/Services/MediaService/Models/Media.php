@@ -4,6 +4,8 @@ namespace App\Services\MediaService\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -14,33 +16,33 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $original_name
  * @property string $type
  * @property string $ext
+ * @property string $dominant_color
+ * @property int $order
  * @property string $identity_address
  * @property int|null $mediable_id
  * @property string|null $mediable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Services\MediaService\Models\Media|null $mediable
- * @property-read \App\Services\MediaService\Models\MediaPreset $size_original
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $mediable
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaPreset[] $presets
  * @property-read int|null $presets_count
+ * @property-read \App\Services\MediaService\Models\MediaPreset|null $size_original
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereDominantColor($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereExt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereMediableId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereMediableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOriginalName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property string $dominant_color
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereDominantColor($value)
- * @property int $order
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOrder($value)
  */
 class Media extends Model
 {
@@ -57,14 +59,14 @@ class Media extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function presets() {
+    public function presets(): HasMany {
         return $this->hasMany(MediaPreset::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function size_original() {
+    public function size_original(): HasOne {
         return $this->hasOne(MediaPreset::class)->where([
             'key' => 'original'
         ]);
@@ -73,7 +75,7 @@ class Media extends Model
     /**
      * @return MorphTo
      */
-    public function mediable() {
+    public function mediable(): MorphTo {
         return $this->morphTo();
     }
 
@@ -81,7 +83,7 @@ class Media extends Model
      * @param string $key
      * @return MediaPreset|null
      */
-    public function findPreset(string $key) {
+    public function findPreset(string $key): string {
         return $this->presets->where('key', $key)->first();
     }
 
@@ -89,7 +91,7 @@ class Media extends Model
      * @param $uid
      * @return self|Builder|Model|object|null
      */
-    public static function findByUid($uid) {
+    public static function findByUid($uid){
         return self::where(compact('uid'))->first();
     }
 
@@ -97,7 +99,7 @@ class Media extends Model
      * @param string $key
      * @return string|null
      */
-    public function urlPublic(string $key) {
+    public function urlPublic(string $key): ?string {
         if ($size = $this->findPreset($key)) {
             return $size->urlPublic();
         }

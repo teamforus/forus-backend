@@ -8,8 +8,10 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
@@ -26,6 +28,7 @@ use Illuminate\Http\Request;
  * @property float|null $old_price
  * @property int $total_amount
  * @property bool $unlimited_stock
+ * @property bool $no_price
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -50,6 +53,8 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Organization $organization
  * @property-read \App\Services\MediaService\Models\Media|null $photo
  * @property-read \App\Models\ProductCategory $product_category
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
+ * @property-read int|null $product_exclusions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
@@ -66,6 +71,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereNoPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOldPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePrice($value)
@@ -82,13 +88,13 @@ class Product extends Model
 {
     use HasMedia, SoftDeletes, HasLogs;
 
-    const EVENT_CREATED = 'created';
-    const EVENT_SOLD_OUT = 'sold_out';
-    const EVENT_EXPIRED = 'expired';
-    const EVENT_RESERVED = 'reserved';
+    public const EVENT_CREATED = 'created';
+    public const EVENT_SOLD_OUT = 'sold_out';
+    public const EVENT_EXPIRED = 'expired';
+    public const EVENT_RESERVED = 'reserved';
 
-    const EVENT_APPROVED = 'approved';
-    const EVENT_REVOKED = 'revoked';
+    public const EVENT_APPROVED = 'approved';
+    public const EVENT_REVOKED = 'revoked';
 
     /**
      * The attributes that are mass assignable.
@@ -98,7 +104,7 @@ class Product extends Model
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
         'price', 'old_price', 'total_amount', 'expire_at', 'sold_out',
-        'unlimited_stock'
+        'unlimited_stock', 'no_price',
     ];
 
     /**
@@ -111,48 +117,49 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'unlimited_stock' => 'boolean'
+        'no_price' => 'boolean',
+        'unlimited_stock' => 'boolean',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization() {
+    public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function vouchers() {
+    public function vouchers(): HasMany {
         return $this->hasMany(Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function vouchers_reserved() {
+    public function vouchers_reserved(): HasMany {
         return $this->hasMany(Voucher::class)->whereDoesntHave('transactions');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function voucher_transactions() {
+    public function voucher_transactions(): HasMany {
         return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product_category() {
+    public function product_category(): BelongsTo {
         return $this->belongsTo(ProductCategory::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function funds() {
+    public function funds(): HasManyThrough {
         return $this->hasManyThrough(
             Fund::class,
             FundProduct::class
@@ -177,10 +184,17 @@ class Product extends Model
     }
 
     /**
+     * @return HasMany
+     */
+    public function product_exclusions(): HasMany {
+        return $this->hasMany(FundProviderProductExclusion::class);
+    }
+
+    /**
      * Get fund logo
      * @return MorphOne
      */
-    public function photo() {
+    public function photo(): MorphOne {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'product_photo'
         ]);
@@ -189,7 +203,7 @@ class Product extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_provider_chats() {
+    public function fund_provider_chats(): HasMany {
         return $this->hasMany(FundProviderChat::class);
     }
 
@@ -198,8 +212,8 @@ class Product extends Model
      *
      * @return bool
      */
-    public function getIsOfferAttribute() {
-        return !!$this->old_price;
+    public function getIsOfferAttribute(): bool {
+        return (bool) $this->old_price;
     }
 
     /**
@@ -208,8 +222,8 @@ class Product extends Model
      * @param $value
      * @return bool
      */
-    public function getSoldOutAttribute($value) {
-        return !!$value;
+    public function getSoldOutAttribute($value): bool {
+        return (bool) $value;
     }
 
     /**
@@ -217,7 +231,7 @@ class Product extends Model
      *
      * @return bool
      */
-    public function getExpiredAttribute() {
+    public function getExpiredAttribute(): bool {
         return $this->expire_at->isPast();
     }
 
@@ -226,7 +240,7 @@ class Product extends Model
      *
      * @return int
      */
-    public function countReserved() {
+    public function countReserved(): int {
         return $this->vouchers()->doesntHave('transactions')->count();
     }
 
@@ -235,14 +249,14 @@ class Product extends Model
      *
      * @return int
      */
-    public function countSold() {
+    public function countSold(): int {
         return $this->voucher_transactions()->count();
     }
 
     /**
      * @return int
      */
-    public function getStockAmountAttribute() {
+    public function getStockAmountAttribute(): int {
         return $this->total_amount - (
             $this->vouchers_reserved->count() +
             $this->voucher_transactions->count());
@@ -251,7 +265,7 @@ class Product extends Model
     /**
      * Update sold out state for the product
      */
-    public function updateSoldOutState() {
+    public function updateSoldOutState(): void {
         if (!$this->unlimited_stock) {
             $totalProducts = $this->countReserved() + $this->countSold();
             $sold_out = $totalProducts >= $this->total_amount;
@@ -323,7 +337,7 @@ class Product extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function searchAny(Request $request) {
+    public static function searchAny(Request $request): Builder {
         $query = self::query()->orderBy('created_at', 'desc');
 
         // filter by unlimited stock
@@ -378,5 +392,37 @@ class Product extends Model
         })->first();
 
         return $fundProviderProduct;
+    }
+
+    /**
+     * @param Request $request
+     */
+    public function updateExclusions(Request $request): void
+    {
+        foreach ($request->input('disable_funds', []) as $fund_id) {
+            /** @var FundProvider $fundProvider */
+            if ($fundProvider = $this->organization->fund_providers()->where([
+                'fund_id' => $fund_id
+            ])->first()) {
+                $fundProvider->product_exclusions()->firstOrCreate([
+                    'product_id' => $this->id
+                ]);
+
+                $fundProvider->fund_provider_products()->where([
+                    'product_id' => $this->id
+                ])->delete();
+            }
+        }
+
+        foreach ($request->input('enable_funds', []) as $fund_id) {
+            /** @var FundProvider $fundProvider */
+            if ($fundProvider = $this->organization->fund_providers()->where([
+                'fund_id' => $fund_id
+            ])->first()) {
+                $fundProvider->product_exclusions()->where([
+                    'product_id' => $this->id
+                ])->delete();
+            }
+        }
     }
 }

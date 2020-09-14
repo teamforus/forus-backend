@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property int|null $fund_id
  * @property int|null $organization_id
  * @property string $state
+ * @property string|null $uid_hash
+ * @property string|null $records_hash
  * @property int $exported
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -38,15 +40,13 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRecordsHash($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRedeemedByAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUidHash($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property string|null $uid_hash
- * @property string|null $records_hash
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRecordsHash($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUidHash($value)
  */
 class Prevalidation extends Model
 {
@@ -81,24 +81,49 @@ class Prevalidation extends Model
         string $identity_address
     ): void {
         $recordRepo = resolve('forus.services.record');
-        $record_type_id = $recordRepo->getTypeIdByKey('bsn');
+        $bsn_type_id = $recordRepo->getTypeIdByKey('bsn');
+        $bsn_hash_type_id = $recordRepo->getTypeIdByKey('bsn_hash');
 
         if (!$bsn = $recordRepo->bsnByAddress($identity_address)) {
             return;
         }
 
-        self::where([
-            'state' => self::STATE_PENDING
-        ])->whereHas('prevalidation_records', static function(
-            Builder $builder
-        ) use ($record_type_id, $bsn) {
-            $builder->where([
-                'record_type_id' => $record_type_id,
-                'value' => $bsn,
-            ]);
-        })->get()->each(static function(
-            Prevalidation $prevalidation
-        ) use ($identity_address) {
+        $funds_with_hashed_bsn = Fund::whereHas('fund_config', static function(Builder $builder) {
+            $builder->where('hash_bsn', '=', true);
+        })->with('fund_config')->get();
+
+        /** @var Builder $query */
+        $query = self::whereState(self::STATE_PENDING);
+
+        $query->where(static function (
+            Builder $query
+        ) use ($bsn_type_id, $bsn_hash_type_id, $bsn, $funds_with_hashed_bsn) {
+            $query->whereHas('prevalidation_records', static function(
+                Builder $builder
+            ) use ($bsn_type_id, $bsn) {
+                $builder->where([
+                    'record_type_id' => $bsn_type_id,
+                    'value' => $bsn,
+                ]);
+            });
+
+            foreach ($funds_with_hashed_bsn as $fund) {
+                $query->orWhere(static function(Builder $builder) use ($bsn_hash_type_id, $bsn, $fund) {
+                    $builder->where([
+                        'fund_id' => $fund->id,
+                    ])->whereHas('prevalidation_records', static function(
+                        Builder $builder
+                    ) use ($bsn_hash_type_id, $bsn, $fund) {
+                        $builder->where([
+                            'record_type_id' => $bsn_hash_type_id,
+                            'value' => $fund->getHashedValue($bsn),
+                        ]);
+                    });
+                });
+            }
+        });
+
+        $query->get()->each(static function(Prevalidation $prevalidation) use ($identity_address) {
             $prevalidation->assignToIdentity($identity_address);
         });
     }
@@ -135,28 +160,14 @@ class Prevalidation extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function search(
-        Request $request
-    ): Builder {
-        $identity_address = auth_address();
+    public static function search(Request $request): Builder {
+        /** @var Builder $prevalidations */
+        $prevalidations = self::whereIdentityAddress(auth_address());
 
-        $q = $request->input('q', null);
-        $fund_id =$request->input('fund_id', null);
-        $organization_id =$request->input('organization_id', null);
-        $state = $request->input('state', null);
-        $from = $request->input('from', null);
-        $to = $request->input('to', null);
-        $exported = $request->input('exported', null);
-
-        $prevalidations = self::query()->where(compact(
-            'identity_address'
-        ));
-
-        if ($q) {
-            $prevalidations->where(function(Builder $query) use ($q) {
-                $query->where(
-                    'uid', 'like', "%{$q}%"
-                )->orWhereIn('id', function(
+        if ($request->has('q') && $q = $request->input('q')) {
+            $prevalidations->where(static function(Builder $query) use ($q) {
+                $query->where('uid', 'like', "%{$q}%");
+                $query->orWhereIn('id', static function(
                     \Illuminate\Database\Query\Builder $query
                 ) use ($q) {
                     $query->from(
@@ -168,32 +179,28 @@ class Prevalidation extends Model
             });
         }
 
-        if ($fund_id) {
+        if ($request->has('fund_id') && $fund_id = $request->input('fund_id')) {
             $prevalidations->where(compact('fund_id'));
         }
 
-        if ($organization_id) {
-            $prevalidations->where(compact('organization_id'));
+        if ($request->has('organization_id')) {
+            $prevalidations->where($request->only('organization_id'));
         }
 
-        if ($state) {
+        if ($request->has('state') && $state = $request->input('state')) {
             $prevalidations->where('state', $state);
         }
 
-        if ($from) {
-            $prevalidations->where(
-                'created_at', '>', Carbon::make($from)->startOfDay()
-            );
+        if ($request->has('from') && $carbonFrom = Carbon::make($request->input('from'))) {
+            $prevalidations->where('created_at', '>', $carbonFrom->startOfDay());
         }
 
-        if ($exported !== null) {
-            $prevalidations->where('exported', '=', $exported);
+        if ($request->has('to') && $carbonTo = Carbon::make($request->input('to'))) {
+            $prevalidations->where('created_at', '<', $carbonTo->endOfDay());
         }
 
-        if ($to) {
-            $prevalidations->where(
-                'created_at', '<', Carbon::make($to)->endOfDay()
-            );
+        if ($request->has('exported')) {
+            $prevalidations->where('exported', '=', $request->input('exported'));
         }
 
         return $prevalidations;
@@ -207,7 +214,6 @@ class Prevalidation extends Model
         $transKey = "export.prevalidations";
 
         $query = self::search($request);
-
         $query->update([
             'exported' => true
         ]);

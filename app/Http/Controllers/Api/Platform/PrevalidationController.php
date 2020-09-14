@@ -19,15 +19,12 @@ class PrevalidationController extends Controller
 {
     use ThrottleWithMeta;
 
-    private $maxAttempts = 3;
-    private $decayMinutes = 180;
-
     /**
      * RecordCategoryController constructor.
      */
     public function __construct() {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', $this->maxAttempts);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', $this->decayMinutes);
+        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
+        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
     }
 
     /**

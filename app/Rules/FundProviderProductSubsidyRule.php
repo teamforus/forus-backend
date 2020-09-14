@@ -47,7 +47,7 @@ class FundProviderProductSubsidyRule extends BaseRule
             return $this->rejectTrans('product_not_found');
         }
 
-        if (!is_numeric($amount) || $amount > $product->price || $amount < .1) {
+        if (!is_numeric($amount) || $amount > $product->price || $amount < 0) {
             return $this->rejectWithMessage(trans('validation.max.numeric', [
                 'max' => currency_format_locale($product->price),
                 'attribute' => trans('validation.attributes.amount')

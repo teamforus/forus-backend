@@ -491,7 +491,7 @@ $router->group(['middleware' => [
             'organizations/{organization}/fund-requests/{fund_request}/records',
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController", [
             'only' => [
-                'index', 'show',
+                'index', 'store', 'show',
             ],
             'parameters' => [
                 'records' => 'fund_request_record',
@@ -604,6 +604,11 @@ $router->group(['middleware' => [
             'messages' => 'fund_provider_chat_messages'
         ]
     ]);
+
+    $router->patch(
+        'organizations/{organization}/products/{product}/exclusions',
+        "Api\Platform\Organizations\ProductsController@updateExclusions"
+    );
 
     $router->resource(
         'organizations.products',

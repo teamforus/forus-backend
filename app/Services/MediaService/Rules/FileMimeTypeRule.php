@@ -15,7 +15,7 @@ class FileMimeTypeRule implements Rule
     /**
      * @var Request
      */
-    protected $request = null;
+    protected $request;
 
     /**
      * Create a new rule instance.
@@ -38,13 +38,12 @@ class FileMimeTypeRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         if ($this->request->hasFile($attribute)) {
-            return in_array(
-                mime_content_type((string) request()->file($attribute)),
-                $this->mimeTypes
-            );
+            return in_array(mime_content_type(
+                (string) request()->file($attribute)
+            ), $this->mimeTypes, true);
         }
 
         return true;
@@ -55,7 +54,7 @@ class FileMimeTypeRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return 'Invalid media type.';
     }

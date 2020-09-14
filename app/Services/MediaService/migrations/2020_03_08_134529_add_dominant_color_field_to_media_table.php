@@ -11,7 +11,7 @@ class AddDominantColorFieldToMediaTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('media', function (Blueprint $table) {
             $table->string('dominant_color', 200)->default('')->after('ext');
@@ -23,7 +23,7 @@ class AddDominantColorFieldToMediaTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('media', function (Blueprint $table) {
             $table->dropColumn('dominant_color');

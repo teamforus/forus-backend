@@ -117,7 +117,7 @@ abstract class MediaConfig
     /**
      * @return MediaPreset[]
      */
-    public function getPresets() {
+    public function getPresets(): array {
         return $this->presets ?? [];
     }
 

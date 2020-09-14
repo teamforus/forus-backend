@@ -39,11 +39,12 @@ class ProductResource extends Resource
         $product = $this->resource;
 
         return array_merge($product->only([
-            'id', 'name', 'description', 'product_category_id', 'sold_out', 'organization_id'
+            'id', 'name', 'description', 'product_category_id', 'sold_out', 'organization_id',
         ]), [
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
+            'no_price' => $product->no_price,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
             'sold_amount' => $product->countSold(),
@@ -84,18 +85,16 @@ class ProductResource extends Resource
             ], $fund->isTypeSubsidy() && $fundProviderProduct ? [
                 'limit_total' => $fundProviderProduct->limit_total,
                 'limit_per_identity' => $fundProviderProduct->limit_per_identity,
-                'limit_available' => auth_address() ?
-                    $fundProviderProduct->stockAvailableForIdentity(auth_address()) : min(
-                        $fundProviderProduct->limit_total,
-                        $fundProviderProduct->limit_per_identity
-                    ),
+                'limit_available' => !auth_address() ? min(
+                    $fundProviderProduct->limit_total,
+                    $fundProviderProduct->limit_per_identity
+                ): $fundProviderProduct->stockAvailableForIdentity(auth_address()),
                 'price' => $product->price - $fundProviderProduct->amount,
             ] : []);
         })->values();
     }
 
     /**
-     * todo: optimize
      * @param Product $product
      * @param string $type
      * @return float
