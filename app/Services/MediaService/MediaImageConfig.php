@@ -35,8 +35,9 @@ abstract class MediaImageConfig extends MediaConfig
             $media->presets()->count() > 0
         ) {
             try {
-                $targetPreset = $media->findPreset($this->getRegenerationPresetName());
-                $file = new TmpFile($targetPreset->getContent());
+                $file = new TmpFile($media->findPreset(
+                    $this->getRegenerationPresetName()
+                )->getContent());
 
                 $media->update([
                     'dominant_color' => $this->getDominantColor($file->path()),
@@ -44,13 +45,11 @@ abstract class MediaImageConfig extends MediaConfig
 
                 $file->close();
             } catch (FileNotFoundException $e) {
-                if ($logger = logger()) {
-                    $logger->error(sprintf(
-                        "Could not generate dominant color for media %s, go error: %s",
-                        $media->id,
-                        $e->getMessage()
-                    ));
-                }
+                logger()->error(sprintf(
+                    "Could not generate dominant color for media %s, go error: %s",
+                    $media->id,
+                    $e->getMessage()
+                ));
             }
         }
     }

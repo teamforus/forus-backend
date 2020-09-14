@@ -3,7 +3,6 @@
 namespace App\Services\MediaService\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Services\MediaService\Models\MediaSize
@@ -40,50 +39,50 @@ class MediaPreset extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function media(): BelongsTo {
+    public function media() {
         return $this->belongsTo(Media::class);
     }
 
     /**
      * @return \App\Services\MediaService\MediaService
      */
-    public function service(): mixed {
+    public function service() {
         return resolve('media');
     }
 
     /**
      * @return bool
      */
-    public function unlink(): bool {
-        return $this->service()->deleteFile($this->path);
+    public function unlink() {
+        return self::service()->deleteFile($this->path);
     }
 
     /**
-     * @return mixed
+     * @return \App\Services\MediaService\mixeds
      */
     public function urlPublic() {
-        return $this->service()->urlPublic($this->path);
+        return self::service()->urlPublic($this->path);
     }
 
     /**
      * @return mixed
      */
     public function storagePath() {
-        return $this->service()->path($this->path);
+        return self::service()->path($this->path);
     }
 
     /**
      * @return string|null
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function getContent(): ?string {
-        return $this->service()->getContent($this->path);
+    public function getContent() {
+        return self::service()->getContent($this->path);
     }
 
     /**
      * @return mixed
      */
     public function fileExists() {
-        return $this->service()->storageFileExists($this->path);
+        return self::service()->storageFileExists($this->path);
     }
 }

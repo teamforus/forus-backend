@@ -19,7 +19,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * Preset image height
      * @var int
      */
-    public $height;
+    public $height = null;
 
     /**
      * Keep media aspect ratio
@@ -32,7 +32,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * Set null to preserve original format
      * @var bool
      */
-    public $format;
+    public $format = 'jpg';
 
     /**
      * @var bool
@@ -53,7 +53,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param bool $allow
      * @return $this
      */
-    public function setTransparency($allow = true): self {
+    public function setTransparency($allow = true) {
         $this->allow_transparency = $allow;
         return $this;
     }
@@ -62,7 +62,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $hex_color
      * @return $this
      */
-    public function setTransparencyBgColor(string $hex_color = "#ffffff"): self {
+    public function setTransparencyBgColor(string $hex_color = "#ffffff") {
         $this->transparent_bg_color = $hex_color;
         return $this;
     }
@@ -71,7 +71,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $format
      * @return $this
      */
-    public function setFormat($format = 'jpg'): self {
+    public function setFormat($format = 'jpg') {
         $this->allow_transparency = $format;
         return $this;
     }
@@ -80,7 +80,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param bool $preserve_aspect_ratio
      * @return $this
      */
-    public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true): self {
+    public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true) {
         $this->preserve_aspect_ratio = $preserve_aspect_ratio;
         return $this;
     }
@@ -92,7 +92,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param int|null $height
      * @param bool $preserveAspectRatio
      * @param int $quality
-     * @param string|null $format
+     * @param string $format
      */
     public function __construct(
         string $name,
@@ -115,7 +115,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $name
      * @return MediaImagePreset
      */
-    public static function createOriginal(string $name): MediaImagePreset {
+    public static function createOriginal(string $name) {
         return (new self($name))->setUseOriginal(true);
     }
 
