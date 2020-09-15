@@ -41,11 +41,11 @@ class StoreVoucherRequest extends FormRequest
             ],
             'email'     => 'nullable|email:strict,dns',
             'note'      => 'nullable|string|max:280',
-            'amount'    => [
+            'amount'    => !$fund || $fund->isTypeBudget() ? [
                 'required_without:product_id',
                 'numeric',
                 'between:.1,' . currency_format($max)
-            ],
+            ] : 'nullable',
             'expire_at' => [
                 'nullable',
                 'date_format:Y-m-d',
@@ -55,10 +55,13 @@ class StoreVoucherRequest extends FormRequest
             'activation_code' => [
                 'nullable', new ValidPrevalidationCodeRule($fund),
             ],
-            'product_id' => [
+            'product_id' => !$fund || $fund->isTypeBudget() ? [
                 'required_without:amount',
                 'exists:products,id',
                 new ProductIdInStockRule($fund)
+            ] : [
+                'nullable',
+                Rule::in([])
             ],
         ];
     }

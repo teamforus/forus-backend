@@ -43,6 +43,14 @@ class ProductIdInStockRule extends BaseRule
             return $this->rejectTrans('product_sold_out');
         }
 
+        if ($product->no_price) {
+            return $this->rejectTrans('product_no_price');
+        }
+
+        if (!$this->fund->isTypeBudget()) {
+            return $this->rejectTrans('product_fund_not_budget');
+        }
+
         if (!$product->unlimited_stock &&
             $this->otherReservations &&
             $product->stock_amount < $this->otherReservations[$product_id]) {

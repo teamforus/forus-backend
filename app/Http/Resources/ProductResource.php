@@ -67,12 +67,19 @@ class ProductResource extends Resource
     }
 
     /**
+     * @return Builder
+     */
+    protected function fundsQuery(): Builder {
+        return Fund::query();
+    }
+
+    /**
      * @param Product $product
      * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
      */
     private function getProductFunds(Product $product) {
         return FundQuery::whereProductsAreApprovedAndActiveFilter(
-            Fund::query(), $product->id
+            $this->fundsQuery(), $product->id
         )->get()->map(static function(Fund $fund) use ($product) {
             $fundProviderProduct = $fund->isTypeSubsidy() ?
                 $product->getSubsidyDetailsForFund($fund) : null;

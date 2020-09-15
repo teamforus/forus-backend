@@ -669,7 +669,7 @@ class Fund extends Model
         /** @var FundLimitMultiplier[]|Collection $multipliers */
         $multipliers = $this->fund_limit_multipliers()->get();
 
-        if ($multipliers->count() === 0) {
+        if (!$identityAddress || ($multipliers->count() === 0)) {
             return 1;
         }
 

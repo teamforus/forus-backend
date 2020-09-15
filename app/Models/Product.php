@@ -319,6 +319,11 @@ class Product extends Model
             $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
         }
 
+        // filter by no_price
+        if ($request->has('no_price')) {
+            $query = $query->where('no_price', '=', (bool) $request->input('no_price'));
+        }
+
         // filter by unlimited stock
         if ($request->has('unlimited_stock') &&
             $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
