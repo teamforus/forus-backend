@@ -54,7 +54,7 @@ class OrganizationsController extends Controller
         /** @var Organization $organization */
         $organization = Organization::create(
             collect($request->only([
-                'name', 'email', 'phone', 'kvk', 'website',
+                'name', 'email', 'phone', 'kvk', 'website', 'description',
                 'email_public', 'phone_public', 'website_public',
                 'business_type_id',
             ]))->merge([
@@ -113,7 +113,7 @@ class OrganizationsController extends Controller
         $organization->update(collect($request->only([
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
-            'business_type_id',
+            'business_type_id', 'description',
         ]))->merge([
             'iban' => strtoupper($request->get('iban'))
         ])->toArray());

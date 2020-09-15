@@ -39,16 +39,24 @@ class LoremDbSeeder extends Seeder
     private $countValidators;
 
     private $implementations = [
-        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Berkelland',
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
     ];
 
     private $implementationsWithFunds = [
-        'Zuidhorn', 'Nijmegen', 'Westerkwartier',
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas',
+    ];
+
+    private $subsidyFunds = [
+        'Stadjerspas',
     ];
 
     private $fundsWithCriteriaEditableAfterLaunch = [
         'Zuidhorn', 'Nijmegen',
+    ];
+
+    private $fundsWithPhysicalCards = [
+        'Nijmegen',
     ];
 
     /**
@@ -208,8 +216,8 @@ class LoremDbSeeder extends Seeder
                 /** @var FundProvider $provider */
                 $provider = $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'allow_budget'      => (bool) random_int(0, 2),
-                    'allow_products'    => (bool) random_int(0, 2)
+                    'allow_budget'      => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
+                    'allow_products'    => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
                 ]);
 
                 FundProviderApplied::dispatch($provider);
@@ -221,18 +229,41 @@ class LoremDbSeeder extends Seeder
         }
 
         foreach (Fund::get() as $fund) {
-            $providers = Organization::with('products')->pluck('id');
+            $providers = Organization::whereHas('products')->pluck('id');
 
             if ($fund->provider_organizations_approved()->count() === 0) {
+                do {
+                    $provider = $providers->random();
+                } while ($fund->providers()->where('organization_id', $provider)->exists());
+
                 $provider = $fund->providers()->create([
                     'organization_id'   => $providers->random(),
-                    'allow_products'    => true,
-                    'allow_budget'      => true,
+                    'allow_products'    => $fund->isTypeBudget(),
+                    'allow_budget'      => $fund->isTypeBudget(),
                 ]);
 
                 FundProviderApplied::dispatch($provider);
             }
         }
+
+        Fund::whereType(Fund::TYPE_SUBSIDIES)->get()->each(static function(Fund $fund) {
+            $fund->providers()->get()->each(static function(FundProvider $provider) {
+                $fundProviderProducts = $provider->organization->products->random(
+                    ceil($provider->organization->products->count() / 2)
+                )->map(static function(Product $product) {
+                    return [
+                        'amount' => random_int(0, 10) < 7 ? $product->price / 2 : $product->price,
+                        'product_id' => $product->id,
+                        'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
+                        'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(
+                            max($product->stock_amount / 10, 1)
+                        ),
+                    ];
+                })->toArray();
+
+                $provider->fund_provider_products()->createMany($fundProviderProducts);
+            });
+        });
 
         foreach (Fund::get() as $fund) {
             foreach ($fund->providers as $fundProvider) {
@@ -323,7 +354,7 @@ class LoremDbSeeder extends Seeder
                 'need_confirmation' => false,
             ]);
 
-            while ($voucher->amount_available > ($voucher->amount / 2)) {
+            while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 2)) {
                 $transaction = $voucher->transactions()->create([
                     'amount' => random_int(
                         (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_min'),
@@ -386,23 +417,19 @@ class LoremDbSeeder extends Seeder
         array $fields = [],
         int $offices_count = 0
     ) {
-        $organization = Organization::create(
-            collect(collect([
-                'kvk' => '69599068',
-                'iban' => 'NL25BUNQ9900069099',
-                'phone' => '123456789',
-                'email' => $this->primaryEmail,
-                'phone_public' => true,
-                'email_public' => true,
-                'business_type_id' => BusinessType::pluck('id')->random(),
-            ])->merge($fields)->merge(
-                compact('name', 'identity_address')
-            )->only([
-                'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
-                'email_public', 'phone_public', 'website_public',
-                'identity_address', 'business_type_id'
-            ]))->toArray()
-        );
+        $organization = Organization::create(array_only(array_merge([
+            'kvk' => '69599068',
+            'iban' => 'NL25BUNQ9900069099',
+            'phone' => '123456789',
+            'email' => $this->primaryEmail,
+            'phone_public' => true,
+            'email_public' => true,
+            'business_type_id' => BusinessType::pluck('id')->random(),
+        ], $fields, compact('name', 'identity_address')), [
+            'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
+            'email_public', 'phone_public', 'website_public',
+            'identity_address', 'business_type_id'
+        ]));
 
         OrganizationCreated::dispatch($organization);
 
@@ -489,7 +516,11 @@ class LoremDbSeeder extends Seeder
             'start_date'                    => Carbon::now()->format('Y-m-d'),
             'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
             'state'                         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
-            'notification_amount'           => 10000
+            'notification_amount'           => 10000,
+            'type'                          => in_array(
+                $fundName,
+                $this->subsidyFunds
+            ) ? Fund::TYPE_SUBSIDIES : Fund::TYPE_BUDGET,
         ], $fields));
 
         $transaction = $fund->top_up_model->transactions()->create([
@@ -568,7 +599,8 @@ class LoremDbSeeder extends Seeder
             'key'                   => $key,
             'bunq_sandbox'          => true,
             'csv_primary_key'       => 'uid',
-            'is_configured'         => true
+            'is_configured'         => true,
+            'allow_physical_cards'  => in_array($fund->name, $this->fundsWithPhysicalCards),
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'
@@ -608,11 +640,10 @@ class LoremDbSeeder extends Seeder
         }
 
         $fund->criteria()->createMany($criteria);
-
-        $fund->fund_formulas()->create([
-            'type'      => 'fixed',
-            'amount'    => config('forus.seeders.lorem_db_seeder.voucher_amount')
-        ]);
+        $fund->isTypeBudget() ? $fund->fund_formulas()->create([
+            'type' => 'fixed',
+            'amount' => config('forus.seeders.lorem_db_seeder.voucher_amount'),
+        ]) : null;
     }
 
     /**
@@ -735,28 +766,33 @@ class LoremDbSeeder extends Seeder
 
         $price = random_int(1, 20);
         $old_price = random_int($price, 50);
-        $total_amount = random_int(1, 10) * 10;
+        $unlimited_stock = random_int(1, 10) < 3;
+        $total_amount = $unlimited_stock ? 0 : random_int(1, 10) * 10;
         $sold_out = false;
         $expire_at = Carbon::now()->addDays(random_int(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
+        $description = implode(' ', [
+            "Ut aliquet nisi felis ipsum consectetuer a vulputate.",
+            "Integer montes nulla in montes venenatis."
+        ]);
 
-        $product = Product::create(
-            collect(array_merge(compact(
-                'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at', 'product_category_id'
-            ), [
-                'organization_id' => $organization->id
-            ]))->merge(collect($fields)->only([
-                'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at'
-            ]))->toArray()
-        );
+        $product = Product::create(array_merge(compact(
+            'name', 'price', 'old_price', 'total_amount', 'sold_out',
+            'expire_at', 'product_category_id', 'description', 'unlimited_stock'
+        ), [
+            'organization_id' => $organization->id
+        ], array_only($fields, [
+            'name', 'price', 'old_price', 'total_amount', 'sold_out', 'expire_at'
+        ])));
 
         ProductCreated::dispatch($product);
 
         return $product;
     }
 
+    /**
+     * @param $implementations
+     */
     public function makeOtherImplementations($implementations): void {
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);

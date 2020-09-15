@@ -39,9 +39,9 @@ class Employee extends Model
 {
     use SoftDeletes, HasLogs;
 
-    const EVENT_CREATED = 'created';
-    const EVENT_UPDATED = 'updated';
-    const EVENT_DELETED = 'deleted';
+    public const EVENT_CREATED = 'created';
+    public const EVENT_UPDATED = 'updated';
+    public const EVENT_DELETED = 'deleted';
 
     protected $fillable = [
         'identity_address', 'organization_id'

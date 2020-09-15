@@ -5,6 +5,8 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 
 /**
@@ -14,18 +16,18 @@ use Illuminate\Http\Request;
  * @property int $voucher_id
  * @property int $organization_id
  * @property int|null $product_id
+ * @property int|null $fund_provider_product_id
  * @property float $amount
+ * @property string|null $iban_from
+ * @property string|null $iban_to
+ * @property string|null $payment_time
  * @property string $address
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $payment_id
  * @property int $attempts
  * @property string $state
- * @property string $iban_from
- * @property string $iban_to
- * @property Carbon $payment_time
  * @property string|null $last_attempt_at
- * @property-read mixed $transaction_details
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
  * @property-read \App\Models\Product|null $product
@@ -38,27 +40,42 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAttempts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereFundProviderProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanTo($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereLastAttemptAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereVoucherId($value)
  * @mixin \Eloquent
+ * @property int|null $employee_id
+ * @property-read \App\Models\Employee|null $employee
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereEmployeeId($value)
  */
 class VoucherTransaction extends Model
 {
+    public const STATE_PENDING = 'pending';
+    public const STATE_SUCCESS = 'success';
+
+    public const STATES = [
+        self::STATE_PENDING,
+        self::STATE_SUCCESS,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'voucher_id', 'organization_id', 'product_id', 'address',
-        'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
-        'iban_from', 'iban_to', 'payment_time'
+        'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
+        'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
+        'iban_from', 'iban_to', 'payment_time', 'employee_id',
     ];
 
     protected $hidden = [
@@ -68,35 +85,42 @@ class VoucherTransaction extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product() {
+    public function product(): BelongsTo {
         return $this->belongsTo(Product::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function provider() {
+    public function provider(): BelongsTo {
         return $this->belongsTo(Organization::class, 'organization_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function voucher() {
+    public function voucher(): BelongsTo {
         return $this->belongsTo(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function employee(): BelongsTo {
+        return $this->belongsTo(Employee::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function notes() {
+    public function notes(): HasMany {
         return $this->hasMany(VoucherTransactionNote::class);
     }
 
     /**
      * @return void
      */
-    public function sendPushNotificationTransaction() {
+    public function sendPushNotificationTransaction(): void {
         $mailService = resolve('forus.services.notification');
 
         if (!$this->voucher->product) {
@@ -126,7 +150,7 @@ class VoucherTransaction extends Model
     /**
      * @return void
      */
-    public function sendPushBunqTransactionSuccess() {
+    public function sendPushBunqTransactionSuccess(): void {
         $mailService = resolve('forus.services.notification');
         $transData = [
             "amount" => currency_format_locale($this->amount)
@@ -146,16 +170,17 @@ class VoucherTransaction extends Model
      */
     public static function search(
         Request $request
-    ) {
+    ): Builder {
+        /** @var Builder $query */
         $query = self::query();
 
         if ($request->has('q') && $q = $request->input('q', '')) {
-            $query->where(function (Builder $query) use ($q) {
-                $query->whereHas('provider', function (Builder $query) use ($q) {
+            $query->where(static function (Builder $query) use ($q) {
+                $query->whereHas('provider', static function (Builder $query) use ($q) {
                     $query->where('name', 'LIKE', "%{$q}%");
                 });
 
-                $query->orWhereHas('voucher.fund', function (Builder $query) use ($q) {
+                $query->orWhereHas('voucher.fund', static function (Builder $query) use ($q) {
                     $query->where('name', 'LIKE', "%{$q}%");
                 });
 
@@ -195,14 +220,9 @@ class VoucherTransaction extends Model
             $query->where('amount', '<=', $amount_max);
         }
 
-        if ($request->has('state') &&
-            $fund_state = $request->input('fund_state')) {
-            $query->whereHas('voucher.fund', function (
-                Builder $query
-            ) use ($fund_state) {
-                $query->where([
-                    'state' =>  $fund_state
-                ]);
+        if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
+            $query->whereHas('voucher.fund', static function (Builder $query) use ($fund_state) {
+                $query->where('state', '=',  $fund_state);
             });
         }
 
@@ -214,8 +234,8 @@ class VoucherTransaction extends Model
     /**
      * @param Request $request
      * @param Organization $organization
-     * @param Fund $fund
-     * @param Organization $provider
+     * @param ?Fund $fund
+     * @param ?Organization $provider
      * @return Builder
      */
     public static function searchSponsor(
@@ -223,10 +243,10 @@ class VoucherTransaction extends Model
         Organization $organization,
         Fund $fund = null,
         Organization $provider = null
-    ) {
+    ): Builder {
         $builder = self::search(
             $request
-        )->whereHas('voucher.fund.organization', function (
+        )->whereHas('voucher.fund.organization', static function (
             Builder $query
         ) use ($organization) {
             $query->where('id', $organization->id);
@@ -237,7 +257,7 @@ class VoucherTransaction extends Model
         }
 
         if ($fund) {
-            $builder->whereHas('voucher', function (
+            $builder->whereHas('voucher', static function (
                 Builder $builder
             ) use ($fund) {
                 $builder->where('fund_id', $fund->id);
@@ -255,7 +275,7 @@ class VoucherTransaction extends Model
     public static function searchProvider(
         Request $request,
         Organization $organization
-    ) {
+    ): Builder {
         return self::search($request)->where([
             'organization_id' => $organization->id
         ]);
@@ -269,7 +289,7 @@ class VoucherTransaction extends Model
     public static function searchVoucher(
         Voucher $voucher,
         Request $request
-    ) {
+    ): Builder {
         return self::search($request)->where([
             'voucher_id' => $voucher->id
         ]);
@@ -285,7 +305,7 @@ class VoucherTransaction extends Model
         return $builder->with([
             'voucher.fund',
             'provider',
-        ])->get()->map(function(
+        ])->get()->map(static function(
             VoucherTransaction $transaction
         ) use ($transKey) {
             return [

@@ -21,12 +21,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordValidation[] $validations
  * @property-read int|null $validations_count
- * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newQuery()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record query()
- * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereId($value)
@@ -39,13 +37,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withoutTrashed()
  * @mixin \Eloquent
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @method static bool|null forceDelete()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record onlyTrashed()
- * @method static bool|null restore()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereDeletedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withoutTrashed()
  */
 class Record extends Model
 {

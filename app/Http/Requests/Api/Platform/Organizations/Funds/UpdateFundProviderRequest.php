@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use App\Models\FundProvider;
+use App\Rules\FundProviderProductSubsidyRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,7 @@ class UpdateFundProviderRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -28,28 +29,64 @@ class UpdateFundProviderRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $fundProvider = $this->fund_provider;
+        return array_merge(
+            $this->baseRules(),
+            $this->enabledProductsRules(),
+            $this->disabledProductsRules()
+        );
+    }
 
+    /**
+     * @return array
+     */
+    private function baseRules(): array {
         return [
             'allow_products' => 'nullable|boolean',
             'allow_budget' => 'nullable|boolean',
             'dismissed' => 'nullable|boolean',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function enabledProductsRules(): array {
+        return array_merge([
             'enable_products' => 'nullable|array',
-            'enable_products.*' => [
-                'required',
-                Rule::exists('products', 'id')->where(
-                    'organization_id', $fundProvider->organization_id
-                )
-            ],
+            'enable_products.*.id' => ['required', 'numeric', Rule::exists('products', 'id')->where(
+                'organization_id', $this->fund_provider->organization_id
+            )],
+        ], $this->fund_provider->fund->isTypeSubsidy() ? [
+            'enable_products.*.amount' => 'required|numeric|min:.1',
+            'enable_products.*.limit_total' => 'required|numeric',
+            'enable_products.*.limit_per_identity' => 'required|numeric',
+            'enable_products.*' => new FundProviderProductSubsidyRule($this->fund_provider)
+        ] : []);
+    }
+
+    /**
+     * @return array[]
+     */
+    private function disabledProductsRules(): array {
+        return [
             'disable_products' => 'nullable|array',
-            'disable_products.*' => [
-                'required',
-                Rule::exists('products', 'id')->where(
-                    'organization_id', $fundProvider->organization_id
-                )
-            ]
+            'disable_products.*' => ['required', 'numeric', Rule::exists('products', 'id')->where(
+                'organization_id', $this->fund_provider->organization_id
+            )],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        return [
+            'enable_products.*.amount' => trans('validation.attributes.amount'),
+            'enable_products.*.limit_total' => trans('validation.attributes.limit_total'),
+            'enable_products.*.limit_per_identity' => trans('validation.attributes.limit_per_identity'),
         ];
     }
 }

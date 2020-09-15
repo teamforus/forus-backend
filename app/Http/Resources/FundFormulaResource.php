@@ -15,13 +15,13 @@ class FundFormulaResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        return collect($this->resource)->only([
+        return $this->resource->only([
             'type', 'amount', 'record_type_key'
-        ])->toArray();
+        ]);
     }
 }

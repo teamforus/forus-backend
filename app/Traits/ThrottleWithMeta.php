@@ -18,14 +18,16 @@ trait ThrottleWithMeta {
     /**
      * @param $error
      * @param $request
+     * @param string $type
      * @param int $code
      * @throws AuthorizationJsonException
      */
     protected function responseWithThrottleMeta(
         $error,
         $request,
+        string $type = 'prevalidations',
         $code = 429
-    ) {
+    ): void {
         $key = $this->throttleKey($request);
         $available_in = $this->limiter()->tooManyAttempts(
             $key, $this->maxAttempts()
@@ -41,8 +43,8 @@ trait ThrottleWithMeta {
             'max_attempts' => $this->maxAttempts(),
         ];
 
-        $title = trans("throttles/prevalidations.$error.title", $meta);
-        $message = trans("throttles/prevalidations.$error.message", $meta);
+        $title = trans("throttles/$type.$error.title", $meta);
+        $message = trans("throttles/$type.$error.message", $meta);
 
         throw new AuthorizationJsonException(json_encode([
             'error' => $error,

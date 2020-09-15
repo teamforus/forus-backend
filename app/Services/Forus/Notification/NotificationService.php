@@ -18,6 +18,7 @@ use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
+use App\Mail\Vouchers\RequestPhysicalCardMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
@@ -444,6 +445,28 @@ class NotificationService
             $qr_token,
             $voucher_amount,
             $voucher_expire_minus_day,
+            $emailFrom
+        ));
+    }
+
+    /**
+     * Request a physical card
+     *
+     * @param string $email
+     * @param EmailFrom|null $emailFrom
+     * @param string $post_code
+     * @param string $house_number
+     * @return bool
+     */
+    public function requestPhysicalCard(
+        string $email,
+        ?EmailFrom $emailFrom,
+        string $post_code,
+        string $house_number
+    ): bool {
+        return $this->sendMail($email, new RequestPhysicalCardMail(
+            $post_code,
+            $house_number,
             $emailFrom
         ));
     }

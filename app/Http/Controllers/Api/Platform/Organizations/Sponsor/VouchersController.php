@@ -78,15 +78,13 @@ class VouchersController extends Controller
         $email      = $request->input('email', false);
         $amount     = $request->input('amount', 0);
         $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
-        $expire_at = $request->input('expire_at', false);
-        $expire_at = $expire_at ? Carbon::parse($expire_at) : null;
+        $expire_at  = $request->input('expire_at', false);
+        $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
 
         if ($product_id = $request->input('product_id', false)) {
-            $voucher = $fund->makeProductVoucher(
-                $identity, $product_id, $expire_at, $note);
+            $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
         } else {
-            $voucher = $fund->makeVoucher(
-                $identity, $amount, $expire_at, $note);
+            $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
         }
 
         if ($activation_code = $request->input('activation_code', false)) {

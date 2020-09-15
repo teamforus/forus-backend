@@ -48,6 +48,18 @@ class FundQuery
 
     /**
      * @param Builder $query
+     * @param $product_id
+     * @return Builder
+     */
+    public static function whereProductsAreApprovedAndActiveFilter(
+        Builder $query,
+        $product_id
+    ): Builder {
+        return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product_id);
+    }
+
+    /**
+     * @param Builder $query
      * @param int|array $organization_id External validator organization id
      * @param bool|null $accepted
      * @return Builder

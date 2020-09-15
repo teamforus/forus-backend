@@ -206,7 +206,7 @@ $router->group([
 
 $router->group(['middleware' => [
     'throttle:3'
-]], function() use ($router) {
+]], static function() use ($router) {
     $router->post(
         '/sms/send',
         'Api\Platform\SmsController@send'
@@ -218,7 +218,7 @@ $router->group(['middleware' => [
  */
 $router->group(['middleware' => [
     'api.auth',
-]], function() use ($router) {
+]], static function() use ($router) {
     $router->patch(
         'organizations/{organization}/update-business',
         "Api\Platform\OrganizationsController@updateBusinessType"
@@ -264,12 +264,12 @@ $router->group(['middleware' => [
     // TODO: deprecated, remove in next releases
     if (!env('DISABLE_DEPRECATED_API', FALSE)) {
         $router->get(
-            'vouchers/{voucher_token_address}/provider',
+            'vouchers/{voucher_address_or_physical_code}/provider',
             "Api\Platform\Provider\VouchersController@show"
         );
     }
 
-    $router->group(['prefix' => '/provider'], function() use ($router) {
+    $router->group(['prefix' => '/provider'], static function() use ($router) {
         $router->resource(
             'vouchers',
             "Api\Platform\Provider\VouchersController", [
@@ -277,7 +277,7 @@ $router->group(['middleware' => [
                 'show'
             ],
             'parameters' => [
-                'vouchers' => 'voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
             ]
         ]);
 
@@ -288,11 +288,68 @@ $router->group(['middleware' => [
                 'index'
             ],
             'parameters' => [
-                'vouchers' => 'budget_voucher_token_address',
+                'vouchers' => 'voucher_address_or_physical_code',
                 'product-vouchers' => 'product_voucher_token_address',
             ]
         ]);
+
+        $router->resource(
+            'vouchers.products',
+            "Api\Platform\Provider\Vouchers\ProductsController", [
+            'only' => [
+                'index', 'show'
+            ],
+            'parameters' => [
+                'vouchers' => 'voucher_address_or_physical_code',
+                'products' => 'products',
+            ]
+        ]);
+
+        $router->resource(
+            'vouchers.transactions',
+            "Api\Platform\Vouchers\TransactionsController", [
+            'only' => [
+                'store'
+            ],
+            'parameters' => [
+                'vouchers' => 'voucher_address_or_physical_code',
+                'transactions' => 'transaction_address',
+            ]
+        ]);
+
+        $router->resource(
+            'transactions',
+            "Api\Platform\Provider\TransactionsController", [
+            'only' => [
+                'index'
+            ],
+            'parameters' => [
+                'transactions' => 'transaction_address',
+            ]
+        ]);
     });
+
+    $router->resource(
+        'vouchers/{voucher_token_address}/physical-cards',
+        "Api\Platform\Vouchers\PhysicalCardsController", [
+        'only' => [
+            'store', 'destroy'
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
+
+    $router->resource(
+        'vouchers/{voucher_token_address}/physical-card-requests',
+        "Api\Platform\Vouchers\PhysicalCardRequestsController", [
+        'only' => [
+            'index', 'store', 'show'
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
 
     $router->post(
         'vouchers/{voucher_token_address}/send-email',
@@ -304,6 +361,7 @@ $router->group(['middleware' => [
         "Api\Platform\VouchersController@shareVoucher"
     );
 
+    // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     $router->resource(
         'vouchers.transactions',
         "Api\Platform\Vouchers\TransactionsController", [
@@ -311,7 +369,7 @@ $router->group(['middleware' => [
             'index', 'show', 'store'
         ],
         'parameters' => [
-            'vouchers' => 'voucher_token_address',
+            'vouchers' => 'voucher_address_or_physical_code',
             'transactions' => 'transaction_address',
         ]
     ]);
@@ -520,6 +578,17 @@ $router->group(['middleware' => [
         'parameters' => [
             'providers' => 'fund_provider',
             'chats' => 'fund_provider_chats',
+        ]
+    ]);
+
+    $router->resource(
+        'organizations.funds.providers.products',
+        "Api\Platform\Organizations\Funds\FundProviders\ProductsController", [
+        'only' => [
+            'index', 'show'
+        ],
+        'parameters' => [
+            'providers' => 'fund_provider',
         ]
     ]);
 

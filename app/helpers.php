@@ -138,6 +138,10 @@ if (!function_exists('format_date_locale')) {
         $date = null,
         string $format = 'short_date_locale'
     ) {
+        if (is_null($date)) {
+            return null;
+        }
+
         try {
             if (is_string($date)) {
                 $date = new Carbon($date);

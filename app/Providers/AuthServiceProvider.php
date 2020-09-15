@@ -13,6 +13,7 @@ use App\Models\FundRequestRecord;
 use App\Models\Implementation;
 use App\Models\Office;
 use App\Models\FundProvider;
+use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -28,6 +29,7 @@ use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
 use App\Policies\ImplementationPolicy;
 use App\Policies\MediaPolicy;
+use App\Policies\PhysicalCardRequestPolicy;
 use App\Policies\PrevalidationPolicy;
 use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
@@ -72,6 +74,7 @@ class AuthServiceProvider extends ServiceProvider
         FundProviderChat::class         => FundProviderChatPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
+        PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,

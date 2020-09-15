@@ -16,26 +16,26 @@ class MediaResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): ?array
     {
         if (is_null($media = $this->resource)) {
             return null;
         }
 
-        $presets = $media->presets->filter(function(MediaPreset $preset) {
-            return $preset->key != 'original';
-        })->keyBy('key')->map(function(MediaPreset $preset) {
+        $presets = $media->presets->filter(static function(MediaPreset $preset) {
+            return $preset->key !== 'original';
+        })->keyBy('key')->map(static function(MediaPreset $preset) {
             return $preset->urlPublic();
         });
 
-        return collect($media)->only([
+        return array_merge($media->only([
             'identity_address', 'original_name', 'type', 'ext', 'uid',
-        ])->merge([
+        ]), [
             'dominant_color' => $media->dominant_color ?? null,
             'sizes' => $presets
-        ])->toArray();
+        ]);
     }
 }

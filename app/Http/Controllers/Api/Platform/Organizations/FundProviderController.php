@@ -8,6 +8,8 @@ use App\Http\Resources\FundProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FundProviderController extends Controller
 {
@@ -22,7 +24,7 @@ class FundProviderController extends Controller
     public function index(
         IndexFundProviderRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 
@@ -46,7 +48,7 @@ class FundProviderController extends Controller
     public function export(
         IndexFundProviderRequest $request,
         Organization $organization
-    ) {
+    ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 

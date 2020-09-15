@@ -135,15 +135,11 @@ class ProductPolicy
             return false;
         }
 
-        if (empty($identity_address)) {
-            return false;
-        }
-
         // check validity
         return ProductQuery::approvedForFundsAndActiveFilter(
             Product::query(),
             $voucher->fund_id
-        )->where('id', $product->id)->exists();
+        )->where('id', '=', $product->id)->exists();
     }
 
     /**
