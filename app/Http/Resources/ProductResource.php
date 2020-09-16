@@ -89,7 +89,12 @@ class ProductResource extends Resource
                         $fundProviderProduct->limit_total,
                         $fundProviderProduct->limit_per_identity
                     ),
-                'price' => $product->price - $fundProviderProduct->amount,
+                'price'     => $product->price - $fundProviderProduct->amount,
+                'approved'  => FundQuery::whereProductsAreApprovedFilter(
+                    Fund::query()->whereId($fund->id),
+                    $product->id
+                )->exists()
+
             ] : []);
         })->values();
     }

@@ -89,6 +89,7 @@ class Product extends Model
 
     const EVENT_APPROVED = 'approved';
     const EVENT_REVOKED = 'revoked';
+    const EVENT_ACTIONS_REMOVED = 'actions_removed';
 
     /**
      * The attributes that are mass assignable.

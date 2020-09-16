@@ -8,9 +8,12 @@ use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
+use App\Notifications\Organizations\Products\ProductActionsRemovedNotification;
+use App\Scopes\Builders\FundQuery;
 use App\Services\MediaService\Models\Media;
 
 class ProductsController extends Controller
@@ -130,6 +133,33 @@ class ProductsController extends Controller
             $media = $this->mediaService->findByUid($media_uid);
 
             $this->authorize('destroy', $media);
+        }
+
+        if (round($request->input('price'), 2) !== round($product->price, 2)) {
+            $subsidiesFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(
+                Fund::query(), $product->id
+            )->get()->filter(function (Fund $fund) {
+                return $fund->isTypeSubsidy();
+            });
+
+            if ($subsidiesFunds->count()) {
+                foreach ($subsidiesFunds as $fund) {
+                    /** @var Fund $fund */
+                    logger()->info('organization: '. print_r($fund->organization->id, true));
+                    ProductActionsRemovedNotification::send(
+                        $product->log(Product::EVENT_ACTIONS_REMOVED, [
+                            'product'  => $product,
+                            'fund'     => $fund,
+                            'sponsor'  => $fund->organization,
+                            'provider' => $product->organization
+                        ])
+                    );
+                }
+
+                $product->fund_provider_products()->whereNotNull(
+                    'limit_total'
+                )->delete();
+            }
         }
 
         $product->update(array_merge($request->only([
