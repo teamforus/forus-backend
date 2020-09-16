@@ -10,6 +10,7 @@ use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundProviderProductQuery;
+use App\Scopes\Builders\TrashedQuery;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -42,7 +43,7 @@ class SponsorProviderProductResource extends Resource
         $fundProvider = $request->route('fund_provider');
         $product = $this->resource;
 
-        $oldDeals = FundProviderProductQuery::withTrashed(
+        $oldDeals = TrashedQuery::withTrashed(
             $fundProvider->fund_provider_products()->getQuery()
         )->orderByDesc('created_at')->where([
             'product_id' => $product->id
@@ -55,6 +56,7 @@ class SponsorProviderProductResource extends Resource
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
+            'no_price' => $product->no_price,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
             'sold_amount' => $product->countSold(),
@@ -73,10 +75,11 @@ class SponsorProviderProductResource extends Resource
             'unseen_messages' => FundProviderChatMessage::whereIn(
                 'fund_provider_chat_id', $product->fund_provider_chats()->pluck('id')
             )->where('provider_seen', '=', false)->count(),
+            'is_available' => $product->product_exclusions()->where([
+                'fund_provider_id' => $fundProvider->id,
+            ])->doesntExist()
         ], $fundProvider->fund->isTypeSubsidy() ? [
-            'deals_history' => $oldDeals->map(static function(
-                FundProviderProduct $fundProviderProduct
-            ) {
+            'deals_history' => $oldDeals->map(static function(FundProviderProduct $fundProviderProduct) {
                 return array_merge($fundProviderProduct->only(array_merge([
                     'id', 'amount', 'limit_total', 'limit_per_identity',
                     'voucher_transactions_count',

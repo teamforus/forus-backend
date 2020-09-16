@@ -59,7 +59,7 @@ class UpdateFundProviderRequest extends FormRequest
                 'organization_id', $this->fund_provider->organization_id
             )],
         ], $this->fund_provider->fund->isTypeSubsidy() ? [
-            'enable_products.*.amount' => 'required|numeric|min:.1',
+            'enable_products.*.amount' => 'required|numeric|min:0',
             'enable_products.*.limit_total' => 'required|numeric',
             'enable_products.*.limit_per_identity' => 'required|numeric',
             'enable_products.*' => new FundProviderProductSubsidyRule($this->fund_provider)

@@ -3,6 +3,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Fund;
 use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -16,18 +17,77 @@ class ProductQuery
     public static function approvedForFundsFilter(Builder $query, $fund_id): Builder
     {
         return $query->where(static function(Builder $builder) use ($fund_id) {
-            $builder->whereHas('fund_providers', static function(
-                Builder $builder
-            ) use ($fund_id) {
+            $builder = self::whereFundNotExcluded($builder, $fund_id);
+
+            $builder->where(static function(Builder $builder) use ($fund_id) {
+                $builder->whereHas('fund_provider_products.fund_provider', static function(
+                    Builder $builder
+                ) use ($fund_id) {
+                    $builder->whereIn('fund_id', (array) $fund_id);
+                });
+
+                $builder->orWhereHas('organization.fund_providers', static function(
+                    Builder $builder
+                ) use ($fund_id) {
+                    $builder->where([
+                        'allow_products' => TRUE,
+                    ])->whereIn('fund_id', (array) $fund_id);
+
+                    $builder->whereHas('fund', function(Builder $builder) {
+                        $builder->where('type', '=', Fund::TYPE_BUDGET);
+                    });
+                });
+            });
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @param $fund_id
+     * @return Builder
+     */
+    public static function whereFundNotExcluded(
+        Builder $query, $fund_id
+    ): Builder {
+        return $query->whereHas('product_exclusions', static function(Builder $builder) use ($fund_id) {
+            $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id) {
                 $builder->whereIn('fund_id', (array) $fund_id);
             });
+        }, '<', count((array) $fund_id));
+    }
 
-            $builder->orWhereHas('organization.fund_providers', static function(
-                Builder $builder
-            ) use ($fund_id) {
-                $builder->where([
-                    'allow_products' => TRUE,
-                ])->whereIn('fund_id', (array) $fund_id);
+    /**
+     * @param Builder $query
+     * @param $fund_id
+     * @return Builder
+     */
+    public static function whereHasFundApprovalHistory(
+        Builder $query, $fund_id
+    ): Builder {
+        return $query->whereHas('fund_provider_products', function(Builder $builder) use ($fund_id) {
+            TrashedQuery::withTrashed($builder);
+
+            $builder->whereHas('fund_provider', static function(Builder $builder) use ($fund_id) {
+                $builder->whereIn('fund_id', (array) $fund_id);
+            });
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @param $fund_id
+     * @return Builder
+     */
+    public static function whereFundNotExcludedOrHasHistory(
+        Builder $query, $fund_id
+    ): Builder {
+        return $query->where(static function(Builder $builder) use ($fund_id) {
+            $builder->where(static function(Builder $builder) use ($fund_id) {
+                self::whereFundNotExcluded($builder, $fund_id);
+            });
+
+            $builder->orWhere(static function(Builder $builder) use ($fund_id) {
+                self::whereHasFundApprovalHistory($builder, $fund_id);
             });
         });
     }

@@ -33,10 +33,6 @@ class ProductActionsRemovedNotification extends BaseProductsNotification
         $fund = Fund::find($this->eventLog->data['fund_id']);
         $sponsor = Organization::find($this->eventLog->data['sponsor_id']);
 
-//        logger()->info('eventLog: '. print_r($this->eventLog->data, true));
-//        logger()->info('sponsor->email: '. print_r($sponsor->email, true));
-        logger()->info('toMail: ');
-
         resolve('forus.services.notification')->sendMailNotification(
             $sponsor->email,
             new ProductActionsRemovedMail(

@@ -23,25 +23,26 @@ class FundQuery
      * @param $product_id
      * @return Builder
      */
-    public static function whereProductsAreApprovedFilter(
-        Builder $query,
-        $product_id
-    ): Builder {
-        return $query->whereHas('providers', static function(
-            Builder $builder
-        ) use ($product_id) {
-            $builder->where(static function(Builder $builder) use ($product_id) {
-                $builder->whereHas('organization.products', static function(
-                    Builder $builder
-                ) use ($product_id) {
-                    $builder->whereIn('products.id', (array) $product_id);
-                })->where('allow_products', true);
+    public static function whereProductsAreApprovedFilter(Builder $query, $product_id): Builder {
+        return $query->where(function(Builder $builder) use ($product_id) {
+            $builder->where(function(Builder $builder) use ($product_id) {
+                $builder->where('type', '=', Fund::TYPE_BUDGET);
+
+                $builder->whereHas('providers', static function(Builder $builder) use ($product_id) {
+                    $builder->whereHas('organization.products', static function(Builder $builder) use ($product_id) {
+                        $builder->whereIn('products.id', (array) $product_id);
+                    })->where('allow_products', '=', true);
+                });
             });
 
-            $builder->orWhereHas('fund_provider_products', static function(
-                Builder $builder
-            ) use ($product_id) {
-                $builder->whereIn('product_id', (array) $product_id);
+            $builder->orWhereHas('providers', static function(Builder $builder) use ($product_id) {
+                $builder->whereDoesntHave('product_exclusions', static function(Builder $builder) use ($product_id) {
+                    $builder->whereIn('product_id', (array) $product_id);
+                });
+
+                $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product_id) {
+                    $builder->whereIn('product_id', (array) $product_id);
+                });
             });
         });
     }

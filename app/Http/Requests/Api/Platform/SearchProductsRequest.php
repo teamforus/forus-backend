@@ -31,6 +31,7 @@ class SearchProductsRequest extends FormRequest
         return [
             'q'                     => 'nullable|string|max:100',
             'unlimited_stock'       => 'nullable|boolean',
+            'no_price'              => 'nullable|boolean',
             'per_page'              => 'nullable|numeric|max:1000',
             'fund_id'               => 'nullable|exists:funds,id',
             'product_category_id'   => 'nullable|exists:product_categories,id',

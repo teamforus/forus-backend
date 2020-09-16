@@ -40,7 +40,7 @@ class StoreVoucherTransactionRequest extends FormRequest
         $voucher = $this->voucher_address_or_physical_code->voucher;
         $rules = $this->commonRules();
 
-        if ($voucher->type === $voucher::TYPE_BUDGET && $voucher->fund->isTypeBudget()) {
+        if ($voucher->isBudgetType() && $voucher->fund->isTypeBudget()) {
             $rules = array_merge($rules, $this->budgetVoucherRules($voucher));
         } else if ($voucher->fund->isTypeSubsidy()) {
             $rules = array_merge($rules, [

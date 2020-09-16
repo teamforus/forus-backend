@@ -9,7 +9,6 @@ use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Product;
-use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
@@ -58,7 +57,7 @@ class TransactionsController extends Controller
         $voucher = $voucherToken->voucher;
         $note = $request->input('note', false);
 
-        if ($voucher->type === Voucher::TYPE_PRODUCT) {
+        if ($voucher->isProductType()) {
             $amount = $voucher->amount;
             $product = $voucher->product;
             $organizationId = $product->organization_id;
@@ -70,7 +69,7 @@ class TransactionsController extends Controller
                 ], 403);
             }
 
-            if ($product->sold_out && $voucher->type !== $voucher::TYPE_PRODUCT) {
+            if ($product->sold_out) {
                 return response()->json([
                     'message' => trans('validation.voucher.product_sold_out'),
                     'key' => 'product_expired'
@@ -89,7 +88,11 @@ class TransactionsController extends Controller
 
             if ($voucher->fund->isTypeSubsidy()) {
                 $product = Product::findOrFail($request->input('product_id'));
-                $fundProviderProduct = $product->getSubsidyDetailsForFund($voucher->fund);
+
+                if (!$fundProviderProduct = $product->getSubsidyDetailsForFund($voucher->fund)) {
+                    abort(403);
+                }
+
                 $fundProviderProductId = $fundProviderProduct->id;
                 $organizationId = $product->organization_id;
                 $amount = $fundProviderProduct->amount;
@@ -111,8 +114,10 @@ class TransactionsController extends Controller
         /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create(array_merge([
             'amount' => $amount,
-            'product_id' => $product ? $product->id : null,
+            'product_id' => $product->id ?? null,
             'employee_id' => $employee->id,
+            'state' => $voucher->fund->isTypeSubsidy() && $amount === 0 ?
+                VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING,
             'fund_provider_product_id' => $fundProviderProductId ?? null,
             'address' => token_generator()->address(),
             'organization_id' => $organizationId,

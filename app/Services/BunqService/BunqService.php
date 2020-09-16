@@ -67,13 +67,11 @@ class BunqService
         $this->storageDriver = config('bunq.storage_driver');
         $this->bunqUseSandbox = $bunqUseSandbox;
 
-        if (!is_numeric($fundId) || $this->storageDriver == 'public') {
-            if ($this->storageDriver == 'public') {
-                app('log')->alert(
-                    'BunqService->__construct: ' .
-                    "can't use `public` storage for bunq context files."
-                );
-            }
+        if (!is_numeric($fundId) || $this->storageDriver === 'public') {
+            app('log')->alert(
+                'BunqService->__construct: ' .
+                "can't use `public` storage for bunq context files."
+            );
 
             abort(403, '');
         }
@@ -95,7 +93,7 @@ class BunqService
         );
 
         if (!$apiContext) {
-            throw new \Exception("Can't create or restore api context.");
+            throw new \RuntimeException("Can't create or restore api context.");
         }
 
         BunqContext::loadApiContext($apiContext);
@@ -124,7 +122,9 @@ class BunqService
                 $bunqUseSandbox
             );
         } catch (\Exception $exception) {
-            logger()->error($exception);
+            if ($logger = logger()) {
+                $logger->error($exception);
+            }
         }
 
         return false;
@@ -181,9 +181,7 @@ class BunqService
      * @return ApiContext
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    private function restoreContext(
-        $bunqContextFilePath
-    ) {
+    private function restoreContext($bunqContextFilePath): ApiContext {
         return ApiContext::fromJson(
             $this->storage()->get($bunqContextFilePath)
         );
@@ -240,13 +238,11 @@ class BunqService
      *
      * @return float
      */
-    public function getBankAccountBalanceValue()
+    public function getBankAccountBalanceValue(): float
     {
         $monetaryAccount = MonetaryAccount::listing()->getValue()[0];
 
-        return floatval(
-            $monetaryAccount->getMonetaryAccountBank()->getBalance()->getValue()
-        );
+        return (float) $monetaryAccount->getMonetaryAccountBank()->getBalance()->getValue();
     }
 
     /**
@@ -261,7 +257,7 @@ class BunqService
         $alias = collect(
             $monetaryAccount->getMonetaryAccountBank()->getAlias()
         )->filter(function(Pointer $alias) {
-            return $alias->getType() == 'IBAN';
+            return $alias->getType() === 'IBAN';
         })->first();
 
         return $alias ? $alias->getValue() : false;
@@ -281,7 +277,7 @@ class BunqService
         string $iban,
         string $name,
         string $description = ""
-    ) {
+    ): int {
         return Payment::create(
             new Amount(number_format($amount, 2, '.', ''), 'EUR'),
             new Pointer('IBAN', $iban, $name),
@@ -297,7 +293,7 @@ class BunqService
      */
     public function paymentDetails(
         int $paymentId
-    ) {
+    ): Payment {
         return Payment::get($paymentId)->getValue();
     }
 
@@ -306,7 +302,7 @@ class BunqService
      *
      * @return array|Payment[]
      */
-    public function getPayments() {
+    public function getPayments(): array {
         return Payment::listing(null, [
             'count' => 100
         ])->getValue();
@@ -331,7 +327,7 @@ class BunqService
      *
      * @return VoucherTransaction|null
      */
-    public static function getNextInTransactionsQueue() {
+    public static function getNextInTransactionsQueue(): ?VoucherTransaction {
         if (!$transaction = self::getNextInTransactionsQueueQuery()->first()) {
             return $transaction;
         }
@@ -355,7 +351,7 @@ class BunqService
      *
      * @return void
      */
-    public static function processQueue() {
+    public static function processQueue(): void {
         while ($transaction = self::getNextInTransactionsQueue()) {
             $voucher = $transaction->voucher;
 
@@ -365,10 +361,13 @@ class BunqService
 
             try {
                 if (!$bunq = $voucher->fund->getBunq()) {
-                    logger()->error(sprintf(
-                        'BunqService: Could not make bunq instance: %s!',
-                        $transaction->id
-                    ));
+                    if ($logger = logger()) {
+                        $logger->error(sprintf(
+                            'BunqService: Could not make bunq instance: %s!',
+                            $transaction->id
+                        ));
+                    }
+
                     continue;
                 }
 
@@ -403,18 +402,21 @@ class BunqService
                     $transaction->sendPushBunqTransactionSuccess();
 
                     sleep(1);
-                } else {
-                    logger()->error(sprintf(
+                } else if ($logger = logger()) {
+                    $logger->error(sprintf(
                         'BunqService: invalid payment_id for transaction: %s!',
                         $transaction->id
                     ));
                 }
             } catch (\Exception $e) {
-                logger()->error(
-                    'BunqService->processQueue error: ' .
-                    sprintf(" [%s] - %s", Carbon::now(), $e->getMessage())
-                );
+                if ($logger = logger()) {
+                    $logger->error(
+                        'BunqService->processQueue error: ' .
+                        sprintf(" [%s] - %s", Carbon::now(), $e->getMessage())
+                    );
+                }
             }
+
             sleep(1);
         }
     }
@@ -424,7 +426,7 @@ class BunqService
      *
      * @return void
      */
-    public static function processTopUps() {
+    public static function processTopUps(): void {
         $funds = Fund::all()->filter(function(Fund $fund) {
             return $fund->getBunqKey();
         });
@@ -506,7 +508,7 @@ class BunqService
         if ($data->getStatusCode() === 200) {
             try {
                 return json_decode(
-                    $data->getBody()->getContents()
+                    $data->getBody()->getContents(), true
                 )->Response[0]->IdealDirectory->country[0]->issuer;
             } catch (\Exception $exception) {
                 throwException(new \Exception(
@@ -552,7 +554,7 @@ class BunqService
      * @return \Illuminate\Support\Collection
      * @throws \Exception
      */
-    public static function updateIdealSandboxIssuers() {
+    public static function updateIdealSandboxIssuers(): \Illuminate\Support\Collection {
         return self::updateIdealIssuers(true);
     }
 
@@ -560,7 +562,7 @@ class BunqService
      * @return \Illuminate\Support\Collection
      * @throws \Exception
      */
-    public static function updateIdealProductionIssuers() {
+    public static function updateIdealProductionIssuers(): \Illuminate\Support\Collection {
         return self::updateIdealIssuers(false);
     }
 
@@ -572,12 +574,12 @@ class BunqService
     public function makeBunqMeTabRequest(
         float $amount,
         string $description = ''
-    ) {
-        $amount = number_format($amount, 2, '.', '');
+    ): ForusBunqMeTabRequest {
+        $amountValue = number_format($amount, 2, '.', '');
         $monetaryAccount = MonetaryAccountBank::listing()->getValue()[0];
 
         $bunqMeTabEntryId = BunqMeTab::create(
-            new BunqMeTabEntry(new Amount($amount, 'EUR'), $description),
+            new BunqMeTabEntry(new Amount($amountValue, 'EUR'), $description),
             $monetaryAccount->getId()
         )->getValue();
 
@@ -589,9 +591,10 @@ class BunqService
         )->getValue());
     }
 
+    // todo: deprecated
     public function getBunqMeTabRequest(
         int $bunqMeTabEntryId
-    ) {
+    ): BunqMeTab {
         return BunqMeTab::get(
             $bunqMeTabEntryId// ,
             // MonetaryAccountBank::listing()->getValue()[0]->getId()
@@ -599,6 +602,7 @@ class BunqService
     }
 
     /**
+    // todo: deprecated
      * Get bunq costs.
      *
      * @param Carbon $fromDate
@@ -636,7 +640,7 @@ class BunqService
      */
     public static function processBunqMeTabQueue(
         Fund $fund
-    ) {
+    ): void {
         $queue = self::getBunqMeTabsQueue($fund)->get();
 
         $queue = $queue->filter(function(\App\Models\BunqMeTab $bunqMeTab) {
@@ -697,7 +701,7 @@ class BunqService
         });
 
         // load bunq context
-        if ($queue->count() == 0 || !$fund->getBunq()) {
+        if ($queue->count() === 0 || !$fund->getBunq()) {
             return;
         }
 
@@ -719,7 +723,7 @@ class BunqService
      *
      * @return \Illuminate\Contracts\Filesystem\Filesystem
      */
-    private function storage() {
+    private function storage(): \Illuminate\Contracts\Filesystem\Filesystem {
         return resolve('filesystem')->disk($this->storageDriver);
     }
 }
