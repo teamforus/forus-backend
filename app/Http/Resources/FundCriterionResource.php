@@ -46,7 +46,7 @@ class FundCriterionResource extends Resource
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
             'description', 'title'
         ]), [
-            'description_html' => resolve('markdown')->convertToHtml(
+            'description_html' => markdown_to_html(
                 $this->resource->description
             ),
             'external_validators' => $external_validators->map(static function(

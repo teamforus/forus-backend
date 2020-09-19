@@ -410,14 +410,15 @@ class Implementation extends Model
      * @return array
      */
     private static function getPlatformSettingsConfig($implementation) {
+
         return array_merge($implementation->only([
             'title', 'description', 'has_more_info_url',
             'more_info_url', 'description_steps',
         ])->toArray(), [
-            'description_html' => resolve('markdown')->convertToHtml(
+            'description_html' => markdown_to_html(
                 $implementation['description'] ?? ''
             ),
-            'description_steps_html' => resolve('markdown')->convertToHtml(
+            'description_steps_html' => markdown_to_html(
                 $implementation['description_steps'] ?? ''
             ),
         ]);

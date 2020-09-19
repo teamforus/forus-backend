@@ -728,3 +728,23 @@ if (!function_exists('user_agent_data')) {
         return Browser::getAgentData($user_agent ?: request()->userAgent());
     }
 }
+
+if (!function_exists('markdown_to_html')) {
+    /**
+     * @param string $str_markdown
+     * @return string
+     */
+    function markdown_to_html(string $str_markdown)
+    {
+        $environment = \League\CommonMark\Environment::createCommonMarkEnvironment();
+        $environment->addExtension(new \Zoon\CommonMark\Ext\YouTubeIframe\YouTubeIframeExtension());
+
+        $converter = new \League\CommonMark\CommonMarkConverter([
+            'youtube_iframe_width' => 600,
+            'youtube_iframe_height' => 300,
+            'youtube_iframe_allowfullscreen' => true,
+        ], $environment);
+
+        return $converter->convertToHtml($str_markdown);
+    }
+}

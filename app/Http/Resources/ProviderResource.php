@@ -29,7 +29,7 @@ class ProviderResource extends Resource
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': ''
         ])->merge([
-            'description_html' => resolve('markdown')->convertToHtml(
+            'description_html' => markdown_to_html(
                 $organization->description ?? ''
             ),
             'business_type' => $organization->business_type ? new BusinessTypeResource(
