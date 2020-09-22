@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\Identity;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Identity\IdentityEmailStoreRequest;
 use App\Http\Resources\IdentityEmailResource;
 use App\Services\Forus\Identity\Models\IdentityEmail;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Http\Request;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -58,11 +58,11 @@ class IdentityEmailsController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param IdentityEmailStoreRequest $request
      * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(Request $request)
+    public function store(IdentityEmailStoreRequest $request)
     {
         $this->authorize('create', IdentityEmail::class);
 
