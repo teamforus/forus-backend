@@ -11,6 +11,7 @@ use App\Console\Commands\MediaCleanupCommand;
 use App\Console\Commands\MediaRegenerateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
+use App\Console\Commands\SendAllDigestsCommand;
 use App\Console\Commands\SendDigestMailCommand;
 use App\Console\Commands\SendProviderFundsDigestCommand;
 use App\Console\Commands\SendProviderProductsDigestCommand;
@@ -64,6 +65,9 @@ class Kernel extends ConsoleKernel
         SendValidatorDigestCommand::class,
         SendSponsorDigestCommand::class,
 
+        // send all digests in one command
+        SendAllDigestsCommand::class,
+
         // voucher transaction details
         UpdateVoucherTransactionDetailsCommand::class,
     ];
@@ -74,7 +78,7 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule(Schedule $schedule): void
     {
         $schedule->command('forus.fund:check')
             ->hourlyAt(1)->withoutOverlapping()->onOneServer();
@@ -134,7 +138,7 @@ class Kernel extends ConsoleKernel
      *
      * @return void
      */
-    protected function commands()
+    protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
 
