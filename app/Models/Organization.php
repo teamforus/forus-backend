@@ -143,8 +143,9 @@ class Organization extends Model
      * @param Request $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function searchQuery(Request $request)
+    public static function searchQuery(Request $request): \Illuminate\Database\Eloquent\Builder
     {
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
         $query = self::query();
 
         if ($request->input('is_employee', true)) {
@@ -250,7 +251,7 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function supplied_funds() {
+    public function supplied_funds(): BelongsToMany {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -260,14 +261,14 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_provider_invitations() {
+    public function fund_provider_invitations(): HasMany {
         return $this->hasMany(FundProviderInvitation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function supplied_funds_approved() {
+    public function supplied_funds_approved(): BelongsToMany {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -283,7 +284,7 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function supplied_funds_approved_budget() {
+    public function supplied_funds_approved_budget(): BelongsToMany {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -314,7 +315,7 @@ class Organization extends Model
      * Get organization logo
      * @return MorphOne
      */
-    public function logo() {
+    public function logo(): MorphOne {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'organization_logo'
         ]);
@@ -323,14 +324,14 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function vouchers() {
+    public function vouchers(): HasManyThrough {
         return $this->hasManyThrough(Voucher::class, Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function employees() {
+    public function employees(): HasMany {
         return $this->hasMany(Employee::class);
     }
 
@@ -384,7 +385,7 @@ class Organization extends Model
         /** @var Employee $employee */
         $employee = $this->employees()->where('identity_address', $identityAddress)->first();
 
-        return $employee ? $employee->roles : collect([]);
+        return $employee->roles ?? collect([]);
     }
 
     /**
@@ -406,18 +407,16 @@ class Organization extends Model
 
     /**
      * Check if identity is organization employee
-     * @param $identity_address string
+     * @param string|null $identity_address string
      * @return bool
      */
-    public function isEmployee(
-        string $identity_address = null
-    ): bool {
+    public function isEmployee(?string $identity_address = null): bool {
         return $identity_address &&
             $this->employees()->whereIn('identity_address', (array) $identity_address)->exists();
     }
 
     /**
-     * @param $identityAddress string
+     * @param string|null $identityAddress string
      * @param array|string $permissions
      * @param $all boolean
      * @return bool

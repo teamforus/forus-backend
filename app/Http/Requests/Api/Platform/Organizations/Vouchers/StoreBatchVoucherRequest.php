@@ -32,7 +32,7 @@ class StoreBatchVoucherRequest extends FormRequest
         $fund = Fund::query()->whereIn('id', $validFunds)->findOrFail($this->input('fund_id'));
 
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
-        $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
+        $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
 
         return [
             'fund_id'   => [
@@ -44,17 +44,20 @@ class StoreBatchVoucherRequest extends FormRequest
                 new VouchersUploadArrayRule($fund),
             ],
             'vouchers.*' => 'required|array',
-            'vouchers.*.amount' => [
+            'vouchers.*.amount' => !$fund || $fund->isTypeBudget() ? [
                 'required_without:vouchers.*.product_id',
                 'numeric',
                 'between:.1,' . currency_format($max),
-            ],
-            'vouchers.*.product_id' => [
+            ] : 'nullable',
+            'vouchers.*.product_id' => !$fund || $fund->isTypeBudget() ? [
                 'required_without:vouchers.*.amount',
                 'exists:products,id',
                 new ProductIdInStockRule($fund, collect(
                     $this->input('vouchers')
                 )->countBy('product_id')->toArray())
+            ] : [
+                'nullable',
+                Rule::in([])
             ],
             'vouchers.*.expire_at' => [
                 'nullable',

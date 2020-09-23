@@ -8,24 +8,26 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class OrganizationQuery
+ * @package App\Scopes\Builders
+ */
 class OrganizationQuery
 {
     /**
      * @param Builder $builder
-     * @param string $identityAddress
-     * @return Organization|Builder|mixed
+     * @param string|array $identityAddress
+     * @return Builder
      */
     public static function whereIsEmployee(
         Builder $builder,
         string $identityAddress
-    ) {
-        return $builder->where(static function(
-            Builder $builder
-        ) use ($identityAddress) {
+    ): Builder {
+        return $builder->where(static function(Builder $builder) use ($identityAddress) {
             $builder->whereHas('employees', static function(
                 Builder $builder
             ) use ($identityAddress) {
-                $builder->where('employees.identity_address', $identityAddress);
+                $builder->whereIn('employees.identity_address', (array) $identityAddress);
             });
         });
     }
@@ -74,7 +76,7 @@ class OrganizationQuery
         )->whereHas('fund_providers', static function(
             Builder $builder
         ) use ($voucher) {
-            if ($voucher->type === Voucher::TYPE_PRODUCT) {
+            if ($voucher->isProductType()) {
                 FundProviderQuery::whereApprovedForFundsFilter(
                     $builder, $voucher->fund_id, 'product', $voucher->product_id
                 );

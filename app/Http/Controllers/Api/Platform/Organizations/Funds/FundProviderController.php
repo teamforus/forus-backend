@@ -98,9 +98,7 @@ class FundProviderController extends Controller
     ): FundProviderResource {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
-        $this->authorize('updateSponsor', [
-            $fundProvider, $organization, $fund
-        ]);
+        $this->authorize('updateSponsor', [$fundProvider, $organization, $fund]);
 
         $enable_products = $request->input('enable_products');
         $disable_products = $request->input('disable_products');

@@ -18,9 +18,8 @@ class VoucherTransactionsSubscriber
     ): void {
         $transaction = $voucherTransactionEvent->getVoucherTransaction();
         $voucher = $transaction->voucher;
-        $isProductTransaction = $voucher->type === Voucher::TYPE_PRODUCT;
 
-        if ($isProductTransaction) {
+        if ($voucher->isProductType()) {
             $voucher->product->updateSoldOutState();
             $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, [
                 'fund' => $voucher->fund,

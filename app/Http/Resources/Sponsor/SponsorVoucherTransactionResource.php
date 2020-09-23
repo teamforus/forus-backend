@@ -15,7 +15,7 @@ class SponsorVoucherTransactionResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         /** @var VoucherTransaction $voucherTransaction */
         $voucherTransaction = $this->resource;

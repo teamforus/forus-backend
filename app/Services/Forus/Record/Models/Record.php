@@ -3,6 +3,8 @@
 namespace App\Services\Forus\Record\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -55,21 +57,21 @@ class Record extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function record_type() {
+    public function record_type(): BelongsTo {
         return $this->belongsTo(RecordType::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function record_category() {
+    public function record_category(): BelongsTo {
         return $this->belongsTo(RecordCategory::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function validations() {
+    public function validations(): HasMany {
         return $this->hasMany(RecordValidation::class);
     }
 }

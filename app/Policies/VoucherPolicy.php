@@ -185,7 +185,7 @@ class VoucherPolicy
             $this->deny("physical_card_already_attached");
         }
 
-        if ($voucher->type !== $voucher::TYPE_BUDGET) {
+        if (!$voucher->isBudgetType()) {
             $this->deny("only_budget_vouchers");
         }
 
@@ -228,7 +228,7 @@ class VoucherPolicy
         }
 
         if ($voucher->fund->type === $voucher->fund::TYPE_BUDGET) {
-            if ($voucher->type === $voucher::TYPE_BUDGET) {
+            if ($voucher->isBudgetType()) {
                 $providersApproved = $fund->providers()->where([
                     'allow_budget' => true,
                 ])->pluck('organization_id');
@@ -302,11 +302,11 @@ class VoucherPolicy
         }
 
         // No approved identity organizations but have pending
-        if ($voucher->type === $voucher::TYPE_BUDGET) {
+        if ($voucher->isBudgetType()) {
             return $providers->intersect($providersApproved)->count() > 0;
         }
 
-        if ($voucher->type === $voucher::TYPE_PRODUCT) {
+        if ($voucher->isProductType()) {
             // Product vouchers should have not transactions
             if ($voucher->transactions()->exists()) {
                 $this->deny('product_voucher_used');

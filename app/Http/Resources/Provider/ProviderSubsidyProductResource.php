@@ -37,7 +37,7 @@ class ProviderSubsidyProductResource extends JsonResource
         $price_user = $product->price - $fundProviderProduct->amount;
 
         return array_merge($product->only([
-            'id', 'name', 'sold_out', 'organization_id', 'expired'
+            'id', 'name', 'sold_out', 'organization_id', 'expired', 'unlimited_stock', 'no_price'
         ]), [
             'price' => currency_format($price),
             'price_user' => currency_format($price_user),

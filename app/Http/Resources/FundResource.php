@@ -29,6 +29,7 @@ class FundResource extends Resource
             'validate_records'
         ])->get();
 
+        $checkCriteria = $request->get('check_criteria', false);
         $providersEmployeeCount = $fund->provider_organizations_approved;
         $providersEmployeeCount = $providersEmployeeCount->reduce(static function (
             int $carry,
@@ -74,7 +75,9 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
-        ], $financialData);
+        ], $checkCriteria ? [
+            'taken_by_partner' => $fund->isTakenByPartner(auth_address()),
+        ]: [], $financialData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {
             $data = array_merge($data, $fund->only([
