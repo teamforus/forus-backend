@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\SearchProductsRequest;
-use App\Http\Resources\ProductResource;
+use App\Http\Resources\Requester\ProductResource;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

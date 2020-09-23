@@ -313,7 +313,8 @@ class VoucherTransaction extends Model
                 trans("$transKey.amount") => currency_format(
                     $transaction->amount
                 ),
-                trans("$transKey.date") => format_datetime_locale($transaction->created_at),
+                trans("$transKey.date_transaction") => format_datetime_locale($transaction->created_at),
+                trans("$transKey.date_payment") => format_datetime_locale($transaction->payment_time),
                 trans("$transKey.fund") => $transaction->voucher->fund->name,
                 trans("$transKey.provider") => $transaction->provider->name,
                 trans("$transKey.state") => trans(

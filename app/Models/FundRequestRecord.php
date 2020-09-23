@@ -140,12 +140,28 @@ class FundRequestRecord extends Model
      * @return $this
      */
     public function makeValidation(): self {
+
+        if ($this->record_type_key === 'partner_bsn' &&
+            $hash_bsn_salt = $this->fund_request->fund->fund_config->hash_bsn_salt) {
+            $this->applyRecordAndValidation(
+                'partner_bsn_hash',
+                hash_hmac('sha256', $this->value, $hash_bsn_salt)
+            );
+        }
+
+        return $this->applyRecordAndValidation($this->record_type_key, $this->value);
+    }
+
+    private function applyRecordAndValidation(
+        string $record_type_key,
+        string $value
+    ): FundRequestRecord {
         $recordService = service_record();
 
         $record = $recordService->recordCreate(
             $this->fund_request->identity_address,
-            $this->record_type_key,
-            $this->value
+            $record_type_key,
+            $value
         );
 
         $validationRequest = $recordService->makeValidationRequest(

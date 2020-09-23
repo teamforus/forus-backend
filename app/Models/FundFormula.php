@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 /**
  * App\Models\FundFormula
  *
@@ -34,7 +36,7 @@ class FundFormula extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund() {
+    public function fund(): BelongsTo {
         return $this->belongsTo(Fund::class);
     }
 }

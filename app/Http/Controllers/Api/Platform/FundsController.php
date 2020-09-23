@@ -14,6 +14,10 @@ use App\Models\Implementation;
 use App\Services\BunqService\BunqService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class FundsController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class FundsController extends Controller
 {
     /**
@@ -38,7 +42,7 @@ class FundsController extends Controller
         $meta = [
             'organizations' => $query->with('organization')->get()->pluck(
                 'organization.name', 'organization.id'
-            )->map(function ($name, $id) {
+            )->map(static function ($name, $id) {
                 return (object) [
                     'id'   => $id,
                     'name' => $name
@@ -85,9 +89,7 @@ class FundsController extends Controller
     ): VoucherResource {
         $this->authorize('apply', $fund);
 
-        return new VoucherResource(
-            $fund->makeVoucher(auth()->id())
-        );
+        return new VoucherResource($fund->makeVoucher(auth_address()));
     }
 
     /**

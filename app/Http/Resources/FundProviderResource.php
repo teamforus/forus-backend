@@ -38,23 +38,23 @@ class FundProviderResource extends Resource
 
         return collect($fundProvider)->only([
             'id', 'organization_id', 'fund_id', 'dismissed',
-            'allow_products', 'allow_some_products', 'allow_budget'
+            'allow_products', 'allow_some_products', 'allow_budget',
         ])->merge([
             'products' => $fundProvider->fund_provider_products->pluck('product_id'),
-            'products_count_all'    => $fundProvider->organization->products->count(),
+            'products_count_all' => $fundProvider->organization->products->count(),
+            'products_count_available' => ProductQuery::whereFundNotExcludedOrHasHistory(
+                $fundProvider->organization->products()->getQuery(),
+                $fundProvider->fund_id
+            )->count(),
             'products_count_approved' => ProductQuery::approvedForFundsAndActiveFilter(
                 $fundProvider->organization->products()->getQuery(),
                 $fundProvider->fund_id
             )->count(),
-            'fund'                  => new FundResource($fundProvider->fund),
-            'organization'          => array_merge((new OrganizationWithPrivateResource(
+            'fund' => new FundResource($fundProvider->fund),
+            'employees' => EmployeeResource::collection($fundProvider->organization->employees),
+            'organization' => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization
-            ))->toArray($request), [
-                'iban' => $fundProvider->organization->iban
-            ]),
-            'employees' => EmployeeResource::collection(
-                $fundProvider->organization->employees
-            ),
+            ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
         ])->toArray();
     }
 }

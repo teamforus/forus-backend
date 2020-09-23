@@ -23,28 +23,6 @@ class FundProviderProductQuery
     }
 
     /**
-     * @param Builder $builder
-     * @param $identity_address
-     * @return Builder
-     */
-    public static function whereInLimitsFilter(Builder $builder, $identity_address): Builder {
-        $limit_total = \DB::raw('`fund_provider_products`.`limit_total`');
-        $limit_per_identity = \DB::raw('`fund_provider_products`.`limit_per_identity`');
-
-        $builder->whereHas('voucher_transactions', null, '<', $limit_total);
-
-        return $builder->whereHas('voucher_transactions', static function(
-            Builder $builder
-        ) use ($identity_address) {
-            $builder->whereHas('voucher', static function(
-                Builder $builder
-            ) use ($identity_address) {
-                $builder->whereIn('vouchers.identity_address', (array) $identity_address);
-            });
-        }, '<', $limit_per_identity);
-    }
-
-    /**
      * @param Builder $query
      * @param Voucher $voucher
      * @param null $organization_id
@@ -73,6 +51,38 @@ class FundProviderProductQuery
             return ProductQuery::approvedForFundsAndActiveFilter($query, $voucher->fund->id);
         });
 
-        return self::whereInLimitsFilter($query, $voucher->identity_address);
+        return self::whereInLimitsFilter($query, $voucher);
+    }
+
+    /**
+     * @param Builder $builder
+     * @param Voucher $voucher
+     * @return Builder
+     */
+    public static function whereInLimitsFilter(
+        Builder $builder,
+        Voucher $voucher
+    ): Builder {
+        $limit_total = \DB::raw('`fund_provider_products`.`limit_total`');
+        $limit_per_identity = \DB::raw(sprintf(
+            "(`fund_provider_products`.`limit_per_identity` * %s)",
+            $voucher->limit_multiplier
+        ));
+
+        $builder->whereHas('product.voucher_transactions', static function(Builder $builder) use ($voucher) {
+            // nesting is required, do not replace with 'product.voucher_transactions.voucher'
+            $builder->whereHas('voucher', static function(Builder $builder) use ($voucher) {
+                $builder->where('vouchers.fund_id', '=', $voucher->fund_id);
+            });
+        },'<', $limit_total);
+
+        $builder->whereHas('product.voucher_transactions', static function(Builder $builder) use ($voucher) {
+            // nesting is required, do not replace with 'product.voucher_transactions.voucher'
+            return $builder->whereHas('voucher', static function(Builder $builder) use ($voucher) {
+                $builder->where('vouchers.id', '=', $voucher->id);
+            });
+        }, '<', $limit_per_identity);
+
+        return $builder;
     }
 }

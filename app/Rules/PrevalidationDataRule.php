@@ -5,15 +5,19 @@ namespace App\Rules;
 use App\Models\Fund;
 use Illuminate\Contracts\Validation\Rule;
 
+/**
+ * Class PrevalidationDataRule
+ * @package App\Rules
+ */
 class PrevalidationDataRule implements Rule
 {
-    private $message;
+    private $messageText;
     private $fundId;
 
     /**
      * Create a new rule instance.
      *
-     * @param $fundId int
+     * @param ?int $fundId
      * @return void
      */
     public function __construct(
@@ -29,16 +33,14 @@ class PrevalidationDataRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         $data = collect($value);
         $recordRepo = resolve('forus.services.record');
         $recordTypes = collect($recordRepo->getRecordTypes())->pluck('key');
 
         if ($data->isEmpty()) {
-            $this->message = trans(
-                'validation.prevalidated_empty_data'
-            );
+            $this->messageText = trans('validation.prevalidated_empty_data');
 
             return false;
         }
@@ -50,40 +52,25 @@ class PrevalidationDataRule implements Rule
         foreach ($data as $records) {
             $records = collect($records);
 
-            if ($fund && $records->keys()->search(
-                $fund->fund_config->csv_primary_key
-                ) === false) {
-                $this->message = trans(
-                    'validation.prevalidation_missing_primary_key'
-                );
+            if ($fund && $records->keys()->search($fund->fund_config->csv_primary_key) === false) {
+                $this->messageText = trans('validation.prevalidation_missing_primary_key');
 
                 return false;
             }
 
-            if ($fund && $records->keys()->intersect(
-                $requiredKeys
-                )->count() < $requiredKeys->count()) {
-                $this->message = trans(
-                    'validation.prevalidation_missing_required_keys'
-                );
-
+            if ($fund && $records->keys()->intersect($requiredKeys)->count() < $requiredKeys->count()) {
+                $this->messageText = trans('validation.prevalidation_missing_required_keys');
                 return false;
             }
 
             foreach ($records as $recordKey => $record) {
                 if ($recordTypes->search($recordKey) === false) {
-                    $this->message = trans(
-                        'validation.prevalidation_invalid_record_key'
-                    );
-
+                    $this->messageText = trans('validation.prevalidation_invalid_record_key');
                     return false;
                 }
 
-                if ($recordKey == 'primary_email') {
-                    $this->message = trans(
-                        'validation.prevalidation_invalid_type_primary_email'
-                    );
-
+                if ($recordKey === 'primary_email') {
+                    $this->messageText = trans('validation.prevalidation_invalid_type_primary_email');
                     return false;
                 }
             }
@@ -97,8 +84,8 @@ class PrevalidationDataRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
-        return $this->message;
+        return $this->messageText;
     }
 }

@@ -71,6 +71,11 @@ class FundRequestPolicy
             return $this->deny('fund_request.fund_not_active');
         }
 
+        if ($fund->fund_config->implementation->digid_required &&
+            !record_repo()->bsnByAddress($identity_address)) {
+            return $this->deny('fund_request.bsn_record_is_mandatory');
+        }
+
         if ($fund->fund_requests()->where([
             'identity_address' => $identity_address,
             'state' => FundRequest::STATE_PENDING,

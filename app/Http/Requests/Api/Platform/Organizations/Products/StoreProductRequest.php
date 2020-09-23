@@ -29,7 +29,8 @@ class StoreProductRequest extends FormRequest
         return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,1000',
-            'price'                 => 'required|numeric|min:.2',
+            'price'                 => 'required_without:no_price|numeric|min:.2',
+            'no_price'              => 'boolean',
             'unlimited_stock'       => 'boolean',
             'old_price'             => 'nullable|numeric|min:' . $price,
             'total_amount'          => [

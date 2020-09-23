@@ -88,8 +88,10 @@ class FundRequestsController extends Controller
     ): ValidatorFundRequestResource {
         $this->authorize('resignAsValidator', [$fundRequest, $organization]);
 
-        return new ValidatorFundRequestResource($fundRequest->resignEmployee(
-            $organization->findEmployee(auth_address())
+        $fundRequest->resignEmployee($organization->findEmployee(auth_address()));
+
+        return new ValidatorFundRequestResource($fundRequest->load(
+            ValidatorFundRequestResource::$load
         ));
     }
 

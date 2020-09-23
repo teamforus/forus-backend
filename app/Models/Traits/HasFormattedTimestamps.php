@@ -10,7 +10,7 @@ namespace App\Models\Traits;
  * @property string|null $updated_at_string_locale
  * @package App\Models\Traits
  */
-trait HasFormattedDatesTrait
+trait HasFormattedTimestamps
 {
     /**
      * @return string|null
