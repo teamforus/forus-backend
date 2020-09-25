@@ -9,12 +9,9 @@ use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductExclusionsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
 use App\Http\Resources\Provider\ProviderProductResource;
-use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
-use App\Notifications\Organizations\Products\ProductActionsRemovedNotification;
-use App\Scopes\Builders\FundQuery;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -139,30 +136,9 @@ class ProductsController extends Controller
             $this->authorize('destroy', $media = $this->mediaService->findByUid($media_uid));
         }
 
-        if (round($request->input('price'), 2) !== round($product->price, 2)) {
-            $subsidiesFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(
-                Fund::query(), $product->id
-            )->get()->filter(function (Fund $fund) {
-                return $fund->isTypeSubsidy();
-            });
-
-            if ($subsidiesFunds->count()) {
-                foreach ($subsidiesFunds as $fund) {
-                    /** @var Fund $fund */
-                    ProductActionsRemovedNotification::send(
-                        $product->log(Product::EVENT_ACTIONS_REMOVED, [
-                            'product'  => $product,
-                            'fund'     => $fund,
-                            'sponsor'  => $fund->organization,
-                            'provider' => $product->organization
-                        ])
-                    );
-                }
-
-                $product->fund_provider_products()->whereNotNull(
-                    'limit_total'
-                )->delete();
-            }
+        if (!$product->no_price && (
+            currency_format($request->input('price')) !== currency_format($product->price))) {
+            $product->resetSubsidyApprovals();
         }
 
         $product->update(array_merge($request->only(array_merge([
