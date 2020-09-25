@@ -42,9 +42,9 @@ return [
         'description' => ':provider_name heeft een nieuwe aanbieding toegevoegd aan :fund_name.',
     ],
     'product_subsidy_removed' => [
-        'title' => ':provider_name has changed the price for ":product_name"',
+        'title' => ':provider_name heeft de prijs veranderd voor ":product_name"',
         'description' =>
-            ':provider_name has changed the price for the product ":product_name", and the product was removed form the webshop. '.
-            'If you want to restore the product on the webshop, please approve the product on the dashboard.'
+            ':provider_name heeft de prijs veranderd voor :product_name" en de actie is verwijderd uit de webshop.'.
+            'Als u dit aanbod weer wilt toevoegen aan de webshop, start opnieuw een actie op uw dashboard.'
     ]
 ];
