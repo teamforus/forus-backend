@@ -38,7 +38,8 @@ return [
     'voucher_transactions'    => [
         'id' => 'ID',
         'amount' => 'bedrag',
-        'date' => 'datum',
+        'date_transaction' => 'Datum betaling',
+        'date_payment' => 'Datum uitbetaling',
         'fund' => 'fonds',
         'provider' => 'aanbieder',
         'state' => 'status',
