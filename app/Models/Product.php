@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
+use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
@@ -429,5 +431,31 @@ class Product extends Model
                 ])->delete();
             }
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function resetSubsidyApprovals(): void
+    {
+        $subsidyFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(
+            Fund::query(), $this->id
+        )->where('type',  Fund::TYPE_SUBSIDIES)->get();
+
+        $subsidyFunds->each(function(Fund $fund) {
+            FundProductSubsidyRemovedNotification::send(
+                $fund->log($fund::EVENT_PRODUCT_SUBSIDY_REMOVED, [
+                    'product'  => $this,
+                    'fund'     => $fund,
+                    'sponsor'  => $fund->organization,
+                    'provider' => $this->organization
+            ]));
+        });
+
+        $this->fund_provider_products()->whereHas('fund_provider', function(Builder $builder) {
+            $builder->whereHas('fund', function(Builder $builder) {
+                $builder->where('type', '=', Fund::TYPE_SUBSIDIES);
+            });
+        })->delete();
     }
 }

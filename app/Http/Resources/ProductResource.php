@@ -96,7 +96,7 @@ class ProductResource extends Resource
                     $fundProviderProduct->limit_total,
                     $fundProviderProduct->limit_per_identity
                 ): $fundProviderProduct->stockAvailableForIdentity(auth_address()),
-                'price' => $product->price - $fundProviderProduct->amount,
+                'price' => currency_format($product->price - $fundProviderProduct->amount),
             ] : []);
         })->values();
     }

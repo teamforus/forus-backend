@@ -28,14 +28,15 @@ abstract class BaseOrganizationNotification extends BaseNotification
      */
     public static function getPermissions(): array
     {
-        if (empty(static::$permissions) || !is_array(static::$permissions)) {
+        if (empty(static::$permissions) || (
+            !is_array(static::$permissions) && !is_string(static::$permissions))) {
             throw new \LogicException(sprintf(
                 'Permissions list is required for "%s"!',
                 static::class
             ));
         }
 
-        return static::$permissions;
+        return (array) static::$permissions;
     }
 
     /**
