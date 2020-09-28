@@ -107,7 +107,7 @@ class FundProviderController extends Controller
             'dismissed', 'allow_products', 'allow_budget',
         ]: 'dismissed'));
 
-        if ($fundProvider->allow_budget || $fundProvider->allow_products) {
+        if ($fundProvider->allow_budget || $fundProvider->allow_products || !empty($enable_products)) {
             $fundProvider->update([
                 'dismissed' => false
             ]);
