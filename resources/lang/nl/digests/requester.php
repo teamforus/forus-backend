@@ -26,5 +26,5 @@ return [
         'price' => "- :product_name voor €:product_price_locale",
     ],
 
-    'button_webshop' => 'GA NAAR HET WEBSHOP',
+    'button_webshop' => 'GA NAAR DE WEBSHOP',
 ];
