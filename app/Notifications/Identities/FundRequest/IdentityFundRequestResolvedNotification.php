@@ -2,7 +2,8 @@
 
 namespace App\Notifications\Identities\FundRequest;
 
-use App\Mail\Funds\FundRequests\FundRequestResolvedMail;
+use App\Mail\Funds\FundRequests\FundRequestApprovedMail;
+use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
 use App\Models\FundRequest;
 use App\Services\Forus\Identity\Models\Identity;
 
@@ -16,14 +17,27 @@ class IdentityFundRequestResolvedNotification extends BaseIdentityFundRequestNot
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;
 
-        resolve('forus.services.notification')->sendMailNotification(
-            $identity->email,
-            new FundRequestResolvedMail(
-                $this->eventLog->data['fund_request_state'],
+        if ($fundRequest->state === FundRequest::STATE_APPROVED) {
+            $mailable = new FundRequestApprovedMail(
                 $this->eventLog->data['fund_name'],
                 $fundRequest->fund->urlWebshop(),
+                'https://www.forus.io/DL',
                 $fundRequest->fund->getEmailFrom()
-            )
+            );
+        } else {
+            $mailable = new FundRequestDeniedMail(
+                $this->eventLog->data['fund_name'],
+                $this->eventLog->data['fund_request_clarification_question'] ?? '',
+                $this->eventLog->data['sponsor_name'],
+                $this->eventLog->data['sponsor_phone'],
+                $this->eventLog->data['sponsor_email'],
+                $fundRequest->fund->getEmailFrom()
+            );
+        }
+
+        resolve('forus.services.notification')->sendMailNotification(
+            $identity->email,
+            $mailable
         );
     }
 }
