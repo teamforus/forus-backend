@@ -11,12 +11,12 @@ class BusinessTypesTableSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         self::seed(true);
     }
 
-    public static function seed($deleteExisting = false)
+    public static function seed($deleteExisting = false): void
     {
         if ($deleteExisting) {
             Schema::disableForeignKeyConstraints();
@@ -30,7 +30,8 @@ class BusinessTypesTableSeeder extends Seeder
         self::seedFile('business-types-with-ids');
     }
 
-    private static function seedFile($file, bool $service = false) {
+    private static function seedFile($file, bool $service = false): void
+    {
         $list = self::loadTaxonomies($file, [
             'nl' => 'nl-NL',
             'en' => 'en-US'
@@ -41,15 +42,15 @@ class BusinessTypesTableSeeder extends Seeder
 
         $translations = [];
 
-        $businessTypes = array_values(array_map(function(
+        $businessTypes = array_values(array_map(static function(
             $category
         ) use ($date, $depth, &$translations, $service) {
             foreach ($category['names'][$depth - 1] as $locale => $name) {
-                array_push($translations, [
+                $translations[] = [
                     'locale' => $locale,
                     'name' => $name,
                     'business_type_id' => $category['id'],
-                ]);
+                ];
             }
 
             return [
@@ -101,10 +102,10 @@ class BusinessTypesTableSeeder extends Seeder
         }
 
         return $taxonomiesRaw[$keyLocale]->map(function($taxonomy) use ($taxonomiesNames) {
-            return array_set($taxonomy, 'names', array_map(function(
+            return array_set($taxonomy, 'names', array_map(static function(
                 $nameKey
             ) use ($taxonomiesNames, $taxonomy) {
-                return array_map(function($names) use ($nameKey)  {
+                return array_map(static function($names) use ($nameKey)  {
                     return $names[$nameKey];
                 }, $taxonomiesNames[$taxonomy['id']]);
             }, array_keys($taxonomy['names'])));

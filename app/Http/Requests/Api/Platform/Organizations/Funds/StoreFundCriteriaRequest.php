@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
-use App\Models\Fund;
 use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

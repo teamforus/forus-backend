@@ -20,15 +20,16 @@ class OfficeScheduleResource extends Resource
      */
     public function toArray($request): array
     {
-        return array_merge($this->resource->only([
+        $schedule = $this->resource;
+
+        return array_merge($schedule->only([
             'id', 'office_id', 'week_day',
-            'start_time', 'end_time',
-            'break_start_time', 'break_end_time'
+            'start_time', 'end_time', 'break_start_time', 'break_end_time'
         ]), [
-            'start_time' => $this->resource ? substr($this->resource->start_time, 0, 5): null,
-            'end_time' => $this->resource ? substr($this->resource->end_time, 0, 5): null,
-            'break_start_time' => $this->resource ? substr($this->resource->break_start_time, 0, 5): null,
-            'break_end_time' => $this->resource ? substr($this->resource->break_end_time, 0, 5): null,
+            'start_time' => $schedule ? substr($schedule->start_time, 0, 5): null,
+            'end_time' => $schedule ? substr($schedule->end_time, 0, 5): null,
+            'break_start_time' => $schedule ? substr($schedule->break_start_time, 0, 5): null,
+            'break_end_time' => $schedule ? substr($schedule->break_end_time, 0, 5): null,
         ]);
     }
 }

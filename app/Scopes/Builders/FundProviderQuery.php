@@ -70,11 +70,11 @@ class FundProviderQuery
     public static function wherePendingForFundsFilter(
         Builder $query,
         $fund_id
-    ) {
+    ): Builder {
         return $query->where(function(Builder $builder) use ($fund_id) {
             $builder->whereIn('fund_id', (array) $fund_id);
 
-            $builder->where(function(Builder $builder) use ($fund_id) {
+            $builder->where(function(Builder $builder) {
                 $builder->where('allow_budget', false);
                 $builder->where('allow_products', false);
                 $builder->doesntHave('fund_provider_products');
@@ -87,7 +87,10 @@ class FundProviderQuery
      * @param string $q
      * @return Builder
      */
-    public static function queryFilter(Builder $query, string $q = '') {
+    public static function queryFilter(
+        Builder $query,
+        string $q = ''
+    ): Builder {
         return $query->whereHas('organization', function(Builder $builder) use ($q) {
             return $builder->where('name', 'LIKE', "%{$q}%")
                 ->orWhere('kvk', 'LIKE', "%{$q}%")

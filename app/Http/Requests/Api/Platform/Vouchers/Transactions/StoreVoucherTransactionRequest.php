@@ -2,14 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers\Transactions;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Scopes\Builders\ProductQuery;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,7 @@ use Illuminate\Validation\Rule;
  * @property VoucherToken $voucher_address_or_physical_code
  * @package App\Http\Requests\Api\Platform\Vouchers\Transactions
  */
-class StoreVoucherTransactionRequest extends FormRequest
+class StoreVoucherTransactionRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -40,9 +41,7 @@ class StoreVoucherTransactionRequest extends FormRequest
         $voucher = $this->voucher_address_or_physical_code->voucher;
         $rules = $this->commonRules();
 
-        if ($voucher->isBudgetType() && $voucher->fund->isTypeBudget()) {
-            $rules = array_merge($rules, $this->budgetVoucherRules($voucher));
-        } else if ($voucher->fund->isTypeSubsidy()) {
+        if ($voucher->fund->isTypeSubsidy()) {
             $rules = array_merge($rules, [
                 'product_id' => [
                     'required',
@@ -50,8 +49,8 @@ class StoreVoucherTransactionRequest extends FormRequest
                     Rule::in($this->getAvailableProductIds($voucher)),
                 ],
             ]);
-        } else {
-            throw new \RuntimeException("Invalid voucher type" ,403);
+        } else if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType()) {
+            $rules = array_merge($rules, $this->budgetVoucherRules($voucher));
         }
 
         return $rules;
@@ -107,15 +106,19 @@ class StoreVoucherTransactionRequest extends FormRequest
      */
     private function getAvailableProductIds($voucher): array
     {
-        return Product::query()->whereHas('fund_provider_products', static function(
+        $query = Product::whereHas('fund_provider_products', function(
             Builder $builder
         ) use ($voucher) {
-            return FundProviderProductQuery::whereAvailableForVoucherFilter(
-                $builder, $voucher, Organization::queryByIdentityPermissions(auth_address(), [
+            FundProviderProductQuery::whereAvailableForVoucherFilter(
+                $builder,
+                $voucher,
+                Organization::queryByIdentityPermissions($this->auth_address(), [
                     'scan_vouchers'
                 ])->pluck('id')->toArray()
             );
-        })->pluck('id')->toArray();
+        });
+
+        return ProductQuery::inStockAndActiveFilter($query)->pluck('id')->toArray();
     }
 
     /**

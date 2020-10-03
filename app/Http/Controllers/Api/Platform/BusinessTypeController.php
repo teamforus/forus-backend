@@ -19,9 +19,7 @@ class BusinessTypeController extends Controller
     public function index(
         SearchBusinessTypesRequest $request
     ): AnonymousResourceCollection {
-        return BusinessTypeResource::collection(BusinessType::search(
-            $request
-        )->with(
+        return BusinessTypeResource::collection(BusinessType::search($request)->with(
             BusinessTypeResource::$load
         )->paginate($request->input('per_page', 100)));
     }

@@ -7,9 +7,9 @@ use Illuminate\Foundation\Http\FormRequest;
 abstract class BaseOfficeRequest extends FormRequest
 {
     /**
-     * @return array
+     * @return array|mixed
      */
-    public function attributes()
+    public function attributes(): array
     {
         $date = now();
         $attributes = [];

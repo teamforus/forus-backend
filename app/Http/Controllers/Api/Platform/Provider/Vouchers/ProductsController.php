@@ -12,6 +12,10 @@ use App\Models\VoucherToken;
 use App\Scopes\Builders\FundProviderProductQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class ProductsController
+ * @package App\Http\Controllers\Api\Platform\Provider\Vouchers
+ */
 class ProductsController extends Controller
 {
     /**
@@ -29,7 +33,7 @@ class ProductsController extends Controller
         $this->authorize('useAsProvider', $voucherToken->voucher);
         $this->authorize('viewAnyPublic', Product::class);
 
-        $organizations = Organization::queryByIdentityPermissions(auth_address(), [
+        $organizations = Organization::queryByIdentityPermissions($request->auth_address(), [
             'scan_vouchers'
         ])->pluck('id')->toArray();
 

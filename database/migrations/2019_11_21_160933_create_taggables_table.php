@@ -11,7 +11,7 @@ class CreateTaggablesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('taggables', function (Blueprint $table) {
             $table->increments('id');
@@ -31,7 +31,7 @@ class CreateTaggablesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('taggables');
     }

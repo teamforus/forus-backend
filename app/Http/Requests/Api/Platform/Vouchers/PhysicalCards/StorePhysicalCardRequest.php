@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Products;
+namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCards;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class IndexProductsRequest extends FormRequest
+class StorePhysicalCardRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +25,13 @@ class IndexProductsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'code' => [
+                'required',
+                'string',
+                'size:12',
+                'starts_with:1001',
+                Rule::unique('physical_cards', 'code')
+            ]
         ];
     }
 }

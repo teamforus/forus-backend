@@ -11,7 +11,7 @@ class CreateValidatorRequestsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('validator_requests', function (Blueprint $table) {
             $table->increments('id');
@@ -42,7 +42,7 @@ class CreateValidatorRequestsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('validator_requests');
     }

@@ -6,7 +6,6 @@ use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
-use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
@@ -55,47 +54,30 @@ class TransactionsController extends Controller
         $product = false;
         $needsReview = false;
         $voucher = $voucherToken->voucher;
-        $note = $request->input('note', false);
+        $transactionState = VoucherTransaction::STATE_PENDING;
 
-        if ($voucher->isProductType()) {
-            $amount = $voucher->amount;
-            $product = $voucher->product;
-            $organizationId = $product->organization_id;
-
-            if ($product->expired) {
-                return response()->json([
-                    'message' => trans('validation.voucher.product_expired'),
-                    'key' => 'product_expired'
-                ], 403);
-            }
-
-            if ($product->sold_out) {
-                return response()->json([
-                    'message' => trans('validation.voucher.product_sold_out'),
-                    'key' => 'product_expired'
-                ], 403);
+        if ($voucher->fund->isTypeBudget()) {
+            if ($voucher->isBudgetType()) {
+                // budget fund and budget voucher
+                $amount = $request->input('amount');
+                $organization = Organization::find($request->input('organization_id'));
+            } else {
+                // budget fund and product voucher
+                $amount = $voucher->amount;
+                $product = $voucher->product;
+                $organization = $product->organization;
             }
         } else {
-            $organizationId = $request->input('organization_id');
-            $amount = $request->input('amount');
+            // subsidy fund
+            $product = Product::findOrFail($request->input('product_id'));
+            $fundProviderProduct = $product->getSubsidyDetailsForFundOrFail($voucher->fund);
 
-            if ($amount > $voucher->amount_available && $voucher->fund->isTypeBudget()) {
-                return response()->json([
-                    'message' => trans('validation.voucher.not_enough_funds'),
-                    'key' => 'not_enough_funds'
-                ], 403);
-            }
+            $fundProviderProductId = $fundProviderProduct->id;
+            $organization = $product->organization;
+            $amount = $fundProviderProduct->amount;
 
-            if ($voucher->fund->isTypeSubsidy()) {
-                $product = Product::findOrFail($request->input('product_id'));
-
-                if (!$fundProviderProduct = $product->getSubsidyDetailsForFund($voucher->fund)) {
-                    abort(403);
-                }
-
-                $fundProviderProductId = $fundProviderProduct->id;
-                $organizationId = $product->organization_id;
-                $amount = $fundProviderProduct->amount;
+            if ($amount === 0) {
+                $transactionState = VoucherTransaction::STATE_SUCCESS;
             }
         }
 
@@ -106,27 +88,25 @@ class TransactionsController extends Controller
             )->exists();
         }
 
-        /** @var Employee $employee */
-        $employee = Organization::findOrFail($organizationId)->employees()->where([
-            'identity_address' => auth_address(),
-        ])->firstOrFail();
+        if (!$employee = $organization->findEmployee(auth_address())) {
+            abort(404);
+        }
 
         /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create(array_merge([
             'amount' => $amount,
             'product_id' => $product->id ?? null,
             'employee_id' => $employee->id,
-            'state' => $voucher->fund->isTypeSubsidy() && $amount === 0 ?
-                VoucherTransaction::STATE_SUCCESS : VoucherTransaction::STATE_PENDING,
+            'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProductId ?? null,
             'address' => token_generator()->address(),
-            'organization_id' => $organizationId,
+            'organization_id' => $organization->id,
         ], $needsReview ? [
             'attempts' => 50,
             'last_attempt_at' => now()
         ] : []));
 
-        if ($note) {
+        if ($note = $request->input('note')) {
             $transaction->addNote('provider', $note);
         }
 

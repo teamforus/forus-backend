@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Provider\Vouchers\Products;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class IndexProductsRequest extends FormRequest
+class IndexProductsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -16,7 +16,7 @@ class IndexProductsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return !empty(auth_address());
+        return !empty($this->auth_address());
     }
 
     /**
@@ -28,7 +28,7 @@ class IndexProductsRequest extends FormRequest
     {
         return [
             'organization_id' => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
-                Organization::query(), auth_address(), 'scan_vouchers'
+                Organization::query(), $this->auth_address(), 'scan_vouchers'
             )->pluck('id')->toArray())],
             'per_page' => 'numeric|between:1,100',
         ];

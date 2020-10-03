@@ -12,7 +12,7 @@ class AddIsConfiguredToFundConfigsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->boolean('is_configured')->default(0)->after('formula_multiplier');
@@ -28,7 +28,7 @@ class AddIsConfiguredToFundConfigsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropColumn('is_configured');

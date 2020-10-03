@@ -9,7 +9,6 @@ use App\Models\FundProvider;
 use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
-use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\TrashedQuery;
 use Illuminate\Http\Resources\Json\Resource;
 

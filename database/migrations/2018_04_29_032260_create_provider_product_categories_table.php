@@ -11,7 +11,7 @@ class CreateProviderProductCategoriesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('provider_product_categories', function (Blueprint $table) {
             $table->increments('id');
@@ -32,7 +32,7 @@ class CreateProviderProductCategoriesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('provider_product_categories');
     }

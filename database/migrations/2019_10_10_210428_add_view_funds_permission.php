@@ -11,7 +11,7 @@ class AddViewFundsPermission extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         if (!Permission::where('key', 'view_funds')->exists()) {
             $permission = Permission::create([
@@ -33,7 +33,7 @@ class AddViewFundsPermission extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         //
     }

@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Provider\Vouchers\ProductsVouchers;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class IndexProductVouchersRequest extends FormRequest
+class IndexProductVouchersRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,7 +13,7 @@ class IndexProductVouchersRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return (bool) auth_address();
+        return !empty($this->auth_address());
     }
 
     /**

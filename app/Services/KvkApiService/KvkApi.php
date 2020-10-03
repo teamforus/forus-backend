@@ -2,6 +2,8 @@
 
 namespace App\Services\KvkApiService;
 
+use Illuminate\Support\Collection;
+
 /**
  * Class KvkApi
  * @package App\Services\KvkApiService
@@ -9,8 +11,8 @@ namespace App\Services\KvkApiService;
 class KvkApi
 {
     protected $api_url = "https://api.kvk.nl/";
-    protected $api_debug = null;
-    protected $api_key = null;
+    protected $api_debug;
+    protected $api_key;
 
     /** @var string $cache_prefix Cache key */
     protected $cache_prefix = 'kvk_service:kvk-number:';
@@ -23,7 +25,7 @@ class KvkApi
      * @param bool $api_debug
      * @param string|null $api_key
      */
-    function __construct(
+    public function __construct(
         bool $api_debug,
         string $api_key = null
     ) {
@@ -37,7 +39,8 @@ class KvkApi
      */
     public function getApiUrl(
         string $kvk_number
-    ) {
+    ): string {
+        // https://api.kvk.nl/api/v2/testprofile/companies?q=rminds&user_key=l7xx2507da46416f4404a9398f7d364e7dda
         return sprintf(
             "%sapi/v2/%s/companies?q=%s&user_key=%s",
             $this->api_url,
@@ -59,13 +62,15 @@ class KvkApi
                 $this->cache_prefix . $kvk_number,
                 $this->cache_time,
                 $kvk_number
-            ));
+            ), true);
 
             if (is_object($response) && (count($response->data->items) > 0)) {
                 return $response;
             }
         } catch (\Exception $e) {
-            logger()->error($e->getMessage());
+            if ($logger = logger()) {
+                $logger->error($e->getMessage());
+            }
         }
 
         return false;
@@ -96,7 +101,7 @@ class KvkApi
      */
     public function getOffices(
         string $kvk_number
-    ) {
+    ): Collection {
         $kvkData = $this->kvkNumberData($kvk_number);
         $addresses = $kvkData->data->items[0]->addresses;
 

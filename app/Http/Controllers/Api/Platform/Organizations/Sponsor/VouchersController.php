@@ -18,6 +18,7 @@ use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Class VouchersController
@@ -56,15 +57,11 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return SponsorVoucherResource::collection(
-            Voucher::searchSponsorQuery(
-                $request,
-                $organization,
-                Fund::find($request->get('fund_id'))
-            )->paginate(
-                $request->input('per_page', 25)
-            )
-        );
+        return SponsorVoucherResource::collection(Voucher::searchSponsorQuery(
+            $request,
+            $organization,
+            Fund::find($request->get('fund_id'))
+        )->paginate($request->input('per_page', 25)));
     }
 
     /**
@@ -90,8 +87,9 @@ class VouchersController extends Controller
         $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
         $expire_at  = $request->input('expire_at', false);
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
+        $product_id = $request->input('product_id');
 
-        if ($fund->isTypeBudget() && ($product_id = $request->input('product_id', false))) {
+        if ($product_id && $fund->isTypeBudget()) {
             $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
         } else {
             $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
@@ -102,7 +100,7 @@ class VouchersController extends Controller
         }
 
         return new SponsorVoucherResource($voucher->updateModel([
-            'employee_id' => Employee::getEmployee(auth_address())->id
+            'employee_id' => Employee::getEmployee($request->auth_address())->id
         ]));
     }
 
@@ -123,18 +121,16 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        $employee_id = Employee::getEmployee(auth_address())->id;
-
         return SponsorVoucherResource::collection(collect(
             $request->post('vouchers')
-        )->map(function($voucher) use ($fund, $employee_id) {
+        )->map(function($voucher) use ($fund,  $organization, $request) {
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
-            $product_id = $voucher['product_id'] ?? false;
             $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
             $expire_at  = $voucher['expire_at'] ?? false;
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
+            $product_id = $voucher['product_id'] ?? false;
 
             if (!$product_id || !$fund->isTypeBudget()) {
                 $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
@@ -142,7 +138,9 @@ class VouchersController extends Controller
                 $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
             }
 
-            return $voucher->updateModel(compact('employee_id'));
+            return $voucher->updateModel([
+                'employee_id' => $organization->findEmployee($request->auth_address())->id
+            ]);
         }));
     }
 
@@ -222,9 +220,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('sendByEmailSponsor', [$voucher, $organization]);
 
-        $email = $request->post('email');
-
-        $voucher->sendToEmail($email);
+        $voucher->sendToEmail($request->post('email'));
 
         return new SponsorVoucherResource($voucher);
     }
@@ -238,7 +234,7 @@ class VouchersController extends Controller
     public function exportUnassigned(
         IndexVouchersRequest $request,
         Organization $organization
-    ): \Symfony\Component\HttpFoundation\BinaryFileResponse {
+    ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 

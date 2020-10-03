@@ -6,12 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PhysicalCardResource;
 use App\Models\PhysicalCard;
 use App\Models\VoucherToken;
-use App\Http\Requests\Api\Platform\Vouchers\StorePhysicalCardRequest;
+use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest;
 use Illuminate\Http\Response;
 
+/**
+ * Class PhysicalCardsController
+ * @package App\Http\Controllers\Api\Platform\Vouchers
+ */
 class PhysicalCardsController extends Controller
 {
-    private $requestsPerDay = 5;
+    private $maxAttempts = 5;
+    private $decayMinutes = 60 * 24;
 
     /**
      * PhysicalCardRequestsController constructor.
@@ -20,8 +25,8 @@ class PhysicalCardsController extends Controller
     {
         $this->middleware(sprintf(
             'throttle:%s,%s,physical_cards',
-            $this->requestsPerDay,
-            60 * 24
+            $this->maxAttempts,
+            $this->decayMinutes
         ))->only('store');
     }
 
@@ -58,7 +63,7 @@ class PhysicalCardsController extends Controller
         $this->authorize('show', $voucherToken->voucher);
 
         $voucherToken->voucher->physical_cards()->where([
-            'id' => $physicalCard->id
+            'physical_cards.id' => $physicalCard->id
         ])->delete();
 
         return new Response('', 200);

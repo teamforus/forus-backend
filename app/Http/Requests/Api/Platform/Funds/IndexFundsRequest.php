@@ -50,7 +50,7 @@ class IndexFundsRequest extends FormRequest
             'state' => [
                 'nullable',
                 Rule::in([
-                    'active_and_closed'
+                    'active_and_closed', 'active',
                 ])
             ]
         ];

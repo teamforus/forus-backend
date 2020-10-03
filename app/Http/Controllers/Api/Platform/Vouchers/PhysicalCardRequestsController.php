@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequestRequest;
+use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
 use App\Models\PhysicalCardRequest;
 use App\Models\VoucherToken;
 use App\Traits\ThrottleWithMeta;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class PhysicalCardRequestsController
+ * @package App\Http\Controllers\Api\Platform\Vouchers
+ */
 class PhysicalCardRequestsController extends Controller
 {
     use ThrottleWithMeta;
@@ -52,14 +55,7 @@ class PhysicalCardRequestsController extends Controller
         VoucherToken $voucherToken
     ): PhysicalCardRequestResource {
         $this->authorize('requestPhysicalCard', $voucherToken->voucher);
-
-        if ($this->hasTooManyLoginAttempts($request)) {
-            $this->responseWithThrottleMeta(
-                'to_many_attempts', $request, 'physical_card_requests'
-            );
-        }
-
-        $this->incrementLoginAttempts($request);
+        $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
         $cardRequest = $voucherToken->voucher->physical_card_requests()->create($request->only(
             'address', 'house', 'house_addition', 'postcode', 'city'
@@ -84,18 +80,5 @@ class PhysicalCardRequestsController extends Controller
         $this->authorize('show', $physicalCardRequest);
 
         return new PhysicalCardRequestResource($physicalCardRequest);
-    }
-
-
-
-    /**
-     * Get the throttle key for the given request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return string
-     */
-    protected function throttleKey(Request $request): string
-    {
-        return strtolower(sprintf('physical_card_requests_%s', $request->ip()));
     }
 }

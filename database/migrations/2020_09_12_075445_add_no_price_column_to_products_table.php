@@ -26,7 +26,7 @@ class AddNoPriceColumnToProductsTable extends Migration
     public function down(): void
     {
         Schema::table('products', static function (Blueprint $table) {
-            $table->dtop('no_price');
+            $table->dropColumn('no_price');
         });
     }
 }

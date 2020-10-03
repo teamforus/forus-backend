@@ -38,10 +38,16 @@ class FundProviderProductExclusion extends Model
         'fund_provider_id', 'product_id'
     ];
 
+    /**
+     * @return BelongsTo
+     */
     public function fund_provider(): BelongsTo {
         return $this->belongsTo(FundProvider::class);
     }
 
+    /**
+     * @return BelongsTo
+     */
     public function product(): BelongsTo {
         return $this->belongsTo(Product::class);
     }

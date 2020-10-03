@@ -11,7 +11,7 @@ class UpdateImplementationDigiDRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,7 +21,7 @@ class UpdateImplementationDigiDRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'digid_app_id'          => 'required_with:digid_shared_secret|nullable|string|max:100',

@@ -9,7 +9,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         RecordType::create([
             'key'       => 'primary_email',
@@ -121,7 +121,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
 
         RecordType::create([
             'key'       => 'bsn_hash',
-            'name'      => 'Partner BSN',
+            'name'      => 'BSN Hash',
             'type'      => 'string',
         ]);
 
@@ -133,7 +133,7 @@ class RecordTypesTableSeeder extends DatabaseSeeder
 
         RecordType::create([
             'key'       => 'partner_bsn_hash',
-            'name'      => 'Partner BSN',
+            'name'      => 'Partner BSN Hash',
             'type'      => 'string',
         ]);
     }
