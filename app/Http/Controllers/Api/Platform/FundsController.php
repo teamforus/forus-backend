@@ -40,7 +40,7 @@ class FundsController extends Controller
         );
 
         $meta = [
-            'organizations' => $query->with('organization')->get()->pluck(
+            'organizations' => Fund::with('organization')->get()->pluck(
                 'organization.name', 'organization.id'
             )->map(static function ($name, $id) {
                 return (object) [
