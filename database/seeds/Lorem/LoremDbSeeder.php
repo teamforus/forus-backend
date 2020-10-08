@@ -722,7 +722,6 @@ class LoremDbSeeder extends Seeder
 
         $csv_primary_key = $fund->fund_config->csv_primary_key;
         $env_lorem_bsn = env('DB_SEED_PREVALIDATION_BSN', 900158086);
-        $partner_bsn = $this->randomFakeBsn();
 
         while ($count-- > 0) {
             do {
@@ -733,7 +732,7 @@ class LoremDbSeeder extends Seeder
                 $env_lorem_bsn : $this->randomFakeBsn();
 
             $bsn_value_partner = $count === $bsn_prevalidation_partner_index ?
-                $partner_bsn : $env_lorem_bsn;
+                $env_lorem_bsn : $this->randomFakeBsn();
 
             $out[] = array_merge($records, [
                 $csv_primary_key => $primaryKeyValue,

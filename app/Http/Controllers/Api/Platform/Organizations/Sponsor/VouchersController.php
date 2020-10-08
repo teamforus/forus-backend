@@ -235,10 +235,13 @@ class VouchersController extends Controller
         IndexVouchersRequest $request,
         Organization $organization
     ): BinaryFileResponse {
+
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        $fund = Fund::find($request->get('fund_id'));
+        $fund = Fund::findOrFail($request->get('fund_id'));
+        $this->authorize('viewAnySponsor', [Voucher::class, $fund->organization]);
+
         $export_type = $request->get('export_type', 'png');
         $unassigned_vouchers = Voucher::searchSponsor($request, $organization, $fund);
 

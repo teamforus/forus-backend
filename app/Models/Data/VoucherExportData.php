@@ -35,4 +35,16 @@ class VoucherExportData
     {
         return $this->voucher;
     }
+
+    public function toArray(): array {
+        return array_merge([
+            'name' => $this->name
+        ], $this->voucher->product ? [
+            'product_name' => $this->voucher->product->name,
+        ] : [], [
+            'fund_name' => $this->voucher->fund->name,
+            'created_at' => format_date_locale($this->voucher->created_at),
+            'expire_at' => format_date_locale($this->voucher->expire_at),
+        ]);
+    }
 }

@@ -106,9 +106,7 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
      */
     private function getAvailableProductIds($voucher): array
     {
-        $query = Product::whereHas('fund_provider_products', function(
-            Builder $builder
-        ) use ($voucher) {
+        $query = Product::whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
             FundProviderProductQuery::whereAvailableForVoucherFilter(
                 $builder,
                 $voucher,

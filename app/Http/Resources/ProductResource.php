@@ -58,8 +58,8 @@ class ProductResource extends Resource
             'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
             'deleted' => !is_null($product->deleted_at),
             'funds' => $this->getProductFunds($product),
-            'price_min' => currency_format($this->getProductSubsidyPrice($product, 'min')),
-            'price_max' => currency_format($this->getProductSubsidyPrice($product, 'max')),
+            'price_min' => currency_format($this->getProductSubsidyPrice($product, 'max')),
+            'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
             'photo' => new MediaResource($product->photo),
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category)
@@ -109,8 +109,9 @@ class ProductResource extends Resource
     private function getProductSubsidyPrice(Product $product, $type = 'min'): float {
         return $product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
-        ])->whereHas('fund_provider.fund', static function(Builder $builder) {
-            $builder->where('type', Fund::TYPE_SUBSIDIES);
+        ])->whereHas('fund_provider.fund', function(Builder $builder) {
+            $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
+            $builder->whereIn('funds.id', $this->fundsQuery()->pluck('id'));
         })->$type('amount');
     }
 }
