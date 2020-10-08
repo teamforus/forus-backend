@@ -11,7 +11,7 @@ class AddFundIdToPrevalidations extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('prevalidations', function(Blueprint $table) {
             $table->integer('fund_id')->unsigned()->nullable()->after('identity_address');
@@ -64,7 +64,7 @@ class AddFundIdToPrevalidations extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('prevalidations', function(Blueprint $table) {
             $table->dropColumn('fund_id');

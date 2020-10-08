@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use App\Services\FileService\Models\File;
 use App\Models\Fund;
@@ -31,7 +29,7 @@ class UpdateMorphableTypes extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         foreach ($this->morphMap as $morphKey => $morphClass) {
             Media::where([
@@ -53,7 +51,7 @@ class UpdateMorphableTypes extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         foreach ($this->morphMap as $morphKey => $morphClass) {
             Media::where([

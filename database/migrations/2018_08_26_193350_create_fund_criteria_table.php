@@ -14,7 +14,7 @@ class CreateFundCriteriaTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('fund_criteria', function (Blueprint $table) {
             $table->increments('id');
@@ -34,7 +34,7 @@ class CreateFundCriteriaTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('fund_criteria');
     }

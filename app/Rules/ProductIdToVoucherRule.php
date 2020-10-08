@@ -33,11 +33,14 @@ class ProductIdToVoucherRule extends BaseRule
     {
         $product = Product::find($product_id);
         $voucherToken = VoucherToken::whereAddress($this->voucherAddress)->first();
-        log_debug($product);
 
         // optional check for human readable output
         if (!$this->voucherAddress || !$voucherToken || (!$voucher = $voucherToken->voucher)) {
             return $this->rejectTrans('voucher_id_required');
+        }
+
+        if (!$product || !$product->exists) {
+            return $this->rejectWithMessage(trans('validation.exists'));
         }
 
         if ($product->sold_out) {

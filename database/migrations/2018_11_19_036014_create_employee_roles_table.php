@@ -11,7 +11,7 @@ class CreateEmployeeRolesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('employee_roles', function (Blueprint $table) {
             $table->increments('id');
@@ -32,7 +32,7 @@ class CreateEmployeeRolesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('employee_roles');
     }

@@ -11,7 +11,7 @@ class CreateDemoTransactionsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('demo_transactions', function (Blueprint $table) {
             $table->increments('id');
@@ -27,7 +27,7 @@ class CreateDemoTransactionsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('demo_transactions');
     }

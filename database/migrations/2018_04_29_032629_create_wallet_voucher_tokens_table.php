@@ -11,7 +11,7 @@ class CreateWalletVoucherTokensTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('wallet_voucher_tokens', function (Blueprint $table) {
             $table->increments('id');
@@ -31,7 +31,7 @@ class CreateWalletVoucherTokensTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('wallet_voucher_tokens');
     }

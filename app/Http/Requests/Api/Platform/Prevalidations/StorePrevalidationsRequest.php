@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Prevalidations;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\PrevalidationItemHasRequiredKeysRule;
 use App\Rules\PrevalidationItemRule;
 use App\Services\Forus\Record\Models\RecordType;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StorePrevalidationsRequest extends FormRequest
+class StorePrevalidationsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -67,7 +67,7 @@ class StorePrevalidationsRequest extends FormRequest
      */
     private function getAvailableFunds(): array
     {
-        return Organization::queryByIdentityPermissions(auth_address(),[
+        return Organization::queryByIdentityPermissions($this->auth_address(), [
             'validate_records'
         ])->get()->pluck('funds')->flatten()->filter(static function ($fund) {
             return $fund->state !== Fund::STATE_CLOSED;

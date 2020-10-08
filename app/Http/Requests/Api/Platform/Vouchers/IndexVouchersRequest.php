@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class RequestPhysicalCardRequest extends FormRequest
+class IndexVouchersRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,7 +13,7 @@ class RequestPhysicalCardRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return !empty($this->auth_address());
     }
 
     /**
@@ -24,8 +24,7 @@ class RequestPhysicalCardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'postcode'      => 'required|string|max:50',
-            'house_number'  => 'required|string|max:50',
+            'per_page' => 'nullable|numeric|between:1,100',
         ];
     }
 }

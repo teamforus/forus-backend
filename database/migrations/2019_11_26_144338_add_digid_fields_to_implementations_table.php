@@ -11,7 +11,7 @@ class AddDigidFieldsToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function(Blueprint $table) {
             $table->boolean('digid_enabled')->default(false)->after('lat');
@@ -29,7 +29,7 @@ class AddDigidFieldsToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function(Blueprint $table) {
             $table->dropColumn('digid_enabled');

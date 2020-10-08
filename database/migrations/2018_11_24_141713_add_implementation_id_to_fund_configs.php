@@ -11,7 +11,7 @@ class AddImplementationIdToFundConfigs extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->integer('implementation_id')->unsigned()->nullable()
@@ -27,7 +27,7 @@ class AddImplementationIdToFundConfigs extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropForeign('fund_configs_implementation_id_foreign');

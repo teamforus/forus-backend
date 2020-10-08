@@ -12,7 +12,7 @@ class AddNotificationAmountToFundsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('funds', function (Blueprint $table) {
             $table->decimal('notification_amount', 10, 2)->nullable()->after('state');
@@ -27,7 +27,7 @@ class AddNotificationAmountToFundsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('funds', function (Blueprint $table) {
             $table->dropColumn('notification_amount');

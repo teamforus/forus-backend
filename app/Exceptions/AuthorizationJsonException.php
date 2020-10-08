@@ -3,8 +3,7 @@
 
 namespace App\Exceptions;
 
-
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 
 class AuthorizationJsonException extends \Exception
@@ -18,13 +17,12 @@ class AuthorizationJsonException extends \Exception
     }
 
     /**
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function render(Request $request)
+    public function render(): JsonResponse
     {
         return response()->json(array_merge(
-            json_decode($this->message, JSON_OBJECT_AS_ARRAY), config('app.debug') ? [
+            json_decode($this->message, JSON_OBJECT_AS_ARRAY), config('app.debug', false) ? [
                 'file' => $this->getFile(),
                 'line' => $this->getLine(),
                 'trace' => collect($this->getTrace())->map(function ($trace) {

@@ -9,7 +9,7 @@ class UpdateOfficeRequest extends BaseOfficeRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -19,7 +19,7 @@ class UpdateOfficeRequest extends BaseOfficeRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'name' => '',

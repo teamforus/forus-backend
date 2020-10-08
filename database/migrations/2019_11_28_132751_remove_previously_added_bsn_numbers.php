@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 class RemovePreviouslyAddedBsnNumbers extends Migration
@@ -11,7 +9,7 @@ class RemovePreviouslyAddedBsnNumbers extends Migration
      *
      * @throws Exception
      */
-    public function up()
+    public function up(): void
     {
         $recordRepo = resolve('forus.services.record');
 
@@ -25,7 +23,7 @@ class RemovePreviouslyAddedBsnNumbers extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         //
     }

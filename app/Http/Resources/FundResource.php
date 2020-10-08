@@ -76,7 +76,8 @@ class FundResource extends Resource
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
         ], $checkCriteria ? [
-            'taken_by_partner' => $fund->isTakenByPartner(auth_address()),
+            'taken_by_partner' =>
+                $fund->fund_config->hash_partner_deny && $fund->isTakenByPartner(auth_address()),
         ]: [], $financialData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {

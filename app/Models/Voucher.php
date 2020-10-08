@@ -95,6 +95,7 @@ class Voucher extends Model
 
     public const EVENT_TRANSACTION = 'transaction';
     public const EVENT_TRANSACTION_PRODUCT = 'transaction_product';
+    public const EVENT_TRANSACTION_SUBSIDY = 'transaction_subsidy';
 
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
@@ -565,7 +566,7 @@ class Voucher extends Model
         foreach ($vouchers as $voucher) {
             $voucherData = new VoucherExportData($voucher);
 
-            fputcsv($fp, (array) $voucherData->getName());
+            fputcsv($fp, $voucherData->toArray());
             $vouchersData[] = $voucherData;
 
             if ($exportType === 'png') {

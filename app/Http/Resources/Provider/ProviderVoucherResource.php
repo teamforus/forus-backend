@@ -5,6 +5,7 @@ namespace App\Http\Resources\Provider;
 use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
@@ -36,7 +37,7 @@ class ProviderVoucherResource extends Resource
             return null;
         }
 
-        if ($voucherToken->voucher->product) {
+        if ($voucherToken->voucher->isProductType()) {
             return $this->productVoucher($voucherToken);
         }
 
@@ -57,6 +58,7 @@ class ProviderVoucherResource extends Resource
         VoucherToken $voucherToken
     ): array {
         $voucher = $voucherToken->voucher;
+        $fund = $voucher->fund;
 
         $allowedOrganizations = OrganizationQuery::whereHasPermissionToScanVoucher(
             Organization::query(), $identityAddress, $voucher
@@ -74,22 +76,13 @@ class ProviderVoucherResource extends Resource
             $voucher->fund_id
         )->whereDoesntHave('transactions')->get();
 
-        $fundData = collect($voucher->fund)->only([
-            'id', 'name', 'state', 'type',
-        ])->merge([
-            'organization'  => new OrganizationBasicResource($voucher->fund->organization),
-            'logo'          => new MediaCompactResource($voucher->fund->logo)
-        ]);
-
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at'
         ])->merge([
             'address' => $voucherToken->address,
             'type' => 'regular',
-            'amount' => currency_format(
-                $voucher->fund->type === $voucher->fund::TYPE_BUDGET ? $voucher->amount_available : 0
-            ),
-            'fund' => $fundData,
+            'amount' => currency_format($fund->isTypeBudget() ? $voucher->amount_available : 0),
+            'fund' => $this->fundDetails($fund),
             'allowed_organizations' => $allowedOrganizations,
         ])->merge(env('DISABLE_DEPRECATED_API') ? [] : [
             // TODO: To be removed in next release
@@ -118,19 +111,31 @@ class ProviderVoucherResource extends Resource
             'created_at' => $voucher->created_at_string,
             'address' => $voucherToken->address,
             'type' => 'product',
+            'fund' => $this->fundDetails($voucher->fund),
             'product' => collect($voucher->product)->only([
                 'id', 'name', 'description', 'total_amount', 'sold_amount',
                 'product_category_id', 'organization_id'
             ])->merge([
                 'price' => currency_format($voucher->product->price),
                 'old_price' => currency_format($voucher->product->old_price),
-                'photo' => new MediaResource(
-                    $voucher->product->photo
-                ),
-                'organization' => new OrganizationBasicResource(
-                    $voucher->product->organization
-                ),
+                'photo' => new MediaResource($voucher->product->photo),
+                'organization' => new OrganizationBasicResource($voucher->product->organization),
             ])->toArray(),
         ])->toArray();
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    private function fundDetails(
+        Fund $fund
+    ): array{
+        return array_merge($fund->only([
+            'id', 'name', 'state', 'type',
+        ]), [
+            'organization'  => new OrganizationBasicResource($fund->organization),
+            'logo'          => new MediaCompactResource($fund->logo)
+        ]);
     }
 }

@@ -11,7 +11,7 @@ class MakeVoucherIdentityAddressNullable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('vouchers', function(Blueprint $table) {
             $table->string('identity_address', 200)->nullable()->change();
@@ -24,7 +24,7 @@ class MakeVoucherIdentityAddressNullable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('vouchers', function(Blueprint $table) {
             $table->string('identity_address', 200)->change();
