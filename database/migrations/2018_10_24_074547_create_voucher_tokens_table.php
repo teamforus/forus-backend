@@ -12,25 +12,23 @@ class CreateVoucherTokensTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('voucher_tokens', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('voucher_id')->unsigned();
             $table->string('address');
-            $table->boolean('need_confirmation', true);
+            $table->boolean('need_confirmation')->default(true);
             $table->timestamps();
 
             $table->foreign('voucher_id'
             )->references('id')->on('vouchers')->onDelete('cascade');
         });
 
-        Voucher::all()->each(function ($voucher) {
-            /** @var Voucher $voucher */
-            $voucher->tokens()->create([
-                'address'           => $voucher->address,
+        Voucher::get()->each(function (Voucher $voucher) {
+            $voucher->tokens()->create(array_merge($voucher->only('address'), [
                 'need_confirmation' => false,
-            ]);
+            ]));
 
             $voucher->tokens()->create([
                 'address'           => resolve('token_generator')->address(),
@@ -48,19 +46,15 @@ class CreateVoucherTokensTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-
         Schema::table('vouchers', function (Blueprint $table) {
             $table->string('address', 200);
         });
 
-        Voucher::all()->each(function ($voucher) {
-            /** @var Voucher $voucher */
-            if ($voucherToken = $voucher->tokens()->where(
-                'need_confirmation', false
-            )->first()) {
-                $voucher->update(['address' => $voucherToken->address]);
+        Voucher::get()->each(function (Voucher $voucher) {
+            if ($voucherToken = $voucher->token_without_confirmation) {
+                $voucher->update($voucherToken->only('address'));
             }
         });
 

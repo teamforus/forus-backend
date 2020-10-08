@@ -2,14 +2,14 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\ValidPrevalidationCodeRule;
 use App\Scopes\Builders\OrganizationQuery;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreVoucherRequest extends FormRequest
+class StoreVoucherRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,7 +28,7 @@ class StoreVoucherRequest extends FormRequest
      */
     public function rules(): array
     {
-        $validFunds = $this->validFundIds(auth_address());
+        $validFunds = $this->validFundIds($this->auth_address());
         $fund = Fund::query()->whereIn('id', $validFunds)->findOrFail($this->input('fund_id'));
 
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');

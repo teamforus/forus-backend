@@ -11,7 +11,7 @@ class KvkApiServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->singleton('kvk_api', function () {
             return new KvkApi(

@@ -11,7 +11,7 @@ class AddOfficeScheduleBreaks extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('office_schedules', function(Blueprint $table) {
             $table->time('break_start_time')->nullable()->default(null)
@@ -26,7 +26,7 @@ class AddOfficeScheduleBreaks extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('office_schedules', function(Blueprint $table) {
             $table->dropColumn('break_start_time');

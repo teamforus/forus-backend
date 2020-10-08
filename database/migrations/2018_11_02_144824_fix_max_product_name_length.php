@@ -11,7 +11,7 @@ class FixMaxProductNameLength extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
             $table->string('name',255)->change();
@@ -23,7 +23,7 @@ class FixMaxProductNameLength extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
             $table->string('name',20)->change();

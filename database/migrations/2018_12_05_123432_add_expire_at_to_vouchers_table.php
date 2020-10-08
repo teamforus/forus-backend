@@ -12,7 +12,7 @@ class AddExpireAtToVouchersTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('vouchers', function (Blueprint $table) {
             $table->timestamp('expire_at')->nullable();
@@ -34,7 +34,7 @@ class AddExpireAtToVouchersTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('vouchers', function (Blueprint $table) {
             $table->dropColumn('expire_at');

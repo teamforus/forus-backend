@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection as SupportCollection;
+
 /**
  * App\Models\FundProviderInvitation
  *
@@ -37,18 +41,18 @@ namespace App\Models;
  */
 class FundProviderInvitation extends Model
 {
-    const STATE_ACCEPTED = 'accepted';
-    const STATE_EXPIRED = 'expired';
-    const STATE_PENDING = 'pending';
+    public const STATE_ACCEPTED = 'accepted';
+    public const STATE_EXPIRED = 'expired';
+    public const STATE_PENDING = 'pending';
 
-    const STATES = [
+    public const STATES = [
         self::STATE_ACCEPTED,
         self::STATE_PENDING,
         self::STATE_EXPIRED,
     ];
 
     // expires in 2 weeks
-    const VALIDITY_IN_MINUTES = 14 * 24 * 60;
+    public const VALIDITY_IN_MINUTES = 14 * 24 * 60;
 
     protected $fillable = [
         'organization_id', 'from_fund_id', 'fund_id', 'state', 'token',
@@ -63,39 +67,40 @@ class FundProviderInvitation extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund() {
+    public function fund(): BelongsTo {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function from_fund() {
+    public function from_fund(): BelongsTo {
         return $this->belongsTo(Fund::class, 'from_fund_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization() {
+    public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
     }
 
     /**
      * @param Fund $fromFund
      * @param Fund $fund
-     * @return \Illuminate\Support\Collection
-     * @throws \Exception
+     * @return Builder|SupportCollection
      */
-    public static function inviteFromFundToFund(Fund $fromFund, Fund $fund)
-    {
+    public static function inviteFromFundToFund(
+        Fund $fromFund,
+        Fund $fund
+    ): Builder {
         $recordRepo = resolve('forus.services.record');
         $token_generator = resolve('token_generator');
         $notificationService = resolve('forus.services.notification');
 
         $alreadyProviders = $fund->provider_organizations_approved->pluck('id');
         $alreadyInvited = $fromFund->provider_invitations()->where([
-            'state' => FundProviderInvitation::STATE_PENDING
+            'state' => self::STATE_PENDING
         ])->pluck('organization_id');
 
         $skipProviders = $alreadyProviders->merge($alreadyInvited)->toArray();
@@ -112,8 +117,7 @@ class FundProviderInvitation extends Model
                 'organization_id'   => $provider->organization_id,
                 'state'             => self::STATE_PENDING,
                 'allow_budget'      => $provider->allow_budget,
-                'allow_products'    => $provider->allow_products ||
-                    $provider->allow_some_products
+                'allow_products'    => $provider->allow_products || $provider->allow_some_products
             ]);
 
             $notificationService->providerInvited(
@@ -143,10 +147,10 @@ class FundProviderInvitation extends Model
      *
      * @return bool
      */
-    public function getExpiredAttribute() {
+    public function getExpiredAttribute(): bool {
         return $this->created_at->lte(
             now()->subMinutes(self::VALIDITY_IN_MINUTES)
-        ) || $this->state == self::STATE_EXPIRED;
+        ) || $this->state === self::STATE_EXPIRED;
     }
 
     /**
@@ -154,14 +158,14 @@ class FundProviderInvitation extends Model
      *
      * @return \Carbon\Carbon
      */
-    public function getExpireAtAttribute() {
+    public function getExpireAtAttribute(): \Carbon\Carbon {
         return $this->created_at->addMinutes(self::VALIDITY_IN_MINUTES);
     }
 
     /**
      * @return FundProviderInvitation
      */
-    public function accept() {
+    public function accept(): FundProviderInvitation {
         $this->fund->providers()->firstOrCreate([
             'organization_id' => $this->organization_id,
         ])->update($this->only([

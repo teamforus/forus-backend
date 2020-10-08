@@ -19,7 +19,7 @@ class StoreFundProviderChatRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -30,15 +30,14 @@ class StoreFundProviderChatRequest extends FormRequest
      * @return array
      * @throws \Exception
      */
-    public function rules()
+    public function rules(): array
     {
-        if (!is_object($this->fund_provider) || get_class(
-            $this->fund_provider) != FundProvider::class) {
+        if (!is_object($this->fund_provider) ||
+            get_class($this->fund_provider) !== FundProvider::class) {
             throw new MissingRequiredRequestPropertyException();
         }
 
-        $invalidProducts = $this->fund_provider
-            ->fund_provider_chats()->pluck('product_id');
+        $invalidProducts = $this->fund_provider->fund_provider_chats()->pluck('product_id');
 
         return [
             'product_id' => [

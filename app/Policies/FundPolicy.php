@@ -109,7 +109,7 @@ class FundPolicy
             return $this->deny(trans('fund.state_' . $fund->state));
         }
 
-        if ($fund->isTakenByPartner(auth_address())) {
+        if ($fund->fund_config->hash_partner_deny && $fund->isTakenByPartner($identity_address)) {
             return $this->deny(trans('fund.taken_by_partner'));
         }
 

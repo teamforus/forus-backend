@@ -12,7 +12,7 @@ class AddTypeFieldToFilesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         if (!Schema::hasColumn('files', 'type')) {
             Schema::table('files', function(Blueprint $table) {
@@ -30,7 +30,7 @@ class AddTypeFieldToFilesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         //
     }

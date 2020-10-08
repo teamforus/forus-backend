@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Implementation;
 use App\Services\BunqService\BunqService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Class FundsController
@@ -29,24 +30,17 @@ class FundsController extends Controller
     public function index(
         IndexFundsRequest $request
     ): AnonymousResourceCollection {
-        $query = Fund::search(
-            $request,
-            $request->input('state') === 'active_and_closed' ?
-                Implementation::queryFundsByState([
-                    Fund::STATE_CLOSED,
-                    Fund::STATE_ACTIVE,
-                ]) :
-                Implementation::activeFundsQuery()
-        );
+        $state = $request->input('state') === 'active_and_closed' ? [
+            Fund::STATE_CLOSED,
+            Fund::STATE_ACTIVE,
+        ] : Fund::STATE_ACTIVE;
 
+        $query = Fund::search($request, Implementation::queryFundsByState($state));
         $meta = [
             'organizations' => $query->with('organization')->get()->pluck(
                 'organization.name', 'organization.id'
             )->map(static function ($name, $id) {
-                return (object) [
-                    'id'   => $id,
-                    'name' => $name
-                ];
+                return (object) compact('id', 'name');
             })->toArray()
         ];
 
@@ -92,6 +86,7 @@ class FundsController extends Controller
         return new VoucherResource($fund->makeVoucher(auth_address()));
     }
 
+    // TODO: remove bunq ideal requests
     /**
      * @param Fund $fund
      * @return AnonymousResourceCollection

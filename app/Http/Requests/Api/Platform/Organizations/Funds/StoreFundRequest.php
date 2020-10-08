@@ -77,7 +77,10 @@ class StoreFundRequest extends FormRequest
         ] : []);
     }
 
-    public function attributes()
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
     {
         return [
             'criteria.*.value' => 'Waarde'

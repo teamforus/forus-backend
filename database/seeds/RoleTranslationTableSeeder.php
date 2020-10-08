@@ -11,7 +11,7 @@ class RoleTranslationTableSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $roles = Role::get();
 

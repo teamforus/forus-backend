@@ -11,7 +11,7 @@ class CreateProviderIdentitiesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('provider_identities', function (Blueprint $table) {
             $table->increments('id');
@@ -29,7 +29,7 @@ class CreateProviderIdentitiesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('provider_identities');
     }

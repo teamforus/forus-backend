@@ -385,9 +385,11 @@ class Product extends Model
 
     /**
      * @param Fund $fund
-     * @return null|FundProviderProduct
+     * @return FundProviderProduct|null
      */
-    public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct {
+    public function getSubsidyDetailsForFund(
+        Fund $fund
+    ): ?FundProviderProduct {
         /** @var FundProviderProduct $fundProviderProduct */
         $fundProviderProduct = $this->fund_provider_products()->whereHas(
             'fund_provider.fund',
@@ -397,6 +399,22 @@ class Product extends Model
                 'type' => $fund::TYPE_SUBSIDIES,
             ]);
         })->first();
+
+        return $fundProviderProduct;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param int $errorCode
+     * @return FundProviderProduct
+     */
+    public function getSubsidyDetailsForFundOrFail(
+        Fund $fund,
+        int $errorCode = 403
+    ): FundProviderProduct {
+        if (!$fundProviderProduct = $this->getSubsidyDetailsForFund($fund)) {
+            abort($errorCode);
+        }
 
         return $fundProviderProduct;
     }

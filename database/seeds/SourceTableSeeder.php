@@ -9,7 +9,7 @@ class SourceTableSeeder extends DatabaseSeeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         Source::create([
             'key'   => 'app.me_app',

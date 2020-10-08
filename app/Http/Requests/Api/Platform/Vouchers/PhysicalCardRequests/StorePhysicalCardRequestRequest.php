@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCards;
+namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests;
 
 use Illuminate\Foundation\Http\FormRequest;
 

@@ -11,7 +11,7 @@ class DropFundSponsorInvestmentsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::dropIfExists('fund_sponsor_investments');
     }
@@ -21,7 +21,7 @@ class DropFundSponsorInvestmentsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::create('fund_sponsor_investments', function (Blueprint $table) {
             $table->increments('id');

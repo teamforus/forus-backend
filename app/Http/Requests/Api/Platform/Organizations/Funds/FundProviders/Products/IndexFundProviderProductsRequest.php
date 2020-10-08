@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Vouchers;
+namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Products;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class StorePhysicalCardRequest extends FormRequest
+/**
+ * Class IndexFundProviderProductsRequest
+ * @package App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Products
+ */
+class IndexFundProviderProductsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,13 +28,7 @@ class StorePhysicalCardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => [
-                'required',
-                'string',
-                'size:12',
-                'starts_with:1001',
-                Rule::unique('physical_cards', 'code')
-            ]
+            'per_page' => 'nullable|numeric|between:1,100',
         ];
     }
 }

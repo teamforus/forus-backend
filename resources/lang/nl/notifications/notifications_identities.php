@@ -94,6 +94,13 @@ return [
             'Er is met uw voucher een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. ' .
             'Het huidige bedrag van uw \':fund_name\'-voucher is €:voucher_amount_locale.',
     ],
+    // budget voucher transaction, for subsidy fund
+    'voucher_subsidy_transaction' => [
+        'title' => 'U heeft uw :fund_name-tegoed gebruikt voor een actie',
+        'description' =>
+            "U heeft gebruik gemaakt van een actie met uw :fund_name-tegoed. \n" .
+            "Uw resterende tegoed voor :product_name is :subsidy_new_limit",
+    ],
 
     // product voucher transaction
     'product_voucher_transaction' => [

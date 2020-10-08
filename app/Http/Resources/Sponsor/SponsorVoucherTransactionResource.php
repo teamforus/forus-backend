@@ -7,6 +7,11 @@ use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Resources\Json\Resource;
 
+/**
+ * Class SponsorVoucherTransactionResource
+ * @property VoucherTransaction $resource
+ * @package App\Http\Resources\Sponsor
+ */
 class SponsorVoucherTransactionResource extends Resource
 {
     /**
@@ -17,7 +22,6 @@ class SponsorVoucherTransactionResource extends Resource
      */
     public function toArray($request): array
     {
-        /** @var VoucherTransaction $voucherTransaction */
         $voucherTransaction = $this->resource;
 
         return collect($voucherTransaction)->only([

@@ -54,13 +54,6 @@ class BusinessType extends Model
     ];
 
     /**
-     * The relations to eager load on every query.
-     *
-     * @var array
-     */
-    protected $with = [];
-
-    /**
      * The attributes that are translatable.
      *
      * @var array
@@ -80,7 +73,8 @@ class BusinessType extends Model
      * @param Request $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function search(Request $request) {
+    public static function search(Request $request): Builder {
+        /** @var Builder $query */
         $query = self::query();
 
         if ($request->input('used', false)) {

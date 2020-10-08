@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $key
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
+ * @property int $hash_partner_deny
  * @property string $bunq_key
  * @property string $bunq_allowed_ip
  * @property int $bunq_sandbox
@@ -36,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereHashBsnSalt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereHashPartnerDeny($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereIsConfigured($value)
@@ -52,7 +54,7 @@ class FundConfig extends Model
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
         'formula_multiplier', 'is_configured', 'allow_physical_cards',
         'csv_primary_key', 'subtract_transaction_costs',
-        'implementation_id', 'implementation'
+        'implementation_id', 'implementation', 'hash_partner_deny',
     ];
 
     /**
@@ -61,6 +63,7 @@ class FundConfig extends Model
     protected $casts = [
         'hash_bsn' => 'boolean',
         'is_configured' => 'boolean',
+        'hash_partner_deny' => 'boolean',
         'allow_physical_cards' => 'boolean',
     ];
 

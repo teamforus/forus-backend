@@ -86,8 +86,8 @@ class FundProviderProduct extends Model
         ]);
 
         $limit_multiplier = $query->exists() ? $query->sum('limit_multiplier') : 1;
-
         $limit_per_identity = $this->limit_per_identity * $limit_multiplier;
+
         $limitAvailable = $this->product->unlimited_stock ?
             min($this->limit_total, $limit_per_identity) :
             min($this->limit_total, $limit_per_identity, $this->product->stock_amount);
@@ -95,9 +95,7 @@ class FundProviderProduct extends Model
         $count_transactions = VoucherTransaction::where([
             'product_id' => $this->product_id,
             'organization_id' => $this->product->organization_id,
-        ])->whereHas('voucher', static function(
-            Builder $builder
-        ) use ($identity_address) {
+        ])->whereHas('voucher', static function(Builder $builder) use ($identity_address) {
             $builder->where('identity_address', '=', $identity_address);
         })->count();
 

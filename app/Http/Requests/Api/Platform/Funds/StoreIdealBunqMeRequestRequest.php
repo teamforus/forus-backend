@@ -13,7 +13,7 @@ class StoreIdealBunqMeRequestRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return request()->route('fund_id');
     }
@@ -24,7 +24,7 @@ class StoreIdealBunqMeRequestRequest extends FormRequest
      * @return array
      * @throws \Exception
      */
-    public function rules()
+    public function rules(): array
     {
         /** @var Fund $fund */
         $fund = request()->route('fund_id');

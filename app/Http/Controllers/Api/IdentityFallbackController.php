@@ -14,6 +14,7 @@ use App\Models\Implementation;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Request;
 
 /**
@@ -25,11 +26,16 @@ use Illuminate\Http\Request;
  */
 class IdentityFallbackController extends Controller
 {
+    use ThrottleWithMeta;
+
     protected $identityRepo;
     protected $mailService;
     protected $recordRepo;
 
     public function __construct() {
+        $this->maxAttempts = env('AUTH_THROTTLE_ATTEMPTS', 10);
+        $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
+
         $this->mailService = resolve('forus.services.notification');
         $this->identityRepo = resolve('forus.services.identity');
         $this->recordRepo = resolve('forus.services.record');
@@ -54,7 +60,7 @@ class IdentityFallbackController extends Controller
     public function store(
         IdentityStoreRequest $request
     ) {
-        $this->middleware('throttle', [10, 1 * 60]);
+        $this->throttleWithKey('to_many_attempts', $request, 'auth');
 
         // client type, key and target primary email
         $clientType = client_type(config('forus.clients.default'));
@@ -115,7 +121,7 @@ class IdentityFallbackController extends Controller
      * @throws \Exception
      */
     public function storeValidateEmail(IdentityStoreValidateEmailRequest $request) {
-        $this->middleware('throttle', [10, 1 * 60]);
+        $this->throttleWithKey('to_many_attempts', $request, 'auth');
 
         $email = (string) $request->input('email', '');
         $used = !identity_repo()->isEmailAvailable($email);
@@ -224,7 +230,7 @@ class IdentityFallbackController extends Controller
     public function proxyAuthorizationEmailToken(
         IdentityAuthorizationEmailTokenRequest $request
     ) {
-        $this->middleware('throttle', [10, 1 * 60]);
+        $this->throttleWithKey('to_many_attempts', $request, 'auth');
 
         $email = $request->input('email', $request->input('primary_email'));
         $source = $request->input('source');

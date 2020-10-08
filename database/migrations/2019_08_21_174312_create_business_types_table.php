@@ -11,7 +11,7 @@ class CreateBusinessTypesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('business_types', function (Blueprint $table) {
             $table->increments('id');
@@ -37,7 +37,7 @@ class CreateBusinessTypesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('business_type_translations');
         Schema::dropIfExists('business_types');
