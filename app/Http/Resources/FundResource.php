@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundRequest;
 use App\Models\Organization;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
@@ -75,6 +76,10 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
+            'has_pending_fund_requests' => $fund->fund_requests()->where([
+                'identity_address' => auth_address(),
+                'state' => FundRequest::STATE_PENDING,
+            ])->exists(),
         ], $checkCriteria ? [
             'taken_by_partner' =>
                 $fund->fund_config->hash_partner_deny && $fund->isTakenByPartner(auth_address()),
