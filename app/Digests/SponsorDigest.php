@@ -45,7 +45,6 @@ class SponsorDigest extends BaseOrganizationDigest
         [$emailBodyProductsAdded, $total_products_added] = $this->getProductsAddedEmailBody($organization);
         [$emailBodyProvidersReply, $total_messages] = $this->getProvidersReplyEmailBody($organization);
 
-
         if (($total_applications + $total_products_added + $total_messages) === 0) {
             return;
         }
@@ -215,7 +214,7 @@ class SponsorDigest extends BaseOrganizationDigest
                     }
                 }
 
-                $emailBody->space();
+                $emailBody = $emailBody->space();
             }
         }
 
