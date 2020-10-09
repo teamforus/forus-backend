@@ -29,7 +29,7 @@ class DigIdController extends Controller
         $digidSession = DigIdSession::createSession(
             $request->auth_address(),
             $request->implementation_model(),
-            $request->auth_address(),
+            $request->client_type(),
             self::makeFinalRedirectUrl($request),
             $request->input('request')
         );
