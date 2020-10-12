@@ -13,13 +13,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $key
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
- * @property int $hash_partner_deny
+ * @property bool $hash_partner_deny
  * @property string $bunq_key
  * @property string $bunq_allowed_ip
  * @property int $bunq_sandbox
  * @property string|null $csv_primary_key
  * @property int $subtract_transaction_costs
  * @property bool $allow_physical_cards
+ * @property bool $allow_fund_requests
+ * @property bool $allow_prevalidations
  * @property bool $is_configured
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -28,7 +30,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereAllowPhysicalCards($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereAllowPrevalidations($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereBunqAllowedIp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereBunqKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereBunqSandbox($value)
@@ -64,6 +68,8 @@ class FundConfig extends Model
         'hash_bsn' => 'boolean',
         'is_configured' => 'boolean',
         'hash_partner_deny' => 'boolean',
+        'allow_fund_requests' => 'boolean',
+        'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',
     ];
 

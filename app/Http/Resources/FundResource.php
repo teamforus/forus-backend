@@ -64,6 +64,8 @@ class FundResource extends Resource
             'tags', 'type',
         ]), [
             'key' => $fund->fund_config->key ?? '',
+            'allow_fund_requests' => $fund->fund_config->allow_fund_requests,
+            'allow_prevalidations' => $fund->fund_config->allow_prevalidations,
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
             'end_date' => $fund->end_date->format('Y-m-d'),

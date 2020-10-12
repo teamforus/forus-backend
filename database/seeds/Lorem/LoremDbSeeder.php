@@ -49,6 +49,11 @@ class LoremDbSeeder extends Seeder
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas',
     ];
 
+    private $implementationsWithMultipleFunds = [
+        'Westerkwartier' => 2,
+        'Stadjerspas' => 4,
+    ];
+
     private $subsidyFunds = [
         'Stadjerspas',
     ];
@@ -159,37 +164,44 @@ class LoremDbSeeder extends Seeder
     ): void {
         $self = $this;
 
-        $organizations = collect(
-            $this->implementationsWithFunds
-        )->map(static function($implementation) use ($self, $identity_address) {
+        $organizations = array_map(static function($implementation) use ($self, $identity_address) {
             return $self->makeOrganization($implementation, $identity_address, []);
-        });
+        }, $this->implementationsWithFunds);
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
+            $countFunds = $this->implementationsWithMultipleFunds[$organization->name] ?? 1;
 
-            $fund = $this->makeFund($organization, true);
+            while ($countFunds-- > 0) {
+                $fund = $this->makeFund($organization, true);
 
-            $implementation = $this->makeImplementation(
-                str_slug($fund->name),
-                $fund->name . ' ' . date('Y')
-            );
+                $implementationKey = str_slug(explode(' ', $fund->name)[0]);
 
-            $this->fundConfigure(
-                $fund,
-                $implementation,
-                $implementation->key . '_' . date('Y'), [
-                    'bunq_key' => config('forus.seeders.lorem_db_seeder.bunq_key'),
-                ]
-            );
+                if (!$implementation = Implementation::where([
+                    'key' => $implementationKey
+                ])->first()) {
+                    $implementation = $this->makeImplementation(
+                        $implementationKey,
+                        $fund->name . ' ' . date('Y')
+                    );
+                }
 
-            $this->makePrevalidations(
-                $fund->organization->identity_address,
-                $fund,
-                $this->generatePrevalidationData($fund, 10, [
-                    $fund->fund_config->key . '_eligible' => 'Ja',
-                ])
-            );
+                $this->fundConfigure(
+                    $fund,
+                    $implementation,
+                    str_slug($fund->name . '_' . date('Y')), [
+                        'bunq_key' => config('forus.seeders.lorem_db_seeder.bunq_key'),
+                    ]
+                );
+
+                $this->makePrevalidations(
+                    $fund->organization->identity_address,
+                    $fund,
+                    $this->generatePrevalidationData($fund, 10, [
+                        $fund->fund_config->key . '_eligible' => 'Ja',
+                    ])
+                );
+            }
         }
     }
 
@@ -492,11 +504,11 @@ class LoremDbSeeder extends Seeder
         bool $active = false,
         array $fields = []
     ) {
-        $flag = false;
+        $nth = 0;
 
         do {
-            $fundName = $organization->name . ($flag ? (' - ' . random_int(0, 999)) : '');
-            $flag = true;
+            $nth++;
+            $fundName = $organization->name . ($nth === 1 ? '' : (' ' . $this->integerToRoman($nth)));
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
         $criteriaEditable = in_array($fundName, $this->fundsWithCriteriaEditableAfterLaunch);
@@ -721,17 +733,17 @@ class LoremDbSeeder extends Seeder
         $bsn_prevalidation_partner_index = $count - 3;
 
         $csv_primary_key = $fund->fund_config->csv_primary_key;
-        $env_lorem_bsn = env('DB_SEED_PREVALIDATION_BSN', 900158086);
+        $env_lorem_bsn = env('DB_SEED_PREVALIDATION_BSN', false);
 
         while ($count-- > 0) {
             do {
                 $primaryKeyValue = random_int(100000, 999999);
             } while (collect($out)->pluck($csv_primary_key)->search($primaryKeyValue) !== false);
 
-            $bsn_value = $count === $bsn_prevalidation_index ?
+            $bsn_value = $env_lorem_bsn && ($count === $bsn_prevalidation_index) ?
                 $env_lorem_bsn : $this->randomFakeBsn();
 
-            $bsn_value_partner = $count === $bsn_prevalidation_partner_index ?
+            $bsn_value_partner = $env_lorem_bsn && ($count === $bsn_prevalidation_partner_index) ?
                 $env_lorem_bsn : $this->randomFakeBsn();
 
             $out[] = array_merge($records, [
@@ -834,6 +846,36 @@ class LoremDbSeeder extends Seeder
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);
         }
+    }
+
+    /**
+     * @param int $integer
+     * @return string
+     */
+    public function integerToRoman(int $integer): string {
+         $result = '';
+         $lookup = [
+             'M' => 1000,
+             'CM' => 900,
+             'D' => 500,
+             'CD' => 400,
+             'C' => 100,
+             'XC' => 90,
+             'L' => 50,
+             'XL' => 40,
+             'X' => 10,
+             'IX' => 9,
+             'V' => 5,
+             'IV' => 4,
+             'I' => 1
+         ];
+
+         foreach($lookup as $roman => $value){
+            $result .= str_repeat($roman, (int) ($integer / $value));
+            $integer %= $value;
+         }
+
+        return $result;
     }
 
     /**

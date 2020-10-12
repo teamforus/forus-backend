@@ -164,8 +164,13 @@ class Organization extends Model
             $query->where($request->only('is_validator'));
         }
 
-        if ($request->has('implementation')) {
-            $query->where($request->only('is_validator'));
+        if ($request->input('implementation', false)) {
+            $query->whereHas('funds', static function(
+                \Illuminate\Database\Eloquent\Builder $builder
+            ) {
+                $funds = Implementation::queryFundsByState('active')->pluck('id')->toArray();
+                $builder->whereIn('funds.id', $funds);
+            });
         }
 
         return $query;

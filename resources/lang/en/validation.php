@@ -175,6 +175,7 @@ return [
         'email' => "e-mail",
         'primary_email' => 'e-mail',
         'records.primary_email' => 'e-mail',
+        'records.bsn' => 'bsn',
     ],
     'employee_already_exists' => 'An employee with the same email address already exists.',
 ];
