@@ -219,7 +219,7 @@ interface IRecordRepo {
         string $value,
         $recordCategoryId = null,
         $order = null
-    );
+    ): ?array;
 
     /**
      * set bsn record

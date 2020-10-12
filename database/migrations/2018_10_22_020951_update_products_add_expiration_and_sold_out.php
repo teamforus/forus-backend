@@ -11,7 +11,7 @@ class UpdateProductsAddExpirationAndSoldOut extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn('sold_amount');
@@ -25,7 +25,7 @@ class UpdateProductsAddExpirationAndSoldOut extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
             $table->integer('sold_amount')->unsigned();

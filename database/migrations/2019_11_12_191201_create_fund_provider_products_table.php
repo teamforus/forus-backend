@@ -11,7 +11,7 @@ class CreateFundProviderProductsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('fund_provider_products', function (Blueprint $table) {
             $table->increments('id');
@@ -28,7 +28,7 @@ class CreateFundProviderProductsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('fund_provider_products');
     }

@@ -12,7 +12,7 @@ class StoreFileRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,13 +22,13 @@ class StoreFileRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'file' => [
                 'required',
                 'file',
-                'mimes:' . join(',', config('file.allowed_extensions', [])),
+                'mimes:' . implode(',', config('file.allowed_extensions', [])),
                 'max:' . config('file.max_file_size', 2000)
             ],
             'type' => [

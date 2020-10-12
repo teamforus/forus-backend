@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests\DigID;
 
-use App\Http\Requests\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
 use Illuminate\Validation\Rule;
 
-class StartDigIdRequest extends FormRequest
+/**
+ * Class StartDigIdRequest
+ * @package App\Http\Requests\DigID
+ */
+class StartDigIdRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -14,12 +18,12 @@ class StartDigIdRequest extends FormRequest
      * @return bool
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        $implementation = Implementation::activeModel();
-        $clientType = $this->header('Client-Type', null);
+        $implementation = $this->implementation_model();
+        $clientType = $this->client_type();
 
-        if (!$clientType || !in_array($clientType, Implementation::FRONTEND_KEYS)) {
+        if (!$clientType || !in_array($clientType, Implementation::FRONTEND_KEYS, true)) {
             $this->deny("Invalid client type.");
         }
 
@@ -39,14 +43,14 @@ class StartDigIdRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $redirectTypes = [
             'fund_request', 'auth'
         ];
 
         return [
-            'request' => 'required|in:' . join(',', $redirectTypes),
+            'request' => 'required|in:' . implode(',', $redirectTypes),
             'fund_id' => [
                 'required_if:redirect_type,fund_request',
                 Rule::exists('funds', 'id')->whereIn(

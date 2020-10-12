@@ -78,6 +78,10 @@ class VoucherResource extends Resource
         ]);
     }
 
+    /**
+     * @param Voucher $voucher
+     * @return array
+     */
     public function getBaseFields(Voucher $voucher): array {
         if ($voucher->type === 'regular') {
             $amount = $voucher->amount_available_cached;

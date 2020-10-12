@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Api\Records;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 use Illuminate\Validation\Rule;
 
-class IndexRecordsRequest extends FormRequest
+class IndexRecordsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

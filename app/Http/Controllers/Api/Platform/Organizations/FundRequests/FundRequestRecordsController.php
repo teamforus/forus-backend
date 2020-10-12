@@ -58,8 +58,8 @@ class FundRequestRecordsController extends Controller
         Organization $organization,
         FundRequest $fundRequest
     ): ValidatorFundRequestRecordResource {
-        // todo: add new authorization policy for this endpoint
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+        $this->authorize('addPartnerBsnNumber', [$fundRequest, $organization]);
 
         /** @var FundRequestRecord $fundRequestRecord */
         $fundRequestRecord = $fundRequest->records()->create(array_merge($request->only([

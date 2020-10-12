@@ -124,7 +124,7 @@ class NotificationService
      * @param $identity_address
      * @param string $title
      * @param string $body
-     * @param string $key
+     * @param ?string $key
      * @return bool
      */
     public function sendPushNotification(
@@ -612,7 +612,7 @@ class NotificationService
      * Send verification link for identity email
      *
      * @param string $email
-     * @param EmailFrom $emailFrom
+     * @param ?EmailFrom $emailFrom
      * @param string $link
      * @return bool|null
      */

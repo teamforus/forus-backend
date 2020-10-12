@@ -11,7 +11,7 @@ class AddBusinessTypeIdToOrganizations extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('organizations', function(Blueprint $table) {
             $table->integer('business_type_id')->unsigned()->nullable()->after('website_public');
@@ -26,7 +26,7 @@ class AddBusinessTypeIdToOrganizations extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('organizations', function(Blueprint $table) {
             $table->dropForeign('organizations_business_type_id_foreign');

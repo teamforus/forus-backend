@@ -29,8 +29,7 @@ class UpdateProductExclusionsRequest extends FormRequest
      */
     public function rules(): array
     {
-        $product = $this->product;
-        $funds = $product->organization->fund_providers->pluck('fund_id');
+        $funds = $this->product->organization->fund_providers->pluck('fund_id');
 
         return [
             'enable_funds'      => 'nullable|array',

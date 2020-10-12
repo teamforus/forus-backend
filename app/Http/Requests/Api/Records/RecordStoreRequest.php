@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests\Api\Records;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Rules\RecordCategoryIdRule;
 use App\Rules\RecordTypeKeyExistsRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class RecordStoreRequest extends FormRequest
+class RecordStoreRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

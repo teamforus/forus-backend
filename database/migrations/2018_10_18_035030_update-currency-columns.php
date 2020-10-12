@@ -11,7 +11,7 @@ class UpdateCurrencyColumns extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_top_ups', function (Blueprint $table) {
             $table->decimal('amount',10, 2)->change();
@@ -36,7 +36,7 @@ class UpdateCurrencyColumns extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
 
     }

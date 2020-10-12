@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\Products\IndexFundProviderProductsRequest;
 use App\Scopes\Builders\ProductQuery;
-use Illuminate\Http\Request;
-use IndexFundProviderProductsRequest;
 use App\Http\Resources\Sponsor\SponsorProviderProductResource;
 use App\Models\Fund;
 use App\Models\FundProvider;
@@ -18,7 +17,7 @@ class ProductsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
+     * @param IndexFundProviderProductsRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @param FundProvider $fundProvider
@@ -26,14 +25,13 @@ class ProductsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        // todo: add custom request
-        // IndexFundProviderProductsRequest $request,
-        Request $request,
+        IndexFundProviderProductsRequest $request,
         Organization $organization,
         Fund $fund,
         FundProvider $fundProvider
     ): AnonymousResourceCollection {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
+
         $query = ProductQuery::whereFundNotExcludedOrHasHistory(
             $fundProvider->organization->products()->getQuery(),
             $fund->id
@@ -62,8 +60,8 @@ class ProductsController extends Controller
     ): SponsorProviderProductResource {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
-        return (new SponsorProviderProductResource($product->load(
-            SponsorProviderProductResource::$load
-        )));
+        return new SponsorProviderProductResource(
+            $product->load(SponsorProviderProductResource::$load)
+        );
     }
 }

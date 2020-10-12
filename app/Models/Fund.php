@@ -166,6 +166,7 @@ class Fund extends Model
     public const EVENT_PRODUCT_ADDED = 'fund_product_added';
     public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
     public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
 
     public const STATE_ACTIVE = 'active';
@@ -1425,7 +1426,6 @@ class Fund extends Model
     }
 
     /**
-     * TODO: refactoring!
      * @param ?string $identity_address
      * @return bool
      */
@@ -1434,62 +1434,38 @@ class Fund extends Model
             return false;
         }
 
-        $auth_bsn = record_repo()->bsnByAddress($identity_address);
-        $auth_bsn_hash = self::getTrustedRecordOfType($identity_address, 'partner_bsn_hash', $this);
+        return Identity::whereHas('vouchers', function(Builder $builder) {
+            $builder->where('fund_id', '=', $this->id);
+        })->whereHas('records', function(Builder $builder) use ($identity) {
+            $builder->where(function(Builder $builder) use ($identity) {
+                $identityBsn = record_repo()->bsnByAddress($identity->address);
 
+                $builder->where(function(Builder $builder) use ($identity, $identityBsn) {
+                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
+                        $this->isHashingBsn() ? 'partner_bsn_hash': 'partner_bsn'
+                    ));
 
-        if ((!$auth_bsn && !$this->isHashingBsn()) && ($auth_bsn_hash && $this->isHashingBsn())) {
-            return false;
-        }
+                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
+                        self::getTrustedRecordOfType($identity->address, 'bsn_hash', $this)['value'] ?? null,
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                    ]) : [$identityBsn ?: null]);
+                });
 
-        $value = $this->isHashingBsn() ? $this->getHashedValue($auth_bsn) : $auth_bsn;
-        $record_type_key = $this->isHashingBsn() ? 'bsn_hash' : 'bsn';
-        $record_type_id = record_repo()->getTypeIdByKey($record_type_key);
+                $builder->orWhere(function(Builder $builder) use ($identity, $identityBsn) {
+                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
+                        $this->isHashingBsn() ? 'bsn_hash': 'bsn'
+                    ));
 
-        $record_type_key_partner = $this->isHashingBsn() ? 'partner_bsn_hash' : 'partner_bsn';
-        $record_type_id_partner = record_repo()->getTypeIdByKey($record_type_key_partner);
-
-        $partners = [$identity_address];
-
-        // you are partner
-        $partners = array_merge($partners, Identity::whereHas('records', function(
-            Builder $builder
-        ) use ($record_type_id_partner, $value, $identity, $record_type_id) {
-            $builder->where(function(Builder $builder) use ($record_type_id_partner, $value) {
-                $builder->where([
-                    'record_type_id' => $record_type_id_partner,
-                    'value' => $value,
-                ]);
-
-                $builder->whereHas('validations', function(Builder $builder) {
-                    $builder->whereIn('identity_address', $this->validatorEmployees());
+                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
+                        self::getTrustedRecordOfType($identity->address, 'partner_bsn_hash', $this)['value'] ?? null,
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                    ]) : [$identityBsn ?: null]);
                 });
             });
 
-            $builder->orWhere(function(Builder $builder) use (
-                $identity, $record_type_id, $record_type_id_partner
-            ) {
-                $builder->where([
-                    'record_type_id' => $record_type_id,
-                ])->whereIn('value', $identity->records()->where([
-                    'record_type_id' => $record_type_id_partner,
-                ])->whereHas('validations', function(Builder $builder) {
-                    $builder->whereIn('identity_address', $this->validatorEmployees());
-                })->get()->pluck('value')->toArray());
-
-                $builder->whereHas('validations', function(Builder $builder) {
-                    $builder->whereIn('identity_address', $this->validatorEmployees());
-                });
+            $builder->whereHas('validations', function(Builder $builder) {
+                $builder->whereIn('identity_address', $this->validatorEmployees());
             });
-        })->pluck('address')->toArray());
-
-        $partners = array_values(array_diff($partners, [$identity_address]));
-
-
-        return self::whereHas('vouchers', function(Builder $builder) use ($partners) {
-            $builder->where([
-                'fund_id' => $this->id
-            ])->whereIn('identity_address', $partners);
         })->exists();
     }
 }

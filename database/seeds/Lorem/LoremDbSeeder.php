@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
+use App\Models\VoucherTransaction;
 use App\Events\Funds\FundCreated;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundStartedEvent;
@@ -351,6 +352,8 @@ class LoremDbSeeder extends Seeder
                     'product_id' => null,
                     'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
+                    'state' => VoucherTransaction::STATE_SUCCESS,
+                    'attempts' => /* It's Over */ 9000
                 ]);
 
                 VoucherTransactionCreated::dispatch($transaction);
@@ -407,7 +410,7 @@ class LoremDbSeeder extends Seeder
     ) {
         $organization = Organization::create(array_only(array_merge([
             'kvk' => '69599068',
-            'iban' => 'NL25BUNQ9900069099',
+            'iban' => env('DB_SEED_PROVIDER_IBAN'),
             'phone' => '123456789',
             'email' => $this->primaryEmail,
             'phone_public' => true,
@@ -513,7 +516,7 @@ class LoremDbSeeder extends Seeder
 
         $transaction = $fund->top_up_model->transactions()->create([
             'bunq_transaction_id' => "XXXX",
-            'amount' => 100000
+            'amount' => 100000,
         ]);
 
         FundCreated::dispatch($fund);
@@ -719,7 +722,6 @@ class LoremDbSeeder extends Seeder
 
         $csv_primary_key = $fund->fund_config->csv_primary_key;
         $env_lorem_bsn = env('DB_SEED_PREVALIDATION_BSN', 900158086);
-        $partner_bsn = $this->randomFakeBsn();
 
         while ($count-- > 0) {
             do {
@@ -730,7 +732,7 @@ class LoremDbSeeder extends Seeder
                 $env_lorem_bsn : $this->randomFakeBsn();
 
             $bsn_value_partner = $count === $bsn_prevalidation_partner_index ?
-                $partner_bsn : $env_lorem_bsn;
+                $env_lorem_bsn : $this->randomFakeBsn();
 
             $out[] = array_merge($records, [
                 $csv_primary_key => $primaryKeyValue,

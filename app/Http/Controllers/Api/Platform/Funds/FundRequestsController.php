@@ -28,10 +28,8 @@ class FundRequestsController extends Controller
         $this->authorize('viewAnyAsRequester', [FundRequest::class, $fund]);
 
         return FundRequestResource::collection($fund->fund_requests()->where([
-            'identity_address' => auth_address()
-        ])->paginate(
-            $request->input('per_page')
-        ));
+            'identity_address' => $request->auth_address()
+        ])->paginate($request->input('per_page')));
     }
 
     /**
@@ -49,7 +47,7 @@ class FundRequestsController extends Controller
         $this->authorize('createAsRequester', [FundRequest::class, $fund]);
 
         $fundRequest = $fund->makeFundRequest(
-            auth_address(),
+            $request->auth_address(),
             $request->input('records')
         );
 

@@ -11,7 +11,7 @@ class AddImplementationsMapCoordinates extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function(Blueprint $table) {
             $table->double('lon')->nullable()->after('url_app');
@@ -24,7 +24,7 @@ class AddImplementationsMapCoordinates extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function(Blueprint $table) {
             $table->dropColumn('lon');

@@ -31,7 +31,7 @@ class OrganizationBasicResource extends Resource
 
         return array_merge($organization->only([
             'id', 'name', 'business_type_id',
-            'email_public', 'phone_public', 'website_public'
+            'email_public', 'phone_public', 'website_public',
         ]), (array_merge($privateData, [
             'business_type' => $organization->business_type ? new BusinessTypeResource(
                 $organization->business_type

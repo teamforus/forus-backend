@@ -2,14 +2,14 @@
 
 namespace App\Http\Requests\Api\Platform\Provider\Transactions;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\OrganizationQuery;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class IndexTransactionsRequest extends FormRequest
+class IndexTransactionsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,7 +18,7 @@ class IndexTransactionsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return !empty(auth_address());
+        return !empty($this->auth_address());
     }
 
     /**
@@ -30,7 +30,7 @@ class IndexTransactionsRequest extends FormRequest
     {
         return [
             'organization_id'   => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
-                Organization::query(), auth_address(), 'scan_vouchers'
+                Organization::query(), $this->auth_address(), 'scan_vouchers'
             )->pluck('id')->toArray())],
             'q'                 => 'nullable|string',
             'state'             => Rule::in(VoucherTransaction::STATES),

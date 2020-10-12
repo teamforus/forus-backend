@@ -6,6 +6,10 @@ use App\Http\Resources\Provider\ProviderVoucherResource;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
 
+/**
+ * Class VouchersController
+ * @package App\Http\Controllers\Api\Platform\Provider
+ */
 class VouchersController extends Controller
 {
     /**

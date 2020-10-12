@@ -114,7 +114,7 @@ class Organization extends Model
 {
     use HasMedia, HasTags, HasLogs, HasDigests;
 
-    public const GENERIC_KVK = 00000000;
+    public const GENERIC_KVK = "00000000";
 
     /**
      * The attributes that are mass assignable.
@@ -161,6 +161,10 @@ class Organization extends Model
         }
 
         if ($request->has('is_validator')) {
+            $query->where($request->only('is_validator'));
+        }
+
+        if ($request->has('implementation')) {
             $query->where($request->only('is_validator'));
         }
 
