@@ -64,8 +64,8 @@ class FundResource extends Resource
             'tags', 'type',
         ]), [
             'key' => $fund->fund_config->key ?? '',
-            'allow_fund_requests' => $fund->fund_config->allow_fund_requests,
-            'allow_prevalidations' => $fund->fund_config->allow_prevalidations,
+            'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
+            'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
             'end_date' => $fund->end_date->format('Y-m-d'),
@@ -79,7 +79,8 @@ class FundResource extends Resource
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
         ], $checkCriteria ? [
             'taken_by_partner' =>
-                $fund->fund_config->hash_partner_deny && $fund->isTakenByPartner(auth_address()),
+                ($fund->fund_config->hash_partner_deny ?? false) &&
+                $fund->isTakenByPartner(auth_address()),
         ]: [], $financialData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {
