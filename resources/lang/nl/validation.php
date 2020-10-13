@@ -174,6 +174,7 @@ return [
         'pin_code' => 'pincode',
         'records' => 'Records',
         'email' => 'e-mail',
+        'bsn' => 'bsn',
         'primary_email' => 'e-mail',
         'records.primary_email' => 'e-mailadres',
         'name' => 'naam',

@@ -37,6 +37,14 @@ $router->group([
     ]);
 
     $router->resource(
+        'organizations',
+        "Api\Platform\OrganizationsController", [
+        'only' => [
+            'index',
+        ]
+    ]);
+
+    $router->resource(
         'funds',
         "Api\Platform\FundsController", [
         'only' => [
@@ -233,7 +241,7 @@ $router->group(['middleware' => [
         'organizations',
         "Api\Platform\OrganizationsController", [
         'only' => [
-            'index', 'show', 'store', 'update'
+            'show', 'store', 'update'
         ]
     ]);
 

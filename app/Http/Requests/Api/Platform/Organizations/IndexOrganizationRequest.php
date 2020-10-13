@@ -42,6 +42,7 @@ class IndexOrganizationRequest extends FormRequest
             'is_sponsor'    => 'nullable|boolean',
             'is_provider'   => 'nullable|boolean',
             'is_validator'  => 'nullable|boolean',
+            'implementation' => 'nullable|boolean',
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Requests\DigID\ResolveDigIdRequest;
 use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Fund;
 use App\Models\Prevalidation;
+use App\Models\Voucher;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
@@ -165,6 +166,7 @@ class DigIdController extends Controller
         if (!$identity_bsn && !$bsn_identity) {
             $recordRepo->setBsnRecord($identity, $bsn);
             Prevalidation::assignAvailableToIdentityByBsn($identity);
+            Voucher::assignAvailableToIdentityByBsn($identity);
 
             return redirect(url_extend_get_params($session->session_final_url, [
                 'digid_success' => 'signed_up'
@@ -185,7 +187,7 @@ class DigIdController extends Controller
         $fund = Fund::find($request->input('fund_id'));
 
         if ($request->input('request') === 'fund_request') {
-            return $fund->urlWebshop(sprintf('/fund/%s/request', $fund->id));
+            return $fund->urlWebshop(sprintf('/funds/%s/activate', $fund->id));
         }
 
         if ($request->input('request') === 'auth') {

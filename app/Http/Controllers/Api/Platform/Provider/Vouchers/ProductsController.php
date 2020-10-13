@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\FundProviderProductQuery;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -24,7 +25,7 @@ class ProductsController extends Controller
      * @param IndexProductsRequest $request
      * @param VoucherToken $voucherToken
      * @return AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function index(
         IndexProductsRequest $request,
