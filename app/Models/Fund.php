@@ -166,6 +166,7 @@ class Fund extends Model
     public const EVENT_PRODUCT_ADDED = 'fund_product_added';
     public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
     public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
 
     public const STATE_ACTIVE = 'active';

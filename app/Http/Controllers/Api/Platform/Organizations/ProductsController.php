@@ -136,6 +136,11 @@ class ProductsController extends Controller
             $this->authorize('destroy', $media = $this->mediaService->findByUid($media_uid));
         }
 
+        if (!$product->no_price && (
+            currency_format($request->input('price')) !== currency_format($product->price))) {
+            $product->resetSubsidyApprovals();
+        }
+
         $product->update(array_merge($request->only(array_merge([
             'name', 'description', 'sold_amount', 'product_category_id', 'expire_at'
         ], $product->no_price ? [] : [
