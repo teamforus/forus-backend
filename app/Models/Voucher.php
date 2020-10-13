@@ -9,12 +9,14 @@ use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 /**
  * App\Models\Voucher
@@ -55,6 +57,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
+ * @property-read \App\Models\VoucherRelation|null $voucher_relation
  * @property-read \App\Models\VoucherToken|null $token_with_confirmation
  * @property-read \App\Models\VoucherToken|null $token_without_confirmation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherToken[] $tokens
@@ -77,7 +80,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereReturnable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class Voucher extends Model
 {
@@ -149,6 +152,12 @@ class Voucher extends Model
         return $this->hasMany(PhysicalCard::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function voucher_relation(): HasOne {
+        return $this->hasOne(VoucherRelation::class);
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -552,7 +561,7 @@ class Voucher extends Model
         } while (file_exists($zipFile));
 
         if (!file_exists($zipPath) && !mkdir($zipPath, 0777, true) && !is_dir($zipPath)) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $zipPath));
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $zipPath));
         }
 
         $fp = fopen('php://temp/maxmemory:1048576', 'wb');
@@ -632,5 +641,38 @@ class Voucher extends Model
         })->whereHas('physical_cards', static function (Builder $builder) use ($code_or_address) {
             $builder->where('code', '=', $code_or_address);
         })->first() ?: self::findByAddress($code_or_address);
+    }
+
+    /**
+     * Set voucher relation to bsn number.
+     *
+     * @param string $bsn
+     * @return VoucherRelation
+     */
+    public function setBsnRelation(string $bsn): VoucherRelation
+    {
+        /** @var VoucherRelation $voucher_relation */
+        $voucher_relation = $this->voucher_relation()->create(compact('bsn'));
+
+        return $voucher_relation;
+    }
+
+    /**
+     * @param string $identity_address
+     */
+    public static function assignAvailableToIdentityByBsn(
+        string $identity_address
+    ): void {
+        if (!$bsn = record_repo()->bsnByAddress($identity_address)) {
+            return;
+        }
+
+        /** @var Builder $query */
+        $query = self::whereNull('identity_address');
+        $query->whereHas('voucher_relation', static function(Builder $builder) use ($bsn) {
+            $builder->where('bsn', '=', $bsn);
+        })->get()->each(static function(Voucher $voucher) {
+            $voucher->voucher_relation->assignIfExists();
+        });
     }
 }

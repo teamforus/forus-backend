@@ -14,9 +14,12 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
+use App\Models\VoucherRelation;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -47,8 +50,8 @@ class VouchersController extends Controller
      *
      * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
      */
     public function index(
         IndexVouchersRequest $request,
@@ -70,7 +73,7 @@ class VouchersController extends Controller
      * @param StoreVoucherRequest $request
      * @param Organization $organization
      * @return SponsorVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @throws AuthorizationException|Exception
      */
     public function store(
         StoreVoucherRequest $request,
@@ -99,6 +102,10 @@ class VouchersController extends Controller
             Prevalidation::deactivateByUid($activation_code);
         }
 
+        if ($bsn = $request->input('bsn', false)) {
+            $voucher->setBsnRelation($bsn)->assignIfExists();
+        }
+
         return new SponsorVoucherResource($voucher->updateModel([
             'employee_id' => Employee::getEmployee($request->auth_address())->id
         ]));
@@ -109,8 +116,8 @@ class VouchersController extends Controller
      *
      * @param StoreBatchVoucherRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherResource|\Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return SponsorVoucherResource|AnonymousResourceCollection
+     * @throws AuthorizationException
      */
     public function storeBatch(
         StoreBatchVoucherRequest $request,
@@ -133,12 +140,16 @@ class VouchersController extends Controller
             $product_id = $voucher['product_id'] ?? false;
 
             if (!$product_id || !$fund->isTypeBudget()) {
-                $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
+                $voucherModel = $fund->makeVoucher($identity, $amount, $expire_at, $note);
             } else {
-                $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
+                $voucherModel = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
             }
 
-            return $voucher->updateModel([
+            if ($bsn = ($voucher['bsn'] ?? false)) {
+                $voucherModel->setBsnRelation($bsn)->assignIfExists();
+            }
+
+            return $voucherModel->updateModel([
                 'employee_id' => $organization->findEmployee($request->auth_address())->id
             ]);
         }));
@@ -172,7 +183,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @return SponsorVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function show(
         Organization $organization,
@@ -189,7 +200,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @return SponsorVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @throws AuthorizationException|Exception
      */
     public function assign(
         AssignVoucherRequest $request,
@@ -199,9 +210,15 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('assignSponsor', [$voucher, $organization]);
 
-        return new SponsorVoucherResource($voucher->assignToIdentity(
-            $this->identityRepo->getOrMakeByEmail($request->post('email'))
-        ));
+        if ($email = $request->post('email')) {
+            $voucher->assignToIdentity(
+                $this->identityRepo->getOrMakeByEmail($request->post('email'))
+            );
+        } elseif ($bsn = $request->post('bsn')) {
+            $voucher->setBsnRelation($bsn)->assignIfExists();
+        }
+
+        return new SponsorVoucherResource($voucher);
     }
 
     /**
@@ -210,7 +227,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @return SponsorVoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function sendByEmail(
         SendVoucherRequest $request,
@@ -228,8 +245,8 @@ class VouchersController extends Controller
     /**
      * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return BinaryFileResponse
+     * @throws AuthorizationException
      */
     public function exportUnassigned(
         IndexVouchersRequest $request,

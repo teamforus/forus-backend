@@ -22,11 +22,10 @@ class OrganizationPolicy
     }
 
     /**
-     * @param $identity_address
      * @return mixed
      */
-    public function viewAny($identity_address) {
-        return !empty($identity_address);
+    public function viewAny() {
+        return true;
     }
 
     /**

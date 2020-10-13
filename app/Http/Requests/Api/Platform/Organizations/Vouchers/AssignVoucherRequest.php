@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AssignVoucherRequest extends FormRequest
 {
@@ -23,8 +24,16 @@ class AssignVoucherRequest extends FormRequest
      */
     public function rules(): array
     {
+        $bsn = $this->input('bsn');
+
         return [
-            'email' => 'required|email:strict,dns',
+            'email' => 'required_without:bsn|email:strict,dns',
+            'bsn' => [
+                'required_without:email',
+                'string',
+                'size:9',
+                ($bsn && !record_repo()->identityAddressByBsn($bsn)) ? Rule::in([]) : null,
+            ],
         ];
     }
 }
