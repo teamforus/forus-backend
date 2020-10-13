@@ -121,6 +121,7 @@ class EventLogService implements IEventLogService
             'sponsor_id' => $provider->id,
             'sponsor_name' => $provider->name,
             'sponsor_phone' => $provider->phone,
+            'sponsor_email' => $provider->email,
         ];
     }
 
