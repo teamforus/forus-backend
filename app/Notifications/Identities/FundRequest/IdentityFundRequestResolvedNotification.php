@@ -20,7 +20,7 @@ class IdentityFundRequestResolvedNotification extends BaseIdentityFundRequestNot
         if ($fundRequest->state === FundRequest::STATE_APPROVED) {
             $mailable = new FundRequestApprovedMail(
                 $this->eventLog->data['fund_name'],
-                $fundRequest->fund->urlWebshop(),
+                $fundRequest->fund->urlWebshop('/funds'),
                 'https://www.forus.io/DL',
                 $fundRequest->fund->getEmailFrom()
             );
