@@ -651,6 +651,8 @@ class Voucher extends Model
      */
     public function setBsnRelation(string $bsn): VoucherRelation
     {
+        $this->voucher_relation()->delete();
+
         /** @var VoucherRelation $voucher_relation */
         $voucher_relation = $this->voucher_relation()->create(compact('bsn'));
 

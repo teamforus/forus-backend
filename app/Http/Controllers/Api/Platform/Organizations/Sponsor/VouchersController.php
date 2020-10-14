@@ -14,7 +14,6 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
-use App\Models\VoucherRelation;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
@@ -210,11 +209,12 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('assignSponsor', [$voucher, $organization]);
 
-        if ($email = $request->post('email')) {
-            $voucher->assignToIdentity(
-                $this->identityRepo->getOrMakeByEmail($request->post('email'))
-            );
-        } elseif ($bsn = $request->post('bsn')) {
+        $bsn = $request->post('bsn');
+        $email = $request->post('email');
+
+        if ($email) {
+            $voucher->assignToIdentity($this->identityRepo->getOrMakeByEmail($email));
+        } else if ($bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
 

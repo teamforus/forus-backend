@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\VoucherRelation
@@ -13,19 +14,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $bsn
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Voucher $voucher
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation newQuery()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\VoucherRelation onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereVoucherId($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\VoucherRelation withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\VoucherRelation withoutTrashed()
  * @mixin \Eloquent
  */
 class VoucherRelation extends Model
 {
+    use SoftDeletes;
+
     /**
      * @var string[]
      */
@@ -45,8 +53,9 @@ class VoucherRelation extends Model
      */
     public function assignIfExists(): bool
     {
-        if ($this->voucher->identity_address ||
-            !($identity_address = record_repo()->identityAddressByBsn($this->bsn))) {
+        $identity_address = record_repo()->identityAddressByBsn($this->bsn);
+
+        if (!$identity_address || $this->voucher->identity_address) {
             return false;
         }
 
