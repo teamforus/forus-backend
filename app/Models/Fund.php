@@ -404,7 +404,7 @@ class Fund extends Model
      */
     public function getTransactionCosts (): float {
         if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
-            return $this->voucher_transactions()->where('amount', '>', '0')->count() * 0.10;
+            return $this->voucher_transactions()->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
         }
 
         return 0.0;
@@ -1466,5 +1466,13 @@ class Fund extends Model
                 $builder->whereIn('identity_address', $this->validatorEmployees());
             });
         })->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAutoValidatingRequests(): bool
+    {
+        return $this->default_validator_employee_id && $this->auto_requests_validation;
     }
 }

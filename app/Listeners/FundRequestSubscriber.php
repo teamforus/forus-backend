@@ -11,6 +11,10 @@ use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotificat
 use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Class FundRequestSubscriber
+ * @package App\Listeners
+ */
 class FundRequestSubscriber
 {
     /**
@@ -23,6 +27,7 @@ class FundRequestSubscriber
         $fund = $fundRequestCreated->getFund();
         $fundRequest = $fundRequestCreated->getFundRequest();
         $recordRepo = resolve('forus.services.record');
+        $identityBsn = $recordRepo->bsnByAddress($fundRequest->identity_address);
 
         // assign fund request to default validator
         if ($fund->default_validator_employee) {
@@ -30,10 +35,7 @@ class FundRequestSubscriber
         }
 
         // auto approve request if required
-        if ($fund->default_validator_employee &&
-            $fund->auto_requests_validation &&
-            !empty($recordRepo->bsnByAddress($fundRequest->identity_address))
-        ) {
+        if (!empty($identityBsn) && $fund->isAutoValidatingRequests()) {
             $fundRequest->approve($fund->default_validator_employee);
         }
 
@@ -47,7 +49,10 @@ class FundRequestSubscriber
         IdentityFundRequestCreatedNotification::send($event);
     }
 
-    public function onFundRequestResolved(FundRequestResolved $fundCreated) {
+    /**
+     * @param FundRequestResolved $fundCreated
+     */
+    public function onFundRequestResolved(FundRequestResolved $fundCreated): void {
         $fundRequest = $fundCreated->getFundRequest();
 
         $stateEvent = [
@@ -78,7 +83,7 @@ class FundRequestSubscriber
      *
      * @param Dispatcher $events
      */
-    public function subscribe(Dispatcher $events)
+    public function subscribe(Dispatcher $events): void
     {
         $events->listen(
             FundRequestCreated::class,
