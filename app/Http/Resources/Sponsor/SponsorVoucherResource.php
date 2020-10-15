@@ -39,6 +39,7 @@ class SponsorVoucherResource extends Resource
             'is_granted' => $voucher->is_granted,
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
+            'relation_bsn' => $voucher->voucher_relation->bsn ?? null,
             'has_transactions' => $voucher->has_transactions,
             'address' => $address ?? null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
