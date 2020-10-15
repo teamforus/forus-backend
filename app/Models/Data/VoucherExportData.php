@@ -46,9 +46,11 @@ class VoucherExportData
         ], $this->voucher->product ? [
             'product_name' => $this->voucher->product->name,
         ] : [], $assigned_to_identity ? [
+            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
             'identity_bsn' => record_repo()->bsnByAddress($this->voucher->identity_address),
             'identity_email' => record_repo()->primaryEmailByAddress($this->voucher->identity_address),
         ] : [
+            'reference_bsn' => null,
             'identity_bsn' => null,
             'identity_email' => null,
         ], [
