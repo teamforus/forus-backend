@@ -748,17 +748,17 @@ $router->group(['middleware' => [
     );
 
     $router->post(
-        'organizations/{organization}/sponsor/vouchers/{voucher_id}/send',
+        'organizations/{organization}/sponsor/vouchers/{voucher}/send',
         "Api\Platform\Organizations\Sponsor\VouchersController@sendByEmail"
     );
 
     $router->get(
         'organizations/{organization}/sponsor/vouchers/export-unassigned',
-        "Api\Platform\Organizations\Sponsor\VouchersController@exportUnassigned"
+        "Api\Platform\Organizations\Sponsor\VouchersController@export"
     );
 
     $router->patch(
-        'organizations/{organization}/sponsor/vouchers/{voucher_id}/assign',
+        'organizations/{organization}/sponsor/vouchers/{voucher}/assign',
         "Api\Platform\Organizations\Sponsor\VouchersController@assign"
     );
 

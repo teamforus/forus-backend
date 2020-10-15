@@ -60,9 +60,7 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         return SponsorVoucherResource::collection(Voucher::searchSponsorQuery(
-            $request,
-            $organization,
-            Fund::find($request->get('fund_id'))
+            $request, $organization, $organization->findFund($request->get('fund_id'))
         )->paginate($request->input('per_page', 25)));
     }
 
@@ -248,25 +246,22 @@ class VouchersController extends Controller
      * @return BinaryFileResponse
      * @throws AuthorizationException
      */
-    public function exportUnassigned(
+    public function export(
         IndexVouchersRequest $request,
         Organization $organization
     ): BinaryFileResponse {
-
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        $fund = Fund::findOrFail($request->get('fund_id'));
-        $this->authorize('viewAnySponsor', [Voucher::class, $fund->organization]);
-
+        $fund = $organization->findFund($request->get('fund_id'));
         $export_type = $request->get('export_type', 'png');
-        $unassigned_vouchers = Voucher::searchSponsor($request, $organization, $fund);
+        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
 
-        if ($unassigned_vouchers->count() === 0) {
+        if ($vouchers->count() === 0) {
             abort(404, "No unassigned vouchers to be exported.");
         }
 
-        if (!$zipFile = Voucher::zipVouchers($unassigned_vouchers, $export_type)) {
+        if (!$zipFile = Voucher::zipVouchers($vouchers, $export_type)) {
             abort(500, "Couldn't make the archive.");
         }
 

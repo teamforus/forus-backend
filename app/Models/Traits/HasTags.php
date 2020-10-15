@@ -7,7 +7,6 @@ use App\Models\Tag;
 
 /**
  * Trait HasTags
- * @mixin \Eloquent
  * @package App\Models\Traits
  */
 trait HasTags

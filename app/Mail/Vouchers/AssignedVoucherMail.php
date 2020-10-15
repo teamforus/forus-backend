@@ -9,34 +9,25 @@ use Illuminate\Mail\Mailable;
 
 class AssignedVoucherMail extends ImplementationMail
 {
-    private $fundName;
-    private $qrToken;
-    private $voucher_amount;
-    private $voucher_expire_minus_day;
+    private $type;
+    private $data;
 
     /**
      * Create a new message instance.
      *
      * AssignedVoucherMail constructor.
-     * @param string $fund_name
-     * @param string $qrToken
-     * @param int $voucher_amount
-     * @param string $voucher_expire_minus_day
      * @param EmailFrom|null $emailFrom
+     * @param string $type
+     * @param array $data
      */
     public function __construct(
-        string $fund_name,
-        string $qrToken,
-        int $voucher_amount,
-        string $voucher_expire_minus_day,
-        ?EmailFrom $emailFrom
+        ?EmailFrom $emailFrom,
+        string $type,
+        array $data = []
     ) {
+        $this->type = $type;
+        $this->data = $this->escapeData($data);
         $this->setMailFrom($emailFrom);
-
-        $this->fundName = $fund_name;
-        $this->qrToken = $qrToken;
-        $this->voucher_amount = $voucher_amount;
-        $this->voucher_expire_minus_day = $voucher_expire_minus_day;
     }
 
     /**
@@ -46,15 +37,43 @@ class AssignedVoucherMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return $this->buildBase()
-            ->subject(mail_trans('voucher_assigned.title', [
-                'fund_name' => $this->fundName
-            ]))
-            ->view('emails.vouchers.voucher_assigned', [
-                'fund_name' => $this->fundName,
-                'qr_token'  => $this->qrToken,
-                'voucher_amount' => $this->voucher_amount,
-                'voucher_expire_minus_day' => $this->voucher_expire_minus_day,
-            ]);
+        switch ($this->type) {
+            case 'budget': return $this->sendMailBudgetVoucher();
+            case 'product': return $this->sendMailProductVoucher();
+            case 'subsidies': return $this->sendMailBudgetSubsidies();
+        }
+    }
+
+    /**
+     * @return Mailable
+     */
+    private function sendMailBudgetVoucher(): Mailable {
+        return $this->buildBase()->subject(
+            mail_trans('voucher_assigned_budget.title', $this->data)
+        )->view('emails.vouchers.voucher_assigned_budget', [
+            'data' => $this->data
+        ]);
+    }
+
+    /**
+     * @return Mailable
+     */
+    private function sendMailProductVoucher(): Mailable {
+        return $this->buildBase()->subject(
+            mail_trans('voucher_assigned_product.title', $this->data)
+        )->view('emails.vouchers.voucher_assigned_product', [
+            'data' => $this->data
+        ]);
+    }
+
+    /**
+     * @return Mailable
+     */
+    private function sendMailBudgetSubsidies(): Mailable {
+        return $this->buildBase()->subject(
+            mail_trans('voucher_assigned_subsidy.title', $this->data)
+        )->view('emails.vouchers.voucher_assigned_subsidy', [
+            'data' => $this->data
+        ]);
     }
 }
