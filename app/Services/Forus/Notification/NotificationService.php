@@ -421,32 +421,22 @@ class NotificationService
     }
 
     /**
-     * todo: has to be migrated
      * Send assigned voucher to email
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param int $voucher_amount
-     * @param string $voucher_expire_minus_day
-     * @param string $qr_token
+     * @param string $type
+     * @param $data
      * @return bool
      */
     public function assignVoucher(
         string $email,
         ?EmailFrom $emailFrom,
-        string $fund_name,
-        int $voucher_amount,
-        string $voucher_expire_minus_day,
-        string $qr_token
+        string $type,
+        $data
     ): bool {
-        return $this->sendMail($email, new AssignedVoucherMail(
-            $fund_name,
-            $qr_token,
-            $voucher_amount,
-            $voucher_expire_minus_day,
-            $emailFrom
-        ));
+        $mailable = new AssignedVoucherMail($emailFrom, $type, $data);
+        return $mailable ? $this->sendMail($email, $mailable) : false;
     }
 
     /**

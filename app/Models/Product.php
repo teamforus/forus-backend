@@ -380,7 +380,7 @@ class Product extends Model
      * @return string
      */
     public function getDescriptionHtmlAttribute(): string {
-        return resolve('markdown')->convertToHtml($this->description);
+        return resolve('markdown')->convertToHtml(e($this->description));
     }
 
     /**

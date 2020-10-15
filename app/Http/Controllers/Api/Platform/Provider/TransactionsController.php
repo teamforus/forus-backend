@@ -22,11 +22,11 @@ class TransactionsController extends Controller
 
         $query = VoucherTransaction::search($request);
         $query->whereHas('employee', static function(Builder $builder) use ($request) {
-            $builder->where('identity_address', $request->auth_address());
-
-            if ($request->has('organization_id')) {
-                $builder->where('organizations_id', '=', $request->input('organization_id'));
-            }
+            $builder->where(array_merge($request->only([
+                'organization_id'
+            ]), [
+                'identity_address' => $request->auth_address()
+            ]));
         });
 
         return ProviderVoucherTransactionEmployeeResource::collection($query->with(

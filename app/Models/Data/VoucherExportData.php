@@ -37,11 +37,24 @@ class VoucherExportData
     }
 
     public function toArray(): array {
+        $assigned_to_identity = $this->voucher->identity_address && $this->voucher->is_granted;
+
         return array_merge([
-            'name' => $this->name
+            'name' => $this->name,
+            'granted' => $assigned_to_identity ? 'Ja': 'Nee',
+            'in_use' => $this->voucher->has_transactions ? 'Ja': 'Nee',
         ], $this->voucher->product ? [
             'product_name' => $this->voucher->product->name,
-        ] : [], [
+        ] : [], $assigned_to_identity ? [
+            'identity_bsn' => record_repo()->bsnByAddress($this->voucher->identity_address),
+            'identity_email' => record_repo()->primaryEmailByAddress($this->voucher->identity_address),
+        ] : [
+            'identity_bsn' => null,
+            'identity_email' => null,
+        ], [
+            'note' => $this->voucher->note,
+            'source' => $this->voucher->employee_id ? 'employee': 'user',
+            'amount' => $this->voucher->amount,
             'fund_name' => $this->voucher->fund->name,
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),

@@ -295,19 +295,29 @@ class Voucher extends Model
     public function assignedVoucherEmail(
         string $email = null
     ): void {
-        /** @var VoucherToken $voucherToken */
-        $voucherToken = $this->tokens()->where([
-            'need_confirmation' => false
-        ])->first();
+        $mailFrom = $this->fund->fund_config->implementation->getEmailFrom();
+        $expireDate = format_date_locale($this->expire_at->subDay(), 'long_date_locale');
 
-        resolve('forus.services.notification')->assignVoucher(
-            $email,
-            $this->fund->fund_config->implementation->getEmailFrom(),
-            $this->fund->name,
-            $this->amount,
-            format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
-            $voucherToken->address
-        );
+        if ($this->isBudgetType()) {
+            $type = $this->fund->isTypeBudget() ? 'budget' : 'subsidies';
+        } else {
+            $type = 'product';
+        }
+
+        resolve('forus.services.notification')->assignVoucher($email, $mailFrom, $type, [
+            'fund_name' => $this->fund->name,
+            'link_webshop' => $this->fund->urlWebshop('/'),
+            'qr_token' => $this->token_without_confirmation->address,
+            'product_name' => $this->product->name ?? null,
+            'provider_name' => $this->product->organization->name ?? null,
+            'product_description' => $this->product->description ?? null,
+            'sponsor_name' => $this->fund->organization->name ?? null,
+            'sponsor_email' => $this->fund->organization->email ?? null,
+            'sponsor_phone' => $this->fund->organization->phone ?? null,
+            'sponsor_description' => $this->fund->organization->description ?? null,
+            'voucher_amount' => $this->amount,
+            'voucher_expire_minus_day' => $expireDate,
+        ]);
     }
 
     /**
@@ -384,13 +394,12 @@ class Voucher extends Model
     ): Builder {
         /** @var Builder $query */
         $query = self::query();
+        $granted = $request->input('granted', null);
 
-        if (($granted = $request->input('granted', null)) !== null) {
-            if (!$granted) {
-                $query->whereNull('identity_address');
-            } else {
-                $query->whereNotNull('identity_address');
-            }
+        if ($granted) {
+            $query->whereNotNull('identity_address');
+        } elseif (!$granted && $granted !== null) {
+            $query->whereNull('identity_address');
         }
 
         if ($request->has('amount_min')) {
@@ -428,11 +437,14 @@ class Voucher extends Model
         Fund $fund = null
     ): Builder {
         $query = self::search($request);
+        $q = $request->input('q', false);
+        $type = $request->input('type', null);
+        $source = $request->input('source', 'employee');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'asc');
+        $unassignedOnly =  $request->input('unassigned', null);
 
-        $query->whereNotNull('employee_id');
-        $query->whereHas('fund', static function(Builder $query) use (
-            $organization, $fund
-        ) {
+        $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
 
             if ($fund) {
@@ -440,36 +452,32 @@ class Voucher extends Model
             }
         });
 
-        if ($request->has('unassigned')) {
-            if ($request->input('unassigned')) {
-                $query->whereNull('identity_address');
-            } else {
-                $query->whereNotNull('identity_address');
-            }
+        if ($unassignedOnly) {
+            $query->whereNull('identity_address');
+        } else if (!$unassignedOnly && $unassignedOnly !== null) {
+            $query->whereNotNull('identity_address');
         }
 
-        switch ($request->input('type', null)) {
+        switch ($type) {
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
         }
 
-        if ($request->has('q') && $q = $request->input('q')) {
-            $identityRepo = resolve('forus.services.identity');
+        switch ($source) {
+            case 'all': break;
+            case 'user': $query->whereNull('employee_id'); break;
+            case 'employee': $query->whereNotNull('employee_id'); break;
+            default: abort(403);
+        }
 
-            $query->where(static function (Builder $query) use ($q, $identityRepo) {
+        if ($q) {
+            $query->where(static function (Builder $query) use ($q) {
                 $query->where('note', 'LIKE', "%{$q}%");
-                $query->orWhereIn(
-                    'identity_address',
-                    $identityRepo->identityAddressesByEmailSearch($q)
-                );
+                $query->orWhereIn('identity_address', identity_repo()->identityAddressesByEmailSearch($q));
             });
         }
 
-        if ($request->has('sort_by') && $sortBy = $request->input('sort_by')) {
-            $query->orderBy($sortBy, $request->input('sort_order', 'asc'));
-        }
-
-        return $query;
+        return $query->orderBy($sortBy, $sortOrder);
     }
 
     /**
@@ -532,13 +540,13 @@ class Voucher extends Model
         ) ? $product->expire_at : $this->fund->end_date;
 
         $voucher = self::create([
-            'identity_address'  => auth_address(),
-            'parent_id'         => $this->id,
-            'fund_id'           => $this->fund_id,
-            'product_id'        => $product->id,
-            'amount'            => $price,
-            'returnable'        => $returnable,
-            'expire_at'         => $voucherExpireAt
+            'identity_address' => auth_address(),
+            'parent_id'        => $this->id,
+            'fund_id'          => $this->fund_id,
+            'product_id'       => $product->id,
+            'amount'           => $price,
+            'returnable'       => $returnable,
+            'expire_at'        => $voucherExpireAt
         ]);
 
         VoucherCreated::dispatch($voucher);
@@ -553,6 +561,7 @@ class Voucher extends Model
      */
     public static function zipVouchers(Collection $vouchers, $exportType): string {
         $vouchersData = [];
+        $vouchersDataNames = [];
         $token_generator = resolve('token_generator');
         $zipPath = storage_path('vouchers-export');
 
@@ -572,11 +581,18 @@ class Voucher extends Model
             $zip->addEmptyDir('images');
         }
 
+        if ($vouchers->count() > 0) {
+            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0]))->toArray()));
+        }
+
         foreach ($vouchers as $voucher) {
-            $voucherData = new VoucherExportData($voucher);
+            do {
+                $voucherData = new VoucherExportData($voucher);
+            } while(in_array($voucherData->getName(), $vouchersDataNames, true));
 
             fputcsv($fp, $voucherData->toArray());
             $vouchersData[] = $voucherData;
+            $vouchersDataNames[] = $voucherData->getName();
 
             if ($exportType === 'png') {
                 $zip->addFromString(

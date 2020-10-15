@@ -10,6 +10,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -575,5 +576,15 @@ class Organization extends Model
         string $identity_address
     ) {
         return $this->employees()->where(compact('identity_address'))->first();
+    }
+
+    /**
+     * @param $fund_id
+     * @return Fund|null
+     */
+    public function findFund($fund_id): ?Fund {
+        /** @var Fund|null $fund */
+        $fund = $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
+        return $fund;
     }
 }
