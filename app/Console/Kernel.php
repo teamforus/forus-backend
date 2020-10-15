@@ -122,7 +122,7 @@ class Kernel extends ConsoleKernel
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.digest.requester:send')
-            ->weeklyOn(5, "18:00")->withoutOverlapping()->onOneServer();
+            ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
 
 
         // use cron to send email/notifications

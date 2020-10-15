@@ -14,7 +14,6 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
-use App\Models\VoucherRelation;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
@@ -61,9 +60,7 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         return SponsorVoucherResource::collection(Voucher::searchSponsorQuery(
-            $request,
-            $organization,
-            Fund::find($request->get('fund_id'))
+            $request, $organization, $organization->findFund($request->get('fund_id'))
         )->paginate($request->input('per_page', 25)));
     }
 
@@ -210,11 +207,12 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('assignSponsor', [$voucher, $organization]);
 
-        if ($email = $request->post('email')) {
-            $voucher->assignToIdentity(
-                $this->identityRepo->getOrMakeByEmail($request->post('email'))
-            );
-        } elseif ($bsn = $request->post('bsn')) {
+        $bsn = $request->post('bsn');
+        $email = $request->post('email');
+
+        if ($email) {
+            $voucher->assignToIdentity($this->identityRepo->getOrMakeByEmail($email));
+        } else if ($bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
 
@@ -248,25 +246,22 @@ class VouchersController extends Controller
      * @return BinaryFileResponse
      * @throws AuthorizationException
      */
-    public function exportUnassigned(
+    public function export(
         IndexVouchersRequest $request,
         Organization $organization
     ): BinaryFileResponse {
-
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        $fund = Fund::findOrFail($request->get('fund_id'));
-        $this->authorize('viewAnySponsor', [Voucher::class, $fund->organization]);
-
+        $fund = $organization->findFund($request->get('fund_id'));
         $export_type = $request->get('export_type', 'png');
-        $unassigned_vouchers = Voucher::searchSponsor($request, $organization, $fund);
+        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
 
-        if ($unassigned_vouchers->count() === 0) {
+        if ($vouchers->count() === 0) {
             abort(404, "No unassigned vouchers to be exported.");
         }
 
-        if (!$zipFile = Voucher::zipVouchers($unassigned_vouchers, $export_type)) {
+        if (!$zipFile = Voucher::zipVouchers($vouchers, $export_type)) {
             abort(500, "Couldn't make the archive.");
         }
 

@@ -51,7 +51,8 @@ class LoremDbSeeder extends Seeder
 
     private $implementationsWithMultipleFunds = [
         'Westerkwartier' => 2,
-        'Stadjerspas' => 4,
+        'Nijmegen' => 2,
+        'Stadjerspas' => 3,
     ];
 
     private $subsidyFunds = [
@@ -64,6 +65,14 @@ class LoremDbSeeder extends Seeder
 
     private $fundsWithPhysicalCards = [
         'Nijmegen', 'Stadjerspas',
+    ];
+
+    private $fundsWithAutoValidation = [
+        'Nijmegen'
+    ];
+
+    private $fundKeyOverwrite = [
+        'Nijmegen' => 'meedoen_2020',
     ];
 
     /**
@@ -174,8 +183,9 @@ class LoremDbSeeder extends Seeder
 
             while ($countFunds-- > 0) {
                 $fund = $this->makeFund($organization, true);
-
                 $implementationKey = str_slug(explode(' ', $fund->name)[0]);
+                $fundKey = str_slug($fund->name . '_' . date('Y'));
+                $fundKey = $this->fundKeyOverwrite[$fund->name] ?? $fundKey;
 
                 if (!$implementation = Implementation::where([
                     'key' => $implementationKey
@@ -186,21 +196,17 @@ class LoremDbSeeder extends Seeder
                     );
                 }
 
-                $this->fundConfigure(
-                    $fund,
-                    $implementation,
-                    str_slug($fund->name . '_' . date('Y')), [
-                        'bunq_key' => config('forus.seeders.lorem_db_seeder.bunq_key'),
-                    ]
-                );
+                $this->fundConfigure($fund, $implementation, $fundKey);
 
-                $this->makePrevalidations(
-                    $fund->organization->identity_address,
-                    $fund,
-                    $this->generatePrevalidationData($fund, 10, [
-                        $fund->fund_config->key . '_eligible' => 'Ja',
-                    ])
-                );
+                if (!$this->isUsingAutoValidation($fund->name)) {
+                    $this->makePrevalidations(
+                        $fund->organization->identity_address,
+                        $fund,
+                        $this->generatePrevalidationData($fund, 10, [
+                            $fund->fund_config->key . '_eligible' => 'Ja',
+                        ])
+                    );
+                }
             }
         }
     }
@@ -511,7 +517,10 @@ class LoremDbSeeder extends Seeder
             $fundName = $organization->name . ($nth === 1 ? '' : (' ' . $this->integerToRoman($nth)));
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
+        /** @var \App\Models\Employee$validator $validator */
+        $validator = $organization->employeesOfRoleQuery('validation')->firstOrFail();
         $criteriaEditable = in_array($fundName, $this->fundsWithCriteriaEditableAfterLaunch);
+        $autoValidation = $this->isUsingAutoValidation($fundName);
 
         $fund = $organization->createFund(array_merge([
             'name'                          => $fundName,
@@ -520,6 +529,8 @@ class LoremDbSeeder extends Seeder
             'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
             'state'                         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
             'notification_amount'           => 10000,
+            'auto_requests_validation'      => $autoValidation,
+            'default_validator_employee_id' => $autoValidation ? $validator->id : null,
             'type'                          => in_array(
                 $fundName,
                 $this->subsidyFunds
@@ -611,41 +622,32 @@ class LoremDbSeeder extends Seeder
             'allow_physical_cards'  => in_array($fund->name, $this->fundsWithPhysicalCards),
             'hash_bsn'              => $hashBsn,
             'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
+            'bunq_key'              => config('forus.seeders.lorem_db_seeder.bunq_key'),
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'
         ]))->toArray());
 
-        $eligibility_key = sprintf("%s %s eligible", $fund->name, date('Y'));
-        $criteria = config('forus.seeders.lorem_db_seeder.funds_criteria');
+        $eligibility_key = sprintf("%s_eligible", $fund->fund_config->key);
+        $criteria = [];
 
-        if ($fund->id === 1) {
+        if (!$fund->isAutoValidatingRequests()) {
+            $criteria = array_merge($criteria, config('forus.seeders.lorem_db_seeder.funds_criteria'));
+        }
+
+        if ($fund->organization_id <= 2) {
             /** @var RecordType $recordType */
             $recordType = RecordType::firstOrCreate([
-                'key'       => str_slug($eligibility_key, '_'),
+                'key'       => $eligibility_key,
                 'type'      => 'string',
             ])->updateModel([
-                'name'      => $eligibility_key,
+                'name'      => $fund->name . ' ' . ' eligible',
             ]);
 
             $criteria[] = [
                 'record_type_key' => $recordType->key,
                 'operator' => '=',
                 'value' => 'Ja',
-            ];
-        } elseif ($fund->id === 2) {
-            /** @var RecordType $recordType */
-            $recordType = RecordType::firstOrCreate([
-                'key'       => str_slug($eligibility_key . '_nth', '_'),
-                'type'      => 'number',
-            ])->updateModel([
-                'name'      => $eligibility_key . ' nth',
-            ]);
-
-            $criteria[] = [
-                'record_type_key' => $recordType->key,
-                'operator' => '>',
-                'value' => '0',
             ];
         }
 
@@ -689,18 +691,10 @@ class LoremDbSeeder extends Seeder
                 }
 
                 return compact('record_type_id', 'value');
-            })->filter(static function($value) {
-                return (bool) $value;
-            })->values();
-        })->filter(static function($records) {
-            return collect($records)->count();
-        })->map(function($records) use ($fund, $identity_address) {
-            do {
-                $uid = $this->tokenGenerator->generate(4, 2);
-            } while(Prevalidation::whereUid($uid)->exists());
-
+            })->filter()->toArray();
+        })->filter()->map(function($records) use ($fund, $identity_address) {
             $prevalidation = Prevalidation::create([
-                'uid' => $uid,
+                'uid' => token_generator_db(Prevalidation::query(), 'uid', 4, 2),
                 'state' => 'pending',
                 'fund_id' => $fund->id,
                 'organization_id' => $fund->organization_id,
@@ -819,6 +813,11 @@ class LoremDbSeeder extends Seeder
         ProductCreated::dispatch($product);
 
         return $product;
+    }
+
+    private function isUsingAutoValidation($fundName): bool
+    {
+        return in_array($fundName, $this->fundsWithAutoValidation, true);
     }
 
     /**

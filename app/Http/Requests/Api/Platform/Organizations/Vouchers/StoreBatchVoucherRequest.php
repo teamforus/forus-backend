@@ -4,11 +4,16 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\Organization;
 use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
-use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Validation\Rule;
 
+/**
+ * Class StoreBatchVoucherRequest
+ * @property-read Organization $organization
+ * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
+ */
 class StoreBatchVoucherRequest extends BaseFormRequest
 {
     /**
@@ -18,7 +23,9 @@ class StoreBatchVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->organization->identityCan($this->auth_address(), [
+            'manage_vouchers'
+        ]);
     }
 
     /**
@@ -28,8 +35,9 @@ class StoreBatchVoucherRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $validFunds = $this->validFundIds($this->auth_address());
-        $fund = Fund::query()->whereIn('id', $validFunds)->findOrFail($this->input('fund_id'));
+        /** @var Fund $fund */
+        $funds = $this->organization->funds();
+        $fund = $funds->findOrFail($this->input('fund_id'));
 
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
@@ -37,7 +45,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
         return [
             'fund_id'   => [
                 'required',
-                Rule::exists('funds', 'id')->whereIn('id', $validFunds)
+                Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
             ],
             'vouchers' => [
                 'required',
@@ -67,17 +75,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             ],
             'vouchers.*.note'       => 'nullable|string|max:280',
             'vouchers.*.email'      => 'nullable|email:strict,dns',
-            'vouchers.*.bsn'        => 'nullable|string|size:9',
+            'vouchers.*.bsn'        => 'nullable|string|between:8,9',
         ];
-    }
-
-    /**
-     * @param $identity_address
-     * @return array
-     */
-    private function validFundIds($identity_address): array {
-        return Fund::whereHas('organization', static function($builder) use ($identity_address) {
-            OrganizationQuery::whereHasPermissions($builder, $identity_address, 'manage_vouchers');
-        })->pluck('funds.id')->toArray();
     }
 }

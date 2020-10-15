@@ -36,4 +36,19 @@ class ImplementationMail extends Mailable
             $this->emailFrom->getName()
         );
     }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function escapeData(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (!ends_with($key, '_html')) {
+                $data[$key] = e($value);
+            }
+        }
+
+        return $data;
+    }
 }
