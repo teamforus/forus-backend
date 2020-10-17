@@ -332,6 +332,11 @@ class Product extends Model
             return ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
         }
 
+        // filter product organization
+        if ($request->has('organization_id')) {
+            $query = $query->where('organization_id', $request->input('organization_id'));
+        }
+
         // filter by string query
         if ($request->has('q') && !empty($q = $request->input('q'))) {
             return ProductQuery::queryDeepFilter($query, $q);
