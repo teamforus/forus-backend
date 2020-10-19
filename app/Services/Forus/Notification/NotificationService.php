@@ -435,6 +435,10 @@ class NotificationService
         string $type,
         $data
     ): bool {
+        // todo remove in next release
+        if($type == "product"){
+            return false;
+        }
         $mailable = new AssignedVoucherMail($emailFrom, $type, $data);
         return $mailable ? $this->sendMail($email, $mailable) : false;
     }
