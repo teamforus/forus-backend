@@ -11,7 +11,7 @@ class AddIbanFieldsToVoucherTransactionsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
             $table->string('iban_from', 200)->nullable()->after('amount');
@@ -25,7 +25,7 @@ class AddIbanFieldsToVoucherTransactionsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('voucher_transactions', function (Blueprint $table) {
             $table->dropColumn('iban_from');

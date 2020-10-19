@@ -24,11 +24,14 @@ class ProviderResource extends Resource
         $organization = $this->resource;
 
         return collect($organization)->only([
-            'id', 'name', 'business_type_id',
+            'id', 'name', 'description', 'business_type_id',
             $organization->email_public ? 'email': '',
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': ''
         ])->merge([
+            'description_html' => resolve('markdown')->convertToHtml(
+                $organization->description ?? ''
+            ),
             'business_type' => $organization->business_type ? new BusinessTypeResource(
                 $organization->business_type
             ) : null,

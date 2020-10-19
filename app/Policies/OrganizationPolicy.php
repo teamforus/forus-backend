@@ -22,11 +22,10 @@ class OrganizationPolicy
     }
 
     /**
-     * @param $identity_address
      * @return mixed
      */
-    public function viewAny($identity_address) {
-        return !empty($identity_address);
+    public function viewAny() {
+        return true;
     }
 
     /**
@@ -37,7 +36,7 @@ class OrganizationPolicy
     public function show(
         $identity_address,
         Organization $organization
-    ) {
+    ): bool {
         return $organization->identityPermissions($identity_address)->count() > 0;
     }
 
@@ -54,7 +53,7 @@ class OrganizationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function update($identity_address, Organization $organization) {
+    public function update($identity_address, Organization $organization): bool {
         return $organization->identityCan($identity_address, [
             'manage_organization'
         ]);
@@ -65,7 +64,7 @@ class OrganizationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function viewExternalFunds($identity_address, Organization $organization) {
+    public function viewExternalFunds($identity_address, Organization $organization): bool {
         return $organization->identityCan($identity_address, [
             'manage_organization'
         ]);

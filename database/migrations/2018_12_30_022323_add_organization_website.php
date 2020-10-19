@@ -11,7 +11,7 @@ class AddOrganizationWebsite extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('organizations', function(Blueprint $table) {
             $table->string('website', 200)->default('')->after('btw');
@@ -23,7 +23,7 @@ class AddOrganizationWebsite extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('organizations', function(Blueprint $table) {
             $table->dropColumn('website');

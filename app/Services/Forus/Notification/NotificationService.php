@@ -18,6 +18,7 @@ use App\Mail\Vouchers\AssignedVoucherMail;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
+use App\Mail\Vouchers\RequestPhysicalCardMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
@@ -123,7 +124,7 @@ class NotificationService
      * @param $identity_address
      * @param string $title
      * @param string $body
-     * @param string $key
+     * @param ?string $key
      * @return bool
      */
     public function sendPushNotification(
@@ -420,30 +421,42 @@ class NotificationService
     }
 
     /**
-     * todo: has to be migrated
      * Send assigned voucher to email
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
-     * @param string $fund_name
-     * @param int $voucher_amount
-     * @param string $voucher_expire_minus_day
-     * @param string $qr_token
+     * @param string $type
+     * @param $data
      * @return bool
      */
     public function assignVoucher(
         string $email,
         ?EmailFrom $emailFrom,
-        string $fund_name,
-        int $voucher_amount,
-        string $voucher_expire_minus_day,
-        string $qr_token
+        string $type,
+        $data
     ): bool {
-        return $this->sendMail($email, new AssignedVoucherMail(
-            $fund_name,
-            $qr_token,
-            $voucher_amount,
-            $voucher_expire_minus_day,
+        $mailable = new AssignedVoucherMail($emailFrom, $type, $data);
+        return $mailable ? $this->sendMail($email, $mailable) : false;
+    }
+
+    /**
+     * Request a physical card
+     *
+     * @param string $email
+     * @param EmailFrom|null $emailFrom
+     * @param string $post_code
+     * @param string $house_number
+     * @return bool
+     */
+    public function requestPhysicalCard(
+        string $email,
+        ?EmailFrom $emailFrom,
+        string $post_code,
+        string $house_number
+    ): bool {
+        return $this->sendMail($email, new RequestPhysicalCardMail(
+            $post_code,
+            $house_number,
             $emailFrom
         ));
     }
@@ -589,7 +602,7 @@ class NotificationService
      * Send verification link for identity email
      *
      * @param string $email
-     * @param EmailFrom $emailFrom
+     * @param ?EmailFrom $emailFrom
      * @param string $link
      * @return bool|null
      */

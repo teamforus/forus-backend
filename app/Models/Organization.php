@@ -10,6 +10,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,6 +39,7 @@ use Illuminate\Http\Request;
  * @property bool $is_provider
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
+ * @property string $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -107,12 +109,13 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereDescription($value)
  */
 class Organization extends Model
 {
     use HasMedia, HasTags, HasLogs, HasDigests;
 
-    public const GENERIC_KVK = 00000000;
+    public const GENERIC_KVK = "00000000";
 
     /**
      * The attributes that are mass assignable.
@@ -123,7 +126,7 @@ class Organization extends Model
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds'
+        'validator_auto_accept_funds', 'description'
     ];
 
     protected $casts = [
@@ -141,8 +144,9 @@ class Organization extends Model
      * @param Request $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function searchQuery(Request $request)
+    public static function searchQuery(Request $request): \Illuminate\Database\Eloquent\Builder
     {
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
         $query = self::query();
 
         if ($request->input('is_employee', true)) {
@@ -159,6 +163,15 @@ class Organization extends Model
 
         if ($request->has('is_validator')) {
             $query->where($request->only('is_validator'));
+        }
+
+        if ($request->input('implementation', false)) {
+            $query->whereHas('funds', static function(
+                \Illuminate\Database\Eloquent\Builder $builder
+            ) {
+                $funds = Implementation::queryFundsByState('active')->pluck('id')->toArray();
+                $builder->whereIn('funds.id', $funds);
+            });
         }
 
         return $query;
@@ -248,7 +261,7 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function supplied_funds() {
+    public function supplied_funds(): BelongsToMany {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -258,14 +271,14 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_provider_invitations() {
+    public function fund_provider_invitations(): HasMany {
         return $this->hasMany(FundProviderInvitation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function supplied_funds_approved() {
+    public function supplied_funds_approved(): BelongsToMany {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -281,7 +294,7 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function supplied_funds_approved_budget() {
+    public function supplied_funds_approved_budget(): BelongsToMany {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -312,7 +325,7 @@ class Organization extends Model
      * Get organization logo
      * @return MorphOne
      */
-    public function logo() {
+    public function logo(): MorphOne {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'organization_logo'
         ]);
@@ -321,14 +334,14 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function vouchers() {
+    public function vouchers(): HasManyThrough {
         return $this->hasManyThrough(Voucher::class, Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function employees() {
+    public function employees(): HasMany {
         return $this->hasMany(Employee::class);
     }
 
@@ -382,7 +395,7 @@ class Organization extends Model
         /** @var Employee $employee */
         $employee = $this->employees()->where('identity_address', $identityAddress)->first();
 
-        return $employee ? $employee->roles : collect([]);
+        return $employee->roles ?? collect([]);
     }
 
     /**
@@ -404,18 +417,16 @@ class Organization extends Model
 
     /**
      * Check if identity is organization employee
-     * @param $identity_address string
+     * @param string|null $identity_address string
      * @return bool
      */
-    public function isEmployee(
-        string $identity_address = null
-    ): bool {
+    public function isEmployee(?string $identity_address = null): bool {
         return $identity_address &&
             $this->employees()->whereIn('identity_address', (array) $identity_address)->exists();
     }
 
     /**
-     * @param $identityAddress string
+     * @param string|null $identityAddress string
      * @param array|string $permissions
      * @param $all boolean
      * @return bool
@@ -565,5 +576,15 @@ class Organization extends Model
         string $identity_address
     ) {
         return $this->employees()->where(compact('identity_address'))->first();
+    }
+
+    /**
+     * @param $fund_id
+     * @return Fund|null
+     */
+    public function findFund($fund_id): ?Fund {
+        /** @var Fund|null $fund */
+        $fund = $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
+        return $fund;
     }
 }

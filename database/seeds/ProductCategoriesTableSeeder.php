@@ -11,12 +11,12 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         self::seedProducts();
     }
 
-    public static function seedProducts($deleteExisting = false)
+    public static function seedProducts($deleteExisting = false): void
     {
         if ($deleteExisting) {
             Schema::disableForeignKeyConstraints();
@@ -39,7 +39,8 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         }
     }
 
-    private static function seedFile($file, bool $service = false) {
+    private static function seedFile($file, bool $service = false): void
+    {
         $taxonomies = self::loadTaxonomies($file, [
             'en' => 'en-US',
             'nl' => 'nl-NL'
@@ -54,17 +55,17 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         while ($list = self::filterByDepth($taxonomies, $depth)) {
             $parents = $depths['keys'][$depth - 1] ?? [];
 
-            $categories = array_values(array_map(function(
+            $categories = array_values(array_map(static function(
                 $category
             ) use ($date, $depth, $parents, &$translations, $service) {
                 $names = $category['names'][$depth - 1];
 
                 foreach ($names as $locale => $name) {
-                    array_push($translations, [
+                    $translations[] = [
                         'locale' => $locale,
                         'name' => $name,
                         'product_category_id' => $category['id'],
-                    ]);
+                    ];
                 }
 
                 return [
@@ -91,7 +92,8 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         ProductCategoryTranslation::query()->insert($translations);
     }
 
-    public static function migrateProducts($list) {
+    public static function migrateProducts($list): void
+    {
         foreach ($list as $oldId => $newId) {
             Product::withTrashed()->where('product_category_id', $oldId)->update([
                 'product_category_id' => $newId
@@ -105,8 +107,8 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
      * @return array|bool
      */
     public static function filterByDepth(array $rows, int $depth = 1) {
-        return array_filter($rows, function($row) use ($depth) {
-            return $row['depth'] == $depth;
+        return array_filter($rows, static function($row) use ($depth) {
+            return $row['depth'] === $depth;
         }) ?: false;
     }
 
@@ -131,7 +133,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
                     ))))->filter(function($row) {
                     return !empty($row) && !starts_with($row, ['#']);
                 })->map(function($row) use ($localeKey, &$taxonomiesNames) {
-                    list($id, $names) = explode(' - ', $row);
+                    [$id, $names] = explode(' - ', $row);
 
                     $names = explode(' > ' , $names);
                     $keys = array_map("str_slug", $names);
@@ -149,10 +151,10 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         }
 
         return $taxonomiesRaw[$keyLocale]->map(function($taxonomy) use ($taxonomiesNames) {
-            return array_set($taxonomy, 'names', array_map(function(
+            return array_set($taxonomy, 'names', array_map(static function(
                 $nameKey
             ) use ($taxonomiesNames, $taxonomy) {
-                return array_map(function($names) use ($nameKey)  {
+                return array_map(static function($names) use ($nameKey)  {
                     return $names[$nameKey];
                 }, $taxonomiesNames[$taxonomy['id']]);
             }, array_keys($taxonomy['names'])));

@@ -12,7 +12,7 @@ class IndexFundsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,7 +22,7 @@ class IndexFundsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'per_page'        => [
@@ -50,7 +50,7 @@ class IndexFundsRequest extends FormRequest
             'state' => [
                 'nullable',
                 Rule::in([
-                    'active_and_closed'
+                    'active_and_closed', 'active',
                 ])
             ]
         ];

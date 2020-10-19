@@ -109,6 +109,10 @@ class FundPolicy
             return $this->deny(trans('fund.state_' . $fund->state));
         }
 
+        if ($fund->fund_config->hash_partner_deny && $fund->isTakenByPartner($identity_address)) {
+            return $this->deny(trans('fund.taken_by_partner'));
+        }
+
         if ($fund->fund_formulas()->count() === 0) {
             return $this->deny(trans('fund.no_formula'));
         }

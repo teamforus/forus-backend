@@ -2,17 +2,17 @@
 
 namespace App\Http\Requests\Api\Identity;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
 
-class ApproveRecordValidationRequest extends FormRequest
+class ApproveRecordValidationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,10 +22,10 @@ class ApproveRecordValidationRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $organizationsAvailable = Organization::queryByIdentityPermissions(
-            auth()->id(), 'validate_records'
+            $this->auth_address(), 'validate_records'
         )->pluck('id');
 
         return [

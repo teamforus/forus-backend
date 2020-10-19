@@ -11,7 +11,7 @@ class CreateRolePermissionsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('role_permissions', function (Blueprint $table) {
             $table->increments('id');
@@ -33,7 +33,7 @@ class CreateRolePermissionsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('role_permissions');
     }

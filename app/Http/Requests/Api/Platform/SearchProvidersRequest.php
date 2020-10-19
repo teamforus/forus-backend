@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\Api\Platform;
 
-use App\Models\Implementation;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 use Illuminate\Validation\Rule;
 
-class SearchProvidersRequest extends FormRequest
+class SearchProvidersRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -23,13 +22,15 @@ class SearchProvidersRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
+        $implementation = $this->implementation_model();
+
         return [
             'per_page'  => 'numeric|max:1000',
             'fund_id'   => [
-                Implementation::activeKey() == 'general' ? null : (
-                    Rule::in(Implementation::activeModel()->funds()->pluck('funds.id'))
+                $this->implementation_key() === 'general' || !$implementation ? null : (
+                    Rule::in($implementation->funds()->pluck('funds.id'))
                 )
             ],
             'business_type_id'   => [

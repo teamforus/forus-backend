@@ -11,7 +11,7 @@ class CreateBunqMeTabsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('bunq_me_tabs', function (Blueprint $table) {
             $table->increments('id');
@@ -37,7 +37,7 @@ class CreateBunqMeTabsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('bunq_me_tabs');
     }

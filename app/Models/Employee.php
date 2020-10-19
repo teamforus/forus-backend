@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Services\EventLogService\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -39,9 +41,9 @@ class Employee extends Model
 {
     use SoftDeletes, HasLogs;
 
-    const EVENT_CREATED = 'created';
-    const EVENT_UPDATED = 'updated';
-    const EVENT_DELETED = 'deleted';
+    public const EVENT_CREATED = 'created';
+    public const EVENT_UPDATED = 'updated';
+    public const EVENT_DELETED = 'deleted';
 
     protected $fillable = [
         'identity_address', 'organization_id'
@@ -50,14 +52,14 @@ class Employee extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization() {
+    public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function roles() {
+    public function roles(): BelongsToMany {
         return $this->belongsToMany(
             Role::class,
             (new EmployeeRole)->getTable()
@@ -68,7 +70,7 @@ class Employee extends Model
      * @param string $role
      * @return bool
      */
-    public function hasRole(string $role) {
+    public function hasRole(string $role): bool {
         return $this->roles()->where('key', '=', $role)->count() > 0;
     }
 

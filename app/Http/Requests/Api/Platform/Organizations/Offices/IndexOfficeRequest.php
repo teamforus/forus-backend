@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
-use App\Rules\Base\ScheduleRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IndexOfficeRequest extends FormRequest
@@ -12,7 +11,7 @@ class IndexOfficeRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,7 +21,7 @@ class IndexOfficeRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'per_page' => [

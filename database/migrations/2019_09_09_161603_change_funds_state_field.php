@@ -12,12 +12,12 @@ class ChangeFundsStateField extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         $fundStates = Fund::pluck('state', 'id');
 
         foreach ($fundStates as $id => $state) {
-            if (!in_array($state, Fund::STATES)) {
+            if (!in_array($state, Fund::STATES, true)) {
                 exit(str_terminal_color(
                     sprintf("Can't migrate fund: %s state: %s\n", $id, $state),
                     'red'
@@ -45,7 +45,7 @@ class ChangeFundsStateField extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         $fundStates = Fund::query()->pluck('state', 'id');
 

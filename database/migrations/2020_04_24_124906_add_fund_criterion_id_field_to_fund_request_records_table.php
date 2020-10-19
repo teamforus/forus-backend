@@ -11,7 +11,7 @@ class AddFundCriterionIdFieldToFundRequestRecordsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_request_records', function (Blueprint $table) {
             $table->integer('fund_criterion_id')->unsigned()->nullable()->after('fund_request_id');
@@ -23,7 +23,7 @@ class AddFundCriterionIdFieldToFundRequestRecordsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_request_records', function (Blueprint $table) {
             $table->dropColumn('fund_criterion_id');

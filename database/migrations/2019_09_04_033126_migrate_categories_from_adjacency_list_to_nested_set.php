@@ -12,7 +12,7 @@ class MigrateCategoriesFromAdjacencyListToNestedSet extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('product_categories', function(Blueprint $table) {
             $table->unsignedInteger('_rgt')->after('parent_id');
@@ -29,7 +29,7 @@ class MigrateCategoriesFromAdjacencyListToNestedSet extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('product_categories', function(Blueprint $table) {
             $table->dropColumn('_lft');

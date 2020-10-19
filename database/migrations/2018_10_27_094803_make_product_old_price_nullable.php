@@ -11,7 +11,7 @@ class MakeProductOldPriceNullable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
             $table->decimal('old_price',10, 2)->nullable()->change();
@@ -23,7 +23,7 @@ class MakeProductOldPriceNullable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
             $table->decimal('old_price',10, 2)->change();

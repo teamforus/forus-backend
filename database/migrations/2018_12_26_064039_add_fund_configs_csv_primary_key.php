@@ -11,7 +11,7 @@ class AddFundConfigsCsvPrimaryKey extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('record_types', function (Blueprint $table) {
             $table->string('key')->unique()->change();
@@ -33,7 +33,7 @@ class AddFundConfigsCsvPrimaryKey extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_configs', function(Blueprint $table) {
             $table->dropForeign('fund_configs_csv_primary_key_foreign');

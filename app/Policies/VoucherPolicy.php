@@ -10,6 +10,10 @@ use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
+/**
+ * Class VoucherPolicy
+ * @package App\Policies
+ */
 class VoucherPolicy
 {
     use HandlesAuthorization;
@@ -30,19 +34,19 @@ class VoucherPolicy
      */
     public function viewAny(
         string $identity_address
-    ) {
+    ): bool {
         return !empty($identity_address);
     }
 
     /**
      * @param string $identity_address
      * @param Organization $organization
-     * @return mixed
+     * @return bool
      */
     public function viewAnySponsor(
         string $identity_address,
         Organization $organization
-    ) {
+    ): bool{
         return $organization->identityCan($identity_address, [
             'manage_vouchers'
         ]);
@@ -52,14 +56,14 @@ class VoucherPolicy
      * @param string $identity_address
      * @param Organization $organization
      * @param Fund $fund
-     * @return bool|void
+     * @return bool
      * @throws AuthorizationJsonException
      */
     public function storeSponsor(
         string $identity_address,
         Organization $organization,
         Fund $fund
-    ) {
+    ): bool {
         if (($fund->organization_id !== $organization->id) ||
             !$this->viewAnySponsor($identity_address, $organization)) {
             $this->deny('no_permission_to_make_vouchers');
@@ -82,11 +86,11 @@ class VoucherPolicy
         string $identity_address,
         Voucher $voucher,
         Organization $organization
-    ) {
+    ): bool {
         return is_null($voucher->parent_id) && $organization->identityCan(
             $identity_address, [
             'manage_vouchers'
-        ]) && ($voucher->fund->organization_id == $organization->id);
+        ]) && ($voucher->fund->organization_id === $organization->id);
     }
 
     /**
@@ -99,12 +103,10 @@ class VoucherPolicy
         string $identity_address,
         Voucher $voucher,
         Organization $organization
-    ) {
+    ): bool {
         return $organization->identityCan($identity_address, [
             'manage_vouchers'
-        ]) && (
-            $voucher->fund->organization_id == $organization->id
-        ) && !$voucher->is_granted;
+        ]) && ($voucher->fund->organization_id === $organization->id) && !$voucher->is_granted;
     }
 
     /**
@@ -117,7 +119,7 @@ class VoucherPolicy
         string $identity_address,
         Voucher $voucher,
         Organization $organization
-    ) {
+    ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization);
     }
 
@@ -127,7 +129,7 @@ class VoucherPolicy
      */
     public function store(
         string $identity_address
-    ) {
+    ): bool {
         return !empty($identity_address);
     }
 
@@ -139,8 +141,8 @@ class VoucherPolicy
     public function show(
         string $identity_address,
         Voucher $voucher
-    ) {
-        return strcmp($identity_address, $voucher->identity_address) == 0;
+    ) : bool {
+        return strcmp($identity_address, $voucher->identity_address) === 0;
     }
 
     /**
@@ -151,7 +153,7 @@ class VoucherPolicy
     public function sendEmail(
         string $identity_address,
         Voucher $voucher
-    ) {
+    ): bool {
         return $this->show($identity_address, $voucher) && !$voucher->expired;
     }
 
@@ -163,8 +165,46 @@ class VoucherPolicy
     public function shareVoucher(
         string $identity_address,
         Voucher $voucher
-    ) {
+    ): bool {
         return $this->sendEmail($identity_address, $voucher);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool|null
+     * @throws AuthorizationJsonException
+     */
+    public function storePhysicalCard(
+        string $identity_address,
+        Voucher $voucher
+    ): ?bool {
+        if (!$voucher->fund->fund_config->allow_physical_cards) {
+            $this->deny("physical_cards_not_allowed");
+        }
+
+        if ($voucher->physical_cards()->exists()) {
+            $this->deny("physical_card_already_attached");
+        }
+
+        if (!$voucher->isBudgetType()) {
+            $this->deny("only_budget_vouchers");
+        }
+
+        return $this->show($identity_address, $voucher);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool|null
+     * @throws AuthorizationJsonException
+     */
+    public function requestPhysicalCard(
+        string $identity_address,
+        Voucher $voucher
+    ): ?bool {
+        return $this->storePhysicalCard($identity_address, $voucher);
     }
 
     /**
@@ -176,7 +216,7 @@ class VoucherPolicy
     public function useAsProvider(
         string $identity_address,
         Voucher $voucher
-    ) {
+    ): bool {
         $fund = $voucher->fund;
 
         // fund should not be expired
@@ -185,29 +225,54 @@ class VoucherPolicy
         }
 
         // fund needs to be active
-        if ($voucher->fund->state != Fund::STATE_ACTIVE) {
+        if ($voucher->fund->state !== $voucher->fund::STATE_ACTIVE) {
             $this->deny('fund_not_active');
         }
 
-        if ($voucher->type == 'regular') {
-            $providersApproved = $fund->providers()->where([
-                'allow_budget' => true,
-            ])->pluck('organization_id');
+        if ($voucher->fund->isTypeBudget()) {
+            if ($voucher->isBudgetType()) {
+                $providersApproved = $fund->providers()->where([
+                    'allow_budget' => true,
+                ])->pluck('organization_id');
 
-            $providersDeclined = $fund->providers()->where([
-                'allow_budget' => false,
-                'dismissed' => true,
-            ])->pluck('organization_id');
+                $providersDeclined = $fund->providers()->where([
+                    'allow_budget' => false,
+                    'dismissed' => true,
+                ])->pluck('organization_id');
 
-            $providersPending = $fund->providers()->where([
-                'allow_budget' => false,
-                'dismissed' => false,
-            ])->pluck('organization_id');
-        } else {
+                $providersPending = $fund->providers()->where([
+                    'allow_budget' => false,
+                    'dismissed' => false,
+                ])->pluck('organization_id');
+            } else {
+                if ($voucher->product->expired) {
+                    $this->deny('product_expired');
+                }
+
+                if ($voucher->product->sold_out) {
+                    $this->deny('product_sold_out');
+                }
+
+                $providersApproved = FundProviderQuery::whereApprovedForFundsFilter(
+                    FundProvider::query(),
+                    $voucher->fund_id,
+                    'product',
+                    $voucher->product_id
+                )->pluck('organization_id');
+
+                $providersDeclined = $fund->providers()->where([
+                    'dismissed' => true,
+                ])->pluck('organization_id')->diff($providersApproved)->values();
+
+                $providersPending = $fund->providers()->where([
+                    'dismissed' => false,
+                ])->pluck('organization_id')->diff($providersApproved)->values();
+            }
+        } elseif ($voucher->fund->isTypeSubsidy()) {
             $providersApproved = FundProviderQuery::whereApprovedForFundsFilter(
                 FundProvider::query(),
                 $voucher->fund_id,
-                'product',
+                'subsidy',
                 $voucher->product_id
             )->pluck('organization_id');
 
@@ -218,45 +283,50 @@ class VoucherPolicy
             $providersPending = $fund->providers()->where([
                 'dismissed' => false,
             ])->pluck('organization_id')->diff($providersApproved)->values();
+        } else {
+            $this->deny('unknown_fund_type');
+            return false;
         }
 
         $providersApplied = $fund->providers()->pluck('organization_id');
 
-        $providers = Organization::queryByIdentityPermissions(
-            $identity_address, 'scan_vouchers'
-        )->pluck('id');
+        $providers = Organization::queryByIdentityPermissions($identity_address, [
+            'scan_vouchers'
+        ])->pluck('id');
 
         // None of identity organizations applied to the fund
-        if ($providers->intersect($providersApplied)->count() == 0) {
+        if ($providers->intersect($providersApplied)->count() === 0) {
             $this->deny('provider_not_applied');
         }
 
         // No approved identity organizations but have pending
-        if ($providers->intersect($providersApproved)->count() == 0 &&
+        if ($providers->intersect($providersApproved)->count() === 0 &&
             $providers->intersect($providersPending)->count() > 0 ) {
             $this->deny('provider_pending');
         }
 
         // No approved identity organizations but have declines
-        if ($providers->intersect($providersApproved)->count() == 0 &&
+        if ($providers->intersect($providersApproved)->count() === 0 &&
             $providers->intersect($providersDeclined)->count() > 0 ) {
             $this->deny('provider_declined');
         }
 
         // No approved identity organizations but have pending
-        if ($voucher->type == Voucher::TYPE_BUDGET) {
+        if ($voucher->isBudgetType()) {
             return $providers->intersect($providersApproved)->count() > 0;
-        } else if ($voucher->type == Voucher::TYPE_PRODUCT) {
+        }
+
+        if ($voucher->isProductType()) {
             // Product vouchers should have not transactions
-            if ($voucher->transactions()->count() > 0) {
+            if ($voucher->transactions()->exists()) {
                 $this->deny('product_voucher_used');
             }
 
             // The identity should be allowed to scan voucher for
             // the provider organization
-            return $voucher->product->organization->identityCan(
-                $identity_address, 'scan_vouchers'
-            );
+            return $voucher->product->organization->identityCan($identity_address, [
+                'scan_vouchers'
+            ]);
         }
 
         return false;
@@ -267,13 +337,10 @@ class VoucherPolicy
      * @param Voucher $voucher
      * @return bool
      */
-    public function destroy(
-        string $identity_address,
-        Voucher $voucher
-    ) {
+    public function destroy(string $identity_address, Voucher $voucher): bool {
         return $this->show($identity_address, $voucher) &&
-            $voucher->parent_id != null &&
-            $voucher->transactions->count() == 0 &&
+            $voucher->parent_id !== null &&
+            $voucher->transactions->count() === 0 &&
             $voucher->returnable;
     }
 
@@ -281,12 +348,12 @@ class VoucherPolicy
      * @param string $error
      * @throws AuthorizationJsonException
      */
-    protected function deny(string $error)
-    {
+    protected function deny(string $error): void {
+        $key = $error;
         $message = trans("validation.voucher.{$error}");
 
         throw new AuthorizationJsonException(json_encode(
-            compact('error', 'message')
+            compact('error', 'message', 'key')
         ), 403);
     }
 }

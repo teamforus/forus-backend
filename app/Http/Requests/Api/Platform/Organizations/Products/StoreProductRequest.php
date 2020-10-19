@@ -11,7 +11,7 @@ class StoreProductRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,7 +21,7 @@ class StoreProductRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $price = rule_number_format($this->input('price', 0));
         $unlimited_stock = $this->input('unlimited_stock', false);
@@ -29,7 +29,8 @@ class StoreProductRequest extends FormRequest
         return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,1000',
-            'price'                 => 'required|numeric|min:.2',
+            'price'                 => 'required_without:no_price|numeric|min:.2',
+            'no_price'              => 'boolean',
             'unlimited_stock'       => 'boolean',
             'old_price'             => 'nullable|numeric|min:' . $price,
             'total_amount'          => [
@@ -45,7 +46,7 @@ class StoreProductRequest extends FormRequest
     /**
      * @return array
      */
-    public function messages()
+    public function messages(): array
     {
         return [
             'expire_at.after' => trans('validation.after', [

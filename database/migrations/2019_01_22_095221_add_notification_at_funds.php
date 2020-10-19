@@ -11,7 +11,7 @@ class AddNotificationAtFunds extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('funds', function (Blueprint $table) {
             $table->timestamp('notified_at')->nullable()->after('notification_amount');
@@ -27,7 +27,7 @@ class AddNotificationAtFunds extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('funds', function (Blueprint $table) {
             $table->dropColumn('notified_at');

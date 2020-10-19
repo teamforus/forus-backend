@@ -46,7 +46,7 @@ interface IIdentityRepo {
 
     /**
      * Get proxy identity by access token
-     * @param string $access_token
+     * @param string|null $access_token
      * @return mixed|void
      */
     public function proxyIdByAccessToken(string $access_token = null);

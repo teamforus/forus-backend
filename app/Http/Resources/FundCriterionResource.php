@@ -16,7 +16,7 @@ class FundCriterionResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
     public function toArray($request): array
@@ -35,7 +35,6 @@ class FundCriterionResource extends Resource
                 $criterion->fund,
                 $criterion
             );
-
             $is_valid = collect($record ? [$record] : [])->where(
                 'value', $criterion->operator, $criterion->value
                 )->count() > 0;
@@ -43,14 +42,14 @@ class FundCriterionResource extends Resource
             $is_valid = $checkCriteria ? false : null;
         }
 
-        return collect($this->resource)->only([
+        return array_merge($this->resource->only([
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
             'description', 'title'
-        ])->merge([
+        ]), [
             'description_html' => resolve('markdown')->convertToHtml(
                 $this->resource->description
             ),
-            'external_validators' => $external_validators->map(function(
+            'external_validators' => $external_validators->map(static function(
                 FundCriterionValidator $validator
             ) {
                 return [
@@ -62,6 +61,6 @@ class FundCriterionResource extends Resource
             'record_type_name' => $recordTypes[$this->resource->record_type_key],
             'show_attachment' => $this->resource->show_attachment ? true : false,
             'is_valid' => $is_valid
-        ])->toArray();
+        ]);
     }
 }

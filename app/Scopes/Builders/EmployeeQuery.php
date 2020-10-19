@@ -3,7 +3,6 @@
 
 namespace App\Scopes\Builders;
 
-use App\Models\Fund;
 use Illuminate\Database\Eloquent\Builder;
 
 class EmployeeQuery
@@ -16,7 +15,7 @@ class EmployeeQuery
     public static function whereHasPermissionFilter(
         Builder $query,
         $permissions
-    ) {
+    ): Builder {
         return $query->whereHas('roles.permissions', function(
             Builder $builder
         ) use ($permissions) {

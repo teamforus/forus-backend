@@ -20,12 +20,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Services\Forus\Identity\Models\Identity $identity
- * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail newQuery()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail query()
- * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereEmail($value)
@@ -39,8 +37,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail withTrashed()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityEmail withoutTrashed()
  * @mixin \Eloquent
- * @property bool $initial
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityEmail whereInitial($value)
  */
 class IdentityEmail extends Model
 {

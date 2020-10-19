@@ -11,7 +11,7 @@ class CreateFundFormulasTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('fund_formulas', function (Blueprint $table) {
             $table->increments('id');
@@ -35,7 +35,7 @@ class CreateFundFormulasTable extends Migration
         DB::table('fund_configs')->get()->each(function($fund_config) {
             if (DB::table('record_types')->where([
                     'key' => $fund_config->formula_multiplier
-                ])->count() == 0) {
+                ])->count() === 0) {
                 return;
             }
 
@@ -59,7 +59,7 @@ class CreateFundFormulasTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_configs', function(Blueprint $table) {
             $table->decimal('formula_amount', 10, 2)->default(0)->after('bunq_sandbox');
