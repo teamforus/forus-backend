@@ -753,8 +753,13 @@ $router->group(['middleware' => [
     );
 
     $router->get(
-        'organizations/{organization}/sponsor/vouchers/export-unassigned',
+        'organizations/{organization}/sponsor/vouchers/export',
         "Api\Platform\Organizations\Sponsor\VouchersController@export"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/vouchers/export-data',
+        "Api\Platform\Organizations\Sponsor\VouchersController@exportData"
     );
 
     $router->patch(
