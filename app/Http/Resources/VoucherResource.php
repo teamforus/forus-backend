@@ -91,7 +91,7 @@ class VoucherResource extends Resource
             $amount = $voucher->amount;
             $offices = $voucher->product->organization->offices;
             $productResource = array_merge($voucher->product->only([
-                'id', 'name', 'description', 'price', 'old_price',
+                'id', 'name', 'description', 'description_html', 'price', 'old_price',
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
             ]), [

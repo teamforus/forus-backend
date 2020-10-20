@@ -618,6 +618,47 @@ class Voucher extends Model
     }
 
     /**
+     * @param Collection|Voucher[] $vouchers
+     * @param $exportType
+     * @return array
+     */
+    public static function zipVouchersData(Collection $vouchers, $exportType): array {
+        $vouchersData = [];
+        $vouchersDataNames = [];
+        $vouchers->load([
+            'voucher_relation', 'product', 'fund'
+        ]);
+
+        $fp = fopen('php://temp/maxmemory:1048576', 'wb');
+
+        if ($vouchers->count() > 0) {
+            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0]))->toArray()));
+        }
+
+        foreach ($vouchers as $voucher) {
+            do {
+                $voucherData = new VoucherExportData($voucher);
+            } while(in_array($voucherData->getName(), $vouchersDataNames, true));
+
+            fputcsv($fp, $voucherData->toArray());
+            $vouchersDataNames[] = $voucherData->getName();
+
+            if ($exportType === 'png') {
+                $vouchersData[] = [
+                    'name' => $voucherData->getName(),
+                    'value' => $voucher->token_without_confirmation->address
+                ];
+            }
+        }
+
+        rewind($fp);
+        $rawCsv = stream_get_contents($fp);
+        fclose($fp);
+
+        return compact('rawCsv', 'vouchersData');
+    }
+
+    /**
      * @return bool
      */
     public function isBudgetType(): bool {
