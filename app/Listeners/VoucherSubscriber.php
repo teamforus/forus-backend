@@ -83,7 +83,7 @@ class VoucherSubscriber
             if ($voucherCreated->isNotifyRequester()) {
                 IdentityProductVoucherReservedNotification::send($event);
             }
-        } else if ($voucher->identity_address) {
+        } else if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
             $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
                 $voucher->identity_address
             ));
