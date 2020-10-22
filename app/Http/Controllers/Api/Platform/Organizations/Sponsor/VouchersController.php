@@ -258,7 +258,7 @@ class VouchersController extends Controller
         $vouchers = Voucher::searchSponsor($request, $organization, $fund);
 
         if ($vouchers->count() === 0) {
-            abort(404, "No unassigned vouchers to be exported.");
+            abort(404, "No vouchers to be exported.");
         }
 
         if (!$zipFile = Voucher::zipVouchers($vouchers, $export_type)) {
@@ -266,5 +266,29 @@ class VouchersController extends Controller
         }
 
         return response()->download($zipFile)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * @param IndexVouchersRequest $request
+     * @param Organization $organization
+     * @return array
+     * @throws AuthorizationException
+     */
+    public function exportData(
+        IndexVouchersRequest $request,
+        Organization $organization
+    ): array {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+
+        $fund = $organization->findFund($request->get('fund_id'));
+        $export_type = $request->get('export_type', 'png');
+        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
+
+        if ($vouchers->count() === 0) {
+            abort(404, "No vouchers to be exported.");
+        }
+
+        return Voucher::zipVouchersData($vouchers, $export_type);
     }
 }

@@ -25,9 +25,9 @@ class SponsorVoucherResource extends Resource
     {
         $recordRepo = resolve('forus.services.record');
         $voucher = $this->resource;
+        $address = $voucher->token_without_confirmation->address ?? null;
 
         if ($voucher->is_granted && $voucher->identity_address) {
-            $address = $voucher->token_without_confirmation->address ?? null;
             $identity_bsn = $recordRepo->bsnByAddress($voucher->identity_address);
             $identity_email = $recordRepo->primaryEmailByAddress($voucher->identity_address);
         }
