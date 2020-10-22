@@ -13,6 +13,7 @@ class KvkApi
     protected $api_url = "https://api.kvk.nl/";
     protected $api_debug;
     protected $api_key;
+    protected $disable_ssl_check;
 
     /** @var string $cache_prefix Cache key */
     protected $cache_prefix = 'kvk_service:kvk-number:';
@@ -24,13 +25,16 @@ class KvkApi
      * KvkApi constructor.
      * @param bool $api_debug
      * @param string|null $api_key
+     * @param bool $disable_ssl_check
      */
     public function __construct(
         bool $api_debug,
-        string $api_key = null
+        string $api_key = null,
+        bool $disable_ssl_check = false
     ) {
         $this->api_debug = $api_debug;
         $this->api_key = $api_key;
+        $this->disable_ssl_check = $disable_ssl_check;
     }
 
     /**
@@ -40,7 +44,6 @@ class KvkApi
     public function getApiUrl(
         string $kvk_number
     ): string {
-        // https://api.kvk.nl/api/v2/testprofile/companies?q=rminds&user_key=l7xx2507da46416f4404a9398f7d364e7dda
         return sprintf(
             "%sapi/v2/%s/companies?q=%s&user_key=%s",
             $this->api_url,
@@ -58,11 +61,7 @@ class KvkApi
         string $kvk_number
     ) {
         try {
-            $response = json_decode($this->makeApiCall(
-                $this->cache_prefix . $kvk_number,
-                $this->cache_time,
-                $kvk_number
-            ), true);
+            $response = json_decode($this->makeApiCall($kvk_number), false);
 
             if (is_object($response) && (count($response->data->items) > 0)) {
                 return $response;
@@ -77,21 +76,27 @@ class KvkApi
     }
 
     /**
-     * @param string $cacheKey
-     * @param int $cacheTime
      * @param string $kvk_number
      * @return mixed
      * @throws \Exception
      */
     private function makeApiCall(
-        string $cacheKey,
-        int $cacheTime,
         string $kvk_number
     ) {
-        return cache()->remember($cacheKey, $cacheTime * 60, function() use (
-            $kvk_number
-        ) {
-            return file_get_contents($this->getApiUrl($kvk_number));
+        $cacheKey = $this->cache_prefix . $kvk_number;
+        $cacheDuration = $this->cache_time * 60;
+
+        return cache()->remember($cacheKey, $cacheDuration, function() use ($kvk_number) {
+            $arrContextOptions = [
+                "ssl" => [
+                    "verify_peer" => !$this->disable_ssl_check,
+                    "verify_peer_name" => !$this->disable_ssl_check,
+                ],
+            ];
+
+            return file_get_contents($this->getApiUrl(
+                $kvk_number
+            ), false, stream_context_create($arrContextOptions));
         });
     }
 

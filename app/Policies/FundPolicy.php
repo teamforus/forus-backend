@@ -113,10 +113,6 @@ class FundPolicy
             return $this->deny(trans('fund.taken_by_partner'));
         }
 
-        if ($fund->fund_formulas()->count() === 0) {
-            return $this->deny(trans('fund.no_formula'));
-        }
-
         // The same identity can't apply twice to the same fund
         if ($fund->vouchers()->where(
             'identity_address', $identity_address

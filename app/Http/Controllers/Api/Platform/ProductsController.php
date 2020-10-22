@@ -28,7 +28,9 @@ class ProductsController extends Controller
 
         return ProductResource::collection(Product::search($request)->with(
             ProductResource::$load
-        )->paginate($request->input('per_page', 15)));
+        )->where([
+            'show_on_webshop' => true,
+        ])->paginate($request->input('per_page', 15)));
     }
 
     /**
