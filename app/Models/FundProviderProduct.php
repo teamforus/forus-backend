@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $limit_total
  * @property int|null $limit_per_identity
  * @property float|null $amount
+ * @property float|null $price
+ * @property float|null $old_price
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -34,6 +36,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitPerIdentity($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitTotal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereOldPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereUpdatedAt($value)
  * @method static \Illuminate\Database\Query\Builder|\App\Models\FundProviderProduct withTrashed()
@@ -48,7 +52,8 @@ class FundProviderProduct extends Model
      * @var string[]
      */
     protected $fillable = [
-        'product_id', 'fund_provider_id', 'limit_total', 'amount', 'limit_per_identity'
+        'product_id', 'fund_provider_id', 'limit_total', 'amount', 'limit_per_identity',
+        'price', 'old_price',
     ];
 
     /**
