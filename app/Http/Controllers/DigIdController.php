@@ -151,7 +151,7 @@ class DigIdController extends Controller
         $identity_bsn = $recordRepo->bsnByAddress($identity);
         $bsn_identity = $recordRepo->identityAddressByBsn($bsn);
 
-        if ($identity_bsn && $identity_bsn !== $bsn_identity) {
+        if ($identity_bsn && $bsn !== $identity_bsn) {
             return redirect(url_extend_get_params($session->session_final_url, [
                 'digid_error' => "uid_dont_match",
             ]));
@@ -163,18 +163,17 @@ class DigIdController extends Controller
             ]));
         }
 
-        if (!$identity_bsn && !$bsn_identity) {
-            $recordRepo->setBsnRecord($identity, $bsn);
-            Prevalidation::assignAvailableToIdentityByBsn($identity);
-            Voucher::assignAvailableToIdentityByBsn($identity);
+        $isFirstSignUp = !$identity_bsn && !$bsn_identity;
 
-            return redirect(url_extend_get_params($session->session_final_url, [
-                'digid_success' => 'signed_up'
-            ]));
+        if ($isFirstSignUp) {
+            $recordRepo->setBsnRecord($identity, $bsn);
         }
 
+        Prevalidation::assignAvailableToIdentityByBsn($identity);
+        Voucher::assignAvailableToIdentityByBsn($identity);
+
         return redirect(url_extend_get_params($session->session_final_url, [
-            'digid_success' => 'signed_in'
+            'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in'
         ]));
     }
 
