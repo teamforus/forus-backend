@@ -394,8 +394,8 @@ class Implementation extends Model
                     'lat' => (float) ($implementation['lat'] ?? config('forus.front_ends.map.lat')),
                 ],
                 'implementation_name' => $implementation->get('name') ?: 'general',
-                'products_hard_limit' => config('forus.features.dashboard.organizations.products.maxProductCount'),
-                'products_soft_limit' => config('forus.features.dashboard.organizations.products.maxProductSoftLimit'),
+                'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
+                'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
             ]);
         }
 

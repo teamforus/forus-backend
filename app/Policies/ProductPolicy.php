@@ -52,13 +52,11 @@ class ProductPolicy
     public function store(
         $identity_address,
         Organization $organization
-    ) {
-        return $organization->identityCan(
-            $identity_address,
-            'manage_products'
-        ) && $organization->products->count() < config(
-            'forus.features.dashboard.organizations.products.maxProductCount'
-        );
+    ): bool {
+        $hard_limit = config('forus.features.dashboard.organizations.products.hard_limit');
+
+        return $organization->identityCan($identity_address, 'manage_products') &&
+            $organization->products->count() < $hard_limit;
     }
 
     /**

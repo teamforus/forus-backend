@@ -36,8 +36,8 @@ return [
         "products" => [
             // list all funds
             "list" => true,
-            "maxProductCount" => env('PRODUCT_MAX_COUNT', 25),
-            "maxProductSoftLimit" => env('PRODUCT_MAX_COUNT_SOFT_LIMIT', 15)
+            "hard_limit" => env('PRODUCT_MAX_COUNT', 25),
+            "soft_limit" => env('PRODUCT_MAX_COUNT_SOFT_LIMIT', 15)
         ],
     ],
 ];
