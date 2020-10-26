@@ -310,7 +310,6 @@ class Voucher extends Model
             'qr_token' => $this->token_without_confirmation->address,
             'product_name' => $this->product->name ?? null,
             'provider_name' => $this->product->organization->name ?? null,
-            'product_description' => $this->product->description ?? null,
             'sponsor_name' => $this->fund->organization->name ?? null,
             'sponsor_email' => $this->fund->organization->email ?? null,
             'sponsor_phone' => $this->fund->organization->phone ?? null,

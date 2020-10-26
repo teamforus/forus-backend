@@ -28,7 +28,9 @@ class ProductsController extends Controller
 
         return ProductResource::collection(Product::search($request)->with(
             ProductResource::$load
-        )->paginate($request->input('per_page', 15)));
+        )->where([
+            'show_on_webshop' => true,
+        ])->paginate($request->input('per_page', 15)));
     }
 
     /**
@@ -41,7 +43,9 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
 
-        $products = Product::search($request)->has('medias')->take(6);
+        $products = Product::search($request)->has('medias')->where([
+            'show_on_webshop' => true,
+        ])->take(6);
         $products->groupBy('organization_id')->distinct()->inRandomOrder();
         $resultProducts = $products->with(ProductResource::$load)->get();
 
@@ -49,9 +53,9 @@ class ProductsController extends Controller
             $resultProducts = $resultProducts->merge(
                 Product::search($request)->whereKeyNot(
                     $resultProducts->pluck('id')
-                )->inRandomOrder()->take(6 - $resultProducts->count())->with(
-                    ProductResource::$load
-                )->get()
+                )->inRandomOrder()->take(6 - $resultProducts->count())->where([
+                    'show_on_webshop' => true,
+                ])->with(ProductResource::$load)->get()
             );
         }
 

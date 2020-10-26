@@ -6,6 +6,7 @@ use App\Events\Funds\FundBalanceLowEvent;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
+use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -1026,6 +1027,7 @@ class Fund extends Model
      * @param Carbon|null $expire_at
      * @param string|null $note
      * @return Voucher|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
      */
     public function makeVoucher(
         string $identity_address = null,
@@ -1038,21 +1040,32 @@ class Fund extends Model
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
         $limit_multiplier = $this->multiplierForIdentity($identity_address);
+        $voucher = null;
 
-        $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
-            'returnable', 'limit_multiplier'
-        ));
+        if ($this->fund_formulas->count() > 0) {
+            $voucher = Voucher::create(compact(
+                'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
+                'returnable', 'limit_multiplier'
+            ));
 
-        VoucherCreated::dispatch($voucher);
+            VoucherCreated::dispatch($voucher);
+        }
 
-        if ($voucherAmount === null) {
+        if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucher->buyProductVoucher(
-                    $fund_formula_product->product,
-                    $fund_formula_product->amount,
-                    false
+                $voucherExpireAt = $this->end_date->gt(
+                    $fund_formula_product->product->expire_at
+                ) ? $fund_formula_product->product->expire_at->expire_at : $this->end_date;
+
+                $voucher = $this->makeProductVoucher(
+                    $identity_address,
+                    $fund_formula_product->product->id,
+                    $voucherExpireAt,
+                    '',
+                    $fund_formula_product->price
                 );
+
+                VoucherAssigned::broadcast($voucher);
             }
         }
 
@@ -1064,15 +1077,17 @@ class Fund extends Model
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param string|null $note
+     * @param float|null $price
      * @return Voucher
      */
     public function makeProductVoucher(
         string $identity_address = null,
         int $product_id = null,
         Carbon $expire_at = null,
-        string $note = null
+        string $note = null,
+        float $price = null
     ): Voucher {
-        $amount = Product::findOrFail($product_id)->price;
+        $amount = $price ?: Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
         $returnable = false;

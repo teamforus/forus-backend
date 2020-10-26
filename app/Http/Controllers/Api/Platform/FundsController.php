@@ -11,6 +11,7 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
+use App\Models\Voucher;
 use App\Services\BunqService\BunqService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Validator;
@@ -77,13 +78,19 @@ class FundsController extends Controller
      * @param Fund $fund
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function apply(
         Fund $fund
     ): VoucherResource {
         $this->authorize('apply', $fund);
 
-        return new VoucherResource($fund->makeVoucher(auth_address()));
+        $identity_address = auth_address();
+        $voucher = $fund->makeVoucher($identity_address);
+
+        return new VoucherResource($voucher ?: $fund->vouchers()->where([
+            'identity_address' => $identity_address,
+        ])->first());
     }
 
     // TODO: remove bunq ideal requests
