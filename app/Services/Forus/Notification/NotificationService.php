@@ -450,17 +450,32 @@ class NotificationService
      * @param EmailFrom|null $emailFrom
      * @param string $post_code
      * @param string $house_number
+     * @param string $city
+     * @param string $street_name
+     * @param string $fund_name
+     * @param string $sponsor_phone
+     * @param string $sponsor_email
      * @return bool
      */
     public function requestPhysicalCard(
         string $email,
         ?EmailFrom $emailFrom,
         string $post_code,
-        string $house_number
+        string $house_number,
+        string $city,
+        string $street_name,
+        string $fund_name,
+        string $sponsor_phone,
+        string $sponsor_email
     ): bool {
         return $this->sendMail($email, new RequestPhysicalCardMail(
             $post_code,
             $house_number,
+            $city,
+            $street_name,
+            $fund_name,
+            $sponsor_phone,
+            $sponsor_email,
             $emailFrom
         ));
     }

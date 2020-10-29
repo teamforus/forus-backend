@@ -5,13 +5,18 @@ namespace App\Http\Controllers\Api\Platform\Vouchers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
+use App\Models\Implementation;
 use App\Models\PhysicalCardRequest;
 use App\Models\VoucherToken;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\Forus\Notification\NotificationService;
+use App\Services\Forus\Identity\Repositories\IdentityRepo;
 
 /**
  * Class PhysicalCardRequestsController
+ * @property IdentityRepo $identityRepo
+ * @property NotificationService $mailService
  * @package App\Http\Controllers\Api\Platform\Vouchers
  */
 class PhysicalCardRequestsController extends Controller
@@ -20,6 +25,18 @@ class PhysicalCardRequestsController extends Controller
 
     private $maxAttempts = 3;
     private $decayMinutes = 60 * 24;
+
+    private $mailService;
+    private $recordService;
+
+    /**
+     * VoucherSubscriber constructor.
+     */
+    public function __construct()
+    {
+        $this->mailService   = resolve('forus.services.notification');
+        $this->identityRepo  = resolve('forus.services.identity');
+    }
 
     /**
      * Display a listing of the resource.
@@ -55,7 +72,20 @@ class PhysicalCardRequestsController extends Controller
         VoucherToken $voucherToken
     ): PhysicalCardRequestResource {
         $this->authorize('requestPhysicalCard', $voucherToken->voucher);
-        $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
+
+        $fund = $voucherToken->voucher->fund;
+
+        $this->mailService->requestPhysicalCard(
+            $this->identityRepo->getPrimaryEmail(auth_address()),
+            Implementation::emailFrom(),
+            $request->input('postcode'),
+            $request->input('house'),
+            $request->input('city'),
+            $request->input('address'),
+            $fund->name,
+            $fund->organization->phone,
+            $fund->organization->email
+        );
 
         $cardRequest = $voucherToken->voucher->physical_card_requests()->create($request->only(
             'address', 'house', 'house_addition', 'postcode', 'city'
