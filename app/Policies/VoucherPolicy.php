@@ -249,7 +249,8 @@ class VoucherPolicy
                     $this->deny('product_expired');
                 }
 
-                if ($voucher->product->countSold() >= $voucher->product->total_amount) {
+                if (!$voucher->product->unlimited_stock &&
+                    ($voucher->product->countSold() >= $voucher->product->total_amount)) {
                     $this->deny('product_sold_out');
                 }
 
