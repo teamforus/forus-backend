@@ -72,20 +72,21 @@ class PhysicalCardRequestsController extends Controller
         VoucherToken $voucherToken
     ): PhysicalCardRequestResource {
         $this->authorize('requestPhysicalCard', $voucherToken->voucher);
+        $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
         $fund = $voucherToken->voucher->fund;
 
         $this->mailService->requestPhysicalCard(
             $this->identityRepo->getPrimaryEmail(auth_address()),
-            Implementation::emailFrom(),
-            $request->input('postcode'),
-            $request->input('house'),
-            $request->input('city'),
-            $request->input('address'),
-            $fund->name,
-            $fund->organization->phone,
-            $fund->organization->email
-        );
+            Implementation::emailFrom(), [
+                'postcode'      => $request->input('postcode'),
+                'house_number'  => $request->input('house'),
+                'city'          => $request->input('city'),
+                'street_name'   => $request->input('address'),
+                'fund_name'     => $fund->name,
+                'sponsor_phone' => $fund->organization->phone,
+                'sponsor_email' => $fund->organization->email
+            ]);
 
         $cardRequest = $voucherToken->voucher->physical_card_requests()->create($request->only(
             'address', 'house', 'house_addition', 'postcode', 'city'

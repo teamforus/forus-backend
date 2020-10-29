@@ -5,15 +5,15 @@
     {{ mail_trans('dear_citizen') }},
     <br/>
     <br/>
-    {!! mail_trans('request_physical_card.description', ['fund_name' => $fund_name]) !!}
+    {!! mail_trans('request_physical_card.description', $data) !!}
     <br/>
     <br/>
-    <strong>{{ $street_name }} {{ $house_number }}</strong>
+    <strong>{{ $data['street_name'] }} {{ $data['house_number'] }}</strong>
     <br/>
-    <strong>{{ $postcode }} {{ $city }}</strong>
+    <strong>{{ $data['postcode'] }} {{ $data['city'] }}</strong>
     <br/>
     <br/>
-    {{ mail_trans('request_physical_card.contact_us', ['sponsor_email' => $sponsor_email, 'sponsor_phone' => $sponsor_phone]) }}
+    {{ mail_trans('request_physical_card.contact_us', $data) }}
     <br/>
     <br/>
     {{ mail_trans('request_physical_card.greets') }}
