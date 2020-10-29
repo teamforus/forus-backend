@@ -30,12 +30,16 @@ class PhysicalCardRequestsController extends Controller
     private $recordService;
 
     /**
-     * VoucherSubscriber constructor.
+     * PhysicalCardRequestsController constructor.
+     * @param IdentityRepo $identityRepo
+     * @param NotificationService $mailService
      */
-    public function __construct()
-    {
-        $this->mailService   = resolve('forus.services.notification');
-        $this->identityRepo  = resolve('forus.services.identity');
+    public function __construct(
+        IdentityRepo $identityRepo,
+        NotificationService $mailService
+    ) {
+        $this->mailService   = $mailService;
+        $this->identityRepo  = $identityRepo;
     }
 
     /**
@@ -78,7 +82,7 @@ class PhysicalCardRequestsController extends Controller
 
         $this->mailService->requestPhysicalCard(
             $this->identityRepo->getPrimaryEmail(auth_address()),
-            Implementation::emailFrom(), [
+            $fund->getEmailFrom(), [
                 'postcode'      => $request->input('postcode'),
                 'house_number'  => $request->input('house'),
                 'city'          => $request->input('city'),
