@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Traits\HasMedia;
@@ -148,6 +149,7 @@ class Organization extends Model
     {
         /** @var \Illuminate\Database\Eloquent\Builder $query */
         $query = self::query();
+        $has_products = $request->input('has_products');
 
         if ($request->input('is_employee', true)) {
             if (auth_address()) {
@@ -176,6 +178,20 @@ class Organization extends Model
                 $funds = Implementation::queryFundsByState('active')->pluck('id')->toArray();
                 $builder->whereIn('funds.id', $funds);
             });
+        }
+
+        if ($has_products) {
+            $query->whereHas('products', static function(\Illuminate\Database\Eloquent\Builder $builder) {
+                $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
+
+                // only in stock and not expired
+                $builder = ProductQuery::inStockAndActiveFilter($builder);
+
+                // only approved by at least one sponsor
+                return ProductQuery::approvedForFundsFilter($builder, $activeFunds);
+            });
+        } else if (!$has_products && $has_products !== null) {
+            $query->whereDoesntHave('products');
         }
 
         return $query;
