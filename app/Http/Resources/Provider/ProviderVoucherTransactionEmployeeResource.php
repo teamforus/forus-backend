@@ -17,6 +17,7 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
         'voucher.fund.logo',
         'provider.logo',
         'product.photo',
+        'fund_provider_product'
     ];
 
     /**
@@ -28,6 +29,10 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
     public function toArray($request): array
     {
         $transaction = $this->resource;
+        $fund_provider_product = $transaction->fund_provider_product;
+
+        $product_price = $fund_provider_product->price ?? null;
+        $product_old_price = $fund_provider_product->old_price ?? null;
 
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "address", "state",
@@ -38,6 +43,8 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
             'created_at_locale' => format_datetime_locale($transaction->created_at),
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
             'amount' => currency_format($transaction->amount),
+            'product_price' => $product_price ? currency_format($product_price) : null,
+            'product_old_price' => $product_old_price ? currency_format($product_old_price) : null,
             "organization" => array_merge($transaction->provider->only([
                 "id", "name"
             ]), [

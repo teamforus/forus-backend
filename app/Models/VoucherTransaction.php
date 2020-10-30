@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property int $voucher_id
  * @property int $organization_id
+ * @property int|null $employee_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
  * @property float $amount
@@ -28,6 +29,8 @@ use Illuminate\Http\Request;
  * @property int $attempts
  * @property string $state
  * @property string|null $last_attempt_at
+ * @property-read \App\Models\Employee|null $employee
+ * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
  * @property-read \App\Models\Product|null $product
@@ -40,6 +43,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAttempts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereFundProviderProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanFrom($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanTo($value)
@@ -53,9 +57,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereVoucherId($value)
  * @mixin \Eloquent
- * @property int|null $employee_id
- * @property-read \App\Models\Employee|null $employee
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereEmployeeId($value)
  */
 class VoucherTransaction extends Model
 {
@@ -115,6 +116,14 @@ class VoucherTransaction extends Model
      */
     public function notes(): HasMany {
         return $this->hasMany(VoucherTransactionNote::class);
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function fund_provider_product(): BelongsTo
+    {
+        return $this->belongsTo(FundProviderProduct::class);
     }
 
     /**

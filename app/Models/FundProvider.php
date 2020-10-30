@@ -434,10 +434,14 @@ class FundProvider extends Model
         $newProducts = array_diff($productIds, $oldProducts);
 
         foreach ($products as $product) {
+            $productModel = Product::findOrFail($product['id']);
+            $product['price'] = $productModel->price;
+            $product['old_price'] = $productModel->old_price;
+
             $this->fund_provider_products()->firstOrCreate([
                 'product_id' => $product['id'],
             ])->update($isTypeSubsidy ? array_only($product, [
-                'limit_total', 'limit_per_identity', 'amount'
+                'limit_total', 'limit_per_identity', 'amount', 'price', 'old_price'
             ]) : []);
         }
 
