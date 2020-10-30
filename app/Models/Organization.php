@@ -150,7 +150,11 @@ class Organization extends Model
         $query = self::query();
 
         if ($request->input('is_employee', true)) {
-            $query = OrganizationQuery::whereIsEmployee($query, auth_address());
+            if (auth_address()) {
+                $query = OrganizationQuery::whereIsEmployee($query, auth_address());
+            } else {
+                $query = $query->whereIn('id', []);
+            }
         }
 
         if ($request->has('is_sponsor')) {
