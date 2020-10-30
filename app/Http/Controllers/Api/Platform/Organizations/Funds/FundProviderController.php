@@ -16,6 +16,7 @@ use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FundProviderController extends Controller
 {
@@ -33,9 +34,7 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund
     ): AnonymousResourceCollection {
-        $this->authorize('viewAnySponsor', [
-            FundProvider::class, $organization, $fund
-        ]);
+        $this->authorize('viewAnySponsor', [FundProvider::class, $organization, $fund]);
 
         $query = $fund->providers()->getQuery();
         $state = $request->input('state', false);
@@ -107,7 +106,7 @@ class FundProviderController extends Controller
             'dismissed', 'allow_products', 'allow_budget',
         ]: 'dismissed'));
 
-        if ($fundProvider->allow_budget || $fundProvider->allow_products) {
+        if ($fundProvider->allow_budget || $fundProvider->allow_products || !empty($enable_products)) {
             $fundProvider->update([
                 'dismissed' => false
             ]);
@@ -145,7 +144,7 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund
-    ) {
+    ): array {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('showSponsor', [
@@ -168,7 +167,7 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('showSponsor', [
@@ -200,7 +199,7 @@ class FundProviderController extends Controller
         Organization $organization,
         Fund $fund,
         FundProvider $organizationFund
-    ) {
+    ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('showSponsor', [
@@ -230,7 +229,7 @@ class FundProviderController extends Controller
         Fund $fund,
         FundProvider $organizationFund,
         VoucherTransaction $transaction
-    ) {
+    ): SponsorVoucherTransactionResource {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
         $this->authorize('showSponsor', [

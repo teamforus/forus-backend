@@ -25,7 +25,7 @@ class FundProviderProductQuery
     /**
      * @param Builder $query
      * @param Voucher $voucher
-     * @param null $organization_id
+     * @param array|int|null $organization_id
      * @return Builder
      */
     public static function whereAvailableForVoucherFilter(
@@ -49,6 +49,10 @@ class FundProviderProductQuery
             });
 
             return ProductQuery::approvedForFundsAndActiveFilter($query, $voucher->fund->id);
+        });
+
+        $query->whereHas('fund_provider', static function(Builder $builder) use ($voucher) {
+            $builder->where('fund_id', '=', $voucher->fund_id);
         });
 
         return self::whereInLimitsFilter($query, $voucher);

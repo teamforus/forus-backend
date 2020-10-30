@@ -383,8 +383,7 @@ class Implementation extends Model
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'digid' => $implementationModel ? $implementationModel->digidEnabled() : false,
-                'digid_mandatory' => $implementationModel ? $implementationModel->digid_required : true,
-                'auto_validation' => $implementationModel && $implementationModel->autoValidationEnabled(),
+                'digid_mandatory' => $implementationModel->digid_required ?? true,
                 'settings' => self::getPlatformSettingsConfig($implementation),
                 'fronts' => $implementation->only([
                     'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app'

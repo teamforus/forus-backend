@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Prevalidations;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\PrevalidationDataRule;
-use Illuminate\Foundation\Http\FormRequest;
 
-class UploadPrevalidationsRequest extends FormRequest
+class UploadPrevalidationsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,7 @@ class UploadPrevalidationsRequest extends FormRequest
      * @return array
      */
     public function rules(): array {
-        $fundsAvailable = Organization::queryByIdentityPermissions(auth_address(), [
+        $fundsAvailable = Organization::queryByIdentityPermissions($this->auth_address(), [
             'validate_records'
         ])->get()->pluck('funds')->flatten()->filter(static function (Fund $fund) {
             return $fund->state !== Fund::STATE_CLOSED;

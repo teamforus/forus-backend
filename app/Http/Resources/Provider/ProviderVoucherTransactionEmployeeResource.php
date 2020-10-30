@@ -32,11 +32,11 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "address", "state",
         ]), [
+            'note' => $transaction->notes->where('group', 'provider')[0]->message ?? null,
             'created_at' => $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : null,
             'updated_at' => $transaction->updated_at ? $transaction->updated_at->format('Y-m-d H:i:s') : null,
             'created_at_locale' => format_datetime_locale($transaction->created_at),
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
-
             'amount' => currency_format($transaction->amount),
             "organization" => array_merge($transaction->provider->only([
                 "id", "name"

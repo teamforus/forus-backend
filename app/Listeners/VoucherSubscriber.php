@@ -83,7 +83,7 @@ class VoucherSubscriber
             if ($voucherCreated->isNotifyRequester()) {
                 IdentityProductVoucherReservedNotification::send($event);
             }
-        } else if ($voucher->identity_address) {
+        } else if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
             $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
                 $voucher->identity_address
             ));
@@ -99,25 +99,22 @@ class VoucherSubscriber
     }
 
     /**
-     * @param VoucherAssigned $voucherCreated
+     * @param VoucherAssigned $voucherAssigned
      */
     public function onVoucherAssigned(
-        VoucherAssigned $voucherCreated
+        VoucherAssigned $voucherAssigned
     ) :void {
-        $voucher = $voucherCreated->getVoucher();
+        $voucher = $voucherAssigned->getVoucher();
         $product = $voucher->product;
-        $implementation = Implementation::activeModel();
 
-        $eventLog = $voucher->log(Voucher::EVENT_ASSIGNED, [
+        IdentityVoucherAssignedNotification::send($voucher->log(Voucher::EVENT_ASSIGNED, [
             'fund' => $voucher->fund,
             'voucher' => $voucher,
             'sponsor' => $voucher->fund->organization,
-        ]);
-
-        IdentityVoucherAssignedNotification::send($eventLog);
+        ]));
 
         $transData = [
-            "implementation_name" => $implementation->name ?? 'General',
+            "implementation_name" => Implementation::activeModel()->name ?? 'General',
             "fund_name" => $voucher->fund->name
         ];
 

@@ -5,9 +5,14 @@ namespace App\Listeners;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Models\Voucher;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherTransactionNotification;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Class VoucherTransactionsSubscriber
+ * @package App\Listeners
+ */
 class VoucherTransactionsSubscriber
 {
     /**
@@ -18,28 +23,40 @@ class VoucherTransactionsSubscriber
     ): void {
         $transaction = $voucherTransactionEvent->getVoucherTransaction();
         $voucher = $transaction->voucher;
+        $fund = $transaction->voucher->fund;
+        $product = $voucher->product;
+
+        if ($product) {
+            $voucher->product->updateSoldOutState();
+        }
+
+        $eventMeta = [
+            'fund'        => $voucher->fund,
+            'voucher'     => $voucher,
+            'sponsor'     => $voucher->fund->organization,
+            'transaction' => $transaction,
+            'provider'    => $transaction->provider,
+            'product'     => $transaction->product,
+        ];
 
         if ($voucher->isProductType()) {
-            $voucher->product->updateSoldOutState();
-            $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, [
-                'fund' => $voucher->fund,
-                'voucher' => $voucher,
-                'sponsor' => $voucher->fund->organization,
-                'provider' => $transaction->provider,
-                'product' => $voucher->product,
-            ]);
+            IdentityProductVoucherTransactionNotification::send(
+                $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, $eventMeta));
+        } else if ($voucher->fund->isTypeBudget()) {
+            IdentityVoucherTransactionNotification::send(
+                $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta));
+        } else if ($voucher->fund->isTypeSubsidy()) {
+            $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
 
-            IdentityProductVoucherTransactionNotification::send($eventLog);
-        } else {
-            $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION, [
-                'fund'        => $voucher->fund,
-                'voucher'     => $voucher,
-                'sponsor'     => $voucher->fund->organization,
-                'transaction' => $transaction,
-                'provider'    => $transaction->provider,
-            ]);
+            if ($fundProviderProduct && $transaction->voucher->identity_address) {
+                $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, [
+                    'subsidy_new_limit' => $fundProviderProduct->stockAvailableForIdentity(
+                        $transaction->voucher->identity_address
+                    )
+                ]);
 
-            IdentityVoucherTransactionNotification::send($eventLog);
+                IdentityVoucherSubsidyTransactionNotification::send($eventLog);
+            }
         }
 
         $transaction->sendPushNotificationTransaction();
@@ -50,7 +67,7 @@ class VoucherTransactionsSubscriber
      *
      * @param Dispatcher $events
      */
-    public function subscribe(Dispatcher $events)
+    public function subscribe(Dispatcher $events): void
     {
         $events->listen(
             VoucherTransactionCreated::class,

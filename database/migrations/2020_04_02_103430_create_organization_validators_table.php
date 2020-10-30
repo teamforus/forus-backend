@@ -11,7 +11,7 @@ class CreateOrganizationValidatorsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('organization_validators', function (Blueprint $table) {
             $table->increments('id');
@@ -37,7 +37,7 @@ class CreateOrganizationValidatorsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('organization_validators');
     }

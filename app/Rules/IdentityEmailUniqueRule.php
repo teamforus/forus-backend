@@ -21,7 +21,7 @@ class IdentityEmailUniqueRule implements Rule
      * @return bool
      * @throws \Exception
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         return identity_repo()->isEmailAvailable($value);
     }
@@ -31,7 +31,7 @@ class IdentityEmailUniqueRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return trans('validation.unique_record', [
             'attribute' => trans('validation.attributes.primary_email')

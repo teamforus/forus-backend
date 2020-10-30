@@ -10,7 +10,7 @@ class RemoveOrganizationOwnersFromEmployeesList extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         // Remove organization owners from employees list
         Organization::all()->map(function(Organization $organization) {
@@ -25,7 +25,7 @@ class RemoveOrganizationOwnersFromEmployeesList extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         //
     }

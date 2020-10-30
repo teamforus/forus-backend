@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundRequest;
 use App\Models\Organization;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
@@ -64,6 +65,9 @@ class FundResource extends Resource
             'tags', 'type',
         ]), [
             'key' => $fund->fund_config->key ?? '',
+            'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
+            'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
+            'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
             'end_date' => $fund->end_date->format('Y-m-d'),
@@ -75,8 +79,14 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
+            'has_pending_fund_requests' => $fund->fund_requests()->where([
+                'identity_address' => auth_address(),
+                'state' => FundRequest::STATE_PENDING,
+            ])->exists(),
         ], $checkCriteria ? [
-            'taken_by_partner' => $fund->isTakenByPartner(auth_address()),
+            'taken_by_partner' =>
+                ($fund->fund_config->hash_partner_deny ?? false) &&
+                $fund->isTakenByPartner(auth_address()),
         ]: [], $financialData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {

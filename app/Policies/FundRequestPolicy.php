@@ -104,9 +104,9 @@ class FundRequestPolicy
         ?string $identity_address,
         Organization $organization
     ) {
-        if (!$organization->employeesWithPermissionsQuery('validate_records')->where(
+        if ($organization->employeesWithPermissionsQuery('validate_records')->where(
             compact('identity_address')
-        )->exists()) {
+        )->doesntExist()) {
             return $this->deny('fund_requests.invalid_validator');
         }
 
@@ -278,13 +278,39 @@ class FundRequestPolicy
     }
 
     /**
+     * Determine whether the validator can resolve the fundRequest.
+     *
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return bool|\Illuminate\Auth\Access\Response
+     */
+    public function addPartnerBsnNumber(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Organization $organization
+    ) {
+        if (!$response = $this->resolveAsValidator(
+            $identity_address,
+            $fundRequest,
+            $organization
+        )) {
+            return $response;
+        }
+
+        return $fundRequest->records()->where([
+            'record_type_key' => 'partner_bsn'
+        ])->doesntExist();
+    }
+
+    /**
      * @param Fund $fund
      * @param FundRequest $fundRequest
      * @return bool
      */
     private function checkIntegrityRequester(
         Fund $fund,
-        FundRequest $fundRequest = null
+        FundRequest $fundRequest
     ): bool {
         return ($fund && $fundRequest) && ($fundRequest->fund_id === $fund->id);
     }

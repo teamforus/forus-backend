@@ -10,8 +10,13 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\FundProviderProductQuery;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class ProductsController
+ * @package App\Http\Controllers\Api\Platform\Provider\Vouchers
+ */
 class ProductsController extends Controller
 {
     /**
@@ -20,7 +25,7 @@ class ProductsController extends Controller
      * @param IndexProductsRequest $request
      * @param VoucherToken $voucherToken
      * @return AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function index(
         IndexProductsRequest $request,
@@ -29,7 +34,7 @@ class ProductsController extends Controller
         $this->authorize('useAsProvider', $voucherToken->voucher);
         $this->authorize('viewAnyPublic', Product::class);
 
-        $organizations = Organization::queryByIdentityPermissions(auth_address(), [
+        $organizations = Organization::queryByIdentityPermissions($request->auth_address(), [
             'scan_vouchers'
         ])->pluck('id')->toArray();
 

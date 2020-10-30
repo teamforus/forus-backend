@@ -21,7 +21,7 @@ class UpdateOrganizationRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -31,11 +31,11 @@ class UpdateOrganizationRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $kvk = $this->input('kvk');
         $kvkDebug = env("KVK_API_DEBUG", false);
-        $kvkGeneric = $kvk == Organization::GENERIC_KVK;
+        $kvkGeneric = $kvk === Organization::GENERIC_KVK;
 
         $kvkUniqueRule = $this->organization ? Rule::unique('organizations', 'kvk')->ignore(
             $this->organization->id

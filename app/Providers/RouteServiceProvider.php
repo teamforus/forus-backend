@@ -14,7 +14,6 @@ use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\PhysicalCard;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -43,7 +42,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function boot()
+    public function boot(): void
     {
         parent::boot();
 
@@ -60,7 +59,7 @@ class RouteServiceProvider extends ServiceProvider
             return Prevalidation::query()->where([
                 'uid' => $value,
                 'state' => Prevalidation::STATE_PENDING
-            ])->first() ?? abort(404);
+            ])->first();
         });
 
         $router->bind('organization', static function ($id) {
@@ -104,10 +103,11 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $router->bind('voucher_address_or_physical_code', static function ($value) {
-            $voucher = Voucher::findByAddressOrPhysicalCard($value);
+            if ($voucher = Voucher::findByAddressOrPhysicalCard($value)) {
+                return $voucher->token_without_confirmation;
+            }
 
-            return $voucher && $voucher->isBudgetType() ?
-                $voucher->token_without_confirmation : abort(404);
+            return abort(404);
         });
 
         $router->bind('voucher_token_address', static function ($address) {

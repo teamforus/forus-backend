@@ -108,10 +108,11 @@ class FundRequest extends Model
             $query->where(function (Builder $query) use ($q, $recordRepo) {
                 $query->whereHas('fund', static function(Builder $builder) use ($q) {
                     $builder->where('name', 'LIKE', "%$q%");
-                })->orWhere(
-                    'identity_address',
-                    $recordRepo->identityAddressByBsn($q)
-                );
+                });
+
+                if ($bsn_identity_address = $recordRepo->identityAddressByBsn($q)) {
+                    $query->orWhere('identity_address', '=', $bsn_identity_address);
+                }
             });
         }
 
@@ -128,12 +129,9 @@ class FundRequest extends Model
         }
 
         if ($request->has('employee_id') && $employee_id = $request->input('employee_id')) {
-            /** @var Employee $employee */
             $employee = Employee::find($employee_id);
 
-            $query->whereHas('records', static function(
-                Builder $builder
-            ) use ($employee) {
+            $query->whereHas('records', static function(Builder $builder) use ($employee) {
                 FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
                     $builder, $employee->identity_address, $employee->id
                 );

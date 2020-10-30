@@ -9,7 +9,7 @@ class LanguagesTableSeeder extends DatabaseSeeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         Language::create([
             'id'        => 1,

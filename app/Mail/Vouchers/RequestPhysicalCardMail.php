@@ -21,7 +21,7 @@ class RequestPhysicalCardMail extends ImplementationMail
         string $postcode,
         string $houseNumber,
         ?EmailFrom $emailFrom
-    ){
+    ) {
         $this->setMailFrom($emailFrom);
 
         $this->postcode = $postcode;

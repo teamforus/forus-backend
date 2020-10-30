@@ -14,7 +14,7 @@ class DropProviderIdentitiesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         if (Schema::hasTable('provider_identities')) {
             $providerIdentities = DB::table('provider_identities')->get();
@@ -52,7 +52,7 @@ class DropProviderIdentitiesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         if (!Schema::hasTable('provider_identities')) {
             (new CreateProviderIdentitiesTable())->up();
@@ -66,9 +66,7 @@ class DropProviderIdentitiesTable extends Migration
                     'role_id' => $roleId
                 ])->get();
 
-                $employeeRoles = $employeeRoles->map(function(
-                    $employeeRole
-                ) use ($roleId) {
+                $employeeRoles = $employeeRoles->map(function($employeeRole) {
                     $employee = DB::table('employees')->where([
                         'id' => $employeeRole->employee_id,
                     ])->first();

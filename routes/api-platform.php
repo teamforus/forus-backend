@@ -37,6 +37,14 @@ $router->group([
     ]);
 
     $router->resource(
+        'organizations',
+        "Api\Platform\OrganizationsController", [
+        'only' => [
+            'index',
+        ]
+    ]);
+
+    $router->resource(
         'funds',
         "Api\Platform\FundsController", [
         'only' => [
@@ -233,7 +241,7 @@ $router->group(['middleware' => [
         'organizations',
         "Api\Platform\OrganizationsController", [
         'only' => [
-            'index', 'show', 'store', 'update'
+            'show', 'store', 'update'
         ]
     ]);
 
@@ -740,17 +748,22 @@ $router->group(['middleware' => [
     );
 
     $router->post(
-        'organizations/{organization}/sponsor/vouchers/{voucher_id}/send',
+        'organizations/{organization}/sponsor/vouchers/{voucher}/send',
         "Api\Platform\Organizations\Sponsor\VouchersController@sendByEmail"
     );
 
     $router->get(
-        'organizations/{organization}/sponsor/vouchers/export-unassigned',
-        "Api\Platform\Organizations\Sponsor\VouchersController@exportUnassigned"
+        'organizations/{organization}/sponsor/vouchers/export',
+        "Api\Platform\Organizations\Sponsor\VouchersController@export"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/vouchers/export-data',
+        "Api\Platform\Organizations\Sponsor\VouchersController@exportData"
     );
 
     $router->patch(
-        'organizations/{organization}/sponsor/vouchers/{voucher_id}/assign',
+        'organizations/{organization}/sponsor/vouchers/{voucher}/assign',
         "Api\Platform\Organizations\Sponsor\VouchersController@assign"
     );
 

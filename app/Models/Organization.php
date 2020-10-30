@@ -10,6 +10,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -114,7 +115,7 @@ class Organization extends Model
 {
     use HasMedia, HasTags, HasLogs, HasDigests;
 
-    public const GENERIC_KVK = 00000000;
+    public const GENERIC_KVK = "00000000";
 
     /**
      * The attributes that are mass assignable.
@@ -149,7 +150,11 @@ class Organization extends Model
         $query = self::query();
 
         if ($request->input('is_employee', true)) {
-            $query = OrganizationQuery::whereIsEmployee($query, auth_address());
+            if (auth_address()) {
+                $query = OrganizationQuery::whereIsEmployee($query, auth_address());
+            } else {
+                $query = $query->whereIn('id', []);
+            }
         }
 
         if ($request->has('is_sponsor')) {
@@ -162,6 +167,15 @@ class Organization extends Model
 
         if ($request->has('is_validator')) {
             $query->where($request->only('is_validator'));
+        }
+
+        if ($request->input('implementation', false)) {
+            $query->whereHas('funds', static function(
+                \Illuminate\Database\Eloquent\Builder $builder
+            ) {
+                $funds = Implementation::queryFundsByState('active')->pluck('id')->toArray();
+                $builder->whereIn('funds.id', $funds);
+            });
         }
 
         return $query;
@@ -566,5 +580,15 @@ class Organization extends Model
         string $identity_address
     ) {
         return $this->employees()->where(compact('identity_address'))->first();
+    }
+
+    /**
+     * @param $fund_id
+     * @return Fund|null
+     */
+    public function findFund($fund_id): ?Fund {
+        /** @var Fund|null $fund */
+        $fund = $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
+        return $fund;
     }
 }

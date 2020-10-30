@@ -11,7 +11,7 @@ class DropWalletVouchersTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::dropIfExists('wallet_vouchers');
     }
@@ -21,7 +21,7 @@ class DropWalletVouchersTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::create('wallet_vouchers', function (Blueprint $table) {
             $table->increments('id');

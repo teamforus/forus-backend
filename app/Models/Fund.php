@@ -6,6 +6,7 @@ use App\Events\Funds\FundBalanceLowEvent;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
+use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -166,6 +167,7 @@ class Fund extends Model
     public const EVENT_PRODUCT_ADDED = 'fund_product_added';
     public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
     public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
 
     public const STATE_ACTIVE = 'active';
@@ -404,7 +406,7 @@ class Fund extends Model
      */
     public function getTransactionCosts (): float {
         if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
-            return $this->voucher_transactions()->where('amount', '>', '0')->count() * 0.10;
+            return $this->voucher_transactions()->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
         }
 
         return 0.0;
@@ -1025,6 +1027,7 @@ class Fund extends Model
      * @param Carbon|null $expire_at
      * @param string|null $note
      * @return Voucher|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
      */
     public function makeVoucher(
         string $identity_address = null,
@@ -1037,21 +1040,32 @@ class Fund extends Model
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
         $limit_multiplier = $this->multiplierForIdentity($identity_address);
+        $voucher = null;
 
-        $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
-            'returnable', 'limit_multiplier'
-        ));
+        if ($this->fund_formulas->count() > 0) {
+            $voucher = Voucher::create(compact(
+                'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
+                'returnable', 'limit_multiplier'
+            ));
 
-        VoucherCreated::dispatch($voucher);
+            VoucherCreated::dispatch($voucher);
+        }
 
-        if ($voucherAmount === null) {
+        if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucher->buyProductVoucher(
-                    $fund_formula_product->product,
-                    $fund_formula_product->amount,
-                    false
+                $voucherExpireAt = $this->end_date->gt(
+                    $fund_formula_product->product->expire_at
+                ) ? $fund_formula_product->product->expire_at->expire_at : $this->end_date;
+
+                $voucher = $this->makeProductVoucher(
+                    $identity_address,
+                    $fund_formula_product->product->id,
+                    $voucherExpireAt,
+                    '',
+                    $fund_formula_product->price
                 );
+
+                VoucherAssigned::broadcast($voucher);
             }
         }
 
@@ -1063,15 +1077,17 @@ class Fund extends Model
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param string|null $note
+     * @param float|null $price
      * @return Voucher
      */
     public function makeProductVoucher(
         string $identity_address = null,
         int $product_id = null,
         Carbon $expire_at = null,
-        string $note = null
+        string $note = null,
+        float $price = null
     ): Voucher {
-        $amount = Product::findOrFail($product_id)->price;
+        $amount = $price ?: Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
         $returnable = false;
@@ -1425,7 +1441,6 @@ class Fund extends Model
     }
 
     /**
-     * TODO: refactoring!
      * @param ?string $identity_address
      * @return bool
      */
@@ -1434,62 +1449,46 @@ class Fund extends Model
             return false;
         }
 
-        $auth_bsn = record_repo()->bsnByAddress($identity_address);
-        $auth_bsn_hash = self::getTrustedRecordOfType($identity_address, 'partner_bsn_hash', $this);
+        return Identity::whereHas('vouchers', function(Builder $builder) {
+            $builder->where('fund_id', '=', $this->id);
+        })->whereHas('records', function(Builder $builder) use ($identity) {
+            $builder->where(function(Builder $builder) use ($identity) {
+                $identityBsn = record_repo()->bsnByAddress($identity->address);
 
+                $builder->where(function(Builder $builder) use ($identity, $identityBsn) {
+                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
+                        $this->isHashingBsn() ? 'partner_bsn_hash': 'partner_bsn'
+                    ));
 
-        if ((!$auth_bsn && !$this->isHashingBsn()) && ($auth_bsn_hash && $this->isHashingBsn())) {
-            return false;
-        }
+                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
+                        self::getTrustedRecordOfType($identity->address, 'bsn_hash', $this)['value'] ?? null,
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                    ]) : [$identityBsn ?: null]);
+                });
 
-        $value = $this->isHashingBsn() ? $this->getHashedValue($auth_bsn) : $auth_bsn;
-        $record_type_key = $this->isHashingBsn() ? 'bsn_hash' : 'bsn';
-        $record_type_id = record_repo()->getTypeIdByKey($record_type_key);
+                $builder->orWhere(function(Builder $builder) use ($identity, $identityBsn) {
+                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
+                        $this->isHashingBsn() ? 'bsn_hash': 'bsn'
+                    ));
 
-        $record_type_key_partner = $this->isHashingBsn() ? 'partner_bsn_hash' : 'partner_bsn';
-        $record_type_id_partner = record_repo()->getTypeIdByKey($record_type_key_partner);
-
-        $partners = [$identity_address];
-
-        // you are partner
-        $partners = array_merge($partners, Identity::whereHas('records', function(
-            Builder $builder
-        ) use ($record_type_id_partner, $value, $identity, $record_type_id) {
-            $builder->where(function(Builder $builder) use ($record_type_id_partner, $value) {
-                $builder->where([
-                    'record_type_id' => $record_type_id_partner,
-                    'value' => $value,
-                ]);
-
-                $builder->whereHas('validations', function(Builder $builder) {
-                    $builder->whereIn('identity_address', $this->validatorEmployees());
+                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
+                        self::getTrustedRecordOfType($identity->address, 'partner_bsn_hash', $this)['value'] ?? null,
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                    ]) : [$identityBsn ?: null]);
                 });
             });
 
-            $builder->orWhere(function(Builder $builder) use (
-                $identity, $record_type_id, $record_type_id_partner
-            ) {
-                $builder->where([
-                    'record_type_id' => $record_type_id,
-                ])->whereIn('value', $identity->records()->where([
-                    'record_type_id' => $record_type_id_partner,
-                ])->whereHas('validations', function(Builder $builder) {
-                    $builder->whereIn('identity_address', $this->validatorEmployees());
-                })->get()->pluck('value')->toArray());
-
-                $builder->whereHas('validations', function(Builder $builder) {
-                    $builder->whereIn('identity_address', $this->validatorEmployees());
-                });
+            $builder->whereHas('validations', function(Builder $builder) {
+                $builder->whereIn('identity_address', $this->validatorEmployees());
             });
-        })->pluck('address')->toArray());
-
-        $partners = array_values(array_diff($partners, [$identity_address]));
-
-
-        return self::whereHas('vouchers', function(Builder $builder) use ($partners) {
-            $builder->where([
-                'fund_id' => $this->id
-            ])->whereIn('identity_address', $partners);
         })->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAutoValidatingRequests(): bool
+    {
+        return $this->default_validator_employee_id && $this->auto_requests_validation;
     }
 }

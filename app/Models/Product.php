@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
+use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
@@ -378,14 +380,16 @@ class Product extends Model
      * @return string
      */
     public function getDescriptionHtmlAttribute(): string {
-        return resolve('markdown')->convertToHtml($this->description);
+        return resolve('markdown')->convertToHtml(e($this->description));
     }
 
     /**
      * @param Fund $fund
-     * @return null|FundProviderProduct
+     * @return FundProviderProduct|null
      */
-    public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct {
+    public function getSubsidyDetailsForFund(
+        Fund $fund
+    ): ?FundProviderProduct {
         /** @var FundProviderProduct $fundProviderProduct */
         $fundProviderProduct = $this->fund_provider_products()->whereHas(
             'fund_provider.fund',
@@ -395,6 +399,22 @@ class Product extends Model
                 'type' => $fund::TYPE_SUBSIDIES,
             ]);
         })->first();
+
+        return $fundProviderProduct;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param int $errorCode
+     * @return FundProviderProduct
+     */
+    public function getSubsidyDetailsForFundOrFail(
+        Fund $fund,
+        int $errorCode = 403
+    ): FundProviderProduct {
+        if (!$fundProviderProduct = $this->getSubsidyDetailsForFund($fund)) {
+            abort($errorCode);
+        }
 
         return $fundProviderProduct;
     }
@@ -429,5 +449,31 @@ class Product extends Model
                 ])->delete();
             }
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function resetSubsidyApprovals(): void
+    {
+        $subsidyFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(
+            Fund::query(), $this->id
+        )->where('type',  Fund::TYPE_SUBSIDIES)->get();
+
+        $subsidyFunds->each(function(Fund $fund) {
+            FundProductSubsidyRemovedNotification::send(
+                $fund->log($fund::EVENT_PRODUCT_SUBSIDY_REMOVED, [
+                    'product'  => $this,
+                    'fund'     => $fund,
+                    'sponsor'  => $fund->organization,
+                    'provider' => $this->organization
+            ]));
+        });
+
+        $this->fund_provider_products()->whereHas('fund_provider', function(Builder $builder) {
+            $builder->whereHas('fund', function(Builder $builder) {
+                $builder->where('type', '=', Fund::TYPE_SUBSIDIES);
+            });
+        })->delete();
     }
 }

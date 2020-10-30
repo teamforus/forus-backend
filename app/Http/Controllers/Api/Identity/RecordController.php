@@ -5,16 +5,20 @@ namespace App\Http\Controllers\Api\Identity;
 use App\Http\Requests\Api\Records\IndexRecordsRequest;
 use App\Http\Requests\Api\Records\RecordStoreRequest;
 use App\Http\Requests\Api\Records\RecordUpdateRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
+/**
+ * Class RecordController
+ * @package App\Http\Controllers\Api\Identity
+ */
 class RecordController extends Controller
 {
     private $recordRepo;
 
     public const HIDDEN_RECORD_TYPES = [
-        'bsn'
+        'bsn', 'bsn_hash', 'partner_bsn', 'partner_bsn_hash'
     ];
 
     /**
@@ -35,7 +39,7 @@ class RecordController extends Controller
     public function index(IndexRecordsRequest $request): array
     {
         return array_values(array_filter($this->recordRepo->recordsList(
-            auth_address(),
+            $request->auth_address(),
             $request->get('type', null),
             $request->get('record_category_id', null),
             (bool) $request->get('deleted', false)
@@ -47,13 +51,13 @@ class RecordController extends Controller
     /**
      * Create new record
      * @param RecordStoreRequest $request
-     * @return array|bool
-     * @throws \Exception
+     * @return array|null
      */
-    public function store(RecordStoreRequest $request)
-    {
+    public function store(
+        RecordStoreRequest $request
+    ): ?array {
         return $this->recordRepo->recordCreate(
-            auth_address(),
+            $request->auth_address(),
             $request->get('type'),
             $request->get('value'),
             $request->get('record_category_id', null),
@@ -69,13 +73,15 @@ class RecordController extends Controller
 
     /**
      * Get record
+     * @param BaseFormRequest $request
      * @param int $recordId
      * @return array
      */
     public function show(
+        BaseFormRequest $request,
         int $recordId
     ): array {
-        $record = $this->recordRepo->recordGet(auth_address(), $recordId, true);
+        $record = $this->recordRepo->recordGet($request->auth_address(), $recordId, true);
 
         if (empty($record) || in_array($record['key'], self::HIDDEN_RECORD_TYPES, true)) {
             abort(404, trans('records.codes.404'));
@@ -95,16 +101,12 @@ class RecordController extends Controller
         RecordUpdateRequest $request,
         int $recordId
     ): array {
-        $identity = auth_address();
-
-        if (empty($this->recordRepo->recordGet(
-            $identity, $recordId
-        ))) {
+        if (empty($this->recordRepo->recordGet($request->auth_address(), $recordId))) {
             abort(404, trans('records.codes.404'));
         }
 
         $success = $this->recordRepo->recordUpdate(
-            auth_address(),
+            $request->auth_address(),
             $recordId,
             $request->input('record_category_id', null),
             $request->input('order', null)
@@ -121,41 +123,35 @@ class RecordController extends Controller
 
     /**
      * Delete record
+     * @param BaseFormRequest $request
      * @param int $recordId
      * @return array
      * @throws \Exception
      */
     public function destroy(
+        BaseFormRequest $request,
         int $recordId
     ): array {
-        $identity = auth_address();
-
-        if (empty($this->recordRepo->recordGet(
-            $identity, $recordId
-        ))) {
+        if (empty($this->recordRepo->recordGet($request->auth_address(), $recordId))) {
             abort(404, trans('records.codes.404'));
         }
 
-        $success = $this->recordRepo->recordDelete(
-            auth_address(),
-            $recordId
-        );
+        $success = $this->recordRepo->recordDelete($request->auth_address(), $recordId);
 
         return compact('success');
     }
 
     /**
      * Sort records
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return array
      */
     public function sort(
-        Request $request
+        BaseFormRequest $request
     ): array {
-        $this->recordRepo->recordsSort(
-            auth_address(),
-            collect($request->get('records', []))->toArray()
-        );
+        $this->recordRepo->recordsSort($request->auth_address(), collect(
+            $request->get('records', [])
+        )->toArray());
 
         $success = true;
 

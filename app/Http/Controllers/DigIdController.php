@@ -5,12 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DigID\ResolveDigIdRequest;
 use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Prevalidation;
+use App\Models\Voucher;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Http\Request;
 
 /**
  * Class DigIdController
@@ -24,14 +23,14 @@ class DigIdController extends Controller
      */
     public function start(StartDigIdRequest $request)
     {
-        if (!in_array($request->input('request'), (array) 'auth', true)) {
+        if ($request->input('request') !== 'auth') {
             $this->middleware('api.auth');
         }
 
         $digidSession = DigIdSession::createSession(
-            auth_address(),
-            Implementation::activeModel(),
-            client_type(),
+            $request->auth_address(),
+            $request->implementation_model(),
+            $request->client_type(),
             self::makeFinalRedirectUrl($request),
             $request->input('request')
         );
@@ -152,7 +151,7 @@ class DigIdController extends Controller
         $identity_bsn = $recordRepo->bsnByAddress($identity);
         $bsn_identity = $recordRepo->identityAddressByBsn($bsn);
 
-        if ($identity_bsn && $identity_bsn !== $bsn_identity) {
+        if ($identity_bsn && $bsn !== $identity_bsn) {
             return redirect(url_extend_get_params($session->session_final_url, [
                 'digid_error' => "uid_dont_match",
             ]));
@@ -164,32 +163,35 @@ class DigIdController extends Controller
             ]));
         }
 
-        if (!$identity_bsn && !$bsn_identity) {
-            $recordRepo->setBsnRecord($identity, $bsn);
-            Prevalidation::assignAvailableToIdentityByBsn($identity);
+        $isFirstSignUp = !$identity_bsn && !$bsn_identity;
 
-            return redirect(url_extend_get_params($session->session_final_url, [
-                'digid_success' => 'signed_up'
-            ]));
+        if ($isFirstSignUp) {
+            $recordRepo->setBsnRecord($identity, $bsn);
         }
 
+        Prevalidation::assignAvailableToIdentityByBsn($identity);
+        Voucher::assignAvailableToIdentityByBsn($identity);
+
         return redirect(url_extend_get_params($session->session_final_url, [
-            'digid_success' => 'signed_in'
+            'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in'
         ]));
     }
 
     /**
-     * @param Request $request
-     * @return bool|mixed|string
+     * @param StartDigIdRequest $request
+     * @return mixed|string|void|null
      */
-    private static function makeFinalRedirectUrl(Request $request) {
-        $implementationModel = Implementation::activeModel();
+    private static function makeFinalRedirectUrl(StartDigIdRequest $request) {
+        $implementationModel = $request->implementation_model();
         $fund = Fund::find($request->input('fund_id'));
 
-        switch ($request->input('request')) {
-            case "fund_request": return $fund->urlWebshop(sprintf('/fund/%s/request', $fund->id));
-            case "auth": return $implementationModel ? $implementationModel->urlFrontend(
-                client_type()
+        if ($request->input('request') === 'fund_request') {
+            return $fund->urlWebshop(sprintf('/funds/%s/activate', $fund->id));
+        }
+
+        if ($request->input('request') === 'auth') {
+            return $implementationModel ? $implementationModel->urlFrontend(
+                $request->client_type()
             ) : abort(404);
         }
 

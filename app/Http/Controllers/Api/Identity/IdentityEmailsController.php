@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api\Identity;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Identity\Emails\StoreIdentityEmailRequest;
 use App\Http\Resources\IdentityEmailResource;
 use App\Services\Forus\Identity\Models\IdentityEmail;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class IdentityEmailsController
@@ -44,7 +47,7 @@ class IdentityEmailsController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
         $this->authorize('viewAny', IdentityEmail::class);
 
@@ -58,11 +61,11 @@ class IdentityEmailsController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
+     * @param StoreIdentityEmailRequest $request
      * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(Request $request)
+    public function store(StoreIdentityEmailRequest $request): IdentityEmailResource
     {
         $this->authorize('create', IdentityEmail::class);
 
@@ -83,7 +86,7 @@ class IdentityEmailsController extends Controller
      * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(IdentityEmail $identityEmail)
+    public function show(IdentityEmail $identityEmail): IdentityEmailResource
     {
         $this->authorize('view', $identityEmail);
 
@@ -95,7 +98,7 @@ class IdentityEmailsController extends Controller
      * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function resend(IdentityEmail $identityEmail)
+    public function resend(IdentityEmail $identityEmail): IdentityEmailResource
     {
         $this->authorize('resend', $identityEmail);
 
@@ -109,7 +112,7 @@ class IdentityEmailsController extends Controller
      * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function primary(IdentityEmail $identityEmail)
+    public function primary(IdentityEmail $identityEmail): IdentityEmailResource
     {
         $this->authorize('makePrimary', $identityEmail);
 
@@ -124,7 +127,7 @@ class IdentityEmailsController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
-    public function destroy(IdentityEmail $identityEmail)
+    public function destroy(IdentityEmail $identityEmail): JsonResponse
     {
         $this->authorize('delete', $identityEmail);
 
@@ -138,7 +141,7 @@ class IdentityEmailsController extends Controller
      * @return \Illuminate\Contracts\View\View
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function emailVerificationToken(IdentityEmail $identityEmail)
+    public function emailVerificationToken(IdentityEmail $identityEmail): View
     {
         $this->authorize('verifyToken', $identityEmail);
 

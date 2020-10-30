@@ -252,7 +252,7 @@ class Prevalidation extends Model
         $recordRepo = resolve('forus.services.record');
         $bsnTypeId = $recordRepo->getTypeIdByKey('bsn');
 
-        foreach($this->prevalidation_records as $record) {
+        foreach ($this->prevalidation_records as $record) {
             if ($record->record_type_id === $bsnTypeId) {
                 continue;
             }

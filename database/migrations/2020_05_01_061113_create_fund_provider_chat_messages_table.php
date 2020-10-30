@@ -11,7 +11,7 @@ class CreateFundProviderChatMessagesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('fund_provider_chat_messages', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -37,7 +37,7 @@ class CreateFundProviderChatMessagesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('fund_provider_chat_messages');
     }

@@ -11,7 +11,7 @@ return [
         "Beste :organization_name,\n Er zijn :count_requests notificaties die betrekking hebben tot uw organisatie.",
     ]),
     'fund_header' => implode('|', [
-        ":count_requests nieuwe aanvragen voor :fund_name",
+        ":count_requests nieuwe aanvraag voor :fund_name",
         ":count_requests nieuwe aanvragen voor :fund_name",
     ]),
     'fund_details' => implode('|', [
