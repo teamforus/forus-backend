@@ -14,7 +14,11 @@
     <br/>
     {{ mail_trans('voucher_assigned_product.paragraph3', $data) }}
     <br/>
+    @if($data['provider_website'])
+        {{ mail_trans('voucher_assigned_product.paragraph4', $data) }}
+        <br/>
+    @endif
+    {{ mail_trans('voucher_assigned_product.paragraph5', $data) }}
     <br/>
-    {{ mail_trans('voucher_assigned_product.paragraph4', $data) }}
     <br/>
 @endsection
