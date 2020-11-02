@@ -20,9 +20,6 @@ use Illuminate\Http\Request;
 
 /**
  * Class IdentityController
- * @property IIdentityRepo $identityRepo
- * @property IRecordRepo $recordRepo
- * @property NotificationService $mailService
  * @package App\Http\Controllers\Api
  */
 class IdentityController extends Controller
@@ -35,14 +32,22 @@ class IdentityController extends Controller
 
     /**
      * IdentityController constructor.
+     *
+     * @param IIdentityRepo $identityRepo
+     * @param IRecordRepo $recordRepo
+     * @param NotificationService $notificationService
      */
-    public function __construct() {
+    public function __construct(
+        IIdentityRepo $identityRepo,
+        IRecordRepo $recordRepo,
+        NotificationService $notificationService
+    ) {
         $this->maxAttempts = env('AUTH_THROTTLE_ATTEMPTS', 10);
         $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
 
-        $this->mailService = resolve('forus.services.notification');
-        $this->identityRepo = resolve('forus.services.identity');
-        $this->recordRepo = resolve('forus.services.record');
+        $this->mailService = $notificationService;
+        $this->identityRepo = $identityRepo;
+        $this->recordRepo = $recordRepo;
     }
 
     /**
@@ -127,7 +132,7 @@ class IdentityController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'auth');
 
         $email = (string) $request->input('email', '');
-        $used = !identity_repo()->isEmailAvailable($email);
+        $used = !$this->identityRepo->isEmailAvailable($email);
 
         return response()->json([
             'email' => [

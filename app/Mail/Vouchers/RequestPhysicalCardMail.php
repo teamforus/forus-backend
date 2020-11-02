@@ -8,24 +8,21 @@ use Illuminate\Mail\Mailable;
 
 class RequestPhysicalCardMail extends ImplementationMail
 {
-    private $postcode;
-    private $houseNumber;
+    private $data;
 
     /**
      * RequestPhysicalCardMail constructor.
-     * @param string $postcode
-     * @param string $houseNumber
-     * @param EmailFrom|null $emailFrom
+     *
+     * RequestPhysicalCardMail constructor.
+     * @param EmailFrom|null $email_from
+     * @param array $data
      */
     public function __construct(
-        string $postcode,
-        string $houseNumber,
-        ?EmailFrom $emailFrom
+        ?EmailFrom $email_from,
+        array $data = []
     ) {
-        $this->setMailFrom($emailFrom);
-
-        $this->postcode = $postcode;
-        $this->houseNumber = $houseNumber;
+        $this->data = $this->escapeData($data);
+        $this->setMailFrom($email_from);
     }
 
     public function build(): Mailable
@@ -33,8 +30,7 @@ class RequestPhysicalCardMail extends ImplementationMail
         return $this->buildBase()
             ->subject(mail_trans('request_physical_card.title', []))
             ->view('emails.vouchers.request-physical-card', [
-                'postcode'      => $this->postcode,
-                'houseNumber'   => $this->houseNumber,
+                'data' => $this->data
             ]);
     }
 }

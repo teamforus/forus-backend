@@ -40,11 +40,11 @@ class ProductPolicy
         $identity_address,
         Organization $organization
     ): bool {
+        $hard_limit = config('forus.features.dashboard.organizations.products.hard_limit');
+  
         return $organization->identityCan($identity_address, [
             'manage_products'
-        ]) && $organization->products->count() < config(
-            'forus.features.dashboard.organizations.products.maxProductCount'
-        );
+        ]) && $organization->products->count() < $hard_limit;
     }
 
     /**
