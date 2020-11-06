@@ -181,8 +181,10 @@ class Organization extends Model
         }
 
         if ($has_products) {
-            $query->whereHas('products', static function(\Illuminate\Database\Eloquent\Builder $builder) {
-                $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
+            $query->whereHas('products', static function(\Illuminate\Database\Eloquent\Builder $builder) use ($fund_type) {
+                $activeFunds = Implementation::activeFundsQuery()->where(
+                    'type', $fund_type
+                )->pluck('id')->toArray();
 
                 // only in stock and not expired
                 $builder = ProductQuery::inStockAndActiveFilter($builder);
