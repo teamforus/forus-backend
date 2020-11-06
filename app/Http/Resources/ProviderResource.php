@@ -3,8 +3,12 @@
 namespace App\Http\Resources;
 
 use App\Models\Organization;
+use App\Models\Product;
+use App\Models\Implementation;
+use App\Scopes\Builders\ProductQuery;
 use Illuminate\Http\Resources\Json\Resource;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class OrganizationBasicResource
@@ -40,7 +44,29 @@ class ProviderResource extends Resource
             ) : null,
             'offices' => OfficeResource::collection(
                 $organization->offices
+            ),
+            'products' => ProductResource::collection(
+                $this->getOrganizationProducts($organization, 'budget')
+            ),
+            'actions' => ProductResource::collection(
+                $this->getOrganizationProducts($organization, 'subsidies')
             )
         ]);
+    }
+
+    /**
+     * @param Organization $organization
+     * @param string $fundType
+     * @return Builder[]|\Illuminate\Database\Eloquent\Collection
+     */
+    private function getOrganizationProducts(Organization $organization, string $fundType) {
+        /** @var Builder $funds */
+        $funds = Implementation::activeFundsQuery()->where('type', '=', $fundType);
+
+        $productQuery = Product::searchQuery()->orderBy('created_at', 'desc');
+
+        return ProductQuery::approvedForFundsAndActiveFilter(
+            $productQuery, $funds->pluck('id')->toArray()
+        )->where('organization_id', $organization->id)->get();
     }
 }
