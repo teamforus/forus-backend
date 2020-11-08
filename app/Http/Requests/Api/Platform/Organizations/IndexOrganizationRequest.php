@@ -44,6 +44,7 @@ class IndexOrganizationRequest extends FormRequest
             'is_provider'   => 'nullable|boolean',
             'is_validator'  => 'nullable|boolean',
             'implementation' => 'nullable|boolean',
+            'has_products'  => 'nullable|boolean',
             'fund_type'     => 'nullable|in:' . implode(',', Fund::TYPES),
         ];
     }
