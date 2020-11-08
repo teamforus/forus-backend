@@ -149,7 +149,7 @@ class Organization extends Model
     {
         /** @var \Illuminate\Database\Eloquent\Builder $query */
         $query = self::query();
-        $has_products = $request->input('has_products', false);
+        $has_products = $request->input('has_products');
         $fund_type    = $request->input('fund_type', 'budget');
 
         if ($request->input('is_employee', true)) {
