@@ -19,9 +19,9 @@ return [
     'products' => [
         'title' => implode('|', [
             // singular
-            ":sponsor_name heeft :count_products nieuwe aanbieding aan de webshop toegevoegd van :fund_name.",
+            ":sponsor_name heeft :count_products nieuwe producten of diensten aan de webshop toegevoegd van :fund_name.",
             // plural
-            ":sponsor_name heeft :count_products nieuwe aanbiedingen aan de webshop toegevoegd van :fund_name."
+            ":sponsor_name heeft :count_products nieuwe producten of diensten aan de webshop toegevoegd van :fund_name."
         ]),
         'price' => "- :product_name voor €:product_price_locale",
     ],
