@@ -2,18 +2,28 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
+use App\Models\Voucher;
 
-class AssignVoucherRequest extends FormRequest
+/**
+ * Class AssignVoucherRequest
+ * @property-read Organization $organization
+ * @property-read Voucher $voucher
+ * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
+ */
+class AssignVoucherRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        return true;
+        return $this->organization->identityCan($this->auth_address(), 'manage_vouchers') &&
+            $this->voucher->fund->organization_id === $this->organization->id &&
+            !$this->voucher->is_granted;
     }
 
     /**
@@ -21,10 +31,11 @@ class AssignVoucherRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'email' => 'required|email:strict,dns',
+            'email' => 'required_without:bsn|email:strict,dns',
+            'bsn' => 'required_without:email|string|between:8,9',
         ];
     }
 }

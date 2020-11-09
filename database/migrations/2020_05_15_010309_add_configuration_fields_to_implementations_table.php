@@ -11,7 +11,7 @@ class AddConfigurationFieldsToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->string('title', 50)->after('name')->nullable();
@@ -27,7 +27,7 @@ class AddConfigurationFieldsToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->dropColumn('title');

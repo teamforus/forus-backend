@@ -8,7 +8,8 @@ use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
-use Illuminate\Database\Eloquent\Collection;
+use \Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -21,42 +22,54 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property string $key
  * @property string $name
+ * @property string|null $title
+ * @property string|null $description
+ * @property string|null $more_info_url
+ * @property string|null $description_steps
+ * @property bool $has_more_info_url
  * @property string $url_webshop
  * @property string $url_sponsor
  * @property string $url_provider
  * @property string $url_validator
- * @property string $title
- * @property string $description
- * @property string $more_info_url
- * @property string $description_steps
- * @property boolean $has_more_info_url
  * @property string $url_app
  * @property float|null $lon
  * @property float|null $lat
+ * @property string|null $email_from_address
+ * @property string|null $email_from_name
  * @property bool $digid_enabled
+ * @property bool $digid_required
  * @property string $digid_env
- * @property Collection|FundConfig[] $fund_configs
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
+ * @property-read int|null $fund_configs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionSteps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnv($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidRequired($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidSharedSecret($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereHasMoreInfoUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLat($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereMoreInfoUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlApp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlProvider($value)
@@ -64,16 +77,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
- * @property string|null $email_from_address
- * @property string|null $email_from_name
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromName($value)
- * @property-read int|null $fund_configs_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionSteps($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereHasMoreInfoUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereMoreInfoUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereTitle($value)
  */
 class Implementation extends Model
 {
@@ -102,6 +105,7 @@ class Implementation extends Model
      */
     protected $casts = [
         'digid_enabled' => 'boolean',
+        'digid_required' => 'boolean',
         'has_more_info_url' => 'boolean',
     ];
 
@@ -139,18 +143,19 @@ class Implementation extends Model
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public static function active(): \Illuminate\Support\Collection
+    public static function active(): Collection
     {
         return self::byKey(self::activeKey());
     }
 
     /**
      * @param $key
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public static function byKey($key) {
+    public static function byKey($key): Collection
+    {
         if ($key === 'general') {
             return collect(self::general_urls());
         }
@@ -234,25 +239,25 @@ class Implementation extends Model
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public static function activeFunds(): \Illuminate\Support\Collection {
+    public static function activeFunds(): Collection {
         return self::activeFundsQuery()->get();
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public static function implementationKeysAvailable(): \Illuminate\Support\Collection {
+    public static function implementationKeysAvailable(): Collection {
         return self::query()->pluck('key')->merge([
             'general'
         ]);
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public static function keysAvailable (): \Illuminate\Support\Collection {
+    public static function keysAvailable (): Collection {
         return self::implementationKeysAvailable()->map(static function ($key) {
             return [
                 $key . '_webshop',
@@ -296,10 +301,10 @@ class Implementation extends Model
      */
     public function urlFrontend(string $frontend, string $uri = '') {
         switch ($frontend) {
-            case 'webshop': return $this->urlWebshop($uri); break;
-            case 'sponsor': return $this->urlSponsorDashboard($uri); break;
-            case 'provider': return $this->urlProviderDashboard($uri); break;
-            case 'validator': return $this->urlValidatorDashboard($uri); break;
+            case 'webshop': return $this->urlWebshop($uri);
+            case 'sponsor': return $this->urlSponsorDashboard($uri);
+            case 'provider': return $this->urlProviderDashboard($uri);
+            case 'validator': return $this->urlValidatorDashboard($uri);
         }
         return null;
     }
@@ -343,18 +348,19 @@ class Implementation extends Model
      * @return bool
      */
     public function autoValidationEnabled(): bool {
-        $oneActiveFund = $this->funds()->where([
-                'state' => Fund::STATE_ACTIVE
-            ])->count() === 1;
-
+        $oneActiveFund = $this->funds()->where(['state' => Fund::STATE_ACTIVE])->count() === 1;
         $oneActiveFundWithAutoValidation = $this->funds()->where([
-                'state' => Fund::STATE_ACTIVE,
-                'auto_requests_validation' => true
-            ])->whereNotNull('default_validator_employee_id')->count() === 1;
+            'state' => Fund::STATE_ACTIVE,
+            'auto_requests_validation' => true
+        ])->whereNotNull('default_validator_employee_id')->count() === 1;
 
         return $oneActiveFund && $oneActiveFundWithAutoValidation;
     }
 
+    /**
+     * @param $value
+     * @return array|\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed|void
+     */
     public static function platformConfig($value) {
         if (!self::isValidKey(self::activeKey())) {
             return abort(403, 'unknown_implementation_key');
@@ -362,72 +368,95 @@ class Implementation extends Model
 
         $ver = request()->input('ver');
 
-        if (preg_match('/[^a-z_\-0-9]/i', $value)) {
-            abort(403);
-        }
-
-        if (preg_match('/[^a-z_\-0-9]/i', $ver)) {
+        if (preg_match('/[^a-z_\-0-9]/i', $value) || preg_match('/[^a-z_\-0-9]/i', $ver)) {
             abort(403);
         }
 
         $config = config('forus.features.' . $value . ($ver ? '.' . $ver : ''));
 
         if (is_array($config)) {
-            $config['media'] = collect(MediaService::getMediaConfigs())->map(static function(
-                MediaImageConfig $mediaConfig
-            ) {
-                return [
-                    'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
-                    'size' => collect($mediaConfig->getPresets())->map(static function(
-                        MediaPreset $mediaPreset
-                    ) {
-                        return $mediaPreset instanceof MediaImagePreset ? [
-                            $mediaPreset->width,
-                            $mediaPreset->height,
-                            $mediaPreset->preserve_aspect_ratio,
-                        ] : null;
-                    })
-                ];
-            });
-
             $implementation = self::active();
             $implementationModel = self::activeModel();
 
-            $config['digid'] = $implementationModel ?
-                $implementationModel->digidEnabled() : false;
-
-            $config['auto_validation'] = $implementationModel &&
-                $implementationModel->autoValidationEnabled();
-
-            $config['fronts'] = $implementation->only([
-                'url_webshop', 'url_sponsor', 'url_provider',
-                'url_validator', 'url_app'
+            $config = array_merge($config, [
+                'media' => self::getPlatformMediaConfig(),
+                'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
+                'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+                'digid' => $implementationModel ? $implementationModel->digidEnabled() : false,
+                'digid_mandatory' => $implementationModel->digid_required ?? true,
+                'settings' => self::getPlatformSettingsConfig($implementation),
+                'fronts' => $implementation->only([
+                    'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app'
+                ]),
+                'map' => [
+                    'lon' => (float) ($implementation['lon'] ?? config('forus.front_ends.map.lon')),
+                    'lat' => (float) ($implementation['lat'] ?? config('forus.front_ends.map.lat')),
+                ],
+                'implementation_name' => $implementation->get('name') ?: 'general',
             ]);
-
-            $config['settings'] = array_merge($implementation->only([
-                'title', 'description', 'has_more_info_url',
-                'more_info_url', 'description_steps',
-            ])->toArray(), [
-                'description_html' => resolve('markdown')->convertToHtml(
-                    $implementation['description'] ?? ''
-                ),
-                'description_steps_html' => resolve('markdown')->convertToHtml(
-                    $implementation['description_steps'] ?? ''
-                ),
-            ]);
-
-            $config['map'] = [
-                'lon' => (float) ($implementation['lon'] ?? config('forus.front_ends.map.lon')),
-                'lat' => (float) ($implementation['lat'] ?? config('forus.front_ends.map.lat'))
-            ];
-
-            $config['implementation_name'] = $implementation->get('name') ?: 'general';
         }
 
         return $config ?: [];
     }
 
+
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function hasFundsOfType(string $type): bool {
+        return self::activeFundsQuery()->where([
+            'type' => $type
+        ])->exists();
+    }
+
+    /**
+     * @param Collection $implementation
+     * @return array
+     */
+    private static function getPlatformSettingsConfig($implementation): array {
+        return array_merge($implementation->only([
+            'title', 'description', 'has_more_info_url',
+            'more_info_url', 'description_steps',
+        ])->toArray(), [
+            'description_html' => resolve('markdown')->convertToHtml(
+                $implementation['description'] ?? ''
+            ),
+            'description_steps_html' => resolve('markdown')->convertToHtml(
+                $implementation['description_steps'] ?? ''
+            ),
+        ]);
+    }
+
+    /**
+     * @return Collection
+     */
+    private static function getPlatformMediaConfig(): Collection
+    {
+        return collect(MediaService::getMediaConfigs())->map(static function(
+            MediaImageConfig $mediaConfig
+        ) {
+            return [
+                'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
+                'size' => collect($mediaConfig->getPresets())->map(static function(
+                    MediaPreset $mediaPreset
+                ) {
+                    return $mediaPreset instanceof MediaImagePreset ? [
+                        $mediaPreset->width,
+                        $mediaPreset->height,
+                        $mediaPreset->preserve_aspect_ratio,
+                    ] : null;
+                })
+            ];
+        });
+    }
+
+    /**
+     * @param Request $request
+     * @return Organization|EloquentBuilder
+     */
     public static function searchProviders(Request $request) {
+        /** @var Builder $query */
         $query = Organization::query();
         $activeModel = self::activeModel();
 

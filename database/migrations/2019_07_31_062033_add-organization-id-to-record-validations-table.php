@@ -10,7 +10,7 @@ class AddOrganizationIdToRecordValidationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('record_validations', function(Blueprint $table) {
             $table->unsignedInteger('organization_id')->nullable()
@@ -23,7 +23,7 @@ class AddOrganizationIdToRecordValidationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('record_validations', function(Blueprint $table) {
             $table->dropColumn('organization_id');

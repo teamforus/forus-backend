@@ -12,7 +12,7 @@ class AddReturnableFieldToVouchersTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('vouchers', function(Blueprint $table) {
             $table->boolean('returnable')->default(true)->after('amount');
@@ -28,7 +28,7 @@ class AddReturnableFieldToVouchersTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('vouchers', function(Blueprint $table) {
             $table->dropColumn('returnable');

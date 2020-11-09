@@ -15,28 +15,21 @@ class OfficeScheduleResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        return collect($this->resource)->only([
+        $schedule = $this->resource;
+
+        return array_merge($schedule->only([
             'id', 'office_id', 'week_day',
-            'start_time', 'end_time',
-            'break_start_time', 'break_end_time'
-        ])->merge([
-            'start_time' => $this->resource ? collect(
-                explode(':', $this->resource->start_time)
-            )->splice(0, 2)->implode(':'): null,
-            'end_time' => $this->resource ? collect(
-                explode(':', $this->resource->end_time)
-            )->splice(0, 2)->implode(':'): null,
-            'break_start_time' => $this->resource ? collect(
-                explode(':', $this->resource->break_start_time)
-            )->splice(0, 2)->implode(':'): null,
-            'break_end_time' => $this->resource ? collect(
-                explode(':', $this->resource->break_end_time)
-            )->splice(0, 2)->implode(':'): null
-        ])->toArray();
+            'start_time', 'end_time', 'break_start_time', 'break_end_time'
+        ]), [
+            'start_time' => $schedule ? substr($schedule->start_time, 0, 5): null,
+            'end_time' => $schedule ? substr($schedule->end_time, 0, 5): null,
+            'break_start_time' => $schedule ? substr($schedule->break_start_time, 0, 5): null,
+            'break_end_time' => $schedule ? substr($schedule->break_end_time, 0, 5): null,
+        ]);
     }
 }

@@ -11,7 +11,7 @@ class UpdateImplementationCmsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,12 +21,12 @@ class UpdateImplementationCmsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'has_more_info_url'     => 'nullable|boolean',
             'more_info_url'         => 'nullable|string|max:50',
-            'description_steps'     => 'nullable|string|max:4000',
+            'description_steps'     => 'nullable|string|max:10000',
             'title'                 => 'nullable|string|max:50',
             'description'           => 'nullable|string|max:4000',
         ];

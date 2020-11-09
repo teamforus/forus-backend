@@ -11,7 +11,7 @@ class MigrateTopUpTransactions extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         DB::table('fund_top_ups')->where('state', '=', 'pending')->delete();
         DB::table('fund_top_ups')->get()->each(function($fund_top_up) {
@@ -34,7 +34,7 @@ class MigrateTopUpTransactions extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_top_ups', function(Blueprint $table) {
             $table->float('amount')->unsigned()->nullable()->after('fund_id');

@@ -11,7 +11,7 @@ class CreateVoucherTransactionNotesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('voucher_transaction_notes', function (Blueprint $table) {
             $table->increments('id');
@@ -33,7 +33,7 @@ class CreateVoucherTransactionNotesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('voucher_transaction_notes');
     }

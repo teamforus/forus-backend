@@ -8,6 +8,8 @@ use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TransactionsController extends Controller
 {
@@ -22,12 +24,12 @@ class TransactionsController extends Controller
     public function index(
         IndexTransactionsRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
         $transactionsQuery = VoucherTransaction::searchProvider($request, $organization)->with(
-                ProviderVoucherTransactionResource::$load
+            ProviderVoucherTransactionResource::$load
         );
         
         $meta = [
@@ -50,7 +52,7 @@ class TransactionsController extends Controller
     public function export(
         IndexTransactionsRequest $request,
         Organization $organization
-    ) {
+    ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
@@ -69,7 +71,7 @@ class TransactionsController extends Controller
     public function show(
         Organization $organization,
         VoucherTransaction $voucherTransaction
-    ) {
+    ): ProviderVoucherTransactionResource {
         $this->authorize('show', $organization);
         $this->authorize('showProvider', [$voucherTransaction, $organization]);
 

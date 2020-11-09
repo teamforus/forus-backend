@@ -7,6 +7,7 @@ use App\Http\Resources\ProviderResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProvidersController extends Controller
 {
@@ -18,7 +19,7 @@ class ProvidersController extends Controller
      */
     public function index(
         SearchProvidersRequest $request
-    ) {
+    ): AnonymousResourceCollection {
         return ProviderResource::collection(Implementation::searchProviders(
             $request
         )->paginate($request->input('per_page', 10)));
@@ -30,7 +31,7 @@ class ProvidersController extends Controller
      * @param Organization $organization
      * @return ProviderResource
      */
-    public function show(Organization $organization)
+    public function show(Organization $organization): ProviderResource
     {
         return new ProviderResource($organization);
     }

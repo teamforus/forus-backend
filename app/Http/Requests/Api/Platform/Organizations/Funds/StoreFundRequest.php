@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Models\Fund;
 use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -55,6 +56,7 @@ class StoreFundRequest extends FormRequest
 
         return array_merge([
             'name'                          => 'required|between:2,200',
+            'type'                          => ['required', Rule::in(Fund::TYPES)],
             'description'                   => 'nullable|string|max:140',
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
@@ -75,7 +77,10 @@ class StoreFundRequest extends FormRequest
         ] : []);
     }
 
-    public function attributes()
+    /**
+     * @return string[]
+     */
+    public function attributes(): array
     {
         return [
             'criteria.*.value' => 'Waarde'

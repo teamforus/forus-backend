@@ -11,7 +11,7 @@ class FundsAddPublicField extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('funds', function (Blueprint $table) {
             $table->boolean('public')->default(0)->after('state');
@@ -23,7 +23,7 @@ class FundsAddPublicField extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('funds', function (Blueprint $table) {
             $table->dropColumn('public');

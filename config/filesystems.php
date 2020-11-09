@@ -62,7 +62,12 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
         ],
-
+        'ftp_physical_cards' => [
+            'driver' => 'ftp',
+            'host' => env('PHYSICAL_CARDS_FTP_HOST'),
+            'username' => env('PHYSICAL_CARDS_FTP_USER'),
+            'password' => env('PHYSICAL_CARDS_FTP_PASS'),
+        ],
     ],
 
 ];

@@ -16,7 +16,7 @@ class OrganizationBasicResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array|Collection
      */
     public function toArray($request)
@@ -29,15 +29,14 @@ class OrganizationBasicResource extends Resource
             'website' => $organization->website_public ? $organization->website ?? null: null,
         ];
 
-        return collect($organization)->only([
+        return array_merge($organization->only([
             'id', 'name', 'business_type_id',
-            'email_public', 'phone_public', 'website_public'
-        ])->merge(array_merge($privateData, [
+            'email_public', 'phone_public', 'website_public',
+        ]), (array_merge($privateData, [
             'business_type' => $organization->business_type ? new BusinessTypeResource(
                 $organization->business_type
             ) : null,
-            'logo' => new MediaCompactResource(
-                $organization->logo)
-        ]))->toArray();
+            'logo' => new MediaCompactResource($organization->logo)
+        ])));
     }
 }

@@ -13,16 +13,6 @@ class ProductPolicy
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * @param $identity_address
      * @param Organization $organization
      * @return bool
@@ -30,17 +20,14 @@ class ProductPolicy
     public function viewAny(
         $identity_address,
         Organization $organization
-    ) {
-        return $organization->identityCan(
-            $identity_address,
-            'manage_products'
-        );
+    ): bool {
+        return $organization->identityCan($identity_address, 'manage_products');
     }
 
     /**
      * @return bool
      */
-    public function viewAnyPublic() {
+    public function viewAnyPublic(): bool {
         return true;
     }
 
@@ -52,11 +39,10 @@ class ProductPolicy
     public function store(
         $identity_address,
         Organization $organization
-    ) {
-        return $organization->identityCan(
-            $identity_address,
+    ): bool {
+        return $organization->identityCan($identity_address, [
             'manage_products'
-        ) && $organization->products->count() < config(
+        ]) && $organization->products->count() < config(
             'forus.features.dashboard.organizations.products.maxProductCount'
         );
     }
@@ -71,7 +57,7 @@ class ProductPolicy
         $identity_address,
         Product $product,
         Organization $organization
-    ) {
+    ): bool {
         return $this->update($identity_address, $product, $organization);
     }
 
@@ -85,14 +71,14 @@ class ProductPolicy
         $identity_address,
         Product $product,
         Organization $organization
-    ) {
+    ): bool {
         return $this->update($identity_address, $product, $organization);
     }
 
     /**
      * @return bool
      */
-    public function showPublic() {
+    public function showPublic(): bool {
         return true;
     }
 
@@ -106,15 +92,12 @@ class ProductPolicy
         $identity_address,
         Product $product,
         Organization $organization
-    ) {
-        if ($product->organization_id != $organization->id) {
+    ): bool {
+        if ($product->organization_id !== $organization->id) {
             return false;
         }
 
-        return $product->organization->identityCan(
-            $identity_address,
-            'manage_products'
-        );
+        return $product->organization->identityCan($identity_address, 'manage_products');
     }
 
     /**
@@ -130,11 +113,7 @@ class ProductPolicy
         $identity_address,
         Product $product,
         Voucher $voucher
-    ) {
-        if (empty($identity_address)) {
-            return false;
-        }
-
+    ): bool {
         if (empty($identity_address)) {
             return false;
         }
@@ -143,7 +122,7 @@ class ProductPolicy
         return ProductQuery::approvedForFundsAndActiveFilter(
             Product::query(),
             $voucher->fund_id
-        )->where('id', $product->id)->exists();
+        )->where('id', '=', $product->id)->exists();
     }
 
     /**
@@ -156,7 +135,7 @@ class ProductPolicy
         $identity_address,
         Product $product,
         Organization $organization
-    ) {
+    ): bool {
         return $this->update($identity_address, $product, $organization);
     }
 }

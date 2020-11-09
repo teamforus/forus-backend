@@ -24,7 +24,9 @@ trait HasLogs
         array $models = [],
         array $raw_meta = []
     ): EventLog {
-        $meta = array_reduce(array_keys($models), static function($carry, $key) use ($models) {
+        $meta = array_reduce(array_keys(array_filter($models, static function($model) {
+            return $model !== null;
+        })), static function($carry, $key) use ($models) {
             return array_merge($carry, resolve(IEventLogService::class)->modelToMeta(
                 $key, $models[$key]
             ));

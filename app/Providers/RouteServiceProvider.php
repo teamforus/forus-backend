@@ -42,7 +42,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function boot()
+    public function boot(): void
     {
         parent::boot();
 
@@ -59,7 +59,7 @@ class RouteServiceProvider extends ServiceProvider
             return Prevalidation::query()->where([
                 'uid' => $value,
                 'state' => Prevalidation::STATE_PENDING
-            ])->first() ?? abort(404);
+            ])->first();
         });
 
         $router->bind('organization', static function ($id) {
@@ -102,12 +102,16 @@ class RouteServiceProvider extends ServiceProvider
             return FundProviderInvitation::where(compact('token'))->firstOrFail();
         });
 
-        $router->bind('configured_fund', static function ($value) {
-            return Fund::whereKey($value)->has('fund_config')->firstOrFail();
+        $router->bind('voucher_address_or_physical_code', static function ($value) {
+            if ($voucher = Voucher::findByAddressOrPhysicalCard($value)) {
+                return $voucher->token_without_confirmation;
+            }
+
+            return abort(404);
         });
 
         $router->bind('voucher_token_address', static function ($address) {
-            return VoucherToken::where(compact('address'))->firstOrFail();
+            return VoucherToken::whereAddress($address)->firstOrFail();
         });
 
         $router->bind('product_voucher_token_address', static function ($address) {

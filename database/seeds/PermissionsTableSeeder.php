@@ -10,7 +10,7 @@ class PermissionsTableSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $permissions = [
             'manage_organization'       => "Manage organization",

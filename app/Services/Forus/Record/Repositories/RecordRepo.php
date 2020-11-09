@@ -478,13 +478,12 @@ class RecordRepo implements IRecordRepo
     }
 
     /**
-     * Add new record to identity
      * @param string $identityAddress
      * @param string $typeKey
      * @param string $value
-     * @param mixed|null $recordCategoryId
-     * @param integer|null $order
-     * @return null|array
+     * @param null $recordCategoryId
+     * @param null $order
+     * @return array|null
      */
     public function recordCreate(
         string $identityAddress,
@@ -492,7 +491,7 @@ class RecordRepo implements IRecordRepo
         string $value,
         $recordCategoryId = null,
         $order = null
-    ) {
+    ): ?array {
         $typeId = $this->getTypeIdByKey($typeKey);
 
         if (!$typeId) {

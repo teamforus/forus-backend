@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\SearchProductsRequest;
-use App\Http\Resources\ProductResource;
+use App\Http\Resources\Requester\ProductResource;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class ProductsController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class ProductsController extends Controller
 {
     /**
@@ -16,13 +21,16 @@ class ProductsController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(SearchProductsRequest $request)
-    {
+    public function index(
+        SearchProductsRequest $request
+    ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
 
         return ProductResource::collection(Product::search($request)->with(
             ProductResource::$load
-        )->paginate($request->input('per_page', 15)));
+        )->where($request->input('show_all', false) ? [] : [
+            'show_on_webshop' => true,
+        ])->paginate($request->input('per_page', 15)));
     }
 
     /**
@@ -30,12 +38,14 @@ class ProductsController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function sample(SearchProductsRequest $request)
-    {
+    public function sample(
+        SearchProductsRequest $request
+    ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
 
-
-        $products = Product::search($request)->has('medias')->take(6);
+        $products = Product::search($request)->has('medias')->where([
+            'show_on_webshop' => true,
+        ])->take(6);
         $products->groupBy('organization_id')->distinct()->inRandomOrder();
         $resultProducts = $products->with(ProductResource::$load)->get();
 
@@ -43,9 +53,9 @@ class ProductsController extends Controller
             $resultProducts = $resultProducts->merge(
                 Product::search($request)->whereKeyNot(
                     $resultProducts->pluck('id')
-                )->inRandomOrder()->take(
-                    6 - $resultProducts->count()
-                )->with(ProductResource::$load)->get()
+                )->inRandomOrder()->take(6 - $resultProducts->count())->where([
+                    'show_on_webshop' => true,
+                ])->with(ProductResource::$load)->get()
             );
         }
 
@@ -57,8 +67,7 @@ class ProductsController extends Controller
      * @return ProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Product $product)
-    {
+    public function show(Product $product): ProductResource {
         $this->authorize('showPublic', $product);
 
         return new ProductResource($product->load(ProductResource::$load));

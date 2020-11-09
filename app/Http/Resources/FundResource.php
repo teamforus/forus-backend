@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundRequest;
 use App\Models\Organization;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
@@ -29,6 +30,7 @@ class FundResource extends Resource
             'validate_records'
         ])->get();
 
+        $checkCriteria = $request->get('check_criteria', false);
         $providersEmployeeCount = $fund->provider_organizations_approved;
         $providersEmployeeCount = $providersEmployeeCount->reduce(static function (
             int $carry,
@@ -50,7 +52,8 @@ class FundResource extends Resource
                     'total'     => currency_format($fund->budget_total),
                     'validated' => currency_format($fund->budget_validated),
                     'used'      => currency_format($fund->budget_used),
-                    'left'      => currency_format($fund->budget_left)
+                    'left'      => currency_format($fund->budget_left),
+                    'reserved'  => currency_format($fund->budget_reserved)
                 ]
             ];
         } else {
@@ -58,9 +61,13 @@ class FundResource extends Resource
         }
 
         $data = array_merge($fund->only([
-            'id', 'name', 'description', 'organization_id', 'state', 'notification_amount', 'tags'
+            'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
+            'tags', 'type',
         ]), [
             'key' => $fund->fund_config->key ?? '',
+            'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
+            'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
+            'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
             'end_date' => $fund->end_date->format('Y-m-d'),
@@ -72,7 +79,15 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
-        ], $financialData);
+            'has_pending_fund_requests' => $fund->fund_requests()->where([
+                'identity_address' => auth_address(),
+                'state' => FundRequest::STATE_PENDING,
+            ])->exists(),
+        ], $checkCriteria ? [
+            'taken_by_partner' =>
+                ($fund->fund_config->hash_partner_deny ?? false) &&
+                $fund->isTakenByPartner(auth_address()),
+        ]: [], $financialData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {
             $data = array_merge($data, $fund->only([

@@ -9,7 +9,7 @@ return [
     'fund_expiring' => [
         'title' => ':fund_name verloopt bijna.',
         'description' =>
-            ':fund_name loopt van :start_date: tot :end_date_minus1: en verloopt bijna.'
+            ':fund_name loopt van :fund_start_date_locale tot :fund_end_date_minus1_locale en verloopt bijna.'
     ],
     'fund_ended' => [
         'title' => ':fund_name is verlopen.',

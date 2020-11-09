@@ -9,7 +9,7 @@ class BunqIdealIssuersTableSeeder extends DatabaseSeeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $issuers = [[
             "name" => "ABN Amro",

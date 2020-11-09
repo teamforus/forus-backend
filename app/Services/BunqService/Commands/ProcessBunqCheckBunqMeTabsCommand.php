@@ -24,20 +24,11 @@ class ProcessBunqCheckBunqMeTabsCommand extends Command
     protected $description = 'Update bunq ideal issuers list.';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct() {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return void
      */
-    public function handle() {
+    public function handle(): void {
         try {
             Fund::query()->whereHas('fund_config', function (Builder $builder) {
                 $builder->where('is_configured', true);

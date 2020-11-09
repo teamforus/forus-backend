@@ -18,7 +18,7 @@ class StoreValidatorOrganizationsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -28,7 +28,7 @@ class StoreValidatorOrganizationsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $organization = $this->organization;
 
@@ -36,7 +36,7 @@ class StoreValidatorOrganizationsRequest extends FormRequest
             'validator_organization_id'
         )->toArray() : [];
 
-        array_push($existingValidators, $organization->id ?? null);
+        $existingValidators[] = $organization->id ?? null;
 
         return [
             'organization_id' => [
