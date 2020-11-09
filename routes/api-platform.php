@@ -820,7 +820,6 @@ $router->group(['middleware' => [
         ]
     ]);
 
-
     $router->post(
         '/devices/register-push',
         'Api\Platform\DevicesController@registerPush'
