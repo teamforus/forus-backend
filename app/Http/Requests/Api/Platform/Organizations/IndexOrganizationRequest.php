@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations;
 
 use App\Http\Resources\OrganizationResource;
+use App\Models\Fund;
 use App\Rules\DependencyRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -43,6 +44,8 @@ class IndexOrganizationRequest extends FormRequest
             'is_provider'   => 'nullable|boolean',
             'is_validator'  => 'nullable|boolean',
             'implementation' => 'nullable|boolean',
+            'has_products'  => 'nullable|boolean',
+            'fund_type'     => 'nullable|in:' . implode(',', Fund::TYPES),
         ];
     }
 }

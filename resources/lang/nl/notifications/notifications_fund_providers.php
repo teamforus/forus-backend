@@ -16,7 +16,7 @@ return [
         'description' =>
             ':fund_name liep van :start_date: tot :end_date_minus1: en is vanaf dit moment niet meer geldig.'.
             'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.'.
-            'Kijk in uw dashboard of u zich voor een nieuw fonds kunt aanmelden.'
+            'Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden.'
     ],
     'fund_started' => [
         'title' => ':fund_name is van start gegaan!',
@@ -26,21 +26,21 @@ return [
     'approved_budget' => [
         'title' => 'Aanmelding voor :fund_name is goedgekeurd.',
         'description' =>
-            'Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbiedingen kan leveren aan klanten die recht hebben op :fund_name. ' .
-            'Uw aanbiedingen worden vanaf nu zichtbaar in de webshop.',
+            'Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbod kan leveren aan klanten die recht hebben op :fund_name. ' .
+            'Uw producten of diensten worden vanaf nu zichtbaar in de webshop.',
     ],
     'approved_products' => [
         'title' => 'Aanmelding voor :fund_name is goedgekeurd.',
         'description' =>
-            'Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbiedingen kan leveren aan klanten die recht hebben op :fund_name. ' .
-            'Al uw aanbiedingen staan nu in de webshop.',
+            'Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbod kan leveren aan klanten die recht hebben op :fund_name. ' .
+            'Al uw aanbod staan nu in de webshop.',
     ],
     'revoked_budget' => [
         'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.',
         'description' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.',
     ],
     'revoked_products' => [
-        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om aanbiedingsvouchers te scannen.',
-        'description' => 'Aanmelding voor :fund_name is gewijzigd. Uw aanbiedingen zijn niet meer zichtbaar in de webshop.',
+        'title' => 'Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om reserveringen te scannen.',
+        'description' => 'Aanmelding voor :fund_name is gewijzigd. Uw producten of diensten zijn niet meer zichtbaar in de webshop.',
     ],
 ];

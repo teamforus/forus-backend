@@ -5,7 +5,7 @@ return [
     'title' => 'Nieuwe aanmeldingen voor uw fondsen',
 
     'greetings' => 'Beste :organization_name,',
-    'dashboard_button' => 'GA NAAR HET DASHBOARD',
+    'dashboard_button' => 'GA NAAR DE BEHEEROMGEVING',
 
     // new provider requests
     'providers_header' => 'Nieuwe aanmeldingen voor :fund_name',

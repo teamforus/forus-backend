@@ -150,6 +150,7 @@ class Organization extends Model
         /** @var \Illuminate\Database\Eloquent\Builder $query */
         $query = self::query();
         $has_products = $request->input('has_products');
+        $fund_type    = $request->input('fund_type', 'budget');
 
         if ($request->input('is_employee', true)) {
             if (auth_address()) {
@@ -181,8 +182,10 @@ class Organization extends Model
         }
 
         if ($has_products) {
-            $query->whereHas('products', static function(\Illuminate\Database\Eloquent\Builder $builder) {
-                $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
+            $query->whereHas('products', static function(\Illuminate\Database\Eloquent\Builder $builder) use ($fund_type) {
+                $activeFunds = Implementation::activeFundsQuery()->where(
+                    'type', $fund_type
+                )->pluck('id')->toArray();
 
                 // only in stock and not expired
                 $builder = ProductQuery::inStockAndActiveFilter($builder);

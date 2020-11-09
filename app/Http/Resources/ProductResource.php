@@ -80,7 +80,9 @@ class ProductResource extends Resource
     private function getProductFunds(Product $product) {
         return FundQuery::whereProductsAreApprovedAndActiveFilter(
             $this->fundsQuery(), $product->id
-        )->get()->map(static function(Fund $fund) use ($product) {
+        )->with([
+            'organization'
+        ])->get()->map(static function(Fund $fund) use ($product) {
             $fundProviderProduct = $fund->isTypeSubsidy() ?
                 $product->getSubsidyDetailsForFund($fund) : null;
 
@@ -89,6 +91,9 @@ class ProductResource extends Resource
                 'name' => $fund->name,
                 'logo' => new MediaResource($fund->logo),
                 'type' => $fund->type,
+                'organization' => $fund->organization->only([
+                    'id', 'name',
+                ])
             ], $fund->isTypeSubsidy() && $fundProviderProduct ? [
                 'limit_total' => $fundProviderProduct->limit_total,
                 'limit_per_identity' => $fundProviderProduct->limit_per_identity,

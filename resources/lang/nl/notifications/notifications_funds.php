@@ -38,8 +38,8 @@ return [
         'description' => ':fund_name is aangemaakt.',
     ],
     'product_added' => [
-        'title' => ':provider_name heeft een nieuwe aanbieding toegevoegd aan :fund_name.',
-        'description' => ':provider_name heeft een nieuwe aanbieding toegevoegd aan :fund_name.',
+        'title' => ':provider_name heeft een nieuw aanbod toegevoegd aan :fund_name.',
+        'description' => ':provider_name heeft een nieuw aanbod toegevoegd aan :fund_name.',
     ],
     'product_subsidy_removed' => [
         'title' => ':provider_name heeft de prijs veranderd voor ":product_name"',
