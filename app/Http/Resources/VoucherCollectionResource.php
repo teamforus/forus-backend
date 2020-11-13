@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Voucher;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -91,12 +90,12 @@ class VoucherCollectionResource extends VoucherResource
 
     /**
      * @param Voucher $voucher
-     * @return \App\Models\Office[]|Collection|\Illuminate\Support\Collection
+     * @return AnonymousResourceCollection
      */
-    protected function getOffices(Voucher $voucher)
+    protected function getOffices(Voucher $voucher): AnonymousResourceCollection
     {
         if (env('REMOVE_VOUCHERS_LIST_OFFICES_SOFT', FALSE)) {
-            return new Collection([]);
+            return OfficeResource::collection($voucher);
         }
 
         return parent::getOffices($voucher);

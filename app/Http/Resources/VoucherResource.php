@@ -187,15 +187,17 @@ class VoucherResource extends Resource
 
     /**
      * @param Voucher $voucher
-     * @return \App\Models\Office[]|Collection|\Illuminate\Support\Collection
+     * @return AnonymousResourceCollection
      */
     protected function getOffices(
         Voucher $voucher
-    ) {
+    ): AnonymousResourceCollection {
         if ($voucher->type === 'regular') {
-            return $voucher->fund->provider_organizations_approved->pluck('offices')->flatten();
+            return OfficeResource::collection(
+                $voucher->fund->provider_organizations_approved->pluck('offices')->flatten()
+            );
         }
 
-        return $voucher->product->organization->offices;
+        return OfficeResource::collection($voucher->product->organization->offices);
     }
 }
