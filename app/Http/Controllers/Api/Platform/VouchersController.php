@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
+use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
@@ -42,9 +43,11 @@ class VouchersController extends Controller
         $this->authorize('viewAny', Voucher::class);
 
         // todo: remove fallback pagination 1000, when apps are ready
-        return VoucherResource::collection(Voucher::whereIdentityAddress([
+        return VoucherCollectionResource::collection(Voucher::whereIdentityAddress([
             'identity_address' => $request->auth_address()
-        ])->with(VoucherResource::$load)->paginate($request->input('per_page', 1000)));
+        ])->with(VoucherCollectionResource::load())->paginate(
+            $request->input('per_page', 1000)
+        ));
     }
 
     /**
@@ -68,7 +71,7 @@ class VouchersController extends Controller
         $this->authorize('reserve', [$product, $voucher]);
 
         return new VoucherResource($voucher->buyProductVoucher($product)->load(
-            VoucherResource::$load
+            VoucherResource::load()
         ));
     }
 
@@ -84,7 +87,7 @@ class VouchersController extends Controller
     ): VoucherResource {
         $this->authorize('show', $voucherToken->voucher);
 
-        return new VoucherResource($voucherToken->voucher->load(VoucherResource::$load));
+        return new VoucherResource($voucherToken->voucher->load(VoucherResource::load()));
     }
 
     /**

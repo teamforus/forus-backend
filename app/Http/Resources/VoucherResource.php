@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Fund;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -37,6 +38,14 @@ class VoucherResource extends Resource
         'fund.logo.presets',
         'fund.organization.logo.presets',
     ];
+
+    /**
+     * @return array|string[]
+     */
+    public static function load(): array
+    {
+        return self::$load;
+    }
 
     /**
      * Transform the resource into an array.
@@ -74,7 +83,7 @@ class VoucherResource extends Resource
             ]) : null,
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
-            'transactions' => VoucherTransactionResource::collection($voucher->transactions),
+            'transactions' => $this->getTransactions($voucher),
         ]);
     }
 
@@ -82,14 +91,12 @@ class VoucherResource extends Resource
      * @param Voucher $voucher
      * @return array
      */
-    public function getBaseFields(Voucher $voucher): array {
+    protected function getBaseFields(Voucher $voucher): array {
         if ($voucher->type === 'regular') {
             $amount = $voucher->amount_available_cached;
-            $offices = $voucher->fund->provider_organizations_approved->pluck('offices')->flatten();
             $productResource = null;
         } elseif ($voucher->type === 'product') {
             $amount = $voucher->amount;
-            $offices = $voucher->product->organization->offices;
             $productResource = array_merge($voucher->product->only([
                 'id', 'name', 'description', 'description_html', 'price', 'old_price',
                 'total_amount', 'sold_amount', 'product_category_id',
@@ -107,7 +114,7 @@ class VoucherResource extends Resource
 
         return [
             'amount' => currency_format($amount),
-            'offices' => OfficeResource::collection($offices),
+            'offices' => $this->getOffices($voucher),
             'product' => $productResource,
         ];
     }
@@ -116,7 +123,7 @@ class VoucherResource extends Resource
      * @param Fund $fund
      * @return array
      */
-    public function getFundResource(Fund $fund): array {
+    protected function getFundResource(Fund $fund): array {
         return array_merge($fund->only([
             'id', 'name', 'state', 'type',
         ]), [
@@ -135,7 +142,7 @@ class VoucherResource extends Resource
      * @param Voucher[]|Collection|null $product_vouchers
      * @return Voucher[]|Collection|null
      */
-    private function getProductVouchers($product_vouchers) {
+    protected function getProductVouchers($product_vouchers) {
         return $product_vouchers ? $product_vouchers->map(static function(Voucher $product_voucher) {
             return array_merge($product_voucher->only([
                 'identity_address', 'fund_id', 'returnable',
@@ -156,7 +163,7 @@ class VoucherResource extends Resource
      * @param Voucher $product_voucher
      * @return array
      */
-    private static function getProductDetails(
+    protected static function getProductDetails(
         Voucher $product_voucher
     ): array {
         return array_merge($product_voucher->product->only([
@@ -166,5 +173,31 @@ class VoucherResource extends Resource
             'price' => currency_format($product_voucher->product->price),
             'old_price' => currency_format($product_voucher->product->old_price),
         ] : []);
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
+    protected function getTransactions(
+        Voucher $voucher
+    ): AnonymousResourceCollection {
+        return VoucherTransactionResource::collection($voucher->transactions);
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return AnonymousResourceCollection
+     */
+    protected function getOffices(
+        Voucher $voucher
+    ): AnonymousResourceCollection {
+        if ($voucher->type === 'regular') {
+            return OfficeResource::collection(
+                $voucher->fund->provider_organizations_approved->pluck('offices')->flatten()
+            );
+        }
+
+        return OfficeResource::collection($voucher->product->organization->offices);
     }
 }

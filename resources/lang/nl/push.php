@@ -4,7 +4,7 @@ return [
     "voucher" => [
         "activated" => [
             "title" => ":fund_name",
-            "body" => "U hebt een activatiecode gebruikt om ':fund_name' voucher te activeren.",
+            "body" => "U hebt een activatiecode gebruikt om ':fund_name' tegoed te activeren.",
         ],
         "bought" => [
             "title" => ":implementation_name",
@@ -18,7 +18,7 @@ return [
         ],
         "offline_product_voucher" => [
             "title" => ":product_name",
-            "body" => "Een aanbieding voucher is zojuist gebruikt om :product_name af te nemen.",
+            "body" => "Een reservering is zojuist gebruikt om :product_name af te nemen.",
         ]
     ],
     "bunq_transactions" => [

@@ -22,12 +22,12 @@ return [
 
     'products_approved' => [
         'title' => implode('|', [
-            'Uw aanmelding voor :count_funds fonds is goedgekeurd met al uw aanbiedingen.',
-            'Uw aanmelding voor :count_funds fondsen is goedgekeurd met al uw aanbiedingen.',
+            'Uw aanmelding voor :count_funds fonds is goedgekeurd met al uw aanbod.',
+            'Uw aanmelding voor :count_funds fondsen is goedgekeurd met al uw aanbod.',
         ]),
         'funds_list' => implode('|', [
-            "Dit betekent dat uw producten in de webshop staan voor de volgende fonds:",
-            "Dit betekent dat uw producten in de webshop staan voor de volgende fondsen:",
+            "Dit betekent dat uw aanbod in de webshop staan voor de volgende fonds:",
+            "Dit betekent dat uw aanbod in de webshop staan voor de volgende fondsen:",
         ]),
     ],
 
@@ -42,29 +42,29 @@ return [
         ]),
         'details' =>
             "Er zijn specifieke rechten aan u toegekend.\n" .
-            "Bekijk het dashboard voor de huidige status.",
+            "Bekijk de beheeromgeving voor de huidige status.",
     ],
 
     'products_revoked' => [
         'title' => implode('|', [
-            "Uw aanmeldingen voor :count_funds fonds zijn geweigerd om aanbiedingen in de webshop te plaatsen.",
-            "Uw aanmeldingen voor :count_funds fondsen zijn geweigerd om aanbiedingen in de webshop te plaatsen.",
+            "Uw aanmelding is geweigerd om uw aanbod in de webshop te plaatsen.",
+            "Uw aanmeldingen voor :count_funds fondsen zijn geweigerd om uw aanbod in de webshop te plaatsen.",
         ]),
         'funds_list' => implode('|', [
-            "Dit betekent dat u voor het volgende fonds geen aanbiedingen meer in de webshop kunt plaatsen:",
-            "Dit betekent dat u voor de volgende fondsen geen aanbiedingen meer in de webshop kunt plaatsen:",
+            "Dit betekent dat u voor het volgende fonds geen aanbod meer in de webshop kunt plaatsen:",
+            "Dit betekent dat u voor de volgende fondsen geen aanbod meer in de webshop kunt plaatsen:",
         ]),
         'funds_list_individual' => implode('|', [
-            "Voor dit fonds staan nog specifieke aanbiedingen in de webshop:",
-            "Voor deze fondsen staan nog specifieke aanbiedingen in de webshop:",
+            "Voor dit fonds staat nog een specifiek aanbod in de webshop:",
+            "Voor deze fondsen staan nog uw specifieke aanbod in de webshop:",
         ]),
         'details' =>
-            "Bekijk het dashboard voor de volledige context en huidige status.",
+            "Bekijk de beheeromgeving voor de volledige context en huidige status.",
     ],
 
     'individual_products' => [
         'title' =>
-            "Een aantal van uw producten zijn goedgekeurd voor fondsen.",
+            "Een aantal van uw producten of diensten zijn goedgekeurd voor fondsen.",
         'details' =>
             "Voor elk fonds zijn specifieke rechten aan u toegekend.\n" .
             "Bekijk het dashboard voor de volledige context en status.",
@@ -74,12 +74,12 @@ return [
 
     'feedback' => [
         'title' => implode('|', [
-            'Feedback op :count_products aanbieding',
-            'Feedback op :count_products aanbiedingen',
+            'Feedback op :count_products product of dienst',
+            'Feedback op :count_products producten of diensten',
         ]),
         'details' => implode('|', [
-            'U heeft feedback ontvangen op :count_products aanbieding.',
-            'U heeft feedback ontvangen op :count_products aanbiedingen.',
+            'U heeft feedback ontvangen op :count_products product of dienst.',
+            'U heeft feedback ontvangen op :count_products producten of diensten.',
         ]),
         'product_title' => "Nieuwe berichten op :product_name voor €:product_price_locale",
         'product_details' => implode('|', [
@@ -88,5 +88,5 @@ return [
         ]),
     ],
 
-    'dashboard_button' => 'GA NAAR HET DASHBOARD',
+    'dashboard_button' => 'GA NAAR DE BEHEEROMGEVING',
 ];

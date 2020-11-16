@@ -444,20 +444,17 @@ class NotificationService
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
-     * @param string $post_code
-     * @param string $house_number
+     * @param $data
      * @return bool
      */
     public function requestPhysicalCard(
         string $email,
         ?EmailFrom $emailFrom,
-        string $post_code,
-        string $house_number
+        $data
     ): bool {
         return $this->sendMail($email, new RequestPhysicalCardMail(
-            $post_code,
-            $house_number,
-            $emailFrom
+            $emailFrom,
+            $data
         ));
     }
 
