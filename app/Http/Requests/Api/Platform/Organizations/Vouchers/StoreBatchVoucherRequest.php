@@ -75,7 +75,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             ],
             'vouchers.*.note'       => 'nullable|string|max:280',
             'vouchers.*.email'      => 'nullable|email:strict,dns',
-            'vouchers.*.bsn'        => 'nullable|string|between:8,9',
+            'vouchers.*.bsn'        => 'nullable|digits:9',
         ];
     }
 }
