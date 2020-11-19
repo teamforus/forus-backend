@@ -8,9 +8,6 @@
     {{ mail_trans('voucher_assigned_subsidy.paragraph1', $data) }}
     <br>
     <br>
-    {{ $data['fund_description_html'] ?? ''  }}
-    <br>
-    <br>
     {!! mail_trans('voucher_assigned_subsidy.paragraph2', $data) !!}
     <br/>
     <img style="display: block; margin: 0 auto;" alt="" src="{{ $message->embedData(make_qr_code('voucher', $data['qr_token']), 'qr_token.png') }}" width="300" />
