@@ -475,7 +475,18 @@ class Voucher extends Model
         if ($q) {
             $query->where(static function (Builder $query) use ($q) {
                 $query->where('note', 'LIKE', "%{$q}%");
-                $query->orWhereIn('identity_address', identity_repo()->identityAddressesByEmailSearch($q));
+
+                if ($email_identity = record_repo()->identityAddressByBsn($q)) {
+                    $query->orWhereIn('identity_address', $email_identity);
+                }
+
+                if ($bsn_identity = record_repo()->identityAddressByBsn($q)) {
+                    $query->orWhereIn('identity_address', $bsn_identity);
+                }
+
+                $query->orWhereHas('voucher_relation', function (Builder $builder) use ($q) {
+                    return $builder->where('bsn', 'LIKE', "%{$q}%");
+                });
             });
         }
 
