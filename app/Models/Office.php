@@ -7,6 +7,8 @@ use App\Scopes\Builders\OfficeQuery;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 
@@ -92,15 +94,15 @@ class Office extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function schedules()
+    public function schedules(): HasMany
     {
-        return $this->hasMany(OfficeSchedule::class);
+        return $this->hasMany(OfficeSchedule::class)->orderBy('week_day');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization() {
+    public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
     }
 
@@ -108,7 +110,7 @@ class Office extends Model
      * Get fund logo
      * @return MorphOne
      */
-    public function photo() {
+    public function photo(): MorphOne {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'office_photo'
         ]);
@@ -118,7 +120,7 @@ class Office extends Model
      * @param array|null $schedules
      * @return $this
      */
-    public function updateSchedule(?array $schedules = [])
+    public function updateSchedule(?array $schedules = []): self
     {
         $this->schedules()->whereNotIn('week_day', array_pluck(
             $schedules, 'week_day'
