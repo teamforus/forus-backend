@@ -6,7 +6,7 @@ return [
     'storage_path'      => env('FILES_STORAGE_PATH', 'files'),
 
     // max file size in kB
-    'max_file_size'     => env('FILES_MAX_SIZE', 2000),
+    'max_file_size'     => env('FILES_MAX_SIZE', 10000),
 
     'allowed_extensions'     => [
         'jpg', 'jpeg', 'png', 'pdf'
