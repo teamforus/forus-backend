@@ -146,13 +146,25 @@ class RecordRepo implements IRecordRepo
      */
     public function identityAddressByBsn(
         string $bsn
-    ) {
+    ): ?string {
         $record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('bsn'),
             'value' => $bsn,
         ])->first();
 
-        return $record ? $record->identity_address : null;
+        return $record->identity_address ?? null;
+    }
+
+    /**
+     * Search identity_address by bsn
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressByBsnSearch(string $search): array
+    {
+        return Record::where([
+            'record_type_id' => $this->getTypeIdByKey('bsn'),
+        ])->where('value', 'LIKE', "%{$search}%")->pluck('identity_address')->toArray();
     }
 
     /**

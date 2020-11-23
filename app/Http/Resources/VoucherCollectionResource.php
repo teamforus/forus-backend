@@ -95,7 +95,7 @@ class VoucherCollectionResource extends VoucherResource
     protected function getOffices(Voucher $voucher): AnonymousResourceCollection
     {
         if (env('REMOVE_VOUCHERS_LIST_OFFICES_SOFT', FALSE)) {
-            return OfficeResource::collection($voucher);
+            return OfficeResource::collection([]);
         }
 
         return parent::getOffices($voucher);

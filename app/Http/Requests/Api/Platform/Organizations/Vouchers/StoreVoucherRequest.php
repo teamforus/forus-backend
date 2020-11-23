@@ -48,7 +48,7 @@ class StoreVoucherRequest extends BaseFormRequest
                 Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
             ],
             'email'     => 'nullable|email:strict,dns',
-            'bsn'       => 'nullable|string|between:8,9',
+            'bsn'       => 'nullable|digits:9',
             'note'      => 'nullable|string|max:280',
             'amount'    => !$fund || $fund->isTypeBudget() ? [
                 'required_without:product_id',
