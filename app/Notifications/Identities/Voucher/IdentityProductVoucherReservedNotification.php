@@ -2,7 +2,6 @@
 
 namespace App\Notifications\Identities\Voucher;
 
-use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductReservedUserMail;
 use App\Models\Implementation;
 use App\Models\Voucher;
@@ -29,15 +28,6 @@ class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNoti
                 'qr_token'  => $voucher->token_without_confirmation->address,
                 'expire_at_locale' => $this->eventLog->data['voucher_expire_date_locale'],
             ]), Implementation::emailFrom($this->eventLog->data['implementation_key']))
-        );
-
-        notification_service()->sendMailNotification(
-            $identity->primary_email->email,
-            new ProductReservedMail(array_merge(
-                $this->eventLog->data, [
-                    'expiration_date' => $this->eventLog->data['voucher_expire_date_locale']
-                ]
-            ), Implementation::emailFrom())
         );
     }
 }
