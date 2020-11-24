@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Rules\FundRequestRecordRecordTypeKeyRule;
 use App\Rules\FundRequestRecordValueRule;
 use App\Rules\RecordTypeKeyExistsRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
@@ -14,16 +14,16 @@ use Illuminate\Validation\Rule;
  * @property Fund|null $fund
  * @package App\Http\Requests\Api\Platform\Funds\Requests
  */
-class StoreFundRequestRequest extends FormRequest
+class StoreFundRequestRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        return $this->fund->state == Fund::STATE_ACTIVE;
+        return $this->fund->state === Fund::STATE_ACTIVE;
     }
 
     /**
@@ -31,7 +31,7 @@ class StoreFundRequestRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $fund = $this->fund;
         $criteria = $fund ? $fund->criteria()->pluck('id')->toArray() : [];
@@ -69,7 +69,7 @@ class StoreFundRequestRequest extends FormRequest
     /**
      * @return array
      */
-    public function messages() {
+    public function messages(): array {
         $recordRepo = resolve('forus.services.record');
         $messages = [];
 
@@ -79,7 +79,7 @@ class StoreFundRequestRequest extends FormRequest
                     $recordRepo->getRecordTypes()
                 )->firstWhere('key', $val['record_type_key'])['name'] ?? '';
 
-                $messages["records.*.required"] = trans('validation.required', [
+                $messages["records.*.value.required"] = trans('validation.required', [
                     'attribute' => $recordTypeName
                 ]);
             }

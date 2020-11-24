@@ -7,6 +7,9 @@ use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderChatQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
@@ -28,7 +31,11 @@ use Carbon\Carbon;
  * @property-read int|null $fund_provider_chats_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
  * @property-read int|null $fund_provider_products_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
+ * @property-read int|null $product_exclusions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider newModelQuery()
@@ -44,8 +51,8 @@ use Carbon\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
- * @property-read int|null $logs_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products_with_trashed
+ * @property-read int|null $fund_provider_products_with_trashed_count
  */
 class FundProvider extends Model
 {
@@ -86,36 +93,50 @@ class FundProvider extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function products() {
+    public function products(): BelongsToMany {
         return $this->belongsToMany(Product::class, 'fund_provider_products');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_provider_products() {
+    public function fund_provider_products(): HasMany {
         return $this->hasMany(FundProviderProduct::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_provider_chats() {
+    public function fund_provider_products_with_trashed(): HasMany {
+        return $this->hasMany(FundProviderProduct::class)->withTrashed();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fund_provider_chats(): HasMany {
         return $this->hasMany(FundProviderChat::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund() {
+    public function fund(): BelongsTo {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization() {
+    public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function product_exclusions(): HasMany {
+        return $this->hasMany(FundProviderProductExclusion::class);
     }
 
     /**
@@ -126,7 +147,7 @@ class FundProvider extends Model
     public function getFinances(
         Request $request,
         Fund $fund
-    ) {
+    ): array {
         $dates = collect();
 
         $type = $request->input('type', 'all');
@@ -134,7 +155,7 @@ class FundProvider extends Model
         $nth = $request->input('nth', 1);
         $product_category_id = $request->input('product_category');
 
-        if ($type == 'quarter') {
+        if ($type === 'quarter') {
             $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfQuarter()->endOfDay();
 
@@ -145,7 +166,7 @@ class FundProvider extends Model
             $dates->push($startDate->copy()->addMonths(2));
             $dates->push($startDate->copy()->addMonths(2)->addDays(14));
             $dates->push($endDate);
-        } elseif ($type == 'month') {
+        } elseif ($type === 'month') {
             $startDate = Carbon::createFromDate($year, $nth, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
@@ -156,14 +177,14 @@ class FundProvider extends Model
             $dates->push($startDate->copy()->addDays(19));
             $dates->push($startDate->copy()->addDays(24));
             $dates->push($endDate);
-        } elseif ($type == 'week') {
+        } elseif ($type === 'week') {
             $startDate = Carbon::now()->setISODate(
                 $year, $nth
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
 
             $dates = range_between_dates($startDate, $endDate);
-        } elseif ($type == 'year') {
+        } elseif ($type === 'year') {
             $startDate = Carbon::createFromDate($year, 1, 1)->startOfDay();
             $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
 
@@ -172,7 +193,7 @@ class FundProvider extends Model
             $dates->push($startDate->copy()->addQuarters(2));
             $dates->push($startDate->copy()->addQuarters(3));
             $dates->push($endDate);
-        } elseif ($type == 'all') {
+        } elseif ($type === 'all') {
             $firstTransaction = $fund->voucher_transactions()->where([
                 'organization_id' => $this->organization_id
             ])->orderBy(
@@ -200,7 +221,7 @@ class FundProvider extends Model
                 ]);
 
                 if ($product_category_id) {
-                    if ($product_category_id == -1) {
+                    if ($product_category_id === -1) {
                         $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
                     } else {
                         $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
@@ -221,7 +242,7 @@ class FundProvider extends Model
             ];
         });
 
-        if ($type == 'year') {
+        if ($type === 'year') {
             $dates->shift();
         }
 
@@ -233,7 +254,7 @@ class FundProvider extends Model
         ]);
 
         if ($product_category_id) {
-            if ($product_category_id == -1) {
+            if ($product_category_id === -1) {
                 $transactions->whereNull('voucher_transactions.product_id');
             } else {
                 $transactions->whereHas('product', function (
@@ -252,7 +273,7 @@ class FundProvider extends Model
         );
 
         if ($product_category_id) {
-            if ($product_category_id == -1) {
+            if ($product_category_id === -1) {
                 $fundUsageInRange = $fundUsageInRange->whereNull('voucher_transactions.product_id');
             } else{
                 $fundUsageInRange = $fundUsageInRange->whereHas('product', function (
@@ -267,7 +288,7 @@ class FundProvider extends Model
         $fundUsageTotal = $fund->voucher_transactions();
 
         if ($product_category_id) {
-            if ($product_category_id == -1) {
+            if ($product_category_id === -1) {
                 $fundUsageTotal = $fundUsageTotal->whereNull('voucher_transactions.product_id');
             } else {
                 $fundUsageTotal = $fundUsageTotal->whereHas('product', function (
@@ -286,7 +307,7 @@ class FundProvider extends Model
         ]);
 
         if ($product_category_id) {
-            if ($product_category_id == -1) {
+            if ($product_category_id === -1) {
                 $providerUsageTotal = $providerUsageTotal->whereNull('voucher_transactions.product_id');
             } else {
                 $providerUsageTotal = $providerUsageTotal->whereHas('product', function (
@@ -318,14 +339,14 @@ class FundProvider extends Model
     public static function search(
         Request $request,
         Organization $organization
-    ) {
+    ): Builder {
         $q = $request->input('q', null);
         $fund_id = $request->input('fund_id', null);
         $dismissed = $request->input('dismissed', null);
         $allow_products = $request->input('allow_products', null);
         $allow_budget = $request->input('allow_budget', null);
 
-        $providers = FundProvider::query()->whereIn(
+        $providers = self::query()->whereIn(
             'fund_id',
             $organization->funds()->pluck('id')
         );
@@ -346,18 +367,18 @@ class FundProvider extends Model
         }
 
         if ($dismissed !== null) {
-            $providers->where('dismissed', !!$dismissed);
+            $providers->where('dismissed', (bool) $dismissed);
         }
 
         if ($allow_budget !== null) {
-            $providers->where('allow_budget', !!$allow_budget);
+            $providers->where('allow_budget', (bool) $allow_budget);
         }
 
         if ($allow_products !== null) {
             if ($allow_products === 'some') {
                 $providers->whereHas('products');
             } else {
-                $providers->where('allow_products', !!$allow_products);
+                $providers->where('allow_products', (bool) $allow_products);
             }
         }
 
@@ -404,12 +425,25 @@ class FundProvider extends Model
      * @param array $products
      * @return $this
      */
-    public function approveProducts(array $products)
+    public function approveProducts(array $products): self
     {
-        $oldProducts = $this->products()->pluck('products.id')->toArray();
-        $newProducts = array_diff($products, $oldProducts);
+        $productIds = array_pluck($products, 'id');
+        $isTypeSubsidy = $this->fund->isTypeSubsidy();
 
-        $this->products()->attach($products);
+        $oldProducts = $this->products()->pluck('products.id')->toArray();
+        $newProducts = array_diff($productIds, $oldProducts);
+
+        foreach ($products as $product) {
+            $productModel = Product::findOrFail($product['id']);
+            $product['price'] = $productModel->price;
+            $product['old_price'] = $productModel->old_price;
+
+            $this->fund_provider_products()->firstOrCreate([
+                'product_id' => $product['id'],
+            ])->update($isTypeSubsidy ? array_only($product, [
+                'limit_total', 'limit_per_identity', 'amount', 'price', 'old_price'
+            ]) : []);
+        }
 
         $newProducts = Product::whereIn('products.id', $newProducts)->get();
         $newProducts->each(function(Product $product) {
@@ -423,12 +457,16 @@ class FundProvider extends Model
      * @param array $products
      * @return $this
      */
-    public function declineProducts(array $products)
+    public function declineProducts(array $products): self
     {
         $oldProducts = $this->products()->pluck('products.id')->toArray();
         $detachedProducts = array_intersect($oldProducts, $products);
 
-        $this->products()->detach($products);
+        $this->fund_provider_products()->whereHas('product', static function(
+            Builder $builder
+        ) use ($products) {
+            $builder->whereIn('products.id', $products);
+        })->delete();
 
         $detachedProducts = Product::whereIn('products.id', $detachedProducts)->get();
         $detachedProducts->each(function(Product $product) {
@@ -438,7 +476,7 @@ class FundProvider extends Model
         FundProviderChatQuery::whereProductFilter(
             $this->fund_provider_chats()->getQuery(),
             $products
-        )->get()->each(function(FundProviderChat $chat) {
+        )->get()->each(static function(FundProviderChat $chat) {
             $chat->addSystemMessage('Aanbieding afgewezen.', auth_address());
         });
 

@@ -146,13 +146,25 @@ class RecordRepo implements IRecordRepo
      */
     public function identityAddressByBsn(
         string $bsn
-    ) {
+    ): ?string {
         $record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('bsn'),
             'value' => $bsn,
         ])->first();
 
-        return $record ? $record->identity_address : null;
+        return $record->identity_address ?? null;
+    }
+
+    /**
+     * Search identity_address by bsn
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressByBsnSearch(string $search): array
+    {
+        return Record::where([
+            'record_type_id' => $this->getTypeIdByKey('bsn'),
+        ])->where('value', 'LIKE', "%{$search}%")->pluck('identity_address')->toArray();
     }
 
     /**
@@ -478,13 +490,12 @@ class RecordRepo implements IRecordRepo
     }
 
     /**
-     * Add new record to identity
      * @param string $identityAddress
      * @param string $typeKey
      * @param string $value
-     * @param mixed|null $recordCategoryId
-     * @param integer|null $order
-     * @return null|array
+     * @param null $recordCategoryId
+     * @param null $order
+     * @return array|null
      */
     public function recordCreate(
         string $identityAddress,
@@ -492,7 +503,7 @@ class RecordRepo implements IRecordRepo
         string $value,
         $recordCategoryId = null,
         $order = null
-    ) {
+    ): ?array {
         $typeId = $this->getTypeIdByKey($typeKey);
 
         if (!$typeId) {

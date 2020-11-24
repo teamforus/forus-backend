@@ -11,7 +11,7 @@ class UpdateOrganizationsAddRoleColumnsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('organizations', function(Blueprint $table) {
             $table->boolean('is_sponsor')->default(false)->after('business_type_id');
@@ -26,7 +26,7 @@ class UpdateOrganizationsAddRoleColumnsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('organizations', function(Blueprint $table) {
             $table->dropColumn([

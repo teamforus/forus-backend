@@ -11,7 +11,7 @@ class CreateFundTopUpsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('fund_top_ups', function (Blueprint $table) {
             $table->increments('id');
@@ -33,7 +33,7 @@ class CreateFundTopUpsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('fund_top_ups');
     }

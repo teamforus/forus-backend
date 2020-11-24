@@ -2,35 +2,52 @@
 
 namespace App\Http\Controllers\Api\Platform;
 
+use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
+use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
 use App\Services\Forus\Record\Repositories\RecordRepo;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class VouchersController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class VouchersController extends Controller
 {
     private $recordRepo;
 
+    /**
+     * VouchersController constructor.
+     * @param RecordRepo $recordRepo
+     */
     public function __construct(RecordRepo $recordRepo)
     {
         $this->recordRepo = $recordRepo;
     }
 
     /**
+     * @param IndexVouchersRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(): AnonymousResourceCollection {
+    public function index(
+        IndexVouchersRequest $request
+    ): AnonymousResourceCollection {
         $this->authorize('viewAny', Voucher::class);
 
-        return VoucherResource::collection(Voucher::query()->where([
-            'identity_address' => auth_address()
-        ])->get()->load(VoucherResource::$load));
+        // todo: remove fallback pagination 1000, when apps are ready
+        return VoucherCollectionResource::collection(Voucher::whereIdentityAddress([
+            'identity_address' => $request->auth_address()
+        ])->with(VoucherCollectionResource::load())->paginate(
+            $request->input('per_page', 1000)
+        ));
     }
 
     /**
@@ -42,20 +59,19 @@ class VouchersController extends Controller
      */
     public function store(
         StoreProductVoucherRequest $request
-    ) {
+    ): VoucherResource {
         $this->authorize('store', Voucher::class);
 
-        $product_id = $request->input('product_id');
-        $voucher_address = $request->input('voucher_address');
-        $voucherToken = VoucherToken::whereAddress($voucher_address)->first();
-
-        $voucher = $voucherToken->voucher;
-        $product = Product::find($product_id);
+        $product = Product::find($request->input('product_id'));
+        $voucher = Voucher::findByAddress(
+            $request->input('voucher_address'),
+            $request->auth_address()
+        );
 
         $this->authorize('reserve', [$product, $voucher]);
 
         return new VoucherResource($voucher->buyProductVoucher($product)->load(
-            VoucherResource::$load
+            VoucherResource::load()
         ));
     }
 
@@ -68,12 +84,10 @@ class VouchersController extends Controller
      */
     public function show(
         VoucherToken $voucherToken
-    ) {
+    ): VoucherResource {
         $this->authorize('show', $voucherToken->voucher);
 
-        return new VoucherResource(
-            $voucherToken->voucher->load(VoucherResource::$load)
-        );
+        return new VoucherResource($voucherToken->voucher->load(VoucherResource::load()));
     }
 
     /**
@@ -84,7 +98,7 @@ class VouchersController extends Controller
      */
     public function sendEmail(
         VoucherToken $voucherToken
-    ) {
+    ): void {
         $this->authorize('sendEmail', $voucherToken->voucher);
 
         $voucherToken->voucher->sendToEmail($this->recordRepo->primaryEmailByAddress(
@@ -102,7 +116,7 @@ class VouchersController extends Controller
     public function shareVoucher(
         VoucherToken $voucherToken,
         ShareProductVoucherRequest $request
-    ) {
+    ): void {
         $this->authorize('shareVoucher', $voucherToken->voucher);
 
         $voucherToken->voucher->shareVoucherEmail(
@@ -113,16 +127,17 @@ class VouchersController extends Controller
 
     /**
      * @param VoucherToken $voucherToken
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
      */
     public function destroy(
         VoucherToken $voucherToken
-    ) {
+    ): JsonResponse {
         $this->authorize('destroy', $voucherToken->voucher);
 
-        return [
+        return response()->json([
             'success' => $voucherToken->voucher->delete() === true
-        ];
+        ]);
     }
 }

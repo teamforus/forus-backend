@@ -11,7 +11,7 @@ class AddDescriptionToFundTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('funds', function(Blueprint $table) {
             $table->string('description', 1000)->nullable()->after('name');
@@ -23,7 +23,7 @@ class AddDescriptionToFundTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('funds', function(Blueprint $table) {
             $table->dropColumn('description');

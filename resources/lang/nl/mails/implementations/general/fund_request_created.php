@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Uw aanvraag voor :fund_name is ingediend.',
-    'message' => 'Uw aanvraag voor :fund_name is ingediend. U zult binnen twee weken een reactie ontvangen op uw aanvraag.',
-    'webshop_button' => '<a href=":link" target="_blank" style="color: #315efd; text-decoration: underline;">Ga naar de webshop</a>'
+    'title' => 'Uw :fund_name aanvraag is ontvangen.',
+    'message' => ':sponsor_name heeft uw :fund_name aanvraag ontvangen. Uw aanvraag is in behandeling. U ontvangt binnen twee weken een reactie op uw aanvraag.',
+    'webshop_button' => 'Ga naar de webshop'
 ];

@@ -6,12 +6,15 @@ use App\Events\Products\ProductCreated;
 use App\Events\Products\ProductUpdated;
 use App\Http\Requests\Api\Platform\Organizations\Products\IndexProductRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\StoreProductRequest;
+use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductExclusionsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Products\UpdateProductRequest;
-use App\Http\Resources\ProductResource;
+use App\Http\Resources\Provider\ProviderProductResource;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 use App\Services\MediaService\Models\Media;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProductsController extends Controller
 {
@@ -36,10 +39,10 @@ class ProductsController extends Controller
     public function index(
         IndexProductRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Product::class, $organization]);
 
-        return ProductResource::collection(Product::searchAny($request)->where([
+        return ProviderProductResource::collection(Product::searchAny($request)->where([
             'organization_id' => $organization->id
         ])->paginate($request->input('per_page', 15)));
     }
@@ -49,13 +52,13 @@ class ProductsController extends Controller
      *
      * @param StoreProductRequest $request
      * @param Organization $organization
-     * @return ProductResource
+     * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         StoreProductRequest $request,
         Organization $organization
-    ) {
+    ): ProviderProductResource {
         $this->authorize('show', $organization);
         $this->authorize('store', [Product::class, $organization]);
 
@@ -72,19 +75,22 @@ class ProductsController extends Controller
         /** @var Product $product */
         $product = $organization->products()->create(array_merge($request->only([
             'name', 'description', 'price', 'old_price', 'product_category_id',
-            'expire_at'
+            'expire_at', 'no_price',
         ]), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
             'unlimited_stock' => $unlimited_stock
-        ]));
+        ], $request->input('no_price') ? [
+            'price' => 0,
+            'old_price' => null,
+        ] : []));
 
         ProductCreated::dispatch($product);
 
-        if ($media instanceof Media && $media->type == 'product_photo') {
+        if ($media instanceof Media && $media->type === 'product_photo') {
             $product->attachMedia($media);
         }
 
-        return new ProductResource($product);
+        return new ProviderProductResource($product);
     }
 
     /**
@@ -92,17 +98,17 @@ class ProductsController extends Controller
      *
      * @param Organization $organization
      * @param Product $product
-     * @return ProductResource
+     * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         Organization $organization,
         Product $product
-    ) {
+    ): ProviderProductResource {
         $this->authorize('show', $organization);
         $this->authorize('show', [$product, $organization]);
 
-        return new ProductResource($product);
+        return new ProviderProductResource($product);
     }
 
     /**
@@ -111,14 +117,14 @@ class ProductsController extends Controller
      * @param UpdateProductRequest $request
      * @param Organization $organization
      * @param Product $product
-     * @return ProductResource
+     * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         UpdateProductRequest $request,
         Organization $organization,
         Product $product
-    ) {
+    ): ProviderProductResource {
         $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
@@ -127,25 +133,52 @@ class ProductsController extends Controller
         $total_amount = $request->input('total_amount');
 
         if ($media_uid = $request->input('media_uid')) {
-            $media = $this->mediaService->findByUid($media_uid);
-
-            $this->authorize('destroy', $media);
+            $this->authorize('destroy', $media = $this->mediaService->findByUid($media_uid));
         }
 
-        $product->update(array_merge($request->only([
-            'name', 'description', 'price', 'old_price', 'sold_amount',
-            'product_category_id', 'expire_at'
-        ]), [
+        if (!$product->no_price && (
+            currency_format($request->input('price')) !== currency_format($product->price))) {
+            $product->resetSubsidyApprovals();
+        }
+
+        $product->update(array_merge($request->only(array_merge([
+            'name', 'description', 'sold_amount', 'product_category_id', 'expire_at'
+        ], $product->no_price ? [] : [
+            'price', 'old_price'
+        ])), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount
         ]));
 
-        if ($media instanceof Media && $media->type == 'product_photo') {
+        if ($media instanceof Media && $media->type === 'product_photo') {
             $product->attachMedia($media);
         }
 
         ProductUpdated::dispatch($product);
 
-        return new ProductResource($product);
+        return new ProviderProductResource($product);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateProductExclusionsRequest $request
+     * @param Organization $organization
+     * @param Product $product
+     * @return ProviderProductResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateExclusions(
+        UpdateProductExclusionsRequest $request,
+        Organization $organization,
+        Product $product
+    ): ProviderProductResource {
+        $this->authorize('show', $organization);
+        $this->authorize('update', [$product, $organization]);
+
+        $product->updateExclusions($request);
+
+        ProductUpdated::dispatch($product);
+        return new ProviderProductResource($product);
     }
 
     /**
@@ -153,18 +186,19 @@ class ProductsController extends Controller
      *
      * @param Organization $organization
      * @param Product $product
-     * @return string
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function destroy(
         Organization $organization,
         Product $product
-    ) {
+    ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$product, $organization]);
 
         $product->delete();
 
-        return "";
+        return response()->json([], 200);
     }
 }

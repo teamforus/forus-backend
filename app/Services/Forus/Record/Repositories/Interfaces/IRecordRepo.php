@@ -94,7 +94,16 @@ interface IRecordRepo {
      */
     public function identityAddressByBsn(
         string $bsn
-    );
+    ): ?string;
+
+    /**
+     * Search identity_address by bsn
+     * @param string $search
+     * @return array
+     */
+    public function identityAddressByBsnSearch(
+        string $search
+    ): array;
 
     /**
      * Get type id by key
@@ -219,7 +228,7 @@ interface IRecordRepo {
         string $value,
         $recordCategoryId = null,
         $order = null
-    );
+    ): ?array;
 
     /**
      * set bsn record

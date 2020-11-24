@@ -6,6 +6,6 @@
 @section('header_image', mail_config('email_activation.header_image'))
 @section('html')
     {{ mail_trans('identity_email_verification.description') }}
-    {!! mail_trans('identity_email_verification.confirmation_button', $link) !!}
+    {!! mail_trans('identity_email_verification.confirmation_button', ['link' => $link]) !!}
     <br/>
 @endsection

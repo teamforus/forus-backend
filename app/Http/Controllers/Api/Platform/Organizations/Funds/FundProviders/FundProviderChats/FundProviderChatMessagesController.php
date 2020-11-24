@@ -12,6 +12,7 @@ use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\Organization;
 use App\Models\FundProviderChatMessage;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderChatMessagesController extends Controller
 {
@@ -32,7 +33,7 @@ class FundProviderChatMessagesController extends Controller
         Fund $fund,
         FundProvider $fundProvider,
         FundProviderChat $fundProviderChat
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('showSponsor', [
             $fundProvider, $organization, $fund
         ]);
@@ -71,7 +72,7 @@ class FundProviderChatMessagesController extends Controller
         Fund $fund,
         FundProvider $fundProvider,
         FundProviderChat $fundProviderChat
-    ) {
+    ): FundProviderChatMessageResource {
         $this->authorize('showSponsor', [
             $fundProvider, $organization, $fund
         ]);
@@ -111,7 +112,7 @@ class FundProviderChatMessagesController extends Controller
         FundProvider $fundProvider,
         FundProviderChat $fundProviderChat,
         FundProviderChatMessage $fundProviderChatMessage
-    ) {
+    ): FundProviderChatMessageResource {
         $this->authorize('showSponsor', [
             $fundProvider, $organization, $fund
         ]);

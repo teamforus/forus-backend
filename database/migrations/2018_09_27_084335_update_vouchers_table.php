@@ -11,7 +11,7 @@ class UpdateVouchersTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('vouchers', function(Blueprint $table) {
             $table->integer('product_id')->unsigned()->nullable();
@@ -30,7 +30,7 @@ class UpdateVouchersTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('vouchers', function(Blueprint $table) {
             $table->dropForeign('vouchers_product_id_foreign');

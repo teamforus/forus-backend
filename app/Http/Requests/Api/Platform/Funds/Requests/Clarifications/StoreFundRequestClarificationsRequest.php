@@ -18,7 +18,7 @@ class StoreFundRequestClarificationsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -28,7 +28,7 @@ class StoreFundRequestClarificationsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'fund_request_record_id' => [

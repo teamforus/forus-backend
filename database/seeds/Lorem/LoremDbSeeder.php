@@ -3,6 +3,7 @@
 use App\Events\Organizations\OrganizationCreated;
 use App\Models\BusinessType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
 use App\Models\Organization;
 use App\Models\ProductCategory;
@@ -12,6 +13,7 @@ use App\Models\Product;
 use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
+use App\Models\VoucherTransaction;
 use App\Events\Funds\FundCreated;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundStartedEvent;
@@ -39,16 +41,38 @@ class LoremDbSeeder extends Seeder
     private $countValidators;
 
     private $implementations = [
-        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Berkelland',
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
     ];
 
     private $implementationsWithFunds = [
-        'Zuidhorn', 'Nijmegen', 'Westerkwartier',
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas',
+    ];
+
+    private $implementationsWithMultipleFunds = [
+        'Westerkwartier' => 2,
+        'Nijmegen' => 2,
+        'Stadjerspas' => 3,
+    ];
+
+    private $subsidyFunds = [
+        'Stadjerspas',
     ];
 
     private $fundsWithCriteriaEditableAfterLaunch = [
         'Zuidhorn', 'Nijmegen',
+    ];
+
+    private $fundsWithPhysicalCards = [
+        'Nijmegen', 'Stadjerspas',
+    ];
+
+    private $fundsWithAutoValidation = [
+        'Nijmegen'
+    ];
+
+    private $fundKeyOverwrite = [
+        'Nijmegen' => 'meedoen_2020',
     ];
 
     /**
@@ -149,37 +173,41 @@ class LoremDbSeeder extends Seeder
     ): void {
         $self = $this;
 
-        $organizations = collect(
-            $this->implementationsWithFunds
-        )->map(static function($implementation) use ($self, $identity_address) {
+        $organizations = array_map(static function($implementation) use ($self, $identity_address) {
             return $self->makeOrganization($implementation, $identity_address, []);
-        });
+        }, $this->implementationsWithFunds);
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
+            $countFunds = $this->implementationsWithMultipleFunds[$organization->name] ?? 1;
 
-            $fund = $this->makeFund($organization, true);
+            while ($countFunds-- > 0) {
+                $fund = $this->makeFund($organization, true);
+                $implementationKey = str_slug(explode(' ', $fund->name)[0]);
+                $fundKey = str_slug($fund->name . '_' . date('Y'));
+                $fundKey = $this->fundKeyOverwrite[$fund->name] ?? $fundKey;
 
-            $implementation = $this->makeImplementation(
-                str_slug($fund->name),
-                $fund->name . ' ' . date('Y')
-            );
+                if (!$implementation = Implementation::where([
+                    'key' => $implementationKey
+                ])->first()) {
+                    $implementation = $this->makeImplementation(
+                        $implementationKey,
+                        $fund->name . ' ' . date('Y')
+                    );
+                }
 
-            $this->fundConfigure(
-                $fund,
-                $implementation,
-                $implementation->key . '_' . date('Y'), [
-                    'bunq_key' => config('forus.seeders.lorem_db_seeder.bunq_key'),
-                ]
-            );
+                $this->fundConfigure($fund, $implementation, $fundKey);
 
-            $this->makePrevalidations(
-                $fund->organization->identity_address,
-                $fund,
-                $this->generatePrevalidationData($fund->fund_config->csv_primary_key, 10, [
-                    $fund->fund_config->key . '_eligible' => 'Ja',
-                ])
-            );
+                if (!$this->isUsingAutoValidation($fund->name)) {
+                    $this->makePrevalidations(
+                        $fund->organization->identity_address,
+                        $fund,
+                        $this->generatePrevalidationData($fund, 10, [
+                            $fund->fund_config->key . '_eligible' => 'Ja',
+                        ])
+                    );
+                }
+            }
         }
     }
 
@@ -208,8 +236,8 @@ class LoremDbSeeder extends Seeder
                 /** @var FundProvider $provider */
                 $provider = $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'allow_budget'      => (bool) random_int(0, 2),
-                    'allow_products'    => (bool) random_int(0, 2)
+                    'allow_budget'      => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
+                    'allow_products'    => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
                 ]);
 
                 FundProviderApplied::dispatch($provider);
@@ -221,18 +249,41 @@ class LoremDbSeeder extends Seeder
         }
 
         foreach (Fund::get() as $fund) {
-            $providers = Organization::with('products')->pluck('id');
+            $providers = Organization::whereHas('products')->pluck('id');
 
             if ($fund->provider_organizations_approved()->count() === 0) {
+                do {
+                    $provider = $providers->random();
+                } while ($fund->providers()->where('organization_id', $provider)->exists());
+
                 $provider = $fund->providers()->create([
                     'organization_id'   => $providers->random(),
-                    'allow_products'    => true,
-                    'allow_budget'      => true,
+                    'allow_products'    => $fund->isTypeBudget(),
+                    'allow_budget'      => $fund->isTypeBudget(),
                 ]);
 
                 FundProviderApplied::dispatch($provider);
             }
         }
+
+        Fund::whereType(Fund::TYPE_SUBSIDIES)->get()->each(static function(Fund $fund) {
+            $fund->providers()->get()->each(static function(FundProvider $provider) {
+                $fundProviderProducts = $provider->organization->products->random(
+                    ceil($provider->organization->products->count() / 2)
+                )->map(static function(Product $product) {
+                    return [
+                        'amount' => random_int(0, 10) < 7 ? $product->price / 2 : $product->price,
+                        'product_id' => $product->id,
+                        'limit_total' => $product->unlimited_stock ? 1000 : $product->stock_amount,
+                        'limit_per_identity' => $product->unlimited_stock ? 25 : ceil(
+                            max($product->stock_amount / 10, 1)
+                        ),
+                    ];
+                })->toArray();
+
+                $provider->fund_provider_products()->createMany($fundProviderProducts);
+            });
+        });
 
         foreach (Fund::get() as $fund) {
             foreach ($fund->providers as $fundProvider) {
@@ -274,13 +325,10 @@ class LoremDbSeeder extends Seeder
      */
     public function applyFunds(string $identity_address): void
     {
-        /** @var Prevalidation[] $prevalidations */
-        $prevalidations = Prevalidation::query()->where([
+        $prevalidations = Prevalidation::where([
             'state' => 'pending',
             'identity_address' => $identity_address
-        ])->get()->groupBy('fund_id')->map(static function(
-            \Illuminate\Support\Collection $arr
-        ) {
+        ])->get()->groupBy('fund_id')->map(static function(SupportCollection $arr) {
             return $arr->first();
         });
 
@@ -311,19 +359,9 @@ class LoremDbSeeder extends Seeder
                 'state' => 'used'
             ]);
 
-            $fund = $prevalidation->fund;
+            $voucher = $prevalidation->fund->makeVoucher($identity_address);
 
-            $voucher = $fund->makeVoucher($identity_address);
-            $voucher->tokens()->create([
-                'address'           => $this->tokenGenerator->address(),
-                'need_confirmation' => true,
-            ]);
-            $voucher->tokens()->create([
-                'address'           => $this->tokenGenerator->address(),
-                'need_confirmation' => false,
-            ]);
-
-            while ($voucher->amount_available > ($voucher->amount / 2)) {
+            while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 2)) {
                 $transaction = $voucher->transactions()->create([
                     'amount' => random_int(
                         (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_min'),
@@ -332,6 +370,8 @@ class LoremDbSeeder extends Seeder
                     'product_id' => null,
                     'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
+                    'state' => VoucherTransaction::STATE_SUCCESS,
+                    'attempts' => /* It's Over */ 9000
                 ]);
 
                 VoucherTransactionCreated::dispatch($transaction);
@@ -386,23 +426,19 @@ class LoremDbSeeder extends Seeder
         array $fields = [],
         int $offices_count = 0
     ) {
-        $organization = Organization::create(
-            collect(collect([
-                'kvk' => '69599068',
-                'iban' => 'NL25BUNQ9900069099',
-                'phone' => '123456789',
-                'email' => $this->primaryEmail,
-                'phone_public' => true,
-                'email_public' => true,
-                'business_type_id' => BusinessType::pluck('id')->random(),
-            ])->merge($fields)->merge(
-                compact('name', 'identity_address')
-            )->only([
-                'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
-                'email_public', 'phone_public', 'website_public',
-                'identity_address', 'business_type_id'
-            ]))->toArray()
-        );
+        $organization = Organization::create(array_only(array_merge([
+            'kvk' => '69599068',
+            'iban' => env('DB_SEED_PROVIDER_IBAN'),
+            'phone' => '123456789',
+            'email' => $this->primaryEmail,
+            'phone_public' => true,
+            'email_public' => true,
+            'business_type_id' => BusinessType::pluck('id')->random(),
+        ], $fields, compact('name', 'identity_address')), [
+            'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
+            'email_public', 'phone_public', 'website_public',
+            'identity_address', 'business_type_id'
+        ]));
 
         OrganizationCreated::dispatch($organization);
 
@@ -474,14 +510,17 @@ class LoremDbSeeder extends Seeder
         bool $active = false,
         array $fields = []
     ) {
-        $flag = false;
+        $nth = 0;
 
         do {
-            $fundName = $organization->name . ($flag ? (' - ' . random_int(0, 999)) : '');
-            $flag = true;
+            $nth++;
+            $fundName = $organization->name . ($nth === 1 ? '' : (' ' . $this->integerToRoman($nth)));
         } while(Fund::query()->where('name', $fundName)->count() > 0);
 
+        /** @var \App\Models\Employee$validator $validator */
+        $validator = $organization->employeesOfRoleQuery('validation')->firstOrFail();
         $criteriaEditable = in_array($fundName, $this->fundsWithCriteriaEditableAfterLaunch);
+        $autoValidation = $this->isUsingAutoValidation($fundName);
 
         $fund = $organization->createFund(array_merge([
             'name'                          => $fundName,
@@ -489,12 +528,18 @@ class LoremDbSeeder extends Seeder
             'start_date'                    => Carbon::now()->format('Y-m-d'),
             'end_date'                      => Carbon::now()->addDays(60)->format('Y-m-d'),
             'state'                         => $active ? Fund::STATE_ACTIVE : Fund::STATE_WAITING,
-            'notification_amount'           => 10000
+            'notification_amount'           => 10000,
+            'auto_requests_validation'      => $autoValidation,
+            'default_validator_employee_id' => $autoValidation ? $validator->id : null,
+            'type'                          => in_array(
+                $fundName,
+                $this->subsidyFunds
+            ) ? Fund::TYPE_SUBSIDIES : Fund::TYPE_BUDGET,
         ], $fields));
 
         $transaction = $fund->top_up_model->transactions()->create([
             'bunq_transaction_id' => "XXXX",
-            'amount' => 100000
+            'amount' => 100000,
         ]);
 
         FundCreated::dispatch($fund);
@@ -519,6 +564,8 @@ class LoremDbSeeder extends Seeder
         string $key,
         string $name
     ) {
+        $requiredDigidImplementations = array_map("str_slug", $this->fundsWithPhysicalCards);
+
         return Implementation::create([
             'key'   => $key,
             'name'  => $name,
@@ -545,6 +592,7 @@ class LoremDbSeeder extends Seeder
             ),
 
             'digid_enabled'         => config('forus.seeders.lorem_db_seeder.digid_enabled'),
+            'digid_required'        => in_array($key, $requiredDigidImplementations, true),
             'digid_app_id'          => config('forus.seeders.lorem_db_seeder.digid_app_id'),
             'digid_shared_secret'   => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
             'digid_a_select_server' => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
@@ -563,27 +611,37 @@ class LoremDbSeeder extends Seeder
         string $key,
         array $fields = []
     ): void {
+        $hashBsn = in_array($fund->name, $this->fundsWithPhysicalCards, true);
+
         $fund->fund_config()->create(collect([
             'implementation_id'     => $implementation->id,
             'key'                   => $key,
             'bunq_sandbox'          => true,
             'csv_primary_key'       => 'uid',
-            'is_configured'         => true
+            'is_configured'         => true,
+            'allow_physical_cards'  => in_array($fund->name, $this->fundsWithPhysicalCards),
+            'hash_bsn'              => $hashBsn,
+            'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
+            'bunq_key'              => config('forus.seeders.lorem_db_seeder.bunq_key'),
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'
         ]))->toArray());
 
-        $eligibility_key = sprintf("%s %s eligible", $fund->name, date('Y'));
-        $criteria = config('forus.seeders.lorem_db_seeder.funds_criteria');
+        $eligibility_key = sprintf("%s_eligible", $fund->fund_config->key);
+        $criteria = [];
 
-        if ($fund->id === 1) {
+        if (!$fund->isAutoValidatingRequests()) {
+            $criteria = array_merge($criteria, config('forus.seeders.lorem_db_seeder.funds_criteria'));
+        }
+
+        if ($fund->organization_id <= 2) {
             /** @var RecordType $recordType */
             $recordType = RecordType::firstOrCreate([
-                'key'       => str_slug($eligibility_key, '_'),
+                'key'       => $eligibility_key,
                 'type'      => 'string',
             ])->updateModel([
-                'name'      => $eligibility_key,
+                'name'      => $fund->name . ' ' . ' eligible',
             ]);
 
             $criteria[] = [
@@ -591,28 +649,23 @@ class LoremDbSeeder extends Seeder
                 'operator' => '=',
                 'value' => 'Ja',
             ];
-        } elseif ($fund->id === 2) {
-            /** @var RecordType $recordType */
-            $recordType = RecordType::firstOrCreate([
-                'key'       => str_slug($eligibility_key . '_nth', '_'),
-                'type'      => 'number',
-            ])->updateModel([
-                'name'      => $eligibility_key . ' nth',
-            ]);
-
-            $criteria[] = [
-                'record_type_key' => $recordType->key,
-                'operator' => '>',
-                'value' => '0',
-            ];
         }
 
         $fund->criteria()->createMany($criteria);
 
         $fund->fund_formulas()->create([
-            'type'      => 'fixed',
-            'amount'    => config('forus.seeders.lorem_db_seeder.voucher_amount')
+            'type' => 'fixed',
+            'amount' => $fund->isTypeBudget() ? config(
+                'forus.seeders.lorem_db_seeder.voucher_amount'
+            ): 0,
         ]);
+
+        if ($fund->isTypeSubsidy()) {
+            $fund->fund_limit_multipliers()->create([
+                'record_type_key' => 'children_nth',
+                'multiplier' => 1,
+            ]);
+        }
     }
 
     /**
@@ -625,9 +678,7 @@ class LoremDbSeeder extends Seeder
         Fund $fund,
         array $records = []
     ): void {
-        $recordTypes = collect(
-            $this->recordRepo->getRecordTypes()
-        )->pluck('id', 'key');
+        $recordTypes = array_pluck($this->recordRepo->getRecordTypes(), 'id', 'key');
 
         collect($records)->map(static function($record) use ($recordTypes) {
             $record = collect($record);
@@ -640,20 +691,10 @@ class LoremDbSeeder extends Seeder
                 }
 
                 return compact('record_type_id', 'value');
-            })->filter(static function($value) {
-                return (bool) $value;
-            })->values();
-        })->filter(static function($records) {
-            return collect($records)->count();
-        })->map(function($records) use ($fund, $identity_address) {
-            do {
-                $uid = $this->tokenGenerator->generate(4, 2);
-            } while(Prevalidation::query()->where(
-                'uid', $uid
-            )->count() > 0);
-
+            })->filter()->toArray();
+        })->filter()->map(function($records) use ($fund, $identity_address) {
             $prevalidation = Prevalidation::create([
-                'uid' => $uid,
+                'uid' => token_generator_db(Prevalidation::query(), 'uid', 4, 2),
                 'state' => 'pending',
                 'fund_id' => $fund->id,
                 'organization_id' => $fund->organization_id,
@@ -667,32 +708,47 @@ class LoremDbSeeder extends Seeder
     }
 
     /**
-     * @param string $primaryKey
+     * @param Fund $fund
      * @param int $count
      * @param array $records
-     * @param callable|null $primaryKeyGenerator
      * @return array
      * @throws Exception
      */
     public function generatePrevalidationData(
-        string $primaryKey,
+        Fund $fund,
         int $count = 10,
-        array $records = [],
-        callable $primaryKeyGenerator = null
+        array $records = []
     ): array {
         $out = [];
+        // second prevalidation in list
+        $bsn_prevalidation_index = $count - 2;
+
+        // third prevalidation in list is partner for second prevalidation
+        $bsn_prevalidation_partner_index = $count - 3;
+
+        $csv_primary_key = $fund->fund_config->csv_primary_key;
+        $env_lorem_bsn = env('DB_SEED_PREVALIDATION_BSN', false);
 
         while ($count-- > 0) {
             do {
-                $primaryKeyValue = is_callable($primaryKeyGenerator) ? $primaryKeyGenerator() : random_int(100000, 999999);
-            } while (collect($out)->pluck($primaryKey)->search($primaryKeyValue) !== false);
+                $primaryKeyValue = random_int(100000, 999999);
+            } while (collect($out)->pluck($csv_primary_key)->search($primaryKeyValue) !== false);
 
-            $out[] = collect($records)->merge([
-                $primaryKey => $primaryKeyValue,
-                'children_nth' => random_int(3, 5),
+            $bsn_value = $env_lorem_bsn && ($count === $bsn_prevalidation_index) ?
+                $env_lorem_bsn : $this->randomFakeBsn();
+
+            $bsn_value_partner = $env_lorem_bsn && ($count === $bsn_prevalidation_partner_index) ?
+                $env_lorem_bsn : $this->randomFakeBsn();
+
+            $out[] = array_merge($records, [
+                $csv_primary_key => $primaryKeyValue,
                 'gender' => 'Female',
                 'net_worth' => random_int(3, 6) * 100,
-            ])->toArray();
+                'children_nth' => random_int(3, 5),
+            ], $fund->fund_config->hash_bsn ? [
+                'bsn_hash' => $fund->getHashedValue($bsn_value),
+                'partner_bsn_hash' => $fund->getHashedValue($bsn_value_partner),
+            ] : []);
         }
 
         return $out;
@@ -735,32 +791,90 @@ class LoremDbSeeder extends Seeder
 
         $price = random_int(1, 20);
         $old_price = random_int($price, 50);
-        $total_amount = random_int(1, 10) * 10;
+        $unlimited_stock = random_int(1, 10) < 3;
+        $total_amount = $unlimited_stock ? 0 : random_int(1, 10) * 10;
         $sold_out = false;
         $expire_at = Carbon::now()->addDays(random_int(20, 60));
         $product_category_id = $this->productCategories->pluck('id')->random();
+        $description = implode(' ', [
+            "Ut aliquet nisi felis ipsum consectetuer a vulputate.",
+            "Integer montes nulla in montes venenatis."
+        ]);
 
-        $product = Product::create(
-            collect(array_merge(compact(
-                'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at', 'product_category_id'
-            ), [
-                'organization_id' => $organization->id
-            ]))->merge(collect($fields)->only([
-                'name', 'price', 'old_price', 'total_amount', 'sold_out',
-                'expire_at'
-            ]))->toArray()
-        );
+        $product = Product::create(array_merge(compact(
+            'name', 'price', 'old_price', 'total_amount', 'sold_out',
+            'expire_at', 'product_category_id', 'description', 'unlimited_stock'
+        ), [
+            'organization_id' => $organization->id
+        ], array_only($fields, [
+            'name', 'price', 'old_price', 'total_amount', 'sold_out', 'expire_at'
+        ])));
 
         ProductCreated::dispatch($product);
 
         return $product;
     }
 
+    private function isUsingAutoValidation($fundName): bool
+    {
+        return in_array($fundName, $this->fundsWithAutoValidation, true);
+    }
+
+    /**
+     * @return int
+     */
+    private function randomFakeBsn(): int
+    {
+        static $randomBsn = [];
+
+        do {
+            try {
+                $bsn = random_int(100000000, 900000000);
+            } catch (Exception $e) {
+                $bsn = false;
+            }
+        } while ($bsn && in_array($bsn, $randomBsn, true));
+
+        return $randomBsn[] = $bsn;
+    }
+
+    /**
+     * @param $implementations
+     */
     public function makeOtherImplementations($implementations): void {
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);
         }
+    }
+
+    /**
+     * @param int $integer
+     * @return string
+     */
+    public function integerToRoman(int $integer): string {
+         $result = '';
+         $lookup = [
+             'M' => 1000,
+             'CM' => 900,
+             'D' => 500,
+             'CD' => 400,
+             'C' => 100,
+             'XC' => 90,
+             'L' => 50,
+             'XL' => 40,
+             'X' => 10,
+             'IX' => 9,
+             'V' => 5,
+             'IV' => 4,
+             'I' => 1
+         ];
+
+         foreach($lookup as $roman => $value){
+            $result .= str_repeat($roman, (int) ($integer / $value));
+            $integer %= $value;
+         }
+
+        return $result;
     }
 
     /**

@@ -20,22 +20,20 @@ class OfficeResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request|any  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         $office = $this->resource;
         $organization = $office->organization;
 
-        return collect($office)->only([
+        return array_merge($office->only([
             'id', 'organization_id', 'address', 'phone', 'lon', 'lat'
-        ])->merge([
+        ]), [
             'photo' => new MediaResource($office->photo),
             'organization' => new OrganizationBasicResource($organization),
-            'schedule' => OfficeScheduleResource::collection(
-                $office->schedules
-            )
-        ])->toArray();
+            'schedule' => OfficeScheduleResource::collection($office->schedules)
+        ]);
     }
 }

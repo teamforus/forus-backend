@@ -85,8 +85,8 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'state', 'start_date', 'end_date',
-            'notification_amount', 'default_validator_employee_id'
+            'name', 'description', 'state', 'start_date', 'end_date', 'type',
+            'notification_amount', 'default_validator_employee_id',
         ], [
             'state' => Fund::STATE_WAITING,
             'auto_requests_validation' => $auto_requests_validation
@@ -258,7 +258,7 @@ class FundsController extends Controller
         FinanceRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): array {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', [$fund, $organization]);
 
@@ -269,7 +269,7 @@ class FundsController extends Controller
         $nth = $request->input('nth', 1);
         $product_category_id = $request->input('product_category');
 
-        if ($type == 'quarter') {
+        if ($type === 'quarter') {
             $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfQuarter()->endOfDay();
 
@@ -280,7 +280,7 @@ class FundsController extends Controller
             $dates->push($startDate->copy()->addMonths(2));
             $dates->push($startDate->copy()->addMonths(2)->addDays(14));
             $dates->push($endDate);
-        } elseif ($type == 'month') {
+        } elseif ($type === 'month') {
             $startDate = Carbon::createFromDate($year, $nth, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
@@ -291,7 +291,7 @@ class FundsController extends Controller
             $dates->push($startDate->copy()->addDays(19));
             $dates->push($startDate->copy()->addDays(24));
             $dates->push($endDate);
-        } elseif ($type == 'week') {
+        } elseif ($type === 'week') {
             $startDate = Carbon::now()->setISODate(
                 $year, $nth
             )->startOfWeek()->startOfDay();
@@ -303,7 +303,7 @@ class FundsController extends Controller
                 $dates[0]->copy()->subDay()->endOfDay()
             );
 
-        } elseif ($type == 'all') {
+        } elseif ($type === 'all') {
             $startDate = Carbon::createFromDate($year, 1, 1)->startOfDay();
             $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
 
@@ -317,7 +317,7 @@ class FundsController extends Controller
             exit();
         }
 
-        if ($product_category_id == -1) {
+        if ($product_category_id === -1) {
             $categories = false;
         } elseif ($product_category_id) {
             $categories = ProductCategory::find($product_category_id)
@@ -330,13 +330,14 @@ class FundsController extends Controller
             $fund, $dates, $categories, $type
         ) {
             $previousIntervalEntry = $date;
-            if ($key === 0 && $type !== 'week') {
+
+            if ($key > 0) {
+                $previousIntervalEntry = $dates[$key - 1];
+            } else if ($key === 0 && $type !== 'week') {
                 return [
                     "key" => null,
                     "value" => null
                 ];
-            } elseif ($key > 0) {
-                $previousIntervalEntry = $dates[$key - 1];
             }
 
             $voucherQuery = $fund->voucher_transactions()->whereBetween(
@@ -388,6 +389,7 @@ class FundsController extends Controller
                     ];
             }
         });
+
         $dates->shift();
 
         $providers = $fund->voucher_transactions()->whereBetween(
@@ -395,14 +397,14 @@ class FundsController extends Controller
             $startDate, $endDate
         ]);
 
-        if($product_category_id){
-            if($product_category_id == -1){
-                $providers = $providers->whereNull('voucher_transactions.product_id');
-            }else{
-                $providers = $providers->whereHas('product', function (Builder $query) use($product_category_id){
-                    return $query->where('product_category_id', $product_category_id);
-                });
-            }
+        if ($product_category_id === -1){
+            $providers = $providers->whereNull('voucher_transactions.product_id');
+        } elseif ($product_category_id) {
+            $providers = $providers->whereHas('product', function (
+                Builder $query
+            ) use ($product_category_id) {
+                return $query->where('product_category_id', $product_category_id);
+            });
         }
 
         return [

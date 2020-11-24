@@ -14,7 +14,7 @@ class IdentityUpdatePinCodeRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -25,7 +25,7 @@ class IdentityUpdatePinCodeRequest extends FormRequest
      * @throws \Exception
      * @return array
      */
-    public function rules(Request $request)
+    public function rules(Request $request): array
     {
         $proxyIdentity = $request->get('proxyIdentity');
 

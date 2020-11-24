@@ -90,7 +90,9 @@ class FundRequest extends Model
         Organization $organization,
         string $identity_address
     ) {
+        /** @var Builder $query */
         $query = self::query();
+        $recordRepo = resolve('forus.services.record');
 
         $query->whereHas('records', static function(
             Builder $builder
@@ -103,12 +105,43 @@ class FundRequest extends Model
         });
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $query->whereHas('fund', static function(Builder $builder) use ($q) {
-                $builder->where('name', 'LIKE', "%$q%");
+            $query->where(function (Builder $query) use ($q, $recordRepo) {
+                $query->whereHas('fund', static function(Builder $builder) use ($q) {
+                    $builder->where('name', 'LIKE', "%$q%");
+                });
+
+                if ($bsn_identity_address = $recordRepo->identityAddressByBsn($q)) {
+                    $query->orWhere('identity_address', '=', $bsn_identity_address);
+                }
             });
         }
 
-        return $query;
+        if ($request->has('state') && $state = $request->input('state')) {
+            $query->where('state', $state);
+        }
+
+        if ($request->has('from') && $from = $request->input('from')) {
+            $query->where('created_at', '>=', $from);
+        }
+
+        if ($request->has('to') && $to = $request->input('to')) {
+            $query->where('created_at', '<=', $to);
+        }
+
+        if ($request->has('employee_id') && $employee_id = $request->input('employee_id')) {
+            $employee = Employee::find($employee_id);
+
+            $query->whereHas('records', static function(Builder $builder) use ($employee) {
+                FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+                    $builder, $employee->identity_address, $employee->id
+                );
+            });
+        }
+
+        return $query->orderBy(
+            $request->get('sort_by', 'created_at'),
+            $request->get('sort_order', 'DESC')
+        );
     }
 
     /**
@@ -222,7 +255,7 @@ class FundRequest extends Model
      */
     public function resolve(): self {
         $records = $this->records()->whereHas('employee');
-        $records->where('state', '!=', self::STATE_PENDING);
+        $records->where('state', '=', self::STATE_APPROVED);
 
         $records->get()->each(static function(FundRequestRecord $record) {
             $record->makeValidation();
@@ -289,6 +322,11 @@ class FundRequest extends Model
         Employee $employee,
         ?FundCriterion $fundCriterion = null
     ): self {
+        $this->records()->where([
+            'employee_id' => $employee->id,
+            'record_type_key' => 'partner_bsn'
+        ])->forceDelete();
+
         $query = $this->records()->where([
             'employee_id' => $employee->id,
         ]);

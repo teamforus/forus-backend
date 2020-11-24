@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class OrganizationsController extends Controller
 {
@@ -24,7 +25,7 @@ class OrganizationsController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(IndexOrganizationRequest $request)
+    public function index(IndexOrganizationRequest $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Organization::class);
 
@@ -44,7 +45,7 @@ class OrganizationsController extends Controller
      */
     public function store(
         StoreOrganizationRequest $request
-    ) {
+    ): OrganizationResource {
         $this->authorize('store', Organization::class);
 
         if ($media = media()->findByUid($request->post('media_uid'))) {
@@ -54,7 +55,7 @@ class OrganizationsController extends Controller
         /** @var Organization $organization */
         $organization = Organization::create(
             collect($request->only([
-                'name', 'email', 'phone', 'kvk', 'website',
+                'name', 'email', 'phone', 'kvk', 'website', 'description',
                 'email_public', 'phone_public', 'website_public',
                 'business_type_id',
             ]))->merge([
@@ -64,7 +65,7 @@ class OrganizationsController extends Controller
             ])->toArray()
         );
 
-        if ($media instanceof Media && $media->type == 'organization_logo') {
+        if ($media instanceof Media && $media->type === 'organization_logo') {
             $organization->attachMedia($media);
         }
 
@@ -84,7 +85,7 @@ class OrganizationsController extends Controller
     public function show(
         Request $request,
         Organization $organization
-    ) {
+    ): OrganizationResource {
         $this->authorize('show', $organization);
 
         return new OrganizationResource(
@@ -103,7 +104,7 @@ class OrganizationsController extends Controller
     public function update(
         UpdateOrganizationRequest $request,
         Organization $organization
-    ) {
+    ): OrganizationResource {
         $this->authorize('update', $organization);
 
         if ($media = media()->findByUid($request->post('media_uid'))) {
@@ -113,12 +114,12 @@ class OrganizationsController extends Controller
         $organization->update(collect($request->only([
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
-            'business_type_id',
+            'business_type_id', 'description',
         ]))->merge([
             'iban' => strtoupper($request->get('iban'))
         ])->toArray());
 
-        if ($media instanceof Media && $media->type == 'organization_logo') {
+        if ($media instanceof Media && $media->type === 'organization_logo') {
             $organization->attachMedia($media);
         }
 
@@ -136,7 +137,7 @@ class OrganizationsController extends Controller
     public function updateBusinessType(
         UpdateOrganizationBusinessTypeRequest $request,
         Organization $organization
-    ) {
+    ): OrganizationResource {
         $this->authorize('update', $organization);
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
@@ -155,7 +156,7 @@ class OrganizationsController extends Controller
     public function updateRoles(
         UpdateOrganizationRolesRequest $request,
         Organization $organization
-    ) {
+    ): OrganizationResource {
         $this->authorize('update', $organization);
 
         OrganizationUpdated::dispatch($organization->updateModel($request->only([

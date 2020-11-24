@@ -15,7 +15,11 @@ namespace App\Models;
  * @property string $title
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $external_validator_organizations
+ * @property-read int|null $external_validator_organizations_count
  * @property-read \App\Models\Fund $fund
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criterion_validators
+ * @property-read int|null $fund_criterion_validators_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion query()
@@ -28,11 +32,8 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereShowAttachment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereTitle($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criterion_validators
- * @property-read int|null $fund_criterion_validators_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $external_validator_organizations
- * @property-read int|null $external_validator_organizations_count
  */
 class FundCriterion extends Model
 {

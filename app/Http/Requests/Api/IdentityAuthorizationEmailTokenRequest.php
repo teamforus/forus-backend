@@ -2,18 +2,18 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
 use App\Rules\IdentityEmailExistsRule;
-use Illuminate\Foundation\Http\FormRequest;
 
-class IdentityAuthorizationEmailTokenRequest extends FormRequest
+class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -23,7 +23,7 @@ class IdentityAuthorizationEmailTokenRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $emailRule = [
             'email:strict,dns',

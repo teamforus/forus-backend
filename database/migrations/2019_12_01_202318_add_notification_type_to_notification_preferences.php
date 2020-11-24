@@ -11,7 +11,7 @@ class AddNotificationTypeToNotificationPreferences extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('notification_preferences', function(Blueprint $table) {
             $table->enum('type', ['email', 'push'])->default(
@@ -27,7 +27,7 @@ class AddNotificationTypeToNotificationPreferences extends Migration
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function down()
+    public function down(): void
     {
         DB::getDoctrineSchemaManager()
             ->getDatabasePlatform()

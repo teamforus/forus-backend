@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Transactions;
 
 use App\Models\Fund;
+use App\Models\VoucherTransaction;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IndexTransactionsRequest extends FormRequest
 {
@@ -12,7 +14,7 @@ class IndexTransactionsRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,13 +24,13 @@ class IndexTransactionsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'per_page'      => 'numeric|between:1,100',
             'q'             => 'nullable|string',
-            'state'         => 'nullable|in:pending,success',
-            'fund_state'    => 'nullable|in:' . join(',', Fund::STATES),
+            'state'         => Rule::in(VoucherTransaction::STATES),
+            'fund_state'    => Rule::in(Fund::STATES),
             'from'          => 'date:Y-m-d',
             'to'            => 'date:Y-m-d',
             'amount_min'    => 'numeric|min:0',

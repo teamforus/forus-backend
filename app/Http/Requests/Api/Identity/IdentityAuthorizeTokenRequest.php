@@ -2,16 +2,16 @@
 
 namespace App\Http\Requests\Api\Identity;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class IdentityAuthorizeTokenRequest extends FormRequest
+class IdentityAuthorizeTokenRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,7 +21,7 @@ class IdentityAuthorizeTokenRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'auth_token' => 'required'

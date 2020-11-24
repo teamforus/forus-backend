@@ -15,19 +15,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+/**
+ * Class PrevalidationController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class PrevalidationController extends Controller
 {
     use ThrottleWithMeta;
-
-    private $maxAttempts = 3;
-    private $decayMinutes = 180;
 
     /**
      * RecordCategoryController constructor.
      */
     public function __construct() {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', $this->maxAttempts);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', $this->decayMinutes);
+        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
+        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
     }
 
     /**
@@ -88,7 +89,7 @@ class PrevalidationController extends Controller
         return [
             'db' => Prevalidation::where([
                 'fund_id' => $fund->id,
-                'identity_address' => auth_address(),
+                'identity_address' => $request->auth_address(),
                 'state' => Prevalidation::STATE_PENDING,
             ])->select(['id', 'uid_hash', 'records_hash'])->get()->toArray(),
             'collection' => array_map(static function ($row) use ($primaryKey) {
@@ -147,20 +148,16 @@ class PrevalidationController extends Controller
         RedeemPrevalidationRequest $request,
         Prevalidation $prevalidation = null
     ): PrevalidationResource {
-        if ($this->hasTooManyLoginAttempts($request)) {
-            $this->responseWithThrottleMeta('to_many_attempts', $request);
-        }
-
-        $this->incrementLoginAttempts($request);
+        $this->throttleWithKey('to_many_attempts', $request, 'prevalidations');
 
         if (!$prevalidation || !$prevalidation->exists()) {
-            $this->responseWithThrottleMeta('not_found', $request, 404);
+            $this->responseWithThrottleMeta('not_found', $request, 'prevalidations', 404);
         }
 
         $this->authorize('redeem', $prevalidation);
-        $this->clearLoginAttempts($request);
+        $this->clearLoginAttemptsWithKey($request, 'prevalidations');
 
-        $prevalidation->assignToIdentity(auth_address());
+        $prevalidation->assignToIdentity($request->auth_address());
 
         return new PrevalidationResource($prevalidation);
     }

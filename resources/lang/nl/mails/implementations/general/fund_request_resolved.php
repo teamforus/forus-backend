@@ -1,7 +1,9 @@
 <?php
 
 return [
-    'title' => 'Uw aanvraag voor :fund_name is afgehandeld.',
-    'message' => 'Uw aanvraag is afgehandeld met de status ":status". U kunt naar de webshop gaan om uw aanvraag in te zien.',
-    'webshop_button' => '<a href=":link" target="_blank" style="color: #315efd; text-decoration: underline;">Ga naar de webshop</a>'
+    'title' => 'U hebt een aanvraag gedaan voor een :fund_name-tegoed.',
+    'contact_us' => 'Mocht u desondanks van mening zijn dat u recht hebt op een :fund_name-tegoed, dan verzoeken wij u met ons contact op te nemen.'.'<br/><br/>'.
+        'Wij hopen dat wij u hiermee voldoende hebben geïnformeerd.',
+    'sponsor_phone' => 'Telefoonnummer: :sponsor_phone',
+    'sponsor_email' => 'E-mailadres: :sponsor_email',
 ];

@@ -11,7 +11,7 @@ class AddEmailFromFieldsToImplementationTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function(Blueprint $table) {
             $table->string('email_from_address', 50)->nullable()->after('lat');
@@ -24,7 +24,7 @@ class AddEmailFromFieldsToImplementationTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function(Blueprint $table) {
             $table->dropColumn('email_from_address');

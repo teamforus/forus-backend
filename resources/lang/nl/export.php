@@ -23,8 +23,8 @@ return [
         'kvk' => 'kvk',
         'state' => 'status',
     'allow_budget' => 'Geaccepteerd: budget',
-    'allow_products' => 'Geaccepteerd: aanbiedingen',
-    'allow_some_products' => 'Geaccepteerd: specifieke aanbiedingen',
+    'allow_products' => 'Geaccepteerd: aanbod',
+    'allow_some_products' => 'Geaccepteerd: specifiek aanbod',
     ],
     
     'fund_requests'              => [
@@ -38,7 +38,8 @@ return [
     'voucher_transactions'    => [
         'id' => 'ID',
         'amount' => 'bedrag',
-        'date' => 'datum',
+        'date_transaction' => 'Datum betaling',
+        'date_payment' => 'Datum uitbetaling',
         'fund' => 'fonds',
         'provider' => 'aanbieder',
         'state' => 'status',

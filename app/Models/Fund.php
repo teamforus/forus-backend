@@ -6,6 +6,7 @@ use App\Events\Funds\FundBalanceLowEvent;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
+use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -17,6 +18,7 @@ use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
+use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
@@ -40,6 +42,7 @@ use Illuminate\Http\Request;
  * @property int $organization_id
  * @property string $name
  * @property string|null $description
+ * @property string $type
  * @property string $state
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -51,6 +54,8 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $budget_vouchers
+ * @property-read int|null $budget_vouchers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
  * @property-read int|null $bunq_me_tabs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
@@ -71,11 +76,14 @@ use Illuminate\Http\Request;
  * @property-read int|null $fund_formula_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_limit_multipliers
+ * @property-read int|null $fund_limit_multipliers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read float $budget_left
+ * @property-read float $budget_reserved
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
@@ -137,6 +145,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund wherePublic($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -158,6 +167,7 @@ class Fund extends Model
     public const EVENT_PRODUCT_ADDED = 'fund_product_added';
     public const EVENT_PRODUCT_APPROVED = 'fund_product_approved';
     public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
+    public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
 
     public const STATE_ACTIVE = 'active';
@@ -172,6 +182,14 @@ class Fund extends Model
         self::STATE_WAITING,
     ];
 
+    public const TYPE_BUDGET = 'budget';
+    public const TYPE_SUBSIDIES = 'subsidies';
+
+    public const TYPES = [
+        self::TYPE_BUDGET,
+        self::TYPE_SUBSIDIES,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -181,7 +199,7 @@ class Fund extends Model
         'organization_id', 'state', 'name', 'description', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
-        'criteria_editable_after_start'
+        'criteria_editable_after_start', 'type',
     ];
 
     protected $hidden = [
@@ -244,6 +262,13 @@ class Fund extends Model
      */
     public function vouchers(): HasMany {
         return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function budget_vouchers(): HasMany {
+        return $this->hasMany(Voucher::class)->whereNull('parent_id');
     }
 
     /**
@@ -352,7 +377,7 @@ class Fund extends Model
      * @return float
      */
     public function getBudgetUsedAttribute(): float {
-        return round($this->voucher_transactions->sum('amount'), 2);
+        return round($this->voucher_transactions()->sum('voucher_transactions.amount'), 2);
     }
 
     /**
@@ -363,10 +388,10 @@ class Fund extends Model
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getFundId(): int {
-        return $this->id;
+    public function getBudgetReservedAttribute(): float {
+        return round($this->budget_vouchers()->sum('amount'), 2);
     }
 
     /**
@@ -381,7 +406,7 @@ class Fund extends Model
      */
     public function getTransactionCosts (): float {
         if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
-            return $this->voucher_transactions()->count() * 0.10;
+            return $this->voucher_transactions()->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
         }
 
         return 0.0;
@@ -509,6 +534,13 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function fund_limit_multipliers(): HasMany {
+        return $this->hasMany(FundLimitMultiplier::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function fund_formula_products(): HasMany {
         return $this->hasMany(FundFormulaProduct::class);
     }
@@ -602,36 +634,53 @@ class Fund extends Model
     }
 
     /**
-     * @param Fund $fund
-     * @param $identityAddress
+     * @param string|null $identityAddress
      * @return int|mixed
      */
-    public static function amountForIdentity(Fund $fund, $identityAddress)
+    public function amountForIdentity(?string $identityAddress)
     {
-        if ($fund->fund_formulas->count() === 0 &&
-            $fund->fund_formula_products->pluck('price')->sum() === 0) {
+        if ($this->fund_formulas->count() === 0 &&
+            $this->fund_formula_products->pluck('price')->sum() === 0) {
             return 0;
         }
 
-        return $fund->fund_formulas->map(static function(FundFormula $formula) use (
-                $fund, $identityAddress
-            ) {
-                switch ($formula->type) {
-                    case 'fixed': return $formula->amount;
-                    case 'multiply': {
-                        $record = self::getTrustedRecordOfType(
-                            $identityAddress,
-                            $formula->record_type_key,
-                            $fund
-                        );
+        return $this->fund_formulas->map(function(FundFormula $formula) use ($identityAddress) {
+            switch ($formula->type) {
+                case 'fixed': return $formula->amount;
+                case 'multiply': {
+                    $record = self::getTrustedRecordOfType(
+                        $identityAddress,
+                        $formula->record_type_key,
+                        $this
+                    );
 
-                        return is_numeric(
-                            $record['value']
-                        ) ? $formula->amount * $record['value'] : 0;
-                    }
-                    default: return 0;
+                    return is_numeric(
+                        $record['value']
+                    ) ? $formula->amount * $record['value'] : 0;
                 }
-            })->sum() + $fund->fund_formula_products->pluck('price')->sum();
+                default: return 0;
+            }
+        })->sum() + $this->fund_formula_products->pluck('price')->sum();
+    }
+
+    /**
+     * @param string|null $identityAddress
+     * @return int|mixed
+     */
+    public function multiplierForIdentity(?string $identityAddress) {
+        /** @var FundLimitMultiplier[]|Collection $multipliers */
+        $multipliers = $this->fund_limit_multipliers()->get();
+
+        if (!$identityAddress || ($multipliers->count() === 0)) {
+            return 1;
+        }
+
+        return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress) {
+            return ((int) self::getTrustedRecordOfType(
+                $identityAddress,
+                $multiplier->record_type_key,
+                $this)['value']) * $multiplier->multiplier;
+        })->sum();
     }
 
     /**
@@ -978,6 +1027,7 @@ class Fund extends Model
      * @param Carbon|null $expire_at
      * @param string|null $note
      * @return Voucher|\Illuminate\Database\Eloquent\Model
+     * @throws \Exception
      */
     public function makeVoucher(
         string $identity_address = null,
@@ -985,29 +1035,37 @@ class Fund extends Model
         Carbon $expire_at = null,
         string $note = null
     ) {
-        $amount = $voucherAmount ?: self::amountForIdentity(
-            $this,
-            $identity_address
-        );
-
+        $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
+        $limit_multiplier = $this->multiplierForIdentity($identity_address);
+        $voucher = null;
 
-        $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note',
-            'fund_id', 'returnable'
-        ));
+        if ($this->fund_formulas->count() > 0) {
+            $voucher = Voucher::create(compact(
+                'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
+                'returnable', 'limit_multiplier'
+            ));
 
-        VoucherCreated::dispatch($voucher);
+            VoucherCreated::dispatch($voucher);
+        }
 
-        if ($voucherAmount === null) {
+        if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucher->buyProductVoucher(
-                    $fund_formula_product->product,
-                    $fund_formula_product->amount,
-                    false
+                $voucherExpireAt = $this->end_date->gt(
+                    $fund_formula_product->product->expire_at
+                ) ? $fund_formula_product->product->expire_at->expire_at : $this->end_date;
+
+                $voucher = $this->makeProductVoucher(
+                    $identity_address,
+                    $fund_formula_product->product->id,
+                    $voucherExpireAt,
+                    '',
+                    $fund_formula_product->price
                 );
+
+                VoucherAssigned::broadcast($voucher);
             }
         }
 
@@ -1019,15 +1077,17 @@ class Fund extends Model
      * @param int|null $product_id
      * @param Carbon|null $expire_at
      * @param string|null $note
+     * @param float|null $price
      * @return Voucher
      */
     public function makeProductVoucher(
         string $identity_address = null,
         int $product_id = null,
         Carbon $expire_at = null,
-        string $note = null
+        string $note = null,
+        float $price = null
     ): Voucher {
-        $amount = Product::findOrFail($product_id)->price;
+        $amount = $price ?: Product::findOrFail($product_id)->price;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
         $returnable = false;
@@ -1345,5 +1405,90 @@ class Fund extends Model
     public function getEmailFrom(): EmailFrom {
         return $this->fund_config->implementation->getEmailFrom() ??
             EmailFrom::createDefault();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeSubsidy(): bool {
+        return $this->type === $this::TYPE_SUBSIDIES;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTypeBudget(): bool {
+        return $this->type === $this::TYPE_BUDGET;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHashingBsn(): bool {
+        return $this->fund_config->hash_bsn;
+    }
+
+    /**
+     * @param $value
+     * @return string|null
+     */
+    public function getHashedValue($value): ?string {
+        if (!$this->isHashingBsn()) {
+            return null;
+        }
+
+        return hash_hmac('sha256', $value, $this->fund_config->hash_bsn_salt);
+    }
+
+    /**
+     * @param ?string $identity_address
+     * @return bool
+     */
+    public function isTakenByPartner(?string $identity_address): bool {
+        if (!$identity_address || !$identity = Identity::findByAddress($identity_address)) {
+            return false;
+        }
+
+        return Identity::whereHas('vouchers', function(Builder $builder) {
+            $builder->where('fund_id', '=', $this->id);
+        })->whereHas('records', function(Builder $builder) use ($identity) {
+            $builder->where(function(Builder $builder) use ($identity) {
+                $identityBsn = record_repo()->bsnByAddress($identity->address);
+
+                $builder->where(function(Builder $builder) use ($identity, $identityBsn) {
+                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
+                        $this->isHashingBsn() ? 'partner_bsn_hash': 'partner_bsn'
+                    ));
+
+                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
+                        self::getTrustedRecordOfType($identity->address, 'bsn_hash', $this)['value'] ?? null,
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                    ]) : [$identityBsn ?: null]);
+                });
+
+                $builder->orWhere(function(Builder $builder) use ($identity, $identityBsn) {
+                    $builder->where('record_type_id', record_repo()->getTypeIdByKey(
+                        $this->isHashingBsn() ? 'bsn_hash': 'bsn'
+                    ));
+
+                    $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
+                        self::getTrustedRecordOfType($identity->address, 'partner_bsn_hash', $this)['value'] ?? null,
+                        $identityBsn ? $this->getHashedValue($identityBsn) : null
+                    ]) : [$identityBsn ?: null]);
+                });
+            });
+
+            $builder->whereHas('validations', function(Builder $builder) {
+                $builder->whereIn('identity_address', $this->validatorEmployees());
+            });
+        })->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAutoValidatingRequests(): bool
+    {
+        return $this->default_validator_employee_id && $this->auto_requests_validation;
     }
 }

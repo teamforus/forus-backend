@@ -7,6 +7,7 @@ use App\Mail\Digest\DigestProviderFundsMail;
 use App\Mail\Digest\DigestProviderProductsMail;
 use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\Digest\DigestSponsorMail;
+use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
 use App\Mail\Funds\FundExpiredMail;
 use App\Mail\Funds\FundStartedMail;
@@ -55,7 +56,7 @@ class NotificationRepo implements INotificationRepo
 
         // Digests
         'digest.daily_sponsor' => DigestSponsorMail::class,
-        'digest.daily_validator' => DigestRequesterMail::class,
+        'digest.daily_validator' => DigestValidatorMail::class,
         'digest.daily_requester' => DigestRequesterMail::class,
         'digest.daily_provider_funds' => DigestProviderFundsMail::class,
         'digest.daily_provider_products' => DigestProviderProductsMail::class,
@@ -129,7 +130,7 @@ class NotificationRepo implements INotificationRepo
             return false;
         }
 
-        return !in_array($keys[$emailClass], self::getMandatoryMailKeys());
+        return !in_array($keys[$emailClass], self::getMandatoryMailKeys(), true);
     }
 
     /**
@@ -138,7 +139,7 @@ class NotificationRepo implements INotificationRepo
      * @return bool
      */
     public function isPushNotificationUnsubscribable(string $key): bool {
-        return in_array($key, self::getPushNotificationMap());
+        return in_array($key, self::getPushNotificationMap(), true);
     }
 
     /**
@@ -215,7 +216,7 @@ class NotificationRepo implements INotificationRepo
      * @param string|null $token
      * @return string
      */
-    private function makeToken(string $email, string $token = null) {
+    private function makeToken(string $email, string $token = null): string {
         $model = $token ? NotificationUnsubscriptionToken::findByToken($token) : null;
 
         return ($model ?: NotificationUnsubscriptionToken::makeToken($email))->token;

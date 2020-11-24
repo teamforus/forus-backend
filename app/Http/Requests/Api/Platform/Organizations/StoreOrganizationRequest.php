@@ -15,7 +15,7 @@ class StoreOrganizationRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -25,14 +25,15 @@ class StoreOrganizationRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $kvk = $this->input('kvk');
         $kvkDebug = env("KVK_API_DEBUG", false);
-        $kvkGeneric = $kvk == Organization::GENERIC_KVK;
+        $kvkGeneric = $kvk === Organization::GENERIC_KVK;
 
         return [
             'name'                  => 'required|between:2,64',
+            'description'           => 'nullable|string|max:4096',
             'iban'                  => ['required', new IbanRule()],
             'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',

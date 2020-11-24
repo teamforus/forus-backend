@@ -11,7 +11,7 @@ class CreateVoucherTransactionBunqColumns extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('voucher_transactions', function(Blueprint $table) {
             $table->integer('payment_id')->unsigned()->nullable();
@@ -27,7 +27,7 @@ class CreateVoucherTransactionBunqColumns extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         //
     }

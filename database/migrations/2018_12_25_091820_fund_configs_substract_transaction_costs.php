@@ -11,7 +11,7 @@ class FundConfigsSubstractTransactionCosts extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->boolean('subtract_transaction_costs')->default(0)->after('formula_multiplier');
@@ -23,7 +23,7 @@ class FundConfigsSubstractTransactionCosts extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->dropColumn('subtract_transaction_costs');

@@ -2,14 +2,19 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\Organization;
+use App\Rules\ProductIdInStockRule;
 use App\Rules\VouchersUploadArrayRule;
-use App\Scopes\Builders\OrganizationQuery;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\Eloquent\Builder;
 
-class StoreBatchVoucherRequest extends FormRequest
+/**
+ * Class StoreBatchVoucherRequest
+ * @property-read Organization $organization
+ * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
+ */
+class StoreBatchVoucherRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,7 +23,9 @@ class StoreBatchVoucherRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->organization->identityCan($this->auth_address(), [
+            'manage_vouchers'
+        ]);
     }
 
     /**
@@ -28,54 +35,47 @@ class StoreBatchVoucherRequest extends FormRequest
      */
     public function rules(): array
     {
-        $fund = Fund::whereHas('organization', static function(Builder $builder) {
-            OrganizationQuery::whereHasPermissions($builder, auth_address(), [
-                'manage_vouchers'
-            ]);
-        })->findOrFail($this->input('fund_id'));
+        /** @var Fund $fund */
+        $funds = $this->organization->funds();
+        $fund = $funds->findOrFail($this->input('fund_id'));
 
-        $fundsId = Fund::whereHas('organization', static function($builder) {
-            OrganizationQuery::whereHasPermissions($builder, auth_address(), [
-                'manage_vouchers'
-            ]);
-        })->pluck('funds.id')->toArray();
-
-        $startDate = $fund->start_date->format('Y-m-d');
-        $endDate = $fund->end_date->format('Y-m-d');
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
-        $max = min($fund ? $fund->budget_left : $max_allowed, $max_allowed);
-        $providers = $fund ?
-            $fund->provider_organizations_approved->pluck('id') : collect();
-
-        $productIdRule = Rule::exists('products', 'id')->where(function (
-            \Illuminate\Database\Query\Builder $query
-        ) use ($providers) {
-            $query->whereIn('organization_id', $providers->toArray());
-        });
+        $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
 
         return [
             'fund_id'   => [
                 'required',
-                'exists:funds,id',
-                Rule::in($fundsId)
+                Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
             ],
             'vouchers' => [
-                'required_without_all:amount,product_id',
+                'required',
                 new VouchersUploadArrayRule($fund),
             ],
             'vouchers.*' => 'required|array',
-            'vouchers.*.amount' => [
-                'required_without:vouchers.*.product_id', 'numeric',
-                'between:.1,' . $max,
-            ],
-            'vouchers.*.product_id' => [
-                'required_without:vouchers.*.amount', $productIdRule,
+            'vouchers.*.amount' => !$fund || $fund->isTypeBudget() ? [
+                'required_without:vouchers.*.product_id',
+                'numeric',
+                'between:.1,' . currency_format($max),
+            ] : 'nullable',
+            'vouchers.*.product_id' => !$fund || $fund->isTypeBudget() ? [
+                'required_without:vouchers.*.amount',
+                'exists:products,id',
+                new ProductIdInStockRule($fund, collect(
+                    $this->input('vouchers')
+                )->countBy('product_id')->toArray())
+            ] : [
+                'nullable',
+                Rule::in([])
             ],
             'vouchers.*.expire_at' => [
-                'nullable', 'date_format:Y-m-d', 'after:' . $startDate, 'before_or_equal:' . $endDate,
+                'nullable',
+                'date_format:Y-m-d',
+                'after:' . $fund->start_date->format('Y-m-d'),
+                'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
             'vouchers.*.note'       => 'nullable|string|max:280',
             'vouchers.*.email'      => 'nullable|email:strict,dns',
+            'vouchers.*.bsn'        => 'nullable|digits:9',
         ];
     }
 }

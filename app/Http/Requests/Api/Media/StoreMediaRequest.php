@@ -15,7 +15,7 @@ class StoreMediaRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -25,7 +25,7 @@ class StoreMediaRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $type = MediaService::getMediaConfig($this->input('type'));
 
@@ -35,7 +35,7 @@ class StoreMediaRequest extends FormRequest
                 'file',
                 'image',
             ], $type ? [
-                'mimes:' . join(',', $type->getSourceExtensions()),
+                'mimes:' . implode(',', $type->getSourceExtensions()),
                 new FileMimeTypeRule($type->getSourceMimeTypes()),
                 'max:' . $type->getMaxSourceFileSize(4096),
             ]: []),
@@ -49,7 +49,7 @@ class StoreMediaRequest extends FormRequest
             ],
             'sync_presets.*' => [
                 'nullable',
-                Rule::in(array_map(function(MediaPreset $mediaPreset) {
+                Rule::in(array_map(static function(MediaPreset $mediaPreset) {
                     return $mediaPreset->name;
                 }, $type->getPresets()))
             ],

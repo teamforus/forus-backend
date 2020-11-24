@@ -11,7 +11,7 @@ class SearchProductCategoriesRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,15 +21,13 @@ class SearchProductCategoriesRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        $parent_id = $this->input('parent_id');
-
         return [
             'q' => 'string',
             'parent_id' => [
                 'nullable',
-                $parent_id == 'null' ? '' : 'exists:product_categories,id'
+                $this->input('parent_id') === 'null' ? '' : 'exists:product_categories,id'
             ],
             'service' => 'boolean',
             'used' => 'boolean',

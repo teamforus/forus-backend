@@ -11,7 +11,7 @@ class CreateTransactionRequestsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('transaction_requests', function (Blueprint $table) {
             $table->increments('id');
@@ -44,7 +44,7 @@ class CreateTransactionRequestsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('transaction_requests');
     }

@@ -5,6 +5,7 @@ namespace App\Http\Resources\Provider;
 use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
@@ -21,21 +22,12 @@ use Illuminate\Http\Resources\Json\Resource;
 class ProviderVoucherResource extends Resource
 {
     /**
-     * ProviderVoucherResource constructor.
-     * @param VoucherToken|Voucher $resource
-     */
-    public function __construct($resource)
-    {
-        parent::__construct($resource);
-    }
-
-    /**
      * Transform the resource into an array.
      *
-     * @param Request $request
+     * @param Request|any $request
      * @return array|mixed|void|null
      */
-    public function toArray($request)
+    public function toArray($request): ?array
     {
         if ($this->resource instanceof VoucherToken) {
             $voucherToken = $this->resource;
@@ -45,7 +37,7 @@ class ProviderVoucherResource extends Resource
             return null;
         }
 
-        if ($voucherToken->voucher->product) {
+        if ($voucherToken->voucher->isProductType()) {
             return $this->productVoucher($voucherToken);
         }
 
@@ -64,14 +56,15 @@ class ProviderVoucherResource extends Resource
         $request,
         string $identityAddress,
         VoucherToken $voucherToken
-    ) {
+    ): array {
         $voucher = $voucherToken->voucher;
+        $fund = $voucher->fund;
 
         $allowedOrganizations = OrganizationQuery::whereHasPermissionToScanVoucher(
-            Organization::query(),
-            $identityAddress,
-            $voucher
-        )->select('id', 'name')->get()->map(function($organization) {
+            Organization::query(), $identityAddress, $voucher
+        )->select([
+            'id', 'name'
+        ])->get()->map(static function($organization) {
             return collect($organization)->merge([
                 'logo' => new MediaCompactResource($organization->logo)
             ]);
@@ -83,20 +76,13 @@ class ProviderVoucherResource extends Resource
             $voucher->fund_id
         )->whereDoesntHave('transactions')->get();
 
-        $fundData = collect($voucher->fund)->only([
-            'id', 'name', 'state'
-        ])->merge([
-            'organization'  => new OrganizationBasicResource($voucher->fund->organization),
-            'logo'          => new MediaCompactResource($voucher->fund->logo)
-        ]);
-
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at'
         ])->merge([
             'address' => $voucherToken->address,
             'type' => 'regular',
-            'amount' => currency_format($voucher->amount_available),
-            'fund' => $fundData,
+            'amount' => currency_format($fund->isTypeBudget() ? $voucher->amount_available : 0),
+            'fund' => $this->fundDetails($fund),
             'allowed_organizations' => $allowedOrganizations,
         ])->merge(env('DISABLE_DEPRECATED_API') ? [] : [
             // TODO: To be removed in next release
@@ -116,27 +102,40 @@ class ProviderVoucherResource extends Resource
      */
     private function productVoucher(
         VoucherToken $voucherToken
-    ) {
+    ): array {
         $voucher = $voucherToken->voucher;
 
         return collect($voucher)->only([
-            'identity_address', 'fund_id', 'created_at'
+            'identity_address', 'fund_id',
         ])->merge([
+            'created_at' => $voucher->created_at_string,
             'address' => $voucherToken->address,
             'type' => 'product',
+            'fund' => $this->fundDetails($voucher->fund),
             'product' => collect($voucher->product)->only([
                 'id', 'name', 'description', 'total_amount', 'sold_amount',
                 'product_category_id', 'organization_id'
             ])->merge([
                 'price' => currency_format($voucher->product->price),
                 'old_price' => currency_format($voucher->product->old_price),
-                'photo' => new MediaResource(
-                    $voucher->product->photo
-                ),
-                'organization' => new OrganizationBasicResource(
-                    $voucher->product->organization
-                ),
+                'photo' => new MediaResource($voucher->product->photo),
+                'organization' => new OrganizationBasicResource($voucher->product->organization),
             ])->toArray(),
         ])->toArray();
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    private function fundDetails(
+        Fund $fund
+    ): array{
+        return array_merge($fund->only([
+            'id', 'name', 'state', 'type',
+        ]), [
+            'organization'  => new OrganizationBasicResource($fund->organization),
+            'logo'          => new MediaCompactResource($fund->logo)
+        ]);
     }
 }

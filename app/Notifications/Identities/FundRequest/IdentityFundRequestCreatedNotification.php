@@ -29,6 +29,7 @@ class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNoti
             $identity->primary_email->email,
             new FundRequestCreatedMail(
                 $this->eventLog->data['fund_name'],
+                $this->eventLog->data['sponsor_name'],
                 $fund->urlWebshop(),
                 $fund->getEmailFrom()
             )

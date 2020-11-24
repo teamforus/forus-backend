@@ -14,6 +14,9 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use App\Traits\ThrottleWithMeta;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Class EmployeesController
@@ -23,17 +26,20 @@ use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
  */
 class EmployeesController extends Controller
 {
+    use ThrottleWithMeta;
+
     private $recordRepo;
     private $identityRepo;
-    private $notificationRepo;
 
     public function __construct(
         IRecordRepo $recordRepo,
         IIdentityRepo $identityRepo
     ) {
+        $this->maxAttempts = env('EMPLOYEE_INVITE_THROTTLE_ATTEMPTS', 10);
+        $this->decayMinutes = env('EMPLOYEE_INVITE_THROTTLE_DECAY', 10);
+
         $this->recordRepo = $recordRepo;
         $this->identityRepo = $identityRepo;
-        $this->notificationRepo = resolve('forus.services.notification');
     }
 
     /**
@@ -47,7 +53,7 @@ class EmployeesController extends Controller
     public function index(
         IndexEmployeesRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', [$organization]);
         $this->authorize('viewAny', [Employee::class, $organization]);
 
@@ -74,6 +80,8 @@ class EmployeesController extends Controller
         StoreEmployeeRequest $request,
         Organization $organization
     ) {
+        $this->throttleWithKey('to_many_attempts', $request, 'invite_employee');
+
         $this->authorize('show', [$organization]);
         $this->authorize('store', [Employee::class, $organization]);
 
@@ -107,7 +115,7 @@ class EmployeesController extends Controller
     public function show(
         Organization $organization,
         Employee $employee
-    ) {
+    ): EmployeeResource {
         $this->authorize('show', [$organization]);
         $this->authorize('show', [$employee, $organization]);
 
@@ -127,7 +135,7 @@ class EmployeesController extends Controller
         UpdateEmployeeRequest $request,
         Organization $organization,
         Employee $employee
-    ) {
+    ): EmployeeResource {
         $this->authorize('show', [$organization]);
         $this->authorize('update', [$employee, $organization]);
 
@@ -144,17 +152,20 @@ class EmployeesController extends Controller
      *
      * @param Organization $organization
      * @param Employee $employee
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
         Organization $organization,
         Employee $employee
-    ) {
+    ): JsonResponse {
         $this->authorize('show', [$organization]);
         $this->authorize('destroy', [$employee, $organization]);
 
         EmployeeDeleted::broadcast($employee);
 
         $employee->delete();
+
+        return response()->json([], 200);
     }
 }

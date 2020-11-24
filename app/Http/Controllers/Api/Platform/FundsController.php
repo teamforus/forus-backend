@@ -11,9 +11,15 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
+use App\Models\Voucher;
 use App\Services\BunqService\BunqService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Validator;
 
+/**
+ * Class FundsController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class FundsController extends Controller
 {
     /**
@@ -25,15 +31,27 @@ class FundsController extends Controller
     public function index(
         IndexFundsRequest $request
     ): AnonymousResourceCollection {
-        return FundResource::collection(Fund::search(
-            $request,
-            $request->input('state') === 'active_and_closed' ?
-            Implementation::queryFundsByState([
-                Fund::STATE_CLOSED,
-                Fund::STATE_ACTIVE,
-            ]) :
-            Implementation::activeFundsQuery()
-        )->get());
+        $state = $request->input('state') === 'active_and_closed' ? [
+            Fund::STATE_CLOSED,
+            Fund::STATE_ACTIVE,
+        ] : Fund::STATE_ACTIVE;
+
+        $query = Fund::search($request, Implementation::queryFundsByState($state));
+        $meta = [
+            'organizations' => $query->with('organization')->get()->pluck(
+                'organization.name', 'organization.id'
+            )->map(static function ($name, $id) {
+                return (object) compact('id', 'name');
+            })->toArray()
+        ];
+
+        if ($per_page = $request->input('per_page', false)) {
+            return FundResource::collection(
+                $query->paginate($per_page)
+            )->additional(compact('meta'));
+        }
+
+        return FundResource::collection($query->get());
     }
 
     /**
@@ -60,17 +78,22 @@ class FundsController extends Controller
      * @param Fund $fund
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function apply(
         Fund $fund
     ): VoucherResource {
         $this->authorize('apply', $fund);
 
-        return new VoucherResource(
-            $fund->makeVoucher(auth()->id())
-        );
+        $identity_address = auth_address();
+        $voucher = $fund->makeVoucher($identity_address);
+
+        return new VoucherResource($voucher ?: $fund->vouchers()->where([
+            'identity_address' => $identity_address,
+        ])->first());
     }
 
+    // TODO: remove bunq ideal requests
     /**
      * @param Fund $fund
      * @return AnonymousResourceCollection

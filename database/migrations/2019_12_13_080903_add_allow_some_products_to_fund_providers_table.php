@@ -12,7 +12,7 @@ class AddAllowSomeProductsToFundProvidersTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_providers', function (Blueprint $table) {
             $table->boolean('allow_some_products')->default(false)
@@ -31,7 +31,7 @@ class AddAllowSomeProductsToFundProvidersTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_providers', function (Blueprint $table) {
             $table->dropColumn('allow_some_products');

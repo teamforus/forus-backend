@@ -11,7 +11,7 @@ class UpdateFundCriteriaValueField extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_criteria', function(Blueprint $table) {
             $table->string('value', 20)->default('')->change();
@@ -23,7 +23,7 @@ class UpdateFundCriteriaValueField extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         //
     }

@@ -6,8 +6,8 @@ return [
     'validations' => [],
     'vouchers' => [
         'voucher_sent' => [
-            'subject' => 'Uw voucher',
-            'title' => 'Uw voucher',
+            'subject' => 'Uw tegoed',
+            'title' => 'Uw tegoed',
         ]
     ]
 ];

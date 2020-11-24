@@ -5,6 +5,11 @@ namespace App\Http\Requests\Api\Platform\Organizations\Products;
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Class UpdateProductRequest
+ * @property Product $product
+ * @package App\Http\Requests\Api\Platform\Organizations\Products
+ */
 class UpdateProductRequest extends FormRequest
 {
     /**
@@ -12,7 +17,7 @@ class UpdateProductRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,10 +27,9 @@ class UpdateProductRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        /** @var Product $product */
-        $product = request()->product;
+        $product = $this->product;
         $currentExpire = $product->expire_at->format('Y-m-d');
         $minAmount = $product->countReserved() + $product->countSold();
 
@@ -34,8 +38,9 @@ class UpdateProductRequest extends FormRequest
         return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,1000',
-            'price'                 => 'required|numeric|min:.2',
-            'old_price'             => [
+            'no_price'              => 'boolean',
+            'price'                 => $product->no_price ? [] : 'required_without:no_price|numeric|min:.2',
+            'old_price'             => $product->no_price ? [] : [
                 'nullable',
                 'numeric',
                 'min:' . $price
@@ -53,7 +58,7 @@ class UpdateProductRequest extends FormRequest
     /**
      * @return array
      */
-    public function messages()
+    public function messages(): array
     {
         return [
             'expire_at.after' => trans('validation.after', [

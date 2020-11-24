@@ -8,6 +8,10 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
+/**
+ * Class VoucherTransactionCreated
+ * @package App\Events\VoucherTransactions
+ */
 class VoucherTransactionCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -31,7 +35,7 @@ class VoucherTransactionCreated
      *
      * @return VoucherTransaction
      */
-    public function getVoucherTransaction()
+    public function getVoucherTransaction(): VoucherTransaction
     {
         return $this->voucherTransaction;
     }
