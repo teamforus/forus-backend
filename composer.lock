@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd9bf2079d290faee9cd80761b0b14b7",
+    "content-hash": "b278cb97e85e6016ef493a8b47fe35dd",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3480,10 +3480,6 @@
                 "json",
                 "jsonpath"
             ],
-            "support": {
-                "issues": "https://github.com/jmespath/jmespath.php/issues",
-                "source": "https://github.com/jmespath/jmespath.php/tree/2.6.0"
-            },
             "time": "2020-07-31T21:01:56+00:00"
         },
         {
@@ -4337,9 +4333,6 @@
                 "request",
                 "response"
             ],
-            "support": {
-                "source": "https://github.com/php-fig/http-message/tree/master"
-            },
             "time": "2016-08-06T14:39:51+00:00"
         },
         {
@@ -7268,6 +7261,45 @@
             ],
             "abandoned": true,
             "time": "2019-03-14T17:18:26+00:00"
+        },
+        {
+            "name": "zoon/commonmark-ext-youtube-iframe",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zoonru/commonmark-ext-youtube-iframe.git",
+                "reference": "9ff4d6beb7437a3bb5450c81dc7d2f1eef8d12fd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zoonru/commonmark-ext-youtube-iframe/zipball/9ff4d6beb7437a3bb5450c81dc7d2f1eef8d12fd",
+                "reference": "9ff4d6beb7437a3bb5450c81dc7d2f1eef8d12fd",
+                "shasum": ""
+            },
+            "require": {
+                "league/commonmark": "^1.0",
+                "php": "^7.1"
+            },
+            "type": "commonmark-extension",
+            "autoload": {
+                "psr-4": {
+                    "Zoon\\CommonMark\\Ext\\YouTubeIframe\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-only"
+            ],
+            "description": "Extension for league/commonmark to replace youtube link with iframe",
+            "homepage": "https://github.com/zoonru/commonmark-ext-youtube-iframe",
+            "keywords": [
+                "commonmark",
+                "extension",
+                "iframe",
+                "markdown",
+                "youtube"
+            ],
+            "time": "2019-12-30T14:36:52+00:00"
         }
     ],
     "packages-dev": [
@@ -9137,11 +9169,11 @@
         "php": ">=7.2.0",
         "ext-bcmath": "*",
         "ext-curl": "*",
+        "ext-fileinfo": "*",
         "ext-json": "*",
         "ext-openssl": "*",
-        "ext-zip": "*",
-        "ext-fileinfo": "*"
+        "ext-zip": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "1.1.0"
 }
