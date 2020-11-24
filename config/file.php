@@ -9,7 +9,7 @@ return [
     'max_file_size'     => env('FILES_MAX_SIZE', 2000),
 
     'allowed_extensions'     => [
-        'jpg', 'jpeg', 'png', 'pdf', 'doc', 'xls'
+        'jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls',
     ],
     'allowed_types' => [
         'fund_request_record_proof',
