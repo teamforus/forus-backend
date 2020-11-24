@@ -200,6 +200,7 @@ return [
         'start_date' => 'startdatum',
         'end_date' => 'einddatum',
         'value' => "waarde",
+        'file' => "bestand",
         'limit_total' => "Totaal aanbod",
         'limit_total_per_identity' => "Limiet per aanvrager",
     ],
