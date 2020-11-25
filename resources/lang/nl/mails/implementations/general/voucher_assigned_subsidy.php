@@ -3,7 +3,7 @@
 return [
     'title' => 'Hierbij ontvangt u uw :fund_name',
     'paragraph1' => 'Alstublieft, hier is uw :fund_name! Uw aanvraag is goedgekeurd.',
-    'paragraph2' => 'Op de <a href=":link_webshop">website</a> vind je het complete aanbod.',
+    'paragraph2' => 'Op de <a href=":link_webshop">website</a> vindt u het complete aanbod.',
     'paragraph3' => 'De QR-code is geldig tot en met :voucher_expire_minus_day.',
     'paragraph4' =>
         'Neem bovenstaande QR-code mee naar de aanbieder als u van een actie gebruik wilt maken. ' .

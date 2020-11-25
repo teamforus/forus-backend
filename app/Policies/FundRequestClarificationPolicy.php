@@ -80,6 +80,10 @@ class FundRequestClarificationPolicy
             return $this->deny('fund_requests.not_requester');
         }
 
+        if ($requestClarification->state !== $requestClarification::STATE_PENDING) {
+            return $this->deny('fund_requests.already_resolved');
+        }
+
         return true;
     }
 
