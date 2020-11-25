@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
+use League\CommonMark\CommonMarkConverter;
+use Zoon\CommonMark\Ext\YouTubeIframe\YouTubeIframeExtension;
 
 /**
  * App\Models\Implementation
@@ -421,12 +423,8 @@ class Implementation extends Model
             'title', 'description', 'has_more_info_url',
             'more_info_url', 'description_steps',
         ])->toArray(), [
-            'description_html' => resolve('markdown')->convertToHtml(
-                $implementation['description'] ?? ''
-            ),
-            'description_steps_html' => resolve('markdown')->convertToHtml(
-                $implementation['description_steps'] ?? ''
-            ),
+            'description_html' => markdown_with_youtube($implementation['description'] ?? ''),
+            'description_steps_html' => markdown_with_youtube($implementation['description_steps'] ?? ''),
         ]);
     }
 
