@@ -4,6 +4,8 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\FundCriterion;
+use App\Rules\FundRequestRecordFileRule;
 use App\Rules\FundRequestRecordRecordTypeKeyRule;
 use App\Rules\FundRequestRecordValueRule;
 use App\Rules\RecordTypeKeyExistsRule;
@@ -57,12 +59,9 @@ class StoreFundRequestRequest extends BaseFormRequest
                 $fund ? new FundRequestRecordRecordTypeKeyRule($this, $fund) : ''
             ],
             'records.*.files' => [
-                'nullable', 'array'
-            ],
-            'records.*.files.*' => [
-                'required',
-                'exists:files,uid',
-            ],
+                'array',
+                new FundRequestRecordFileRule($this, $fund),
+            ]
         ];
     }
 
