@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use \App\Services\Forus\Session\Services\Browser;
+use League\CommonMark\CommonMarkConverter;
+use Zoon\CommonMark\Ext\YouTubeIframe\YouTubeIframeExtension;
 
 if (!function_exists('auth_user')) {
     /**
@@ -726,5 +728,26 @@ if (!function_exists('user_agent_data')) {
     function user_agent_data($user_agent = null)
     {
         return Browser::getAgentData($user_agent ?: request()->userAgent());
+    }
+}
+
+if (!function_exists('markdown_with_youtube')) {
+    /**
+     * @param string $str_markdown
+     * @return string
+     */
+    function markdown_with_youtube(string $str_markdown)
+    {
+        $environment = \League\CommonMark\Environment::createCommonMarkEnvironment();
+        $environment->mergeConfig(array_except(config('markdown'), ['extensions', 'views']));
+        $environment->addExtension(new YouTubeIframeExtension());
+
+        $markdown = new CommonMarkConverter([
+            'youtube_iframe_width' => 800,
+            'youtube_iframe_height' => 450,
+            'youtube_iframe_allowfullscreen' => true,
+        ], $environment);
+
+        return $markdown->convertToHtml($str_markdown);
     }
 }
