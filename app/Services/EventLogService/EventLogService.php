@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
+use App\Models\FundRequestRecord;
 use App\Models\FundTopUpTransaction;
 use App\Models\Organization;
 use App\Models\Product;
@@ -82,9 +83,13 @@ class EventLogService implements IEventLogService
      * @return array
      */
     protected function fundRequestMeta(FundRequest $fundRequest): array {
+        /** @var FundRequestRecord $request_record */
+        $request_record = $fundRequest->records_declined()->whereNotNull('note')->first();
+
         return [
             'fund_request_id' => $fundRequest->id,
             'fund_request_state' => $fundRequest->state,
+            'fund_request_clarification_question' => $request_record->note ?? null,
         ];
     }
 
