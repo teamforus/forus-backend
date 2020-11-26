@@ -171,6 +171,9 @@ return [
         'product_sold_out' => 'Product uitverkocht.',
         'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
     ],
+    'employees' => [
+        'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
+    ],
     'attributes' => [
         'pin_code' => 'pincode',
         'records' => 'Eigenschappen',
@@ -201,8 +204,16 @@ return [
         'end_date' => 'einddatum',
         'value' => "waarde",
         'file' => "bestand",
+        'no_price' => "Geen prijs",
+        'no_price_type' => "Geen prijs type",
+        'no_price_discount' => "Korting",
         'limit_total' => "Totaal aanbod",
         'limit_total_per_identity' => "Limiet per aanvrager",
     ],
-    'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',
+    'values' => [
+        'no_price_type' => [
+            'free' => 'gratis',
+            'discount' => 'korting',
+        ],
+    ]
 ];

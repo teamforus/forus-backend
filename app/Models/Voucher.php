@@ -631,32 +631,35 @@ class Voucher extends Model
     }
 
     /**
-     * @param Collection|Voucher[] $vouchers
-     * @param $exportType
+     * @param Collection $vouchers
+     * @param string $exportType
+     * @param bool|null $data_only
      * @return array
      */
-    public static function zipVouchersData(Collection $vouchers, $exportType): array {
+    public static function zipVouchersData(
+        Collection $vouchers,
+        string $exportType,
+        ?bool $data_only = true
+    ): array {
         $vouchersData = [];
         $vouchersDataNames = [];
-        $vouchers->load([
-            'voucher_relation', 'product', 'fund'
-        ]);
+        $vouchers->load('voucher_relation', 'product', 'fund');
 
         $fp = fopen('php://temp/maxmemory:1048576', 'wb');
 
         if ($vouchers->count() > 0) {
-            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0]))->toArray()));
+            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $data_only))->toArray()));
         }
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher);
-            } while(in_array($voucherData->getName(), $vouchersDataNames, true));
+                $voucherData = new VoucherExportData($voucher, $data_only);
+            } while(!$data_only && in_array($voucherData->getName(), $vouchersDataNames, true));
 
             fputcsv($fp, $voucherData->toArray());
             $vouchersDataNames[] = $voucherData->getName();
 
-            if ($exportType === 'png') {
+            if ($exportType === 'png' && !$data_only) {
                 $vouchersData[] = [
                     'name' => $voucherData->getName(),
                     'value' => $voucher->token_without_confirmation->address

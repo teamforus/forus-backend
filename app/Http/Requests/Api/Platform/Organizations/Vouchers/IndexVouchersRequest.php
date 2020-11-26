@@ -34,19 +34,20 @@ class IndexVouchersRequest extends BaseFormRequest
         $funds = $this->organization->funds()->pluck('funds.id');
 
         return [
-            'per_page'      => 'numeric|between:1,100',
-            'fund_id'       => 'nullable|exists:funds,id|in:' . $funds->join(','),
-            'granted'       => 'nullable|boolean',
-            'amount_min'    => 'nullable|numeric',
-            'amount_max'    => 'nullable|numeric',
-            'from'          => 'nullable|date_format:Y-m-d',
-            'to'            => 'nullable|date_format:Y-m-d',
-            'type'          => 'required|in:fund_voucher,product_voucher',
-            'unassigned'    => 'nullable|boolean',
-            'source'        => 'required|in:all,user,employee',
-            'export_type'   => 'nullable|in:pdf,png',
-            'sort_by'       => 'nullable|in:amount,expire_at,created_at',
-            'sort_order'    => 'nullable|in:asc,desc',
+            'per_page'          => 'numeric|between:1,100',
+            'fund_id'           => 'nullable|exists:funds,id|in:' . $funds->join(','),
+            'granted'           => 'nullable|boolean',
+            'amount_min'        => 'nullable|numeric',
+            'amount_max'        => 'nullable|numeric',
+            'from'              => 'nullable|date_format:Y-m-d',
+            'to'                => 'nullable|date_format:Y-m-d',
+            'type'              => 'required|in:fund_voucher,product_voucher',
+            'unassigned'        => 'nullable|boolean',
+            'source'            => 'required|in:all,user,employee',
+            'export_type'       => 'nullable|in:pdf,png',
+            'sort_by'           => 'nullable|in:amount,expire_at,created_at',
+            'sort_order'        => 'nullable|in:asc,desc',
+            'export_only_data'  => 'nullable|boolean',
         ];
     }
 }
