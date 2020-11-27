@@ -39,7 +39,7 @@ class FundRequestRecordSubscriber
             $fundRequest->fund->fund_config->implementation->getEmailFrom(),
             $requestRecord->note,
             $fundRequest->fund->name,
-            env('WEB_SHOP_GENERAL_URL')
+            $fundRequest->fund->urlWebshop()
         );
     }
 
