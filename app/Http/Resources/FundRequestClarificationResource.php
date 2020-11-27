@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\FundRequestClarification;
-use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -25,9 +24,7 @@ class FundRequestClarificationResource extends Resource
             'id', 'question', 'answer', 'fund_request_record_id', 'state',
             'answered_at', 'created_at', 'updated_at',
         ]), [
-            'fund_request_record_name' => RecordType::where(
-                'key', $this->resource->fund_request_record->record_type_key
-            )->first()->name,
+            'fund_request_record_name' => $this->resource->fund_request_record->record_type->name,
             'answered_at_locale' => format_datetime_locale($this->resource->answered_at),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
