@@ -24,6 +24,7 @@ class FundRequestClarificationResource extends Resource
             'id', 'question', 'answer', 'fund_request_record_id', 'state',
             'answered_at', 'created_at', 'updated_at',
         ]), [
+            'fund_request_record_name' => $this->resource->fund_request_record->record_type->name,
             'answered_at_locale' => format_datetime_locale($this->resource->answered_at),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
