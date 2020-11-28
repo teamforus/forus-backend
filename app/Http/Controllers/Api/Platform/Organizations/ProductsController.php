@@ -65,6 +65,8 @@ class ProductsController extends Controller
         $media = null;
         $unlimited_stock = $request->input('unlimited_stock', false);
         $total_amount = $request->input('total_amount');
+        $no_price_type = $request->input('no_price_type');
+        $no_price_discount = $request->input('no_price_discount');
 
         if ($media_uid = $request->input('media_uid')) {
             $media = $this->mediaService->findByUid($media_uid);
@@ -82,6 +84,8 @@ class ProductsController extends Controller
         ], $request->input('no_price') ? [
             'price' => 0,
             'old_price' => null,
+            'no_price_type' => $no_price_type,
+            'no_price_discount' => $no_price_type === 'free' ? null : $no_price_discount,
         ] : []));
 
         ProductCreated::dispatch($product);
@@ -128,30 +132,32 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
-        $media = null;
-        $unlimited_stock = $product->unlimited_stock;
+        $price = $request->input('price');
+        $no_price = $product->no_price;
         $total_amount = $request->input('total_amount');
+        $no_price_type = $request->input('no_price_type');
+        $no_price_discount = $request->input('no_price_discount');
+        $no_price_discount = $no_price && $no_price_type === 'discount' ? $no_price_discount : null;
 
         if ($media_uid = $request->input('media_uid')) {
-            $this->authorize('destroy', $media = $this->mediaService->findByUid($media_uid));
+            $media = $this->mediaService->findByUid($media_uid);
+            $this->authorize('destroy', $media);
+
+            if ($media instanceof Media && $media->type === 'product_photo') {
+                $product->attachMedia($media);
+            }
         }
 
-        if (!$product->no_price && (
-            currency_format($request->input('price')) !== currency_format($product->price))) {
+        if (!$no_price && (currency_format($price) !== currency_format($product->price))) {
             $product->resetSubsidyApprovals();
         }
 
         $product->update(array_merge($request->only(array_merge([
             'name', 'description', 'sold_amount', 'product_category_id', 'expire_at'
-        ], $product->no_price ? [] : [
-            'price', 'old_price'
-        ])), [
-            'total_amount' => $unlimited_stock ? 0 : $total_amount
+        ], $no_price ? ['no_price_type'] : ['price', 'old_price'])), [
+            'total_amount' => $product->unlimited_stock ? 0 : $total_amount,
+            'no_price_discount' => $no_price_discount,
         ]));
-
-        if ($media instanceof Media && $media->type === 'product_photo') {
-            $product->attachMedia($media);
-        }
 
         ProductUpdated::dispatch($product);
 

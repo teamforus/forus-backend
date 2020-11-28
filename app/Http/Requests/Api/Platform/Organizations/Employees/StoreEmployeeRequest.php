@@ -58,7 +58,7 @@ class StoreEmployeeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.not_in' => trans('validation.employee_already_exists')
+            'email.not_in' => trans('validation.employees.employee_already_exists')
         ];
     }
 }
