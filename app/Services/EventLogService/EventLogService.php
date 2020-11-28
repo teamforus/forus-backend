@@ -84,6 +84,7 @@ class EventLogService implements IEventLogService
     protected function fundRequestMeta(FundRequest $fundRequest): array {
         return [
             'fund_request_id' => $fundRequest->id,
+            'fund_request_note' => $fundRequest->note,
             'fund_request_state' => $fundRequest->state,
         ];
     }

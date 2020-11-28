@@ -27,7 +27,7 @@ class IdentityFundRequestResolvedNotification extends BaseIdentityFundRequestNot
         } else {
             $mailable = new FundRequestDeniedMail(
                 $this->eventLog->data['fund_name'],
-                $this->eventLog->data['fund_request_clarification_question'] ?? '',
+                $this->eventLog->data['fund_request_note'],
                 $this->eventLog->data['sponsor_name'],
                 $this->eventLog->data['sponsor_phone'],
                 $this->eventLog->data['sponsor_email'],
