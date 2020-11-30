@@ -12,8 +12,8 @@
     <br/><br/>
     {{ mail_trans('fund_expires.voucher_due_to', [
         'fund_name' => $fund_name,
-        'end_date_fund' => $end_date_fund,
-        'not_legit_anymore_date' => Carbon\Carbon::createFromFormat('l, d F Y', $end_date_fund)->addDay()->format('l, d F Y')
+        'end_date_fund' => format_date_locale($end_date_fund, 'long_date_locale'),
+        'not_legit_anymore_date' => format_date_locale($end_date_fund->addDay(), 'long_date_locale'),
     ]) }}
     <br/><br/>
     {!! mail_trans('fund_expires.see_budget_and_transactions', ['link' => $shop_implementation_url]) !!}
