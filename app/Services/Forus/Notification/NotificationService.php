@@ -534,7 +534,7 @@ class NotificationService
      * @param string $fund_name
      * @param string $sponsor_name
      * @param string $start_date
-     * @param string $end_date
+     * @param $end_date
      * @param string $sponsor_phone
      * @param string $sponsor_email
      * @param string $webshopLink
@@ -546,7 +546,7 @@ class NotificationService
         string $fund_name,
         string $sponsor_name,
         string $start_date,
-        string $end_date,
+        $end_date,
         string $sponsor_phone,
         string $sponsor_email,
         string $webshopLink

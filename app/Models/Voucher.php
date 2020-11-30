@@ -347,7 +347,6 @@ class Voucher extends Model
      */
     public static function checkVoucherExpireQueue(int $days = 4 * 7): void
     {
-        $notificationService = resolve('forus.services.notification');
         $date = now()->addDays($days)->startOfDay()->format('Y-m-d');
 
         $vouchers = self::query()
@@ -359,32 +358,39 @@ class Voucher extends Model
         /** @var self $voucher */
         foreach ($vouchers as $voucher) {
             if ($voucher->amount_available_cached > 0) {
-                $recordRepo = resolve('forus.services.record');
-                $primaryEmail = $recordRepo->primaryEmailByAddress(
-                    $voucher->identity_address
-                );
-
-                $fund_name = $voucher->fund->name;
-                $sponsor_name = $voucher->fund->organization->name;
-                $start_date = $voucher->fund->start_date->format('Y');
-                $end_date = format_date_locale($voucher->fund->end_date, 'long_date_locale');
-                $phone = $voucher->fund->organization->phone;
-                $email = $voucher->fund->organization->email;
-                $webshopLink = env('WEB_SHOP_GENERAL_URL');
-
-                $notificationService->voucherExpireSoon(
-                    $primaryEmail,
-                    $voucher->fund->fund_config->implementation->getEmailFrom(),
-                    $fund_name,
-                    $sponsor_name,
-                    $start_date,
-                    $end_date,
-                    $phone,
-                    $email,
-                    $webshopLink
-                );
+                $voucher->sendVoucherExpireMail();
             }
         }
+    }
+
+    /**
+     * Send voucher expiration warning email to requester identity
+     */
+    protected function sendVoucherExpireMail(): void {
+        $voucher = $this;
+        $notificationService = resolve('forus.services.notification');
+        $recordRepo = resolve('forus.services.record');
+        $primaryEmail = $recordRepo->primaryEmailByAddress($voucher->identity_address);
+
+        $fund_name = $voucher->fund->name;
+        $sponsor_name = $voucher->fund->organization->name;
+        $start_date = $voucher->fund->start_date->format('Y');
+        $end_date = $voucher->fund->end_date;
+        $phone = $voucher->fund->organization->phone;
+        $email = $voucher->fund->organization->email;
+        $webshopLink = $voucher->fund->urlWebshop();
+
+        $notificationService->voucherExpireSoon(
+            $primaryEmail,
+            $voucher->fund->fund_config->implementation->getEmailFrom(),
+            $fund_name,
+            $sponsor_name,
+            $start_date,
+            $end_date,
+            $phone,
+            $email,
+            $webshopLink
+        );
     }
 
     /**
