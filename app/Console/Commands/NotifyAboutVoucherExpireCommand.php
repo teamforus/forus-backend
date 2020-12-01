@@ -22,27 +22,19 @@ class NotifyAboutVoucherExpireCommand extends Command
     protected $description = 'Notify users about voucher expire';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         try {
             Voucher::checkVoucherExpireQueue(3 * 7);
             Voucher::checkVoucherExpireQueue(6 * 7);
         } catch (\Exception $e) {
-            logger()->error($e->getMessage());
+            if ($logger = logger()) {
+                $logger->error($e->getMessage());
+            }
         }
     }
 }

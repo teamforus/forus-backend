@@ -31,6 +31,9 @@ use Illuminate\Http\Request;
  * @property int $total_amount
  * @property bool $unlimited_stock
  * @property bool $no_price
+ * @property string $no_price_type
+ * @property float|null $no_price_discount
+ * @property int $show_on_webshop
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -74,10 +77,13 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereNoPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereNoPriceDiscount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereNoPriceType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOldPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereProductCategoryId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereShowOnWebshop($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereSoldOut($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereTotalAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereUnlimitedStock($value)
@@ -106,7 +112,7 @@ class Product extends Model
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
         'price', 'old_price', 'total_amount', 'expire_at', 'sold_out',
-        'unlimited_stock', 'no_price',
+        'unlimited_stock', 'no_price', 'no_price_type', 'no_price_discount',
     ];
 
     /**

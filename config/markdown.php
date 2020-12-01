@@ -41,7 +41,9 @@ return [
     |
     */
 
-    'extensions' => [],
+    'extensions' => [
+        \App\Libs\Markdown\Extensions\Youtube\YouTubeIframeExtension::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -63,6 +65,12 @@ return [
         'inner_separator' => "\n",
         'soft_break'      => "\n",
     ],
+
+    /**
+     * Youtube player settings
+     */
+    'youtube_iframe_allowfullscreen' => true,
+    'youtube_iframe_wrapper_class' => 'youtube-root',
 
     /*
     |--------------------------------------------------------------------------
