@@ -37,7 +37,7 @@ class UpdateProductRequest extends FormRequest
 
         return [
             'name'                  => 'required|between:2,200',
-            'description'           => 'required|between:5,1000',
+            'description'           => 'required|between:5,2500',
             'no_price'              => 'boolean',
             'price'                 => $product->no_price ? [] : 'required_without:no_price|numeric|min:.2',
             'old_price'             => $product->no_price ? [] : [
