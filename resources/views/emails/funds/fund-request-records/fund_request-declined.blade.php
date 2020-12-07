@@ -1,7 +1,7 @@
 <?php
     /** @var string $fund_name */
     /** @var string $webshop_link Link to webshop */
-    /** @var string rejection_note Reason for rejection */
+    /** @var string $rejection_note Reason for rejection */
     $viewData = compact('fund_name', 'webshop_link', 'rejection_note');
 ?>
 @extends('emails.base')

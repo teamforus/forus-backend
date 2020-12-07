@@ -28,9 +28,11 @@ class StoreProductRequest extends FormRequest
 
         return [
             'name'                  => 'required|between:2,200',
-            'description'           => 'required|between:5,2500',
-            'price'                 => 'required_without:no_price|numeric|min:.2',
+            'description'           => 'required|between:5,1000',
+            'price'                 => 'required_without:no_price|numeric|min:.2|max:10000',
             'no_price'              => 'boolean',
+            'no_price_type'         => 'required_with:no_price|in:free,discount',
+            'no_price_discount'     => 'nullable|required_if:no_price_type,discount|numeric|min:0|max:100',
             'unlimited_stock'       => 'boolean',
             'old_price'             => 'nullable|numeric|min:' . $price,
             'total_amount'          => [
@@ -49,9 +51,18 @@ class StoreProductRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'no_price_discount.required_if' => 'Het kortingsveld is verplicht.',
             'expire_at.after' => trans('validation.after', [
                 'date' => trans('validation.attributes.today')
             ])
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'no_price_type.free' => 'gratis',
+            'no_price_type.discount' => 'korting',
         ];
     }
 }

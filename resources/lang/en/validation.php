@@ -112,15 +112,6 @@ return [
     'uploaded'             => 'The :attribute failed to upload.',
     'url'                  => 'The :attribute must start with http:// or https://.',
 
-    // Custom
-    'old_pin_code'          => 'Old pin code don\'t match.',
-    'unknown_record_key'    => 'Unknown record key: ":key".',
-    'unique_record'         => 'The :attribute record has already been taken.',
-
-    'organization_fund'     => [
-        'wrong_categories'  => 'validation.organization_fund.wrong_categories',
-        'already_requested' => 'validation.organization_fund.already_requested',
-    ],
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -136,6 +127,29 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+    ],
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Attributes
+    |--------------------------------------------------------------------------
+    |
+    | The following language lines are used to swap attribute place-holders
+    | with something more reader friendly such as E-Mail Address instead
+    | of 'email'. This simply helps us make messages a little cleaner.
+    |
+    */
+    'old_pin_code'          => 'Old pin code don\'t match.',
+    'unknown_record_key'    => 'Unknown record key: ":key".',
+    'unique_record'         => 'The :attribute record has already been taken.',
+
+    'organization_fund'     => [
+        'wrong_categories'  => 'validation.organization_fund.wrong_categories',
+        'already_requested' => 'validation.organization_fund.already_requested',
+    ],
+    'employees' => [
+        'employee_already_exists' => 'An employee with the same email address already exists.',
     ],
 
     /*
@@ -177,5 +191,4 @@ return [
         'records.primary_email' => 'e-mail',
         'records.bsn' => 'bsn',
     ],
-    'employee_already_exists' => 'An employee with the same email address already exists.',
 ];

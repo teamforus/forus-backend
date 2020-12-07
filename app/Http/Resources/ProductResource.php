@@ -45,6 +45,8 @@ class ProductResource extends Resource
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
             'no_price' => $product->no_price,
+            'no_price_type' => $product->no_price_type,
+            'no_price_discount' => $product->no_price_discount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
             'sold_amount' => $product->countSold(),
