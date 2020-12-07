@@ -24,7 +24,7 @@ class FundExpiredMail extends ImplementationMail
         string $fundName,
         string $sponsorName,
         string $startDateFund,
-        string $endDateFund,
+        $endDateFund,
         string $phoneNumberSponsor,
         string $emailAddressSponsor,
         string $shopImplementationUrl,

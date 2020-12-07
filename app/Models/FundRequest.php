@@ -222,6 +222,10 @@ class FundRequest extends Model
      * @return FundRequest|bool
      */
     public function decline(Employee $employee, string $note = null) {
+        $this->update([
+            'note' => $note ?: '',
+        ]);
+
         $this->records_pending()->where([
             'employee_id' => $employee->id
         ])->each(static function(FundRequestRecord $record) use ($note) {

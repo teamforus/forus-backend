@@ -31,7 +31,7 @@ class VoucherExpiring
      *
      * @return Voucher
      */
-    public function getVoucher()
+    public function getVoucher(): Voucher
     {
         return $this->voucher;
     }

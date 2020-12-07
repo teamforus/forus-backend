@@ -11,19 +11,27 @@ use App\Models\Voucher;
  */
 class VoucherExportData
 {
+    protected $data_only;
     protected $voucher;
     protected $name;
 
-    public function __construct(Voucher $voucher)
+    /**
+     * VoucherExportData constructor.
+     * @param Voucher $voucher
+     * @param bool|null $data_only
+     */
+    public function __construct(Voucher $voucher, ?bool $data_only = false)
     {
-        $this->name = token_generator()->generate(6, 2);
+        $this->data_only = $data_only;
+        $this->name = $data_only ? null : token_generator()->generate(6, 2);
+
         $this->voucher = $voucher;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }
@@ -36,11 +44,16 @@ class VoucherExportData
         return $this->voucher;
     }
 
-    public function toArray(): array {
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
         $assigned_to_identity = $this->voucher->identity_address && $this->voucher->is_granted;
 
-        return array_merge([
+        return array_merge($this->data_only ? [] : [
             'name' => $this->name,
+        ], [
             'granted' => $assigned_to_identity ? 'Ja': 'Nee',
             'in_use' => $this->voucher->has_transactions ? 'Ja': 'Nee',
         ], $this->voucher->product ? [

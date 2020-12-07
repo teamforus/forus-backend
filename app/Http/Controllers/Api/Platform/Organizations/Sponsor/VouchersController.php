@@ -282,6 +282,7 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         $fund = $organization->findFund($request->get('fund_id'));
+        $data_only = $request->get('export_only_data', false);
         $export_type = $request->get('export_type', 'png');
         $vouchers = Voucher::searchSponsor($request, $organization, $fund);
 
@@ -289,6 +290,6 @@ class VouchersController extends Controller
             abort(404, "No vouchers to be exported.");
         }
 
-        return Voucher::zipVouchersData($vouchers, $export_type);
+        return Voucher::zipVouchersData($vouchers, $export_type, $data_only);
     }
 }

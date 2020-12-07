@@ -4,29 +4,38 @@ namespace App\Models;
 
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\FileService\Traits\HasFiles;
+use App\Services\Forus\Record\Models\RecordType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 /**
  * App\Models\FundRequestRecord
  *
  * @property int $id
  * @property int $fund_request_id
+ * @property int|null $fund_criterion_id
  * @property string $record_type_key
  * @property string $value
  * @property string $note
  * @property string $state
+ * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Employee|null $employee
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
+ * @property-read \App\Models\FundCriterion|null $fund_criterion
  * @property-read \App\Models\FundRequest $fund_request
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $fund_request_clarifications
  * @property-read int|null $fund_request_clarifications_count
+ * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereFundCriterionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereFundRequestId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereNote($value)
@@ -35,12 +44,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereValue($value)
  * @mixin \Eloquent
- * @property int|null $employee_id
- * @property-read \App\Models\Employee|null $employee
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereEmployeeId($value)
- * @property int|null $fund_criterion_id
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereFundCriterionId($value)
- * @property-read \App\Models\FundCriterion|null $fund_criterion
  */
 class FundRequestRecord extends Model
 {
@@ -75,6 +78,14 @@ class FundRequestRecord extends Model
     public function fund_criterion(): BelongsTo
     {
         return $this->belongsTo(FundCriterion::class);
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function record_type(): BelongsTo
+    {
+        return $this->belongsTo(RecordType::class, 'record_type_key', 'key');
     }
 
     /**
