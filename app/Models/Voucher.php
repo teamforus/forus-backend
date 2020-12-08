@@ -9,7 +9,6 @@ use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
-use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,6 +46,7 @@ use RuntimeException;
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
+ * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Voucher|null $parent
@@ -57,13 +57,13 @@ use RuntimeException;
  * @property-read \App\Models\Product|null $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
- * @property-read \App\Models\VoucherRelation|null $voucher_relation
  * @property-read \App\Models\VoucherToken|null $token_with_confirmation
  * @property-read \App\Models\VoucherToken|null $token_without_confirmation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherToken[] $tokens
  * @property-read int|null $tokens_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $transactions
  * @property-read int|null $transactions_count
+ * @property-read \App\Models\VoucherRelation|null $voucher_relation
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
@@ -80,7 +80,7 @@ use RuntimeException;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereReturnable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereUpdatedAt($value)
- * @mixin Eloquent
+ * @mixin \Eloquent
  */
 class Voucher extends Model
 {
@@ -106,6 +106,10 @@ class Voucher extends Model
     public const TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_PRODUCT,
+    ];
+
+    protected $withCount = [
+        'transactions'
     ];
 
     /**
@@ -180,6 +184,13 @@ class Voucher extends Model
      */
     public function transactions(): HasMany {
         return $this->hasMany(VoucherTransaction::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function last_transaction(): HasOne {
+        return $this->hasOne(VoucherTransaction::class)->orderByDesc('created_at');
     }
 
     /**

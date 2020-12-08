@@ -18,6 +18,7 @@ class VoucherCollectionResource extends VoucherResource
     public static $load = [
         'parent',
         'tokens',
+        'last_transaction',
         'product_vouchers.product.photo.presets',
         'product.photo.presets',
         'product.product_category.translations',
