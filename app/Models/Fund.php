@@ -1026,15 +1026,14 @@ class Fund extends Model
      * @param float|null $voucherAmount
      * @param Carbon|null $expire_at
      * @param string|null $note
-     * @return Voucher|\Illuminate\Database\Eloquent\Model
-     * @throws \Exception
+     * @return Voucher|null
      */
     public function makeVoucher(
         string $identity_address = null,
         float $voucherAmount = null,
         Carbon $expire_at = null,
         string $note = null
-    ) {
+    ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
         $expire_at = $expire_at ?: $this->end_date;

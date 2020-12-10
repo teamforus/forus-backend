@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Exports\PrevalidationsExport;
-use App\Http\Requests\Api\Platform\Prevalidations\RedeemPrevalidationRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\SearchPrevalidationsRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\StorePrevalidationsRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
-use App\Traits\ThrottleWithMeta;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -21,16 +19,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class PrevalidationController extends Controller
 {
-    use ThrottleWithMeta;
-
-    /**
-     * RecordCategoryController constructor.
-     */
-    public function __construct() {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
-    }
-
     /**
      * @param StorePrevalidationsRequest $request
      * @return PrevalidationResource
@@ -134,31 +122,5 @@ class PrevalidationController extends Controller
             new PrevalidationsExport($request),
             date('Y-m-d H:i:s') . '.xls'
         );
-    }
-
-    /**
-     * Redeem prevalidation.
-     *
-     * @param RedeemPrevalidationRequest $request
-     * @param Prevalidation|null $prevalidation
-     * @return PrevalidationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
-     */
-    public function redeem(
-        RedeemPrevalidationRequest $request,
-        Prevalidation $prevalidation = null
-    ): PrevalidationResource {
-        $this->throttleWithKey('to_many_attempts', $request, 'prevalidations');
-
-        if (!$prevalidation || !$prevalidation->exists()) {
-            $this->responseWithThrottleMeta('not_found', $request, 'prevalidations', 404);
-        }
-
-        $this->authorize('redeem', $prevalidation);
-        $this->clearLoginAttemptsWithKey($request, 'prevalidations');
-
-        $prevalidation->assignToIdentity($request->auth_address());
-
-        return new PrevalidationResource($prevalidation);
     }
 }

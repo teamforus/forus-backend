@@ -158,6 +158,7 @@ return [
     'business_type_id' => 'Organisatie type',
     'voucher' => [
         'expired' => 'Dit tegoed is niet meer geldig.',
+        'pending' => 'This voucher is not active.',
         'product_voucher_used' => 'Het tegoed voor dit aanbod is al gebruikt!',
         'provider_not_applied' => 'U mag dit tegoed niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van dit tegoed.',
         'provider_pending' => 'U mag dit tegoed niet scannen! Status voor aanmelding van het fonds van dit tegoed is wachtend.',

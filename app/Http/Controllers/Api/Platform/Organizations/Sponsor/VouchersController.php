@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
@@ -81,7 +83,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        $note       = $request->input('note', null);
+        $note       = $request->input('note');
         $email      = $request->input('email', false);
         $amount     = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
         $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
@@ -89,7 +91,7 @@ class VouchersController extends Controller
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
 
-        if ($product_id && $fund->isTypeBudget()) {
+        if ($product_id) {
             $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
         } else {
             $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
@@ -101,6 +103,18 @@ class VouchersController extends Controller
 
         if ($bsn = $request->input('bsn', false)) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
+        }
+
+        if (!$voucher->is_granted) {
+            if (!$request->input('activate')) {
+                $voucher->update([
+                    'state' => $voucher::STATE_PENDING,
+                ]);
+            }
+
+            if ($request->input('make_activation_code')) {
+                $voucher->makeActivationCode();
+            }
         }
 
         return new SponsorVoucherResource($voucher->updateModel([
@@ -136,14 +150,26 @@ class VouchersController extends Controller
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
 
-            if (!$product_id || !$fund->isTypeBudget()) {
+            if (!$product_id) {
                 $voucherModel = $fund->makeVoucher($identity, $amount, $expire_at, $note);
             } else {
                 $voucherModel = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
             }
 
             if ($bsn = ($voucher['bsn'] ?? false)) {
-                $voucherModel->setBsnRelation($bsn)->assignIfExists();
+                $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
+            }
+
+            if (!$voucherModel->is_granted) {
+                if (!($voucher['activate'] ?? false)) {
+                    $voucherModel->update([
+                        'state' => $voucherModel::STATE_PENDING,
+                    ]);
+                }
+
+                if ($voucher['make_activation_code'] ?? false) {
+                    $voucherModel->makeActivationCode();
+                }
             }
 
             return $voucherModel->updateModel([
@@ -215,6 +241,48 @@ class VouchersController extends Controller
         } else if ($bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param ActivateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException|Exception
+     */
+    public function activate(
+        ActivateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('activateSponsor', [$voucher, $organization]);
+
+        $voucher->update([
+            'state' => $voucher::STATE_ACTIVE,
+        ]);
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param ActivationCodeVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException|Exception
+     */
+    public function makeActivationCode(
+        ActivationCodeVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('makeActivationCodeSponsor', [$voucher, $organization]);
+
+        $voucher->makeActivationCode();
 
         return new SponsorVoucherResource($voucher);
     }

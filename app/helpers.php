@@ -637,9 +637,27 @@ if (!function_exists('token_generator_db')) {
     ) : string {
         do {
             $value = token_generator()->generate($block_length, $block_count);
-        } while($builder->newQuery()->where([
-            $column => $value
-        ])->exists());
+        } while($builder->newQuery()->where($column, $value)->exists());
+
+        return $value;
+    }
+}
+
+if (!function_exists('token_generator_callback')) {
+    /**
+     * @param callable $is_unique
+     * @param int $block_length
+     * @param int $block_count
+     * @return string
+     */
+    function token_generator_callback(
+        callable $is_unique,
+        int $block_length,
+        int $block_count = 1
+    ) : string {
+        do {
+            $value = token_generator()->generate($block_length, $block_count);
+        } while(!$is_unique($value));
 
         return $value;
     }

@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
+use App\Http\Requests\Api\Platform\Funds\RedeemFundsRequest;
 use App\Http\Requests\Api\Platform\Funds\StoreIdealBunqMeRequestRequest;
 use App\Http\Resources\BunqIdealIssuerResource;
 use App\Http\Resources\BunqMeIdealRequestResource;
 use App\Http\Resources\FundResource;
+use App\Http\Resources\PrevalidationResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
+use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Services\BunqService\BunqService;
+use App\Traits\ThrottleWithMeta;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Validator;
 
 /**
  * Class FundsController
@@ -22,6 +26,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class FundsController extends Controller
 {
+    use ThrottleWithMeta;
+
     /**
      * Display a listing of all active funds.
      *
@@ -70,6 +76,50 @@ class FundsController extends Controller
         }
 
         return new FundResource($fund);
+    }
+
+    /**
+     * @param RedeemFundsRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \App\Exceptions\AuthorizationJsonException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function redeem(
+        RedeemFundsRequest $request
+    ): JsonResponse {
+        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
+        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
+
+        $this->throttleWithKey('to_many_attempts', $request, 'prevalidations');
+
+        $code = $request->input('code');
+        $voucher = Voucher::findByCode($code);
+        $prevalidation = Prevalidation::findByCode($code);
+
+        if (!$voucher && !$prevalidation) {
+            $this->responseWithThrottleMeta('not_found', $request, 'prevalidations', 404);
+        }
+
+        if (($voucher && $voucher->is_granted) || ($prevalidation && $prevalidation->is_used)) {
+            $this->responseWithThrottleMeta('used', $request, 'prevalidations', 403);
+        }
+
+        if ($voucher) {
+            $this->authorize('redeem', $voucher);
+            $voucher->assignToIdentity(auth_address());
+        }
+
+        if ($prevalidation) {
+            $this->authorize('redeem', $prevalidation);
+            $prevalidation->assignToIdentity($request->auth_address());
+        }
+
+        $this->clearLoginAttemptsWithKey($request, 'prevalidations');
+
+        return response()->json([
+            'prevalidation' => $prevalidation ? new PrevalidationResource($prevalidation) : null,
+            'voucher' => $voucher ? new VoucherResource($voucher) : null,
+        ]);
     }
 
     /**

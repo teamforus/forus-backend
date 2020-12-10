@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund|null $fund
+ * @property-read bool $is_used
  * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $prevalidation_records
  * @property-read int|null $prevalidation_records_count
@@ -336,7 +337,6 @@ class Prevalidation extends Model
             ];
         }, $data), "is_array");
 
-        /** @var Prevalidation[] $prevalidations Newly created and updated pre validations */
         $prevalidations = array_map(static function(array $records) use (
             $fund, $overwriteKeys, $identity_address, $fundPrevalidationPrimaryKey
         ) {
@@ -360,7 +360,10 @@ class Prevalidation extends Model
             } else {
                 /** @var Prevalidation $prevalidation */
                 $prevalidation = Prevalidation::create([
-                    'uid' => token_generator_db(Prevalidation::query(), 'uid', 4, 2),
+                    'uid' => token_generator_callback(static function($value) {
+                        return !(Prevalidation::whereUid($value)->exists() ||
+                            Voucher::whereActivationCode($value)->exists());
+                    }, 4, 2),
                     'state' => Prevalidation::STATE_PENDING,
                     'organization_id' => $fund->organization_id,
                     'fund_id' => $fund->id,
@@ -393,5 +396,21 @@ class Prevalidation extends Model
         ]);
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsUsedAttribute(): bool {
+        return $this->state === self::STATE_USED;
+    }
+
+    /**
+     * @param $code
+     * @return static|null
+     */
+    public static function findByCode($code): ?self
+    {
+        return self::whereUid($code)->first();
     }
 }

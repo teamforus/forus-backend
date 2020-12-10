@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Prevalidation;
-use App\Models\PrevalidationRecord;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**

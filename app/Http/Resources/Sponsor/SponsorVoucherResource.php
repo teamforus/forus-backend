@@ -5,7 +5,6 @@ namespace App\Http\Resources\Sponsor;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -37,6 +36,8 @@ class SponsorVoucherResource extends Resource
         ]), [
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'is_granted' => $voucher->is_granted,
+            'state' => $voucher->state,
+            'activation_code' => $voucher->activation_code,
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
             'relation_bsn' => $voucher->voucher_relation->bsn ?? null,

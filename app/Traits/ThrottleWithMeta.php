@@ -31,7 +31,7 @@ trait ThrottleWithMeta {
     private function throttleWithKey(
         string $error,
         Request $request,
-        string $type = 'prevalidations',
+        string $type,
         ?string $key = null,
         $code = 429
     ): void {

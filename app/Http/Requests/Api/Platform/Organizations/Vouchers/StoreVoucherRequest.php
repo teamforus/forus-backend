@@ -62,16 +62,16 @@ class StoreVoucherRequest extends BaseFormRequest
                 'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
             'activation_code' => [
-                'nullable', new ValidPrevalidationCodeRule($fund),
+                'nullable',
+                new ValidPrevalidationCodeRule($fund),
             ],
-            'product_id' => !$fund || $fund->isTypeBudget() ? [
+            'product_id' => [
                 'required_without:amount',
                 'exists:products,id',
-                new ProductIdInStockRule($fund)
-            ] : [
-                'nullable',
-                Rule::in([])
+                new ProductIdInStockRule($fund),
             ],
+            'activate' => 'boolean',
+            'make_activation_code' => 'boolean',
         ];
     }
 
