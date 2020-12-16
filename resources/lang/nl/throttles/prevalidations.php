@@ -16,9 +16,9 @@ return [
         ]),
     ],
     'used' => [
-        'title' => 'Used!',
+        'title' => 'Gebruikt!',
         'message' => implode("\n", [
-            "The code is already used. ",
+            "Deze code is al gebruikt.",
             "Dit is uw :attempts poging uit :max_attempts waarna u voor :decay_minutes minuten geblokeerd wordt."
         ]),
     ],
