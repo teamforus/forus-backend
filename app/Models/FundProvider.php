@@ -6,6 +6,7 @@ use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderChatQuery;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\Forus\Session\Models\Session;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -137,6 +138,47 @@ class FundProvider extends Model
      */
     public function product_exclusions(): HasMany {
         return $this->hasMany(FundProviderProductExclusion::class);
+    }
+
+    public function getLastActivity() {
+        /** @var Carbon $last_activity_date */
+        /** @var Carbon $last_transaction_date */
+        /** @var Carbon $last_session_date */
+        $last_transaction_date = $last_session_date = null;
+
+        $fundVouchers = $this->organization->vouchers()->whereHas('transactions')->get();
+        foreach ($fundVouchers as $fundVoucher) {
+            /** @var Voucher $fundVoucher */
+            /** @var VoucherTransaction $voucherTransaction */
+            $voucherTransaction = $fundVoucher->transactions->last();
+
+            $last_transaction_date = empty($last_transaction_date) ?
+                $voucherTransaction->created_at :
+                $voucherTransaction->created_at->max($last_transaction_date);
+        }
+        $last_activity_date = $last_transaction_date;
+
+        foreach ($this->organization->employees as $employee) {
+            if ($employee->roles->pluck('key')->search('admin') !== false) {
+                $session = Session::where([
+                    'identity_address' => $employee->identity_address
+                ])->orderByDesc('last_activity_at')->first();
+
+                if (!$session) {
+                    continue;
+                }
+
+                $last_session_date = empty($last_session_date) ?
+                    $session->last_activity_at :
+                    $session->last_activity_at->max($last_session_date);
+
+                $last_activity_date = empty($last_transaction_date) ?
+                    $last_session_date :
+                    $last_session_date->max($last_transaction_date);
+            }
+        }
+
+        return $last_activity_date;
     }
 
     /**

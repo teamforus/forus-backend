@@ -55,6 +55,7 @@ class FundProviderResource extends Resource
             'organization' => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization
             ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
+            'last_activity' => $fundProvider->getLastActivity()
         ])->toArray();
     }
 }
