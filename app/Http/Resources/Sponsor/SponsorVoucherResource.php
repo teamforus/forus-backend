@@ -32,23 +32,20 @@ class SponsorVoucherResource extends Resource
         }
 
         return array_merge($voucher->only([
-            'id', 'amount', 'note', 'identity_address',
+            'id', 'amount', 'note', 'identity_address', 'state', 'is_granted',
+            'expired', 'activation_code', 'has_transactions',
         ]), [
             'source' => $voucher->employee_id ? 'employee' : 'user',
-            'is_granted' => $voucher->is_granted,
-            'state' => $voucher->state,
-            'activation_code' => $voucher->activation_code,
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
             'relation_bsn' => $voucher->voucher_relation->bsn ?? null,
-            'has_transactions' => $voucher->has_transactions,
             'address' => $address ?? null,
+            'fund' => $voucher->fund->only('id', 'name', 'organization_id', 'state'),
+            'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),
             'created_at_locale' => format_datetime_locale($voucher->created_at),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
-            'fund' => $voucher->fund->only('id', 'name', 'organization_id', 'state'),
-            'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
         ]);
     }
 

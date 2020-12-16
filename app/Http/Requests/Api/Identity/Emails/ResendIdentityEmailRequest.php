@@ -2,22 +2,19 @@
 
 namespace App\Http\Requests\Api\Identity\Emails;
 
-use App\Rules\IdentityEmailUniqueRule;
+use App\Services\Forus\Identity\Models\IdentityEmail;
 
 /**
- * Class StoreIdentityEmailRequest
+ * Class ResendIdentityEmailRequest
+ * @property IdentityEmail $identity_email
  * @package App\Http\Requests\Api\Identity\Emails
  */
-class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
+class ResendIdentityEmailRequest extends BaseIdentityEmailRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize(): bool
     {
-        return true;
+        return $this->isAuthorized() &&
+            $this->identity_email->identity_address === $this->auth_address();
     }
 
     /**
@@ -30,10 +27,6 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
     {
         $this->throttleWithKey('to_many_attempts', $this, 'email');
 
-        return [
-            'email' => [
-                'required', new IdentityEmailUniqueRule()
-            ]
-        ];
+        return [];
     }
 }

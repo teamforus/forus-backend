@@ -37,7 +37,7 @@ class StoreVoucherRequest extends BaseFormRequest
     {
         /** @var Fund $fund */
         $funds = $this->organization->funds();
-        $fund = $funds->findOrFail($this->input('fund_id'));
+        $fund = $funds->find($this->input('fund_id'));
 
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
@@ -50,11 +50,11 @@ class StoreVoucherRequest extends BaseFormRequest
             'email'     => 'nullable|email:strict,dns',
             'bsn'       => 'nullable|digits:9',
             'note'      => 'nullable|string|max:280',
-            'amount'    => !$fund || $fund->isTypeBudget() ? [
-                'required_without:product_id',
+            'amount'    => [
+                $fund && $fund->isTypeBudget() ? 'required_without:product_id' : 'nullable',
                 'numeric',
                 'between:.1,' . currency_format($max)
-            ] : 'nullable',
+            ],
             'expire_at' => [
                 'nullable',
                 'date_format:Y-m-d',
@@ -66,7 +66,7 @@ class StoreVoucherRequest extends BaseFormRequest
                 new ValidPrevalidationCodeRule($fund),
             ],
             'product_id' => [
-                'required_without:amount',
+                $fund && $fund->isTypeBudget() ? 'required_without:amount' : 'nullable',
                 'exists:products,id',
                 new ProductIdInStockRule($fund),
             ],

@@ -803,7 +803,7 @@ $router->group(['middleware' => [
         'prevalidations',
         'Api\Platform\PrevalidationController', [
             'only' => [
-                'index', 'store',
+                'index', 'store', 'destroy',
             ],
             'parameters' => [
                 'prevalidations' => 'prevalidation_uid'

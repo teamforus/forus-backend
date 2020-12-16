@@ -137,7 +137,7 @@ if (!function_exists('format_date_locale')) {
     function format_date_locale(
         $date = null,
         string $format = 'short_date_locale'
-    ) {
+    ): ?string {
         if (is_null($date)) {
             return null;
         }
@@ -147,9 +147,7 @@ if (!function_exists('format_date_locale')) {
                 $date = new Carbon($date);
             }
 
-            return $date->formatLocalized(
-                config("forus.formats.$format") ?: $format
-            );
+            return $date->formatLocalized(config("forus.formats.$format") ?: $format);
         } catch (Throwable $throwable) {
             return is_string($date) ? $date : null;
         }

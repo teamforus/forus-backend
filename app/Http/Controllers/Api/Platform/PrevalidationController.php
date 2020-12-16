@@ -10,6 +10,7 @@ use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -23,6 +24,7 @@ class PrevalidationController extends Controller
      * @param StorePrevalidationsRequest $request
      * @return PrevalidationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function store(
         StorePrevalidationsRequest $request
@@ -42,6 +44,7 @@ class PrevalidationController extends Controller
      * @param UploadPrevalidationsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function storeCollection(
         UploadPrevalidationsRequest $request
@@ -65,6 +68,7 @@ class PrevalidationController extends Controller
      * @param UploadPrevalidationsRequest $request
      * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function collectionHash(
         UploadPrevalidationsRequest $request
@@ -95,6 +99,7 @@ class PrevalidationController extends Controller
      * @param SearchPrevalidationsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function index(
         SearchPrevalidationsRequest $request
@@ -112,6 +117,7 @@ class PrevalidationController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer
+     * @noinspection PhpUnused
      */
     public function export(
         SearchPrevalidationsRequest $request
@@ -122,5 +128,23 @@ class PrevalidationController extends Controller
             new PrevalidationsExport($request),
             date('Y-m-d H:i:s') . '.xls'
         );
+    }
+
+    /**
+     * Delete prevalidation
+     * @param Prevalidation $prevalidation
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
+     * @noinspection PhpUnused
+     */
+    public function destroy(
+        Prevalidation $prevalidation
+    ): JsonResponse {
+        $this->authorize('destroy', $prevalidation);
+
+        $prevalidation->delete();
+
+        return response()->json([]);
     }
 }

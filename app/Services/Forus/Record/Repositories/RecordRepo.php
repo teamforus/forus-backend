@@ -8,6 +8,7 @@ use App\Services\Forus\Record\Models\RecordCategory;
 use App\Services\Forus\Record\Models\RecordType;
 use App\Services\Forus\Record\Models\RecordValidation;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Database\Eloquent\Builder;
 
 class RecordRepo implements IRecordRepo
 {
@@ -380,21 +381,14 @@ class RecordRepo implements IRecordRepo
         $type = null,
         $categoryId = null,
         bool $deleted = false
-    ) {
+    ): ?array {
         // Todo: validation state
+        /** @var Builder $query */
         $query = $deleted ? Record::onlyTrashed() : Record::query();
-        $query->where([
-            'identity_address' => $identityAddress
-        ])->with([
-            'record_type'
-        ]);
+        $query->where('identity_address', $identityAddress)->with('record_type');
 
         if ($type) {
-            $recordType = RecordType::query()->where([
-                'key' => $type
-            ])->first();
-
-            if ($recordType) {
+            if ($recordType = RecordType::query()->where('key', $type)->first()) {
                 $query->where('record_type_id', $recordType->id);
             } else {
                 return null;
@@ -405,20 +399,16 @@ class RecordRepo implements IRecordRepo
             $query->where('record_category_id', $categoryId);
         }
 
-        return $query->orderBy('order')->get()->map(function(
-            Record $record
-        ) {
+        return $query->orderBy('order')->get()->map(function(Record $record) {
             $validations = $record->validations()->where([
                 'state' => 'approved'
             ])->select([
-                'state', 'identity_address', 'created_at', 'updated_at',
-                'organization_id'
-            ])->get()->load('organization')->map(function(
-                RecordValidation $validation
-            ) {
+                'id', 'state', 'identity_address', 'created_at', 'updated_at',
+                'organization_id', 'prevalidation_id',
+            ])->get()->load('organization')->map(function(RecordValidation $validation) {
                 return $validation->setAttribute(
                     'email',
-                    $validation->organization ? null :$this->primaryEmailByAddress(
+                    $validation->organization ? null : $this->primaryEmailByAddress(
                         $validation->identity_address
                     )
                 );
@@ -673,22 +663,25 @@ class RecordRepo implements IRecordRepo
      * @param string $identityAddress
      * @param string $validationUuid
      * @param int|null $organization_id
+     * @param int|null $prevalidation_id
      * @return bool
      */
     public function approveValidationRequest(
         string $identityAddress,
         string $validationUuid,
-        int $organization_id = null
+        int $organization_id = null,
+        int $prevalidation_id = null
     ): bool {
         $validation = RecordValidation::whereUuid($validationUuid)->first();
         $identity = Identity::whereAddress($identityAddress)->first();
 
-        if (!$identity || $validation->identity_address) {
+        if (!$identity || !$validation || $validation->identity_address) {
             return false;
         }
 
         return (bool) $validation->update([
             'identity_address' => $identity->address,
+            'prevalidation_id' => $prevalidation_id,
             'organization_id' => $organization_id,
             'state' => 'approved'
         ]);

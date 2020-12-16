@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $fund_id
  * @property int|null $implementation_id
  * @property string $key
+ * @property int|null $records_validity_days
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
  * @property bool $hash_partner_deny
  * @property string $bunq_key
- * @property string $bunq_allowed_ip
+ * @property array $bunq_allowed_ip
  * @property int $bunq_sandbox
  * @property string|null $csv_primary_key
  * @property int $subtract_transaction_costs
@@ -46,14 +47,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereIsConfigured($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereRecordsValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereSubtractTransactionCosts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundConfig extends Model
 {
-    protected $fillable = [];
-
+    /**
+     * @var string[]
+     */
     protected $hidden = [
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
         'formula_multiplier', 'is_configured', 'allow_physical_cards',
@@ -73,21 +76,31 @@ class FundConfig extends Model
         'allow_physical_cards' => 'boolean',
     ];
 
-    public function getBunqAllowedIpAttribute($value) {
+    /**
+     * @param $value
+     * @return array
+     * @noinspection PhpUnused
+     */
+    public function getBunqAllowedIpAttribute($value): array
+    {
         return collect(explode(',', $value))->filter()->toArray();
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function implementation(): BelongsTo {
+    public function implementation(): BelongsTo
+    {
         return $this->belongsTo(Implementation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 }

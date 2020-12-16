@@ -23,7 +23,7 @@ class FundExpiredMail extends ImplementationMail
     public function __construct(
         string $fundName,
         string $sponsorName,
-        string $startDateFund,
+        $startDateFund,
         $endDateFund,
         string $phoneNumberSponsor,
         string $emailAddressSponsor,

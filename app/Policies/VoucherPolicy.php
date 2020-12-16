@@ -121,7 +121,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization) &&
-            !$voucher->is_granted;
+            !$voucher->is_granted && !$voucher->expired;
     }
 
     /**
@@ -136,7 +136,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization) &&
-            !$voucher->activation_code;
+            !$voucher->activation_code && !$voucher->expired;
     }
 
     /**

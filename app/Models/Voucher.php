@@ -145,43 +145,55 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function parent(): BelongsTo {
+    public function parent(): BelongsTo
+    {
         return $this->belongsTo(self::class, 'parent_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function physical_cards(): HasMany {
+    public function physical_cards(): HasMany
+    {
         return $this->hasMany(PhysicalCard::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
-    public function voucher_relation(): HasOne {
+    public function voucher_relation(): HasOne
+    {
         return $this->hasOne(VoucherRelation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function physical_card_requests(): HasMany {
+    public function physical_card_requests(): HasMany
+    {
         return $this->hasMany(PhysicalCardRequest::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function product(): BelongsTo {
+    public function product(): BelongsTo
+    {
         return query_with_trashed($this->belongsTo(
             Product::class, 'product_id', 'id'
         ));
@@ -189,32 +201,48 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function transactions(): HasMany {
+    public function transactions(): HasMany
+    {
         return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function product_vouchers(): HasMany {
+    public function product_vouchers(): HasMany
+    {
         return $this->hasMany(self::class, 'parent_id');
     }
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
-    public function getTypeAttribute(): string {
+    public function getTypeAttribute(): string
+    {
         return $this->product_id ? 'product' : 'regular';
     }
 
-    public function getAmountAvailableAttribute() {
+    /**
+     * @return float
+     * @noinspection PhpUnused
+     */
+    public function getAmountAvailableAttribute(): float
+    {
         return round($this->amount -
             $this->transactions()->sum('amount') -
             $this->product_vouchers()->sum('amount'), 2);
     }
 
-    public function getAmountAvailableCachedAttribute() {
+    /**
+     * @return float
+     * @noinspection PhpUnused
+     */
+    public function getAmountAvailableCachedAttribute(): float
+    {
         return round($this->amount -
             $this->transactions->sum('amount') -
             $this->product_vouchers->sum('amount'), 2);
@@ -222,15 +250,19 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function tokens(): HasMany {
+    public function tokens(): HasMany
+    {
         return $this->hasMany(VoucherToken::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
-    public function token_without_confirmation(): HasOne {
+    public function token_without_confirmation(): HasOne
+    {
         return $this->hasOne(VoucherToken::class)->where([
             'need_confirmation' => false
         ]);
@@ -238,8 +270,10 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
-    public function token_with_confirmation(): HasOne {
+    public function token_with_confirmation(): HasOne
+    {
         return $this->hasOne(VoucherToken::class)->where([
             'need_confirmation' => true
         ]);
@@ -249,15 +283,18 @@ class Voucher extends Model
      * The voucher is expired
      *
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function getExpiredAttribute(): bool {
-        return (bool) $this->expire_at->isPast();
+    public function getExpiredAttribute(): bool
+    {
+        return (bool) $this->fund->end_date->isPast() || $this->expire_at->isPast();
     }
 
     /**
      * The voucher is expired
      *
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getUsedAttribute(): bool
     {
@@ -267,10 +304,11 @@ class Voucher extends Model
 
     /**
      * @return Carbon|\Illuminate\Support\Carbon
+     * @noinspection PhpUnused
      */
-    public function getLastActiveDayAttribute() {
-        return $this->type === 'product' ?
-            $this->product->expire_at : $this->expire_at->subDay();
+    public function getLastActiveDayAttribute()
+    {
+        return $this->isProductType() ? $this->product->expire_at : $this->expire_at->subDay();
     }
 
     /**
@@ -318,7 +356,7 @@ class Voucher extends Model
 
         resolve('forus.services.notification')->assignVoucher($email, $mailFrom, $type, [
             'fund_name' => $this->fund->name,
-            'link_webshop' => $this->fund->urlWebshop('/'),
+            'link_webshop' => $this->fund->urlWebshop(),
             'qr_token' => $this->token_without_confirmation->address,
             'product_name' => $this->product->name ?? null,
             'provider_name' => $this->product->organization->name ?? null,
@@ -378,7 +416,7 @@ class Voucher extends Model
     /**
      * Send voucher expiration warning email to requester identity
      */
-    protected function sendVoucherExpireMail(): void {
+    public function sendVoucherExpireMail(): void {
         $voucher = $this;
         $notificationService = resolve('forus.services.notification');
         $recordRepo = resolve('forus.services.record');
@@ -386,7 +424,7 @@ class Voucher extends Model
 
         $fund_name = $voucher->fund->name;
         $sponsor_name = $voucher->fund->organization->name;
-        $start_date = $voucher->fund->start_date->format('Y');
+        $start_date = $voucher->fund->start_date;
         $end_date = $voucher->fund->end_date;
         $phone = $voucher->fund->organization->phone;
         $email = $voucher->fund->organization->email;
@@ -532,15 +570,19 @@ class Voucher extends Model
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function getIsGrantedAttribute(): bool {
+    public function getIsGrantedAttribute(): bool
+    {
         return !empty($this->identity_address);
     }
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function getHasTransactionsAttribute(): bool {
+    public function getHasTransactionsAttribute(): bool
+    {
         return count($this->transactions) > 0;
     }
 
@@ -550,7 +592,8 @@ class Voucher extends Model
      * @param $identity_address
      * @return $this
      */
-    public function assignToIdentity(string $identity_address): self {
+    public function assignToIdentity(string $identity_address): self
+    {
         $this->update([
             'identity_address' => $identity_address,
             'state' => self::STATE_ACTIVE,
@@ -703,14 +746,16 @@ class Voucher extends Model
     /**
      * @return bool
      */
-    public function isBudgetType(): bool {
+    public function isBudgetType(): bool
+    {
         return $this->type === self::TYPE_BUDGET;
     }
 
     /**
      * @return bool
      */
-    public function isProductType(): bool {
+    public function isProductType(): bool
+    {
         return $this->type === self::TYPE_PRODUCT;
     }
 
@@ -719,7 +764,10 @@ class Voucher extends Model
      * @param string|null $identity_address
      * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model
      */
-    public static function findByAddress(string $address, ?string $identity_address = null) {
+    public static function findByAddress(
+        string $address,
+        ?string $identity_address = null
+    ) {
         return self::whereHas('tokens', static function(Builder $builder) use ($address) {
             $builder->where('address', '=', $address);
         })->where(static function(Builder $builder) use ($identity_address) {

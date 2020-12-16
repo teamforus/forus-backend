@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\Forus\Record\Models\Record;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -23,6 +25,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property string|null $uid_hash
  * @property string|null $records_hash
  * @property int $exported
+ * @property \Illuminate\Support\Carbon|null $validated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund|null $fund
@@ -34,8 +38,10 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property-read int|null $records_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newQuery()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Prevalidation onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereExported($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereId($value)
@@ -47,16 +53,28 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUidHash($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereValidatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Prevalidation withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
 class Prevalidation extends Model
 {
+    use SoftDeletes;
+
     public const STATE_PENDING = 'pending';
     public const STATE_USED = 'used';
 
     public const STATES = [
         self::STATE_PENDING,
         self::STATE_USED
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $dates = [
+        'validated_at'
     ];
 
     /**
@@ -72,7 +90,7 @@ class Prevalidation extends Model
     protected $fillable = [
         'uid', 'identity_address', 'redeemed_by_address', 'state',
         'fund_id', 'organization_id', 'exported', 'json',
-        'records_hash', 'uid_hash',
+        'records_hash', 'uid_hash', 'validated_at',
     ];
 
     /**
@@ -265,15 +283,17 @@ class Prevalidation extends Model
                 $record->value
             );
 
-            $validationRequest = $recordRepo->makeValidationRequest(
-                $identity_address,
-                $record['id']
-            );
+            if ($recordModel = Record::find($record['id'])) {
+                $recordModel->update([
+                    'prevalidation_id' => $this->id,
+                ]);
+            }
 
             $recordRepo->approveValidationRequest(
                 $this->identity_address,
-                $validationRequest['uuid'],
-                $this->organization_id
+                $recordRepo->makeValidationRequest($identity_address, $record['id'])['uuid'],
+                $this->organization_id,
+                $this->id
             );
         }
 
@@ -308,9 +328,7 @@ class Prevalidation extends Model
                 'identity_address' => $identity_address,
                 'fund_id' => $fund->id,
             ]);
-        })->where([
-            'record_type_id' => $fundPrevalidationPrimaryKey,
-        ])->pluck('value');
+        })->where('record_type_id', $fundPrevalidationPrimaryKey)->pluck('value');
 
         /** @var array[] $data new pre validations and pre validations that have to be updated */
         $data = array_filter(array_map(static function($record) use (
@@ -367,7 +385,8 @@ class Prevalidation extends Model
                     'state' => Prevalidation::STATE_PENDING,
                     'organization_id' => $fund->organization_id,
                     'fund_id' => $fund->id,
-                    'identity_address' => $identity_address
+                    'identity_address' => $identity_address,
+                    'validated_at' => now(),
                 ]);
             }
 

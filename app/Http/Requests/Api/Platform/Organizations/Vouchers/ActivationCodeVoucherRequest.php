@@ -23,6 +23,6 @@ class ActivationCodeVoucherRequest extends BaseFormRequest
     {
         return $this->organization->identityCan($this->auth_address(), 'manage_vouchers') &&
             $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->is_granted;
+            !$this->voucher->is_granted && !$this->voucher->expired;
     }
 }

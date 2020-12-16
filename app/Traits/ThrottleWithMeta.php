@@ -28,7 +28,7 @@ trait ThrottleWithMeta {
      * @param int $code
      * @throws AuthorizationJsonException
      */
-    private function throttleWithKey(
+    protected function throttleWithKey(
         string $error,
         Request $request,
         string $type,

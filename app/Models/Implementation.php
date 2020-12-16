@@ -15,8 +15,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\Request;
-use League\CommonMark\CommonMarkConverter;
-use Zoon\CommonMark\Ext\YouTubeIframe\YouTubeIframeExtension;
 
 /**
  * App\Models\Implementation
@@ -299,41 +297,43 @@ class Implementation extends Model
     /**
      * @param string $frontend
      * @param string $uri
-     * @return mixed|string|null
+     * @return string|null
      */
-    public function urlFrontend(string $frontend, string $uri = '') {
+    public function urlFrontend(string $frontend, string $uri = ''): ?string
+    {
         switch ($frontend) {
             case 'webshop': return $this->urlWebshop($uri);
             case 'sponsor': return $this->urlSponsorDashboard($uri);
             case 'provider': return $this->urlProviderDashboard($uri);
             case 'validator': return $this->urlValidatorDashboard($uri);
         }
+
         return null;
     }
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      */
-    public function urlWebshop(string $uri = "/")
+    public function urlWebshop(string $uri = "/"): string
     {
         return http_resolve_url($this->url_webshop ?? env('WEB_SHOP_GENERAL_URL'), $uri);
     }
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      */
-    public function urlSponsorDashboard(string $uri = "/")
+    public function urlSponsorDashboard(string $uri = "/"): string
     {
         return http_resolve_url($this->url_sponsor ?? env('PANEL_SPONSOR_URL'), $uri);
     }
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      */
-    public function urlProviderDashboard(string $uri = "/")
+    public function urlProviderDashboard(string $uri = "/"): string
     {
         return http_resolve_url($this->url_provider ?? env('PANEL_PROVIDER_URL'), $uri);
     }
@@ -365,7 +365,7 @@ class Implementation extends Model
      */
     public static function platformConfig($value) {
         if (!self::isValidKey(self::activeKey())) {
-            return abort(403, 'unknown_implementation_key');
+            abort(403, 'unknown_implementation_key');
         }
 
         $ver = request()->input('ver');
