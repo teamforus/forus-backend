@@ -57,15 +57,12 @@ class StoreBatchVoucherRequest extends BaseFormRequest
                 'numeric',
                 'between:.1,' . currency_format($max),
             ] : 'nullable',
-            'vouchers.*.product_id' => !$fund || $fund->isTypeBudget() ? [
+            'vouchers.*.product_id' => [
                 'required_without:vouchers.*.amount',
                 'exists:products,id',
                 new ProductIdInStockRule($fund, collect(
                     $this->input('vouchers')
                 )->countBy('product_id')->toArray())
-            ] : [
-                'nullable',
-                Rule::in([])
             ],
             'vouchers.*.expire_at' => [
                 'nullable',
@@ -74,8 +71,10 @@ class StoreBatchVoucherRequest extends BaseFormRequest
                 'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
             'vouchers.*.note'       => 'nullable|string|max:280',
-            'vouchers.*.email'      => 'nullable|email:strict,dns',
-            'vouchers.*.bsn'        => 'nullable|digits:9',
+            'vouchers.*.email'      => 'nullable|string|email:strict,dns',
+            'vouchers.*.bsn'        => 'nullable|string|digits:9',
+            'vouchers.*.activate'   => 'boolean',
+            'vouchers.*.make_activation_code' => 'boolean',
         ];
     }
 }

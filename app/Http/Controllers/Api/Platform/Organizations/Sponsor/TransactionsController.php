@@ -8,7 +8,14 @@ use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+/**
+ * Class TransactionsController
+ * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
+ * @noinspection PhpUnused
+ */
 class TransactionsController extends Controller
 {
     /**
@@ -18,11 +25,12 @@ class TransactionsController extends Controller
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function index(
         IndexTransactionsRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
@@ -44,11 +52,12 @@ class TransactionsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @noinspection PhpUnused
      */
     public function export(
         IndexTransactionsRequest $request,
         Organization $organization
-    ) {
+    ): BinaryFileResponse {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
@@ -65,11 +74,12 @@ class TransactionsController extends Controller
      * @param VoucherTransaction $voucherTransaction
      * @return SponsorVoucherTransactionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function show(
         Organization $organization,
         VoucherTransaction $voucherTransaction
-    ) {
+    ): SponsorVoucherTransactionResource {
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucherTransaction, $organization]);
 

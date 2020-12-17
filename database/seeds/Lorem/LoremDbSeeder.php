@@ -699,6 +699,7 @@ class LoremDbSeeder extends Seeder
                 'fund_id' => $fund->id,
                 'organization_id' => $fund->organization_id,
                 'identity_address' => $identity_address,
+                'validated_at' => now(),
             ]);
 
             $prevalidation->prevalidation_records()->createMany($records);

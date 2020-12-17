@@ -22,9 +22,14 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array
+     * @throws \App\Exceptions\AuthorizationJsonException
      */
     public function rules(): array
     {
+        $this->maxAttempts = env('AUTH_THROTTLE_ATTEMPTS', 10);
+        $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
+        $this->throttleWithKey('to_many_attempts', $this, 'auth');
+
         $emailRule = [
             'email:strict,dns',
             new IdentityEmailExistsRule()

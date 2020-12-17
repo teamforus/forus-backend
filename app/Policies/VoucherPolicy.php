@@ -115,6 +115,50 @@ class VoucherPolicy
      * @param Organization $organization
      * @return bool
      */
+    public function activateSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): bool {
+        return $this->assignSponsor($identity_address, $voucher, $organization) &&
+            !$voucher->is_granted && !$voucher->expired;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function makeActivationCodeSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): bool {
+        return $this->assignSponsor($identity_address, $voucher, $organization) &&
+            !$voucher->activation_code && !$voucher->expired;
+    }
+
+    /**
+     * Voucher can be redeemed using an activation code.
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function redeem(
+        string $identity_address,
+        Voucher $voucher
+    ): bool {
+        return ($identity_address && $voucher) &&
+            (bool) $voucher->activation_code && !$voucher->identity_address;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
     public function sendByEmailSponsor(
         string $identity_address,
         Voucher $voucher,
@@ -222,6 +266,11 @@ class VoucherPolicy
         // fund should not be expired
         if ($voucher->expired) {
             $this->deny('expired');
+        }
+
+        // fund should not be expired
+        if ($voucher->state !== $voucher::STATE_ACTIVE) {
+            $this->deny('pending');
         }
 
         // fund needs to be active

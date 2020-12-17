@@ -82,29 +82,61 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        /**
+         * CheckFundStateCommand:
+         */
         $schedule->command('forus.fund:check')
             ->hourlyAt(1)->withoutOverlapping()->onOneServer();
 
+        /**
+         * CheckFundConfigCommand:
+         */
         $schedule->command('forus.fund.config:check')
             ->everyMinute()->withoutOverlapping()->onOneServer();
 
+        /**
+         * CalculateFundUsersCommand:
+         */
         $schedule->command('forus.fund.users:calculate')
             ->monthly()->withoutOverlapping()->onOneServer();
 
+        /**
+         * NotifyAboutVoucherExpireCommand:
+         */
         $schedule->command('forus.voucher:check-expire')
             ->dailyAt('09:00')->withoutOverlapping()->onOneServer();
 
+        /**
+         * UpdateFundProviderInvitationExpireStateCommand
+         */
         $schedule->command('forus.funds.provider_invitations:check-expire')
             ->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 
+        /**
+         * NotifyAboutReachedNotificationFundAmount
+         */
         $schedule->command('forus.fund:check-amount')
             ->cron('0 */8 * * *')->withoutOverlapping()->onOneServer();
-  
-        $schedule->command('digid:session-clean')
-            ->everyMinute()->withoutOverlapping()->onOneServer();
 
+        /**
+         * CheckProductExpirationCommand
+         */
         $schedule->command('forus.product.expiration:check')
             ->daily()->withoutOverlapping()->onOneServer();
+
+        $this->scheduleDigest($schedule);
+        $this->scheduleQueue($schedule);
+    }
+
+    /**
+     * @param Schedule $schedule
+     */
+    public function scheduleDigest(Schedule $schedule): void {
+        /**
+         * DigIdSessionsCleanupCommand
+         */
+        $schedule->command('digid:session-clean')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
 
         /**
          * Digests
@@ -123,8 +155,13 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('forus.digest.requester:send')
             ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
+    }
 
-
+    /**
+     * @param Schedule $schedule
+     */
+    public function scheduleQueue(Schedule $schedule): void
+    {
         // use cron to send email/notifications
         if (env('QUEUE_USE_CRON', false)) {
             $schedule->command('queue:work --queue=' . env('EMAIL_QUEUE_NAME', 'emails'))

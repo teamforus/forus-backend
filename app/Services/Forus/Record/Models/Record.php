@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $identity_address
  * @property int $record_type_id
  * @property int|null $record_category_id
+ * @property int|null $prevalidation_id
  * @property string $value
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record wherePrevalidationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereRecordCategoryId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereRecordTypeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereUpdatedAt($value)
@@ -51,27 +53,33 @@ class Record extends Model
      */
     protected $fillable = [
         'identity_address', 'record_type_id', 'record_category_id',
-        'value', 'order'
+        'value', 'order', 'prevalidation_id',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function record_type(): BelongsTo {
+    public function record_type(): BelongsTo
+    {
         return $this->belongsTo(RecordType::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function record_category(): BelongsTo {
+    public function record_category(): BelongsTo
+    {
         return $this->belongsTo(RecordCategory::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function validations(): HasMany {
+    public function validations(): HasMany
+    {
         return $this->hasMany(RecordValidation::class);
     }
 }

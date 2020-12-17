@@ -3,59 +3,35 @@
 namespace App\Http\Controllers\Api\Identity;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Identity\Emails\IndexIdentityEmailRequest;
+use App\Http\Requests\Api\Identity\Emails\ResendIdentityEmailRequest;
 use App\Http\Requests\Api\Identity\Emails\StoreIdentityEmailRequest;
 use App\Http\Resources\IdentityEmailResource;
 use App\Services\Forus\Identity\Models\IdentityEmail;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 
 /**
  * Class IdentityEmailsController
- * @property IRecordRepo $rec
- * @property Notification $recordRepo
- * @property IIdentityRepo $identityRepo
  * @package App\Http\Controllers\Api\Identity
  */
 class IdentityEmailsController extends Controller
 {
-    protected $identityRepo;
-    protected $mailService;
-    protected $recordRepo;
-
-    /**
-     * IdentityEmailsController constructor.
-     *
-     * @param IRecordRepo $recordRepo
-     * @param IIdentityRepo $identityRepo
-     */
-    public function __construct(
-        IRecordRepo $recordRepo,
-        IIdentityRepo $identityRepo
-    ) {
-        $this->mailService = resolve('forus.services.notification');
-        $this->identityRepo = $identityRepo;
-        $this->recordRepo = $recordRepo;
-    }
-
     /**
      * Display a listing of the resource.
      *
+     * @param IndexIdentityEmailRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(): AnonymousResourceCollection
+    public function index(IndexIdentityEmailRequest $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', IdentityEmail::class);
 
-        return IdentityEmailResource::collection(
-            IdentityEmail::where([
-                'identity_address' => auth_address()
-            ])->orderByDesc('primary')->orderBy('email')->get()
-        );
+        return IdentityEmailResource::collection(IdentityEmail::where([
+            'identity_address' => $request->auth_address()
+        ])->orderByDesc('primary')->orderBy('email')->get());
     }
 
     /**
@@ -69,14 +45,12 @@ class IdentityEmailsController extends Controller
     {
         $this->authorize('create', IdentityEmail::class);
 
-        $identityEmail = $this->identityRepo->addIdentityEmail(
-            auth_address(),
+        $identityEmail = $request->identity_repo()->addIdentityEmail(
+            $request->auth_address(),
             $request->input('email')
         );
 
-        $identityEmail->sendVerificationEmail();
-
-        return new IdentityEmailResource($identityEmail);
+        return new IdentityEmailResource($identityEmail->sendVerificationEmail());
     }
 
     /**
@@ -94,17 +68,21 @@ class IdentityEmailsController extends Controller
     }
 
     /**
+     * Resend email confirmation link
+     *
+     * @param ResendIdentityEmailRequest $request
      * @param IdentityEmail $identityEmail
      * @return IdentityEmailResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function resend(IdentityEmail $identityEmail): IdentityEmailResource
-    {
+    public function resend(
+        /** @noinspection PhpUnusedParameterInspection */
+        ResendIdentityEmailRequest $request,
+        IdentityEmail $identityEmail
+    ): IdentityEmailResource {
         $this->authorize('resend', $identityEmail);
 
-        $identityEmail->sendVerificationEmail();
-
-        return new IdentityEmailResource($identityEmail);
+        return new IdentityEmailResource($identityEmail->sendVerificationEmail());
     }
 
     /**
@@ -116,8 +94,7 @@ class IdentityEmailsController extends Controller
     {
         $this->authorize('makePrimary', $identityEmail);
 
-        $identityEmail->makePrimary();
-        return new IdentityEmailResource($identityEmail);
+        return new IdentityEmailResource($identityEmail->setPrimary());
     }
 
     /**
@@ -133,7 +110,7 @@ class IdentityEmailsController extends Controller
 
         $identityEmail->delete();
 
-        return response()->json(null, 200);
+        return response()->json([]);
     }
 
     /**
@@ -145,9 +122,7 @@ class IdentityEmailsController extends Controller
     {
         $this->authorize('verifyToken', $identityEmail);
 
-        $identityEmail->update([
-            'verified' => 1
-        ]);
+        $identityEmail->setVerified();
 
         return view('messages.email-verified');
     }

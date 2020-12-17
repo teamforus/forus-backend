@@ -19,7 +19,9 @@ class CheckFundConfigCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Check if fund is configured.';
+    protected $description =
+        'Check if fund is configured ' .
+        'and send email to approved providers about `fund started`';
 
     /**
      * Execute the console command.
@@ -29,8 +31,9 @@ class CheckFundConfigCommand extends Command
      */
     public function handle(Fund $fund): void
     {
-        try {
+        // TODO: check this command
+        /*try {
             $fund::checkConfigStateQueue();
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {}*/
     }
 }
