@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Hierbij ontvangt u uw :fund_name-tegped',
+    'title' => 'Hierbij ontvangt u uw :fund_name-tegoed',
     'you_have_asked' => 'U heeft gevraagd uw :product_name-tegoed per e-mail te ontvangen.',
     'voucher_details' => 'Het tegoed heeft een waarde van € :voucher_amount en is geldig tot en met :expire_at_minus_day.'.
         'Onderstaande voucher laat u bij de organisatie van uw keuze zien. ',
