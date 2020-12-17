@@ -8,6 +8,7 @@ use App\Services\Forus\Record\Models\RecordCategory;
 use App\Services\Forus\Record\Models\RecordType;
 use App\Services\Forus\Record\Models\RecordValidation;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use Illuminate\Database\Eloquent\Builder;
 
 class RecordRepo implements IRecordRepo
 {
@@ -370,31 +371,26 @@ class RecordRepo implements IRecordRepo
     /**
      * Get identity records
      * @param string $identityAddress
-     * @param string|null $type
-     * @param integer|null $categoryId
+     * @param null $type
+     * @param null $categoryId
      * @param bool $deleted
+     * @param ?int $trustedDays
      * @return array
      */
     public function recordsList(
         string $identityAddress,
         $type = null,
         $categoryId = null,
-        bool $deleted = false
-    ) {
+        bool $deleted = false,
+        ?int $trustedDays = null
+    ): ?array {
         // Todo: validation state
+        /** @var Builder $query */
         $query = $deleted ? Record::onlyTrashed() : Record::query();
-        $query->where([
-            'identity_address' => $identityAddress
-        ])->with([
-            'record_type'
-        ]);
+        $query->where('identity_address', $identityAddress)->with('record_type');
 
         if ($type) {
-            $recordType = RecordType::query()->where([
-                'key' => $type
-            ])->first();
-
-            if ($recordType) {
+            if ($recordType = RecordType::query()->where('key', $type)->first()) {
                 $query->where('record_type_id', $recordType->id);
             } else {
                 return null;
@@ -405,23 +401,38 @@ class RecordRepo implements IRecordRepo
             $query->where('record_category_id', $categoryId);
         }
 
-        return $query->orderBy('order')->get()->map(function(
-            Record $record
-        ) {
+        if ($trustedDays) {
+            $query->whereHas('validations', static function(Builder $builder) use ($trustedDays) {
+                $builder->where(static function(Builder $builder) use ($trustedDays) {
+                    $builder->whereNotNull('prevalidation_id');
+                    $builder->whereHas('prevalidation', static function(
+                        Builder $builder
+                    ) use ($trustedDays) {
+                        $builder->where('validated_at', '>=', now()->subDays($trustedDays));
+                    });
+                });
+                $builder->orWhere(static function(Builder $builder) use ($trustedDays) {
+                    $builder->whereNull('prevalidation_id');
+                    $builder->where('created_at', '>=', now()->subDays($trustedDays));
+                });
+            });
+        }
+
+        return $query->orderBy('order')->get()->map(function(Record $record) {
             $validations = $record->validations()->where([
                 'state' => 'approved'
             ])->select([
-                'state', 'identity_address', 'created_at', 'updated_at',
-                'organization_id'
-            ])->get()->load('organization')->map(function(
-                RecordValidation $validation
-            ) {
-                return $validation->setAttribute(
-                    'email',
-                    $validation->organization ? null :$this->primaryEmailByAddress(
-                        $validation->identity_address
-                    )
-                );
+                'id', 'state', 'identity_address', 'created_at', 'updated_at',
+                'organization_id', 'prevalidation_id',
+            ])->get()->load('organization')->map(function(RecordValidation $validation) {
+                $validation->setAttribute('validation_date_timestamp', $validation->validation_date->timestamp);
+                $validation->setAttribute('email', $validation->organization ? null : $this->primaryEmailByAddress(
+                    $validation->identity_address
+                ));
+
+                return $validation;
+            })->sortByDesc(static function(RecordValidation $validation) {
+                return $validation->validation_date->timestamp;
             });
 
             return [
@@ -432,7 +443,7 @@ class RecordRepo implements IRecordRepo
                 'name' => $record->record_type->name,
                 'deleted' => !is_null($record->deleted_at),
                 'record_category_id' => $record->record_category_id,
-                'validations' => $validations
+                'validations' => $validations,
             ];
         })->toArray();
     }
@@ -673,22 +684,25 @@ class RecordRepo implements IRecordRepo
      * @param string $identityAddress
      * @param string $validationUuid
      * @param int|null $organization_id
+     * @param int|null $prevalidation_id
      * @return bool
      */
     public function approveValidationRequest(
         string $identityAddress,
         string $validationUuid,
-        int $organization_id = null
+        int $organization_id = null,
+        int $prevalidation_id = null
     ): bool {
         $validation = RecordValidation::whereUuid($validationUuid)->first();
         $identity = Identity::whereAddress($identityAddress)->first();
 
-        if (!$identity || $validation->identity_address) {
+        if (!$identity || !$validation || $validation->identity_address) {
             return false;
         }
 
         return (bool) $validation->update([
             'identity_address' => $identity->address,
+            'prevalidation_id' => $prevalidation_id,
             'organization_id' => $organization_id,
             'state' => 'approved'
         ]);

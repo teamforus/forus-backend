@@ -8,6 +8,7 @@ use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
@@ -72,11 +73,13 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
  * @property-read \App\Models\FundConfig|null $fund_config
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfigRecord[] $fund_config_records
+ * @property-read int|null $fund_config_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_limit_multipliers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
@@ -116,8 +119,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $providers_allowed_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
  * @property-read int|null $providers_approved_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
- * @property-read int|null $providers_declined_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
@@ -226,14 +227,16 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization(): BelongsTo {
+    public function organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function products(): BelongsToMany {
+    public function products(): BelongsToMany
+    {
         return $this->belongsToMany(
             Product::class,
             'fund_products'
@@ -243,7 +246,8 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function criteria(): HasMany {
+    public function criteria(): HasMany
+    {
         return $this->hasMany(FundCriterion::class);
     }
 
@@ -251,7 +255,8 @@ class Fund extends Model
      * Get fund logo
      * @return MorphOne
      */
-    public function logo(): MorphOne {
+    public function logo(): MorphOne
+    {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'fund_logo'
         ]);
@@ -260,35 +265,40 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function vouchers(): HasMany {
+    public function vouchers(): HasMany
+    {
         return $this->hasMany(Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function budget_vouchers(): HasMany {
+    public function budget_vouchers(): HasMany
+    {
         return $this->hasMany(Voucher::class)->whereNull('parent_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function voucher_transactions(): HasManyThrough {
+    public function voucher_transactions(): HasManyThrough
+    {
         return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function providers(): HasMany {
+    public function providers(): HasMany
+    {
         return $this->hasMany(FundProvider::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function providers_approved(): HasMany {
+    public function providers_approved(): HasMany
+    {
         return $this->hasMany(FundProvider::class)->where(static function(Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
@@ -299,14 +309,17 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function provider_invitations(): HasMany {
+    public function provider_invitations(): HasMany
+    {
         return $this->hasMany(FundProviderInvitation::class, 'from_fund_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function providers_allowed_products(): HasMany {
+    public function providers_allowed_products(): HasMany
+    {
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => true
         ]);
@@ -314,8 +327,10 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnusedPrivateMethodInspection
      */
-    public function providers_declined_products(): HasMany {
+    private function providers_declined_products(): HasMany
+    {
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => false
         ]);
@@ -324,49 +339,61 @@ class Fund extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function top_ups(): HasMany {
+    public function top_ups(): HasMany
+    {
         return $this->hasMany(FundTopUp::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function default_validator_employee(): BelongsTo {
+    public function default_validator_employee(): BelongsTo
+    {
         return $this->belongsTo(Employee::class, 'default_validator_employee_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
-    public function top_up_transactions(): HasManyThrough {
+    public function top_up_transactions(): HasManyThrough
+    {
         return $this->hasManyThrough(FundTopUpTransaction::class, FundTopUp::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_requests(): HasMany {
+    public function fund_requests(): HasMany
+    {
         return $this->hasMany(FundRequest::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
-    public function fund_request_records(): HasManyThrough {
+    public function fund_request_records(): HasManyThrough
+    {
         return $this->hasManyThrough(FundRequestRecord::class, FundRequest::class);
     }
 
     /**
      * @return float
+     * @noinspection PhpUnused
      */
-    public function getBudgetValidatedAttribute(): float {
+    public function getBudgetValidatedAttribute(): float
+    {
         return 0;
     }
 
     /**
      * @return float
+     * @noinspection PhpUnused
      */
-    public function getBudgetTotalAttribute(): float {
+    public function getBudgetTotalAttribute(): float
+    {
         return round(array_sum([
             $this->top_up_transactions->sum('amount'),
             $this->bunq_me_tabs_paid->sum('amount')
@@ -375,36 +402,44 @@ class Fund extends Model
 
     /**
      * @return float
+     * @noinspection PhpUnused
      */
-    public function getBudgetUsedAttribute(): float {
+    public function getBudgetUsedAttribute(): float
+    {
         return round($this->voucher_transactions()->sum('voucher_transactions.amount'), 2);
     }
 
     /**
      * @return float
+     * @noinspection PhpUnused
      */
-    public function getBudgetLeftAttribute(): float {
+    public function getBudgetLeftAttribute(): float
+    {
         return round($this->budget_total - $this->budget_used, 2);
     }
 
     /**
      * @return float
+     * @noinspection PhpUnused
      */
-    public function getBudgetReservedAttribute(): float {
+    public function getBudgetReservedAttribute(): float
+    {
         return round($this->budget_vouchers()->sum('amount'), 2);
     }
 
     /**
      * @return float
      */
-    public function getServiceCosts(): float {
+    public function getServiceCosts(): float
+    {
         return $this->getTransactionCosts();
     }
 
     /**
      * @return float
      */
-    public function getTransactionCosts (): float {
+    public function getTransactionCosts (): float
+    {
         if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
             return $this->voucher_transactions()->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
         }
@@ -414,8 +449,10 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function provider_organizations_approved(): BelongsToMany {
+    public function provider_organizations_approved(): BelongsToMany
+    {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
@@ -428,10 +465,11 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function provider_organizations_approved_budget(): BelongsToMany {
-        return $this->belongsToMany(
-            Organization::class,
+    public function provider_organizations_approved_budget(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class,
             'fund_providers'
         )->where(static function(Builder $builder) {
             $builder->where('allow_budget', true);
@@ -440,24 +478,22 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function provider_organizations_approved_products(): BelongsToMany {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        )->where(static function(Builder $builder) {
+    public function provider_organizations_approved_products(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where(static function(Builder $builder) {
             $builder->where('allow_products', true);
         });
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function provider_organizations_declined(): BelongsToMany {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        )->where([
+    public function provider_organizations_declined(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
             'allow_budget' => false,
             'allow_products' => false,
             'dismissed' => true,
@@ -466,12 +502,11 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function provider_organizations_pending(): BelongsToMany {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        )->where([
+    public function provider_organizations_pending(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
             'allow_budget' => false,
             'allow_products' => false,
         ]);
@@ -479,8 +514,10 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function provider_organizations(): BelongsToMany {
+    public function provider_organizations(): BelongsToMany
+    {
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
@@ -489,8 +526,10 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
-    public function employees(): HasManyThrough {
+    public function employees(): HasManyThrough
+    {
         return $this->hasManyThrough(
             Employee::class,
             Organization::class,
@@ -503,8 +542,10 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
-    public function employees_validators(): HasManyThrough {
+    public function employees_validators(): HasManyThrough
+    {
         return $this->hasManyThrough(
             Employee::class,
             Organization::class,
@@ -519,36 +560,54 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
-    public function fund_config(): HasOne {
+    public function fund_config(): HasOne
+    {
         return $this->hasOne(FundConfig::class);
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_formulas(): HasMany {
+    public function fund_config_records(): HasMany
+    {
+        return $this->hasMany(FundConfigRecord::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_formulas(): HasMany
+    {
         return $this->hasMany(FundFormula::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_limit_multipliers(): HasMany {
+    public function fund_limit_multipliers(): HasMany
+    {
         return $this->hasMany(FundLimitMultiplier::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_formula_products(): HasMany {
+    public function fund_formula_products(): HasMany
+    {
         return $this->hasMany(FundFormulaProduct::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
-    public function formula_products(): HasManyThrough {
+    public function formula_products(): HasManyThrough
+    {
         return $this->hasManyThrough(
             Product::class,
             FundFormulaProduct::class,
@@ -559,15 +618,19 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function bunq_me_tabs(): HasMany {
+    public function bunq_me_tabs(): HasMany
+    {
         return $this->hasMany(BunqMeTab::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function bunq_me_tabs_paid(): HasMany {
+    public function bunq_me_tabs_paid(): HasMany
+    {
         return $this->hasMany(BunqMeTab::class)->where([
             'status' => 'PAID'
         ]);
@@ -592,52 +655,70 @@ class Fund extends Model
     /**
      * @param string $identity_address
      * @param string $record_type
-     * @param Fund $fund
      * @param FundCriterion|null $criterion
      * @return mixed
      */
-    public static function getTrustedRecordOfType(
+    public function getTrustedRecordOfType(
         string $identity_address,
         string $record_type,
-        Fund $fund,
         FundCriterion $criterion = null
     ) {
+        $fund = $this;
         $organization = $fund->organization;
         $recordRepo = resolve('forus.services.record');
         $trustedIdentities = $fund->validatorEmployees($criterion);
-        $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, []);
+        $daysTrusted = $this->getTrustedDays($record_type);
+        $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, null,false, $daysTrusted);
 
         $validRecordsOfType = collect($recordsOfType)->map(static function($record) use (
-            $trustedIdentities, $organization
+            $trustedIdentities, $organization, $criterion, $record_type, $daysTrusted
         ) {
-            $validations = collect($record['validations'])->whereIn(
-                'identity_address', $trustedIdentities);
-
-            if ($organization) {
-                $validations = collect()->merge($validations->where(
-                    'organization_id', $organization->id
-                ))->merge($validations->where(
-                    'organization_id', null
-                ));
-            }
+            $validations = collect($record['validations']);
+            $validations = $validations->whereIn('identity_address', $trustedIdentities);
+            $validations = $validations->filter(static function($validation) use ($organization) {
+                return is_null($validation['organization_id']) ||
+                    ($validation['organization_id'] === $organization->id);
+            });
 
             return array_merge($record, [
-                'validations' => $validations->sortByDesc('created_at')
+                'validations' => $validations->sortByDesc('created_at')->values()->toArray()
             ]);
         })->filter(static function($record) {
             return count($record['validations']) > 0;
         })->sortByDesc(static function($record) {
-            return $record['validations'][0]['created_at'];
+            return $record['validations'][0]['validation_date_timestamp'];
         });
 
-        return collect($validRecordsOfType)->first();
+        return $validRecordsOfType->first();
+    }
+
+    /**
+     * @param string $recordType
+     * @return int|null
+     */
+    public function getTrustedDays(string $recordType): ?int
+    {
+        /** @var FundConfigRecord $typeConfig */
+        $typeConfig = $this->fund_config_records->where('record_type', $recordType)->first();
+        $typeConfigValue = $typeConfig ? $typeConfig->record_validity_days : null;
+        $fundConfigValue = $this->fund_config ? $this->fund_config->record_validity_days : null;
+
+        if ($typeConfigValue === 0) {
+            return $typeConfigValue;
+        } else if ($typeConfigValue === null && $fundConfigValue === 0) {
+            return $fundConfigValue;
+        }
+
+        return ($typeConfigValue ?: false) ?:
+            ($fundConfigValue ?: false) ?:
+                ((int) config('forus.funds.record_validity_days')) ?: null;
     }
 
     /**
      * @param string|null $identityAddress
-     * @return int|mixed
+     * @return int
      */
-    public function amountForIdentity(?string $identityAddress)
+    public function amountForIdentity(?string $identityAddress): int
     {
         if ($this->fund_formulas->count() === 0 &&
             $this->fund_formula_products->pluck('price')->sum() === 0) {
@@ -648,10 +729,9 @@ class Fund extends Model
             switch ($formula->type) {
                 case 'fixed': return $formula->amount;
                 case 'multiply': {
-                    $record = self::getTrustedRecordOfType(
+                    $record = $this->getTrustedRecordOfType(
                         $identityAddress,
-                        $formula->record_type_key,
-                        $this
+                        $formula->record_type_key
                     );
 
                     return is_numeric(
@@ -665,9 +745,9 @@ class Fund extends Model
 
     /**
      * @param string|null $identityAddress
-     * @return int|mixed
+     * @return int
      */
-    public function multiplierForIdentity(?string $identityAddress) {
+    public function multiplierForIdentity(?string $identityAddress): int {
         /** @var FundLimitMultiplier[]|Collection $multipliers */
         $multipliers = $this->fund_limit_multipliers()->get();
 
@@ -676,10 +756,10 @@ class Fund extends Model
         }
 
         return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress) {
-            return ((int) self::getTrustedRecordOfType(
+            return ((int) $this->getTrustedRecordOfType(
                 $identityAddress,
-                $multiplier->record_type_key,
-                $this)['value']) * $multiplier->multiplier;
+                $multiplier->record_type_key
+                )['value']) * $multiplier->multiplier;
         })->sum();
     }
 
@@ -1026,15 +1106,14 @@ class Fund extends Model
      * @param float|null $voucherAmount
      * @param Carbon|null $expire_at
      * @param string|null $note
-     * @return Voucher|\Illuminate\Database\Eloquent\Model
-     * @throws \Exception
+     * @return Voucher|null
      */
     public function makeVoucher(
         string $identity_address = null,
         float $voucherAmount = null,
         Carbon $expire_at = null,
         string $note = null
-    ) {
+    ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
         $expire_at = $expire_at ?: $this->end_date;
@@ -1302,27 +1381,27 @@ class Fund extends Model
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      */
-    public function urlWebshop(string $uri = "/")
+    public function urlWebshop(string $uri = "/"): string
     {
         return $this->fund_config->implementation->urlWebshop($uri);
     }
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      */
-    public function urlSponsorDashboard(string $uri = "/")
+    public function urlSponsorDashboard(string $uri = "/"): string
     {
         return $this->fund_config->implementation->urlSponsorDashboard($uri);
     }
 
     /**
      * @param string $uri
-     * @return mixed|string
+     * @return string
      */
-    public function urlProviderDashboard(string $uri = "/")
+    public function urlProviderDashboard(string $uri = "/"): string
     {
         return $this->fund_config->implementation->urlProviderDashboard($uri);
     }
@@ -1330,15 +1409,19 @@ class Fund extends Model
     /**
      * @param string $uri
      * @return mixed|string
+     * @noinspection PhpUnused
      */
-    public function urlValidatorDashboard(string $uri = "/"): string {
+    public function urlValidatorDashboard(string $uri = "/"): string
+    {
         return $this->fund_config->implementation->urlValidatorDashboard($uri);
     }
 
     /**
      * @return \App\Models\FundTopUp
+     * @noinspection PhpUnused
      */
-    public function getTopUpModelAttribute(): FundTopUp {
+    public function getTopUpModelAttribute(): FundTopUp
+    {
         /** @var FundTopUp $topUp */
         if ($this->top_ups()->count() > 0) {
             $topUp = $this->top_ups()->first();
@@ -1450,7 +1533,7 @@ class Fund extends Model
         }
 
         return Identity::whereHas('vouchers', function(Builder $builder) {
-            $builder->where('fund_id', '=', $this->id);
+            return VoucherQuery::whereNotExpired($builder->where('fund_id', $this->id));
         })->whereHas('records', function(Builder $builder) use ($identity) {
             $builder->where(function(Builder $builder) use ($identity) {
                 $identityBsn = record_repo()->bsnByAddress($identity->address);
@@ -1461,7 +1544,7 @@ class Fund extends Model
                     ));
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        self::getTrustedRecordOfType($identity->address, 'bsn_hash', $this)['value'] ?? null,
+                        $this->getTrustedRecordOfType($identity->address, 'bsn_hash')['value'] ?? null,
                         $identityBsn ? $this->getHashedValue($identityBsn) : null
                     ]) : [$identityBsn ?: null]);
                 });
@@ -1472,7 +1555,7 @@ class Fund extends Model
                     ));
 
                     $builder->whereIn('value', $this->isHashingBsn() ? array_filter([
-                        self::getTrustedRecordOfType($identity->address, 'partner_bsn_hash', $this)['value'] ?? null,
+                        $this->getTrustedRecordOfType($identity->address, 'partner_bsn_hash')['value'] ?? null,
                         $identityBsn ? $this->getHashedValue($identityBsn) : null
                     ]) : [$identityBsn ?: null]);
                 });

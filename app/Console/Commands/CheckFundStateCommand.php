@@ -19,7 +19,7 @@ class CheckFundStateCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Check fund state';
+    protected $description = 'Update fund state by the start/end date';
 
     /**
      * Execute the console command.

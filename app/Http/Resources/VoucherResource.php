@@ -109,7 +109,8 @@ class VoucherResource extends Resource
                 'organization' => new OrganizationBasicWithPrivateResource($voucher->product->organization),
             ]);
         } else {
-            exit(abort("Unknown voucher type!", 403));
+            abort("Unknown voucher type!", 403);
+            exit();
         }
 
         return [

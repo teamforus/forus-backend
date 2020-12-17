@@ -6,58 +6,49 @@ use App\Exceptions\AuthorizationJsonException;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 
+/**
+ * Class PrevalidationPolicy
+ * @package App\Policies
+ */
 class PrevalidationPolicy extends BasePolicy
 {
     /**
-     * Create a new policy instance.
-     *
-     * @return void
+     * @param string|null $identity_address
+     * @return bool
      */
-    public function __construct()
+    public function viewAny(?string $identity_address): bool
     {
-        //
-    }
-
-    /**
-     * @param $identity_address
-     * @return mixed
-     */
-    public function viewAny(
-        $identity_address
-    ) {
         return !empty($identity_address);
     }
 
     /**
-     * @param $identity_address
+     * @param string|null $identity_address
      * @return bool
      */
-    public function show(
-        $identity_address
-    ) {
+    public function show(?string $identity_address): bool
+    {
         return !empty($identity_address);
     }
 
     /**
-     * @param $identity_address
+     * @param string|null $identity_address
      * @return bool
      */
-    public function store(
-        $identity_address
-    ) {
+    public function store(?string $identity_address): bool
+    {
         return !empty($identity_address);
     }
 
     /**
-     * @param $identity_address
+     * @param string|null $identity_address
      * @param Prevalidation $prevalidation
-     * @return bool|void
+     * @return bool
      * @throws AuthorizationJsonException
      */
     public function redeem(
-        $identity_address,
-        Prevalidation $prevalidation = null
-    ) {
+        ?string $identity_address,
+        Prevalidation $prevalidation
+    ): bool {
         if (empty($identity_address)) {
             return false;
         }
@@ -66,18 +57,40 @@ class PrevalidationPolicy extends BasePolicy
             $this->deny('wrong_code');
         }
 
-        if ($prevalidation->state != 'pending') {
+        if ($prevalidation->state !== $prevalidation::STATE_PENDING) {
             $this->deny('used');
         }
 
         if (Voucher::where([
-                'identity_address' => $identity_address,
-                'fund_id' => $prevalidation->fund_id,
-            ])->count() > 0) {
+            'fund_id' => $prevalidation->fund_id,
+            'identity_address' => $identity_address,
+        ])->exists()) {
             $this->deny('used_same_fund');
         }
 
         return true;
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param Prevalidation $prevalidation
+     * @return bool
+     */
+    public function destroy(
+        ?string $identity_address,
+        Prevalidation $prevalidation
+    ): bool {
+        $organization = $prevalidation->organization;
+        $isCreator = $prevalidation->identity_address === $identity_address;
+        $isOrganizationEmployee = false;
+
+        if ($organization) {
+            $isOrganizationEmployee = $organization->employeesWithPermissionsQuery([
+                'validate_records'
+            ])->where(compact('identity_address'))->exists();
+        }
+
+        return !$prevalidation->is_used && ($isCreator || $isOrganizationEmployee);
     }
 
     /**

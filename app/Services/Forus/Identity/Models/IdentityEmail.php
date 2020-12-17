@@ -4,6 +4,7 @@ namespace App\Services\Forus\Identity\Models;
 
 use App\Models\Implementation;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -62,33 +63,37 @@ class IdentityEmail extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function identity() {
+    public function identity(): BelongsTo
+    {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
     }
 
     /**
      * Send/Resend verification link to the email
      */
-    public function sendVerificationEmail() {
+    public function sendVerificationEmail(): IdentityEmail
+    {
         $notificationService = resolve('forus.services.notification');
+
         $notificationService->sendEmailVerificationLink(
             $this->email,
             Implementation::emailFrom(),
             url(sprintf('/email-verification/%s', $this->verification_token))
         );
+
+        return $this;
     }
 
     /**
      * Make this identity email as primary
      */
-    public function makePrimary() {
+    public function setPrimary(): IdentityEmail
+    {
         $this->update([
             'primary' => true,
         ]);
 
-        $this->identity->emails()->where(
-            'identity_emails.id', '!=', $this->id
-        )->update([
+        $this->identity->emails()->where('identity_emails.id', '!=', $this->id)->update([
             'primary' => false,
         ]);
 
@@ -96,13 +101,17 @@ class IdentityEmail extends Model
             $this->identity_address,
             $this->email
         );
+
+        return $this;
     }
 
     /**
      * Set this identity email as verified
+     * @return self
      */
-    public function setVerified() {
-        $this->update([
+    public function setVerified(): IdentityEmail
+    {
+        return tap($this)->update([
             'verified' => true
         ]);
     }

@@ -128,9 +128,8 @@ class IdentityFallbackController extends Controller
      * @return array
      * @throws \Exception
      */
-    public function storeValidateEmail(IdentityStoreValidateEmailRequest $request) {
-        $this->throttleWithKey('to_many_attempts', $request, 'auth');
-
+    public function storeValidateEmail(IdentityStoreValidateEmailRequest $request): array
+    {
         $email = (string) $request->input('email', '');
         $used = !$this->identityRepo->isEmailAvailable($email);
 

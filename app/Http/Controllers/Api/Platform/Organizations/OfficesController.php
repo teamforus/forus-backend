@@ -10,6 +10,7 @@ use App\Models\Office;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Services\MediaService\Models\Media;
+use Illuminate\Http\JsonResponse;
 
 class OfficesController extends Controller
 {
@@ -144,18 +145,19 @@ class OfficesController extends Controller
      *
      * @param Organization $organization
      * @param Office $office
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function destroy(
         Organization $organization,
         Office $office
-    ) {
+    ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$office, $organization]);
 
         $office->delete();
 
-        return response('', 200);
+        return response()->json([]);
     }
 }
