@@ -10,5 +10,5 @@ return [
     /**
      * By default records are considered as valid 5 years after the validation
      */
-    'records_validity_days' => env('RECORDS_VALIDITY_DAYS', 365 * 5),
+    'record_validity_days' => env('RECORD_VALIDITY_DAYS', 365 * 5),
 ];

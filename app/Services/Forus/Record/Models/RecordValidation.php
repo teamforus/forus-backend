@@ -3,8 +3,10 @@
 namespace App\Services\Forus\Record\Models;
 
 use App\Models\Organization;
+use App\Models\Prevalidation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Services\Forus\Record\Models\RecordValidation
@@ -18,7 +20,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Support\Carbon|null $validation_date
  * @property-read \App\Models\Organization|null $organization
+ * @property-read \App\Models\Prevalidation|null $prevalidation
  * @property-read \App\Services\Forus\Record\Models\Record $record
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation newQuery()
@@ -64,5 +68,22 @@ class RecordValidation extends Model
         return $this->belongsTo(Organization::class)->select([
             'id', 'name', 'email',
         ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function prevalidation(): BelongsTo
+    {
+        return $this->belongsTo(Prevalidation::class);
+    }
+
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     * @noinspection PhpUnused
+     */
+    public function getValidationDateAttribute(): ?Carbon {
+        return $this->prevalidation_id ? $this->prevalidation->validated_at : $this->created_at;
     }
 }

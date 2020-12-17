@@ -23,7 +23,7 @@ class AddValidatedAtFieldToPrevalidationsTable extends Migration
             $table->dateTime('validated_at')->after('exported')->nullable();
         });
 
-        Prevalidation::whereNull('validated_at')->update([
+        Prevalidation::withTrashed()->whereNull('validated_at')->update([
             'validated_at' => DB::raw('`created_at`'),
         ]);
     }

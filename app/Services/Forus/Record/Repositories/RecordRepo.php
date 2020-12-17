@@ -371,16 +371,18 @@ class RecordRepo implements IRecordRepo
     /**
      * Get identity records
      * @param string $identityAddress
-     * @param string|null $type
-     * @param integer|null $categoryId
+     * @param null $type
+     * @param null $categoryId
      * @param bool $deleted
+     * @param ?int $trustedDays
      * @return array
      */
     public function recordsList(
         string $identityAddress,
         $type = null,
         $categoryId = null,
-        bool $deleted = false
+        bool $deleted = false,
+        ?int $trustedDays = null
     ): ?array {
         // Todo: validation state
         /** @var Builder $query */
@@ -399,6 +401,23 @@ class RecordRepo implements IRecordRepo
             $query->where('record_category_id', $categoryId);
         }
 
+        if ($trustedDays) {
+            $query->whereHas('validations', static function(Builder $builder) use ($trustedDays) {
+                $builder->where(static function(Builder $builder) use ($trustedDays) {
+                    $builder->whereNotNull('prevalidation_id');
+                    $builder->whereHas('prevalidation', static function(
+                        Builder $builder
+                    ) use ($trustedDays) {
+                        $builder->where('validated_at', '>=', now()->subDays($trustedDays));
+                    });
+                });
+                $builder->orWhere(static function(Builder $builder) use ($trustedDays) {
+                    $builder->whereNull('prevalidation_id');
+                    $builder->where('created_at', '>=', now()->subDays($trustedDays));
+                });
+            });
+        }
+
         return $query->orderBy('order')->get()->map(function(Record $record) {
             $validations = $record->validations()->where([
                 'state' => 'approved'
@@ -406,12 +425,14 @@ class RecordRepo implements IRecordRepo
                 'id', 'state', 'identity_address', 'created_at', 'updated_at',
                 'organization_id', 'prevalidation_id',
             ])->get()->load('organization')->map(function(RecordValidation $validation) {
-                return $validation->setAttribute(
-                    'email',
-                    $validation->organization ? null : $this->primaryEmailByAddress(
-                        $validation->identity_address
-                    )
-                );
+                $validation->setAttribute('validation_date_timestamp', $validation->validation_date->timestamp);
+                $validation->setAttribute('email', $validation->organization ? null : $this->primaryEmailByAddress(
+                    $validation->identity_address
+                ));
+
+                return $validation;
+            })->sortByDesc(static function(RecordValidation $validation) {
+                return $validation->validation_date->timestamp;
             });
 
             return [
@@ -422,7 +443,7 @@ class RecordRepo implements IRecordRepo
                 'name' => $record->record_type->name,
                 'deleted' => !is_null($record->deleted_at),
                 'record_category_id' => $record->record_category_id,
-                'validations' => $validations
+                'validations' => $validations,
             ];
         })->toArray();
     }

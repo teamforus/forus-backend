@@ -33,6 +33,7 @@ class AddPrevalidationIdFieldToRecordValidationsTable extends Migration
     public function down(): void
     {
         Schema::table('record_validations', static function (Blueprint $table) {
+            $table->dropForeign('record_validations_prevalidation_id_foreign');
             $table->dropColumn('prevalidation_id');
         });
     }

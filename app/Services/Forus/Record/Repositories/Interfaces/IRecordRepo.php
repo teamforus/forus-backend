@@ -191,13 +191,15 @@ interface IRecordRepo {
      * @param null $type
      * @param null $categoryId
      * @param bool $deleted
+     * @param ?int $trustedDays
      * @return array
      */
     public function recordsList(
         string $identityAddress,
         $type = null,
         $categoryId = null,
-        bool $deleted = false
+        bool $deleted = false,
+        ?int $trustedDays = null
     ): ?array;
 
     /**

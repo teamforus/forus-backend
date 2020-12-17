@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $record_type_key
  * @property string $operator
  * @property string $value
- * @property int|null $records_validity_days
  * @property string|null $title
  * @property bool $show_attachment
  * @property string $description
@@ -34,7 +33,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereOperator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereRecordsValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereShowAttachment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterion whereUpdatedAt($value)
@@ -49,8 +47,8 @@ class FundCriterion extends Model
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'record_type_key', 'operator', 'value',
-        'show_attachment', 'description', 'title', 'records_validity_days',
+        'fund_id', 'record_type_key', 'operator', 'value', 'show_attachment',
+        'description', 'title',
     ];
 
     protected $casts = [
@@ -82,15 +80,5 @@ class FundCriterion extends Model
     public function external_validator_organizations(): BelongsToMany
     {
         return $this->belongsToMany(OrganizationValidator::class, FundCriterionValidator::class);
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getTrustedDays(): ?int
-    {
-        return $this->records_validity_days ?:
-            ($this->fund->fund_config ? $this->fund->fund_config->records_validity_days : null) ?:
-                (int) config('forus.funds.records_validity_days');
     }
 }

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $fund_id
  * @property int|null $implementation_id
  * @property string $key
- * @property int|null $records_validity_days
+ * @property int|null $record_validity_days
  * @property bool $hash_bsn
  * @property string|null $hash_bsn_salt
  * @property bool $hash_partner_deny
@@ -51,6 +51,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereSubtractTransactionCosts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereRecordValidityDays($value)
  */
 class FundConfig extends Model
 {

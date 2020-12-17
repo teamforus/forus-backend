@@ -14,7 +14,7 @@ class UpdatePrevalidationHashes extends Migration
     {
         Prevalidation::whereHas('fund.fund_config')->with([
             'fund.fund_config', 'prevalidation_records.record_type',
-        ])->get()->each(static function(Prevalidation $prevalidation) {
+        ])->withTrashed()->get()->each(static function(Prevalidation $prevalidation) {
             $prevalidation->updateHashes();
         });
     }

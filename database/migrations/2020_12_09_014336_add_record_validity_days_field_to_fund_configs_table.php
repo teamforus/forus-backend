@@ -5,10 +5,10 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddRecordsValidityDaysFieldToFundCriteriaTable
+ * Class AddRecordsValidityDaysFieldToFundConfigsTable
  * @noinspection PhpUnused
  */
-class AddRecordsValidityDaysFieldToFundCriteriaTable extends Migration
+class AddRecordValidityDaysFieldToFundConfigsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -17,8 +17,8 @@ class AddRecordsValidityDaysFieldToFundCriteriaTable extends Migration
      */
     public function up(): void
     {
-        Schema::table('fund_criteria', function (Blueprint $table) {
-            $table->unsignedMediumInteger('records_validity_days')->nullable()->after('value');
+        Schema::table('fund_configs', static function (Blueprint $table) {
+            $table->unsignedMediumInteger('record_validity_days')->nullable()->after('key');
         });
     }
 
@@ -29,8 +29,8 @@ class AddRecordsValidityDaysFieldToFundCriteriaTable extends Migration
      */
     public function down(): void
     {
-        Schema::table('fund_criteria', function (Blueprint $table) {
-            $table->dropColumn('records_validity_days');
+        Schema::table('fund_configs', static function (Blueprint $table) {
+            $table->dropColumn('record_validity_days');
         });
     }
 }

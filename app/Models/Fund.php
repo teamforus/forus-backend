@@ -22,7 +22,6 @@ use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\Forus\Notification\NotificationService;
-use App\Services\Forus\Record\Models\RecordValidation;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -74,11 +73,13 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
  * @property-read \App\Models\FundConfig|null $fund_config
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfigRecord[] $fund_config_records
+ * @property-read int|null $fund_config_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_limit_multipliers
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
@@ -118,8 +119,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $providers_allowed_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
  * @property-read int|null $providers_approved_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_declined_products
- * @property-read int|null $providers_declined_products_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
@@ -450,6 +449,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
     public function provider_organizations_approved(): BelongsToMany
     {
@@ -514,6 +514,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
     public function provider_organizations(): BelongsToMany
     {
@@ -525,6 +526,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
     public function employees(): HasManyThrough
     {
@@ -540,6 +542,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
     public function employees_validators(): HasManyThrough
     {
@@ -557,6 +560,7 @@ class Fund extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
     public function fund_config(): HasOne
     {
@@ -564,7 +568,17 @@ class Fund extends Model
     }
 
     /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function fund_config_records(): HasMany
+    {
+        return $this->hasMany(FundConfigRecord::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function fund_formulas(): HasMany
     {
@@ -653,10 +667,11 @@ class Fund extends Model
         $organization = $fund->organization;
         $recordRepo = resolve('forus.services.record');
         $trustedIdentities = $fund->validatorEmployees($criterion);
-        $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, []);
+        $daysTrusted = $this->getTrustedDays($record_type);
+        $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, null,false, $daysTrusted);
 
         $validRecordsOfType = collect($recordsOfType)->map(static function($record) use (
-            $trustedIdentities, $organization, $criterion
+            $trustedIdentities, $organization, $criterion, $record_type, $daysTrusted
         ) {
             $validations = collect($record['validations']);
             $validations = $validations->whereIn('identity_address', $trustedIdentities);
@@ -665,30 +680,38 @@ class Fund extends Model
                     ($validation['organization_id'] === $organization->id);
             });
 
-            if ($criterion) {
-                $validations = $validations->filter(static function($validation) use ($criterion) {
-                    $daysTrusted = $criterion->getTrustedDays();
-
-                    if ($prevalidation = Prevalidation::find($validation['prevalidation_id'])) {
-                        $validated_at = $prevalidation->validated_at;
-                    } else {
-                        $validated_at = RecordValidation::findOrFail($validation['id'])->created_at;
-                    }
-
-                    return $validated_at->clone()->startOfDay()->addDays($daysTrusted)->isFuture();
-                });
-            }
-
             return array_merge($record, [
                 'validations' => $validations->sortByDesc('created_at')->values()->toArray()
             ]);
         })->filter(static function($record) {
             return count($record['validations']) > 0;
         })->sortByDesc(static function($record) {
-            return $record['validations'][0]['created_at'];
+            return $record['validations'][0]['validation_date_timestamp'];
         });
 
-        return collect($validRecordsOfType)->first();
+        return $validRecordsOfType->first();
+    }
+
+    /**
+     * @param string $recordType
+     * @return int|null
+     */
+    public function getTrustedDays(string $recordType): ?int
+    {
+        /** @var FundConfigRecord $typeConfig */
+        $typeConfig = $this->fund_config_records->where('record_type', $recordType)->first();
+        $typeConfigValue = $typeConfig ? $typeConfig->record_validity_days : null;
+        $fundConfigValue = $this->fund_config ? $this->fund_config->record_validity_days : null;
+
+        if ($typeConfigValue === 0) {
+            return $typeConfigValue;
+        } else if ($typeConfigValue === null && $fundConfigValue === 0) {
+            return $fundConfigValue;
+        }
+
+        return ($typeConfigValue ?: false) ?:
+            ($fundConfigValue ?: false) ?:
+                ((int) config('forus.funds.record_validity_days')) ?: null;
     }
 
     /**
