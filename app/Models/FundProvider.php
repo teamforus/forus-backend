@@ -159,23 +159,21 @@ class FundProvider extends Model
         $last_activity_date = $last_transaction_date;
 
         foreach ($this->organization->employees as $employee) {
-            if ($employee->roles->pluck('key')->search('admin') !== false) {
-                $session = Session::where([
-                    'identity_address' => $employee->identity_address
-                ])->orderByDesc('last_activity_at')->first();
+            $session = Session::where([
+                'identity_address' => $employee->identity_address
+            ])->orderByDesc('last_activity_at')->first();
 
-                if (!$session) {
-                    continue;
-                }
-
-                $last_session_date = empty($last_session_date) ?
-                    $session->last_activity_at :
-                    $session->last_activity_at->max($last_session_date);
-
-                $last_activity_date = empty($last_transaction_date) ?
-                    $last_session_date :
-                    $last_session_date->max($last_transaction_date);
+            if (!$session) {
+                continue;
             }
+
+            $last_session_date = empty($last_session_date) ?
+                $session->last_activity_at :
+                $session->last_activity_at->max($last_session_date);
+
+            $last_activity_date = empty($last_transaction_date) ?
+                $last_session_date :
+                $last_session_date->max($last_transaction_date);
         }
 
         return $last_activity_date;
