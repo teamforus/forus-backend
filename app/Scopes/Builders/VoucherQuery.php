@@ -52,10 +52,12 @@ class VoucherQuery
      * @return Builder
      */
     public static function whereNotExpired(Builder $builder): Builder {
-        return $builder->where(
-            'expire_at', '>', now()->endOfDay()
-        )->whereDoesntHave('fund', static function(Builder $builder) {
-            $builder->where('end_date', '>', now()->endOfDay());
+        return $builder->where(static function(Builder $builder) {
+            $builder->where(
+                'expire_at', '>', now()->endOfDay()
+            )->whereDoesntHave('fund', static function(Builder $builder) {
+                $builder->where('end_date', '<', now()->endOfDay());
+            });
         });
     }
 }
