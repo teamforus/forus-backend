@@ -30,6 +30,7 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         $product = $this->product;
+        $no_price = $this->product->no_price;
         $currentExpire = $product->expire_at->format('Y-m-d');
         $minAmount = $product->countReserved() + $product->countSold();
 
@@ -39,7 +40,7 @@ class UpdateProductRequest extends FormRequest
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
             'no_price'              => 'boolean',
-            'no_price_type'         => 'required_if:no_price,true|in:free,discount',
+            'no_price_type'         => $no_price ? 'required:no_price|in:free,discount' : '',
             'no_price_discount'     => 'nullable|required_if:no_price_type,discount|numeric|min:0|max:100',
             'price'                 => $product->no_price ? [] : 'required_without:no_price|numeric|min:.2',
             'old_price'             => $product->no_price ? [] : [
