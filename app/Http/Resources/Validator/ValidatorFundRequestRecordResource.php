@@ -43,7 +43,7 @@ class ValidatorFundRequestRecordResource extends Resource
 
         return array_merge(array_only($this->resource->toArray(), array_merge([
             'id', 'state', 'record_type_key', 'fund_request_id',
-            'created_at', 'updated_at', 'employee_id',
+            'created_at', 'updated_at', 'employee_id', 'note',
         ], $is_visible ? [
             'value'
         ] : [])), array_merge($is_assigned ? [
