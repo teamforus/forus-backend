@@ -45,7 +45,7 @@ class VouchersController extends Controller
         // todo: remove fallback pagination 1000, when apps are ready
         return VoucherCollectionResource::collection(Voucher::whereIdentityAddress([
             'identity_address' => $request->auth_address()
-        ])->with(VoucherCollectionResource::load())->paginate(
+        ])->with(VoucherCollectionResource::load())->latest()->paginate(
             $request->input('per_page', 1000)
         ));
     }
