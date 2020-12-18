@@ -76,7 +76,7 @@ class ProductsController extends Controller
 
         /** @var Product $product */
         $product = $organization->products()->create(array_merge($request->only([
-            'name', 'description', 'price', 'old_price', 'product_category_id',
+            'name', 'description', 'price', /*'old_price',*/ 'product_category_id',
             'expire_at', 'no_price',
         ]), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
@@ -154,7 +154,7 @@ class ProductsController extends Controller
 
         $product->update(array_merge($request->only(array_merge([
             'name', 'description', 'sold_amount', 'product_category_id', 'expire_at'
-        ], $no_price ? ['no_price_type'] : ['price', 'old_price'])), [
+        ], $no_price ? ['no_price_type'] : ['price', /*'old_price'*/])), [
             'total_amount' => $product->unlimited_stock ? 0 : $total_amount,
             'no_price_discount' => $no_price_discount,
         ]));
