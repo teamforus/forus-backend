@@ -8,7 +8,9 @@ use App\Models\FundRequestRecord;
 use App\Models\Organization;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Database\Eloquent\Builder;
 
 class FundRequestPolicy
 {
@@ -79,14 +81,23 @@ class FundRequestPolicy
         if ($fund->fund_requests()->where([
             'identity_address' => $identity_address,
             'state' => FundRequest::STATE_PENDING,
-        ])->first()) {
+        ])->exists()) {
             return $this->deny('fund_request.pending_request_exists');
         }
 
-        if ($fund->fund_requests()->where([
+        if ($fund->fund_requests()->whereHas('fund', static function(
+            Builder $builder
+        ) use ($identity_address) {
+            $builder->whereHas('vouchers', static function(
+                Builder $builder
+            ) use ($identity_address) {
+                $builder->where(compact('identity_address'));
+                VoucherQuery::whereNotExpired($builder);
+            });
+        })->where([
             'identity_address' => $identity_address,
             'state' => FundRequest::STATE_APPROVED,
-        ])->first()) {
+        ])->exists()) {
             return $this->deny('fund_request.approved_request_exists');
         }
 
