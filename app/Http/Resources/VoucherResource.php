@@ -21,6 +21,7 @@ class VoucherResource extends Resource
     public static $load = [
         'parent',
         'tokens',
+        'last_transaction',
         'transactions.voucher.fund.logo.presets',
         'transactions.provider.logo.presets',
         'transactions.product.photo.presets',
@@ -37,6 +38,13 @@ class VoucherResource extends Resource
         'fund.provider_organizations_approved.offices.organization.logo.presets',
         'fund.logo.presets',
         'fund.organization.logo.presets',
+    ];
+
+    /**
+     * @var array
+     */
+    public static $loadCount = [
+        'transactions',
     ];
 
     /**
@@ -69,6 +77,11 @@ class VoucherResource extends Resource
             'expire_at_locale' => format_date_locale($voucher->expire_at),
             'last_active_day' => $voucher->last_active_day->format('Y-m-d'),
             'last_active_day_locale' => format_date_locale($voucher->last_active_day),
+            'last_transaction_at' => $voucher->last_transaction ?
+                $voucher->last_transaction->created_at->format('Y-m-d') : null,
+            'last_transaction_at_locale' => $voucher->last_transaction ? format_date_locale(
+                $voucher->last_transaction->created_at
+            ) : null,
             'expired' => $voucher->expired,
             'created_at_locale' => $voucher->created_at_string_locale,
             'address' => $voucher->token_with_confirmation->address,
@@ -95,7 +108,9 @@ class VoucherResource extends Resource
         if ($voucher->type === 'regular') {
             $amount = $voucher->amount_available_cached;
             $productResource = null;
+            $used = $amount === 0;
         } elseif ($voucher->type === 'product') {
+            $used = $voucher->transactions_count > 0;
             $amount = $voucher->amount;
             $productResource = array_merge($voucher->product->only([
                 'id', 'name', 'description', 'description_html', 'price', 'old_price',
@@ -114,6 +129,7 @@ class VoucherResource extends Resource
         }
 
         return [
+            'used' => $used,
             'amount' => currency_format($amount),
             'offices' => $this->getOffices($voucher),
             'product' => $productResource,

@@ -39,6 +39,7 @@ class UpdateProductRequest extends FormRequest
         return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
+            'no_price'              => 'boolean',
             'no_price_type'         => $no_price ? 'required:no_price|in:free,discount' : '',
             'no_price_discount'     => 'nullable|required_if:no_price_type,discount|numeric|min:0|max:100',
             'price'                 => $product->no_price ? [] : 'required_without:no_price|numeric|min:.2',
