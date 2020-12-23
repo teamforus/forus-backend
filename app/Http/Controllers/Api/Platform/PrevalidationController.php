@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Exports\PrevalidationsExport;
-use App\Http\Requests\Api\Platform\Prevalidations\RedeemPrevalidationRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\SearchPrevalidationsRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\StorePrevalidationsRequest;
 use App\Http\Requests\Api\Platform\Prevalidations\UploadPrevalidationsRequest;
 use App\Http\Resources\PrevalidationResource;
 use App\Models\Fund;
 use App\Models\Prevalidation;
-use App\Traits\ThrottleWithMeta;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -21,20 +20,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class PrevalidationController extends Controller
 {
-    use ThrottleWithMeta;
-
-    /**
-     * RecordCategoryController constructor.
-     */
-    public function __construct() {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
-    }
-
     /**
      * @param StorePrevalidationsRequest $request
      * @return PrevalidationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function store(
         StorePrevalidationsRequest $request
@@ -54,6 +44,7 @@ class PrevalidationController extends Controller
      * @param UploadPrevalidationsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function storeCollection(
         UploadPrevalidationsRequest $request
@@ -77,6 +68,7 @@ class PrevalidationController extends Controller
      * @param UploadPrevalidationsRequest $request
      * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function collectionHash(
         UploadPrevalidationsRequest $request
@@ -107,6 +99,7 @@ class PrevalidationController extends Controller
      * @param SearchPrevalidationsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function index(
         SearchPrevalidationsRequest $request
@@ -124,6 +117,7 @@ class PrevalidationController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer
+     * @noinspection PhpUnused
      */
     public function export(
         SearchPrevalidationsRequest $request
@@ -137,28 +131,20 @@ class PrevalidationController extends Controller
     }
 
     /**
-     * Redeem prevalidation.
-     *
-     * @param RedeemPrevalidationRequest $request
-     * @param Prevalidation|null $prevalidation
-     * @return PrevalidationResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * Delete prevalidation
+     * @param Prevalidation $prevalidation
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
+     * @noinspection PhpUnused
      */
-    public function redeem(
-        RedeemPrevalidationRequest $request,
-        Prevalidation $prevalidation = null
-    ): PrevalidationResource {
-        $this->throttleWithKey('to_many_attempts', $request, 'prevalidations');
+    public function destroy(
+        Prevalidation $prevalidation
+    ): JsonResponse {
+        $this->authorize('destroy', $prevalidation);
 
-        if (!$prevalidation || !$prevalidation->exists()) {
-            $this->responseWithThrottleMeta('not_found', $request, 'prevalidations', 404);
-        }
+        $prevalidation->delete();
 
-        $this->authorize('redeem', $prevalidation);
-        $this->clearLoginAttemptsWithKey($request, 'prevalidations');
-
-        $prevalidation->assignToIdentity($request->auth_address());
-
-        return new PrevalidationResource($prevalidation);
+        return response()->json([]);
     }
 }

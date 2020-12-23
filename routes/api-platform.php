@@ -337,6 +337,8 @@ $router->group(['middleware' => [
         ]);
     });
 
+    $router->post('funds/redeem', "Api\Platform\FundsController@redeem");
+
     $router->resource(
         'vouchers/{voucher_token_address}/physical-cards',
         "Api\Platform\Vouchers\PhysicalCardsController", [
@@ -359,15 +361,8 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    $router->post(
-        'vouchers/{voucher_token_address}/send-email',
-        "Api\Platform\VouchersController@sendEmail"
-    );
-
-    $router->post(
-        'vouchers/{voucher_token_address}/share',
-        "Api\Platform\VouchersController@shareVoucher"
-    );
+    $router->post('vouchers/{voucher_token_address}/send-email', "Api\Platform\VouchersController@sendEmail");
+    $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     $router->resource(
@@ -767,6 +762,16 @@ $router->group(['middleware' => [
         "Api\Platform\Organizations\Sponsor\VouchersController@assign"
     );
 
+    $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher}/activate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@activate"
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher}/activation-code',
+        "Api\Platform\Organizations\Sponsor\VouchersController@makeActivationCode"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/vouchers',
         "Api\Platform\Organizations\Sponsor\VouchersController", [
@@ -777,12 +782,6 @@ $router->group(['middleware' => [
                 'vouchers' => 'voucher_id',
             ]
         ]
-    );
-
-    // Prevalidations endpoints
-    $router->post(
-        'prevalidations/{prevalidation_uid}/redeem',
-        'Api\Platform\PrevalidationController@redeem'
     );
 
     $router->get(
@@ -804,7 +803,7 @@ $router->group(['middleware' => [
         'prevalidations',
         'Api\Platform\PrevalidationController', [
             'only' => [
-                'index', 'store'
+                'index', 'store', 'destroy',
             ],
             'parameters' => [
                 'prevalidations' => 'prevalidation_uid'

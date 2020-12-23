@@ -5,21 +5,12 @@ namespace App\Policies;
 use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\Organization;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class FundPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
 
     /**
      * @param $identity_address
@@ -97,10 +88,8 @@ class FundPolicy
      * @param Fund $fund
      * @return bool|\Illuminate\Auth\Access\Response
      */
-    public function apply(
-        $identity_address,
-        Fund $fund
-    ) {
+    public function apply($identity_address, Fund $fund)
+    {
         if (empty($identity_address)) {
             return false;
         }
@@ -114,8 +103,8 @@ class FundPolicy
         }
 
         // The same identity can't apply twice to the same fund
-        if ($fund->vouchers()->where(
-            'identity_address', $identity_address
+        if (VoucherQuery::whereNotExpired($fund->vouchers()->getQuery())->where(
+            compact('identity_address')
         )->exists()) {
             return $this->deny(trans('fund.already_received'));
         }
@@ -123,19 +112,12 @@ class FundPolicy
         // Check criteria
         $invalidCriteria = $fund->criteria->filter(static function(
             FundCriterion $criterion
-        ) use (
-            $identity_address, $fund
-        ) {
-            $record = Fund::getTrustedRecordOfType(
+        ) use ($identity_address, $fund) {
+            return collect([$fund->getTrustedRecordOfType(
                 $identity_address,
                 $criterion->record_type_key,
-                $fund,
                 $criterion
-            );
-
-            return (collect([$record])->where(
-                'value', $criterion->operator, $criterion->value
-                )->count() === 0);
+            )])->where('value', $criterion->operator, $criterion->value )->count() === 0;
         });
 
         if ($invalidCriteria->count() > 0) {

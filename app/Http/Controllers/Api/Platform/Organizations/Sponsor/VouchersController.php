@@ -1,7 +1,9 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
@@ -14,8 +16,6 @@ use App\Models\Organization;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -28,22 +28,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class VouchersController extends Controller
 {
-    protected $identityRepo;
-    protected $recordRepo;
-
-    /**
-     * VouchersController constructor.
-     * @param IIdentityRepo $identityRepo
-     * @param IRecordRepo $recordRepo
-     */
-    public function __construct(
-        IIdentityRepo $identityRepo,
-        IRecordRepo $recordRepo
-    ) {
-        $this->identityRepo = $identityRepo;
-        $this->recordRepo = $recordRepo;
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -51,6 +35,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function index(
         IndexVouchersRequest $request,
@@ -71,6 +56,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @noinspection PhpUnused
      */
     public function store(
         StoreVoucherRequest $request,
@@ -81,15 +67,15 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeSponsor', [Voucher::class, $organization, $fund]);
 
-        $note       = $request->input('note', null);
+        $note       = $request->input('note');
         $email      = $request->input('email', false);
         $amount     = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
-        $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
+        $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
         $expire_at  = $request->input('expire_at', false);
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
 
-        if ($product_id && $fund->isTypeBudget()) {
+        if ($product_id) {
             $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
         } else {
             $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
@@ -101,6 +87,18 @@ class VouchersController extends Controller
 
         if ($bsn = $request->input('bsn', false)) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
+        }
+
+        if (!$voucher->is_granted) {
+            if (!$request->input('activate')) {
+                $voucher->update([
+                    'state' => $voucher::STATE_PENDING,
+                ]);
+            }
+
+            if ($request->input('make_activation_code')) {
+                $voucher->makeActivationCode();
+            }
         }
 
         return new SponsorVoucherResource($voucher->updateModel([
@@ -115,6 +113,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return SponsorVoucherResource|AnonymousResourceCollection
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function storeBatch(
         StoreBatchVoucherRequest $request,
@@ -131,19 +130,31 @@ class VouchersController extends Controller
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
-            $identity   = $email ? $this->identityRepo->getOrMakeByEmail($email) : null;
+            $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
             $expire_at  = $voucher['expire_at'] ?? false;
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
 
-            if (!$product_id || !$fund->isTypeBudget()) {
+            if (!$product_id) {
                 $voucherModel = $fund->makeVoucher($identity, $amount, $expire_at, $note);
             } else {
                 $voucherModel = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
             }
 
             if ($bsn = ($voucher['bsn'] ?? false)) {
-                $voucherModel->setBsnRelation($bsn)->assignIfExists();
+                $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
+            }
+
+            if (!$voucherModel->is_granted) {
+                if (!($voucher['activate'] ?? false)) {
+                    $voucherModel->update([
+                        'state' => $voucherModel::STATE_PENDING,
+                    ]);
+                }
+
+                if ($voucher['make_activation_code'] ?? false) {
+                    $voucherModel->makeActivationCode();
+                }
             }
 
             return $voucherModel->updateModel([
@@ -157,6 +168,7 @@ class VouchersController extends Controller
      *
      * @param StoreVoucherRequest $request
      * @param Organization $organization
+     * @noinspection PhpUnused
      */
     public function storeValidate(
         StoreVoucherRequest $request,
@@ -168,6 +180,7 @@ class VouchersController extends Controller
      *
      * @param StoreBatchVoucherRequest $request
      * @param Organization $organization
+     * @noinspection PhpUnused
      */
     public function storeBatchValidate(
         StoreBatchVoucherRequest $request,
@@ -181,6 +194,7 @@ class VouchersController extends Controller
      * @param Voucher $voucher
      * @return SponsorVoucherResource
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function show(
         Organization $organization,
@@ -198,6 +212,7 @@ class VouchersController extends Controller
      * @param Voucher $voucher
      * @return SponsorVoucherResource
      * @throws AuthorizationException|Exception
+     * @noinspection PhpUnused
      */
     public function assign(
         AssignVoucherRequest $request,
@@ -211,10 +226,54 @@ class VouchersController extends Controller
         $email = $request->post('email');
 
         if ($email) {
-            $voucher->assignToIdentity($this->identityRepo->getOrMakeByEmail($email));
+            $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
         } else if ($bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param ActivateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException|Exception
+     * @noinspection PhpUnused
+     */
+    public function activate(
+        ActivateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('activateSponsor', [$voucher, $organization]);
+
+        $request->authorize() ? $voucher->update([
+            'state' => $voucher::STATE_ACTIVE,
+        ]) : null;
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param ActivationCodeVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException|Exception
+     * @noinspection PhpUnused
+     */
+    public function makeActivationCode(
+        ActivationCodeVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('makeActivationCodeSponsor', [$voucher, $organization]);
+
+        $request->authorize() ? $voucher->makeActivationCode() : null;
 
         return new SponsorVoucherResource($voucher);
     }
@@ -226,6 +285,7 @@ class VouchersController extends Controller
      * @param Voucher $voucher
      * @return SponsorVoucherResource
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function sendByEmail(
         SendVoucherRequest $request,
@@ -245,6 +305,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return BinaryFileResponse
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function export(
         IndexVouchersRequest $request,
@@ -273,6 +334,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return array
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function exportData(
         IndexVouchersRequest $request,

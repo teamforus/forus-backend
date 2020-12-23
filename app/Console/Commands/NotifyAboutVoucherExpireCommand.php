@@ -19,7 +19,7 @@ class NotifyAboutVoucherExpireCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Notify users about voucher expire';
+    protected $description = 'Send vouchers expiration warning email 3 and 6 weeks before expiration.';
 
     /**
      * Execute the console command.

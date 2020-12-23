@@ -3,7 +3,6 @@
 
 namespace App\Scopes\Builders;
 
-
 use Illuminate\Database\Eloquent\Builder;
 
 class VoucherQuery
@@ -45,6 +44,20 @@ class VoucherQuery
             });
 
             ProductQuery::approvedForFundsFilter($builder, $fund_id);
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereNotExpired(Builder $builder): Builder {
+        return $builder->where(static function(Builder $builder) {
+            $builder->where(
+                'expire_at', '>', now()->endOfDay()
+            )->whereDoesntHave('fund', static function(Builder $builder) {
+                $builder->where('end_date', '<', now()->endOfDay());
+            });
         });
     }
 }

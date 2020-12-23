@@ -191,14 +191,16 @@ interface IRecordRepo {
      * @param null $type
      * @param null $categoryId
      * @param bool $deleted
-     * @return mixed
+     * @param ?int $trustedDays
+     * @return array
      */
     public function recordsList(
         string $identityAddress,
         $type = null,
         $categoryId = null,
-        bool $deleted = false
-    );
+        bool $deleted = false,
+        ?int $trustedDays = null
+    ): ?array;
 
     /**
      * Get identity record
@@ -296,12 +298,14 @@ interface IRecordRepo {
      * @param string $identityAddress
      * @param string $validationUuid
      * @param int|null $organization_id
+     * @param int|null $prevalidation_id
      * @return bool
      */
     public function approveValidationRequest(
         string $identityAddress,
         string $validationUuid,
-        int $organization_id = null
+        int $organization_id = null,
+        int $prevalidation_id = null
     ): bool;
 
     /**

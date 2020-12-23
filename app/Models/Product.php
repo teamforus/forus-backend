@@ -111,7 +111,7 @@ class Product extends Model
      */
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
-        'price', 'old_price', 'total_amount', 'expire_at', 'sold_out',
+        'price', /*'old_price',*/ 'total_amount', 'expire_at', 'sold_out',
         'unlimited_stock', 'no_price', 'no_price_type', 'no_price_discount',
     ];
 
@@ -486,5 +486,13 @@ class Product extends Model
                 $builder->where('type', '=', Fund::TYPE_SUBSIDIES);
             });
         })->delete();
+    }
+
+    /**
+     * @return null
+     * @noinspection PhpUnused
+     */
+    public function getOldPriceAttribute() {
+       return null;
     }
 }

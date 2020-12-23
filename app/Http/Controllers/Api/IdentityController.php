@@ -9,14 +9,10 @@ use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
-use App\Services\Forus\Notification\NotificationService;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use App\Traits\ThrottleLoginAttempts;
-use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * Class IdentityController
@@ -24,42 +20,18 @@ use Illuminate\Http\Request;
  */
 class IdentityController extends Controller
 {
-    use ThrottleWithMeta;
-
-    protected $identityRepo;
-    protected $mailService;
-    protected $recordRepo;
-
-    /**
-     * IdentityController constructor.
-     *
-     * @param IIdentityRepo $identityRepo
-     * @param IRecordRepo $recordRepo
-     * @param NotificationService $notificationService
-     */
-    public function __construct(
-        IIdentityRepo $identityRepo,
-        IRecordRepo $recordRepo,
-        NotificationService $notificationService
-    ) {
-        $this->maxAttempts = env('AUTH_THROTTLE_ATTEMPTS', 10);
-        $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
-
-        $this->mailService = $notificationService;
-        $this->identityRepo = $identityRepo;
-        $this->recordRepo = $recordRepo;
-    }
-
     /**
      * Get identity details
      *
+     * @param BaseFormRequest $request
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
-    public function getPublic(): JsonResponse
+    public function getPublic(BaseFormRequest $request): JsonResponse
     {
-        $address = auth_address();
-        $email = $this->identityRepo->getPrimaryEmail($address);
-        $bsn = !empty($this->recordRepo->bsnByAddress($address));
+        $address = $request->auth_address();
+        $email = $request->identity_repo()->getPrimaryEmail($address);
+        $bsn = !empty($request->records_repo()->bsnByAddress($address));
 
         return response()->json(compact('address', 'email', 'bsn'));
     }
@@ -70,12 +42,11 @@ class IdentityController extends Controller
      * @param IdentityStoreRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
+     * @noinspection PhpUnused
      */
     public function store(
         IdentityStoreRequest $request
     ): JsonResponse {
-        $this->throttleWithKey('to_many_attempts', $request, 'auth');
-
         // client type, key and primary email
         $clientKey = implementation_key();
         $clientType = client_type();
@@ -88,8 +59,8 @@ class IdentityController extends Controller
         })->toArray();
 
         // make identity and exchange_token
-        $identityAddress = $this->identityRepo->makeByEmail($primaryEmail, $records);
-        $identityProxy = $this->identityRepo->makeIdentityPoxy($identityAddress);
+        $identityAddress = $request->identity_repo()->makeByEmail($primaryEmail, $records);
+        $identityProxy = $request->identity_repo()->makeIdentityPoxy($identityAddress);
         $exchangeToken = $identityProxy['exchange_token'];
         $isMobile = in_array($clientType, config('forus.clients.mobile'), true);
 
@@ -109,7 +80,7 @@ class IdentityController extends Controller
         ));
 
         // send confirmation email
-        $this->mailService->sendEmailConfirmationLink(
+        $request->notification_repo()->sendEmailConfirmationLink(
             $primaryEmail,
             $clientType,
             Implementation::emailFrom(),
@@ -123,16 +94,14 @@ class IdentityController extends Controller
      * Validate email for registration, format and if it's already in the system
      *
      * @param IdentityStoreValidateEmailRequest $request
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \Exception
+     * @return JsonResponse
+     * @noinspection PhpUnused
      */
     public function storeValidateEmail(
         IdentityStoreValidateEmailRequest $request
     ): JsonResponse {
-        $this->throttleWithKey('to_many_attempts', $request, 'auth');
-
         $email = (string) $request->input('email', '');
-        $used = !$this->identityRepo->isEmailAvailable($email);
+        $used = !$request->identity_repo()->isEmailAvailable($email);
 
         return response()->json([
             'email' => [
@@ -142,7 +111,7 @@ class IdentityController extends Controller
                     'email' => 'required|email'
                 ])->passes(),
             ]
-        ], 200);
+        ]);
     }
 
     /**
@@ -153,6 +122,7 @@ class IdentityController extends Controller
      * @param string $exchangeToken
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
      * @throws \Exception
+     * @noinspection PhpUnused
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
@@ -209,35 +179,36 @@ class IdentityController extends Controller
     /**
      * Exchange email confirmation token for access_token
      *
-     * @param $exchangeToken
+     * @param BaseFormRequest $request
+     * @param string $exchangeToken
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
     public function emailConfirmationExchange(
+        BaseFormRequest $request,
         string $exchangeToken
     ): JsonResponse {
         return response()->json([
-            'access_token' => $this->identityRepo->exchangeEmailConfirmationToken($exchangeToken)
-        ], 200);
+            'access_token' => $request->identity_repo()->exchangeEmailConfirmationToken($exchangeToken)
+        ]);
     }
 
     /**
      * Make new email authorization request
      *
      * @param IdentityAuthorizationEmailTokenRequest $request
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \App\Exceptions\AuthorizationJsonException
+     * @return JsonResponse
+     * @noinspection PhpUnused
      */
     public function proxyAuthorizationEmailToken(
         IdentityAuthorizationEmailTokenRequest $request
     ): JsonResponse {
-        $this->throttleWithKey('to_many_attempts', $request, 'auth');
-
         $email = $request->input('email', $request->input('primary_email'));
         $source = sprintf('%s_%s', implementation_key(), client_type());
         $isMobile = in_array(client_type(), config('forus.clients.mobile'), true);
 
-        $identityId = $this->recordRepo->identityAddressByEmail($email);
-        $proxy = $this->identityRepo->makeAuthorizationEmailProxy($identityId);
+        $identityId = $request->records_repo()->identityAddressByEmail($email);
+        $proxy = $request->identity_repo()->makeAuthorizationEmailProxy($identityId);
 
         $redirect_link = url(sprintf(
             '/api/v1/identity/proxy/email/redirect/%s?%s',
@@ -251,7 +222,7 @@ class IdentityController extends Controller
             ]))
         ));
 
-        $this->mailService->loginViaEmail(
+        $request->notification_repo()->loginViaEmail(
             $email,
             Implementation::emailFrom(),
             $redirect_link,
@@ -268,6 +239,7 @@ class IdentityController extends Controller
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $emailToken
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @noinspection PhpUnused
      */
     public function emailTokenRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
@@ -302,7 +274,7 @@ class IdentityController extends Controller
             $sourceUrl . "identity-restore?%s",
             http_build_query(array_filter([
                 'token' => $emailToken,
-                'target' => $request->input('target', null)
+                'target' => $request->input('target')
             ], static function($var) {
                 return !empty($var);
             }))
@@ -320,24 +292,31 @@ class IdentityController extends Controller
     /**
      * Exchange email sign in token for access_token
      *
+     * @param BaseFormRequest $request
      * @param string $emailToken
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
     public function emailTokenExchange(
+        BaseFormRequest $request,
         string $emailToken
     ): JsonResponse {
         return response()->json([
-            'access_token' => $this->identityRepo->activateAuthorizationEmailProxy($emailToken)
-        ], 200);
+            'access_token' => $request->identity_repo()->activateAuthorizationEmailProxy($emailToken)
+        ]);
     }
 
     /**
      * Make new pin code authorization request
      *
+     * @param BaseFormRequest $request
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
-    public function proxyAuthorizationCode(): JsonResponse {
-        $proxy = $this->identityRepo->makeAuthorizationCodeProxy();
+    public function proxyAuthorizationCode(
+        BaseFormRequest $request
+    ): JsonResponse {
+        $proxy = $request->identity_repo()->makeAuthorizationCodeProxy();
 
         return response()->json([
             'access_token' => $proxy['access_token'],
@@ -350,25 +329,30 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizeCodeRequest $request
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
     public function proxyAuthorizeCode(
         IdentityAuthorizeCodeRequest $request
     ): JsonResponse {
-        $this->identityRepo->activateAuthorizationCodeProxy(
+        $request->identity_repo()->activateAuthorizationCodeProxy(
             $request->auth_address(),
             $request->post('auth_code', '')
         );
 
-        return response()->json(null, 200);
+        return response()->json(null);
     }
 
     /**
      * Make new auth token (qr-code) authorization request
      *
+     * @param BaseFormRequest $request
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
-    public function proxyAuthorizationToken(): JsonResponse {
-        $proxy = $this->identityRepo->makeAuthorizationTokenProxy();
+    public function proxyAuthorizationToken(
+        BaseFormRequest $request
+    ): JsonResponse {
+        $proxy = $request->identity_repo()->makeAuthorizationTokenProxy();
 
         return response()->json([
             'access_token' => $proxy['access_token'],
@@ -381,29 +365,37 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizeTokenRequest $request
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
     public function proxyAuthorizeToken(
         IdentityAuthorizeTokenRequest $request
     ): JsonResponse {
-        $this->identityRepo->activateAuthorizationTokenProxy(
+        $request->identity_repo()->activateAuthorizationTokenProxy(
             $request->auth_address(),
             $request->post('auth_token', '')
         );
 
-        return response()->json(null, 200);
+        return response()->json(null);
     }
 
     /**
      * Create and activate a short living token for current user
      *
+     * @param BaseFormRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
+     * @noinspection PhpUnused
      */
-    public function proxyAuthorizationShortToken(): JsonResponse {
-        $proxy = $this->identityRepo->makeAuthorizationShortTokenProxy();
+    public function proxyAuthorizationShortToken(
+        BaseFormRequest $request
+    ): JsonResponse {
+        $proxy = $request->identity_repo()->makeAuthorizationShortTokenProxy();
         $exchange_token = $proxy['exchange_token'];
 
-        $this->identityRepo->activateAuthorizationShortTokenProxy(auth_address(), $exchange_token);
+        $request->identity_repo()->activateAuthorizationShortTokenProxy(
+            $request->auth_address(),
+            $exchange_token
+        );
 
         return response()->json(compact('exchange_token'), 201);
     }
@@ -411,29 +403,35 @@ class IdentityController extends Controller
     /**
      * Exchange `short_token` for `access_token`
      *
+     * @param BaseFormRequest $request
      * @param string $shortToken
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
     public function proxyExchangeAuthorizationShortToken(
+        BaseFormRequest $request,
         string $shortToken
     ): JsonResponse {
+        $token = $request->identity_repo()->exchangeAuthorizationShortTokenProxy($shortToken);
+
         return response()->json([
-            'access_token' => $this->identityRepo->exchangeAuthorizationShortTokenProxy($shortToken)
-        ], 200);
+            'access_token' => $token
+        ]);
     }
 
     /**
      * Check access_token state
      *
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return \Illuminate\Http\JsonResponse
+     * @noinspection PhpUnused
      */
-    public function checkToken(Request $request): JsonResponse
+    public function checkToken(BaseFormRequest $request): JsonResponse
     {
-        $accessToken = $request->header('Access-Token', null);
-        $proxyIdentityId = $this->identityRepo->proxyIdByAccessToken($accessToken);
-        $identityAddress = $this->identityRepo->identityAddressByProxyId($proxyIdentityId);
-        $proxyIdentityState = $this->identityRepo->proxyStateById($proxyIdentityId);
+        $accessToken = $request->header('Access-Token');
+        $proxyIdentityId = $request->identity_repo()->proxyIdByAccessToken($accessToken);
+        $identityAddress = $request->identity_repo()->identityAddressByProxyId($proxyIdentityId);
+        $proxyIdentityState = $request->identity_repo()->proxyStateById($proxyIdentityId);
         $message = 'active';
 
         if ($proxyIdentityState === 'pending') {
@@ -442,22 +440,23 @@ class IdentityController extends Controller
             $message = 'invalid';
         }
 
-        return response()->json(compact('message'), 200);
+        return response()->json(compact('message'));
     }
 
     /**
      * Destroy an access token
      *
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return JsonResponse
+     * @noinspection PhpUnused
      */
     public function proxyDestroy(
-        Request $request
+        BaseFormRequest $request
     ): JsonResponse {
         $proxyDestroy = $request->get('proxyIdentity');
 
-        $this->identityRepo->destroyProxyIdentity($proxyDestroy);
+        $request->identity_repo()->destroyProxyIdentity($proxyDestroy);
 
-        return response()->json(null, 200);
+        return response()->json(null);
     }
 }
