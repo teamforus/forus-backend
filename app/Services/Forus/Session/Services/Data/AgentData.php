@@ -15,7 +15,8 @@ class AgentData extends Parser
      * @param string $user_agent
      * @return AgentData
      */
-    public static function parse(string $user_agent) {
+    public static function parse(string $user_agent): AgentData
+    {
         return new self($user_agent);
     }
 
@@ -25,16 +26,16 @@ class AgentData extends Parser
      * @param  string $s The string that will be prefixed
      * @return string
      */
-    private function a($s)
+    private function a($s): string
     {
-        return 'een ';
         // return (preg_match("/^[aeiou]/i", $s) ? 'an ' : 'a ') . $s;
+        return 'een ';
     }
 
     /**
      * @return string
      */
-    public function toString()
+    public function toString(): string
     {
         try {
             $prefix = $this->camouflage ? 'een onbekende imititatie browser van ' : '';

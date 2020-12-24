@@ -102,6 +102,18 @@ class VouchersController extends Controller
     }
 
     /**
+     * Validate store a newly created resource in storage.
+     *
+     * @param StoreVoucherRequest $request
+     * @param Organization $organization
+     * @noinspection PhpUnused
+     */
+    public function storeValidate(
+        StoreVoucherRequest $request,
+        Organization $organization
+    ): void {}
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param StoreBatchVoucherRequest $request

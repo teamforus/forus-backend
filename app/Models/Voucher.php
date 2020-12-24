@@ -7,6 +7,7 @@ use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -509,21 +510,8 @@ class Voucher extends Model
         Organization $organization,
         Fund $fund = null
     ): Builder {
-        $query = self::search($request);
-        $q = $request->input('q', false);
-        $type = $request->input('type');
-        $source = $request->input('source', 'employee');
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'asc');
+        $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
         $unassignedOnly = $request->input('unassigned');
-
-        $query->where(static function(Builder $builder) {
-            $builder->whereNotNull('employee_id');
-            $builder->orWhere(static function(Builder $builder) {
-                $builder->whereNull('employee_id');
-                $builder->whereNull('product_id');
-            });
-        });
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -543,38 +531,37 @@ class Voucher extends Model
             $query->whereNotNull('identity_address');
         }
 
-        switch ($type) {
+        switch ($request->input('type')) {
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
         }
 
-        switch ($source) {
+        switch ($request->input('source', 'employee')) {
             case 'all': break;
             case 'user': $query->whereNull('employee_id'); break;
             case 'employee': $query->whereNotNull('employee_id'); break;
             default: abort(403);
         }
 
-        if ($q) {
-            $query->where(static function (Builder $query) use ($q) {
-                $query->where('note', 'LIKE', "%{$q}%");
-                $query->orWhere('activation_code', 'LIKE', "%{$q}%");
+        if ($request->has('email') && $email = $request->input('email')) {
+            $query->where('identity_address', identity_repo()->getAddress($email) ?: '_');
+        }
 
-                if ($email_identities = identity_repo()->identityAddressesByEmailSearch($q)) {
-                    $query->orWhereIn('identity_address', $email_identities);
-                }
-
-                if ($bsn_identities = record_repo()->identityAddressByBsnSearch($q)) {
-                    $query->orWhereIn('identity_address', $bsn_identities);
-                }
-
-                $query->orWhereHas('voucher_relation', function (Builder $builder) use ($q) {
-                    return $builder->where('bsn', 'LIKE', "%{$q}%");
-                });
+        if ($request->has('bsn') && $bsn = $request->input('bsn')) {
+            $query->where('identity_address', record_repo()->identityAddressByBsn($bsn) ?: '-');
+            $query->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
+                return $builder->where(compact('bsn'));
             });
         }
 
-        return $query->orderBy($sortBy, $sortOrder);
+        if ($q = $request->input('q')) {
+            $query = VoucherQuery::whereSearchSponsorQuery($query, $q);
+        }
+
+        return $query->orderBy(
+            $request->input('sort_by', 'created_at'),
+            $request->input('sort_order', 'asc')
+        );
     }
 
     /**

@@ -46,8 +46,8 @@ class StoreVoucherRequest extends BaseFormRequest
                 'required',
                 Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
             ],
-            'email'     => 'nullable|email:strict,dns',
-            'bsn'       => 'nullable|digits:9',
+            'email'     => 'nullable|required_if:assign_by_type,email|email:strict,dns',
+            'bsn'       => 'nullable|required_if:assign_by_type,bsn|digits:9',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
                 $fund && $fund->isTypeBudget() ? 'required_without:product_id' : 'nullable',
@@ -68,6 +68,14 @@ class StoreVoucherRequest extends BaseFormRequest
             'activate'              => 'boolean',
             'activation_code'       => 'boolean',
             'activation_code_uid'   => 'nullable|string|max:20',
+            'assign_by_type'        => 'required|in:email,bsn,activation_code_uid',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'assign_by_type' => 'methode',
         ];
     }
 
