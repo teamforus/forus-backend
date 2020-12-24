@@ -93,20 +93,34 @@ class FundsController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'prevalidations');
 
         $code = $request->input('code');
-        $voucher = Voucher::findByCode($code);
         $prevalidation = Prevalidation::findByCode($code);
 
-        if (!$voucher && !$prevalidation) {
+        $vouchersAvailable = Voucher::whereNull('identity_address')->where([
+            'activation_code' => $code,
+        ])->get();
+
+        $vouchersUsed = Voucher::whereNotNull('identity_address')->where([
+            'activation_code' => $code,
+        ])->get();
+
+        if ($vouchersAvailable->isEmpty() && !$vouchersUsed->isEmpty() && !$prevalidation) {
             $this->responseWithThrottleMeta('not_found', $request, 'prevalidations', 404);
         }
 
-        if (($voucher && $voucher->is_granted) || ($prevalidation && $prevalidation->is_used)) {
+        if (($vouchersAvailable->isEmpty() && $vouchersUsed->isNotEmpty()) ||
+            ($prevalidation && $prevalidation->is_used)) {
             $this->responseWithThrottleMeta('used', $request, 'prevalidations', 403);
         }
 
-        if ($voucher) {
-            $this->authorize('redeem', $voucher);
-            $voucher->assignToIdentity(auth_address());
+        if ($vouchersAvailable->isNotEmpty()) {
+            // check permissions of all voucher before assigning
+            foreach ($vouchersAvailable as $voucher) {
+                $this->authorize('redeem', $voucher);
+            }
+
+            foreach ($vouchersAvailable as $voucher) {
+                $voucher->assignToIdentity(auth_address());
+            }
         }
 
         if ($prevalidation) {
@@ -118,7 +132,7 @@ class FundsController extends Controller
 
         return response()->json([
             'prevalidation' => $prevalidation ? new PrevalidationResource($prevalidation) : null,
-            'voucher' => $voucher ? new VoucherResource($voucher) : null,
+            'vouchers' => VoucherResource::collection($vouchersAvailable),
         ]);
     }
 

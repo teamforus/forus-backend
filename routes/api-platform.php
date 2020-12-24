@@ -728,11 +728,6 @@ $router->group(['middleware' => [
     );
 
     $router->post(
-        'organizations/{organization}/sponsor/vouchers/validate',
-        "Api\Platform\Organizations\Sponsor\VouchersController@storeValidate"
-    );
-
-    $router->post(
         'organizations/{organization}/sponsor/vouchers/batch',
         "Api\Platform\Organizations\Sponsor\VouchersController@storeBatch"
     );

@@ -13,7 +13,6 @@ use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
-use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
@@ -81,10 +80,6 @@ class VouchersController extends Controller
             $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
         }
 
-        if ($activation_code = $request->input('activation_code', false)) {
-            Prevalidation::deactivateByUid($activation_code);
-        }
-
         if ($bsn = $request->input('bsn', false)) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
@@ -96,8 +91,8 @@ class VouchersController extends Controller
                 ]);
             }
 
-            if ($request->input('make_activation_code')) {
-                $voucher->makeActivationCode();
+            if ($request->input('activation_code')) {
+                $voucher->makeActivationCode($request->input('activation_code_uid'));
             }
         }
 
@@ -152,8 +147,8 @@ class VouchersController extends Controller
                     ]);
                 }
 
-                if ($voucher['make_activation_code'] ?? false) {
-                    $voucherModel->makeActivationCode();
+                if ($voucher['activation_code'] ?? false) {
+                    $voucherModel->makeActivationCode($voucher['activation_code_uid'] ?? null);
                 }
             }
 
@@ -162,18 +157,6 @@ class VouchersController extends Controller
             ]);
         }));
     }
-
-    /**
-     * Validate store a newly created resource in storage.
-     *
-     * @param StoreVoucherRequest $request
-     * @param Organization $organization
-     * @noinspection PhpUnused
-     */
-    public function storeValidate(
-        StoreVoucherRequest $request,
-        Organization $organization
-    ): void {}
 
     /**
      * Validate store a newly created resource in storage.
@@ -273,7 +256,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('makeActivationCodeSponsor', [$voucher, $organization]);
 
-        $request->authorize() ? $voucher->makeActivationCode() : null;
+        $voucher->makeActivationCode($request->input('activation_code_uid'));
 
         return new SponsorVoucherResource($voucher);
     }

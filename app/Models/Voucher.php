@@ -29,6 +29,7 @@ use RuntimeException;
  * @property string|null $note
  * @property int|null $employee_id
  * @property string|null $activation_code
+ * @property string|null $activation_code_uid
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -36,8 +37,8 @@ use RuntimeException;
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property-read \App\Models\Fund $fund
- * @property-read mixed $amount_available
- * @property-read mixed $amount_available_cached
+ * @property-read float $amount_available
+ * @property-read float $amount_available_cached
  * @property-read string|null $created_at_string
  * @property-read string|null $created_at_string_locale
  * @property-read bool $expired
@@ -70,6 +71,7 @@ use RuntimeException;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereActivationCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereActivationCodeUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereEmployeeId($value)
@@ -131,8 +133,8 @@ class Voucher extends Model
      */
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
-        'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'activation_code',
-        'state',
+        'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
+        'activation_code', 'activation_code_uid',
     ];
 
     /**
@@ -215,6 +217,7 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
     public function last_transaction(): HasOne {
         return $this->hasOne(VoucherTransaction::class)->orderByDesc('created_at');
@@ -513,6 +516,14 @@ class Voucher extends Model
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'asc');
         $unassignedOnly = $request->input('unassigned');
+
+        $query->where(static function(Builder $builder) {
+            $builder->whereNotNull('employee_id');
+            $builder->orWhere(static function(Builder $builder) {
+                $builder->whereNull('employee_id');
+                $builder->whereNull('product_id');
+            });
+        });
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -838,23 +849,31 @@ class Voucher extends Model
     }
 
     /**
-     * @param $code
-     * @return static|null
-     */
-    public static function findByCode($code): ?self
-    {
-        return self::whereActivationCode($code)->first();
-    }
-
-    /**
+     * @param string|null $activation_code_uid
      * @return $this
      */
-    public function makeActivationCode(): self {
+    public function makeActivationCode(string $activation_code_uid = null): self
+    {
+        $queryUnused = self::whereHas('fund', function(Builder $builder) {
+            $builder->where('organization_id', $this->fund->organization_id);
+        })->whereNull('identity_address')->where([
+            'activation_code_uid' => $activation_code_uid
+        ]);
+
+        if (!is_null($activation_code_uid) && $queryUnused->exists()) {
+            /** @var Voucher $voucher */
+            $voucher = $queryUnused->first();
+            $activation_code = $voucher->activation_code;
+        } else {
+            $activation_code = token_generator_callback(static function($value) {
+                return Prevalidation::whereUid($value)->doesntExist() &&
+                    Voucher::whereActivationCode($value)->doesntExist();
+            }, 4, 2);
+        }
+
         return $this->updateModel([
-            'activation_code' => token_generator_callback(static function($value) {
-                return !(Prevalidation::whereUid($value)->exists() ||
-                    Voucher::whereActivationCode($value)->exists());
-            }, 4, 2),
+            'activation_code' => $activation_code,
+            'activation_code_uid' => $activation_code_uid,
         ]);
     }
 }

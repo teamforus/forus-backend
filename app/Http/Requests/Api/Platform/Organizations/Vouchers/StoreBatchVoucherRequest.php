@@ -70,11 +70,12 @@ class StoreBatchVoucherRequest extends BaseFormRequest
                 'after:' . $fund->start_date->format('Y-m-d'),
                 'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
-            'vouchers.*.note'       => 'nullable|string|max:280',
-            'vouchers.*.email'      => 'nullable|string|email:strict,dns',
-            'vouchers.*.bsn'        => 'nullable|string|digits:9',
-            'vouchers.*.activate'   => 'boolean',
-            'vouchers.*.make_activation_code' => 'boolean',
+            'vouchers.*.note'                   => 'nullable|string|max:280',
+            'vouchers.*.email'                  => 'nullable|string|email:strict,dns',
+            'vouchers.*.bsn'                    => 'nullable|string|digits:9',
+            'vouchers.*.activate'               => 'boolean',
+            'vouchers.*.activation_code'        => 'boolean',
+            'vouchers.*.activation_code_uid'    => 'nullable|string|max:20',
         ];
     }
 }
