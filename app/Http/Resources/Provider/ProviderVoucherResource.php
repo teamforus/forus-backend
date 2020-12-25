@@ -11,8 +11,10 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\VoucherQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Support\Collection;
 
 /**
  * Class ProviderVoucherResource
@@ -29,6 +31,8 @@ class ProviderVoucherResource extends Resource
      */
     public function toArray($request): ?array
     {
+        $auth_address = auth_address();
+
         if ($this->resource instanceof VoucherToken) {
             $voucherToken = $this->resource;
         } else if ($this->resource instanceof Voucher) {
@@ -38,10 +42,31 @@ class ProviderVoucherResource extends Resource
         }
 
         if ($voucherToken->voucher->isProductType()) {
-            return $this->productVoucher($voucherToken);
+            return $this->productVoucher($voucherToken, $auth_address);
         }
 
-        return $this->regularVoucher($request, auth_address(), $voucherToken);
+        return $this->regularVoucher($request, $auth_address, $voucherToken);
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @param string|null $identityAddress
+     * @return Collection
+     */
+    private function getAllowedOrganizations(Voucher $voucher, ?string $identityAddress): Collection {
+        return OrganizationQuery::whereHasPermissionToScanVoucher(
+            Organization::query(), $identityAddress, $voucher
+        )->select([
+            'id', 'name'
+        ])->where(static function(Builder $builder) use ($voucher) {
+            if ($voucher->product_id) {
+                $builder->where('organizations.id', $voucher->product->organization_id);
+            }
+        })->get()->map(static function($organization) {
+            return collect($organization)->merge([
+                'logo' => new MediaCompactResource($organization->logo)
+            ]);
+        });
     }
 
     /**
@@ -60,16 +85,6 @@ class ProviderVoucherResource extends Resource
         $voucher = $voucherToken->voucher;
         $fund = $voucher->fund;
 
-        $allowedOrganizations = OrganizationQuery::whereHasPermissionToScanVoucher(
-            Organization::query(), $identityAddress, $voucher
-        )->select([
-            'id', 'name'
-        ])->get()->map(static function($organization) {
-            return collect($organization)->merge([
-                'logo' => new MediaCompactResource($organization->logo)
-            ]);
-        });
-
         $productVouchers = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
             $voucher->product_vouchers()->getQuery(),
             $identityAddress,
@@ -83,7 +98,7 @@ class ProviderVoucherResource extends Resource
             'type' => 'regular',
             'amount' => currency_format($fund->isTypeBudget() ? $voucher->amount_available : 0),
             'fund' => $this->fundDetails($fund),
-            'allowed_organizations' => $allowedOrganizations,
+            'allowed_organizations' => $this->getAllowedOrganizations($voucher, $identityAddress),
         ])->merge(env('DISABLE_DEPRECATED_API') ? [] : [
             // TODO: To be removed in next release
             'allowed_product_categories' => [],
@@ -98,10 +113,12 @@ class ProviderVoucherResource extends Resource
      * Transform the resource into an array.
      *
      * @param VoucherToken $voucherToken
+     * @param string $identityAddress
      * @return array
      */
     private function productVoucher(
-        VoucherToken $voucherToken
+        VoucherToken $voucherToken,
+        string $identityAddress
     ): array {
         $voucher = $voucherToken->voucher;
 
@@ -112,6 +129,7 @@ class ProviderVoucherResource extends Resource
             'address' => $voucherToken->address,
             'type' => 'product',
             'fund' => $this->fundDetails($voucher->fund),
+            'allowed_organizations' => $this->getAllowedOrganizations($voucher, $identityAddress),
             'product' => collect($voucher->product)->only([
                 'id', 'name', 'description', 'total_amount', 'sold_amount',
                 'product_category_id', 'organization_id'

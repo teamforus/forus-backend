@@ -42,11 +42,15 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
         $rules = $this->commonRules();
 
         if ($voucher->fund->isTypeSubsidy()) {
+            $availableProducts = $this->getAvailableProductIds($voucher);
+
             $rules = array_merge($rules, [
                 'product_id' => [
                     'required',
                     'exists:products,id',
-                    Rule::in($this->getAvailableProductIds($voucher)),
+                    Rule::in($voucher->product_id ? array_intersect($availableProducts, [
+                        $voucher->product_id
+                    ]): $availableProducts),
                 ],
             ]);
         } else if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType()) {

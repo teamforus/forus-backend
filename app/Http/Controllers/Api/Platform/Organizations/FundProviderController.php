@@ -31,9 +31,7 @@ class FundProviderController extends Controller
         return FundProviderResource::collection(
             FundProvider::search($request, $organization)->with(
                 FundProviderResource::$load
-            )->paginate(
-                $request->input('per_page', 10)
-            )
+            )->paginate($request->input('per_page', 10))
         );
     }
 
