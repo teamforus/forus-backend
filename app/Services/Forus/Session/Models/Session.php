@@ -4,6 +4,8 @@ namespace App\Services\Forus\Session\Models;
 
 use App\Services\Forus\Session\Services\GeoIp;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -59,7 +61,7 @@ class Session extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function requests()
+    public function requests(): HasMany
     {
         return $this->hasMany(SessionRequest::class);
     }
@@ -67,7 +69,7 @@ class Session extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function first_request()
+    public function first_request(): HasOne
     {
         return $this->hasOne(SessionRequest::class)->orderBy('created_at');
     }
@@ -75,7 +77,7 @@ class Session extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function last_request()
+    public function last_request(): HasOne
     {
         return $this->hasOne(SessionRequest::class)->orderByDesc('created_at');
     }
@@ -83,24 +85,25 @@ class Session extends Model
     /**
      * @throws \Exception
      */
-    public function terminate() {
+    public function terminate()
+    {
         $identity_address = $this->identity_address;
         $identity_proxy_id = $this->identity_proxy_id;
 
         $identityRepo = resolve('forus.services.identity');
         $identityRepo->destroyProxyIdentity($identity_proxy_id, true);
 
-        self::where(compact(
-            'identity_address', 'identity_proxy_id'
-        ))->delete();
+        self::where(compact('identity_address', 'identity_proxy_id'))->delete();
     }
 
     /**
      * @param $identity_address
+     * @throws \Exception
      */
     public static function terminateAll($identity_address)
     {
         while ($session = self::where(compact('identity_address'))->first()) {
+            /** @var \App\Services\Forus\Session\Models\Session $session */
             $session->terminate();
         }
     }
@@ -108,7 +111,8 @@ class Session extends Model
     /**
      * @return \Illuminate\Support\Collection
      */
-    public function locations() {
+    public function locations(): ?\Illuminate\Support\Collection
+    {
         if (GeoIp::isAvailable()) {
             $ipAddresses = $this->requests()->distinct()->pluck('ip');
 
@@ -126,7 +130,7 @@ class Session extends Model
      *
      * @return bool
      */
-    public function isActive()
+    public function isActive(): bool
     {
         return $this->last_activity_at->diffInMinutes(now()) <= 5;
     }

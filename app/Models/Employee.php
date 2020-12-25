@@ -51,26 +51,29 @@ class Employee extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function organization(): BelongsTo {
+    public function organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function roles(): BelongsToMany {
-        return $this->belongsToMany(
-            Role::class,
-            (new EmployeeRole)->getTable()
-        );
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, (new EmployeeRole)->getTable());
     }
 
     /**
      * @param string $role
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function hasRole(string $role): bool {
+    public function hasRole(string $role): bool
+    {
         return $this->roles()->where('key', '=', $role)->count() > 0;
     }
 

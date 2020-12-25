@@ -93,41 +93,52 @@ class FundProvider extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function products(): BelongsToMany {
+    public function products(): BelongsToMany
+    {
         return $this->belongsToMany(Product::class, 'fund_provider_products');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_provider_products(): HasMany {
+    public function fund_provider_products(): HasMany
+    {
         return $this->hasMany(FundProviderProduct::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_provider_products_with_trashed(): HasMany {
+    public function fund_provider_products_with_trashed(): HasMany
+    {
         return $this->hasMany(FundProviderProduct::class)->withTrashed();
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_provider_chats(): HasMany {
+    public function fund_provider_chats(): HasMany
+    {
         return $this->hasMany(FundProviderChat::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
@@ -135,48 +146,23 @@ class FundProvider extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function product_exclusions(): HasMany {
         return $this->hasMany(FundProviderProductExclusion::class);
     }
 
-    public function getLastActivity() {
-        /** @var Carbon $last_activity_date */
-        /** @var Carbon $last_transaction_date */
-        /** @var Carbon $last_session_date */
-        $last_transaction_date = $last_session_date = null;
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     */
+    public function getLastActivity(): ?Carbon {
+        /** @var Session|null $session */
+        $session = Session::whereIn(
+            'identity_address',
+            $this->organization->employees->pluck('identity_address')
+        )->latest()->first();
 
-        $fundVouchers = $this->organization->vouchers()->whereHas('transactions')->get();
-        foreach ($fundVouchers as $fundVoucher) {
-            /** @var Voucher $fundVoucher */
-            /** @var VoucherTransaction $voucherTransaction */
-            $voucherTransaction = $fundVoucher->transactions->last();
-
-            $last_transaction_date = empty($last_transaction_date) ?
-                $voucherTransaction->created_at :
-                $voucherTransaction->created_at->max($last_transaction_date);
-        }
-        $last_activity_date = $last_transaction_date;
-
-        foreach ($this->organization->employees as $employee) {
-            $session = Session::where([
-                'identity_address' => $employee->identity_address
-            ])->orderByDesc('last_activity_at')->first();
-
-            if (!$session) {
-                continue;
-            }
-
-            $last_session_date = empty($last_session_date) ?
-                $session->last_activity_at :
-                $session->last_activity_at->max($last_session_date);
-
-            $last_activity_date = empty($last_transaction_date) ?
-                $last_session_date :
-                $last_session_date->max($last_transaction_date);
-        }
-
-        return $last_activity_date;
+        return $session ? $session->last_activity_at : null;
     }
 
     /**

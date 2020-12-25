@@ -74,4 +74,12 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function implementation_model(): ?Implementation {
         return Implementation::activeModel();
     }
+
+    /**
+     * @return bool
+     */
+    public function isAuthenticated(): bool
+    {
+        return (bool) $this->auth_address();
+    }
 }
