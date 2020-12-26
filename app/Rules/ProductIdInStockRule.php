@@ -28,11 +28,12 @@ class ProductIdInStockRule extends BaseRule
      * Determine if the validation rule passes.
      *
      * @param  string  $attribute
-     * @param  mixed  $product_id
+     * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $product_id): bool
+    public function passes($attribute, $value): bool
     {
+        $product_id = $value;
         $product = Product::find($product_id);
 
         if (!$product) {
@@ -45,10 +46,6 @@ class ProductIdInStockRule extends BaseRule
 
         if ($product->no_price) {
             return $this->rejectTrans('product_no_price');
-        }
-
-        if (!$this->fund->isTypeBudget()) {
-            return $this->rejectTrans('product_fund_not_budget');
         }
 
         if (!$product->unlimited_stock &&

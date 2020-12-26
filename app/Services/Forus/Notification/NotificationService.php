@@ -533,7 +533,7 @@ class NotificationService
      * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param string $sponsor_name
-     * @param string $start_date
+     * @param $start_date
      * @param $end_date
      * @param string $sponsor_phone
      * @param string $sponsor_email
@@ -545,12 +545,13 @@ class NotificationService
         ?EmailFrom $emailFrom,
         string $fund_name,
         string $sponsor_name,
-        string $start_date,
+        $start_date,
         $end_date,
         string $sponsor_phone,
         string $sponsor_email,
         string $webshopLink
     ): bool {
+
         return $this->sendMail($email, new FundExpiredMail(
             $fund_name,
             $sponsor_name,

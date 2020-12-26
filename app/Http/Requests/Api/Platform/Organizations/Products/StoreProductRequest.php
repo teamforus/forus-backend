@@ -31,7 +31,7 @@ class StoreProductRequest extends FormRequest
             'description'           => 'required|between:5,1000',
             'price'                 => 'required_without:no_price|numeric|min:.2|max:10000',
             'no_price'              => 'boolean',
-            'no_price_type'         => 'required_with:no_price|in:free,discount',
+            'no_price_type'         => 'required_if:no_price,true|in:free,discount',
             'no_price_discount'     => 'nullable|required_if:no_price_type,discount|numeric|min:0|max:100',
             'unlimited_stock'       => 'boolean',
             'old_price'             => 'nullable|numeric|min:' . $price,

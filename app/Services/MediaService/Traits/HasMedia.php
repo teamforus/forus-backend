@@ -2,7 +2,6 @@
 
 namespace App\Services\MediaService\Traits;
 
-use App\Services\MediaService\MediaConfig;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,7 +18,8 @@ trait HasMedia
      * @param Media $media
      * @return $this
      */
-    public function attachMedia(Media $media) {
+    public function attachMedia(Media $media): self
+    {
         $this->syncMedia($media->uid, $media->type);
 
         return $this;
@@ -30,7 +30,8 @@ trait HasMedia
      * @param string $mediaConfigType
      * @return bool
      */
-    public function syncMedia($uid, string $mediaConfigType) {
+    public function syncMedia($uid, string $mediaConfigType): bool
+    {
         $uid = (array) $uid;
         $mediaConfig = MediaService::getMediaConfig($mediaConfigType);
         $multiple = $mediaConfig && ($mediaConfig->getType() === $mediaConfig::TYPE_MULTIPLE);
@@ -74,7 +75,9 @@ trait HasMedia
                 resolve('media')->unlink($media);
             });
         } catch (\Exception $exception) {
-            logger()->error($exception->getMessage());
+            if ($logger = logger()) {
+                $logger->error($exception->getMessage());
+            }
         }
     }
 
@@ -82,7 +85,7 @@ trait HasMedia
      * Get all of the mediable's medias.
      * @return MorphMany
      */
-    public function medias()
+    public function medias(): MorphMany
     {
         return $this->morphMany(Media::class, 'mediable');
     }

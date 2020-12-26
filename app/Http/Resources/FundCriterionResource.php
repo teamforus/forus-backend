@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\FundCriterionValidator;
 use Illuminate\Http\Resources\Json\Resource;
@@ -23,31 +24,18 @@ class FundCriterionResource extends Resource
     {
         $criterion = $this->resource;
         $fund = $this->resource->fund;
+        $auth_address = auth_address();
+        $is_valid = $this->isValid($request, $fund, $auth_address);
 
         $recordTypes = array_pluck(record_types_cached(), 'name', 'key');
-        $external_validators = $this->resource->fund_criterion_validators;
-        $checkCriteria = $request->get('check_criteria', false);
+        $external_validators = $criterion->fund_criterion_validators;
 
-        if ($checkCriteria && auth_address()) {
-            $record = $fund::getTrustedRecordOfType(
-                auth_address(),
-                $criterion->record_type_key,
-                $criterion->fund,
-                $criterion
-            );
-            $is_valid = collect($record ? [$record] : [])->where(
-                'value', $criterion->operator, $criterion->value
-                )->count() > 0;
-        } else {
-            $is_valid = $checkCriteria ? false : null;
-        }
-
-        return array_merge($this->resource->only([
+        return array_merge($criterion->only([
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
             'description', 'title'
         ]), [
             'description_html' => resolve('markdown')->convertToHtml(
-                $this->resource->description
+                $criterion->description
             ),
             'external_validators' => $external_validators->map(static function(
                 FundCriterionValidator $validator
@@ -58,9 +46,34 @@ class FundCriterionResource extends Resource
                     'accepted' => $validator->accepted,
                 ];
             })->toArray(),
-            'record_type_name' => $recordTypes[$this->resource->record_type_key],
-            'show_attachment' => $this->resource->show_attachment ? true : false,
+            'record_type_name' => $recordTypes[$criterion->record_type_key],
+            'show_attachment' => $criterion->show_attachment ? true : false,
             'is_valid' => $is_valid
         ]);
+    }
+
+    /**
+     * @param $request
+     * @param Fund $fund
+     * @param $auth_address
+     * @return bool|null
+     */
+    private function isValid($request, Fund $fund, $auth_address): ?bool {
+        $criterion = $this->resource;
+        $checkCriteria = $request->get('check_criteria', false);
+
+        if ($checkCriteria && $auth_address) {
+            $record = $fund->getTrustedRecordOfType(
+                $auth_address,
+                $criterion->record_type_key,
+                $criterion
+            );
+
+            $is_valid = collect($record ? [$record] : []);
+
+            return $is_valid->where('value', $criterion->operator, $criterion->value)->count() > 0;
+        } else {
+            return $checkCriteria ? false : null;
+        }
     }
 }

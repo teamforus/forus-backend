@@ -3,6 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Models\Implementation;
+use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
+use App\Services\Forus\Notification\NotificationService;
+use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
 
 /**
@@ -11,10 +15,13 @@ use Illuminate\Auth\Access\AuthorizationException;
  */
 class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 {
+    use ThrottleWithMeta;
+
     protected $message;
 
     /**
      * @return array
+     * @noinspection PhpUnused
      */
     public function rules(): array {
         return [];
@@ -23,6 +30,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     /**
      * @param string $message
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function deny($message = 'This action is unauthorized.'): void {
         $this->message = $message;
@@ -33,8 +41,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * Handle a failed authorization attempt.
      *
      * @return void
-     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     protected function failedAuthorization(): void {
         throw new AuthorizationException($this->message);
@@ -42,6 +50,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function auth_address(): ?string {
         return auth_address();
@@ -49,6 +58,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function client_type(): ?string {
         return client_type();
@@ -56,6 +66,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function client_version(): ?string {
         return client_version();
@@ -63,6 +74,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return string|null
+     * @noinspection PhpUnused
      */
     public function implementation_key(): ?string {
         return implementation_key();
@@ -70,6 +82,7 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return Implementation|null
+     * @noinspection PhpUnused
      */
     public function implementation_model(): ?Implementation {
         return Implementation::activeModel();
@@ -81,5 +94,29 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function isAuthenticated(): bool
     {
         return (bool) $this->auth_address();
+    }
+
+    /**
+     * @return IIdentityRepo
+     * @noinspection PhpUnused
+     */
+    public function identity_repo(): IIdentityRepo {
+        return resolve('forus.services.identity');
+    }
+
+    /**
+     * @return IRecordRepo
+     * @noinspection PhpUnused
+     */
+    public function records_repo(): IRecordRepo {
+        return resolve('forus.services.record');
+    }
+
+    /**
+     * @return NotificationService
+     * @noinspection PhpUnused
+     */
+    public function notification_repo(): NotificationService {
+        return resolve('forus.services.notification');
     }
 }

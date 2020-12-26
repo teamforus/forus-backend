@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Platform\Vouchers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
-use App\Models\Implementation;
 use App\Models\PhysicalCardRequest;
 use App\Models\VoucherToken;
 use App\Traits\ThrottleWithMeta;
@@ -83,13 +82,14 @@ class PhysicalCardRequestsController extends Controller
         $this->mailService->requestPhysicalCard(
             $this->identityRepo->getPrimaryEmail(auth_address()),
             $fund->getEmailFrom(), [
-                'postcode'      => $request->input('postcode'),
-                'house_number'  => $request->input('house'),
-                'city'          => $request->input('city'),
-                'street_name'   => $request->input('address'),
-                'fund_name'     => $fund->name,
-                'sponsor_phone' => $fund->organization->phone,
-                'sponsor_email' => $fund->organization->email
+                'postcode'       => $request->input('postcode'),
+                'house_number'   => $request->input('house'),
+                'house_addition' => $request->input('house_addition'),
+                'city'           => $request->input('city'),
+                'street_name'    => $request->input('address'),
+                'fund_name'      => $fund->name,
+                'sponsor_phone'  => $fund->organization->phone,
+                'sponsor_email'  => $fund->organization->email
             ]);
 
         $cardRequest = $voucherToken->voucher->physical_card_requests()->create($request->only(

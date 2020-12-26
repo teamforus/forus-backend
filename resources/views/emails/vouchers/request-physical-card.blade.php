@@ -8,7 +8,7 @@
     {!! mail_trans('request_physical_card.description', $data) !!}
     <br/>
     <br/>
-    <strong>{{ $data['street_name'] }} {{ $data['house_number'] }}</strong>
+    <strong>{{ $data['street_name'] }} {{ $data['house_number'] }} {{ $data['house_addition'] }}</strong>
     <br/>
     <strong>{{ $data['postcode'] }} {{ $data['city'] }}</strong>
     <br/>

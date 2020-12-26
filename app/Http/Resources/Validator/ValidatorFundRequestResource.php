@@ -37,7 +37,7 @@ class ValidatorFundRequestResource extends Resource
         $fundRequest = $this->resource;
 
         return array_merge(array_only($fundRequest->toArray(), [
-            'id', 'state', 'fund_id', 'created_at', 'updated_at'
+            'id', 'state', 'fund_id', 'note', 'created_at', 'updated_at'
         ]), [
             'fund' => new FundResource($fundRequest->fund),
             'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),

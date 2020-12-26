@@ -230,11 +230,19 @@ class DigIdSession extends Model
         ]);
     }
 
-    public function isAuthorized() {
+    /**
+     * @return bool
+     */
+    public function isAuthorized(): bool
+    {
         return $this->state == self::STATE_AUTHORIZED;
     }
 
-    public function getErrorKey() {
+    /**
+     * @return string
+     */
+    public function getErrorKey(): string
+    {
         return sprintf(
             'error%s',
             $this->digid_error_code ? "_" . $this->digid_error_code : ""

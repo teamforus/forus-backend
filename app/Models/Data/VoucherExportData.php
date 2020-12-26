@@ -67,6 +67,8 @@ class VoucherExportData
             'identity_bsn' => null,
             'identity_email' => null,
         ], [
+            'state' => $this->voucher->state ?? null,
+            'activation_code' => $this->voucher->activation_code ?? null,
             'note' => $this->voucher->note,
             'source' => $this->voucher->employee_id ? 'employee': 'user',
             'amount' => $this->voucher->amount,

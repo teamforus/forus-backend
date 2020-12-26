@@ -52,6 +52,7 @@ class FundSubscriber
 
     /**
      * @param FundCreated $event
+     * @noinspection PhpUnused
      */
     public function onFundCreated(FundCreated $event): void {
         $fund = $event->getFund();
@@ -73,6 +74,7 @@ class FundSubscriber
 
     /**
      * @param FundStartedEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundStarted(FundStartedEvent $event): void {
         $fund = $event->getFund();
@@ -92,6 +94,7 @@ class FundSubscriber
 
     /**
      * @param FundExpiringEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundExpiring(FundExpiringEvent $event): void {
         $fund = $event->getFund();
@@ -111,6 +114,7 @@ class FundSubscriber
 
     /**
      * @param FundEndedEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundEnded(FundEndedEvent $event): void {
         $fund = $event->getFund();
@@ -161,6 +165,7 @@ class FundSubscriber
 
     /**
      * @param FundProviderApplied $event
+     * @noinspection PhpUnused
      */
     public function onFundProviderApplied(FundProviderApplied $event): void {
         $fundProvider = $event->getFundProvider();
@@ -176,6 +181,7 @@ class FundSubscriber
 
     /**
      * @param FundProviderChatMessageEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundProviderChatMessage(FundProviderChatMessageEvent $event): void {
         FundProviderChatMessageNotification::send(
@@ -189,6 +195,7 @@ class FundSubscriber
 
     /**
      * @param FundBalanceLowEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundBalanceLow(FundBalanceLowEvent $event): void {
         $fund = $event->getFund();
@@ -206,6 +213,7 @@ class FundSubscriber
 
     /**
      * @param FundBalanceSuppliedEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundBalanceSupplied(FundBalanceSuppliedEvent $event): void {
         $fund = $event->getFund();
@@ -222,6 +230,7 @@ class FundSubscriber
 
     /**
      * @param FundProductAddedEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundProductAdded(FundProductAddedEvent $event): void {
         $fund = $event->getFund();
@@ -239,6 +248,7 @@ class FundSubscriber
 
     /**
      * @param FundProductApprovedEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundProductApproved(FundProductApprovedEvent $event): void {
         $fund = $event->getFund();
@@ -255,6 +265,7 @@ class FundSubscriber
 
     /**
      * @param FundProductRevokedEvent $event
+     * @noinspection PhpUnused
      */
     public function onFundProductRevoked(FundProductRevokedEvent $event): void {
         $fund = $event->getFund();
@@ -273,6 +284,7 @@ class FundSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events)
     {

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Prevalidations;
+namespace App\Http\Requests\Api\Platform\Funds;
 
 use App\Http\Requests\BaseFormRequest;
 
-class RedeemPrevalidationRequest extends BaseFormRequest
+class RedeemFundsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,6 +13,6 @@ class RedeemPrevalidationRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return (bool) $this->auth_address();
     }
 }
