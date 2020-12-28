@@ -13,7 +13,7 @@ class ResendIdentityEmailRequest extends BaseIdentityEmailRequest
 {
     public function authorize(): bool
     {
-        return $this->isAuthorized() &&
+        return $this->isAuthenticated() &&
             $this->identity_email->identity_address === $this->auth_address();
     }
 

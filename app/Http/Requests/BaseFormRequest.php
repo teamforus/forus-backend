@@ -90,9 +90,9 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
 
     /**
      * @return bool
-     * @noinspection PhpUnused
      */
-    public function isAuthorized(): bool {
+    public function isAuthenticated(): bool
+    {
         return (bool) $this->auth_address();
     }
 
