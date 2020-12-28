@@ -13,8 +13,6 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Fund;
 use App\Http\Controllers\Controller;
 use App\Models\Implementation;
-use App\Models\Prevalidation;
-use App\Models\Voucher;
 use App\Services\BunqService\BunqService;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +25,15 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class FundsController extends Controller
 {
     use ThrottleWithMeta;
+
+    /**
+     * FundsController constructor.
+     */
+    public function __construct()
+    {
+        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
+        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
+    }
 
     /**
      * Display a listing of all active funds.
@@ -81,44 +88,30 @@ class FundsController extends Controller
     /**
      * @param RedeemFundsRequest $request
      * @return \Illuminate\Http\JsonResponse
-     * @throws \App\Exceptions\AuthorizationJsonException
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function redeem(
         RedeemFundsRequest $request
     ): JsonResponse {
-        $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
-        $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
+        $vouchersAvailable = $request->getAvailableVouchers();
 
-        $this->throttleWithKey('to_many_attempts', $request, 'prevalidations');
-
-        $code = $request->input('code');
-        $voucher = Voucher::findByCode($code);
-        $prevalidation = Prevalidation::findByCode($code);
-
-        if (!$voucher && !$prevalidation) {
-            $this->responseWithThrottleMeta('not_found', $request, 'prevalidations', 404);
-        }
-
-        if (($voucher && $voucher->is_granted) || ($prevalidation && $prevalidation->is_used)) {
-            $this->responseWithThrottleMeta('used', $request, 'prevalidations', 403);
-        }
-
-        if ($voucher) {
-            $this->authorize('redeem', $voucher);
-            $voucher->assignToIdentity(auth_address());
-        }
-
-        if ($prevalidation) {
+        if ($prevalidation = $request->getPrevalidation()) {
             $this->authorize('redeem', $prevalidation);
             $prevalidation->assignToIdentity($request->auth_address());
         }
 
-        $this->clearLoginAttemptsWithKey($request, 'prevalidations');
+        // check permissions of all voucher before assigning
+        foreach ($vouchersAvailable as $voucher) {
+            $this->authorize('redeem', $voucher);
+        }
+
+        foreach ($vouchersAvailable as $voucher) {
+            $voucher->assignToIdentity($request->auth_address());
+        }
 
         return response()->json([
             'prevalidation' => $prevalidation ? new PrevalidationResource($prevalidation) : null,
-            'voucher' => $voucher ? new VoucherResource($voucher) : null,
+            'vouchers' => VoucherResource::collection($vouchersAvailable),
         ]);
     }
 

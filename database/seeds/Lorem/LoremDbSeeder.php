@@ -256,13 +256,15 @@ class LoremDbSeeder extends Seeder
                     $provider = $providers->random();
                 } while ($fund->providers()->where('organization_id', $provider)->exists());
 
-                $provider = $fund->providers()->create([
+                /** @var FundProvider $provider */
+                $provider = $fund->providers()->firstOrCreate([
                     'organization_id'   => $providers->random(),
-                    'allow_products'    => $fund->isTypeBudget(),
-                    'allow_budget'      => $fund->isTypeBudget(),
                 ]);
 
-                FundProviderApplied::dispatch($provider);
+                FundProviderApplied::dispatch($provider->updateModel([
+                    'allow_products'    => $fund->isTypeBudget(),
+                    'allow_budget'      => $fund->isTypeBudget(),
+                ]));
             }
         }
 
@@ -881,7 +883,7 @@ class LoremDbSeeder extends Seeder
     /**
      * @param $key
      * @param null $default
-     * @return \Illuminate\Config\Repository|mixed
+     * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed
      */
     public function config($key, $default = null) {
         return config(sprintf('forus.seeders.lorem_db_seeder.%s', $key), $default);

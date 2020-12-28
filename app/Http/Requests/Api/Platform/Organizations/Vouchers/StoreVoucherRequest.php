@@ -6,7 +6,6 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\ProductIdInStockRule;
-use App\Rules\ValidPrevalidationCodeRule;
 use Illuminate\Validation\Rule;
 
 /**
@@ -47,8 +46,8 @@ class StoreVoucherRequest extends BaseFormRequest
                 'required',
                 Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
             ],
-            'email'     => 'nullable|email:strict,dns',
-            'bsn'       => 'nullable|digits:9',
+            'email'     => 'nullable|required_if:assign_by_type,email|email:strict,dns',
+            'bsn'       => 'nullable|required_if:assign_by_type,bsn|digits:9',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
                 $fund && $fund->isTypeBudget() ? 'required_without:product_id' : 'nullable',
@@ -61,17 +60,22 @@ class StoreVoucherRequest extends BaseFormRequest
                 'after:' . $fund->start_date->format('Y-m-d'),
                 'before_or_equal:' . $fund->end_date->format('Y-m-d'),
             ],
-            'activation_code' => [
-                'nullable',
-                new ValidPrevalidationCodeRule($fund),
-            ],
             'product_id' => [
                 $fund && $fund->isTypeBudget() ? 'required_without:amount' : 'nullable',
                 'exists:products,id',
                 new ProductIdInStockRule($fund),
             ],
-            'activate' => 'boolean',
-            'make_activation_code' => 'boolean',
+            'activate'              => 'boolean',
+            'activation_code'       => 'boolean',
+            'activation_code_uid'   => 'nullable|string|max:20',
+            'assign_by_type'        => 'required|in:email,bsn,activation_code_uid',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'assign_by_type' => 'methode',
         ];
     }
 

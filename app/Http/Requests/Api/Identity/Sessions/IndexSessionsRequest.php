@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Requests\Api\Identity\Emails;
+namespace App\Http\Requests\Api\Identity\Sessions;
 
 use App\Http\Requests\BaseFormRequest;
 
-class BaseIdentityEmailRequest extends BaseFormRequest
+/**
+ * Class IndexSessionsRequest
+ * @package App\Http\Requests\Api\Identity\Sessions
+ */
+class IndexSessionsRequest extends BaseFormRequest
 {
-    protected $maxAttempts = 5;
-    protected $decayMinutes = 30;
-
     /**
      * Determine if the user is authorized to make this request.
      *

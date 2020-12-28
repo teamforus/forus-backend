@@ -35,46 +35,93 @@ class StoreBatchVoucherRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        /** @var Fund $fund */
-        $funds = $this->organization->funds();
-        $fund = $funds->findOrFail($this->input('fund_id'));
+        $fund = $this->getFund();
 
+        return [
+            'fund_id'                           => $this->fundIdRule(),
+            'vouchers'                          => ['required', new VouchersUploadArrayRule($fund)],
+            'vouchers.*'                        => 'required|array',
+            'vouchers.*.amount'                 => $this->amountRule($fund),
+            'vouchers.*.product_id'             => $this->productIdRule($fund),
+            'vouchers.*.expire_at'              => $this->expireAtRule($fund),
+            'vouchers.*.note'                   => 'nullable|string|max:280',
+            'vouchers.*.email'                  => 'nullable|string|email:strict,dns',
+            'vouchers.*.bsn'                    => 'nullable|string|digits:9',
+            'vouchers.*.activate'               => 'boolean',
+            'vouchers.*.activation_code'        => 'boolean',
+            'vouchers.*.activation_code_uid'    => 'nullable|string|max:20',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function fundIdRule(): array {
+        $fundIds = $this->organization->funds()->pluck('id')->toArray();
+
+        return [
+            'required',
+            Rule::exists('funds', 'id')->whereIn('id', $fundIds)
+        ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string[]
+     */
+    private function expireAtRule(Fund $fund): array {
+        return [
+            'nullable',
+            'date_format:Y-m-d',
+            'after:' . $fund->start_date->format('Y-m-d'),
+            'before_or_equal:' . $fund->end_date->format('Y-m-d'),
+        ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string|string[]
+     */
+    private function amountRule(Fund $fund) {
+        return !$fund || $fund->isTypeBudget() ? [
+            'required_without:vouchers.*.product_id',
+            'numeric',
+            'between:.1,' . currency_format($this->maxAmount($fund)),
+        ] : 'nullable';
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string|string[]
+     */
+    private function productIdRule(Fund $fund) {
+        $vouchers = $this->input('vouchers');
+
+        return [
+            'required_without:vouchers.*.amount',
+            'exists:products,id',
+            new ProductIdInStockRule($fund, collect($vouchers)->countBy('product_id')->toArray())
+        ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return mixed
+     */
+    private function maxAmount(Fund $fund): float {
         $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
         $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
 
-        return [
-            'fund_id'   => [
-                'required',
-                Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
-            ],
-            'vouchers' => [
-                'required',
-                new VouchersUploadArrayRule($fund),
-            ],
-            'vouchers.*' => 'required|array',
-            'vouchers.*.amount' => !$fund || $fund->isTypeBudget() ? [
-                'required_without:vouchers.*.product_id',
-                'numeric',
-                'between:.1,' . currency_format($max),
-            ] : 'nullable',
-            'vouchers.*.product_id' => [
-                'required_without:vouchers.*.amount',
-                'exists:products,id',
-                new ProductIdInStockRule($fund, collect(
-                    $this->input('vouchers')
-                )->countBy('product_id')->toArray())
-            ],
-            'vouchers.*.expire_at' => [
-                'nullable',
-                'date_format:Y-m-d',
-                'after:' . $fund->start_date->format('Y-m-d'),
-                'before_or_equal:' . $fund->end_date->format('Y-m-d'),
-            ],
-            'vouchers.*.note'       => 'nullable|string|max:280',
-            'vouchers.*.email'      => 'nullable|string|email:strict,dns',
-            'vouchers.*.bsn'        => 'nullable|string|digits:9',
-            'vouchers.*.activate'   => 'boolean',
-            'vouchers.*.make_activation_code' => 'boolean',
-        ];
+        return (float) $max;
+    }
+
+    /**
+     * @return Fund
+     */
+    private function getFund(): Fund {
+        /** @var Fund $fund */
+        $fund = $this->organization->funds()->findOrFail($this->input('fund_id'));
+
+        return $fund;
     }
 }

@@ -35,11 +35,29 @@ class FundProviderResource extends Resource
     public function toArray($request): array
     {
         $fundProvider = $this->resource;
+        $lastActivity = $fundProvider->getLastActivity();
 
-        return collect($fundProvider)->only([
+        return array_merge($fundProvider->only([
             'id', 'organization_id', 'fund_id', 'dismissed',
             'allow_products', 'allow_some_products', 'allow_budget',
-        ])->merge([
+        ]), $this->productFields($fundProvider), [
+            'fund' => new FundResource($fundProvider->fund),
+            'employees' => EmployeeResource::collection($fundProvider->organization->employees),
+            'organization' => array_merge((new OrganizationWithPrivateResource(
+                $fundProvider->organization
+            ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
+            'last_activity' => $lastActivity,
+            'last_activity_locale' => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
+        ]);
+    }
+
+    /**
+     * @param FundProvider $fundProvider
+     * @return array
+     */
+    private function productFields(FundProvider $fundProvider): array
+    {
+        return [
             'products' => $fundProvider->fund_provider_products->pluck('product_id'),
             'products_count_all' => $fundProvider->organization->products->count(),
             'products_count_available' => ProductQuery::whereFundNotExcludedOrHasHistory(
@@ -50,11 +68,6 @@ class FundProviderResource extends Resource
                 $fundProvider->organization->products()->getQuery(),
                 $fundProvider->fund_id
             )->count(),
-            'fund' => new FundResource($fundProvider->fund),
-            'employees' => EmployeeResource::collection($fundProvider->organization->employees),
-            'organization' => array_merge((new OrganizationWithPrivateResource(
-                $fundProvider->organization
-            ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
-        ])->toArray();
+        ];
     }
 }
