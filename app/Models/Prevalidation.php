@@ -255,15 +255,6 @@ class Prevalidation extends Model
     }
 
     /**
-     * @param $uid
-     */
-    public static function deactivateByUid($uid): void {
-        self::where(compact('uid'))->update([
-            'state' => self::STATE_USED
-        ]);
-    }
-
-    /**
      * @param $identity_address
      * @return Prevalidation
      */

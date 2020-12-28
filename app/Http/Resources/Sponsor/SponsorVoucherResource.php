@@ -33,7 +33,7 @@ class SponsorVoucherResource extends Resource
 
         return array_merge($voucher->only([
             'id', 'amount', 'note', 'identity_address', 'state', 'is_granted',
-            'expired', 'activation_code', 'has_transactions',
+            'expired', 'activation_code', 'activation_code_uid', 'has_transactions',
         ]), [
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'identity_bsn' => $identity_bsn ?? null,

@@ -50,6 +50,9 @@ class IndexVouchersRequest extends BaseFormRequest
             'state'             => 'nullable|in:' . implode(',', Voucher::STATES),
             'sort_order'        => 'nullable|in:asc,desc',
             'export_only_data'  => 'nullable|boolean',
+            'q'                 => 'nullable|string|max:100',
+            'email'             => 'nullable|string|max:100',
+            'bsn'               => 'nullable|string|max:100',
         ];
     }
 }

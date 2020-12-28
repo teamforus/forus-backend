@@ -51,12 +51,53 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
-    public static function whereNotExpired(Builder $builder): Builder {
+    public static function whereNotExpired(Builder $builder): Builder
+    {
         return $builder->where(static function(Builder $builder) {
             $builder->where(
                 'expire_at', '>', now()->endOfDay()
             )->whereDoesntHave('fund', static function(Builder $builder) {
                 $builder->where('end_date', '<', now()->endOfDay());
+            });
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $query
+     * @return Builder
+     */
+    public static function whereSearchSponsorQuery(Builder $builder, string $query): Builder
+    {
+        return $builder->where(static function (Builder $builder) use ($query) {
+            $builder->where('note', 'LIKE', "%{$query}%");
+            $builder->orWhere('activation_code', 'LIKE', "%{$query}%");
+
+            if ($email_identities = identity_repo()->identityAddressesByEmailSearch($query)) {
+                $builder->orWhereIn('identity_address', $email_identities);
+            }
+
+            if ($bsn_identities = record_repo()->identityAddressByBsnSearch($query)) {
+                $builder->orWhereIn('identity_address', $bsn_identities);
+            }
+
+            $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($query) {
+                return $builder->where('bsn', 'LIKE', "%{$query}%");
+            });
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereVisibleToSponsor(Builder $builder): Builder
+    {
+        return $builder->where(static function(Builder $builder) {
+            $builder->whereNotNull('employee_id');
+            $builder->orWhere(static function(Builder $builder) {
+                $builder->whereNull('employee_id');
+                $builder->whereNull('product_id');
             });
         });
     }
