@@ -42,7 +42,7 @@ class VouchersUploadArrayRule implements Rule
         }
 
         if (collect($value)->sum('amount') > $this->fund->getMaxAmountSumVouchers()) {
-            return 'The sum of the vouchers amount exceeds budget left on the fund.';
+            return trans('validation.voucher_generator.budget_exceeded');
         }
 
         return true;

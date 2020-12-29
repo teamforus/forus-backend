@@ -211,6 +211,9 @@ return [
         'limit_total' => "Totaal aanbod",
         'limit_total_per_identity' => "Limiet per aanvrager",
     ],
+    'voucher_generator' => [
+        'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
+    ],
     'values' => [
         'no_price_type' => [
             'free' => 'gratis',
