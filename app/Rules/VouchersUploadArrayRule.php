@@ -5,6 +5,10 @@ namespace App\Rules;
 use App\Models\Fund;
 use Illuminate\Contracts\Validation\Rule;
 
+/**
+ * Class VouchersUploadArrayRule
+ * @package App\Rules
+ */
 class VouchersUploadArrayRule implements Rule
 {
     protected $fund;
@@ -37,7 +41,7 @@ class VouchersUploadArrayRule implements Rule
             return trans('validation.array');
         }
 
-        if (collect($value)->sum('amount') > $this->fund->budget_left) {
+        if (collect($value)->sum('amount') > $this->fund->getMaxAmountSumVouchers()) {
             return 'The sum of the vouchers amount exceeds budget left on the fund.';
         }
 
@@ -49,7 +53,7 @@ class VouchersUploadArrayRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return $this->message;
     }

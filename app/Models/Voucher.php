@@ -548,9 +548,11 @@ class Voucher extends Model
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
-            $query->where('identity_address', record_repo()->identityAddressByBsn($bsn) ?: '-');
-            $query->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
-                return $builder->where(compact('bsn'));
+            $query->where(static function(Builder $builder) use ($bsn) {
+                $builder->where('identity_address', record_repo()->identityAddressByBsn($bsn) ?: '-');
+                $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
+                    $builder->where(compact('bsn'));
+                });
             });
         }
 

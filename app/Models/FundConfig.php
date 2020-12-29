@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
  * @property bool $is_configured
+ * @property bool $limit_generator_amount
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -47,11 +48,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereIsConfigured($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereRecordsValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereLimitGeneratorAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereRecordValidityDays($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereSubtractTransactionCosts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfig whereRecordValidityDays($value)
  */
 class FundConfig extends Model
 {
@@ -63,6 +64,7 @@ class FundConfig extends Model
         'formula_multiplier', 'is_configured', 'allow_physical_cards',
         'csv_primary_key', 'subtract_transaction_costs',
         'implementation_id', 'implementation', 'hash_partner_deny',
+        'limit_generator_amount',
     ];
 
     /**
@@ -75,6 +77,7 @@ class FundConfig extends Model
         'allow_fund_requests' => 'boolean',
         'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',
+        'limit_generator_amount' => 'boolean',
     ];
 
     /**
