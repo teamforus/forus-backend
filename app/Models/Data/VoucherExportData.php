@@ -63,12 +63,13 @@ class VoucherExportData
             'identity_bsn' => record_repo()->bsnByAddress($this->voucher->identity_address),
             'identity_email' => record_repo()->primaryEmailByAddress($this->voucher->identity_address),
         ] : [
-            'reference_bsn' => null,
+            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
             'identity_bsn' => null,
             'identity_email' => null,
         ], [
             'state' => $this->voucher->state ?? null,
             'activation_code' => $this->voucher->activation_code ?? null,
+            'activation_code_uid' => $this->voucher->activation_code_uid ?? null,
             'note' => $this->voucher->note,
             'source' => $this->voucher->employee_id ? 'employee': 'user',
             'amount' => $this->voucher->amount,

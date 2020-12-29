@@ -100,6 +100,7 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         \Gate::resource('funds', FundPolicy::class, [
+            'manageVouchers' => 'manageVouchers',
             'showFinances' => 'showFinances',
             'update' => 'update',
         ]);

@@ -38,9 +38,6 @@ class StoreVoucherRequest extends BaseFormRequest
         $funds = $this->organization->funds();
         $fund = $funds->find($this->input('fund_id'));
 
-        $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
-        $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
-
         return [
             'fund_id'   => [
                 'required',
@@ -52,7 +49,7 @@ class StoreVoucherRequest extends BaseFormRequest
             'amount'    => [
                 $fund && $fund->isTypeBudget() ? 'required_without:product_id' : 'nullable',
                 'numeric',
-                'between:.1,' . currency_format($max)
+                'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
             ],
             'expire_at' => [
                 'nullable',
@@ -72,6 +69,9 @@ class StoreVoucherRequest extends BaseFormRequest
         ];
     }
 
+    /**
+     * @return string[]
+     */
     public function attributes(): array
     {
         return [

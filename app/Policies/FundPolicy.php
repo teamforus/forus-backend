@@ -154,6 +154,24 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
+    public function manageVouchers(
+        $identity_address,
+        Fund $fund,
+        Organization $organization
+    ): bool {
+        if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
+        return $fund->organization->identityCan($identity_address, 'manage_vouchers');
+    }
+
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     */
     public function destroy(
         $identity_address,
         Fund $fund,

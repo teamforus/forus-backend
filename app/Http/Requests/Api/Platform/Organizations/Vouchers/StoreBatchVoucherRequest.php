@@ -86,7 +86,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
         return !$fund || $fund->isTypeBudget() ? [
             'required_without:vouchers.*.product_id',
             'numeric',
-            'between:.1,' . currency_format($this->maxAmount($fund)),
+            'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
         ] : 'nullable';
     }
 
@@ -102,17 +102,6 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'exists:products,id',
             new ProductIdInStockRule($fund, collect($vouchers)->countBy('product_id')->toArray())
         ];
-    }
-
-    /**
-     * @param Fund $fund
-     * @return mixed
-     */
-    private function maxAmount(Fund $fund): float {
-        $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
-        $max = min($fund->budget_left ?? $max_allowed, $max_allowed);
-
-        return (float) $max;
     }
 
     /**

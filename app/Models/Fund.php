@@ -1574,4 +1574,31 @@ class Fund extends Model
     {
         return $this->default_validator_employee_id && $this->auto_requests_validation;
     }
+
+    /**
+     * @return bool
+     */
+    public function limitGeneratorAmount(): bool
+    {
+        return $this->fund_config && $this->fund_config->limit_generator_amount ?? true;
+    }
+
+    /**
+     * @return float
+     */
+    public function getMaxAmountPerVoucher(): float
+    {
+        $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
+        $max = min($this->budget_left ?? $max_allowed, $max_allowed);
+
+        return (float) ($this->limitGeneratorAmount() ? $max : $max_allowed);
+    }
+
+    /**
+     * @return float
+     */
+    public function getMaxAmountSumVouchers(): float
+    {
+        return (float) ($this->limitGeneratorAmount() ? $this->budget_left : 1000000);
+    }
 }
