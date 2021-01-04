@@ -7,6 +7,7 @@ use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,7 @@ use RuntimeException;
  * @property string|null $note
  * @property int|null $employee_id
  * @property string|null $activation_code
+ * @property string|null $activation_code_uid
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -36,8 +38,8 @@ use RuntimeException;
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property-read \App\Models\Fund $fund
- * @property-read mixed $amount_available
- * @property-read mixed $amount_available_cached
+ * @property-read float $amount_available
+ * @property-read float $amount_available_cached
  * @property-read string|null $created_at_string
  * @property-read string|null $created_at_string_locale
  * @property-read bool $expired
@@ -70,6 +72,7 @@ use RuntimeException;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereActivationCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereActivationCodeUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereEmployeeId($value)
@@ -131,8 +134,8 @@ class Voucher extends Model
      */
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
-        'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'activation_code',
-        'state',
+        'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
+        'activation_code', 'activation_code_uid',
     ];
 
     /**
@@ -215,6 +218,7 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
     public function last_transaction(): HasOne {
         return $this->hasOne(VoucherTransaction::class)->orderByDesc('created_at');
@@ -506,12 +510,7 @@ class Voucher extends Model
         Organization $organization,
         Fund $fund = null
     ): Builder {
-        $query = self::search($request);
-        $q = $request->input('q', false);
-        $type = $request->input('type');
-        $source = $request->input('source', 'employee');
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'asc');
+        $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
         $unassignedOnly = $request->input('unassigned');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
@@ -532,38 +531,39 @@ class Voucher extends Model
             $query->whereNotNull('identity_address');
         }
 
-        switch ($type) {
+        switch ($request->input('type')) {
             case 'fund_voucher': $query->whereNull('product_id'); break;
             case 'product_voucher': $query->whereNotNull('product_id'); break;
         }
 
-        switch ($source) {
+        switch ($request->input('source', 'employee')) {
             case 'all': break;
             case 'user': $query->whereNull('employee_id'); break;
             case 'employee': $query->whereNotNull('employee_id'); break;
             default: abort(403);
         }
 
-        if ($q) {
-            $query->where(static function (Builder $query) use ($q) {
-                $query->where('note', 'LIKE', "%{$q}%");
-                $query->orWhere('activation_code', 'LIKE', "%{$q}%");
+        if ($request->has('email') && $email = $request->input('email')) {
+            $query->where('identity_address', identity_repo()->getAddress($email) ?: '_');
+        }
 
-                if ($email_identities = identity_repo()->identityAddressesByEmailSearch($q)) {
-                    $query->orWhereIn('identity_address', $email_identities);
-                }
-
-                if ($bsn_identities = record_repo()->identityAddressByBsnSearch($q)) {
-                    $query->orWhereIn('identity_address', $bsn_identities);
-                }
-
-                $query->orWhereHas('voucher_relation', function (Builder $builder) use ($q) {
-                    return $builder->where('bsn', 'LIKE', "%{$q}%");
+        if ($request->has('bsn') && $bsn = $request->input('bsn')) {
+            $query->where(static function(Builder $builder) use ($bsn) {
+                $builder->where('identity_address', record_repo()->identityAddressByBsn($bsn) ?: '-');
+                $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
+                    $builder->where(compact('bsn'));
                 });
             });
         }
 
-        return $query->orderBy($sortBy, $sortOrder);
+        if ($q = $request->input('q')) {
+            $query = VoucherQuery::whereSearchSponsorQuery($query, $q);
+        }
+
+        return $query->orderBy(
+            $request->input('sort_by', 'created_at'),
+            $request->input('sort_order', 'asc')
+        );
     }
 
     /**
@@ -838,23 +838,31 @@ class Voucher extends Model
     }
 
     /**
-     * @param $code
-     * @return static|null
-     */
-    public static function findByCode($code): ?self
-    {
-        return self::whereActivationCode($code)->first();
-    }
-
-    /**
+     * @param string|null $activation_code_uid
      * @return $this
      */
-    public function makeActivationCode(): self {
+    public function makeActivationCode(string $activation_code_uid = null): self
+    {
+        $queryUnused = self::whereHas('fund', function(Builder $builder) {
+            $builder->where('organization_id', $this->fund->organization_id);
+        })->whereNull('identity_address')->where([
+            'activation_code_uid' => $activation_code_uid
+        ]);
+
+        if (!is_null($activation_code_uid) && $queryUnused->exists()) {
+            /** @var Voucher $voucher */
+            $voucher = $queryUnused->first();
+            $activation_code = $voucher->activation_code;
+        } else {
+            $activation_code = token_generator_callback(static function($value) {
+                return Prevalidation::whereUid($value)->doesntExist() &&
+                    Voucher::whereActivationCode($value)->doesntExist();
+            }, 4, 2);
+        }
+
         return $this->updateModel([
-            'activation_code' => token_generator_callback(static function($value) {
-                return !(Prevalidation::whereUid($value)->exists() ||
-                    Voucher::whereActivationCode($value)->exists());
-            }, 4, 2),
+            'activation_code' => $activation_code,
+            'activation_code_uid' => $activation_code_uid,
         ]);
     }
 }

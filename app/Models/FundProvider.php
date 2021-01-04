@@ -6,6 +6,7 @@ use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderChatQuery;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\Forus\Session\Models\Session;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -92,41 +93,52 @@ class FundProvider extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function products(): BelongsToMany {
+    public function products(): BelongsToMany
+    {
         return $this->belongsToMany(Product::class, 'fund_provider_products');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_provider_products(): HasMany {
+    public function fund_provider_products(): HasMany
+    {
         return $this->hasMany(FundProviderProduct::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_provider_products_with_trashed(): HasMany {
+    public function fund_provider_products_with_trashed(): HasMany
+    {
         return $this->hasMany(FundProviderProduct::class)->withTrashed();
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_provider_chats(): HasMany {
+    public function fund_provider_chats(): HasMany
+    {
         return $this->hasMany(FundProviderChat::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
@@ -134,9 +146,23 @@ class FundProvider extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function product_exclusions(): HasMany {
         return $this->hasMany(FundProviderProductExclusion::class);
+    }
+
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     */
+    public function getLastActivity(): ?Carbon {
+        /** @var Session|null $session */
+        $session = Session::whereIn(
+            'identity_address',
+            $this->organization->employees->pluck('identity_address')
+        )->latest()->first();
+
+        return $session ? $session->last_activity_at : null;
     }
 
     /**

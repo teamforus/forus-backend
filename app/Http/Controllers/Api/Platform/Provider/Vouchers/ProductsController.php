@@ -44,6 +44,10 @@ class ProductsController extends Controller
             $request->input('organization_id', $organizations)
         );
 
+        if ($voucherToken->voucher->product_id) {
+            $query->where('product_id', $voucherToken->voucher->product_id);
+        }
+
         return ProviderSubsidyProductResource::collection($query->with(
             ProviderSubsidyProductResource::$load
         )->paginate($request->input('per_page', 10)));

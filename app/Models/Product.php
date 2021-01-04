@@ -493,6 +493,6 @@ class Product extends Model
      * @noinspection PhpUnused
      */
     public function getOldPriceAttribute() {
-       return null;
+       return $this->price;
     }
 }

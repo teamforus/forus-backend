@@ -23,6 +23,18 @@ class ActivationCodeVoucherRequest extends BaseFormRequest
     {
         return $this->organization->identityCan($this->auth_address(), 'manage_vouchers') &&
             $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->is_granted && !$this->voucher->expired;
+            !$this->voucher->is_granted &&
+            !$this->voucher->expired &&
+            !$this->voucher->activation_code;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function rules(): array
+    {
+        return [
+            'activation_code_uid' => 'nullable|string|max:20',
+        ];
     }
 }

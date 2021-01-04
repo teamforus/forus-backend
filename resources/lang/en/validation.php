@@ -191,4 +191,7 @@ return [
         'records.primary_email' => 'e-mail',
         'records.bsn' => 'bsn',
     ],
+    'voucher_generator' => [
+        'budget_exceeded' => 'The sum of the vouchers amount exceeds budget left on the fund',
+    ],
 ];
