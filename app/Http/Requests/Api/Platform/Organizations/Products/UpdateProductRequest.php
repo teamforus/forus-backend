@@ -31,7 +31,6 @@ class UpdateProductRequest extends FormRequest
     {
         $product = $this->product;
         $price_type = $this->input('price_type');
-        $currentExpire = $product->expire_at->format('Y-m-d');
         $minAmount = $product->countReserved() + $product->countSold();
 
         return [
@@ -48,7 +47,7 @@ class UpdateProductRequest extends FormRequest
                 'numeric',
                 $product->unlimited_stock ? null : 'min:' . $minAmount,
             ],
-            'expire_at'             => 'required|date|after:today|after_or_equal:' . $currentExpire,
+            'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
         ];
     }

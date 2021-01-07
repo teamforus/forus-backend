@@ -47,6 +47,7 @@ use Illuminate\Http\Request;
  * @property-read int|null $funds_count
  * @property-read string $description_html
  * @property-read bool $expired
+ * @property-read string $price_discount_locale
  * @property-read string $price_locale
  * @property-read int $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -246,7 +247,7 @@ class Product extends Model
      * @return bool
      */
     public function getExpiredAttribute(): bool {
-        return $this->expire_at->isPast();
+        return $this->expire_at ? $this->expire_at->isPast() : false;
     }
 
     /**
@@ -403,24 +404,32 @@ class Product extends Model
     public function getPriceLocaleAttribute(): string
     {
         switch ($this->price_type) {
-            case self::PRICE_TYPE_REGULAR: {
-                return currency_format_locale($this->price);
+            case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
+            case self::PRICE_TYPE_FREE: return 'Gratis';
+            case self::PRICE_TYPE_DISCOUNT_FIXED:
+            case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+                return 'Korting: ' . $this->price_discount_locale;
             }
-            case self::PRICE_TYPE_FREE: {
-                return 'Gratis';
-            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getPriceDiscountLocaleAttribute(): string
+    {
+        switch ($this->price_type) {
             case self::PRICE_TYPE_DISCOUNT_FIXED: {
-                return 'Korting: ' . currency_format_locale($this->price_discount);
+                return currency_format_locale($this->price_discount);
             }
             case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
                 $isWhole = (double) ($this->price_discount -
                         round($this->price_discount)) === (double) 0;
 
-                return join('', [
-                    'Korting: ',
-                    currency_format($this->price_discount, $isWhole ? 0 : 2),
-                    '%'
-                ]);
+                return currency_format($this->price_discount, $isWhole ? 0 : 2) . '%';
             }
         }
 

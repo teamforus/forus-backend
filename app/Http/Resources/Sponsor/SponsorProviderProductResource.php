@@ -63,7 +63,7 @@ class SponsorProviderProductResource extends Resource
             'price_locale' => $product->price_locale,
             'price_type' => $product->price_type,
             'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
-            'expire_at' => $product->expire_at->format('Y-m-d'),
+            'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : '',
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
             'expired' => $product->expired,
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,

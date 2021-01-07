@@ -42,7 +42,7 @@ class StoreProductRequest extends FormRequest
                 'numeric',
                 'min:1'
             ],
-            'expire_at'             => 'required|date_format:Y-m-d|after:today',
+            'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
         ];
     }

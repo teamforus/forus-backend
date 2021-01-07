@@ -48,6 +48,7 @@ class ProductResource extends Resource
             // new price fields
             'price_type' => $product->price_type,
             'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
+            'price_discount_locale' => $product->price_discount_locale,
 
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
@@ -55,7 +56,7 @@ class ProductResource extends Resource
             'stock_amount' => $product->stock_amount,
             'price' => is_null($product->price) ? null : currency_format($product->price),
             'price_locale' => $product->price_locale,
-            'expire_at' => $product->expire_at->format('Y-m-d'),
+            'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : null,
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
             'expired' => $product->expired,
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,

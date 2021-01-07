@@ -47,7 +47,7 @@ class ProviderSubsidyProductResource extends JsonResource
             'price_user' => currency_format($price_user),
             'sponsor_subsidy' => currency_format($sponsor_subsidy),
 
-            'expire_at' => $product->expire_at->format('Y-m-d'),
+            'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : '',
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
 
             'photo' => new MediaResource($product->photo),

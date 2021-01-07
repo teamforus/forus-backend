@@ -14,7 +14,6 @@ use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
 use App\Models\FundProviderChat;
 use App\Models\Product;
-use App\Models\Voucher;
 use App\Notifications\Organizations\Products\ProductApprovedNotification;
 use App\Notifications\Organizations\Products\ProductExpiredNotification;
 use App\Notifications\Organizations\Products\ProductReservedNotification;
@@ -50,14 +49,6 @@ class ProductSubscriber
         foreach ($chats as $chat) {
             $chat->addSystemMessage('Aanbieding aangepast.', auth_address());
         }
-
-        $product->vouchers()->each(static function (Voucher $voucher) {
-            $voucher->update([
-                'expire_at' => $voucher->fund->end_date->gt(
-                    $voucher->product->expire_at
-                ) ? $voucher->product->expire_at : $voucher->fund->end_date
-            ]);
-        });
 
         $product->updateSoldOutState();
     }
