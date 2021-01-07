@@ -793,7 +793,6 @@ class LoremDbSeeder extends Seeder
         } while(Product::query()->where('name', $name)->count() > 0);
 
         $price = random_int(1, 20);
-        $old_price = random_int($price, 50);
         $unlimited_stock = random_int(1, 10) < 3;
         $total_amount = $unlimited_stock ? 0 : random_int(1, 10) * 10;
         $sold_out = false;
@@ -805,12 +804,12 @@ class LoremDbSeeder extends Seeder
         ]);
 
         $product = Product::create(array_merge(compact(
-            'name', 'price', 'old_price', 'total_amount', 'sold_out',
+            'name', 'price', 'total_amount', 'sold_out',
             'expire_at', 'product_category_id', 'description', 'unlimited_stock'
         ), [
             'organization_id' => $organization->id
         ], array_only($fields, [
-            'name', 'price', 'old_price', 'total_amount', 'sold_out', 'expire_at'
+            'name', 'price', 'total_amount', 'sold_out', 'expire_at'
         ])));
 
         ProductCreated::dispatch($product);

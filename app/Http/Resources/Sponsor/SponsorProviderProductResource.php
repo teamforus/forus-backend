@@ -50,18 +50,19 @@ class SponsorProviderProductResource extends Resource
 
         return array_merge($product->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
-            'organization_id'
+            'organization_id', 'price_type', 'price_type_discount',
         ]), [
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
-            'no_price' => $product->no_price,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
             'sold_amount' => $product->countSold(),
             'stock_amount' => $product->stock_amount,
             'price' => currency_format($product->price),
-            'old_price' => $product->old_price ? currency_format($product->old_price) : null,
+            'price_locale' => $product->price_locale,
+            'price_type' => $product->price_type,
+            'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
             'expire_at' => $product->expire_at->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
             'expired' => $product->expired,

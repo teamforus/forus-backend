@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProductRequest extends FormRequest
@@ -23,18 +24,19 @@ class StoreProductRequest extends FormRequest
      */
     public function rules(): array
     {
-        $price = rule_number_format($this->input('price', 0));
         $unlimited_stock = $this->input('unlimited_stock', false);
+        $price_type = $this->input('price_type');
 
         return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,1000',
-            'price'                 => 'required_without:no_price|numeric|min:.2|max:10000',
-            'no_price'              => 'boolean',
-            'no_price_type'         => 'required_if:no_price,true|in:free,discount',
-            'no_price_discount'     => 'nullable|required_if:no_price_type,discount|numeric|min:0|max:100',
+            'price'                 => 'required_if:price_type,regular|numeric|min:.2',
+            'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
+            'price_discount'        => [
+                'discount_fixed'        => 'required_if:price_type,discount_fixed|min:.1',
+                'discount_percentage'   => 'required_if:price_type,discount_percentage|between:.1,100',
+            ][$price_type] ?? [],
             'unlimited_stock'       => 'boolean',
-            'old_price'             => 'nullable|numeric|min:' . $price,
             'total_amount'          => [
                 $unlimited_stock ? null : 'required',
                 'numeric',
@@ -51,7 +53,7 @@ class StoreProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'no_price_discount.required_if' => 'Het kortingsveld is verplicht.',
+            'price_discount.required_if' => 'Het kortingsveld is verplicht.',
             'expire_at.after' => trans('validation.after', [
                 'date' => trans('validation.attributes.today')
             ])
@@ -61,8 +63,9 @@ class StoreProductRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'no_price_type.free' => 'gratis',
-            'no_price_type.discount' => 'korting',
+            'price_type.free' => 'gratis',
+            'price_type.discount_fixed' => 'korting',
+            'price_type.discount_percentage' => 'korting',
         ];
     }
 }

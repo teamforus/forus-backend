@@ -113,7 +113,7 @@ class VoucherResource extends Resource
             $used = $voucher->transactions_count > 0;
             $amount = $voucher->amount;
             $productResource = array_merge($voucher->product->only([
-                'id', 'name', 'description', 'description_html', 'price', 'old_price',
+                'id', 'name', 'description', 'description_html', 'price',
                 'total_amount', 'sold_amount', 'product_category_id',
                 'organization_id'
             ]), [
@@ -188,7 +188,6 @@ class VoucherResource extends Resource
             'sold_amount', 'product_category_id', 'organization_id'
         ]), $product_voucher->fund->isTypeBudget() ? [
             'price' => currency_format($product_voucher->product->price),
-            'old_price' => currency_format($product_voucher->product->old_price),
         ] : []);
     }
 
