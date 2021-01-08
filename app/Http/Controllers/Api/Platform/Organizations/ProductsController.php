@@ -63,10 +63,18 @@ class ProductsController extends Controller
         $this->authorize('store', [Product::class, $organization]);
 
         $media = null;
-        $unlimited_stock = $request->input('unlimited_stock', false);
+        $price_type = $request->input('price_type');
         $total_amount = $request->input('total_amount');
-        $no_price_type = $request->input('no_price_type');
-        $no_price_discount = $request->input('no_price_discount');
+        $unlimited_stock = $request->input('unlimited_stock', false);
+
+        $price = in_array($price_type, [
+            Product::PRICE_TYPE_REGULAR,
+        ]) ? $request->input('price') : 0;
+
+        $price_discount = in_array($price_type, [
+            Product::PRICE_TYPE_DISCOUNT_FIXED,
+            Product::PRICE_TYPE_DISCOUNT_PERCENTAGE
+        ]) ? $request->input('price_discount') : 0;
 
         if ($media_uid = $request->input('media_uid')) {
             $media = $this->mediaService->findByUid($media_uid);
@@ -76,17 +84,11 @@ class ProductsController extends Controller
 
         /** @var Product $product */
         $product = $organization->products()->create(array_merge($request->only([
-            'name', 'description', 'price', /*'old_price',*/ 'product_category_id',
-            'expire_at', 'no_price',
+            'name', 'description', 'price', 'product_category_id', 'expire_at',
         ]), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
             'unlimited_stock' => $unlimited_stock
-        ], $request->input('no_price') ? [
-            'price' => 0,
-            'old_price' => null,
-            'no_price_type' => $no_price_type,
-            'no_price_discount' => $no_price_type === 'free' ? null : $no_price_discount,
-        ] : []));
+        ], compact('price', 'price_type', 'price_discount')));
 
         ProductCreated::dispatch($product);
 
@@ -132,12 +134,17 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
-        $price = $request->input('price');
-        $no_price = $product->no_price;
+        $price_type = $request->input('price_type');
         $total_amount = $request->input('total_amount');
-        $no_price_type = $request->input('no_price_type');
-        $no_price_discount = $request->input('no_price_discount');
-        $no_price_discount = $no_price && $no_price_type === 'discount' ? $no_price_discount : null;
+
+        $price = in_array($price_type, [
+            $product::PRICE_TYPE_REGULAR,
+        ]) ? $request->input('price') : 0;
+
+        $price_discount = in_array($price_type, [
+            $product::PRICE_TYPE_DISCOUNT_FIXED,
+            $product::PRICE_TYPE_DISCOUNT_PERCENTAGE
+        ]) ? $request->input('price_discount') : 0;
 
         if ($media_uid = $request->input('media_uid')) {
             $media = $this->mediaService->findByUid($media_uid);
@@ -148,16 +155,15 @@ class ProductsController extends Controller
             }
         }
 
-        if (!$no_price && (currency_format($price) !== currency_format($product->price))) {
+        if ($product->priceWillChanged($price_type, $price, $price_discount)) {
             $product->resetSubsidyApprovals();
         }
 
-        $product->update(array_merge($request->only(array_merge([
-            'name', 'description', 'sold_amount', 'product_category_id', 'expire_at'
-        ], $no_price ? ['no_price_type'] : ['price', /*'old_price'*/])), [
+        $product->update(array_merge($request->only([
+            'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
+        ]), [
             'total_amount' => $product->unlimited_stock ? 0 : $total_amount,
-            'no_price_discount' => $no_price_discount,
-        ]));
+        ], compact('price', 'price_type', 'price_discount')));
 
         ProductUpdated::dispatch($product);
 
@@ -205,6 +211,6 @@ class ProductsController extends Controller
 
         $product->delete();
 
-        return response()->json([], 200);
+        return response()->json([]);
     }
 }

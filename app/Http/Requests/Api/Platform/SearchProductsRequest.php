@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform;
 
 use App\Models\Fund;
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -31,7 +32,7 @@ class SearchProductsRequest extends FormRequest
         return [
             'q'                     => 'nullable|string|max:100',
             'unlimited_stock'       => 'nullable|boolean',
-            'no_price'              => 'nullable|boolean',
+            'perice_type'           => 'nullable|string|in:' . join(',', Product::PRICE_TYPES),
             'show_all'              => 'nullable|boolean',
             'per_page'              => 'nullable|numeric|max:1000',
             'fund_id'               => 'nullable|exists:funds,id',

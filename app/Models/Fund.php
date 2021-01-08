@@ -1132,9 +1132,9 @@ class Fund extends Model
 
         if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucherExpireAt = $this->end_date->gt(
+                $voucherExpireAt = $fund_formula_product->product->expire_at && $this->end_date->gt(
                     $fund_formula_product->product->expire_at
-                ) ? $fund_formula_product->product->expire_at->expire_at : $this->end_date;
+                ) ? $fund_formula_product->product->expire_at : $this->end_date;
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,

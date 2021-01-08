@@ -324,7 +324,8 @@ class Voucher extends Model
      */
     public function getLastActiveDayAttribute()
     {
-        return $this->isProductType() ? $this->product->expire_at : $this->expire_at->subDay();
+        return $this->isProductType() && $this->product->expire_at ?
+            $this->product->expire_at : $this->expire_at->subDay();
     }
 
     /**
@@ -629,7 +630,7 @@ class Voucher extends Model
     ) {
         $price = (float) (!$price && ($price !== 0) ? $product->price : $price);
 
-        $voucherExpireAt = $this->fund->end_date->gt(
+        $voucherExpireAt = $product->expire_at && $this->fund->end_date->gt(
             $product->expire_at
         ) ? $product->expire_at : $this->fund->end_date;
 

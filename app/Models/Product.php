@@ -26,18 +26,16 @@ use Illuminate\Http\Request;
  * @property int $product_category_id
  * @property string $name
  * @property string $description
- * @property float $price
- * @property float|null $old_price
+ * @property float|null $price
  * @property int $total_amount
  * @property bool $unlimited_stock
- * @property bool $no_price
- * @property string $no_price_type
- * @property float|null $no_price_discount
+ * @property string $price_type
+ * @property float|null $price_discount
  * @property int $show_on_webshop
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property \Illuminate\Support\Carbon $expire_at
+ * @property \Illuminate\Support\Carbon|null $expire_at
  * @property bool $sold_out
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
@@ -49,7 +47,8 @@ use Illuminate\Http\Request;
  * @property-read int|null $funds_count
  * @property-read string $description_html
  * @property-read bool $expired
- * @property-read bool $is_offer
+ * @property-read string $price_discount_locale
+ * @property-read string $price_locale
  * @property-read int $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -76,12 +75,10 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereExpireAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereNoPrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereNoPriceDiscount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereNoPriceType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOldPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePriceDiscount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePriceType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereProductCategoryId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereShowOnWebshop($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereSoldOut($value)
@@ -104,6 +101,25 @@ class Product extends Model
     public const EVENT_APPROVED = 'approved';
     public const EVENT_REVOKED = 'revoked';
 
+    public const PRICE_TYPE_FREE = 'free';
+    public const PRICE_TYPE_REGULAR = 'regular';
+    public const PRICE_TYPE_DISCOUNT_FIXED = 'discount_fixed';
+    public const PRICE_TYPE_DISCOUNT_PERCENTAGE = 'discount_percentage';
+
+    /** @noinspection PhpUnused */
+    public const PRICE_DISCOUNT_TYPES = [
+        self::PRICE_TYPE_DISCOUNT_FIXED,
+        self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
+    ];
+
+    /** @noinspection PhpUnused */
+    public const PRICE_TYPES = [
+        self::PRICE_TYPE_FREE,
+        self::PRICE_TYPE_REGULAR,
+        self::PRICE_TYPE_DISCOUNT_FIXED,
+        self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -111,8 +127,8 @@ class Product extends Model
      */
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
-        'price', /*'old_price',*/ 'total_amount', 'expire_at', 'sold_out',
-        'unlimited_stock', 'no_price', 'no_price_type', 'no_price_discount',
+        'price', 'total_amount', 'expire_at', 'sold_out',
+        'unlimited_stock', 'price_type', 'price_discount',
     ];
 
     /**
@@ -125,7 +141,6 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'no_price' => 'boolean',
         'unlimited_stock' => 'boolean',
     ];
 
@@ -145,6 +160,7 @@ class Product extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function vouchers_reserved(): HasMany {
         return $this->hasMany(Voucher::class)->whereDoesntHave('transactions');
@@ -216,15 +232,6 @@ class Product extends Model
     }
 
     /**
-     * The product is offer
-     *
-     * @return bool
-     */
-    public function getIsOfferAttribute(): bool {
-        return (bool) $this->old_price;
-    }
-
-    /**
      * The product is sold out
      *
      * @param $value
@@ -240,7 +247,7 @@ class Product extends Model
      * @return bool
      */
     public function getExpiredAttribute(): bool {
-        return $this->expire_at->isPast();
+        return $this->expire_at ? $this->expire_at->isPast() : false;
     }
 
     /**
@@ -263,6 +270,7 @@ class Product extends Model
 
     /**
      * @return int
+     * @noinspection PhpUnused
      */
     public function getStockAmountAttribute(): int {
         return $this->total_amount - (
@@ -317,33 +325,27 @@ class Product extends Model
             );
         }
 
-        // filter by product_category_id
         if ($category_id = $request->input('product_category_id')) {
             $query = ProductQuery::productCategoriesFilter($query, $category_id);
         }
 
-        // filter by fund_id
         if ($request->has('fund_id') && $fund_id = $request->input('fund_id')) {
             $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
         }
 
-        // filter by no_price
-        if ($request->has('no_price')) {
-            $query = $query->where('no_price', '=', (bool) $request->input('no_price'));
+        if ($request->has('price_type')) {
+            $query = $query->where('price_type', $request->input('price_type'));
         }
 
-        // filter by unlimited stock
         if ($request->has('unlimited_stock') &&
             $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
             return ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
         }
 
-        // filter product organization
         if ($request->has('organization_id')) {
             $query = $query->where('organization_id', $request->input('organization_id'));
         }
 
-        // filter by string query
         if ($request->has('q') && !empty($q = $request->input('q'))) {
             return ProductQuery::queryDeepFilter($query, $q);
         }
@@ -389,9 +391,49 @@ class Product extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getDescriptionHtmlAttribute(): string {
         return resolve('markdown')->convertToHtml(e($this->description));
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getPriceLocaleAttribute(): string
+    {
+        switch ($this->price_type) {
+            case self::PRICE_TYPE_REGULAR: return currency_format_locale($this->price);
+            case self::PRICE_TYPE_FREE: return 'Gratis';
+            case self::PRICE_TYPE_DISCOUNT_FIXED:
+            case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+                return 'Korting: ' . $this->price_discount_locale;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getPriceDiscountLocaleAttribute(): string
+    {
+        switch ($this->price_type) {
+            case self::PRICE_TYPE_DISCOUNT_FIXED: {
+                return currency_format_locale($this->price_discount);
+            }
+            case self::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+                $isWhole = (double) ($this->price_discount -
+                        round($this->price_discount)) === (double) 0;
+
+                return currency_format($this->price_discount, $isWhole ? 0 : 2) . '%';
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -489,10 +531,28 @@ class Product extends Model
     }
 
     /**
-     * @return null
-     * @noinspection PhpUnused
+     * Check if price will change after update
+     * @param string $price_type
+     * @param float $price
+     * @param float $price_discount
+     * @return bool
      */
-    public function getOldPriceAttribute() {
-       return $this->price;
+    public function priceWillChanged(string $price_type, float $price, float $price_discount): bool
+    {
+        if ($price_type !== $this->price_type) {
+            return true;
+        }
+
+        if ($this->price_type === self::PRICE_TYPE_REGULAR &&
+            currency_format($price) !== currency_format($this->price)) {
+            return true;
+        }
+
+        if (in_array($this->price_type, self::PRICE_DISCOUNT_TYPES, true) &&
+            currency_format($price_discount) !== currency_format($this->price_discount)) {
+            return true;
+        }
+
+        return false;
     }
 }

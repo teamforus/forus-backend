@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b278cb97e85e6016ef493a8b47fe35dd",
+    "content-hash": "550a8b8d0e5e46de8f881b4206f822a1",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -139,16 +139,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.158.22",
+            "version": "3.171.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "0aae6d7d0e9fc40ace69ed7f7785d7ddab4dabd0"
+                "reference": "1f7f7c1db844f6c988c93008f902b352c7616da8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/0aae6d7d0e9fc40ace69ed7f7785d7ddab4dabd0",
-                "reference": "0aae6d7d0e9fc40ace69ed7f7785d7ddab4dabd0",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/1f7f7c1db844f6c988c93008f902b352c7616da8",
+                "reference": "1f7f7c1db844f6c988c93008f902b352c7616da8",
                 "shasum": ""
             },
             "require": {
@@ -220,12 +220,7 @@
                 "s3",
                 "sdk"
             ],
-            "support": {
-                "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
-                "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.158.22"
-            },
-            "time": "2020-11-06T19:13:12+00:00"
+            "time": "2020-12-29T19:11:15+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1946,10 +1941,6 @@
             "keywords": [
                 "promise"
             ],
-            "support": {
-                "issues": "https://github.com/guzzle/promises/issues",
-                "source": "https://github.com/guzzle/promises/tree/1.4.0"
-            },
             "time": "2020-09-30T07:37:28+00:00"
         },
         {
@@ -2021,10 +2012,6 @@
                 "uri",
                 "url"
             ],
-            "support": {
-                "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/1.7.0"
-            },
             "time": "2020-09-30T07:37:11+00:00"
         },
         {
@@ -6120,9 +6107,6 @@
                 "portable",
                 "shim"
             ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.20.0"
-            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -7556,6 +7540,7 @@
                 "faker",
                 "fixtures"
             ],
+            "abandoned": true,
             "time": "2019-12-12T13:22:17+00:00"
         },
         {

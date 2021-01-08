@@ -170,10 +170,13 @@ if (!function_exists('currency_format')) {
 if (!function_exists('currency_format_locale')) {
     /**
      * @param $number
+     * @param string $sign
      * @return string
      */
-    function currency_format_locale($number) {
-        return ($number % 1 === 0 ? (int) $number : currency_format($number)) . ',-';
+    function currency_format_locale($number, $sign = '€ '): string {
+        $isWhole = (double) ($number - round($number)) === (double) 0;
+
+        return $sign . currency_format($number, $isWhole ? 0 : 2, ',', '.') . ($isWhole ? ',-' : '');
     }
 }
 

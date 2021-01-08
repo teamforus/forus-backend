@@ -44,8 +44,8 @@ class ProductIdInStockRule extends BaseRule
             return $this->rejectTrans('product_sold_out');
         }
 
-        if ($product->no_price) {
-            return $this->rejectTrans('product_no_price');
+        if ($product->price_type !== $product::PRICE_TYPE_REGULAR) {
+            return $this->rejectTrans('product_price_type_not_regular');
         }
 
         if (!$product->unlimited_stock &&

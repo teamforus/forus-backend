@@ -12,6 +12,7 @@ use App\Scopes\Builders\ProductQuery;
  */
 class FundProviderProductSubsidyRule extends BaseRule
 {
+    protected $maxAmount;
     private $fundProvider;
 
     /**
@@ -21,6 +22,7 @@ class FundProviderProductSubsidyRule extends BaseRule
      */
     public function __construct(FundProvider $fundProvider)
     {
+        $this->maxAmount = env('MAX_SPONSOR_SUBSIDY_AMOUNT', 10000);
         $this->fundProvider = $fundProvider;
     }
 
@@ -47,7 +49,7 @@ class FundProviderProductSubsidyRule extends BaseRule
             return $this->rejectTrans('product_not_found');
         }
 
-        if (!is_numeric($amount) || $amount > $product->price || $amount < 0) {
+        if (!is_numeric($amount) || $amount > $this->maxAmount || $amount < 0) {
             return $this->rejectWithMessage(trans('validation.max.numeric', [
                 'max' => currency_format_locale($product->price),
                 'attribute' => trans('validation.attributes.amount')
