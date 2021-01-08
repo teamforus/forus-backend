@@ -28,6 +28,20 @@ class SponsorDigest extends BaseOrganizationDigest
     ];
 
     /**
+     * When at least one provider applied to one of your funds,
+     * send info about lack of activity on your other funds
+     */
+    protected $notifyAboutLackOfActivity;
+
+    /**
+     * SponsorDigest constructor.
+     */
+    public function __construct()
+    {
+        $this->notifyAboutLackOfActivity = env('DIGEST_NOTIFY_NO_PROVIDER_REQUESTS', false);
+    }
+
+    /**
      * @param Organization $organization
      * @param NotificationService $notificationService
      */
@@ -98,7 +112,7 @@ class SponsorDigest extends BaseOrganizationDigest
                         'providers_count' => $countEvents,
                         'providers_list' => $eventLogs->pluck('provider_name')->implode("\n- "),
                     ]));
-                } else {
+                } else if ($this->notifyAboutLackOfActivity) {
                     $emailBody->h3(trans('digests/sponsor.providers_header_empty', [
                         'fund_name' => $fund->name,
                     ]), ['margin_less'])->text(trans('digests/sponsor.providers_empty'));
