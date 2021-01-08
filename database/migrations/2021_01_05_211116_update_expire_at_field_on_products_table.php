@@ -17,6 +17,9 @@ class UpdateExpireAtFieldOnProductsTable extends Migration
      */
     public function up()
     {
+        DB::getDoctrineSchemaManager()
+            ->getDatabasePlatform()
+            ->registerDoctrineTypeMapping('enum', 'string');
         Schema::table('products', function (Blueprint $table) {
             $table->dateTime('expire_at')->nullable()->default(null)->change();
         });
