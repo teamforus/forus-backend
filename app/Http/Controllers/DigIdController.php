@@ -8,6 +8,7 @@ use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Services\DigIdService\Models\DigIdSession;
+use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
@@ -19,12 +20,16 @@ class DigIdController extends Controller
 {
     /**
      * @param StartDigIdRequest $request
-     * @return array|void
+     * @return array
      */
-    public function start(StartDigIdRequest $request)
+    public function start(StartDigIdRequest $request): array
     {
         if ($request->input('request') !== 'auth') {
             $this->middleware('api.auth');
+        }
+
+        if (!$finalRedirect = self::makeFinalRedirectUrl($request)) {
+            abort(404);
         }
 
         $digidSession = DigIdSession::createSession(
@@ -41,14 +46,13 @@ class DigIdController extends Controller
         )));
 
         if ($digidSession->state !== DigIdSession::STATE_PENDING_AUTH) {
-            return abort(503, 'Unable to handle the request at the moment.', [
+            abort(503, 'Unable to handle the request at the moment.', [
                 'Error-Code' => strtolower('digid_' . $digidSession->digid_error_code),
             ]);
         }
 
         return [
-            'redirect_url' => url(sprintf(
-                '/api/v1/platform/digid/%s/redirect',
+            'redirect_url' => url(sprintf('/api/v1/platform/digid/%s/redirect',
                 $digidSession->session_uid
             ))
         ];
@@ -93,9 +97,11 @@ class DigIdController extends Controller
         // check if digid request went well and redirect to final url with
         // error core if not
         if (!$session->isAuthorized()) {
-            return redirect(url_extend_get_params($session->session_final_url, [
+            $redirectParams = $session->digid_error_code !== DigIdRepo::DIGID_CANCELLED ? [
                 'digid_error' => $session->getErrorKey()
-            ]));
+            ] : [];
+
+            return redirect(url_extend_get_params($session->session_final_url, $redirectParams));
         }
 
         switch ($session->session_request) {
@@ -179,9 +185,9 @@ class DigIdController extends Controller
 
     /**
      * @param StartDigIdRequest $request
-     * @return mixed|string|void|null
+     * @return string|null
      */
-    private static function makeFinalRedirectUrl(StartDigIdRequest $request) {
+    private static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string {
         $implementationModel = $request->implementation_model();
         $fund = Fund::find($request->input('fund_id'));
 
@@ -189,12 +195,10 @@ class DigIdController extends Controller
             return $fund->urlWebshop(sprintf('/funds/%s/activate', $fund->id));
         }
 
-        if ($request->input('request') === 'auth') {
-            return $implementationModel ? $implementationModel->urlFrontend(
-                $request->client_type()
-            ) : abort(404);
+        if (($request->input('request') === 'auth') && $implementationModel) {
+            return $implementationModel->urlFrontend($request->client_type());
         }
 
-        return abort(404);
+        return null;
     }
 }
