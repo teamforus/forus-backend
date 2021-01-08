@@ -141,7 +141,7 @@ class FundRequest extends Model
         return $query->orderBy(
             $request->get('sort_by', 'created_at'),
             $request->get('sort_order', 'DESC')
-        );
+        )->orderBy('created_at');
     }
 
     /**
