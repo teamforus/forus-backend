@@ -135,7 +135,6 @@ class ProviderVoucherResource extends Resource
                 'product_category_id', 'organization_id'
             ])->merge([
                 'price' => currency_format($voucher->product->price),
-                'old_price' => currency_format($voucher->product->old_price),
                 'photo' => new MediaResource($voucher->product->photo),
                 'organization' => new OrganizationBasicResource($voucher->product->organization),
             ])->toArray(),

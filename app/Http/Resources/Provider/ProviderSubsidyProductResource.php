@@ -16,6 +16,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ProviderSubsidyProductResource extends JsonResource
 {
     public static $load = [
+        'fund_provider.fund.organization',
         'product.photo.presets',
         'product.product_category.translations',
         'product.organization.logo.presets',
@@ -32,22 +33,25 @@ class ProviderSubsidyProductResource extends JsonResource
     {
         $fundProviderProduct = $this->resource;
         $product = $fundProviderProduct->product;
+        $fund = $fundProviderProduct->fund_provider->fund;
 
         $price = $product->price;
-        $price_user = $product->price - $fundProviderProduct->amount;
+        $price_user = max($product->price - $fundProviderProduct->amount, 0);
+        $sponsor_subsidy = $fundProviderProduct->amount;
 
         return array_merge($product->only([
-            'id', 'name', 'sold_out', 'organization_id', 'expired', 'unlimited_stock', 'no_price',
-            'no_price_type', 'no_price_discount'
+            'id', 'name', 'sold_out', 'organization_id', 'expired', 'unlimited_stock',
+            'price_type', 'price_discount',
         ]), [
             'price' => currency_format($price),
             'price_user' => currency_format($price_user),
-            'price_old' => $product->old_price ? currency_format($product->old_price) : null,
+            'sponsor_subsidy' => currency_format($sponsor_subsidy),
 
-            'expire_at' => $product->expire_at->format('Y-m-d'),
+            'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : '',
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
 
             'photo' => new MediaResource($product->photo),
+            'sponsor' => new OrganizationBasicResource($fund->organization),
             'organization' => new OrganizationBasicResource($product->organization),
             'product_category' => new ProductCategoryResource($product->product_category),
         ]);

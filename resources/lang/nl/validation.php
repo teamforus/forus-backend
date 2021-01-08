@@ -191,7 +191,6 @@ return [
         'note' => 'notitie',
         'amount' => 'hoeveelheid',
         'product_categories' => 'categorieën',
-        'old_price' => 'Orginele prijs',
         'description' => 'omschrijving',
         'price' => 'prijs',
         'total_amount' => 'aanbod',
@@ -205,16 +204,19 @@ return [
         'end_date' => 'einddatum',
         'value' => "waarde",
         'file' => "bestand",
-        'no_price' => "Geen prijs",
-        'no_price_type' => "Geen prijs type",
-        'no_price_discount' => "Korting",
+        'price_type' => "Prijs type",
+        'price_discount' => "Korting",
         'limit_total' => "Totaal aanbod",
         'limit_total_per_identity' => "Limiet per aanvrager",
     ],
+    'voucher_generator' => [
+        'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
+    ],
     'values' => [
-        'no_price_type' => [
+        'price_type' => [
             'free' => 'gratis',
-            'discount' => 'korting',
+            'discount_fixed' => 'korting',
+            'discount_percentage' => 'korting',
         ],
     ]
 ];

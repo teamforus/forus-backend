@@ -23,42 +23,12 @@ class FundResource extends Resource
      */
     public function toArray($request): array
     {
-        $fund               = $this->resource;
-        $organization       = $fund->organization;
-        $sponsorCount       = $organization->employees->count();
-        $validators         = $organization->employeesWithPermissionsQuery([
-            'validate_records'
-        ])->get();
+        $fund           = $this->resource;
+        $organization   = $fund->organization;
+        $checkCriteria  = $request->get('check_criteria', false);
 
-        $checkCriteria = $request->get('check_criteria', false);
-        $providersEmployeeCount = $fund->provider_organizations_approved;
-        $providersEmployeeCount = $providersEmployeeCount->reduce(static function (
-            int $carry,
-            Organization $organization
-        ) {
-            return $carry + $organization->employees->count();
-        }, 0);
-
-        if (Gate::allows('funds.showFinances', [$fund, $organization])) {
-            $financialData = [
-                'sponsor_count'                => $sponsorCount,
-                'provider_organizations_count' => $fund->provider_organizations_approved->count(),
-                'provider_employees_count'  => $providersEmployeeCount,
-                'requester_count'           => $fund->vouchers->where(
-                    'parent_id', '=', null
-                )->count(),
-                'validators_count'          => $validators->count(),
-                'budget'                    => [
-                    'total'     => currency_format($fund->budget_total),
-                    'validated' => currency_format($fund->budget_validated),
-                    'used'      => currency_format($fund->budget_used),
-                    'left'      => currency_format($fund->budget_left),
-                    'reserved'  => currency_format($fund->budget_reserved)
-                ]
-            ];
-        } else {
-            $financialData = [];
-        }
+        $financialData  = $this->getFinancialData($fund);
+        $generatorData  = $this->getVoucherGeneratorData($fund);
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
@@ -87,7 +57,7 @@ class FundResource extends Resource
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&
                 $fund->isTakenByPartner(auth_address()),
-        ]: [], $financialData);
+        ]: [], $financialData, $generatorData);
 
         if ($organization->identityCan(auth()->id(), 'manage_funds')) {
             $data = array_merge($data, $fund->only([
@@ -105,5 +75,55 @@ class FundResource extends Resource
         }
 
         return $data;
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    public function getVoucherGeneratorData(Fund $fund): array
+    {
+        return Gate::allows('funds.manageVouchers', [$fund, $fund->organization]) ? [
+            'limit_per_voucher' => $fund->getMaxAmountPerVoucher(),
+            'limit_sum_vouchers' => $fund->getMaxAmountSumVouchers(),
+        ] : [];
+    }
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    public function getFinancialData(Fund $fund): array
+    {
+        $approvedCount = $fund->provider_organizations_approved;
+        $providersEmployeeCount = $approvedCount->map(function (Organization $organization) {
+            return $organization->employees->count();
+        })->sum();
+
+        $validatorsCount = $fund->organization->employeesWithPermissionsQuery([
+            'validate_records'
+        ])->count();
+
+        return Gate::allows('funds.showFinances', [$fund, $fund->organization]) ? [
+            'sponsor_count'                 => $fund->organization->employees->count(),
+            'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
+            'provider_employees_count'      => $providersEmployeeCount,
+            'requester_count'               => $fund->vouchers->whereNull('parent_id')->count(),
+            'validators_count'              => $validatorsCount,
+            'budget'                        => $this->getBudgetData($fund),
+        ] : [];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array
+     */
+    public function getBudgetData(Fund $fund): array {
+        return [
+            'total'     => currency_format($fund->budget_total),
+            'validated' => currency_format($fund->budget_validated),
+            'used'      => currency_format($fund->budget_used),
+            'left'      => currency_format($fund->budget_left),
+            'reserved'  => currency_format($fund->budget_reserved)
+        ];
     }
 }

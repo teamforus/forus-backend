@@ -1132,9 +1132,9 @@ class Fund extends Model
 
         if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucherExpireAt = $this->end_date->gt(
+                $voucherExpireAt = $fund_formula_product->product->expire_at && $this->end_date->gt(
                     $fund_formula_product->product->expire_at
-                ) ? $fund_formula_product->product->expire_at->expire_at : $this->end_date;
+                ) ? $fund_formula_product->product->expire_at : $this->end_date;
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,
@@ -1573,5 +1573,32 @@ class Fund extends Model
     public function isAutoValidatingRequests(): bool
     {
         return $this->default_validator_employee_id && $this->auto_requests_validation;
+    }
+
+    /**
+     * @return bool
+     */
+    public function limitGeneratorAmount(): bool
+    {
+        return $this->fund_config && $this->fund_config->limit_generator_amount ?? true;
+    }
+
+    /**
+     * @return float
+     */
+    public function getMaxAmountPerVoucher(): float
+    {
+        $max_allowed = config('forus.funds.max_sponsor_voucher_amount');
+        $max = min($this->budget_left ?? $max_allowed, $max_allowed);
+
+        return (float) ($this->limitGeneratorAmount() ? $max : $max_allowed);
+    }
+
+    /**
+     * @return float
+     */
+    public function getMaxAmountSumVouchers(): float
+    {
+        return (float) ($this->limitGeneratorAmount() ? $this->budget_left : 1000000);
     }
 }

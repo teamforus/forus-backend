@@ -170,7 +170,10 @@ class ProductQuery
         return $query->where(static function(Builder $builder) {
             return $builder
                 ->where('sold_out', false)
-                ->where('expire_at', '>', date('Y-m-d'));
+                ->where(static function(Builder $builder) {
+                    $builder->whereNull('expire_at');
+                    $builder->orWhere('expire_at', '>', date('Y-m-d'));
+                });
         });
     }
 
