@@ -153,8 +153,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('forus.digest.sponsor:send')
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
 
-        $schedule->command('forus.digest.requester:send')
-            ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
+        // $schedule->command('forus.digest.requester:send')
+        //     ->monthlyOn(1, "18:00")->withoutOverlapping()->onOneServer();
     }
 
     /**
