@@ -34,7 +34,7 @@ class SendAllDigestsCommand extends Command
     {
         ProviderFundsDigest::dispatchNow();
         ProviderProductsDigest::dispatchNow();
-        //RequesterDigest::dispatchNow();
+        RequesterDigest::dispatchNow();
         SponsorDigest::dispatchNow();
         ValidatorDigest::dispatchNow();
     }
