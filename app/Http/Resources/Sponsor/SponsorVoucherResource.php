@@ -55,12 +55,11 @@ class SponsorVoucherResource extends Resource
      */
     private function getProductDetails(Voucher $voucher): array {
         return array_merge($voucher->product->only([
-            'id', 'name', 'description', 'price', 'old_price',
-            'total_amount', 'sold_amount', 'product_category_id',
-            'organization_id'
+            'id', 'name', 'description', 'price', 'total_amount', 'sold_amount',
+            'product_category_id', 'organization_id'
         ]), [
             'product_category' => $voucher->product->product_category,
-            'expire_at' => $voucher->product->expire_at->format('Y-m-d'),
+            'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : null,
             'expire_at_locale' => format_datetime_locale($voucher->product->expire_at),
             'photo' => new MediaResource($voucher->product->photo),
             'organization' => new OrganizationBasicResource($voucher->product->organization),

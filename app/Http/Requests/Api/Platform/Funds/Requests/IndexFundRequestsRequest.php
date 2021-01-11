@@ -31,18 +31,8 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'employee_id'   => 'nullable|exists:employees,id',
             'from'          => 'nullable|date:Y-m-d',
             'to'            => 'nullable|date:Y-m-d',
-            'sort_by'       => [
-                'nullable',
-                Rule::in([
-                    'created_at', 'note'
-                ])
-            ],
-            'sort_order'    => [
-                'nullable',
-                Rule::in([
-                    'asc', 'desc'
-                ])
-            ],
+            'sort_by'       => 'nullable|in:created_at,note,state',
+            'sort_order'    => 'nullable|in:asc,desc',
         ];
     }
 }

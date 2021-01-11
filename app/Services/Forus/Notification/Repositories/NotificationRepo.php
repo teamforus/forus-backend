@@ -16,6 +16,7 @@ use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\Vouchers\PaymentSuccessMail;
+use App\Mail\Vouchers\ProductReservedMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
@@ -49,6 +50,7 @@ class NotificationRepo implements INotificationRepo
         'funds.product_sold_out' => ProductSoldOutMail::class,
         'funds.fund_expires' => FundExpiredMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
+        'funds.product_reserved' => ProductReservedMail::class,
 
         // Authorization emails
         'auth.user_login' => UserLoginMail::class,
@@ -135,25 +137,26 @@ class NotificationRepo implements INotificationRepo
 
     /**
      * Check if Push notification can be unsubscribed
-     * @param string $key
+     * @param string $pushKey
      * @return bool
      */
-    public function isPushNotificationUnsubscribable(string $key): bool {
-        return in_array($key, self::getPushNotificationMap(), true);
+    public function isPushNotificationUnsubscribable(string $pushKey): bool {
+        return in_array($pushKey, self::getPushNotificationMap(), true);
     }
 
     /**
      * Check if Push notification can be unsubscribed
      * @param string $identity_address
-     * @param string $key
+     * @param string $pushKey
      * @return bool
      */
     public function isPushNotificationUnsubscribed(
         string $identity_address,
-        string $key
+        string $pushKey
     ): bool {
         $subscribed = false;
         $type = 'push';
+        $key = $pushKey;
 
         return NotificationPreference::where(compact(
             'identity_address', 'key', 'subscribed', 'type'

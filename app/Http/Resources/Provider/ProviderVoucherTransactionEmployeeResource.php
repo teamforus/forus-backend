@@ -32,7 +32,6 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
         $fund_provider_product = $transaction->fund_provider_product;
 
         $product_price = $fund_provider_product->price ?? null;
-        $product_old_price = $fund_provider_product->old_price ?? null;
 
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "address", "state",
@@ -44,7 +43,6 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
             'amount' => currency_format($transaction->amount),
             'product_price' => $product_price ? currency_format($product_price) : null,
-            'product_old_price' => $product_old_price ? currency_format($product_old_price) : null,
             "organization" => array_merge($transaction->provider->only([
                 "id", "name"
             ]), [

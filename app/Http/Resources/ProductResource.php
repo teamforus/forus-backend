@@ -44,16 +44,19 @@ class ProductResource extends Resource
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
-            'no_price' => $product->no_price,
-            'no_price_type' => $product->no_price_type,
-            'no_price_discount' => $product->no_price_discount,
+
+            // new price fields
+            'price_type' => $product->price_type,
+            'price_discount' => $product->price_discount ? currency_format($product->price_discount) : null,
+            'price_discount_locale' => $product->price_discount_locale,
+
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
             'sold_amount' => $product->countSold(),
             'stock_amount' => $product->stock_amount,
-            'price' => currency_format($product->price),
-            'old_price' => $product->old_price ? currency_format($product->old_price) : null,
-            'expire_at' => $product->expire_at->format('Y-m-d'),
+            'price' => is_null($product->price) ? null : currency_format($product->price),
+            'price_locale' => $product->price_locale,
+            'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : null,
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
             'expired' => $product->expired,
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
@@ -114,11 +117,11 @@ class ProductResource extends Resource
      * @return float
      */
     private function getProductSubsidyPrice(Product $product, string $type): float {
-        return $product->price - $product->fund_provider_products()->where([
+        return max($product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
         ])->whereHas('fund_provider.fund', function(Builder $builder) {
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
             $builder->whereIn('funds.id', $this->fundsQuery()->pluck('id'));
-        })->$type('amount');
+        })->$type('amount'), 0);
     }
 }

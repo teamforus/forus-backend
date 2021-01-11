@@ -29,7 +29,7 @@ class ProductUpdated
      *
      * @return Product
      */
-    public function getProduct()
+    public function getProduct(): Product
     {
         return $this->product;
     }

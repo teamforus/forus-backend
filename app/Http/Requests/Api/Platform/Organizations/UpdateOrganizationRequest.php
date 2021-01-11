@@ -47,7 +47,7 @@ class UpdateOrganizationRequest extends FormRequest
             'iban'                  => ['required', new IbanRule()],
             'email'                 => 'required|email:strict,dns',
             'email_public'          => 'boolean',
-            'phone'                 => 'required|digits_between:6,20',
+            'phone'                 => 'required|digits_between:4,20',
             'phone_public'          => 'boolean',
             'kvk'                   => [
                 'required',

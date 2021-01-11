@@ -10,6 +10,7 @@ use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProductsController extends Controller
@@ -32,10 +33,13 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
-        $query = ProductQuery::whereFundNotExcludedOrHasHistory(
-            $fundProvider->organization->products()->getQuery(),
-            $fund->id
-        );
+        $query = $fundProvider->organization->products()->getQuery();
+        $query = $query->where(static function(Builder $builder) {
+            $builder->whereNull('expire_at');
+            $builder->orWhere('expire_at', '>', now()->endOfDay());
+        });
+
+        $query = ProductQuery::whereFundNotExcludedOrHasHistory($query, $fund->id);
 
         return SponsorProviderProductResource::collection($query->with(
             SponsorProviderProductResource::$load

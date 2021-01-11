@@ -30,30 +30,24 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         $product = $this->product;
-        $no_price = $this->product->no_price;
-        $currentExpire = $product->expire_at->format('Y-m-d');
+        $price_type = $this->input('price_type');
         $minAmount = $product->countReserved() + $product->countSold();
-
-        $price = rule_number_format($this->get('price', 0));
 
         return [
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
-            'no_price'              => 'boolean',
-            'no_price_type'         => $no_price ? 'required:no_price|in:free,discount' : '',
-            'no_price_discount'     => 'nullable|required_if:no_price_type,discount|numeric|min:0|max:100',
-            'price'                 => $product->no_price ? [] : 'required_without:no_price|numeric|min:.2',
-            'old_price'             => $product->no_price ? [] : [
-                'nullable',
-                'numeric',
-                'min:' . $price
-            ],
+            'price'                 => 'required_if:price_type,regular|numeric|min:.2',
+            'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
+            'price_discount'        => [
+                'discount_fixed'        => 'required_if:price_type,discount_fixed|numeric|min:.1',
+                'discount_percentage'   => 'required_if:price_type,discount_percentage|numeric|between:.1,100',
+            ][$price_type] ?? [],
             'total_amount'          => [
                 $product->unlimited_stock ? null : 'required',
                 'numeric',
                 $product->unlimited_stock ? null : 'min:' . $minAmount,
             ],
-            'expire_at'             => 'required|date|after:today|after_or_equal:' . $currentExpire,
+            'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
         ];
     }
@@ -64,7 +58,7 @@ class UpdateProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'no_price_discount.required_if' => 'Het kortingsveld is verplicht.',
+            'price_discount.required_if' => 'Het kortingsveld is verplicht.',
             'expire_at.after' => trans('validation.after', [
                 'date' => trans('validation.attributes.today')
             ])
