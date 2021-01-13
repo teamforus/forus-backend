@@ -53,6 +53,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'q'                 => 'nullable|string|max:100',
             'email'             => 'nullable|string|max:100',
             'bsn'               => 'nullable|string|max:100',
+            'in_use'            => 'nullable|boolean',
         ];
     }
 }
