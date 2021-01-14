@@ -95,9 +95,17 @@ class VoucherQuery
     {
         return $builder->where(static function(Builder $builder) {
             $builder->whereNotNull('employee_id');
+
             $builder->orWhere(static function(Builder $builder) {
                 $builder->whereNull('employee_id');
                 $builder->whereNull('product_id');
+            });
+
+            $builder->orWhere(static function(Builder $builder) {
+                $builder->whereNull('employee_id');
+                $builder->whereNotNull('product_id');
+                $builder->whereNull('parent_id');
+                $builder->where('returnable', false);
             });
         });
     }
