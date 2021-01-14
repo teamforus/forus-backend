@@ -2,15 +2,16 @@
 
 namespace App\Mail\Digest;
 
+/**
+ * Class DigestProviderFundsMail
+ * @package App\Mail\Digest
+ */
 class DigestProviderFundsMail extends BaseDigestMail
 {
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build(): self
+    public function __construct($viewData = [])
     {
-        return $this->view('emails.mail-digest')->subject(trans('digests/provider_funds.subject'));
+        parent::__construct($viewData);
+
+        $this->subject(trans('digests/provider_funds.subject'));
     }
 }
