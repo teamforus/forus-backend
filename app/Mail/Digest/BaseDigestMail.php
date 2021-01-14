@@ -19,4 +19,14 @@ class BaseDigestMail extends Mailable
     {
         $this->viewData = array_merge($this->viewData, $viewData);
     }
+
+    /**
+     * Build the message.
+     *
+     * @return $this
+     */
+    public function build(): self
+    {
+        return $this->view('emails.mail-builder-template');
+    }
 }

@@ -34,7 +34,7 @@ class ShareAppMail extends Mailable
         $this->viewData['emailBody'] = $emailBody;
 
         return $this
-            ->view('emails.share.share-app-mail')
+            ->view('emails.mail-builder-template')
             ->subject(trans('share/email.me_app_download_link.title'));
     }
 }
