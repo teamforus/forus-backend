@@ -105,6 +105,20 @@ class MailBodyBuilder
      * @param array $styles
      * @return $this
      */
+    public function link(
+        string $url = '',
+        string $text = '',
+        $styles = []
+    ): MailBodyBuilder {
+        return $this->button('link', $url, $text ?: $url, $styles);
+    }
+
+    /**
+     * @param string $text
+     * @param string $url
+     * @param array $styles
+     * @return $this
+     */
     public function button_primary(
         string $url = '',
         string $text = '',
@@ -164,7 +178,7 @@ class MailBodyBuilder
      * @param array $styles
      * @return $this
      */
-    protected function block(
+    public function block(
         string $type = 'h1',
         string $text = '',
         $styles = []

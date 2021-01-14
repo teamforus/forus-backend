@@ -212,14 +212,8 @@ $router->group([
     ]);
 });
 
-$router->group(['middleware' => [
-    'throttle:3'
-]], static function() use ($router) {
-    $router->post(
-        '/sms/send',
-        'Api\Platform\SmsController@send'
-    );
-});
+$router->post('/share/sms', 'Api\Platform\ShareController@sendSms');
+$router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
 
 /**
  * Authorization required
