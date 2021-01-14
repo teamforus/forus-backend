@@ -36,6 +36,7 @@ use Illuminate\Http\Request;
  * @property float|null $lat
  * @property string|null $email_from_address
  * @property string|null $email_from_name
+ * @property string|null $privacy_page
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property string $digid_env
@@ -77,6 +78,8 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
+ * @property string|null $description_provider
+ * @method static EloquentBuilder|Implementation whereDescriptionProvider($value)
  */
 class Implementation extends Model
 {
@@ -87,8 +90,9 @@ class Implementation extends Model
      */
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
-        'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
-        'title', 'description', 'has_more_info_url', 'more_info_url', 'description_steps',
+        'url_validator', 'lon', 'lat', 'email_from_address',
+        'email_from_name', 'title', 'description', 'has_more_info_url',
+        'more_info_url', 'description_steps', 'privacy_page',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
     ];
 
@@ -421,13 +425,16 @@ class Implementation extends Model
     private static function getPlatformSettingsConfig($implementation): array {
         return array_merge($implementation->only([
             'title', 'description', 'has_more_info_url',
-            'more_info_url', 'description_steps',
+            'more_info_url', 'description_steps', 'privacy_page'
         ])->toArray(), [
             'description_html' => resolve('markdown')->convertToHtml(
                 $implementation['description'] ?? ''
             ),
             'description_steps_html' => resolve('markdown')->convertToHtml(
                 $implementation['description_steps'] ?? ''
+            ),
+            'privacy_page_html' => resolve('markdown')->convertToHtml(
+                $implementation['privacy_page'] ?? ''
             ),
         ]);
     }
