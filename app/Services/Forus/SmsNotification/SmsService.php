@@ -18,7 +18,7 @@ class SmsService
     public function sendSms(
         string $message,
         string $phoneNumber
-    ) {
+    ): bool {
         try {
             $client = new Client(
                 config('forus.twilio.sid'),
