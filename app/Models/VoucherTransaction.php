@@ -138,8 +138,22 @@ class VoucherTransaction extends Model
                 "fund_name" => $this->voucher->fund->name,
             ];
 
-            $title = trans('push.transactions.offline_regular_voucher.title', $transData);
-            $body = trans('push.transactions.offline_regular_voucher.body', $transData);
+            $fund = $this->voucher->fund;
+            if ($fund->isTypeSubsidy()) {
+                $fundProviderProduct = $this->product->getSubsidyDetailsForFund($fund);
+
+                if ($fundProviderProduct && $this->voucher->identity_address) {
+                    $transData = array_merge($transData, [
+                        "product_name" => $this->product->name,
+                        "new_limit"    => $fundProviderProduct->stockAvailableForIdentity(
+                            $this->voucher->identity_address
+                        )
+                    ]);
+                }
+            }
+
+            $title = trans('push.transactions.offline_regular_voucher.'.$fund->type.'.title', $transData);
+            $body = trans('push.transactions.offline_regular_voucher.'.$fund->type.'.body', $transData);
         } else {
             $transData = [
                 "product_name" => $this->voucher->product->name,
