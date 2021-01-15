@@ -2,6 +2,7 @@
 
 use App\Events\Organizations\OrganizationCreated;
 use App\Models\BusinessType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
@@ -39,6 +40,8 @@ class LoremDbSeeder extends Seeder
 
     private $countProviders;
     private $countValidators;
+    private $countFundRequests;
+    private $fundRequestEmailPattern;
 
     private $implementations = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
@@ -86,9 +89,12 @@ class LoremDbSeeder extends Seeder
 
         $this->countProviders = config('forus.seeders.lorem_db_seeder.providers_count');
         $this->countValidators = config('forus.seeders.lorem_db_seeder.validators_count');
+        $this->countFundRequests = config('forus.seeders.lorem_db_seeder.fund_requests_count');
 
         $this->productCategories = ProductCategory::all();
+
         $this->primaryEmail = config('forus.seeders.lorem_db_seeder.default_email');
+        $this->fundRequestEmailPattern = config('forus.seeders.lorem_db_seeder.fund_request_email_pattern');
     }
 
     private function disableEmails(): void {
@@ -112,7 +118,7 @@ class LoremDbSeeder extends Seeder
 
         $this->productCategories = ProductCategory::all();
         $this->info("Making base identity!");
-        $baseIdentity = $this->makeBaseIdentity($this->primaryEmail);
+        $baseIdentity = $this->makeIdentity($this->primaryEmail, true);
         $this->success("Identity created!");
 
         $this->info("Making Sponsors!");
@@ -127,7 +133,9 @@ class LoremDbSeeder extends Seeder
         $this->makeExternalValidators($baseIdentity, $this->countValidators);
         $this->success("Validators created!");
 
+        $this->info("Applying to providers to funds!");
         $this->applyFunds($baseIdentity);
+        $this->success("Providers applied to funds!");
 
         $this->info("Making other implementations!");
         $this->makeOtherImplementations(array_diff(
@@ -136,16 +144,22 @@ class LoremDbSeeder extends Seeder
         ));
         $this->success("Other implementations created!");
 
+        $this->info("Making fund requests!");
+        $this->makeFundRequests();
+        $this->success("Fund requests created!");
+
         $this->enableEmails();
     }
 
     /**
      * @param string $primaryEmail
+     * @param bool $print
      * @return mixed
      * @throws Exception
      */
-    public function makeBaseIdentity(
-        string $primaryEmail
+    public function makeIdentity(
+        string $primaryEmail,
+        bool $print = false
     ) {
         $identityAddress = $this->identityRepo->make([
             'primary_email' => $primaryEmail,
@@ -159,7 +173,9 @@ class LoremDbSeeder extends Seeder
             'active'
         );
 
-        $this->info("Base identity access token \"{$proxy['access_token']}\"");
+        if ($print) {
+            $this->info("Base identity access token \"{$proxy['access_token']}\"");
+        }
 
         return $identityAddress;
     }
@@ -766,7 +782,7 @@ class LoremDbSeeder extends Seeder
      */
     public function makeProducts(
         Organization $organization,
-        int $count = 5,
+        int $count = 10,
         array $fields = []
     ): array {
         $out = [];
@@ -803,13 +819,24 @@ class LoremDbSeeder extends Seeder
             "Integer montes nulla in montes venenatis."
         ]);
 
+        $price = random_int(1, 100) >= 25 ? $price : 0;
+        $price = $fields['price'] ?? $price;
+        $price_type = $price > 0 ? 'regular' : 'free';
+        $price_discount = 0;
+
+        if ($price_type === 'free' && (random_int(1, 100) <= 50)) {
+            $price_type = (random_int(1, 100) <= 50) ? 'discount_percentage' : 'discount_fixed';
+            $price_discount = random_int(1, 9) * 10;
+        }
+
         $product = Product::create(array_merge(compact(
             'name', 'price', 'total_amount', 'sold_out',
-            'expire_at', 'product_category_id', 'description', 'unlimited_stock'
+            'expire_at', 'product_category_id', 'description', 'unlimited_stock',
+            'price_type', 'price_discount'
         ), [
-            'organization_id' => $organization->id
+            'organization_id' => $organization->id,
         ], array_only($fields, [
-            'name', 'price', 'total_amount', 'sold_out', 'expire_at'
+            'name', 'total_amount', 'sold_out', 'expire_at'
         ])));
 
         ProductCreated::dispatch($product);
@@ -847,6 +874,67 @@ class LoremDbSeeder extends Seeder
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);
         }
+    }
+
+    /**
+     * Make fund requests
+     * @return void
+     * @throws Exception
+     */
+    public function makeFundRequests(): void {
+        $requesters = [];
+
+        foreach (range(1, $this->countFundRequests) as $nth) {
+            $requesters[] = $this->makeIdentity(
+                strtolower(sprintf($this->fundRequestEmailPattern, $this->integerToRoman($nth)))
+            );
+        }
+
+        /** @var Fund[] $funds */
+        $funds = Fund::whereHas('fund_config', function(Builder $builder) {
+            $builder->where('allow_fund_requests', true);
+        })->get();
+
+        foreach ($funds as $fund) {
+            foreach ($requesters as $requester) {
+                $fund->makeFundRequest($requester, $this->makeFundRequestRecords($fund));
+            }
+        }
+    }
+
+    /**
+     * @param Fund $fund
+     * @return string[]
+     */
+    public function makeFundRequestRecords(Fund $fund): array {
+        $records = [];
+
+        foreach ($fund->criteria as $criterion) {
+            $record = [
+                'fund_criterion_id' => $criterion->id,
+                'record_type_key' => $criterion->record_type_key,
+            ];
+
+            switch ($criterion->operator) {
+                case '=': {
+                    $records[] = array_merge($record, [
+                        'value' => $criterion->value,
+                    ]);
+                } break;
+                case '>': {
+                    $records[] = array_merge($record, [
+                        'value' => (int) $criterion->value * 2,
+                    ]);
+                } break;
+                case '<': {
+                    $records[] = array_merge($record, [
+                        'value' => (int) ((int) $criterion->value / 2),
+                    ]);
+                } break;
+            }
+        }
+
+        return $records;
     }
 
     /**
