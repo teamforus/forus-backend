@@ -80,7 +80,7 @@ class ImplementationsController extends Controller
 
         $implementation->update($request->only([
             'title', 'description', 'has_more_info_url', 'more_info_url',
-            'description_steps', 'description_providers', 'privacy_page'
+            'description_steps', 'description_providers', 'description_privacy'
         ]));
 
         return new ImplementationPrivateResource($implementation);

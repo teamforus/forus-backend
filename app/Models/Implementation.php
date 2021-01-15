@@ -26,7 +26,8 @@ use Illuminate\Http\Request;
  * @property string|null $description
  * @property string|null $more_info_url
  * @property string|null $description_steps
- * @property string|null $description_providers
+ * @property string|null $description_provider
+ * @property string|null $description_privacy
  * @property bool $has_more_info_url
  * @property string $url_webshop
  * @property string $url_sponsor
@@ -37,7 +38,6 @@ use Illuminate\Http\Request;
  * @property float|null $lat
  * @property string|null $email_from_address
  * @property string|null $email_from_name
- * @property string|null $privacy_page
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property string $digid_env
@@ -50,37 +50,37 @@ use Illuminate\Http\Request;
  * @property-read int|null $fund_configs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionSteps($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnabled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidEnv($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidRequired($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidSharedSecret($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereHasMoreInfoUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLat($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLon($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereMoreInfoUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlApp($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlProvider($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlSponsor($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
- * @mixin \Eloquent
- * @property string|null $description_provider
+ * @method static EloquentBuilder|Implementation newModelQuery()
+ * @method static EloquentBuilder|Implementation newQuery()
+ * @method static EloquentBuilder|Implementation query()
+ * @method static EloquentBuilder|Implementation whereCreatedAt($value)
+ * @method static EloquentBuilder|Implementation whereDescription($value)
  * @method static EloquentBuilder|Implementation whereDescriptionProvider($value)
+ * @method static EloquentBuilder|Implementation whereDescriptionSteps($value)
+ * @method static EloquentBuilder|Implementation whereDigidASelectServer($value)
+ * @method static EloquentBuilder|Implementation whereDigidAppId($value)
+ * @method static EloquentBuilder|Implementation whereDigidEnabled($value)
+ * @method static EloquentBuilder|Implementation whereDigidEnv($value)
+ * @method static EloquentBuilder|Implementation whereDigidRequired($value)
+ * @method static EloquentBuilder|Implementation whereDigidSharedSecret($value)
+ * @method static EloquentBuilder|Implementation whereEmailFromAddress($value)
+ * @method static EloquentBuilder|Implementation whereEmailFromName($value)
+ * @method static EloquentBuilder|Implementation whereHasMoreInfoUrl($value)
+ * @method static EloquentBuilder|Implementation whereId($value)
+ * @method static EloquentBuilder|Implementation whereKey($value)
+ * @method static EloquentBuilder|Implementation whereLat($value)
+ * @method static EloquentBuilder|Implementation whereLon($value)
+ * @method static EloquentBuilder|Implementation whereMoreInfoUrl($value)
+ * @method static EloquentBuilder|Implementation whereName($value)
+ * @method static EloquentBuilder|Implementation wherePrivacyPage($value)
+ * @method static EloquentBuilder|Implementation whereTitle($value)
+ * @method static EloquentBuilder|Implementation whereUpdatedAt($value)
+ * @method static EloquentBuilder|Implementation whereUrlApp($value)
+ * @method static EloquentBuilder|Implementation whereUrlProvider($value)
+ * @method static EloquentBuilder|Implementation whereUrlSponsor($value)
+ * @method static EloquentBuilder|Implementation whereUrlValidator($value)
+ * @method static EloquentBuilder|Implementation whereUrlWebshop($value)
+ * @mixin \Eloquent
  */
 class Implementation extends Model
 {
@@ -93,7 +93,7 @@ class Implementation extends Model
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_providers',
-        'has_more_info_url', 'more_info_url', 'description_steps', 'privacy_page',
+        'has_more_info_url', 'more_info_url', 'description_steps', 'description_privacy',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
     ];
 
@@ -426,7 +426,7 @@ class Implementation extends Model
     private static function getPlatformSettingsConfig($implementation): array {
         return array_merge($implementation->only([
             'title', 'description', 'has_more_info_url',
-            'more_info_url', 'description_steps', 'description_providers', 'privacy_page'
+            'more_info_url', 'description_steps', 'description_providers', 'description_privacy'
         ])->toArray(), [
             'description_html' => resolve('markdown')->convertToHtml(
                 $implementation['description'] ?? ''
@@ -437,8 +437,8 @@ class Implementation extends Model
             'description_providers_html' => resolve('markdown')->convertToHtml(
                 $implementation['description_providers'] ?? ''
             ),
-            'privacy_page_html' => resolve('markdown')->convertToHtml(
-                $implementation['privacy_page'] ?? ''
+            'description_privacy_html' => resolve('markdown')->convertToHtml(
+                $implementation['description_privacy'] ?? ''
             ),
         ]);
     }

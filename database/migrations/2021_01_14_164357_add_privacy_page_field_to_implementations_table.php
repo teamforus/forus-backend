@@ -14,7 +14,7 @@ class AddPrivacyPageFieldToImplementationsTable extends Migration
     public function up()
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->text('privacy_page')->after('description_steps')->nullable();
+            $table->text('description_privacy')->after('description_steps')->nullable();
         });
     }
 
@@ -26,7 +26,7 @@ class AddPrivacyPageFieldToImplementationsTable extends Migration
     public function down()
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->dropColumn('privacy_page');
+            $table->dropColumn('description_privacy');
         });
     }
 }
