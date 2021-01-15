@@ -4,7 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddPrivacyPageFieldToImplementationsTable extends Migration
+/**
+ * Class AddDescriptionProvidersFieldToImplementationsTable
+ * @noinspection PhpUnused
+ */
+class AddDescriptionProvidersFieldToImplementationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +18,7 @@ class AddPrivacyPageFieldToImplementationsTable extends Migration
     public function up()
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->text('privacy_page')->after('description_steps')->nullable();
+            $table->text('description_providers')->after('description_steps')->nullable();
         });
     }
 
@@ -26,7 +30,7 @@ class AddPrivacyPageFieldToImplementationsTable extends Migration
     public function down()
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->dropColumn('privacy_page');
+            $table->dropColumn('description_providers');
         });
     }
 }

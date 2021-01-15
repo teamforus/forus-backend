@@ -16,7 +16,7 @@ class ImplementationPrivateResource extends JsonResource
      * @property Implementation $resource
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): ?array
     {
         /** @var Implementation $implementation **/
         if (is_null($implementation = $this->resource)) {
@@ -32,7 +32,7 @@ class ImplementationPrivateResource extends JsonResource
         $data = $implementation->only([
             'id', 'key', 'name', 'url_webshop', 'title',
             'description', 'has_more_info_url', 'more_info_url',
-            'description_steps', 'privacy_page'
+            'description_steps', 'description_providers', 'privacy_page'
         ]);
 
         if ($organization->identityCan(auth()->id(), 'implementation_manager')) {

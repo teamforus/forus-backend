@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
  * @property string|null $description
  * @property string|null $more_info_url
  * @property string|null $description_steps
+ * @property string|null $description_providers
  * @property bool $has_more_info_url
  * @property string $url_webshop
  * @property string $url_sponsor
@@ -90,9 +91,9 @@ class Implementation extends Model
      */
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
-        'url_validator', 'lon', 'lat', 'email_from_address',
-        'email_from_name', 'title', 'description', 'has_more_info_url',
-        'more_info_url', 'description_steps', 'privacy_page',
+        'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
+        'title', 'description', 'description_providers',
+        'has_more_info_url', 'more_info_url', 'description_steps', 'privacy_page',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
     ];
 
@@ -425,13 +426,16 @@ class Implementation extends Model
     private static function getPlatformSettingsConfig($implementation): array {
         return array_merge($implementation->only([
             'title', 'description', 'has_more_info_url',
-            'more_info_url', 'description_steps', 'privacy_page'
+            'more_info_url', 'description_steps', 'description_providers', 'privacy_page'
         ])->toArray(), [
             'description_html' => resolve('markdown')->convertToHtml(
                 $implementation['description'] ?? ''
             ),
             'description_steps_html' => resolve('markdown')->convertToHtml(
                 $implementation['description_steps'] ?? ''
+            ),
+            'description_providers_html' => resolve('markdown')->convertToHtml(
+                $implementation['description_providers'] ?? ''
             ),
             'privacy_page_html' => resolve('markdown')->convertToHtml(
                 $implementation['privacy_page'] ?? ''
