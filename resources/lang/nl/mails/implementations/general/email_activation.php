@@ -11,6 +11,7 @@ return [
         'provider' => 'het aanmeldformulier voor aanbieders',
         'validator' => 'het aanmeldformulier voor validators',
         'website' => 'de website',
-        'me_app' => 'Me',
+        'me_app-android' => 'de Me-app',
+        'me_app-ios' => 'de Me-app',
     ]
 ];
