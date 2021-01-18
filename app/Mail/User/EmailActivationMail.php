@@ -27,6 +27,14 @@ class EmailActivationMail extends ImplementationMail
 
     public function build(): Mailable
     {
+        $xSesConfigurationSet = env('MAIL_X_SES_CONFIGURATION_SET', false);
+
+        if ($xSesConfigurationSet) {
+            $this->withSwiftMessage(function ($message) use ($xSesConfigurationSet) {
+                $message->getHeaders()->addTextHeader('X-SES-CONFIGURATION-SET', $xSesConfigurationSet);
+            });
+        }
+
         return $this->buildBase()
             ->subject(mail_trans('email_activation.title'))
             ->view('emails.user.email_activation', [
