@@ -72,6 +72,7 @@ class VoucherQuery
         return $builder->where(static function (Builder $builder) use ($query) {
             $builder->where('note', 'LIKE', "%{$query}%");
             $builder->orWhere('activation_code', 'LIKE', "%{$query}%");
+            $builder->orWhere('activation_code_uid', 'LIKE', "%{$query}%");
 
             if ($email_identities = identity_repo()->identityAddressesByEmailSearch($query)) {
                 $builder->orWhereIn('identity_address', $email_identities);
@@ -95,9 +96,17 @@ class VoucherQuery
     {
         return $builder->where(static function(Builder $builder) {
             $builder->whereNotNull('employee_id');
+
             $builder->orWhere(static function(Builder $builder) {
                 $builder->whereNull('employee_id');
                 $builder->whereNull('product_id');
+            });
+
+            $builder->orWhere(static function(Builder $builder) {
+                $builder->whereNull('employee_id');
+                $builder->whereNotNull('product_id');
+                $builder->whereNull('parent_id');
+                $builder->where('returnable', false);
             });
         });
     }
