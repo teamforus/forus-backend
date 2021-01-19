@@ -94,6 +94,8 @@ class Implementation extends Model
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_providers',
         'has_more_info_url', 'more_info_url', 'description_steps', 'description_privacy',
+        'description_contact_details', 'description_opening_times',
+        'privacy_statement_url', 'terms_and_conditions_url', 'accessibility_url',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
     ];
 
@@ -426,7 +428,9 @@ class Implementation extends Model
     private static function getPlatformSettingsConfig($implementation): array {
         return array_merge($implementation->only([
             'title', 'description', 'has_more_info_url',
-            'more_info_url', 'description_steps', 'description_providers', 'description_privacy'
+            'more_info_url', 'description_steps', 'description_providers', 'description_privacy', 
+            'description_contact_details', 'description_opening_times',
+            'privacy_statement_url', 'terms_and_conditions_url', 'accessibility_url'
         ])->toArray(), [
             'description_html' => resolve('markdown')->convertToHtml(
                 $implementation['description'] ?? ''
@@ -439,6 +443,12 @@ class Implementation extends Model
             ),
             'description_privacy_html' => resolve('markdown')->convertToHtml(
                 $implementation['description_privacy'] ?? ''
+            ),
+            'description_contact_details_html' => resolve('markdown')->convertToHtml(
+                $implementation['description_contact_details'] ?? ''
+            ),
+            'description_opening_times_html' => resolve('markdown')->convertToHtml(
+                $implementation['description_opening_times'] ?? ''
             ),
         ]);
     }

@@ -32,7 +32,10 @@ class ImplementationPrivateResource extends JsonResource
         $data = $implementation->only([
             'id', 'key', 'name', 'url_webshop', 'title',
             'description', 'has_more_info_url', 'more_info_url',
-            'description_steps', 'description_providers', 'description_privacy'
+            'description_steps', 'description_providers', 'description_privacy',
+            'description_contact_details', 'description_opening_times',
+            'privacy_statement_url', 'terms_and_conditions_url', 
+            'accessibility_url'
         ]);
 
         if ($organization->identityCan(auth()->id(), 'implementation_manager')) {
