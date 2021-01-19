@@ -79,8 +79,8 @@ class ImplementationsController extends Controller
         $this->authorize('updateCMS', [$implementation, $organization]);
 
         $implementation->update($request->only([
-            'title', 'description', 'has_more_info_url',
-            'more_info_url', 'description_steps', 'description_providers'
+            'title', 'description', 'has_more_info_url', 'more_info_url',
+            'description_steps', 'description_providers', 'description_privacy'
         ]));
 
         return new ImplementationPrivateResource($implementation);
