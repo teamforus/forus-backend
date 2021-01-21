@@ -7,6 +7,7 @@ use App\Http\Resources\PhysicalCardResource;
 use App\Models\PhysicalCard;
 use App\Models\VoucherToken;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest;
+use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Response;
 
 /**
@@ -15,20 +16,10 @@ use Illuminate\Http\Response;
  */
 class PhysicalCardsController extends Controller
 {
+    use ThrottleWithMeta;
+
     private $maxAttempts = 5;
     private $decayMinutes = 60 * 24;
-
-    /**
-     * PhysicalCardRequestsController constructor.
-     */
-    public function __construct()
-    {
-        $this->middleware(sprintf(
-            'throttle:%s,%s,physical_cards',
-            $this->maxAttempts,
-            $this->decayMinutes
-        ))->only('store');
-    }
 
     /**
      * Link existing physical card to existing voucher
@@ -36,11 +27,13 @@ class PhysicalCardsController extends Controller
      * @param VoucherToken $voucherToken
      * @return PhysicalCardResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \App\Exceptions\AuthorizationJsonException
      */
     public function store(
         StorePhysicalCardRequest $request,
         VoucherToken $voucherToken
     ): PhysicalCardResource {
+        $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
         $this->authorize('storePhysicalCard', $voucherToken->voucher);
 
         return new PhysicalCardResource($voucherToken->voucher->physical_cards()->create(

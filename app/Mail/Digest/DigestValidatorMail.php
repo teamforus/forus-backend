@@ -2,15 +2,16 @@
 
 namespace App\Mail\Digest;
 
+/**
+ * Class DigestValidatorMail
+ * @package App\Mail\Digest
+ */
 class DigestValidatorMail extends BaseDigestMail
 {
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build(): self
+    public function __construct($viewData = [])
     {
-        return $this->view('emails.mail-digest')->subject(trans('digests/validator.subject'));
+        parent::__construct($viewData);
+
+        $this->subject(trans('digests/validator.subject'));
     }
 }

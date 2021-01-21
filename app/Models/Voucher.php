@@ -513,6 +513,7 @@ class Voucher extends Model
     ): Builder {
         $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
         $unassignedOnly = $request->input('unassigned');
+        $in_use = $request->input('in_use');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -559,6 +560,10 @@ class Voucher extends Model
 
         if ($q = $request->input('q')) {
             $query = VoucherQuery::whereSearchSponsorQuery($query, $q);
+        }
+
+        if ($request->has('in_use')) {
+            $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
         }
 
         return $query->orderBy(
