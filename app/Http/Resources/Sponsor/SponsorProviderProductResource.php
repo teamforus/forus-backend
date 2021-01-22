@@ -81,7 +81,7 @@ class SponsorProviderProductResource extends Resource
         ], $fundProvider->fund->isTypeSubsidy() ? [
             'deals_history' => $oldDeals->map(static function(FundProviderProduct $fundProviderProduct) {
                 return array_merge($fundProviderProduct->only(array_merge([
-                    'id', 'amount', 'limit_total', 'limit_per_identity',
+                    'id', 'amount', 'limit_total', 'limit_total_unlimited', 'limit_per_identity',
                     'voucher_transactions_count',
                 ])), [
                     'active' => !$fundProviderProduct->trashed()
