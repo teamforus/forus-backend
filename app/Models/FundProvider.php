@@ -160,7 +160,7 @@ class FundProvider extends Model
         $session = Session::whereIn(
             'identity_address',
             $this->organization->employees->pluck('identity_address')
-        )->latest()->first();
+        )->latest('last_activity_at')->first();
 
         return $session ? $session->last_activity_at : null;
     }
