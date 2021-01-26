@@ -59,6 +59,10 @@ class LoremDbSeeder extends Seeder
         'Stadjerspas',
     ];
 
+    private $implementationsWithInformalCommunication = [
+        'Zuidhorn', 'Nijmegen',
+    ];
+
     private $fundsWithCriteriaEditableAfterLaunch = [
         'Zuidhorn', 'Nijmegen',
     ];
@@ -567,6 +571,7 @@ class LoremDbSeeder extends Seeder
         string $name
     ) {
         $requiredDigidImplementations = array_map("str_slug", $this->fundsWithPhysicalCards);
+        $informalCommunication = array_map("str_slug", $this->implementationsWithInformalCommunication);
 
         return Implementation::create([
             'key'   => $key,
@@ -593,11 +598,12 @@ class LoremDbSeeder extends Seeder
                 compact('key')
             ),
 
-            'digid_enabled'         => config('forus.seeders.lorem_db_seeder.digid_enabled'),
-            'digid_required'        => in_array($key, $requiredDigidImplementations, true),
-            'digid_app_id'          => config('forus.seeders.lorem_db_seeder.digid_app_id'),
-            'digid_shared_secret'   => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
-            'digid_a_select_server' => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
+            'digid_enabled'             => config('forus.seeders.lorem_db_seeder.digid_enabled'),
+            'digid_required'            => in_array($key, $requiredDigidImplementations, true),
+            'informal_communication'    => in_array($key, $informalCommunication, true),
+            'digid_app_id'              => config('forus.seeders.lorem_db_seeder.digid_app_id'),
+            'digid_shared_secret'       => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
+            'digid_a_select_server'     => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
         ]);
     }
 

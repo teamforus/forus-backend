@@ -11,6 +11,7 @@ use App\Http\Resources\ImplementationPrivateResource;
 use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ImplementationsController extends Controller
 {
@@ -25,7 +26,7 @@ class ImplementationsController extends Controller
     public function index(
         IndexImplementationRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [Implementation::class, $organization]);
 
@@ -54,7 +55,7 @@ class ImplementationsController extends Controller
     public function show(
         Organization $organization,
         Implementation $implementation
-    ) {
+    ): ImplementationPrivateResource {
         $this->authorize('show', $organization);
         $this->authorize('view', [$implementation, $organization]);
 
@@ -74,13 +75,14 @@ class ImplementationsController extends Controller
         UpdateImplementationCmsRequest $request,
         Organization $organization,
         Implementation $implementation
-    ) {
+    ): ImplementationPrivateResource {
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
         $implementation->update($request->only([
             'title', 'description', 'has_more_info_url',
-            'more_info_url', 'description_steps', 'description_providers'
+            'more_info_url', 'description_steps', 'description_providers',
+            'informal_communication',
         ]));
 
         return new ImplementationPrivateResource($implementation);
@@ -99,7 +101,7 @@ class ImplementationsController extends Controller
         UpdateImplementationDigiDRequest $request,
         Organization $organization,
         Implementation $implementation
-    ) {
+    ): ImplementationPrivateResource {
         $this->authorize('show', $organization);
         $this->authorize('updateDigiD', [$implementation, $organization]);
 
@@ -118,12 +120,13 @@ class ImplementationsController extends Controller
      * @param Implementation $implementation
      * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function updateEmail(
         UpdateImplementationEmailRequest $request,
         Organization $organization,
         Implementation $implementation
-    ) {
+    ): ImplementationPrivateResource {
         $this->authorize('show', $organization);
         $this->authorize('updateEmail', [$implementation, $organization]);
 

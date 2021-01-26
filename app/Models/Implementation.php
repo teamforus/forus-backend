@@ -35,6 +35,7 @@ use Illuminate\Http\Request;
  * @property string $url_app
  * @property float|null $lon
  * @property float|null $lat
+ * @property bool $informal_communication
  * @property string|null $email_from_address
  * @property string|null $email_from_name
  * @property bool $digid_enabled
@@ -54,6 +55,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionProviders($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionSteps($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidASelectServer($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDigidAppId($value)
@@ -65,6 +67,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereEmailFromName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereHasMoreInfoUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereInformalCommunication($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLat($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereLon($value)
@@ -91,7 +94,8 @@ class Implementation extends Model
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
         'title', 'description', 'description_providers',
         'has_more_info_url', 'more_info_url', 'description_steps',
-        'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled'
+        'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+        'informal_communication',
     ];
 
     /**
@@ -109,6 +113,7 @@ class Implementation extends Model
         'digid_enabled' => 'boolean',
         'digid_required' => 'boolean',
         'has_more_info_url' => 'boolean',
+        'informal_communication' => 'boolean',
     ];
 
     public const FRONTEND_WEBSHOP = 'webshop';
@@ -388,6 +393,7 @@ class Implementation extends Model
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'digid' => $implementationModel ? $implementationModel->digidEnabled() : false,
                 'digid_mandatory' => $implementationModel->digid_required ?? true,
+                'communication_type' => ($implementationModel->communication ?? false ? 'formal' : 'informal'),
                 'settings' => self::getPlatformSettingsConfig($implementation),
                 'fronts' => $implementation->only([
                     'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app'
@@ -561,7 +567,8 @@ class Implementation extends Model
     public function getEmailFrom(): EmailFrom {
         return new EmailFrom(
             $this->email_from_address ?: config('mail.from.address'),
-            $this->email_from_name ?: config('mail.from.name')
+            $this->email_from_name ?: config('mail.from.name'),
+            $this->informal_communication ?? false
         );
     }
 }

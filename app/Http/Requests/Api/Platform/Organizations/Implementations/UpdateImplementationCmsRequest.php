@@ -24,12 +24,13 @@ class UpdateImplementationCmsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'has_more_info_url'     => 'nullable|boolean',
-            'more_info_url'         => 'nullable|string|max:50',
-            'description_steps'     => 'nullable|string|max:10000',
-            'description_providers'  => 'nullable|string|max:10000',
-            'title'                 => 'nullable|string|max:50',
-            'description'           => 'nullable|string|max:4000',
+            'has_more_info_url'         => 'nullable|boolean',
+            'more_info_url'             => 'nullable|string|max:50',
+            'description_steps'         => 'nullable|string|max:10000',
+            'description_providers'     => 'nullable|string|max:10000',
+            'title'                     => 'nullable|string|max:50',
+            'description'               => 'nullable|string|max:4000',
+            'informal_communication'    => 'nullable|boolean',
         ];
     }
 }

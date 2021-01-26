@@ -58,7 +58,8 @@ class UserLoginMail extends ImplementationMail
             ]))
             ->view('emails.login.login_via_email', [
                 'platform' => $this->platform,
-                'link' => $this->link
+                'link' => $this->link,
+                'emailFrom' => $this->emailFrom,
             ]);
     }
 }

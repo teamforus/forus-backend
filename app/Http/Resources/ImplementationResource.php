@@ -22,7 +22,7 @@ class ImplementationResource extends JsonResource
         }
 
         return $implementation->only([
-            'id', 'key', 'name', 'url_webshop'
+            'id', 'key', 'name', 'url_webshop', 'informal_communication',
         ]);
     }
 }

@@ -32,14 +32,15 @@ class ImplementationPrivateResource extends JsonResource
         $data = $implementation->only([
             'id', 'key', 'name', 'url_webshop', 'title',
             'description', 'has_more_info_url',
-            'more_info_url', 'description_steps', 'description_providers'
+            'more_info_url', 'description_steps', 'description_providers',
+            'informal_communication',
         ]);
 
         if ($organization->identityCan(auth()->id(), 'implementation_manager')) {
             $data = array_merge($data, $implementation->only([
                 'digid_app_id', 'digid_shared_secret',
                 'digid_a_select_server', 'digid_enabled',
-                'email_from_address', 'email_from_name'
+                'email_from_address', 'email_from_name',
             ]));
         }
 
