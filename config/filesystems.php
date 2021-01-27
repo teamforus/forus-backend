@@ -61,7 +61,27 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
         ],
+
+        's3_media' => [
+            'driver' => 's3',
+            'key' => env('AWS_MEDIA_ACCESS_KEY_ID'),
+            'secret' => env('AWS_MEDIA_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_MEDIA_DEFAULT_REGION'),
+            'bucket' => env('AWS_MEDIA_BUCKET'),
+            'url' => env('AWS_MEDIA_URL'),
+        ],
+
+        's3_files' => [
+            'driver' => 's3',
+            'key' => env('AWS_FILES_ACCESS_KEY_ID'),
+            'secret' => env('AWS_FILES_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_FILES_DEFAULT_REGION'),
+            'bucket' => env('AWS_FILES_BUCKET'),
+            'url' => env('AWS_FILES_URL'),
+        ],
+
         'ftp_physical_cards' => [
             'driver' => 'ftp',
             'host' => env('PHYSICAL_CARDS_FTP_HOST'),
