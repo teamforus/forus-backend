@@ -60,8 +60,9 @@ class UpdateFundProviderRequest extends FormRequest
             )],
         ], $this->fund_provider->fund->isTypeSubsidy() ? [
             'enable_products.*.amount' => 'required|numeric|min:0',
-            'enable_products.*.limit_total' => 'required|numeric',
-            'enable_products.*.limit_per_identity' => 'required|numeric',
+            'enable_products.*.limit_total' => 'required|numeric|min:0',
+            'enable_products.*.limit_total_unlimited' => 'nullable|boolean',
+            'enable_products.*.limit_per_identity' => 'required|numeric|min:0',
             'enable_products.*' => new FundProviderProductSubsidyRule($this->fund_provider)
         ] : []);
     }
