@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Http\Resources\Json\Resource;
@@ -87,7 +88,7 @@ class ProductResource extends Resource
             $this->fundsQuery(), $product->id
         )->with([
             'organization'
-        ])->get()->map(static function(Fund $fund) use ($product) {
+        ])->get()->map(function(Fund $fund) use ($product) {
             $fundProviderProduct = $fund->isTypeSubsidy() ?
                 $product->getSubsidyDetailsForFund($fund) : null;
 
@@ -103,14 +104,28 @@ class ProductResource extends Resource
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
             ], $fund->isTypeSubsidy() && $fundProviderProduct ? [
                 'limit_total' => $fundProviderProduct->limit_total,
+                'limit_total_unlimited' => $fundProviderProduct->limit_total_unlimited,
                 'limit_per_identity' => $fundProviderProduct->limit_per_identity,
-                'limit_available' => !auth_address() ? min(
-                    $fundProviderProduct->limit_total,
-                    $fundProviderProduct->limit_per_identity
-                ): $fundProviderProduct->stockAvailableForIdentity(auth_address()),
+                'limit_available' => $this->getLimitAvailable($fundProviderProduct),
                 'price' => currency_format($product->price - $fundProviderProduct->amount),
             ] : []);
         })->values();
+    }
+
+    /**
+     * @param FundProviderProduct $providerProduct
+     * @return int|null
+     */
+    private function getLimitAvailable(FundProviderProduct $providerProduct): ?int
+    {
+        if ($authAddress = auth_address()) {
+            return $providerProduct->stockAvailableForIdentity($authAddress);
+        }
+
+        return !$providerProduct->limit_total_unlimited ? min(
+            $providerProduct->limit_total,
+            $providerProduct->limit_per_identity
+        ) : $providerProduct->limit_per_identity;
     }
 
     /**

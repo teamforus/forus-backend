@@ -2,19 +2,22 @@
 
 return [
     // primary email for the identity to whom the organizations and funds are attached
-    'default_email'             => env('DB_SEED_BASE_EMAIL', 'example@example.com'),
+    'default_email'                 => env('DB_SEED_BASE_EMAIL', 'example@example.com'),
 
     // count of providers to be generated
-    'providers_count'           => env('DB_SEED_PROVIDERS', 5),
-    'validators_count'          => env('DB_SEED_VALIDATORS', 2),
-    'provider_offices_count'    => env('DB_SEED_PROVIDER_OFFICES', 2),
-    'provider_products_count'   => env('DB_SEED_PROVIDER_PRODUCTS', 4),
+    'providers_count'               => env('DB_SEED_PROVIDERS', 5),
+    'validators_count'              => env('DB_SEED_VALIDATORS', 2),
+    'provider_offices_count'        => env('DB_SEED_PROVIDER_OFFICES', 2),
+    'provider_products_count'       => env('DB_SEED_PROVIDER_PRODUCTS', 4),
 
     // amount in generated vouchers
-    'voucher_amount'            => env('DB_SEED_VOUCHER_AMOUNT', 600),
+    'voucher_amount'                => env('DB_SEED_VOUCHER_AMOUNT', 600),
 
-    'voucher_transaction_min'   => env('DB_SEED_VOUCHER_TRANS_MIN', 5),
-    'voucher_transaction_max'   => env('DB_SEED_VOUCHER_TRANS_MAX', 50),
+    'voucher_transaction_min'       => env('DB_SEED_VOUCHER_TRANS_MIN', 5),
+    'voucher_transaction_max'       => env('DB_SEED_VOUCHER_TRANS_MAX', 50),
+
+    'fund_requests_count'           => env('DB_SEED_FUND_REQUESTS', 0),
+    'fund_request_email_pattern'    => env('DB_SEED_FUND_REQUEST_EMAIL_PATTERN', 'requester-%s@example.com'),
 
     // default bunq key
     'bunq_key'              => env('DB_SEED_BUNQ_KEY', ''),

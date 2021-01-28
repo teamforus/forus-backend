@@ -160,7 +160,7 @@ class FundProvider extends Model
         $session = Session::whereIn(
             'identity_address',
             $this->organization->employees->pluck('identity_address')
-        )->latest()->first();
+        )->latest('last_activity_at')->first();
 
         return $session ? $session->last_activity_at : null;
     }
@@ -187,8 +187,8 @@ class FundProvider extends Model
 
             $dates->push($startDate);
             $dates->push($startDate->copy()->addDays(14));
-            $dates->push($startDate->copy()->addMonths(1));
-            $dates->push($startDate->copy()->addMonths(1)->addDays(14));
+            $dates->push($startDate->copy()->addMonth());
+            $dates->push($startDate->copy()->addMonth()->addDays(14));
             $dates->push($startDate->copy()->addMonths(2));
             $dates->push($startDate->copy()->addMonths(2)->addDays(14));
             $dates->push($endDate);
@@ -215,7 +215,7 @@ class FundProvider extends Model
             $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
 
             $dates->push($startDate);
-            $dates->push($startDate->copy()->addQuarters(1));
+            $dates->push($startDate->copy()->addQuarter());
             $dates->push($startDate->copy()->addQuarters(2));
             $dates->push($startDate->copy()->addQuarters(3));
             $dates->push($endDate);
@@ -231,7 +231,7 @@ class FundProvider extends Model
 
             $dates = range_between_dates($startDate, $endDate, 8);
         } else {
-            abort(403, "");
+            abort(403);
             exit();
         }
 
@@ -366,11 +366,11 @@ class FundProvider extends Model
         Request $request,
         Organization $organization
     ): Builder {
-        $q = $request->input('q', null);
-        $fund_id = $request->input('fund_id', null);
-        $dismissed = $request->input('dismissed', null);
-        $allow_products = $request->input('allow_products', null);
-        $allow_budget = $request->input('allow_budget', null);
+        $q = $request->input('q');
+        $fund_id = $request->input('fund_id');
+        $dismissed = $request->input('dismissed');
+        $allow_products = $request->input('allow_products');
+        $allow_budget = $request->input('allow_budget');
 
         $providers = self::query()->whereIn(
             'fund_id',
@@ -463,10 +463,15 @@ class FundProvider extends Model
             $productModel = Product::findOrFail($product['id']);
             $product['price'] = $productModel->price;
 
+            if ($product['limit_total_unlimited'] ?? false) {
+                $product['limit_total'] = 0;
+                $product['limit_total_unlimited'] = 1;
+            }
+
             $this->fund_provider_products()->firstOrCreate([
                 'product_id' => $product['id'],
             ])->update($isTypeSubsidy ? array_only($product, [
-                'limit_total', 'limit_per_identity', 'amount', 'price',
+                'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'amount', 'price',
             ]) : []);
         }
 
