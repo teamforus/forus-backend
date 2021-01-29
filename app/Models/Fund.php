@@ -756,10 +756,12 @@ class Fund extends Model
         }
 
         return $multipliers->map(function(FundLimitMultiplier $multiplier) use ($identityAddress) {
-            return ((int) $this->getTrustedRecordOfType(
+            $records = $this->getTrustedRecordOfType(
                 $identityAddress,
                 $multiplier->record_type_key
-                )['value']) * $multiplier->multiplier;
+            );
+
+            return ((int) ($records ? $records['value']: 1)) * $multiplier->multiplier;
         })->sum();
     }
 
