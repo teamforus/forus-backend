@@ -64,6 +64,21 @@ class VoucherQuery
 
     /**
      * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereExpired(Builder $builder): Builder
+    {
+        return $builder->where(static function(Builder $builder) {
+            $builder->where(
+                'expire_at', '<=', now()->endOfDay()
+            )->orWhereHas('fund', static function(Builder $builder) {
+                $builder->where('end_date', '>=', now()->endOfDay());
+            });
+        });
+    }
+
+    /**
+     * @param Builder $builder
      * @param string $query
      * @return Builder
      */

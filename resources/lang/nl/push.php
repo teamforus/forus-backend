@@ -15,7 +15,7 @@ return [
         "offline_regular_voucher" => [
             "budget" => [
                 "title"  => ":fund_name",
-                "body"   => "Er is €:amount is afgeschreven van uw :fund_name tegoed.",
+                "body"   => "Er is :amount is afgeschreven van uw :fund_name tegoed.",
             ],
             "subsidies" => [
                 "title"  => ":fund_name",
@@ -30,7 +30,7 @@ return [
     "bunq_transactions" => [
         "complete" => [
             "title" => "Uitbetaling",
-            "body" => "Uw transactie van €:amount is uitbetaald.",
+            "body" => "Uw transactie van :amount is uitbetaald.",
         ]
     ],
     "access_levels" => [
