@@ -110,9 +110,9 @@ return [
 
     // product voucher reserved on webshop (voucher created)
     'product_voucher_reserved' => [
-        'title' => 'You reserved :product_name.',
+        'title' => 'U heeft :product_name gereserveerd.',
         'description' =>
-            'You reserved :product_name from :provider_name.',
+            'U heeft :product_name gereserveerd bij :provider_name.',
     ],
 
     // product voucher shared to provider
