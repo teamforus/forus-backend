@@ -4,7 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddPrivacyPageFieldToImplementationsTable extends Migration
+/**
+ * Class AddFormalCommunicationFieldToImplementationsTable
+ * @noinspection PhpUnused
+ */
+class AddInformalCommunicationFieldToImplementationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +18,7 @@ class AddPrivacyPageFieldToImplementationsTable extends Migration
     public function up()
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->text('description_privacy')->after('description_steps')->nullable();
+            $table->boolean('informal_communication')->default(0)->after('lat');
         });
     }
 
@@ -26,7 +30,7 @@ class AddPrivacyPageFieldToImplementationsTable extends Migration
     public function down()
     {
         Schema::table('implementations', function (Blueprint $table) {
-            $table->dropColumn('description_privacy');
+            $table->dropColumn('informal_communication');
         });
     }
 }

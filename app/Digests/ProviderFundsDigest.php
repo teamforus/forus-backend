@@ -57,9 +57,10 @@ class ProviderFundsDigest extends BaseOrganizationDigest
         }
 
         $mailBody->space()->button_primary(
-            Implementation::general_urls()['url_provider'],
+            Implementation::general()->url_provider,
             trans('digests/provider_funds.dashboard_button')
         );
+
         $this->sendOrganizationDigest($organization, $mailBody, $notificationService);
     }
 

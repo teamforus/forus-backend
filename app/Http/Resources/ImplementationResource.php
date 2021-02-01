@@ -14,7 +14,7 @@ class ImplementationResource extends JsonResource
      * @property Implementation $resource
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): ?array
     {
         /** @var Implementation $implementation **/
         if (is_null($implementation = $this->resource)) {
@@ -22,7 +22,7 @@ class ImplementationResource extends JsonResource
         }
 
         return $implementation->only([
-            'id', 'key', 'name', 'url_webshop'
+            'id', 'key', 'name', 'url_webshop', 'informal_communication',
         ]);
     }
 }

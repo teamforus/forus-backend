@@ -70,7 +70,7 @@ class SponsorDigest extends BaseOrganizationDigest
         );
 
         $emailBody->button_primary(
-            Implementation::general_urls()['url_sponsor'],
+            Implementation::general()->url_sponsor,
             trans('digests/sponsor.dashboard_button')
         );
 

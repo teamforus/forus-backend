@@ -3,9 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
+use App\Models\ImplementationPage;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Models\Organization;
-use App\Scopes\Builders\OrganizationQuery;
 
 class ImplementationPrivateResource extends JsonResource
 {
@@ -23,29 +22,42 @@ class ImplementationPrivateResource extends JsonResource
             return null;
         }
 
-        /** @var Organization $organization */
-        $organization = OrganizationQuery::whereImplementationIdFilter(
-            Organization::query(),
-            $implementation->id
-        )->first() or abort(403);
-
         $data = $implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'title',
-            'description', 'has_more_info_url', 'more_info_url',
-            'description_steps', 'description_providers', 'description_privacy',
-            'description_contact_details', 'description_opening_times',
-            'privacy_statement_url', 'terms_and_conditions_url', 
-            'accessibility_url'
+            'id', 'key', 'name', 'url_webshop', 'title', 'description',
         ]);
 
-        if ($organization->identityCan(auth()->id(), 'implementation_manager')) {
+        $data = array_merge($data, [
+            'pages' => array_reduce(ImplementationPage::TYPES, function(
+                array $pages, string $type
+            ) use ($implementation) {
+                $page = $implementation->pages->where('page_type', $type)->first();
+
+                return array_merge($pages, [
+                    $type => $page ? $this->pageDetails($page) : null,
+                ]);
+            }, []),
+            'page_types' => ImplementationPage::TYPES,
+            'page_types_internal' => ImplementationPage::TYPES_INTERNAL
+        ]);
+
+        if ($implementation->organization->identityCan(auth()->id(), 'implementation_manager')) {
             $data = array_merge($data, $implementation->only([
-                'digid_app_id', 'digid_shared_secret',
-                'digid_a_select_server', 'digid_enabled',
-                'email_from_address', 'email_from_name'
+                'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+                'email_from_address', 'email_from_name',
             ]));
         }
 
         return $data;
+    }
+
+    /**
+     * @param ImplementationPage|null $page
+     * @return array|null
+     */
+    protected function pageDetails(?ImplementationPage $page): ?array
+    {
+        return $page ? $page->only([
+            'page_type', 'content', 'external', 'external_url',
+        ]) : null;
     }
 }
