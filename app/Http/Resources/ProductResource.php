@@ -100,8 +100,8 @@ class ProductResource extends Resource
                 'organization' => $fund->organization->only([
                     'id', 'name',
                 ]),
-                'end_at' => $fund->end_date ? $fund->end_date->format('Y-m-d') : null,
-                'end_at_locale' => format_date_locale($fund->end_date ?? null),
+                'end_at' => $fund->end_date ? $fund->end_date->subDay()->format('Y-m-d') : null,
+                'end_at_locale' => format_date_locale($fund->end_date->subDay() ?? null),
             ], $fund->isTypeSubsidy() && $fundProviderProduct ? [
                 'limit_total' => $fundProviderProduct->limit_total,
                 'limit_total_unlimited' => $fundProviderProduct->limit_total_unlimited,
