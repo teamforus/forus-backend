@@ -29,7 +29,7 @@ class StoreProductRequest extends FormRequest
 
         return [
             'name'                  => 'required|between:2,200',
-            'description'           => 'required|between:5,1000',
+            'description'           => 'required|between:5,2500',
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
             'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
             'price_discount'        => [
