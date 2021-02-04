@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Requests\Api\RecordCategories;
+namespace App\Http\Requests\Api\Platform\RecordTypes;
 
 use App\Http\Requests\BaseFormRequest;
 
 /**
- * Class RecordCategoryStoreRequest
- * @package App\Http\Requests\Api\RecordCategories
+ * Class IndexRecordTypesRequest
+ * @package App\Http\Requests\Api\Platform\RecordTypes
  */
-class RecordCategoryStoreRequest extends BaseFormRequest
+class IndexRecordTypesRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,8 +28,7 @@ class RecordCategoryStoreRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'name'  => 'required|between:2,16',
-            'order' => 'nullable|numeric|min:0',
+            'insertable_only' => 'nullable|boolean',
         ];
     }
 }

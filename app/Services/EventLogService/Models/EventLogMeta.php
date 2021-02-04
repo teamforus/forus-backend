@@ -5,12 +5,12 @@ namespace App\Services\EventLogService\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Models\EventLogMeta
+ * App\Services\EventLogService\Models\EventLogMeta
  *
- * @property-read \App\Models\EventLog $event_log
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\EventLogMeta newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\EventLogMeta newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\EventLogMeta query()
+ * @property-read \App\Services\EventLogService\Models\EventLog $event_log
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLogMeta newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLogMeta newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLogMeta query()
  * @mixin \Eloquent
  */
 class EventLogMeta extends Model

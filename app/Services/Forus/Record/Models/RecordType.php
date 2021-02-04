@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $key
  * @property string $type
- * @property string $name
+ * @property bool $system
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Services\Forus\Record\Models\RecordTypeTranslation $translation
+ * @property-read \App\Services\Forus\Record\Models\RecordTypeTranslation|null $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordTypeTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType listsTranslations($translationField)
@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereSystem($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereTranslationLike($translationField, $value, $locale = null)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordType whereType($value)
@@ -47,7 +48,7 @@ class RecordType extends Model
      * @var array
      */
     protected $fillable = [
-        'key', 'type'
+        'key', 'type', 'system',
     ];
 
     /**
@@ -57,6 +58,10 @@ class RecordType extends Model
      */
     public $translatedAttributes = [
         'name'
+    ];
+
+    protected $casts = [
+        'system' => 'bool',
     ];
 
     /**

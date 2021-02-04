@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property string|null $identity_address
  * @property string $name
+ * @property string|null $description
  * @property string $iban
  * @property string $email
  * @property bool $email_public
@@ -40,7 +41,6 @@ use Illuminate\Http\Request;
  * @property bool $is_provider
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
- * @property string $description
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -93,6 +93,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereBtw($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereBusinessTypeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereEmailPublic($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIban($value)
@@ -110,7 +111,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
  * @mixin \Eloquent
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereDescription($value)
  */
 class Organization extends Model
 {

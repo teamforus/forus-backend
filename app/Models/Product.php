@@ -26,7 +26,7 @@ use Illuminate\Http\Request;
  * @property int $product_category_id
  * @property string $name
  * @property string $description
- * @property float|null $price
+ * @property float $price
  * @property int $total_amount
  * @property bool $unlimited_stock
  * @property string $price_type

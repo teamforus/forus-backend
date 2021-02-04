@@ -17,10 +17,6 @@ class RecordController extends Controller
 {
     private $recordRepo;
 
-    public const HIDDEN_RECORD_TYPES = [
-        'bsn', 'bsn_hash', 'partner_bsn', 'partner_bsn_hash'
-    ];
-
     /**
      * RecordController constructor.
      * @param IRecordRepo $recordRepo
@@ -38,13 +34,20 @@ class RecordController extends Controller
      */
     public function index(IndexRecordsRequest $request): array
     {
+        $recordRepo = $request->records_repo();
+        $recordTypes = collect($recordRepo->getRecordTypes())->keyBy('key')->toArray();
+
         return array_values(array_filter($this->recordRepo->recordsList(
             $request->auth_address(),
-            $request->get('type', null),
-            $request->get('record_category_id', null),
+            $request->get('type'),
+            $request->get('record_category_id'),
             (bool) $request->get('deleted', false)
-        ), static function($record) {
-            return !in_array($record['key'], self::HIDDEN_RECORD_TYPES, true);
+        ), static function($record) use ($recordTypes) {
+            if (env('HIDE_SYSTEM_RECORDS', false)) {
+                return (bool) !($recordTypes[$record['key']]['system'] ?? true);
+            }
+
+            return $record;
         }));
     }
 
@@ -53,15 +56,14 @@ class RecordController extends Controller
      * @param RecordStoreRequest $request
      * @return array|null
      */
-    public function store(
-        RecordStoreRequest $request
-    ): ?array {
+    public function store(RecordStoreRequest $request): ?array
+    {
         return $this->recordRepo->recordCreate(
             $request->auth_address(),
             $request->get('type'),
             $request->get('value'),
-            $request->get('record_category_id', null),
-            $request->get('order', null)
+            $request->get('record_category_id'),
+            $request->get('order')
         );
     }
 
@@ -77,13 +79,14 @@ class RecordController extends Controller
      * @param int $recordId
      * @return array
      */
-    public function show(
-        BaseFormRequest $request,
-        int $recordId
-    ): array {
-        $record = $this->recordRepo->recordGet($request->auth_address(), $recordId, true);
+    public function show(BaseFormRequest $request, int $recordId): array
+    {
+        $recordRepo = $request->records_repo();
+        $recordTypes = collect($recordRepo->getRecordTypes())->keyBy('key')->toArray();
+        $record = $recordRepo->recordGet($request->auth_address(), $recordId, true);
+        $hideSystemRecords = env('HIDE_SYSTEM_RECORDS', false);
 
-        if (empty($record) || in_array($record['key'], self::HIDDEN_RECORD_TYPES, true)) {
+        if (!$record || ($hideSystemRecords && ($recordTypes[$record['key']]['system'] ?? true))) {
             abort(404, trans('records.codes.404'));
         }
 
@@ -97,10 +100,8 @@ class RecordController extends Controller
      * @param int $recordId
      * @return array
      */
-    public function update(
-        RecordUpdateRequest $request,
-        int $recordId
-    ): array {
+    public function update(RecordUpdateRequest $request, int $recordId): array
+    {
         if (empty($this->recordRepo->recordGet($request->auth_address(), $recordId))) {
             abort(404, trans('records.codes.404'));
         }
@@ -108,8 +109,8 @@ class RecordController extends Controller
         $success = $this->recordRepo->recordUpdate(
             $request->auth_address(),
             $recordId,
-            $request->input('record_category_id', null),
-            $request->input('order', null)
+            $request->input('record_category_id'),
+            $request->input('order')
         );
 
         return compact('success');
@@ -128,10 +129,8 @@ class RecordController extends Controller
      * @return array
      * @throws \Exception
      */
-    public function destroy(
-        BaseFormRequest $request,
-        int $recordId
-    ): array {
+    public function destroy(BaseFormRequest $request, int $recordId): array
+    {
         if (empty($this->recordRepo->recordGet($request->auth_address(), $recordId))) {
             abort(404, trans('records.codes.404'));
         }
@@ -146,12 +145,9 @@ class RecordController extends Controller
      * @param BaseFormRequest $request
      * @return array
      */
-    public function sort(
-        BaseFormRequest $request
-    ): array {
-        $this->recordRepo->recordsSort($request->auth_address(), collect(
-            $request->get('records', [])
-        )->toArray());
+    public function sort(BaseFormRequest $request): array
+    {
+        $this->recordRepo->recordsSort($request->auth_address(), $request->get('records', []));
 
         $success = true;
 

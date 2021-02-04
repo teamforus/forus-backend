@@ -19,16 +19,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Services\Forus\Session\Models\SessionRequest $first_request
- * @property-read \App\Services\Forus\Session\Models\SessionRequest $last_request
+ * @property-read \App\Services\Forus\Session\Models\SessionRequest|null $first_request
+ * @property-read \App\Services\Forus\Session\Models\SessionRequest|null $last_request
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Session\Models\SessionRequest[] $requests
  * @property-read int|null $requests_count
- * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session newQuery()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Session\Models\Session onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session query()
- * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereId($value)

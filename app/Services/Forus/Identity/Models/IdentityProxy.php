@@ -20,12 +20,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read bool $exchange_time_expired
  * @property-read \App\Services\Forus\Identity\Models\Identity|null $identity
- * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy newQuery()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityProxy onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy query()
- * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereAccessToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereDeletedAt($value)

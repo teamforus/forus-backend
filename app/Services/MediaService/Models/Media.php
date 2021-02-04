@@ -14,33 +14,33 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $original_name
  * @property string $type
  * @property string $ext
+ * @property string $dominant_color
+ * @property int $order
  * @property string $identity_address
  * @property int|null $mediable_id
  * @property string|null $mediable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Services\MediaService\Models\Media|null $mediable
- * @property-read \App\Services\MediaService\Models\MediaPreset $size_original
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $mediable
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\MediaPreset[] $presets
  * @property-read int|null $presets_count
+ * @property-read \App\Services\MediaService\Models\MediaPreset|null $size_original
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereDominantColor($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereExt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereMediableId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereMediableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOriginalName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property string $dominant_color
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereDominantColor($value)
- * @property int $order
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\MediaService\Models\Media whereOrder($value)
  */
 class Media extends Model
 {
