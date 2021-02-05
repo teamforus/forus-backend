@@ -4,12 +4,28 @@ namespace App\Notifications\Identities\Employee;
 
 use App\Mail\User\EmployeeAddedMail;
 use App\Models\Implementation;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * Class IdentityAddedEmployeeNotification
+ * @package App\Notifications\Identities\Employee
+ */
 class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 {
     protected $key = 'notifications_identities.added_employee';
     protected $sendMail = true;
+
+    /**
+     * IdentityAddedEmployeeNotification constructor.
+     * @param EventLog $eventLog
+     * @param array $meta
+     */
+    public function __construct(EventLog $eventLog, array $meta = [])
+    {
+        parent::__construct($eventLog, $meta);
+        $this->sendMail = !env('DISABLE_EMPLOYEE_INVITATION_EMAIL');
+    }
 
     /**
      * @param Identity $identity
