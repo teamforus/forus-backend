@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 abstract class BaseRepo implements IBaseRepo
 {
     /**
-     * @var Model
+     * @var Model|\Eloquent
      */
     protected $model;
 
@@ -22,6 +22,7 @@ abstract class BaseRepo implements IBaseRepo
 
     /**
      * @return mixed|void
+     * @throws \Exception
      */
     public function unlinkAll() {
         $this->model->all()->each(static function($model) {

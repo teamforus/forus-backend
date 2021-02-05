@@ -52,12 +52,12 @@ class NotificationToken extends Model
                 return (new ApnBasicNotification($title, $body))->onQueue(
                     env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications')
                 );
-            } break;
+            }
             case self::TYPE_PUSH_ANDROID: {
                 return (new FcmBasicNotification($title, $body))->onQueue(
                     env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications')
                 );
-            } break;
+            }
         }
 
         return false;

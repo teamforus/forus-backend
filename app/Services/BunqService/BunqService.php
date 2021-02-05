@@ -73,7 +73,7 @@ class BunqService
                 "can't use `public` storage for bunq context files."
             );
 
-            abort(403, '');
+            abort(403);
         }
 
         $storage = $this->storage();

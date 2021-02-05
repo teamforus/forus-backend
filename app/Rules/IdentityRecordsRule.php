@@ -38,10 +38,10 @@ class IdentityRecordsRule implements Rule
             return false;
         }
 
-        $invalidKeys = array_diff(array_merge(array_keys($value)), array_merge(
-            array_pluck($this->recordRepo->getRecordTypes(false), 'key'),
-            env('DISABLE_DEPRECATED_API') ? [] : ['primary_email']
-        ));
+        $invalidKeys = array_diff(
+            array_keys($value),
+            array_pluck($this->recordRepo->getRecordTypes(false), 'key')
+        );
 
         if (count($invalidKeys) > 0) {
             $this->message = trans('validation.unknown_record_key', [

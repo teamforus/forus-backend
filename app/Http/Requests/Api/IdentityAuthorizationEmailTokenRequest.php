@@ -30,29 +30,14 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
         $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
-        $emailRule = [
-            'email:strict,dns',
-            new IdentityEmailExistsRule()
-        ];
-
-        return array_merge(env('DISABLE_DEPRECATED_API', false) ? [
-            'email' => array_merge((array) 'required', $emailRule),
-        ] : [
-            'email' => array_merge((array) (
-                $this->has('primary_email') ? 'nullable' : 'required'
-            ), $emailRule),
-            'primary_email' => array_merge((array) (
-                $this->has('email') ? 'nullable' : 'required'
-            ), $emailRule),
-        ], [
-            'source' => env('DISABLE_DEPRECATED_API', false) ? [] : [
+        return [
+            'email' => [
                 'required',
-                'in:' . Implementation::keysAvailable()->implode(',')
+                'email:strict,dns',
+                new IdentityEmailExistsRule()
             ],
-            'target' => [
-                'nullable',
-                'alpha_dash',
-            ]
-        ]);
+            'source' => 'required|in:' . Implementation::keysAvailable()->implode(','),
+            'target' => 'nullable|alpha_dash'
+        ];
     }
 }

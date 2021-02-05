@@ -47,9 +47,7 @@ class ExportPhysicalCardsRequestsCommand extends Command
 
         try {
             resolve('excel')->store($exporter, $path, $disc);
-        } catch (Exception $e) {
-            $this->error($e->getMessage());
-        } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+        } catch (Exception | \PhpOffice\PhpSpreadsheet\Exception $e) {
             $this->error($e->getMessage());
         }
     }

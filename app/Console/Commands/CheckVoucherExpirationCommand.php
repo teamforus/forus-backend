@@ -32,7 +32,7 @@ class CheckVoucherExpirationCommand extends Command
     public function handle(): void
     {
         $expiredVouchers = $this->getExpiredVouchers();
-        $expiringVouchers = $this->getExpiringVouchers(14);
+        $expiringVouchers = $this->getExpiringVouchers();
 
         foreach ($expiringVouchers as $voucher) {
             VoucherExpiring::dispatch($voucher);

@@ -263,14 +263,6 @@ $router->group(['middleware' => [
         ]
     ]);
 
-    // TODO: deprecated, remove in next releases
-    if (!env('DISABLE_DEPRECATED_API', FALSE)) {
-        $router->get(
-            'vouchers/{voucher_address_or_physical_code}/provider',
-            "Api\Platform\Provider\VouchersController@show"
-        );
-    }
-
     $router->group(['prefix' => '/provider'], static function() use ($router) {
         $router->resource(
             'vouchers',
@@ -359,17 +351,19 @@ $router->group(['middleware' => [
     $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
-    $router->resource(
-        'vouchers.transactions',
-        "Api\Platform\Vouchers\TransactionsController", [
-        'only' => [
-            'index', 'show', 'store'
-        ],
-        'parameters' => [
-            'vouchers' => 'voucher_address_or_physical_code',
-            'transactions' => 'transaction_address',
-        ]
-    ]);
+    if (!env('DISABLE_FALLBACK_TRANSACTIONS', true)) {
+        $router->resource(
+            'vouchers.transactions',
+            "Api\Platform\Vouchers\TransactionsController", [
+            'only' => [
+                'index', 'show', 'store'
+            ],
+            'parameters' => [
+                'vouchers' => 'voucher_address_or_physical_code',
+                'transactions' => 'transaction_address',
+            ]
+        ]);
+    }
 
     $router->resource(
         'demo/transactions',

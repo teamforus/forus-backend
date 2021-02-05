@@ -19,7 +19,7 @@ class StatusController extends Controller
     public function getStatus() {
         try {
             DB::connection()->getPdo();
-            return response(null, 200);
+            return response(null);
         } catch (\Exception $e) {
             return response(null, 503);
         }
