@@ -348,7 +348,7 @@ class IdentityFallbackController extends Controller
         if ($isMobile) {
             $sourceUrl = config('forus.front_ends.app-me_app');
         } else {
-            $sourceUrl = Implementation::whereKey($implementation)->first()['url_' . $frontend];
+            $sourceUrl = Implementation::byKey($implementation)->urlFrontend($frontend);
         }
 
         $redirectUrl = sprintf(

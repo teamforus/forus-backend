@@ -263,7 +263,7 @@ class IdentityController extends Controller
         if ($isMobile) {
             $sourceUrl = config('forus.front_ends.app-me_app');
         } else {
-            $sourceUrl = Implementation::whereKey($implementationKey)->first()['url_' . $clientType];
+            $sourceUrl = Implementation::byKey($implementationKey)->urlFrontend($clientType);
         }
 
         $redirectUrl = sprintf(
