@@ -161,6 +161,20 @@ class FundRequest extends Model
     }
 
     /**
+     * @param $identity_address
+     * @param $employee_id
+     * @return Builder
+     */
+    public function recordsWhereCanValidateQuery($identity_address, $employee_id): Builder
+    {
+        return FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            self::records()->getQuery(),
+            $identity_address,
+            $employee_id
+        );
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
     public function clarifications(): HasManyThrough {
@@ -181,6 +195,7 @@ class FundRequest extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function records_declined(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([
@@ -190,6 +205,7 @@ class FundRequest extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function records_pending(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([
@@ -199,6 +215,7 @@ class FundRequest extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function clarifications_pending(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([
@@ -208,6 +225,7 @@ class FundRequest extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function clarifications_answered(): HasMany {
         return $this->hasMany(FundRequestRecord::class)->where([

@@ -514,6 +514,7 @@ class Voucher extends Model
         $query = VoucherQuery::whereVisibleToSponsor(self::search($request));
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');
+        $expired = $request->input('expired');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -556,6 +557,10 @@ class Voucher extends Model
                     $builder->where(compact('bsn'));
                 });
             });
+        }
+
+        if ($expired !== null) {
+            $query = $expired ? VoucherQuery::whereExpired($query) : VoucherQuery::whereNotExpired($query);
         }
 
         if ($q = $request->input('q')) {

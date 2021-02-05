@@ -14,10 +14,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $fund_provider_id
  * @property int $product_id
  * @property int|null $limit_total
+ * @property bool $limit_total_unlimited
  * @property int|null $limit_per_identity
  * @property float|null $amount
  * @property float|null $price
- * @property float|null $old_price
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -36,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitPerIdentity($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitTotal($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereOldPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitTotalUnlimited($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereUpdatedAt($value)
@@ -52,8 +52,12 @@ class FundProviderProduct extends Model
      * @var string[]
      */
     protected $fillable = [
-        'product_id', 'fund_provider_id', 'limit_total', 'amount', 'limit_per_identity',
-        'price', 'old_price',
+        'product_id', 'fund_provider_id', 'limit_total', 'limit_total_unlimited',
+        'limit_per_identity', 'price', 'old_price', 'amount'
+    ];
+
+    protected $casts = [
+        'limit_total_unlimited' => 'bool',
     ];
 
     /**
@@ -92,11 +96,17 @@ class FundProviderProduct extends Model
 
         $limit_multiplier = $query->exists() ? $query->sum('limit_multiplier') : 1;
         $limit_per_identity = $this->limit_per_identity * $limit_multiplier;
+        $limiters = [$limit_per_identity];
 
-        $limitAvailable = $this->product->unlimited_stock ?
-            min($this->limit_total, $limit_per_identity) :
-            min($this->limit_total, $limit_per_identity, $this->product->stock_amount);
+        if (!$this->product->unlimited_stock) {
+            $limiters[] = $this->product->stock_amount;
+        }
 
+        if (!$this->limit_total_unlimited) {
+            $limiters[] = $this->limit_total;
+        }
+
+        $limitAvailable = (int) collect($limiters)->min();
         $count_transactions = VoucherTransaction::where([
             'product_id' => $this->product_id,
             'organization_id' => $this->product->organization_id,
