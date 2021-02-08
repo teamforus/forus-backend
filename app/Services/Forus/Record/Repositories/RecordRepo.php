@@ -654,7 +654,9 @@ class RecordRepo implements IRecordRepo
 
         if ($record['record_type_id'] ==
             $this->getTypeIdByKey('primary_email')) {
-            abort(403,'record.exceptions.cant_delete_primary_email');
+            abort(403,'record.exceptions.cant_delete_primary_email', [
+                'record_type_name' => $record->record_type->name
+            ]);
         }
 
         return !!$record->delete();
