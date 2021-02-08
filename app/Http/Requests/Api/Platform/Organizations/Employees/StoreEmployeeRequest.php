@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\NotIn;
 
 /**
@@ -11,7 +11,7 @@ use Illuminate\Validation\Rules\NotIn;
  * @property Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Employees
  */
-class StoreEmployeeRequest extends FormRequest
+class StoreEmployeeRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -20,7 +20,7 @@ class StoreEmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->isAuthenticated();
     }
 
     /**
@@ -40,7 +40,7 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'email'     => [
                 'required',
-                'email:strict,dns',
+                'email:strict',
                 new NotIn($emails),
             ],
             'roles'     => 'present|array',
