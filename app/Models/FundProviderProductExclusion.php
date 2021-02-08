@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\FundProviderExclusion
+ * App\Models\FundProviderProductExclusion
  *
  * @property int $id
  * @property int $fund_provider_id

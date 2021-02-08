@@ -32,14 +32,14 @@ class FundRequestRecordRecordTypeKeyRule implements Rule
      *
      * @param string $attribute
      * @param mixed $value
-     * @return bool|void
+     * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         $inputRoot = implode('.', array_slice(explode('.', $attribute), 0, -1));
         $criterionKey =  $inputRoot . '.fund_criterion_id';
         $inputRecordTypeKey =  $inputRoot . '.record_type_key';
-        $criterionId = $this->request->input($criterionKey, null);
+        $criterionId = $this->request->input($criterionKey);
 
         $typesFull = record_types_cached();
         $typesByKey = @collect($typesFull)->keyBy('key');
@@ -70,7 +70,7 @@ class FundRequestRecordRecordTypeKeyRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return $this->msg;
     }

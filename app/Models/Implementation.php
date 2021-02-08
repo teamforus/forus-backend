@@ -84,9 +84,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlValidator($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
- * @property string|null $description_privacy
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionPrivacy($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Implementation whereDescriptionProviders($value)
  */
 class Implementation extends Model
 {

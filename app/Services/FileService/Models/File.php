@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Services\FileService\Models\File|null $fileable
+ * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $fileable
  * @property-read mixed $url_public
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newQuery()

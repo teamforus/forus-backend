@@ -47,7 +47,7 @@ class IdentityStoreRequest extends BaseFormRequest
             'records' => [
                 !env('DISABLE_DEPRECATED_API', false) && !$this->has('email') ? 'required' : 'nullable',
                 'array',
-                new IdentityRecordsRule()
+                new IdentityRecordsRule($this)
             ],
             'records.primary_email' => array_merge((array) (
                 $this->has('email') ? 'nullable' : 'required'

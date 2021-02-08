@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property int $fund_provider_chat_id
  * @property string $message
- * @property string $identity_address
+ * @property string|null $identity_address
  * @property string $counterpart
  * @property string|null $seen_at
  * @property bool $provider_seen

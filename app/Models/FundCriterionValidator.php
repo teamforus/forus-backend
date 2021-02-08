@@ -11,9 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $fund_criterion_id
  * @property int $organization_validator_id
- * @property int $accepted
+ * @property bool $accepted
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\OrganizationValidator $external_validator
+ * @property-read \App\Models\FundCriterion $fund_criterion
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator query()
@@ -24,8 +26,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereOrganizationValidatorId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \App\Models\OrganizationValidator $external_validator
- * @property-read \App\Models\FundCriterion $fund_criterion
  */
 class FundCriterionValidator extends Model
 {

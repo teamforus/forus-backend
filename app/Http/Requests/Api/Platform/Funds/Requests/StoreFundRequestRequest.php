@@ -48,8 +48,7 @@ class StoreFundRequestRequest extends BaseFormRequest
             'records.*.fund_criterion_id' => 'required|in:' . implode(',', $criteria),
             'records.*.record_type_key' => [
                 'required',
-                'not_in:primary_email',
-                new RecordTypeKeyExistsRule(),
+                new RecordTypeKeyExistsRule($this, true),
                 $fund ? new FundRequestRecordRecordTypeKeyRule($this, $fund) : ''
             ],
             'records.*.files' => 'nullable|array',

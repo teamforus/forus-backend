@@ -28,10 +28,12 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\ProductCategory|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read \App\Models\ProductCategoryTranslation $translation
+ * @property-read \App\Models\ProductCategoryTranslation|null $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductCategoryTranslation[] $translations
  * @property-read int|null $translations_count
+ * @method static \Kalnoy\Nestedset\Collection|static[] all($columns = ['*'])
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory d()
+ * @method static \Kalnoy\Nestedset\Collection|static[] get($columns = ['*'])
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory listsTranslations($translationField)
  * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newModelQuery()
  * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newQuery()
@@ -54,8 +56,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory withTranslation()
  * @mixin \Eloquent
- * @method static \Kalnoy\Nestedset\Collection|static[] all($columns = ['*'])
- * @method static \Kalnoy\Nestedset\Collection|static[] get($columns = ['*'])
  */
 class ProductCategory extends Model
 {
