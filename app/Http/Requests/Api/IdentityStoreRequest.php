@@ -31,7 +31,7 @@ class IdentityStoreRequest extends BaseFormRequest
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
         return [
-            'email' => 'required|email:strict,dns|unique:identity_emails,email',
+            'email' => 'required|email:strict|unique:identity_emails,email',
             'records' => [
                 'nullable',
                 'array',

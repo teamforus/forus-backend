@@ -65,7 +65,7 @@ abstract class BaseOfficeRequest extends BaseFormRequest
         return [
             'name' => '',
             'phone' => '',
-            'email' => 'nullable|email:strict,dns',
+            'email' => 'nullable|email:strict',
             'address' => 'required',
             'schedule' => 'present|array',
             'schedule.*' => 'required|array',

@@ -34,7 +34,7 @@ class AssignVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'email' => 'required_without:bsn|email:strict,dns',
+            'email' => 'required_without:bsn|email:strict',
             'bsn' => 'required_without:email|string|between:8,9',
         ];
     }

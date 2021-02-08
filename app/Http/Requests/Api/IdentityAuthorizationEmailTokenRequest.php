@@ -33,7 +33,7 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
         return [
             'email' => [
                 'required',
-                'email:strict,dns',
+                'email:strict',
                 new IdentityEmailExistsRule()
             ],
             'source' => 'required|in:' . Implementation::keysAvailable()->implode(','),

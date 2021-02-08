@@ -35,7 +35,7 @@ class StoreOrganizationRequest extends FormRequest
             'name'                  => 'required|between:2,64',
             'description'           => 'nullable|string|max:4096',
             'iban'                  => ['required', new IbanRule()],
-            'email'                 => 'required|email:strict,dns',
+            'email'                 => 'required|email:strict',
             'email_public'          => 'boolean',
             'phone'                 => 'required|digits_between:4,20',
             'phone_public'          => 'boolean',
