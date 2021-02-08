@@ -9,7 +9,11 @@
     {{ mail_trans('dear_user') }},
     <br/>
     <br/>
-    {{ mail_trans('login_via_email.login_on_platform', ['platform' => $platform]) }}.
+    @if ($emailFrom->isInformalCommunication())
+        {{ mail_trans('login_via_email.login_on_platform_informal', ['platform' => $platform]) }}.
+    @else
+        {{ mail_trans('login_via_email.login_on_platform_formal', ['platform' => $platform]) }}.
+    @endif
     <br />
     {!! mail_trans('login_via_email.login_button', ['link' => $link]) !!}
     <br/>

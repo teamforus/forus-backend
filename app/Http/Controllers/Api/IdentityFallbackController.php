@@ -72,7 +72,7 @@ class IdentityFallbackController extends Controller
 
         // client type, key and target primary email
         $clientType = client_type(config('forus.clients.default'));
-        $clientKey = implementation_key('general');
+        $clientKey = $request->implementation_key();
         $primaryEmail = $request->input('email', $request->input(
             'records.primary_email'
         ));
@@ -347,12 +347,8 @@ class IdentityFallbackController extends Controller
 
         if ($isMobile) {
             $sourceUrl = config('forus.front_ends.app-me_app');
-        } else if ($implementation === 'general') {
-            $sourceUrl = Implementation::general_urls()['url_' . $frontend];
         } else {
-            $sourceUrl = Implementation::query()->where([
-                'key' => $implementation
-            ])->first()['url_' . $frontend];
+            $sourceUrl = Implementation::byKey($implementation)->urlFrontend($frontend);
         }
 
         $redirectUrl = sprintf(

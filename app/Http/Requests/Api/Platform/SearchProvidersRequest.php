@@ -29,7 +29,7 @@ class SearchProvidersRequest extends BaseFormRequest
         return [
             'per_page'  => 'numeric|max:1000',
             'fund_id'   => [
-                $this->implementation_key() === 'general' || !$implementation ? null : (
+                $implementation->isGeneral() || !$implementation ? null : (
                     Rule::in($implementation->funds()->pluck('funds.id'))
                 )
             ],
