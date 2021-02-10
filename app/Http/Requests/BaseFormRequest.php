@@ -84,8 +84,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return Implementation|null
      * @noinspection PhpUnused
      */
-    public function implementation_model(): ?Implementation {
-        return Implementation::activeModel();
+    public function implementation_model(): Implementation {
+        return Implementation::active();
     }
 
     /**

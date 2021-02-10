@@ -4,6 +4,9 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\FundProviderProduct;
+use App\Models\Implementation;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -185,5 +188,46 @@ class ProductQuery
     public static function approvedForFundsAndActiveFilter(Builder $query, $fund_id): Builder
     {
         return self::approvedForFundsFilter(self::inStockAndActiveFilter($query), $fund_id);
+    }
+
+    /**
+     * Add min_price column form the action funds
+     * Has to be used as the last query builder operation (unless you have reasons not to)
+     *
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function addPriceMinAndMaxColumn(Builder $builder): Builder
+    {
+        $fundProviderProductQuery = function(string $type) {
+            return FundProviderProduct::whereHas('fund_provider.fund', function(Builder $builder) {
+                $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
+                $builder->whereIn('funds.id', Implementation::activeFundsQuery()->pluck('id'));
+            })->select('amount')
+                ->orderBy('amount', $type)
+                ->whereColumn('fund_provider_products.product_id', 'products.id')
+                ->limit(1);
+        };
+
+        $builder->addSelect([
+            'sponsor_amount_min' => $fundProviderProductQuery('asc'),
+            'sponsor_amount_max' => $fundProviderProductQuery('desc'),
+        ]);
+
+        /** @var Builder $query */
+        $query = Product::fromSub($builder, 'products');
+
+        $query->selectRaw(
+            '*, ' .
+            '(CASE WHEN `sponsor_amount_max` IS NULL THEN `price` ELSE ' .
+            '(CASE WHEN `price` - `sponsor_amount_max` < 0 THEN 0 ELSE ' .
+            '`price` - `sponsor_amount_max` END) END) as `price_min`, ' .
+
+            '(CASE WHEN `sponsor_amount_min` IS NULL THEN `price` ELSE ' .
+            '(CASE WHEN `price` - `sponsor_amount_min` < 0 THEN 0 ELSE ' .
+            '`price` - `sponsor_amount_min` END) END) as `price_max`'
+        );
+
+        return $query;
     }
 }

@@ -48,6 +48,7 @@ class VoucherSubscriber
 
     /**
      * @param VoucherCreated $voucherCreated
+     * @noinspection PhpUnused
      */
     public function onVoucherCreated(
         VoucherCreated $voucherCreated
@@ -100,6 +101,7 @@ class VoucherSubscriber
 
     /**
      * @param VoucherAssigned $voucherAssigned
+     * @noinspection PhpUnused
      */
     public function onVoucherAssigned(
         VoucherAssigned $voucherAssigned
@@ -114,7 +116,7 @@ class VoucherSubscriber
         ]));
 
         $transData = [
-            "implementation_name" => Implementation::activeModel()->name ?? 'General',
+            "implementation_name" => Implementation::active()->name,
             "fund_name" => $voucher->fund->name
         ];
 
@@ -141,6 +143,7 @@ class VoucherSubscriber
 
     /**
      * @param ProductVoucherShared $voucherShared
+     * @noinspection PhpUnused
      */
     public function onProductVoucherShared(
         ProductVoucherShared $voucherShared
@@ -161,6 +164,7 @@ class VoucherSubscriber
 
     /**
      * @param VoucherExpiring $voucherExpired
+     * @noinspection PhpUnused
      */
     public function onVoucherExpiring(
         VoucherExpiring $voucherExpired
@@ -189,6 +193,7 @@ class VoucherSubscriber
 
     /**
      * @param VoucherExpired $voucherExpired
+     * @noinspection PhpUnused
      */
     public function onVoucherExpired(
         VoucherExpired $voucherExpired
