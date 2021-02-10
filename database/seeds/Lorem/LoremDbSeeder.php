@@ -666,6 +666,7 @@ class LoremDbSeeder extends Seeder
                 'key'       => $eligibility_key,
                 'type'      => 'string',
             ])->updateModel([
+                'system'    => true,
                 'name'      => $fund->name . ' ' . ' eligible',
             ]);
 

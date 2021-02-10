@@ -20,8 +20,8 @@ class RecordTypeController extends Controller
     public function index(IndexRecordTypesRequest $request): array
     {
         $insertableOnly = $request->input('insertable_only', false);
-        $system = $request->input('insertable_only', false);
-        $recordTypes = $request->records_repo()->getRecordTypes(!$insertableOnly && !$system);
+        $system = $request->input('system', false);
+        $recordTypes = $request->records_repo()->getRecordTypes(!$insertableOnly || $system);
 
         return array_values(array_map(function ($type) {
             return array_only($type, [
