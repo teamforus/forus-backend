@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Rules\IdentityPinCodeRule;
 use App\Rules\IdentityRecordsAddressRule;
 use App\Rules\IdentityRecordsRule;
 
@@ -31,37 +30,18 @@ class IdentityStoreRequest extends BaseFormRequest
         $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
-        $emailRule = [
-            'email:strict,dns',
-            'unique:identity_emails,email',
-        ];
-
         return [
-            'pin_code' => [
-                'nullable',
-                new IdentityPinCodeRule()
-            ],
-            'email' => array_merge((array) (
-                $this->has('records.primary_email') ? 'nullable' : 'required'
-            ), $emailRule),
+            'email' => 'required|email:strict|unique:identity_emails,email',
             'records' => [
-                !env('DISABLE_DEPRECATED_API', false) && !$this->has('email') ? 'required' : 'nullable',
+                'nullable',
                 'array',
                 new IdentityRecordsRule($this)
             ],
-            'records.primary_email' => array_merge((array) (
-                $this->has('email') ? 'nullable' : 'required'
-            ), $emailRule),
             'records.address' => [
                 new IdentityRecordsAddressRule()
             ],
-            'records.*' => [
-                'required'
-            ],
-            'target' => [
-                'nullable',
-                'alpha_dash',
-            ]
+            'records.*' => 'required',
+            'target' => 'nullable|alpha_dash',
         ];
     }
 }

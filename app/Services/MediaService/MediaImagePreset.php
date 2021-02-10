@@ -92,7 +92,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param int|null $height
      * @param bool $preserveAspectRatio
      * @param int $quality
-     * @param string $format
+     * @param string|null $format
      */
     public function __construct(
         string $name,

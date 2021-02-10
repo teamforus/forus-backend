@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Offices;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class IndexOfficeRequest extends FormRequest
+/**
+ * Class IndexOfficeRequest
+ * @package App\Http\Requests\Api\Platform\Organizations\Offices
+ */
+class IndexOfficeRequest extends BaseOfficeRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,11 +26,7 @@ class IndexOfficeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page' => [
-                'nullable',
-                'numeric',
-                'max:100'
-            ],
+            'per_page' => 'nullable|numeric|between:0,100',
         ];
     }
 }

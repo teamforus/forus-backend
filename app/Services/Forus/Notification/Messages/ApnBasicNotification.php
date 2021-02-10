@@ -49,6 +49,6 @@ class ApnBasicNotification extends Notification implements ShouldQueue
         return ApnMessage::create(
             $this->title,
             $this->body
-        )->sound('default');
+        )->sound();
     }
 }

@@ -10,7 +10,6 @@ use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\OrganizationQuery;
-use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\Resource;
@@ -45,7 +44,7 @@ class ProviderVoucherResource extends Resource
             return $this->productVoucher($voucherToken, $auth_address);
         }
 
-        return $this->regularVoucher($request, $auth_address, $voucherToken);
+        return $this->regularVoucher($auth_address, $voucherToken);
     }
 
     /**
@@ -72,24 +71,16 @@ class ProviderVoucherResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param $request
      * @param string $identityAddress
      * @param VoucherToken $voucherToken
      * @return array
      */
     private function regularVoucher(
-        $request,
         string $identityAddress,
         VoucherToken $voucherToken
     ): array {
         $voucher = $voucherToken->voucher;
         $fund = $voucher->fund;
-
-        $productVouchers = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
-            $voucher->product_vouchers()->getQuery(),
-            $identityAddress,
-            $voucher->fund_id
-        )->whereDoesntHave('transactions')->get();
 
         return collect($voucher)->only([
             'identity_address', 'fund_id', 'created_at'
@@ -99,13 +90,6 @@ class ProviderVoucherResource extends Resource
             'amount' => currency_format($fund->isTypeBudget() ? $voucher->amount_available : 0),
             'fund' => $this->fundDetails($fund),
             'allowed_organizations' => $this->getAllowedOrganizations($voucher, $identityAddress),
-        ])->merge(env('DISABLE_DEPRECATED_API') ? [] : [
-            // TODO: To be removed in next release
-            'allowed_product_categories' => [],
-            // TODO: To be removed in next release
-            'allowed_products' => [],
-            // TODO: To be moved to separate endpoint in next release
-            'product_vouchers' => self::collection($productVouchers)->toArray($request),
         ])->toArray();
     }
 

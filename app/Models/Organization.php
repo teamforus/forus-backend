@@ -192,7 +192,7 @@ class Organization extends Model
                 // only approved by at least one sponsor
                 return ProductQuery::approvedForFundsFilter($builder, $activeFunds);
             });
-        } else if (!$has_products && $has_products !== null) {
+        } else if ($has_products !== null) {
             $query->whereDoesntHave('products');
         }
 

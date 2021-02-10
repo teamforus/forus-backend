@@ -78,34 +78,6 @@ interface IIdentityRepo {
     );
 
     /**
-     * @param $proxyIdentityId
-     * @return bool
-     * @throws \Exception
-     */
-    public function hasPinCode($proxyIdentityId);
-
-    /**
-     * @param mixed $proxyIdentityId
-     * @param string $pinCode
-     * @return bool
-     * @throws \Exception
-     */
-    public function cmpPinCode($proxyIdentityId, $pinCode);
-
-    /**
-     * @param $proxyIdentityId
-     * @param string $pinCode
-     * @param string $oldPinCode
-     * @return bool
-     * @throws \Exception
-     */
-    public function updatePinCode(
-        $proxyIdentityId,
-        $pinCode,
-        $oldPinCode = null
-    );
-
-    /**
      * Create new proxy of type
      *
      * @param string $type

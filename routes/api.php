@@ -19,64 +19,28 @@ $router = resolve('router');
  */
 Route::group([], static function() use ($router) {
     $router->group(['prefix' => '/identity'], static function() use ($router) {
-        if (env('DISABLE_DEPRECATED_API', false)) {
-            $router->post('/', 'Api\IdentityController@store');
-            $router->post('/validate/email', 'Api\IdentityController@storeValidateEmail');
+        $router->post('/', 'Api\IdentityController@store');
+        $router->post('/validate/email', 'Api\IdentityController@storeValidateEmail');
 
-            $router->group(['prefix' => '/proxy'], static function() use ($router) {
-                $router->post('/code', 'Api\IdentityController@proxyAuthorizationCode');
-                $router->post('/token', 'Api\IdentityController@proxyAuthorizationToken');
-                $router->post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
+        $router->group(['prefix' => '/proxy'], static function() use ($router) {
+            $router->post('/code', 'Api\IdentityController@proxyAuthorizationCode');
+            $router->post('/token', 'Api\IdentityController@proxyAuthorizationToken');
+            $router->post('/email', 'Api\IdentityController@proxyAuthorizationEmailToken');
 
-                // short tokens
-                $router->post('/short-token', 'Api\IdentityController@proxyAuthorizationShortToken');
-                $router->get('/short-token/exchange/{shortToken}', 'Api\IdentityController@proxyExchangeAuthorizationShortToken');
+            // short tokens
+            $router->post('/short-token', 'Api\IdentityController@proxyAuthorizationShortToken');
+            $router->get('/short-token/exchange/{shortToken}', 'Api\IdentityController@proxyExchangeAuthorizationShortToken');
 
-                // sign in by email
-                $router->get('/email/redirect/{emailToken}', 'Api\IdentityController@emailTokenRedirect')->name('emailSignInRedirect');
-                $router->get('/email/exchange/{emailToken}', 'Api\IdentityController@emailTokenExchange');
+            // sign in by email
+            $router->get('/email/redirect/{emailToken}', 'Api\IdentityController@emailTokenRedirect')->name('emailSignInRedirect');
+            $router->get('/email/exchange/{emailToken}', 'Api\IdentityController@emailTokenExchange');
 
-                // sign up, email confirmation
-                $router->get('/confirmation/redirect/{exchangeToken}', 'Api\IdentityController@emailConfirmationRedirect')->name('emailSignUpRedirect');
-                $router->get('/confirmation/exchange/{exchangeToken}', 'Api\IdentityController@emailConfirmationExchange');
+            // sign up, email confirmation
+            $router->get('/confirmation/redirect/{exchangeToken}', 'Api\IdentityController@emailConfirmationRedirect')->name('emailSignUpRedirect');
+            $router->get('/confirmation/exchange/{exchangeToken}', 'Api\IdentityController@emailConfirmationExchange');
 
-                $router->get('/check-token', 'Api\IdentityController@checkToken');
-            });
-        } else {
-            // TODO: remove deprecated api endpoints
-            $router->post('/', 'Api\IdentityFallbackController@store');
-            $router->post('/validate/email', 'Api\IdentityFallbackController@storeValidateEmail');
-
-            $router->group(['prefix' => '/proxy'], static function() use ($router) {
-                $router->post('/code', 'Api\IdentityFallbackController@proxyAuthorizationCode');
-                $router->post('/token', 'Api\IdentityFallbackController@proxyAuthorizationToken');
-                $router->post('/email', 'Api\IdentityFallbackController@proxyAuthorizationEmailToken');
-
-                // short tokens
-                $router->post('/short-token', 'Api\IdentityFallbackController@proxyAuthorizationShortToken');
-                # old version
-                $router->get('/short-token/{shortToken}', 'Api\IdentityFallbackController@proxyExchangeAuthorizationShortToken');
-                # new version
-                $router->get('/short-token/exchange/{shortToken}', 'Api\IdentityController@proxyExchangeAuthorizationShortToken');
-
-                // email
-                $router->get('/redirect/email/{source}/{emailToken}', 'Api\IdentityFallbackController@proxyRedirectEmail');
-                $router->get('/authorize/email/{source}/{emailToken}', 'Api\IdentityFallbackController@proxyAuthorizeEmail');
-
-                // email, new version
-                $router->get('/email/redirect/{emailToken}', 'Api\IdentityController@emailTokenRedirect');
-                $router->get('/email/exchange/{emailToken}', 'Api\IdentityController@emailTokenExchange');
-
-                // email confirmation
-                # old version
-                $router->get('/confirmation/redirect/{exchangeToken}/{clientType}/{implementationKey?}', 'Api\IdentityFallbackController@emailConfirmationRedirect');
-                # new version
-                $router->get('/confirmation/redirect/{exchangeToken}', 'Api\IdentityController@emailConfirmationRedirect');
-                $router->get('/confirmation/exchange/{exchangeToken}', 'Api\IdentityController@emailConfirmationExchange');
-
-                $router->get('/check-token', 'Api\IdentityFallbackController@checkToken');
-            });
-        }
+            $router->get('/check-token', 'Api\IdentityController@checkToken');
+        });
 
         /**
          * Record types
@@ -120,36 +84,17 @@ Route::group(['middleware' => ['api.auth']], static function() use ($router) {
         $router->post('emails/{identity_email}/resend', 'Api\Identity\IdentityEmailsController@resend');
         $router->patch('emails/{identity_email}/primary', 'Api\Identity\IdentityEmailsController@primary');
 
-        if (env('DISABLE_DEPRECATED_API', false)) {
-            /**
-             * Identity proxies
-             */
-            $router->group(['prefix' => '/proxy'], static function() use ($router) {
-                $router->delete('/', 'Api\IdentityController@proxyDestroy');
+        /**
+         * Identity proxies
+         */
+        $router->group(['prefix' => '/proxy'], static function() use ($router) {
+            $router->delete('/', 'Api\IdentityController@proxyDestroy');
 
-                $router->group(['prefix' => '/authorize'], static function() use ($router) {
-                    $router->post('/code', 'Api\IdentityController@proxyAuthorizeCode');
-                    $router->post('/token', 'Api\IdentityController@proxyAuthorizeToken');
-                });
+            $router->group(['prefix' => '/authorize'], static function() use ($router) {
+                $router->post('/code', 'Api\IdentityController@proxyAuthorizeCode');
+                $router->post('/token', 'Api\IdentityController@proxyAuthorizeToken');
             });
-        } else {
-            // TODO: remove deprecated api endpoints
-            $router->get('/', 'Api\IdentityFallbackController@getPublic');
-            $router->get('/pin-code/{pinCode}', 'Api\IdentityFallbackController@checkPinCode');
-            $router->post('/pin-code', 'Api\IdentityFallbackController@updatePinCode');
-
-            /**
-             * Identity proxies
-             */
-            $router->group(['prefix' => '/proxy'], static function() use ($router) {
-                $router->delete('/', 'Api\IdentityFallbackController@proxyDestroy');
-
-                $router->group(['prefix' => '/authorize'], static function() use ($router) {
-                    $router->post('/code', 'Api\IdentityFallbackController@proxyAuthorizeCode');
-                    $router->post('/token', 'Api\IdentityFallbackController@proxyAuthorizeToken');
-                });
-            });
-        }
+        });
 
         /**
          * Record categories

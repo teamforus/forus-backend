@@ -17,7 +17,7 @@ class IdentityEmailVerificationMail extends ImplementationMail
     /**
      * IdentityEmailVerificationMail constructor.
      * @param string $link
-     * @param EmailFrom $emailFrom
+     * @param EmailFrom|null $emailFrom
      */
     public function __construct(string $link, ?EmailFrom $emailFrom) {
         $this->setMailFrom($emailFrom);
