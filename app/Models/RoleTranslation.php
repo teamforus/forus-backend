@@ -6,9 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Class RoleTranslation
+ * App\Models\RoleTranslation
  *
- * @package App\Models
  * @property int $id
  * @property string $name
  * @property string $description

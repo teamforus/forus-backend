@@ -85,6 +85,6 @@ class ValidatorOrganizationsController extends Controller
 
         $organization->detachExternalValidator($validatorOrganization);
 
-        return response()->json([], 200);
+        return response()->json([]);
     }
 }

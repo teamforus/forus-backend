@@ -40,7 +40,7 @@ class FundProviderInvitationsController extends Controller
 
         return FundProviderInvitationResource::collection($providers->with(
             FundProviderInvitationResource::$load
-        )->paginate($request->input('per_page', null)));
+        )->paginate($request->input('per_page')));
     }
 
     /**

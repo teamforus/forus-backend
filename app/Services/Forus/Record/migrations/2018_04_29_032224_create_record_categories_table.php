@@ -1,9 +1,13 @@
-<?php
+<?php /** @noinspection PhpIllegalPsrClassPathInspection */
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * Class CreateRecordCategoriesTable
+ * @noinspection PhpUnused
+ */
 class CreateRecordCategoriesTable extends Migration
 {
     /**

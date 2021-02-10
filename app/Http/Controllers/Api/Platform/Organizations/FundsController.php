@@ -227,7 +227,7 @@ class FundsController extends Controller
     ) {
         $this->authorize('show', $organization);
 
-        return response()->json([], 200);
+        return response()->json([]);
     }
 
     /**
@@ -275,8 +275,8 @@ class FundsController extends Controller
 
             $dates->push($startDate);
             $dates->push($startDate->copy()->addDays(14));
-            $dates->push($startDate->copy()->addMonths(1));
-            $dates->push($startDate->copy()->addMonths(1)->addDays(14));
+            $dates->push($startDate->copy()->addMonths());
+            $dates->push($startDate->copy()->addMonths()->addDays(14));
             $dates->push($startDate->copy()->addMonths(2));
             $dates->push($startDate->copy()->addMonths(2)->addDays(14));
             $dates->push($endDate);
@@ -308,12 +308,12 @@ class FundsController extends Controller
             $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
 
             $dates->push($startDate);
-            $dates->push($startDate->copy()->addQuarters(1));
+            $dates->push($startDate->copy()->addQuarters());
             $dates->push($startDate->copy()->addQuarters(2));
             $dates->push($startDate->copy()->addQuarters(3));
             $dates->push($endDate);
         } else {
-            abort(403, "");
+            abort(403);
             exit();
         }
 
@@ -457,6 +457,6 @@ class FundsController extends Controller
         $fund->fund_formula_products()->delete();
         $fund->delete();
 
-        return response()->json([], 200);
+        return response()->json([]);
     }
 }

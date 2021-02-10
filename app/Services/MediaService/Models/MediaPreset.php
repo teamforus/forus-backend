@@ -5,7 +5,7 @@ namespace App\Services\MediaService\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * App\Services\MediaService\Models\MediaSize
+ * App\Services\MediaService\Models\MediaPreset
  *
  * @property int $id
  * @property int $media_id

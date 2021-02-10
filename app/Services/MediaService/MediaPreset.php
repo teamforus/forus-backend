@@ -34,8 +34,8 @@ abstract class MediaPreset
     /**
      * MediaPreset constructor.
      * @param string $name
-     * @param string $format
-     * @param $quality
+     * @param string|null $format
+     * @param string $quality
      */
     public function __construct(
         string $name,

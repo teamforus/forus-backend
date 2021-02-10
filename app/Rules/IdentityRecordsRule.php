@@ -2,8 +2,13 @@
 
 namespace App\Rules;
 
+use App\Http\Requests\BaseFormRequest;
 use Illuminate\Contracts\Validation\Rule;
 
+/**
+ * Class IdentityRecordsRule
+ * @package App\Rules
+ */
 class IdentityRecordsRule implements Rule
 {
     private $recordRepo;
@@ -12,11 +17,11 @@ class IdentityRecordsRule implements Rule
     /**
      * Create a new rule instance.
      *
-     * @return void
+     * @param BaseFormRequest $request
      */
-    public function __construct()
+    public function __construct(BaseFormRequest $request)
     {
-        $this->recordRepo = resolve('forus.services.record');
+        $this->recordRepo = $request->records_repo();
     }
 
     /**
@@ -26,27 +31,24 @@ class IdentityRecordsRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         if (!is_array($value)) {
             $this->message = trans('validation.array');
             return false;
         }
 
-        $requestKeys = array_keys($value);
-        $recordTypes = collect(
-            $this->recordRepo->getRecordTypes()
-        )->pluck('key');
+        $invalidKeys = array_diff(
+            array_keys($value),
+            array_pluck($this->recordRepo->getRecordTypes(false), 'key')
+        );
 
+        if (count($invalidKeys) > 0) {
+            $this->message = trans('validation.unknown_record_key', [
+                'key' => array_first($invalidKeys)
+            ]);
 
-        foreach ($requestKeys as $requestKey) {
-            if ($recordTypes->search($requestKey) === FALSE) {
-                $this->message = trans('validation.unknown_record_key', [
-                    'key' => $requestKey
-                ]);
-
-                return false;
-            }
+            return false;
         }
 
         return true;
@@ -57,7 +59,7 @@ class IdentityRecordsRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return $this->message;
     }

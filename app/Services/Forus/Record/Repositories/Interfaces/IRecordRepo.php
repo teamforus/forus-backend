@@ -15,10 +15,11 @@ interface IRecordRepo {
     );
 
     /**
-    * Get list all available record type keys
-    * @return array
-    */
-    public function getRecordTypes();
+     * Get list all available record type keys
+     * @param bool $withSystem
+     * @return array
+     */
+    public function getRecordTypes(bool $withSystem = true): array;
 
     /**
      * Check if record type and value is unique
@@ -32,7 +33,7 @@ interface IRecordRepo {
         string $recordTypeKey,
         string $recordValue,
         string $excludeIdentity = null
-    );
+    ): bool;
 
     /**
      * Check if record type and value is already existing

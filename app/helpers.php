@@ -244,11 +244,10 @@ if (!function_exists('authorize')) {
 
 if (!function_exists('implementation_key')) {
     /**
-     * @param string $default
      * @return array|string|null
      */
-    function implementation_key($default = 'general') {
-        return request()->header('Client-Key', $default);
+    function implementation_key() {
+        return Implementation::activeKey();
     }
 }
 
@@ -393,9 +392,7 @@ if (!function_exists('cache_optional')) {
         try {
             $reset && cache()->driver()->delete($key);
             return cache()->driver($driver)->remember($key, $minutes * 60, $callback);
-        } catch (\Psr\SimpleCache\CacheException $throwable) {
-            return $callback();
-        } catch (\Throwable $throwable) {
+        } catch (\Psr\SimpleCache\CacheException | \Throwable $throwable) {
             return $callback();
         }
     }
@@ -494,7 +491,7 @@ if (!function_exists('api_dependency_requested')) {
         bool $default = true
     ) {
         $requestData = $request ?? request();
-        $dependency = $requestData->input('dependency', null);
+        $dependency = $requestData->input('dependency');
 
         if (is_array($dependency)) {
             return in_array($key, $dependency, true);

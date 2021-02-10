@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $voucher_id
  * @property string $address
  * @property string $house
- * @property string $house_number
+ * @property string $house_addition
  * @property string $postcode
  * @property string $city
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -26,14 +26,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereCity($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereHouse($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereHouseNumber($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereHouseAddition($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest wherePostcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereVoucherId($value)
  * @mixin \Eloquent
- * @property string $house_addition
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCardRequest whereHouseAddition($value)
  */
 class PhysicalCardRequest extends Model
 {

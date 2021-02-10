@@ -179,7 +179,7 @@ class FundRequestRecordPolicy
     /**
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @param FundRequestRecord $fundRequestRecord
+     * @param FundRequestRecord|null $fundRequestRecord
      * @return bool
      */
     private function checkIntegrityValidator(

@@ -67,7 +67,7 @@ class ValidatorDigest extends BaseOrganizationDigest
         }
 
         $emailBody->button_primary(
-            Implementation::general_urls()['url_validator'],
+            Implementation::general()->url_validator,
             trans('digests/validator.dashboard_button')
         );
 

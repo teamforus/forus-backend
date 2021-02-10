@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Identity;
 
 use App\Http\Requests\Api\RecordCategories\RecordCategoryStoreRequest;
 use App\Http\Requests\Api\RecordCategories\RecordCategoryUpdateRequest;
-use Illuminate\Http\Request;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Controllers\Controller;
 
 class RecordCategoryController extends Controller
@@ -20,13 +20,12 @@ class RecordCategoryController extends Controller
 
     /**
      * Get list categories
+     * @param BaseFormRequest $request
      * @return array
      */
-    public function index()
+    public function index(BaseFormRequest $request): array
     {
-        return $this->recordRepo->categoriesList(
-            auth_address()
-        );
+        return $request->records_repo()->categoriesList($request->auth_address());
     }
 
     /**
@@ -34,11 +33,10 @@ class RecordCategoryController extends Controller
      * @param RecordCategoryStoreRequest $request
      * @return array
      */
-    public function store(
-        RecordCategoryStoreRequest $request
-    ) {
+    public function store(RecordCategoryStoreRequest $request): array
+    {
         $success = !!$this->recordRepo->categoryCreate(
-            auth_address(),
+            $request->auth_address(),
             $request->get('name'),
             $request->input('order', 0)
         );
@@ -48,24 +46,17 @@ class RecordCategoryController extends Controller
 
     /**
      * Get record category
+     * @param BaseFormRequest $request
      * @param int $recordCategoryId
      * @return array|null
      */
-    public function show(
-        int $recordCategoryId
-    ) {
-        $identity = auth_address();
-
-        if (empty($this->recordRepo->categoryGet(
-            $identity, $recordCategoryId
-        ))) {
+    public function show(BaseFormRequest $request, int $recordCategoryId): ?array
+    {
+        if (empty($this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId))) {
             abort(404, trans('record-categories.codes.404'));
         }
 
-        $category = $this->recordRepo->categoryGet(
-            $identity,
-            $recordCategoryId
-        );
+        $category = $this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId);
 
         if (!$category) {
             abort(404, trans('record-categories.codes.404'));
@@ -80,23 +71,17 @@ class RecordCategoryController extends Controller
      * @param int $recordCategoryId
      * @return array
      */
-    public function update(
-        RecordCategoryUpdateRequest $request,
-        int $recordCategoryId
-    ) {
-        $identity = auth_address();
-
-        if (empty($this->recordRepo->categoryGet(
-            $identity, $recordCategoryId
-        ))) {
+    public function update(RecordCategoryUpdateRequest $request, int $recordCategoryId): array
+    {
+        if (empty($this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId))) {
             abort(404, trans('record-categories.codes.404'));
         }
 
         $success = $this->recordRepo->categoryUpdate(
-            auth_address(),
+            $request->auth_address(),
             $recordCategoryId,
-            $request->input('name', null),
-            $request->input('order', null)
+            $request->input('name'),
+            $request->input('order')
         );
 
         return compact('success');
@@ -104,39 +89,34 @@ class RecordCategoryController extends Controller
 
     /**
      * Delete record category
+     * @param BaseFormRequest $request
      * @param int $recordCategoryId
      * @return array
      * @throws \Exception
      */
-    public function destroy(
-        int $recordCategoryId
-    ) {
-        $identity = auth_address();
-
-        if (empty($this->recordRepo->categoryGet(
-            $identity, $recordCategoryId
-        ))) {
+    public function destroy(BaseFormRequest $request, int $recordCategoryId ): array
+    {
+        if (empty($this->recordRepo->categoryGet($request->auth_address(), $recordCategoryId))) {
             abort(404, trans('record-categories.codes.404'));
         }
 
-        $success = $this->recordRepo->categoryDelete(
-            auth_address(),
-            $recordCategoryId
-        );
-
-        return compact('success');
+        return [
+            'success' => $this->recordRepo->categoryDelete(
+                $request->auth_address(),
+                $recordCategoryId
+            ),
+        ];
     }
 
     /**
      * Sort record categories
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return array
      */
-    public function sort(
-        Request $request
-    ) {
+    public function sort(BaseFormRequest $request): array
+    {
         $this->recordRepo->categoriesSort(
-            auth_address(),
+            $request->auth_address(),
             collect($request->get('categories', []))->toArray()
         );
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
 
+use App\Rules\ImplementationPagesArrayKeysRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateImplementationCmsRequest extends FormRequest
@@ -24,12 +25,27 @@ class UpdateImplementationCmsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'has_more_info_url'     => 'nullable|boolean',
-            'more_info_url'         => 'nullable|string|max:50',
-            'description_steps'     => 'nullable|string|max:10000',
-            'description_providers'  => 'nullable|string|max:10000',
-            'title'                 => 'nullable|string|max:50',
-            'description'           => 'nullable|string|max:4000',
+            'title' => 'nullable|string|max:50',
+            'description' => 'nullable|string|max:4000',
+            'informal_communication' => 'nullable|boolean',
+
+            'pages' => ['array', new ImplementationPagesArrayKeysRule()],
+            'pages.*' => 'array',
+            'pages.*.content' => 'nullable|string|max:10000',
+            'pages.*.external' => 'present|boolean',
+            'pages.*.external_url' => 'nullable|string|max:100',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function attributes(): array
+    {
+        return [
+            'pages.privacy.external_url' => 'External url',
+            'pages.privacy.external' => 'External',
+            'pages.privacy.content' => 'Content',
         ];
     }
 }

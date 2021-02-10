@@ -59,6 +59,6 @@ class DevicesController extends Controller
             auth_address()
         );
 
-        return response(null, 200);
+        return response(null);
     }
 }

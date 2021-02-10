@@ -31,7 +31,7 @@ class ApiAuthMiddleware
                 return response()->json([
                     "message" => 'proxy_identity_pending'
                 ])->setStatusCode(401);
-            } break;
+            }
         }
 
         if (!$proxyId || !$address) {
