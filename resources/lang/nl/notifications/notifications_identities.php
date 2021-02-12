@@ -39,42 +39,35 @@ return [
             ':product_name van :provider_name is toegevoegd aan de webshop',
     ],
 
-    // assigned through dashboard
-    'identity_voucher_assigned' => [
+    // assigned budget through dashboard
+    'identity_voucher_assigned_budget' => [
         'title' => ':fund_name-tegoed is aan u toegekend.',
         'description' =>
             'Hierbij ontvangt u uw :fund_name-tegoed. Het tegoed heeft een waarde van ' .
             ':voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
     ],
 
-    // @TODO: IMPLEMENT SUBSIDY NOTIFICATION assigned through dashboard
-    'identity_voucher_subsidy_assigned' => [
+    // assigned subsidy through dashboard
+    'identity_voucher_assigned_subsidy' => [
         'title' => ':fund_name is aan u toegekend.',
-        // informal: 'Je hebt een :fund_name gekregen!.'
         'description' =>
-            'Hierbij ontvangt u uw :fund_name.' . 
+            'Hierbij ontvangt u uw :fund_name. ' .
             'Het tegoed is geldig tot en met :voucher_expire_date_locale.',
-        //
     ],
-    
 
     // added to identity through webshop by activation code or fund request
-    'voucher_added' => [
+    'voucher_added_budget' => [
         'title' => 'Gefeliciteerd! :fund_name is geactiveerd!',
         'description' =>
             'Uw :fund_name is geactiveerd. ' .
             'Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
     ],
 
-    // @TODO: IMPLEMENT SUBSIDY NOTIFICATION voucher added
     'voucher_added_subsidy' => [
         'title' => 'Er is een :fund_name aan u toegekend.',
-        // informal: 'title' => 'Je hebt een :fund_name gekregen!.',
         'description' =>
             'Hierbij ontvangt u uw :fund_name. ' .
             'Het tegoed is geldig tot en met :voucher_expire_date_locale.',
-        // informal: 'Gefeliciteerd! Je hebt een :fund_name gekregen.'
-        // 'Het tegoed is geldig tot en met :voucher_expire_date_locale.',
     ],
 
     // bought from webshop
@@ -85,13 +78,12 @@ return [
             'De reservering heeft een waarde van €:voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale',
     ],
 
-    // fund request submitted @todo: max change last sentence to informal/formal
+    // fund request submitted
     'fund_request_created' => [
         'title' => 'Aanvraag voor :fund_name is ontvangen.',
         'description' =>
             'De aanvraag voor :fund_name is ontvangen. ' .
             'U ontvangt binnen twee weken een reactie op uw aanvraag.',
-            // informal: 'Je ontvangt binnen twee weken een reactie op jouw aanvraag.',
     ],
 
     // fund request submitted
@@ -102,10 +94,10 @@ return [
             ':sponsor_name heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question',
     ],
 
-    // fund request resolved TODO: @max uitzoeken
+    // fund request resolved
     'fund_request_resolved' => [
         'title' => 'Aanvraag is behandeld',
-        'description' => 'Aanvraag is behandeld.',
+        'description' => ':sponsor_name heeft uw aanvraag voor :fund_name behandeld.',
     ],
 
     // budget voucher transaction
@@ -113,8 +105,9 @@ return [
         'title' => 'Er is een bedrag van uw :fund_name-tegoed afgeschreven.',
         'description' =>
             'Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. ' .
-            'Het huidige bedrag van uw \':fund_name\'-voucher is €:voucher_amount_locale.',
+            'Het huidige bedrag van uw \':fund_name\'-voucher is :voucher_amount_locale.',
     ],
+
     // subsidy voucher transaction, for subsidy fund
     'voucher_subsidy_transaction' => [
         'title' => 'Aanbieding van :fund_name gebruikt!',

@@ -446,7 +446,7 @@ class Implementation extends Model
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
-                'communication_type' => ($implementation->communication ?? false ? 'formal' : 'informal'),
+                'communication_type' => ($implementation->informal_communication ?? false ? 'informal' : 'formal'),
                 'settings' => $implementation->only('title', 'description', 'description_html'),
                 'fronts' => $implementation->only([
                     'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app'
