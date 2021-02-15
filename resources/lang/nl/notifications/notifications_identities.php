@@ -11,7 +11,7 @@ return [
     ],
     'changed_employee_roles' => [
         'title' => 'Uw rechten als medewerker zijn aangepast voor :organization_name',
-        'description' => 'Aan uw profiel zijn de volgende rollen toegekend: employee_roles voor organisatie :organization_name.',
+        'description' => 'Aan uw profiel zijn de volgende rollen toegekend: :employee_roles voor organisatie :organization_name.',
     ],
 
     // approved for budget
