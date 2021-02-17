@@ -33,9 +33,9 @@ class RecordTypeKeyExistsRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        return in_array(array_pluck($this->recordRepo->getRecordTypes(
+        return in_array($value, array_pluck($this->recordRepo->getRecordTypes(
             $this->allowSystemKeys
-        ), 'key'), $value);
+        ), 'key'), true);
     }
 
     /**
