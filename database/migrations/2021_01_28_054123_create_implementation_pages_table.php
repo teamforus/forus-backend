@@ -18,7 +18,7 @@ class CreateImplementationPagesTable extends Migration
             $table->unsignedInteger('implementation_id');
             $table->string('page_type', 50)->nullable();
             $table->text('content')->nullable();
-            $table->string('external_url', 200)->nullable();
+            $table->string('external_url', 300)->nullable();
             $table->boolean('external')->default(0);
             $table->timestamps();
         });
