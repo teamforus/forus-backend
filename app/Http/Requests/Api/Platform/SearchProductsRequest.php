@@ -34,6 +34,7 @@ class SearchProductsRequest extends FormRequest
             'unlimited_stock'       => 'nullable|boolean',
             'perice_type'           => 'nullable|string|in:' . join(',', Product::PRICE_TYPES),
             'show_all'              => 'nullable|boolean',
+            'sample'                => 'nullable|boolean',
             'per_page'              => 'nullable|numeric|max:1000',
             'fund_id'               => 'nullable|exists:funds,id',
             'product_category_id'   => 'nullable|exists:product_categories,id',

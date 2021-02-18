@@ -349,6 +349,10 @@ class Product extends Model
 
         $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
+        if ($request->has('sample')) {
+            return $query->inRandomOrder();
+        }
+
         return $query->orderBy(
             $request->input('order_by', 'created_at'),
             $request->input('order_by_dir', 'desc')
