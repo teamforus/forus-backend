@@ -343,6 +343,10 @@ class Product extends Model
             $query = $query->where('organization_id', $request->input('organization_id'));
         }
 
+        if ($request->has('sample')) {
+            $query = $query->whereHas('photo');
+        }
+
         if ($request->has('q') && !empty($q = $request->input('q'))) {
             return ProductQuery::queryDeepFilter($query, $q);
         }
