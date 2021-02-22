@@ -32,7 +32,7 @@ class StoreIdentityEmailRequest extends BaseIdentityEmailRequest
 
         return [
             'email' => [
-                'required', new IdentityEmailUniqueRule()
+                'required', 'email:strict', new IdentityEmailUniqueRule()
             ]
         ];
     }

@@ -24,12 +24,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityEmail[] $emails
  * @property-read int|null $emails_count
  * @property-read string $email
- * @property-read \App\Services\Forus\Identity\Models\IdentityEmail $initial_email
+ * @property-read \App\Services\Forus\Identity\Models\IdentityEmail|null $initial_email
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Services\Forus\Identity\Models\DatabaseNotification[] $notifications
  * @property-read int|null $notifications_count
- * @property-read \App\Services\Forus\Identity\Models\IdentityEmail $primary_email
+ * @property-read \App\Services\Forus\Identity\Models\IdentityEmail|null $primary_email
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityProxy[] $proxies
  * @property-read int|null $proxies_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\Record[] $records
+ * @property-read int|null $records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newModelQuery()
@@ -44,8 +46,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity wherePublicKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\Record[] $records
- * @property-read int|null $records_count
  */
 class Identity extends Model
 {

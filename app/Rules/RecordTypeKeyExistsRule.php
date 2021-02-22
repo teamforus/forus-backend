@@ -2,18 +2,26 @@
 
 namespace App\Rules;
 
+use App\Http\Requests\BaseFormRequest;
 use Illuminate\Contracts\Validation\Rule;
 
 class RecordTypeKeyExistsRule implements Rule
 {
+    protected $allowSystemKeys;
+    protected $recordRepo;
+
     /**
      * Create a new rule instance.
      *
-     * @return void
+     * @param BaseFormRequest $baseFormRequest
+     * @param bool $allowSystemKeys
      */
-    public function __construct()
-    {
-        //
+    public function __construct(
+        BaseFormRequest $baseFormRequest,
+        bool $allowSystemKeys = false
+    ) {
+        $this->recordRepo = $baseFormRequest->records_repo();
+        $this->allowSystemKeys = $allowSystemKeys;
     }
 
     /**
@@ -23,13 +31,11 @@ class RecordTypeKeyExistsRule implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
-        $recordRepo = resolve('forus.services.record');
-
-        return collect($recordRepo->getRecordTypes())->pluck(
-            'key'
-            )->search($value) !== false;
+        return in_array($value, array_pluck($this->recordRepo->getRecordTypes(
+            $this->allowSystemKeys
+        ), 'key'), true);
     }
 
     /**
@@ -37,7 +43,7 @@ class RecordTypeKeyExistsRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return trans('validation.exists');
     }

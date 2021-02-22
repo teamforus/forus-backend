@@ -75,7 +75,7 @@ class ProviderProductsDigest extends BaseOrganizationDigest
         ]));
 
         $emailBody = $emailBody->merge($emailBodyProducts)->space()->button_primary(
-            Implementation::general_urls()['url_provider'],
+            Implementation::general()->url_provider,
             trans('digests/provider_products.dashboard_button')
         );
 

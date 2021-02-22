@@ -15,8 +15,10 @@ use App\Notifications\Identities\Voucher\IdentityProductVoucherAddedNotification
 use App\Notifications\Identities\Voucher\IdentityProductVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherAddedNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherAssignedNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAddedSubsidyNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAssignedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
@@ -48,6 +50,7 @@ class VoucherSubscriber
 
     /**
      * @param VoucherCreated $voucherCreated
+     * @noinspection PhpUnused
      */
     public function onVoucherCreated(
         VoucherCreated $voucherCreated
@@ -94,12 +97,17 @@ class VoucherSubscriber
                 'sponsor' => $voucher->fund->organization,
             ]);
 
-            IdentityVoucherAddedNotification::send($event);
+            if ($voucher->fund->isTypeSubsidy()) {
+                IdentityVoucherAddedSubsidyNotification::send($event);
+            } else {
+                IdentityVoucherAddedBudgetNotification::send($event);
+            }
         }
     }
 
     /**
      * @param VoucherAssigned $voucherAssigned
+     * @noinspection PhpUnused
      */
     public function onVoucherAssigned(
         VoucherAssigned $voucherAssigned
@@ -107,14 +115,20 @@ class VoucherSubscriber
         $voucher = $voucherAssigned->getVoucher();
         $product = $voucher->product;
 
-        IdentityVoucherAssignedNotification::send($voucher->log(Voucher::EVENT_ASSIGNED, [
+        $event = $voucher->log(Voucher::EVENT_ASSIGNED, [
             'fund' => $voucher->fund,
             'voucher' => $voucher,
             'sponsor' => $voucher->fund->organization,
-        ]));
+        ]);
+
+        if ($voucher->fund->isTypeSubsidy()) {
+            IdentityVoucherAssignedSubsidyNotification::send($event);
+        } else {
+            IdentityVoucherAssignedBudgetNotification::send($event);
+        }
 
         $transData = [
-            "implementation_name" => Implementation::activeModel()->name ?? 'General',
+            "implementation_name" => Implementation::active()->name,
             "fund_name" => $voucher->fund->name
         ];
 
@@ -141,6 +155,7 @@ class VoucherSubscriber
 
     /**
      * @param ProductVoucherShared $voucherShared
+     * @noinspection PhpUnused
      */
     public function onProductVoucherShared(
         ProductVoucherShared $voucherShared
@@ -161,6 +176,7 @@ class VoucherSubscriber
 
     /**
      * @param VoucherExpiring $voucherExpired
+     * @noinspection PhpUnused
      */
     public function onVoucherExpiring(
         VoucherExpiring $voucherExpired
@@ -189,6 +205,7 @@ class VoucherSubscriber
 
     /**
      * @param VoucherExpired $voucherExpired
+     * @noinspection PhpUnused
      */
     public function onVoucherExpired(
         VoucherExpired $voucherExpired

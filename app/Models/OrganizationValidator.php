@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $validator_organization_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criteria_validators
+ * @property-read int|null $fund_criteria_validators_count
  * @property-read \App\Models\Organization $organization
  * @property-read \App\Models\Organization $validator_organization
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator newModelQuery()
@@ -25,8 +27,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator whereValidatorOrganizationId($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criteria_validators
- * @property-read int|null $fund_criteria_validators_count
  */
 class OrganizationValidator extends Model
 {

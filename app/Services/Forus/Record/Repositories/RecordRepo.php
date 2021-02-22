@@ -38,11 +38,21 @@ class RecordRepo implements IRecordRepo
 
     /**
      * Get list all available record type keys
+     * @param bool $withSystem
      * @return array
      */
-    public function getRecordTypes() {
-        return RecordType::query()->get()->map(function(RecordType $recordType) {
-            return $recordType->only(['id', 'key', 'name', 'type']);
+    public function getRecordTypes(bool $withSystem = true): array
+    {
+        $query = RecordType::query();
+
+        if (!$withSystem) {
+            $query->where('system', 0);
+        }
+
+        return $query->get()->map(static function(RecordType $recordType) {
+            return array_merge($recordType->only('id', 'key', 'type', 'system'), [
+                'name' => $recordType['name'] ?? $recordType['key'],
+            ]);
         })->toArray();
     }
 
@@ -57,7 +67,7 @@ class RecordRepo implements IRecordRepo
         string $recordTypeKey,
         string $recordValue,
         string $excludeIdentity = null
-    ) {
+    ): bool {
         /**
          * @var RecordType $recordType
          */
@@ -84,6 +94,7 @@ class RecordRepo implements IRecordRepo
 
         return $record->count() == 0;
     }
+
     /**
      * Check if record type and value is already existing
      * @param string $recordTypeKey
@@ -433,7 +444,7 @@ class RecordRepo implements IRecordRepo
                 return $validation;
             })->sortByDesc(static function(RecordValidation $validation) {
                 return $validation->validation_date->timestamp;
-            });
+            })->toArray();
 
             return [
                 'id' => $record->id,
@@ -643,7 +654,9 @@ class RecordRepo implements IRecordRepo
 
         if ($record['record_type_id'] ==
             $this->getTypeIdByKey('primary_email')) {
-            abort(403,'record.exceptions.cant_delete_primary_email');
+            abort(403,'record.exceptions.cant_delete_primary_email', [
+                'record_type_name' => $record->record_type->name
+            ]);
         }
 
         return !!$record->delete();

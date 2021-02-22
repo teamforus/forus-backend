@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Implementation;
 use App\Models\Organization;
-use App\Scopes\Builders\ImplementationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ImplementationPolicy
@@ -21,7 +20,7 @@ class ImplementationPolicy
     public function viewAny(
         $identity_address,
         Organization $organization
-    ) {
+    ): bool {
         return $organization->identityCan($identity_address, [
             'manage_implementation', 'manage_implementation_cms'
         ], false);
@@ -39,7 +38,7 @@ class ImplementationPolicy
         $identity_address,
         Implementation $implementation,
         Organization $organization
-    ) {
+    ): bool {
         if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
@@ -61,7 +60,7 @@ class ImplementationPolicy
         $identity_address,
         Implementation $implementation,
         Organization $organization
-    ) {
+    ): bool {
         if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
@@ -81,7 +80,7 @@ class ImplementationPolicy
         $identity_address,
         Implementation $implementation,
         Organization $organization
-    ) {
+    ): bool {
         if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
@@ -101,7 +100,7 @@ class ImplementationPolicy
         $identity_address,
         Implementation $implementation,
         Organization $organization
-    ) {
+    ): bool {
         if (!$this->checkIntegrity($implementation, $organization)) {
             return false;
         }
@@ -117,10 +116,7 @@ class ImplementationPolicy
     private function checkIntegrity(
         Implementation $implementation,
         Organization $organization
-    ) {
-        return ImplementationQuery::whereOrganizationIdFilter(
-            Implementation::query(),
-            $organization->id
-        )->where('id', $implementation->id)->exists();
+    ): bool {
+        return $implementation->organization_id === $organization->id;
     }
 }

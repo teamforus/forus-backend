@@ -14,12 +14,19 @@ class SubsidyPaymentSuccessMail extends ImplementationMail
 {
     private $transData;
 
+    /**
+     * SubsidyPaymentSuccessMail constructor.
+     * @param array $data
+     * @param EmailFrom|null $emailFrom
+     */
     public function __construct(
         array $data = [],
         ?EmailFrom $emailFrom = null
     ) {
         $this->setMailFrom($emailFrom);
-        $this->transData = compact('data');
+        $this->transData = [
+            'data' => $this->escapeData($data)
+        ];
     }
 
     /**

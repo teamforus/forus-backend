@@ -29,6 +29,8 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $clarifications_pending
  * @property-read int|null $clarifications_pending_count
  * @property-read \App\Models\Fund $fund
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records_approved
@@ -41,7 +43,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest query()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereIdentityAddress($value)
@@ -49,8 +50,6 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
- * @property-read int|null $logs_count
  */
 class FundRequest extends Model
 {

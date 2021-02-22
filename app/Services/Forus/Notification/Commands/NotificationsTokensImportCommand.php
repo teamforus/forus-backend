@@ -36,7 +36,7 @@ class NotificationsTokensImportCommand extends Command
         $tokens = [];
 
         if (($h = fopen((string) $csvPath, 'rb')) !== FALSE) {
-            while (($data = fgetcsv($h, 1000, ",")) !== FALSE) {
+            while (($data = fgetcsv($h, 1000)) !== FALSE) {
                 $tokens[] = $data;
             }
 

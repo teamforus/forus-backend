@@ -507,7 +507,7 @@ class MediaService
     }
 
     /**
-     * @param string $uid
+     * @param string|null $uid
      * @return Media
      */
     public function findByUid(string $uid = null) {

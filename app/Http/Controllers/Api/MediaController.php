@@ -110,6 +110,6 @@ class MediaController extends Controller
 
         $this->mediaService->unlink($media);
 
-        return response("");
+        return response();
     }
 }

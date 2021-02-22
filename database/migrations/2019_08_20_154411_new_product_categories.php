@@ -1,8 +1,12 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use App\Models\ProductCategory;
+use Illuminate\Database\Migrations\Migration;
 
+/**
+ * Class NewProductCategories
+ * @noinspection PhpUnused
+ */
 class NewProductCategories extends Migration
 {
     /**
@@ -47,6 +51,6 @@ class NewProductCategories extends Migration
      */
     public function down(): void
     {
-        //
+        
     }
 }

@@ -62,6 +62,10 @@ class LoremDbSeeder extends Seeder
         'Stadjerspas',
     ];
 
+    private $implementationsWithInformalCommunication = [
+        'Zuidhorn', 'Nijmegen',
+    ];
+
     private $fundsWithCriteriaEditableAfterLaunch = [
         'Zuidhorn', 'Nijmegen',
     ];
@@ -138,10 +142,7 @@ class LoremDbSeeder extends Seeder
         $this->success("Providers applied to funds!");
 
         $this->info("Making other implementations!");
-        $this->makeOtherImplementations(array_diff(
-            $this->implementations,
-            $this->implementationsWithFunds
-        ));
+        $this->makeOtherImplementations(array_diff($this->implementations, $this->implementationsWithFunds));
         $this->success("Other implementations created!");
 
         $this->info("Making fund requests!");
@@ -223,6 +224,10 @@ class LoremDbSeeder extends Seeder
                         ])
                     );
                 }
+
+                $implementation->update([
+                    'organization_id' => $fund->organization_id,
+                ]);
             }
         }
     }
@@ -583,6 +588,7 @@ class LoremDbSeeder extends Seeder
         string $name
     ) {
         $requiredDigidImplementations = array_map("str_slug", $this->fundsWithPhysicalCards);
+        $informalCommunication = array_map("str_slug", $this->implementationsWithInformalCommunication);
 
         return Implementation::create([
             'key'   => $key,
@@ -609,11 +615,12 @@ class LoremDbSeeder extends Seeder
                 compact('key')
             ),
 
-            'digid_enabled'         => config('forus.seeders.lorem_db_seeder.digid_enabled'),
-            'digid_required'        => in_array($key, $requiredDigidImplementations, true),
-            'digid_app_id'          => config('forus.seeders.lorem_db_seeder.digid_app_id'),
-            'digid_shared_secret'   => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
-            'digid_a_select_server' => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
+            'digid_enabled'             => config('forus.seeders.lorem_db_seeder.digid_enabled'),
+            'digid_required'            => in_array($key, $requiredDigidImplementations, true),
+            'informal_communication'    => in_array($key, $informalCommunication, true),
+            'digid_app_id'              => config('forus.seeders.lorem_db_seeder.digid_app_id'),
+            'digid_shared_secret'       => config('forus.seeders.lorem_db_seeder.digid_shared_secret'),
+            'digid_a_select_server'     => config('forus.seeders.lorem_db_seeder.digid_a_select_server'),
         ]);
     }
 
@@ -659,6 +666,7 @@ class LoremDbSeeder extends Seeder
                 'key'       => $eligibility_key,
                 'type'      => 'string',
             ])->updateModel([
+                'system'    => true,
                 'name'      => $fund->name . ' ' . ' eligible',
             ]);
 

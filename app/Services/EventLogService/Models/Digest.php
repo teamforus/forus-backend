@@ -21,7 +21,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereDigestableId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereDigestableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereEventLogId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereUpdatedAt($value)

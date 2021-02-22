@@ -158,7 +158,7 @@ class FundSubscriber
                 $fund->end_date,
                 $fund->organization->email,
                 $fund->organization->name,
-                $fund->fund_config->implementation->url_webshop ?? env('WEB_SHOP_GENERAL_URL')
+                $fund->fund_config->implementation->url_webshop
             );
         }
     }

@@ -5,8 +5,11 @@ namespace App\Http\Requests\Api\Records;
 use App\Http\Requests\BaseFormRequest;
 use App\Rules\RecordCategoryIdRule;
 use App\Rules\RecordTypeKeyExistsRule;
-use Illuminate\Validation\Rule;
 
+/**
+ * Class RecordStoreRequest
+ * @package App\Http\Requests\Api\Records
+ */
 class RecordStoreRequest extends BaseFormRequest
 {
     /**
@@ -26,22 +29,17 @@ class RecordStoreRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $type = request()->get('type');
-        $valueRules = ['required'];
-
-        if ($type === 'email' || $type === 'primary_email') {
-            $valueRules[] = 'email:strict,dns';
-        }
+        $type = $this->input('type');
 
         return [
             'type' => [
                 'required',
-                new RecordTypeKeyExistsRule(),
-                Rule::notIn([
-                    'primary_email', 'bsn'
-                ])
+                new RecordTypeKeyExistsRule($this, false),
             ],
-            'value' => $valueRules,
+            'value' => [
+                'required',
+                $type === 'email' || $type === 'primary_email' ? 'email:strict' : null
+            ],
             'order' => 'nullable|numeric|min:0',
             'record_category_id' => ['nullable', new RecordCategoryIdRule()]
         ];

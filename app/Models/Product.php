@@ -26,7 +26,7 @@ use Illuminate\Http\Request;
  * @property int $product_category_id
  * @property string $name
  * @property string $description
- * @property float|null $price
+ * @property float $price
  * @property int $total_amount
  * @property bool $unlimited_stock
  * @property string $price_type
@@ -313,16 +313,13 @@ class Product extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function search(Request $request): Builder {
-        $query = self::searchQuery()->orderBy('created_at', 'desc');
+    public static function search(Request $request): Builder
+    {
+        $query = self::searchQuery();
+        $fund_type = $request->input('fund_type');
 
-        // filter by fund_type
-        if ($fund_type = $request->input('fund_type')) {
-            /** @var Builder $funds */
-            $funds = Implementation::activeFundsQuery()->where('type', '=', $fund_type);
-            $query = ProductQuery::approvedForFundsAndActiveFilter(
-                $query, $funds->pluck('id')->toArray()
-            );
+        if ($fund_type) {
+            $query = self::filterFundType($query, $fund_type);
         }
 
         if ($category_id = $request->input('product_category_id')) {
@@ -350,7 +347,26 @@ class Product extends Model
             return ProductQuery::queryDeepFilter($query, $q);
         }
 
-        return $query;
+        $query = ProductQuery::addPriceMinAndMaxColumn($query);
+
+        return $query->orderBy(
+            $request->input('order_by', 'created_at'),
+            $request->input('order_by_dir', 'desc')
+        )->orderBy('price_type')->orderBy('price_discount')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $fundType
+     * @return Builder
+     */
+    public static function filterFundType(Builder $builder, string $fundType): Builder
+    {
+        $fundIds = Implementation::activeFundsQuery()->where([
+            'type' => $fundType
+        ])->pluck('id')->toArray();
+
+        return ProductQuery::approvedForFundsAndActiveFilter($builder, $fundIds);
     }
 
     /**

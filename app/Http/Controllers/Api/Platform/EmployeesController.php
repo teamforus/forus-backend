@@ -16,7 +16,7 @@ class EmployeesController extends Controller
      */
     public function index(IndexEmployeesRequest $request)
     {
-        $role = $request->input('role', null);
+        $role = $request->input('role');
         $employees = Employee::where('identity_address', auth_address());
 
         if ($role) {

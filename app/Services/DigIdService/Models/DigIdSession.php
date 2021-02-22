@@ -35,12 +35,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Implementation|null $implementation
- * @method static bool|null forceDelete()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession newQuery()
  * @method static \Illuminate\Database\Query\Builder|\App\Services\DigIdService\Models\DigIdSession onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession query()
- * @method static bool|null restore()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereClientType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\DigIdService\Models\DigIdSession whereDeletedAt($value)
