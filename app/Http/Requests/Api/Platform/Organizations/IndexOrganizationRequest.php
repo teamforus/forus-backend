@@ -32,7 +32,7 @@ class IndexOrganizationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page'  => 'nullable|numeric|between:1,150',
+            'per_page'  => 'nullable|numeric|between:1,300',
             'role' => [
                 'nullable', 'string', 'exists:roles,key'
             ],
