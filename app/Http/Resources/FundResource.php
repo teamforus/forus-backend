@@ -5,6 +5,8 @@ namespace App\Http\Resources;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
+use App\Models\Voucher;
+use App\Scopes\Builders\VoucherQuery;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -107,7 +109,13 @@ class FundResource extends Resource
             'sponsor_count'                 => $fund->organization->employees->count(),
             'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
             'provider_employees_count'      => $providersEmployeeCount,
-            'requester_count'               => $fund->vouchers->whereNull('parent_id')->count(),
+            'requester_count'               => VoucherQuery::whereNotExpired(
+                $fund->vouchers()->getQuery()
+            )->whereNull(
+                'parent_id'
+            )->where(
+                'state', Voucher::STATE_ACTIVE
+            )->count(),
             'validators_count'              => $validatorsCount,
             'budget'                        => $this->getBudgetData($fund),
         ] : [];
@@ -123,7 +131,11 @@ class FundResource extends Resource
             'validated' => currency_format($fund->budget_validated),
             'used'      => currency_format($fund->budget_used),
             'left'      => currency_format($fund->budget_left),
-            'reserved'  => currency_format($fund->budget_reserved)
+            'reserved'  => round(VoucherQuery::whereNotExpired(
+                $fund->budget_vouchers()->getQuery()
+            )->where(
+                'state', Voucher::STATE_ACTIVE
+            )->sum('amount'), 2)
         ];
     }
 }
