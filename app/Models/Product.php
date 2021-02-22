@@ -347,11 +347,11 @@ class Product extends Model
             $query = $query->whereHas('photo');
         }
 
+        $query = ProductQuery::addPriceMinAndMaxColumn($query);
+
         if ($request->has('q') && !empty($q = $request->input('q'))) {
             return ProductQuery::queryDeepFilter($query, $q);
         }
-
-        $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
         if ($request->has('sample')) {
             return $query->inRandomOrder();

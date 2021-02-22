@@ -351,7 +351,7 @@ $router->group(['middleware' => [
     $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
-    if (!env('DISABLE_FALLBACK_TRANSACTIONS', true)) {
+    if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
         $router->resource(
             'vouchers.transactions',
             "Api\Platform\Vouchers\TransactionsController", [
