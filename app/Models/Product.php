@@ -343,11 +343,11 @@ class Product extends Model
             $query = $query->where('organization_id', $request->input('organization_id'));
         }
 
+        $query = ProductQuery::addPriceMinAndMaxColumn($query);
+
         if ($request->has('q') && !empty($q = $request->input('q'))) {
             return ProductQuery::queryDeepFilter($query, $q);
         }
-
-        $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
         return $query->orderBy(
             $request->input('order_by', 'created_at'),
