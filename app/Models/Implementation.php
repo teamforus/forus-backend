@@ -582,11 +582,7 @@ class Implementation extends Model
      */
     public function getEmailFrom(): EmailFrom
     {
-        return new EmailFrom(
-            $this->email_from_address ?: config('mail.from.address'),
-            $this->email_from_name ?: config('mail.from.name'),
-            $this->informal_communication ?? false
-        );
+        return new EmailFrom($this);
     }
 
     /**
