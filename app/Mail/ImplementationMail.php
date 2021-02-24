@@ -19,7 +19,6 @@ class ImplementationMail extends Mailable
 
     public $emailFrom;
     public $implementationKey;
-    public $mailTrans;
 
     /**
      * @param EmailFrom|null $emailFrom
