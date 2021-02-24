@@ -6,6 +6,10 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
 use App\Rules\IdentityEmailExistsRule;
 
+/**
+ * Class IdentityAuthorizationEmailTokenRequest
+ * @package App\Http\Requests\Api
+ */
 class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
 {
     /**
@@ -30,8 +34,11 @@ class IdentityAuthorizationEmailTokenRequest extends BaseFormRequest
         $this->decayMinutes = env('AUTH_THROTTLE_DECAY', 10);
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
+        // TODO: remove `primary_email` when iOS is ready
+        $emailKey = $this->has('email') ? 'email': 'primary_email';
+
         return [
-            'email' => [
+            $emailKey => [
                 'required',
                 'email:strict',
                 new IdentityEmailExistsRule()
