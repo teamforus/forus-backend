@@ -109,12 +109,10 @@ class FundResource extends Resource
             'sponsor_count'                 => $fund->organization->employees->count(),
             'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
             'provider_employees_count'      => $providersEmployeeCount,
-            'requester_count'               => VoucherQuery::whereNotExpired(
+            'requester_count'               => VoucherQuery::whereNotExpiredAndActive(
                 $fund->vouchers()->getQuery()
             )->whereNull(
                 'parent_id'
-            )->where(
-                'state', Voucher::STATE_ACTIVE
             )->count(),
             'validators_count'              => $validatorsCount,
             'budget'                        => $this->getBudgetData($fund),
@@ -131,10 +129,8 @@ class FundResource extends Resource
             'validated' => currency_format($fund->budget_validated),
             'used'      => currency_format($fund->budget_used),
             'left'      => currency_format($fund->budget_left),
-            'reserved'  => round(VoucherQuery::whereNotExpired(
+            'reserved'  => round(VoucherQuery::whereNotExpiredAndActive(
                 $fund->budget_vouchers()->getQuery()
-            )->where(
-                'state', Voucher::STATE_ACTIVE
             )->sum('amount'), 2)
         ];
     }

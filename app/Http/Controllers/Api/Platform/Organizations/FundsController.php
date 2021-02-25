@@ -416,12 +416,10 @@ class FundsController extends Controller
                 'total' => $fund->getServiceCosts(),
                 'transaction_costs' => $fund->getTransactionCosts()
             ],
-            'activations' => VoucherQuery::whereNotExpired(
+            'activations' => VoucherQuery::whereNotExpiredAndActive(
                 $fund->vouchers()->getQuery()
             )->whereNull(
                 'parent_id'
-            )->where(
-                'state', Voucher::STATE_ACTIVE
             )->whereBetween('created_at', [
                 $startDate, $endDate
             ])->count(),
