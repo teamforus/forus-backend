@@ -343,18 +343,10 @@ class Product extends Model
             $query = $query->where('organization_id', $request->input('organization_id'));
         }
 
-        if ($request->has('sample')) {
-            $query = $query->whereHas('photo');
-        }
-
         $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
         if ($request->has('q') && !empty($q = $request->input('q'))) {
             return ProductQuery::queryDeepFilter($query, $q);
-        }
-
-        if ($request->has('sample')) {
-            return $query->inRandomOrder();
         }
 
         return $query->orderBy(
