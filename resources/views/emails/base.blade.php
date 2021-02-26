@@ -1,11 +1,14 @@
 <?php
     $footerStyle = "border-collapse: collapse; padding-bottom: 25px; font-size: 13px; line-height: 18px; padding-top: 20px;";
+    $body_style = mail_config('base.body_style', null, $implementationKey ?? null);
+    $body_bg_color = mail_config('base.body_bg_color', null, $implementationKey ?? null);
+    $button_style = mail_config('base.button_style', null, $implementationKey ?? null);
 ?>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     </head>
-    <body style="{{ mail_config('base.body_style') }}" bgcolor="{{ mail_config('base.body_bg_color') }}">
+    <body style="{{ $body_style }}" bgcolor="{{ $body_bg_color }}">
     <center>
         <table id="wrapperTable" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; width: 100% !important; max-width: 600px !important; line-height: 100% !important; background: #fff; margin: 0 auto; padding: 0;" bgcolor="#fff">
             <tr>
@@ -40,7 +43,7 @@
                                     <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-size: 0; text-align: center; margin: 0px auto;">
                                         <tr>
                                             <td align="center" style="border-collapse: collapse; padding-bottom: 25px;">
-                                                <a href="@yield('link')" target="_blank" style="{{ mail_config('base.button_style') }}">@yield('button_text')</a>
+                                                <a href="@yield('link')" target="_blank" style="{{ $button_style }}">@yield('button_text')</a>
                                             </td>
                                         </tr>
                                     </table>

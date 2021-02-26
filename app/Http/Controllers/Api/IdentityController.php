@@ -203,7 +203,8 @@ class IdentityController extends Controller
     public function proxyAuthorizationEmailToken(
         IdentityAuthorizationEmailTokenRequest $request
     ): JsonResponse {
-        $email = $request->input('email', $request->input('primary_email'));
+        // TODO: remove `primary_email` when iOS is ready
+        $email = $request->input($request->has('email') ? 'email' : 'primary_email');
         $source = sprintf('%s_%s', implementation_key(), client_type());
         $isMobile = in_array(client_type(), config('forus.clients.mobile'), true);
 
