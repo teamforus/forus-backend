@@ -5,7 +5,13 @@
 @section('title', mail_trans('identity_email_verification.title'))
 @section('header_image', mail_config('email_activation.header_image'))
 @section('html')
-    {{ mail_trans('identity_email_verification.description') }}
-    {!! mail_trans('identity_email_verification.confirmation_button', ['link' => $link]) !!}
+    @if ($emailFrom->isInformalCommunication())
+        {{ mail_trans('identity_email_verification.description_informal') }}
+        {!! mail_trans('identity_email_verification.confirmation_button_informal', ['link' => $link]) !!} 
+    @else
+        {{ mail_trans('identity_email_verification.description_formal') }}
+        {!! mail_trans('identity_email_verification.confirmation_button_formal', ['link' => $link]) !!} 
+    @endif
+
     <br/>
 @endsection

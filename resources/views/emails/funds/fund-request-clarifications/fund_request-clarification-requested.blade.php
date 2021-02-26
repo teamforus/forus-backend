@@ -5,10 +5,17 @@
     $viewData = compact('fund_name', 'question', 'webshop_link_clarification');
 ?>
 @extends('emails.base')
-
-@section('button_text', mail_trans('fund_request_clarification_requested.button_text'))
+@if ($emailFrom->isInformalCommunication())
+    @section('button_text', mail_trans('fund_request_clarification_requested.button_text_informal'))
+@else
+    @section('button_text', mail_trans('fund_request_clarification_requested.button_text_formal'))  
+@endif
 @section('link', $webshop_link_clarification)
-@section('title', mail_trans('fund_request_clarification_requested.title', ['fund_name' => $fund_name]))
+@if ($emailFrom->isInformalCommunication())
+    @section('title', mail_trans('fund_request_clarification_requested.title_informal', ['fund_name' => $fund_name]))    
+@else
+    @section('title', mail_trans('fund_request_clarification_requested.title_formal', ['fund_name' => $fund_name]))
+@endif
 @section('html')
     {{ $question }}
     <br/>

@@ -33,8 +33,10 @@ class FundRequestClarificationRequestedMail extends ImplementationMail
 
     public function build(): Mailable
     {
+        $this->communicationType =  $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
+
         return $this->buildBase()
-            ->subject(mail_trans('fund_request_clarification_requested.title', ['fund_name' => $this->fundName]))
+            ->subject(mail_trans('fund_request_clarification_requested.title_' .  $this->communicationType, ['fund_name' => $this->fundName]))
             ->view('emails.funds.fund-request-clarifications.fund_request-clarification-requested', [
                 'fund_name' => $this->fundName,
                 'question' => $this->question,

@@ -8,7 +8,7 @@
 
 @section('title', mail_trans('fund_request_record_declined.title', ['fund_name' => $fund_name]))
 @section('html')
-    {{ mail_trans('dear_citizen') }}
+    {{ mail_trans('dear_citizen') }},
     <br/>
     {{ mail_trans('fund_request_record_declined.message', ['fund_name' => $fund_name]) }}
     <br/>
