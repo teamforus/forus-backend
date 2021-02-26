@@ -17,7 +17,6 @@ class EmailFrom
      * @param Implementation $implementation
      */
     public function __construct(Implementation $implementation) {
-        log_debug($this->implementation);
         $this->implementation = $implementation;
     }
 
