@@ -25,7 +25,7 @@ class ImplementationMail extends Mailable
      */
     public function setMailFrom(?EmailFrom $emailFrom): void {
         $this->emailFrom = $emailFrom;
-        $this->implementationKey = $emailFrom->getImplementation()->key ?? null;
+        $this->implementationKey = $emailFrom->getImplementationKey() ?: null;
     }
 
     /**
