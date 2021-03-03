@@ -12,10 +12,13 @@ use App\Http\Resources\Provider\ProviderProductResource;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
-use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class ProductsController
+ * @package App\Http\Controllers\Api\Platform\Organizations
+ */
 class ProductsController extends Controller
 {
     private $mediaService;
@@ -44,7 +47,9 @@ class ProductsController extends Controller
 
         return ProviderProductResource::collection(Product::searchAny($request)->where([
             'organization_id' => $organization->id
-        ])->paginate($request->input('per_page', 15)));
+        ])->paginate($request->input('per_page', 15)))->additional([
+            'meta' => $organization->productsMeta()
+        ]);
     }
 
     /**
@@ -62,39 +67,8 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('store', [Product::class, $organization]);
 
-        $media = null;
-        $price_type = $request->input('price_type');
-        $total_amount = $request->input('total_amount');
-        $unlimited_stock = $request->input('unlimited_stock', false);
-
-        $price = in_array($price_type, [
-            Product::PRICE_TYPE_REGULAR,
-        ]) ? $request->input('price') : 0;
-
-        $price_discount = in_array($price_type, [
-            Product::PRICE_TYPE_DISCOUNT_FIXED,
-            Product::PRICE_TYPE_DISCOUNT_PERCENTAGE
-        ]) ? $request->input('price_discount') : 0;
-
-        if ($media_uid = $request->input('media_uid')) {
-            $media = $this->mediaService->findByUid($media_uid);
-
-            $this->authorize('destroy', $media);
-        }
-
-        /** @var Product $product */
-        $product = $organization->products()->create(array_merge($request->only([
-            'name', 'description', 'price', 'product_category_id', 'expire_at',
-        ]), [
-            'total_amount' => $unlimited_stock ? 0 : $total_amount,
-            'unlimited_stock' => $unlimited_stock
-        ], compact('price', 'price_type', 'price_discount')));
-
+        $product = Product::storeFromRequest($organization, $request);
         ProductCreated::dispatch($product);
-
-        if ($media instanceof Media && $media->type === 'product_photo') {
-            $product->attachMedia($media);
-        }
 
         return new ProviderProductResource($product);
     }
@@ -134,37 +108,7 @@ class ProductsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$product, $organization]);
 
-        $price_type = $request->input('price_type');
-        $total_amount = $request->input('total_amount');
-
-        $price = in_array($price_type, [
-            $product::PRICE_TYPE_REGULAR,
-        ]) ? $request->input('price') : 0;
-
-        $price_discount = in_array($price_type, [
-            $product::PRICE_TYPE_DISCOUNT_FIXED,
-            $product::PRICE_TYPE_DISCOUNT_PERCENTAGE
-        ]) ? $request->input('price_discount') : 0;
-
-        if ($media_uid = $request->input('media_uid')) {
-            $media = $this->mediaService->findByUid($media_uid);
-            $this->authorize('destroy', $media);
-
-            if ($media instanceof Media && $media->type === 'product_photo') {
-                $product->attachMedia($media);
-            }
-        }
-
-        if ($product->priceWillChanged($price_type, $price, $price_discount)) {
-            $product->resetSubsidyApprovals();
-        }
-
-        $product->update(array_merge($request->only([
-            'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
-        ]), [
-            'total_amount' => $product->unlimited_stock ? 0 : $total_amount,
-        ], compact('price', 'price_type', 'price_discount')));
-
+        $product->updateFromRequest($request);
         ProductUpdated::dispatch($product);
 
         return new ProviderProductResource($product);

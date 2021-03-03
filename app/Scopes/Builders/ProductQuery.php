@@ -171,12 +171,19 @@ class ProductQuery
     public static function inStockAndActiveFilter(Builder $query): Builder
     {
         return $query->where(static function(Builder $builder) {
-            return $builder
-                ->where('sold_out', false)
-                ->where(static function(Builder $builder) {
-                    $builder->whereNull('expire_at');
-                    $builder->orWhere('expire_at', '>', date('Y-m-d'));
-                });
+            self::whereNotExpired($builder->where('sold_out', false));
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereNotExpired(Builder $query): Builder
+    {
+        return $query->where(static function(Builder $builder) {
+            $builder->whereNull('expire_at');
+            $builder->orWhere('expire_at', '>', now()->endOfDay());
         });
     }
 

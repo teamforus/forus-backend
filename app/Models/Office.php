@@ -24,24 +24,24 @@ use Illuminate\Http\Request;
  * @property int $parsed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read \App\Services\MediaService\Models\Media|null $photo
+ * @property-read Media|null $photo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OfficeSchedule[] $schedules
  * @property-read int|null $schedules_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereLat($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereLon($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereParsed($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Office whereUpdatedAt($value)
+ * @method static Builder|Office newModelQuery()
+ * @method static Builder|Office newQuery()
+ * @method static Builder|Office query()
+ * @method static Builder|Office whereAddress($value)
+ * @method static Builder|Office whereCreatedAt($value)
+ * @method static Builder|Office whereId($value)
+ * @method static Builder|Office whereLat($value)
+ * @method static Builder|Office whereLon($value)
+ * @method static Builder|Office whereOrganizationId($value)
+ * @method static Builder|Office whereParsed($value)
+ * @method static Builder|Office wherePhone($value)
+ * @method static Builder|Office whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Office extends Model

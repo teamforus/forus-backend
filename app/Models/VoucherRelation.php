@@ -16,18 +16,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation newQuery()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\VoucherRelation onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereBsn($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherRelation whereVoucherId($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\VoucherRelation withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\VoucherRelation withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation newQuery()
+ * @method static \Illuminate\Database\Query\Builder|VoucherRelation onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation query()
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation whereBsn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherRelation whereVoucherId($value)
+ * @method static \Illuminate\Database\Query\Builder|VoucherRelation withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|VoucherRelation withoutTrashed()
  * @mixin \Eloquent
  */
 class VoucherRelation extends Model

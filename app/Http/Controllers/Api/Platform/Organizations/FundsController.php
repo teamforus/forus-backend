@@ -83,6 +83,9 @@ class FundsController extends Controller
             !$request->input('default_validator_employee_id') ? null :
                 $request->input('auto_requests_validation');
 
+        $manage_provider_products = $organization->manage_provider_products ?
+            $request->input('manage_provider_products') : false;
+
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
             'name', 'description', 'state', 'start_date', 'end_date', 'type',
@@ -90,7 +93,7 @@ class FundsController extends Controller
         ], [
             'state' => Fund::STATE_WAITING,
             'auto_requests_validation' => $auto_requests_validation
-        ])));
+        ]), compact('manage_provider_products')));
 
         if ($media instanceof Media && $media->type === 'fund_logo') {
             $fund->attachMedia($media);

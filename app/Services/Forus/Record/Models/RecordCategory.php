@@ -15,18 +15,18 @@ use App\Services\MediaService\Models\Media;
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Services\MediaService\Models\Media|null $icon
+ * @property-read Media|null $icon
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\Record[] $records
  * @property-read int|null $records_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordCategory whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordCategory whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class RecordCategory extends Model

@@ -31,10 +31,19 @@ class FundsController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         /** @var Fund[] $data */
-        $data = FundQuery::whereHasProviderFilter(
+        $query = FundQuery::whereHasProviderFilter(
             Fund::search($request, Fund::query()),
             $organization->id
-        )->paginate(10);
+        );
+
+        if ($product->sponsor_organization) {
+            $query->where([
+                'organization_id' => $product->sponsor_organization->id,
+                'type' => Fund::TYPE_SUBSIDIES,
+            ]);
+        }
+
+        $data = $query->paginate(10);
 
         foreach($data as $dataItem) {
             $dataItem['approved'] = FundQuery::whereProductsAreApprovedFilter(

@@ -61,10 +61,9 @@ class StoreFundRequest extends FormRequest
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
+            'manage_provider_products'      => 'nullable|boolean',
         ], [
-            'auto_requests_validation' => [
-                'nullable', 'boolean'
-            ],
+            'auto_requests_validation' => 'nullable|boolean',
             'default_validator_employee_id' => [
                 'nullable', Rule::in($availableValidators)
             ],

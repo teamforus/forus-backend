@@ -26,6 +26,19 @@ trait HasMedia
     }
 
     /**
+     * @param string|null $uid
+     * @return $this
+     */
+    public function attachMediaByUid(?string $uid): self
+    {
+        if ($uid && $media = media()->findByUid($uid)) {
+            return $this->attachMedia($media);
+        }
+
+        return $this;
+    }
+
+    /**
      * @param string|array $uid
      * @param string $mediaConfigType
      * @return bool

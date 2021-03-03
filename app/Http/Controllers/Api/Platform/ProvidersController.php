@@ -9,6 +9,10 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class ProvidersController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class ProvidersController extends Controller
 {
     /**

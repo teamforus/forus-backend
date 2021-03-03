@@ -29,20 +29,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\FundRequest $fund_request
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $fund_request_clarifications
  * @property-read int|null $fund_request_clarifications_count
- * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereFundCriterionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereFundRequestId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereRecordTypeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestRecord whereValue($value)
+ * @property-read RecordType $record_type
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereEmployeeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundCriterionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereFundRequestId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereRecordTypeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestRecord whereValue($value)
  * @mixin \Eloquent
  */
 class FundRequestRecord extends Model

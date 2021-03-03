@@ -87,7 +87,7 @@ class ProductResource extends Resource
         return FundQuery::whereProductsAreApprovedAndActiveFilter(
             $this->fundsQuery(), $product->id
         )->with([
-            'organization'
+            'organization',
         ])->get()->map(function(Fund $fund) use ($product) {
             $fundProviderProduct = $fund->isTypeSubsidy() ? $product->getSubsidyDetailsForFund($fund) : null;
 

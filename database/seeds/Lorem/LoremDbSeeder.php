@@ -78,6 +78,14 @@ class LoremDbSeeder extends Seeder
         'Nijmegen'
     ];
 
+    private $fundsWithSponsorProducts = [
+        'Stadjerspas'
+    ];
+
+    private $sponsorsWithSponsorProducts = [
+        'Stadjerspas'
+    ];
+
     private $fundKeyOverwrite = [
         'Nijmegen' => 'meedoen_2020',
     ];
@@ -457,10 +465,11 @@ class LoremDbSeeder extends Seeder
             'phone_public' => true,
             'email_public' => true,
             'business_type_id' => BusinessType::pluck('id')->random(),
+            'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
         ], $fields, compact('name', 'identity_address')), [
             'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
-            'identity_address', 'business_type_id'
+            'identity_address', 'business_type_id', 'manage_provider_products',
         ]));
 
         OrganizationCreated::dispatch($organization);
@@ -554,6 +563,7 @@ class LoremDbSeeder extends Seeder
             'notification_amount'           => 10000,
             'auto_requests_validation'      => $autoValidation,
             'default_validator_employee_id' => $autoValidation ? $validator->id : null,
+            'manage_provider_products'      => in_array($fundName, $this->fundsWithSponsorProducts),
             'type'                          => in_array(
                 $fundName,
                 $this->subsidyFunds

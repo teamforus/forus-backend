@@ -15,4 +15,12 @@ class TrashedQuery
     public static function withTrashed(Builder $query): Builder {
         return $query->withTrashed();
     }
+
+    /**
+     * @param Builder|SoftDeletes $query
+     * @return Builder
+     */
+    public static function onlyTrashed(Builder $query): Builder {
+        return $query->onlyTrashed();
+    }
 }

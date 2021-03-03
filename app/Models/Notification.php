@@ -22,17 +22,17 @@ use Illuminate\Notifications\DatabaseNotification;
  * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $notifiable
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] all($columns = ['*'])
  * @method static \Illuminate\Notifications\DatabaseNotificationCollection|static[] get($columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereNotifiableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereNotifiableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereReadAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Notification whereUpdatedAt($value)
+ * @method static Builder|Notification newModelQuery()
+ * @method static Builder|Notification newQuery()
+ * @method static Builder|Notification query()
+ * @method static Builder|Notification whereCreatedAt($value)
+ * @method static Builder|Notification whereData($value)
+ * @method static Builder|Notification whereId($value)
+ * @method static Builder|Notification whereNotifiableId($value)
+ * @method static Builder|Notification whereNotifiableType($value)
+ * @method static Builder|Notification whereReadAt($value)
+ * @method static Builder|Notification whereType($value)
+ * @method static Builder|Notification whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Notification extends DatabaseNotification

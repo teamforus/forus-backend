@@ -28,6 +28,8 @@ class SponsorProviderProductResource extends Resource
         'product_category.translations',
         'organization.logo.presets',
         'organization.business_type.translations',
+        'sponsor_organization.logo.presets',
+        'sponsor_organization.business_type.translations',
     ];
 
     /**
@@ -42,18 +44,19 @@ class SponsorProviderProductResource extends Resource
         $fundProvider = $request->route('fund_provider');
         $product = $this->resource;
 
-        $oldDeals = TrashedQuery::withTrashed(
+        $oldDeals = $fundProvider ? TrashedQuery::withTrashed(
             $fundProvider->fund_provider_products()->getQuery()
         )->orderByDesc('created_at')->where([
             'product_id' => $product->id
-        ])->withCount('voucher_transactions')->get();
+        ])->withCount('voucher_transactions')->get() : null;
 
         return array_merge($product->only([
             'id', 'name', 'description', 'product_category_id', 'sold_out',
-            'organization_id', 'price_type', 'price_type_discount',
+            'organization_id', 'price_type', 'price_type_discount', 'sponsor', 'sponsor_organization_id'
         ]), [
             'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
+            'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'total_amount' => $product->total_amount,
             'unlimited_stock' => $product->unlimited_stock,
             'reserved_amount' => $product->vouchers_reserved->count(),
@@ -75,10 +78,10 @@ class SponsorProviderProductResource extends Resource
             'unseen_messages' => FundProviderChatMessage::whereIn(
                 'fund_provider_chat_id', $product->fund_provider_chats()->pluck('id')
             )->where('provider_seen', '=', false)->count(),
-            'is_available' => $product->product_exclusions()->where([
+            'is_available' => $fundProvider ? $product->product_exclusions()->where([
                 'fund_provider_id' => $fundProvider->id,
-            ])->doesntExist()
-        ], $fundProvider->fund->isTypeSubsidy() ? [
+            ])->doesntExist() : true,
+        ], $fundProvider && $fundProvider->fund->isTypeSubsidy() ? [
             'deals_history' => $oldDeals->map(static function(FundProviderProduct $fundProviderProduct) {
                 return array_merge($fundProviderProduct->only(array_merge([
                     'id', 'amount', 'limit_total', 'limit_total_unlimited', 'limit_per_identity',

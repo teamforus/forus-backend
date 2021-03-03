@@ -39,8 +39,12 @@ class FundProviderController extends Controller
         $query = $fund->providers()->getQuery();
         $state = $request->input('state', false);
 
-        if ($q = $request->input('q', false)) {
-            $query = FundProviderQuery::queryFilter($query, $q);
+        if ($request->input('q')) {
+            $query = FundProviderQuery::queryFilter($query, $request->input('q'));
+        }
+
+        if ($request->input('organization_id')) {
+            $query->where('organization_id', $request->input('organization_id'));
         }
 
         if ($state === FundProvider::STATE_APPROVED) {

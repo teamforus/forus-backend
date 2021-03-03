@@ -21,10 +21,14 @@ class OfficeResource extends Resource
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request|any  $request
-     * @return array
+     * @return array|null
      */
-    public function toArray($request): array
+    public function toArray($request): ?array
     {
+        if ($this->resource === null) {
+            return null;
+        }
+
         $office = $this->resource;
         $organization = $office->organization;
 

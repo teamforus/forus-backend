@@ -20,21 +20,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\RoleTranslation|null $translation
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RoleTranslation[] $translations
  * @property-read int|null $translations_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role listsTranslations($translationField)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role notTranslatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role orWhereTranslation($translationField, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role orWhereTranslationLike($translationField, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role orderByTranslation($translationField, $sortMethod = 'asc')
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role translated()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role translatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role whereTranslationLike($translationField, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Role withTranslation()
+ * @method static \Illuminate\Database\Eloquent\Builder|Role listsTranslations(string $translationField)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Role newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Role notTranslatedIn(?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role orWhereTranslation(string $translationField, $value, ?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role orderByTranslation(string $translationField, string $sortMethod = 'asc')
+ * @method static \Illuminate\Database\Eloquent\Builder|Role query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Role translated()
+ * @method static \Illuminate\Database\Eloquent\Builder|Role translatedIn(?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
+ * @method static \Illuminate\Database\Eloquent\Builder|Role whereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static \Illuminate\Database\Eloquent\Builder|Role withTranslation()
  * @mixin \Eloquent
  */
 class Role extends Model

@@ -2,10 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Product;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\MediaUidRule;
 
-class StoreProductRequest extends FormRequest
+/**
+ * Class StoreProductRequest
+ * @package App\Http\Requests\Api\Platform\Organizations\Products
+ */
+class StoreProductRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -31,6 +36,7 @@ class StoreProductRequest extends FormRequest
             'name'                  => 'required|between:2,200',
             'description'           => 'required|between:5,2500',
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
+            'media_uid'             => ['nullable', 'string', new MediaUidRule('product_photo')],
             'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
             'price_discount'        => [
                 'discount_fixed'        => 'required_if:price_type,discount_fixed|min:.1',

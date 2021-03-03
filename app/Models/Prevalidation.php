@@ -32,30 +32,30 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property-read \App\Models\Fund|null $fund
  * @property-read bool $is_used
  * @property-read \App\Models\Organization|null $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $prevalidation_records
+ * @property-read EloquentCollection|\App\Models\PrevalidationRecord[] $prevalidation_records
  * @property-read int|null $prevalidation_records_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PrevalidationRecord[] $records
+ * @property-read EloquentCollection|\App\Models\PrevalidationRecord[] $records
  * @property-read int|null $records_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation newQuery()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Prevalidation onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereExported($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRecordsHash($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereRedeemedByAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUidHash($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Prevalidation whereValidatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Prevalidation withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Prevalidation withoutTrashed()
+ * @method static Builder|Prevalidation newModelQuery()
+ * @method static Builder|Prevalidation newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Prevalidation onlyTrashed()
+ * @method static Builder|Prevalidation query()
+ * @method static Builder|Prevalidation whereCreatedAt($value)
+ * @method static Builder|Prevalidation whereDeletedAt($value)
+ * @method static Builder|Prevalidation whereExported($value)
+ * @method static Builder|Prevalidation whereFundId($value)
+ * @method static Builder|Prevalidation whereId($value)
+ * @method static Builder|Prevalidation whereIdentityAddress($value)
+ * @method static Builder|Prevalidation whereOrganizationId($value)
+ * @method static Builder|Prevalidation whereRecordsHash($value)
+ * @method static Builder|Prevalidation whereRedeemedByAddress($value)
+ * @method static Builder|Prevalidation whereState($value)
+ * @method static Builder|Prevalidation whereUid($value)
+ * @method static Builder|Prevalidation whereUidHash($value)
+ * @method static Builder|Prevalidation whereUpdatedAt($value)
+ * @method static Builder|Prevalidation whereValidatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|Prevalidation withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Prevalidation withoutTrashed()
  * @mixin \Eloquent
  */
 class Prevalidation extends Model

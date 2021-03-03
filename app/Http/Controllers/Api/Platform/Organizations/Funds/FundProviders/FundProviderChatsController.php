@@ -14,6 +14,10 @@ use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class FundProviderChatsController
+ * @package App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders
+ */
 class FundProviderChatsController extends Controller
 {
     /**
@@ -32,9 +36,7 @@ class FundProviderChatsController extends Controller
         Fund $fund,
         FundProvider $fundProvider
     ): AnonymousResourceCollection {
-        $this->authorize('showSponsor', [
-            $fundProvider, $organization, $fund
-        ]);
+        $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
         $this->authorize('viewAnySponsor', [
             FundProviderChat::class, $fundProvider, $fund, $organization
@@ -67,9 +69,7 @@ class FundProviderChatsController extends Controller
         Fund $fund,
         FundProvider $fundProvider
     ): FundProviderChatResource {
-        $this->authorize('showSponsor', [
-            $fundProvider, $organization, $fund
-        ]);
+        $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
         $this->authorize('createSponsor', [
             FundProviderChat::class, $fundProvider, $fund, $organization
@@ -102,13 +102,8 @@ class FundProviderChatsController extends Controller
         FundProvider $fundProvider,
         FundProviderChat $fundProviderChat
     ): FundProviderChatResource {
-        $this->authorize('showSponsor', [
-            $fundProvider, $organization, $fund
-        ]);
-
-        $this->authorize('viewSponsor', [
-            $fundProviderChat, $fundProvider, $fund, $organization
-        ]);
+        $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
+        $this->authorize('viewSponsor', [$fundProviderChat, $fundProvider, $fund, $organization]);
 
         return new FundProviderChatResource($fundProviderChat);
     }

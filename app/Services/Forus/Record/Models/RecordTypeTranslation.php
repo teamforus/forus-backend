@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $locale
  * @property string $name
  * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordTypeTranslation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordTypeTranslation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordTypeTranslation query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordTypeTranslation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordTypeTranslation whereLocale($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordTypeTranslation whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordTypeTranslation whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation query()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordTypeTranslation whereRecordTypeId($value)
  * @mixin \Eloquent
  */
 class RecordTypeTranslation extends Model
