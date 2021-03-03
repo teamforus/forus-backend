@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $limit_per_identity
  * @property float|null $amount
  * @property float|null $price
+ * @property \Illuminate\Support\Carbon|null $expiration_date
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -53,7 +54,7 @@ class FundProviderProduct extends Model
      */
     protected $fillable = [
         'product_id', 'fund_provider_id', 'limit_total', 'limit_total_unlimited',
-        'limit_per_identity', 'price', 'old_price', 'amount'
+        'limit_per_identity', 'price', 'old_price', 'amount', 'expiration_date'
     ];
 
     protected $casts = [
