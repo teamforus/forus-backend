@@ -313,6 +313,20 @@ class Product extends Model
      * @param Request $request
      * @return Builder
      */
+    public static function searchSample(Request $request): Builder {
+        $query = self::searchQuery();
+
+        if ($request->input('fund_type')) {
+            $query = self::filterFundType($query, $request->input('fund_type'));
+        }
+
+        return $query->inRandomOrder();
+    }
+
+    /**
+     * @param Request $request
+     * @return Builder
+     */
     public static function search(Request $request): Builder
     {
         $query = self::searchQuery();
