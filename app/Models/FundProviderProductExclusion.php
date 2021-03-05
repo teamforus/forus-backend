@@ -20,14 +20,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read \App\Models\Product|null $product
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion whereFundProviderId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProductExclusion whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion whereFundProviderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderProductExclusion whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderProductExclusion extends Model

@@ -15,16 +15,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Prevalidation $prevalidation
- * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord wherePrevalidationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereRecordTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PrevalidationRecord whereValue($value)
+ * @property-read RecordType $record_type
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord wherePrevalidationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PrevalidationRecord whereValue($value)
  * @mixin \Eloquent
  */
 class PrevalidationRecord extends Model

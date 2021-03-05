@@ -8,8 +8,10 @@ use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -40,75 +42,84 @@ use Illuminate\Http\Request;
  * @property bool $is_provider
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
+ * @property bool $manage_provider_products
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $external_validators
+ * @property-read Collection|Organization[] $external_validators
  * @property-read int|null $external_validators_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
+ * @property-read Collection|\App\Models\FundProviderInvitation[] $fund_provider_invitations
  * @property-read int|null $fund_provider_invitations_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $fund_providers
+ * @property-read Collection|\App\Models\FundProvider[] $fund_providers
  * @property-read int|null $fund_providers_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
+ * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
+ * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
+ * @property-read Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
  * @property-read int|null $funds_voucher_transactions_count
- * @property-read \App\Services\MediaService\Models\Media|null $logo
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read string $description_html
+ * @property-read Media|null $logo
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Office[] $offices
+ * @property-read Collection|\App\Models\Office[] $offices
  * @property-read int|null $offices_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $organization_validators
+ * @property-read Collection|\App\Models\OrganizationValidator[] $organization_validators
  * @property-read int|null $organization_validators_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds
+ * @property-read Collection|\App\Models\Product[] $products_as_sponsor
+ * @property-read int|null $products_as_sponsor_count
+ * @property-read Collection|\App\Models\Product[] $products_provider
+ * @property-read int|null $products_provider_count
+ * @property-read Collection|\App\Models\Product[] $products_sponsor
+ * @property-read int|null $products_sponsor_count
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds
  * @property-read int|null $supplied_funds_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved
  * @property-read int|null $supplied_funds_approved_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_budget
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_budget
  * @property-read int|null $supplied_funds_approved_budget_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $supplied_funds_approved_products
+ * @property-read Collection|\App\Models\Fund[] $supplied_funds_approved_products
  * @property-read int|null $supplied_funds_approved_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\OrganizationValidator[] $validated_organizations
+ * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
  * @property-read int|null $validated_organizations_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereBtw($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereBusinessTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereEmailPublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIsProvider($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIsSponsor($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereIsValidator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereKvk($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization wherePhonePublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereValidatorAutoAcceptFunds($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsite($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Organization whereWebsitePublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBtw($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBusinessTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereEmailPublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIban($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsProvider($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsSponsor($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsValidator($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereKvk($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereManageProviderProducts($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization wherePhonePublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereValidatorAutoAcceptFunds($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereWebsite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
  */
 class Organization extends Model
@@ -126,9 +137,12 @@ class Organization extends Model
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds', 'description'
+        'validator_auto_accept_funds', 'manage_provider_products', 'description',
     ];
 
+    /**
+     * @var string[]
+     */
     protected $casts = [
         'btw'                           => 'string',
         'email_public'                  => 'boolean',
@@ -137,7 +151,8 @@ class Organization extends Model
         'is_sponsor'                    => 'boolean',
         'is_provider'                   => 'boolean',
         'is_validator'                  => 'boolean',
-        'validator_auto_accept_funds'   => 'boolean'
+        'manage_provider_products'      => 'boolean',
+        'validator_auto_accept_funds'   => 'boolean',
     ];
 
     /**
@@ -171,6 +186,10 @@ class Organization extends Model
             $query->where($request->only('is_validator'));
         }
 
+        if ($q = $request->input('q')) {
+            $query->where('name', 'LIKE', "%$q%");
+        }
+
         if ($request->input('implementation', false)) {
             $query->whereHas('funds', static function(
                 \Illuminate\Database\Eloquent\Builder $builder
@@ -202,6 +221,7 @@ class Organization extends Model
     /**
      * @param Request $request
      * @return \Illuminate\Database\Eloquent\Builder[]|Collection
+     * @noinspection PhpUnused
      */
     public static function search(Request $request)
     {
@@ -210,22 +230,55 @@ class Organization extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function funds(): HasMany {
+    public function funds(): HasMany
+    {
         return $this->hasMany(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function products(): HasMany {
+    public function products(): HasMany
+    {
         return $this->hasMany(Product::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function validated_organizations(): HasMany {
+    public function products_as_sponsor(): HasMany
+    {
+        return $this->hasMany(Product::class, 'sponsor_organization_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function products_provider(): HasMany
+    {
+        return $this->hasMany(Product::class)->whereNull('sponsor_organization_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function products_sponsor(): HasMany
+    {
+        return $this->hasMany(Product::class)->whereNotNull('sponsor_organization_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
+     */
+    public function validated_organizations(): HasMany
+    {
         return $this->hasMany(OrganizationValidator::class, 'validator_organization_id');
     }
 
@@ -236,7 +289,12 @@ class Organization extends Model
         return $this->hasMany(OrganizationValidator::class);
     }
 
-    public function external_validators(): BelongsToMany {
+    /**
+     * @return BelongsToMany
+     * @noinspection PhpUnused
+     */
+    public function external_validators(): BelongsToMany
+    {
         return $this->belongsToMany(
             self::class,
             OrganizationValidator::class,
@@ -247,43 +305,55 @@ class Organization extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function offices(): HasMany {
+    public function offices(): HasMany
+    {
         return $this->hasMany(Office::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function business_type(): BelongsTo {
+    public function business_type(): BelongsTo
+    {
         return $this->belongsTo(BusinessType::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function voucher_transactions(): HasMany {
+    public function voucher_transactions(): HasMany
+    {
         return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
-    public function funds_voucher_transactions(): HasManyThrough {
+    public function funds_voucher_transactions(): HasManyThrough
+    {
         return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
      */
-    public function fund_requests(): HasManyThrough {
+    public function fund_requests(): HasManyThrough
+    {
         return $this->hasManyThrough(FundRequest::class, Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function supplied_funds(): BelongsToMany {
+    public function supplied_funds(): BelongsToMany
+    {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -292,15 +362,19 @@ class Organization extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_provider_invitations(): HasMany {
+    public function fund_provider_invitations(): HasMany
+    {
         return $this->hasMany(FundProviderInvitation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function supplied_funds_approved(): BelongsToMany {
+    public function supplied_funds_approved(): BelongsToMany
+    {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -315,8 +389,10 @@ class Organization extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function supplied_funds_approved_budget(): BelongsToMany {
+    public function supplied_funds_approved_budget(): BelongsToMany
+    {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -327,8 +403,10 @@ class Organization extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
      */
-    public function supplied_funds_approved_products(): BelongsToMany {
+    public function supplied_funds_approved_products(): BelongsToMany
+    {
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
@@ -339,15 +417,19 @@ class Organization extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_providers(): HasMany {
+    public function fund_providers(): HasMany
+    {
         return $this->hasMany(FundProvider::class);
     }
     /**
      * Get organization logo
      * @return MorphOne
+     * @noinspection PhpUnused
      */
-    public function logo(): MorphOne {
+    public function logo(): MorphOne
+    {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'organization_logo'
         ]);
@@ -356,7 +438,8 @@ class Organization extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function vouchers(): HasManyThrough {
+    public function vouchers(): HasManyThrough
+    {
         return $this->hasManyThrough(Voucher::class, Fund::class);
     }
 
@@ -365,6 +448,30 @@ class Organization extends Model
      */
     public function employees(): HasMany {
         return $this->hasMany(Employee::class);
+    }
+
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     * @noinspection PhpUnused
+     */
+    public function getLastActivity(): ?Carbon
+    {
+        /** @var Session|null $session */
+        $session = Session::whereIn(
+            'identity_address',
+            $this->employees->pluck('identity_address')
+        )->latest('last_activity_at')->first();
+
+        return $session ? $session->last_activity_at : null;
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getDescriptionHtmlAttribute(): string
+    {
+        return resolve('markdown')->convertToHtml($this->description ?? '');
     }
 
     /**
@@ -487,28 +594,6 @@ class Organization extends Model
 
     /**
      * @param $identityAddress string
-     * @param bool|array|string $roles
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public static function queryByIdentityRole (
-        string $identityAddress,
-        $roles = false
-    ): \Illuminate\Database\Eloquent\Builder {
-        $roles = (array) $roles;
-
-        return self::query()->whereIn('id', function(Builder $query) use ($identityAddress, $roles) {
-            $query->select(['organization_id'])->from((new Employee)->getTable())->where([
-                'identity_address' => $identityAddress
-            ])->whereIn('id', function (Builder $query) use ($roles) {
-                $query->select('employee_id')->from((new EmployeeRole)->getTable())->whereIn('role_id', function (Builder $query) use ($roles) {
-                    $query->select(['id'])->from((new Role)->getTable())->whereIn('key', $roles)->get();
-                });
-            });
-        })->orWhere('identity_address', $identityAddress);
-    }
-
-    /**
-     * @param $identityAddress string
      * @param string|array|bool $permissions
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -608,5 +693,21 @@ class Organization extends Model
         /** @var Fund|null $fund */
         $fund = $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
         return $fund;
+    }
+
+    /**
+     * @return array
+     */
+    public function productsMeta(): array
+    {
+        return [
+            'total_archived' => Product::onlyTrashed()->where('organization_id', $this->id)->count(),
+            'total_provider' => Product::whereOrganizationId($this->id)->whereNull(
+                'sponsor_organization_id'
+            )->count(),
+            'total_sponsor' => Product::whereOrganizationId($this->id)->whereNotNull(
+                'sponsor_organization_id'
+            )->count(),
+        ];
     }
 }

@@ -18,24 +18,24 @@ use Illuminate\Support\Carbon;
  * @property int|null $organization_id
  * @property int|null $prevalidation_id
  * @property string $state
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read \Illuminate\Support\Carbon|null $validation_date
- * @property-read \App\Models\Organization|null $organization
- * @property-read \App\Models\Prevalidation|null $prevalidation
+ * @property-read Organization|null $organization
+ * @property-read Prevalidation|null $prevalidation
  * @property-read \App\Services\Forus\Record\Models\Record $record
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation wherePrevalidationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereRecordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\RecordValidation whereUuid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation query()
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation wherePrevalidationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereRecordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RecordValidation whereUuid($value)
  * @mixin \Eloquent
  */
 class RecordValidation extends Model

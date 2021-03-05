@@ -20,6 +20,7 @@ class FundProviderResource extends Resource
         'fund.employees',
         'fund.top_up_transactions',
         'fund.provider_organizations_approved.employees',
+        'organization.offices',
         'organization.products',
         'organization.logo.presets',
         'organization.business_type.translations',
@@ -42,6 +43,7 @@ class FundProviderResource extends Resource
             'allow_products', 'allow_some_products', 'allow_budget',
         ]), $this->productFields($fundProvider), [
             'fund' => new FundResource($fundProvider->fund),
+            'offices' => OfficeResource::collection($fundProvider->organization->offices),
             'employees' => EmployeeResource::collection($fundProvider->organization->employees),
             'organization' => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization

@@ -20,22 +20,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read bool $exchange_time_expired
  * @property-read \App\Services\Forus\Identity\Models\Identity|null $identity
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy newQuery()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityProxy onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereAccessToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereExchangeToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereExpiresIn($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\IdentityProxy whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityProxy withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Identity\Models\IdentityProxy withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy newQuery()
+ * @method static \Illuminate\Database\Query\Builder|IdentityProxy onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy query()
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereAccessToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereExchangeToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereExpiresIn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|IdentityProxy whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|IdentityProxy withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|IdentityProxy withoutTrashed()
  * @mixin \Eloquent
  */
 class IdentityProxy extends Model

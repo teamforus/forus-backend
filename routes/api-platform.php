@@ -772,6 +772,32 @@ $router->group(['middleware' => [
         ]
     );
 
+    $router->get('organizations/{organization}/sponsor/providers/export', "Api\Platform\Organizations\Sponsor\ProvidersController@export");
+
+    $router->resource(
+        'organizations/{organization}/sponsor/providers',
+        "Api\Platform\Organizations\Sponsor\ProvidersController", [
+            'only' => [
+                'index', 'show',
+            ],
+            'parameters' => [
+                'providers' => 'organization_id',
+            ]
+        ]
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/providers.products',
+        "Api\Platform\Organizations\Sponsor\Providers\ProductsController", [
+            'only' => [
+                'index', 'show', 'store', 'update', 'destroy',
+            ],
+            'parameters' => [
+                'providers' => 'organization_id',
+            ]
+        ]
+    );
+
     $router->get(
         'prevalidations/export',
         'Api\Platform\PrevalidationController@export'

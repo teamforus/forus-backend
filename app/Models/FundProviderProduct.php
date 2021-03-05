@@ -16,8 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $limit_total
  * @property bool $limit_total_unlimited
  * @property int|null $limit_per_identity
- * @property float|null $amount
- * @property float|null $price
+ * @property string|null $amount
+ * @property string|null $price
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -25,23 +25,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Models\Product $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct newQuery()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\FundProviderProduct onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereFundProviderId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitPerIdentity($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitTotal($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereLimitTotalUnlimited($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct wherePrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderProduct whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\FundProviderProduct withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\FundProviderProduct withoutTrashed()
+ * @method static Builder|FundProviderProduct newModelQuery()
+ * @method static Builder|FundProviderProduct newQuery()
+ * @method static \Illuminate\Database\Query\Builder|FundProviderProduct onlyTrashed()
+ * @method static Builder|FundProviderProduct query()
+ * @method static Builder|FundProviderProduct whereAmount($value)
+ * @method static Builder|FundProviderProduct whereCreatedAt($value)
+ * @method static Builder|FundProviderProduct whereDeletedAt($value)
+ * @method static Builder|FundProviderProduct whereFundProviderId($value)
+ * @method static Builder|FundProviderProduct whereId($value)
+ * @method static Builder|FundProviderProduct whereLimitPerIdentity($value)
+ * @method static Builder|FundProviderProduct whereLimitTotal($value)
+ * @method static Builder|FundProviderProduct whereLimitTotalUnlimited($value)
+ * @method static Builder|FundProviderProduct wherePrice($value)
+ * @method static Builder|FundProviderProduct whereProductId($value)
+ * @method static Builder|FundProviderProduct whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|FundProviderProduct withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|FundProviderProduct withoutTrashed()
  * @mixin \Eloquent
  */
 class FundProviderProduct extends Model

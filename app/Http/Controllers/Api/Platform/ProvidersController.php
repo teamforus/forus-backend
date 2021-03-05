@@ -9,6 +9,10 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class ProvidersController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class ProvidersController extends Controller
 {
     /**
@@ -17,12 +21,10 @@ class ProvidersController extends Controller
      * @param SearchProvidersRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(
-        SearchProvidersRequest $request
-    ): AnonymousResourceCollection {
-        return ProviderResource::collection(Implementation::searchProviders(
-            $request
-        )->paginate($request->input('per_page', 10)));
+    public function index(SearchProvidersRequest $request): AnonymousResourceCollection {
+        return ProviderResource::collection(Implementation::searchProviders($request)->paginate(
+            $request->input('per_page', 10)
+        ));
     }
 
     /**

@@ -10,12 +10,12 @@ namespace App\Models;
  * @property int $permission_id
  * @property-read \App\Models\Permission $permission
  * @property-read \App\Models\Role $role
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\RolePermission newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\RolePermission newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\RolePermission query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\RolePermission whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\RolePermission wherePermissionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\RolePermission whereRoleId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RolePermission newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RolePermission newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|RolePermission query()
+ * @method static \Illuminate\Database\Eloquent\Builder|RolePermission whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RolePermission wherePermissionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RolePermission whereRoleId($value)
  * @mixin \Eloquent
  */
 class RolePermission extends Model

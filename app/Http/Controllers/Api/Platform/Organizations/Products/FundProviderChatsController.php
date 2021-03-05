@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Scopes\Builders\FundProviderChatQuery;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderChatsController extends Controller
 {
@@ -25,7 +26,7 @@ class FundProviderChatsController extends Controller
         Request $request,
         Organization $organization,
         Product $product
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', [$organization]);
         $this->authorize('showFunds', [$product, $organization]);
 
@@ -55,7 +56,7 @@ class FundProviderChatsController extends Controller
         Organization $organization,
         Product $product,
         FundProviderChat $fundProviderChat
-    ) {
+    ): FundProviderChatResource {
         $this->authorize('show', [$organization]);
         $this->authorize('showFunds', [$product, $organization]);
 
