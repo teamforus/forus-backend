@@ -70,8 +70,10 @@ class AssignedVoucherMail extends ImplementationMail
      * @return Mailable
      */
     private function sendMailBudgetSubsidies(): Mailable {
+        $this->communicationType =  $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
+
         return $this->buildBase()->subject(
-            mail_trans('voucher_assigned_subsidy.title', $this->data)
+            mail_trans('voucher_assigned_subsidy.title_' . $this->communicationType, $this->data)
         )->view('emails.vouchers.voucher_assigned_subsidy', [
             'data' => $this->data
         ]);

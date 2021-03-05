@@ -3,10 +3,13 @@
     /** @var string $fund_name */
 ?>
 @extends('emails.base')
-
-@section('title', mail_trans('fund_request_resolved.title', ['fund_name' => $fund_name]))
+@if ($emailFrom->isInformalCommunication())
+    @section('title', mail_trans('fund_request_resolved.title_informal', ['fund_name' => $fund_name])) 
+@else
+    @section('title', mail_trans('fund_request_resolved.title_formal', ['fund_name' => $fund_name]))   
+@endif
 @section('html')
-    {{ mail_trans('dear_citizen') }}
+    {{ mail_trans('dear_citizen') }},
     <br/>
     <br/>
 
@@ -16,7 +19,11 @@
         <br/>
     @endif
 
-    {!! mail_trans('fund_request_resolved.contact_us', ['fund_name' => $fund_name]) !!}
+    @if ($emailFrom->isInformalCommunication())
+        {!! mail_trans('fund_request_resolved.contact_us_informal', ['fund_name' => $fund_name]) !!} 
+    @else
+        {!! mail_trans('fund_request_resolved.contact_us_formal', ['fund_name' => $fund_name]) !!}
+    @endif
     <br/>
     <br/>
     {{ $sponsor_name }}

@@ -3,8 +3,13 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class VoucherQuery
+ * @package App\Scopes\Builders
+ */
 class VoucherQuery
 {
     /**
@@ -60,6 +65,17 @@ class VoucherQuery
                 $builder->where('end_date', '<', now()->endOfDay());
             });
         });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereNotExpiredAndActive(Builder $builder): Builder
+    {
+        return self::whereNotExpired($builder)->where(
+            'state', Voucher::STATE_ACTIVE
+        );
     }
 
     /**
