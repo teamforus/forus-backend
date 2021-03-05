@@ -30,8 +30,10 @@ class FundRequestResolvedMail extends ImplementationMail
 
     public function build(): Mailable
     {
+        $this->communicationType =  $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
+
         return $this->buildBase()
-            ->subject(mail_trans('fund_request_resolved.title', ['fund_name' => $this->fundName]))
+            ->subject(mail_trans('fund_request_resolved.title_' . $this->communicationType, ['fund_name' => $this->fundName]))
             ->view('emails.funds.fund-requests.fund_request-resolved', [
                 'fund_name' => $this->fundName,
                 'webshop_link' => $this->link,

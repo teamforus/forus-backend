@@ -1,20 +1,37 @@
 @extends('emails.base')
 
-@section('title', mail_trans('fund_closed.title', ['fund_name' => $fund_name]))
+@if ($emailFrom->isInformalCommunication())
+    @section('title', mail_trans('fund_closed.title_informal', ['fund_name' => $fund_name])).
+@else
+    @section('title', mail_trans('fund_closed.title_formal', ['fund_name' => $fund_name])).
+@endif
 @section('html')
-    {{ mail_trans('dear_citizen') }}
+    {{ mail_trans('dear_citizen') }},
     <br />
     <br />
-    {{ mail_trans('fund_closed.description', [
-        'fund_name'    => $fund_name,
-        'sponsor_name' => $sponsor_name,
-        'end_date'     => $fund_end_date,
-    ]) }} <br />
-    {{ mail_trans('fund_closed.contact', [
-        'fund_name'    => $fund_name,
-        'fund_contact' => $fund_contact,
-        'end_date'     => $fund_end_date,
-    ]) }} <br />
+    @if ($emailFrom->isInformalCommunication())
+        {{ mail_trans('fund_closed.description_informal', [
+            'fund_name'    => $fund_name,
+            'sponsor_name' => $sponsor_name,
+            'end_date'     => $fund_end_date,
+        ]) }} <br />
+        {{ mail_trans('fund_closed.contact_informal', [
+            'fund_name'    => $fund_name,
+            'fund_contact' => $fund_contact,
+            'end_date'     => $fund_end_date,
+        ]) }} <br />
+    @else
+        {{ mail_trans('fund_closed.description_formal', [
+            'fund_name'    => $fund_name,
+            'sponsor_name' => $sponsor_name,
+            'end_date'     => $fund_end_date,
+        ]) }} <br />
+        {{ mail_trans('fund_closed.contact_formal', [
+            'fund_name'    => $fund_name,
+            'fund_contact' => $fund_contact,
+            'end_date'     => $fund_end_date,
+        ]) }} <br />
+    @endif
     <br/>
     {!! mail_trans('fund_closed.webshop_link', ['link' => $webshop_link]) !!}
 @endsection
