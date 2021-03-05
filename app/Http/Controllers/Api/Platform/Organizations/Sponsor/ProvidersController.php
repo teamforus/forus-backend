@@ -35,7 +35,11 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $query = Organization::searchQuery($request);
+        $query = Organization::query();
+
+        if ($q = $request->input('q')) {
+            $query->where('name', 'LIKE', "%$q%");
+        }
 
         $query->whereHas('fund_providers', function(Builder $builder) use ($request, $organization) {
             FundProvider::search($request, $organization, $builder);

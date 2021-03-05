@@ -20,6 +20,7 @@ class IndexProvidersRequest extends IndexOrganizationRequest
     public function rules(): array
     {
         return array_merge(parent::rules(), [
+            'q' => 'nullable|string|max:100',
             'fund_id' => 'nullable|in:' . $this->organization->funds()->pluck('id')->join(',')
         ]);
     }
