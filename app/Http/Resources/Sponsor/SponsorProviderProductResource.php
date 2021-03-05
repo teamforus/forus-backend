@@ -87,7 +87,9 @@ class SponsorProviderProductResource extends Resource
                     'id', 'amount', 'limit_total', 'limit_total_unlimited', 'limit_per_identity',
                     'voucher_transactions_count',
                 ])), [
-                    'active' => !$fundProviderProduct->trashed()
+                    'active' => !$fundProviderProduct->trashed(),
+                    'expire_at' => $fundProviderProduct->expire_at ? $fundProviderProduct->expire_at->format('Y-m-d') : null,
+                    'expire_at_locale' => format_date_locale($fundProviderProduct->expire_at ?? null),
                 ]);
             })
         ] : []);

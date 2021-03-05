@@ -495,7 +495,8 @@ class FundProvider extends Model
             $this->fund_provider_products()->firstOrCreate([
                 'product_id' => $product['id'],
             ])->update($isTypeSubsidy ? array_only($product, [
-                'limit_total', 'limit_total_unlimited', 'limit_per_identity', 'amount', 'price',
+                'limit_total', 'limit_total_unlimited', 'limit_per_identity',
+                'expire_at', 'amount', 'price',
             ]) : []);
         }
 
