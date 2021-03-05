@@ -6,6 +6,10 @@ namespace App\Scopes\Builders;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class VoucherQuery
+ * @package App\Scopes\Builders
+ */
 class VoucherQuery
 {
     /**

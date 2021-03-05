@@ -5,7 +5,6 @@ namespace App\Http\Resources;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
-use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
@@ -105,16 +104,16 @@ class FundResource extends Resource
             'validate_records'
         ])->count();
 
+        $requesterCount = VoucherQuery::whereNotExpiredAndActive(
+            $fund->vouchers()->getQuery()
+        )->whereNull('parent_id')->count();
+
         return Gate::allows('funds.showFinances', [$fund, $fund->organization]) ? [
             'sponsor_count'                 => $fund->organization->employees->count(),
             'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
             'provider_employees_count'      => $providersEmployeeCount,
-            'requester_count'               => VoucherQuery::whereNotExpiredAndActive(
-                $fund->vouchers()->getQuery()
-            )->whereNull(
-                'parent_id'
-            )->count(),
             'validators_count'              => $validatorsCount,
+            'requester_count'               => $requesterCount,
             'budget'                        => $this->getBudgetData($fund),
         ] : [];
     }
