@@ -23,7 +23,7 @@ return [
          * Hides elements from webshop and disable responsible api endpoints
          * when disabled
          */
-        'fund_requests' => env('ENABLE_FUND_REQUESTS_WEBSHOP', false),
+        'fund_requests' => env('ENABLE_FUND_REQUESTS_WEBSHOP', true),
     ],
     "products" => [
         // list all funds

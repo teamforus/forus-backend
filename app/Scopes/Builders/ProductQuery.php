@@ -142,8 +142,8 @@ class ProductQuery
     public static function queryFilter(Builder $query, string $q = ''): Builder
     {
         return $query->where(static function (Builder $query) use ($q) {
-            $query->where('name', 'LIKE', "%{$q}%");
-            $query->orWhere('description', 'LIKE', "%{$q}%");
+            $query->where('products.name', 'LIKE', "%{$q}%");
+            $query->orWhere('products.description', 'LIKE', "%{$q}%");
         });
     }
 
@@ -155,10 +155,10 @@ class ProductQuery
     public static function queryDeepFilter(Builder $query, string $q = ''): Builder
     {
         return $query->where(static function (Builder $query) use ($q) {
-            $query->where('name', 'LIKE', "%{$q}%");
-            $query->orWhere('description', 'LIKE', "%{$q}%");
+            $query->where('products.name', 'LIKE', "%{$q}%");
+            $query->orWhere('products.description', 'LIKE', "%{$q}%");
             $query->orWhereHas('organization', static function(Builder $builder) use ($q) {
-                $builder->where('name', 'LIKE', "%{$q}%");
+                $builder->where('organizations.name', 'LIKE', "%{$q}%");
             });
         });
     }

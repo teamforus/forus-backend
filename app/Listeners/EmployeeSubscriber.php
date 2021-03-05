@@ -76,7 +76,7 @@ class EmployeeSubscriber
                 'organization' => $employee->organization,
             ], [
                 'employee_roles_removed' => $removedRoles->pluck('name')->join(', '),
-                'employee_roles_assigned' => $removedRoles->pluck('name')->join(', '),
+                'employee_roles_assigned' => $assignedRoles->pluck('name')->join(', '),
             ]);
 
             IdentityChangedEmployeeRolesNotification::send($event);

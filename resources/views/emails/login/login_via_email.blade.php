@@ -3,7 +3,7 @@
 @section('button_text', mail_trans('login_via_email.button_text'))
 @section('link', $link)
 @section('title', mail_trans('login_via_email.title', ['platform' => $platform]))
-@section('header_image', mail_config('login_via_email.header_image'))
+@section('header_image', mail_config('login_via_email.header_image', null, $implementationKey ?? null))
 
 @section('html')
     {{ mail_trans('dear_user') }},

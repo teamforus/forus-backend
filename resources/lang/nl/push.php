@@ -4,7 +4,7 @@ return [
     "voucher" => [
         "activated" => [
             "title" => ":fund_name",
-            "body" => "U hebt een activatiecode gebruikt om ':fund_name' tegoed te activeren.",
+            "body" => "Gefeliciteerd! De activatie van :fund_name is gelukt!.",
         ],
         "bought" => [
             "title" => ":implementation_name",
@@ -15,11 +15,11 @@ return [
         "offline_regular_voucher" => [
             "budget" => [
                 "title"  => ":fund_name",
-                "body"   => "Er is :amount is afgeschreven van uw :fund_name tegoed.",
+                "body"   => "Er is :amount afgeschreven van :fund_name.",
             ],
             "subsidies" => [
                 "title"  => ":fund_name",
-                "body"   => "Uw resterende tegoed voor :product_name is :new_limit",
+                "body"   => "Het resterende tegoed voor :product_name is :new_limit",
             ],
         ],
         "offline_product_voucher" => [

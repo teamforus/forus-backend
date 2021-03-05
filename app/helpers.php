@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use \App\Services\Forus\Session\Services\Browser;
+use Illuminate\Support\Facades\Config;
 
 if (!function_exists('auth_user')) {
     /**
@@ -278,34 +279,24 @@ if (!function_exists('mail_trans')) {
      * @param string $key
      * @param array $replace
      * @param string|null $locale
+     * @param string|null $implementation
      * @return string|array|null
      */
     function mail_trans(
-        string $key,
-        array $replace = [],
-        string $locale = null
+        string $key, array
+        $replace = [],
+        string $locale = null,
+        string $implementation = null
     ) {
-        $implementation = Implementation::activeKey();
+        $implementation = $implementation ?: Implementation::activeKey();
 
         switch ($implementation) {
             case (Lang::has('mails/implementations/' . $implementation . '/' . $key)):
-                return Lang::get(
-                    'mails/implementations/' . $implementation . '/' . $key,
-                    $replace,
-                    $locale
-                );
+                return Lang::get('mails/implementations/' . $implementation . '/' . $key, $replace, $locale);
             case (Lang::has('mails/implementations/general/' . $key)):
-                return Lang::get(
-                    'mails/implementations/general/' . $key,
-                    $replace,
-                    $locale
-                );
+                return Lang::get('mails/implementations/general/' . $key, $replace, $locale);
             case (Lang::has('mails/implementations/general.' . $key)):
-                return Lang::get(
-                    'mails/implementations/general.' . $key,
-                    $replace,
-                    $locale
-                );
+                return Lang::get('mails/implementations/general.' . $key, $replace, $locale);
         }
 
         return trans($key, $replace, $locale);
@@ -319,22 +310,19 @@ if (!function_exists('mail_config')) {
      * @param string $key
      * @param string|null $default
      * @param string|null $implementation
-     * @return mixed|string
+     * @return string|array|null
      */
-    function mail_config(
-        string $key,
-        string $default = null,
-        string $implementation = null
-    ) {
+    function mail_config(string $key, string $default = null, string $implementation = null)
+    {
         $implementationKey = $implementation ?: Implementation::activeKey();
         $configKey = "forus.mails.implementations.%s.$key";
 
-        if (config()->has(sprintf($configKey, $implementationKey))) {
-            return config()->get(sprintf($configKey, $implementationKey));
+        if (Config::has(sprintf($configKey, $implementationKey))) {
+            return Config::get(sprintf($configKey, $implementationKey));
         }
 
-        if (config()->has(sprintf($configKey, 'general'))) {
-            return config()->get(sprintf($configKey, 'general'));
+        if (Config::has(sprintf($configKey, 'general'))) {
+            return Config::get(sprintf($configKey, 'general'));
         }
 
         return $default ?: $key;
@@ -342,10 +330,13 @@ if (!function_exists('mail_config')) {
 }
 
 if (!function_exists('str_terminal_color')) {
-    function str_terminal_color(
-        string $text,
-        string $color = 'green'
-    ) {
+    /**
+     * @param string $text
+     * @param string $color
+     * @return string
+     */
+    function str_terminal_color(string $text, string $color = 'green'): string
+    {
         $colors = [
             'black' => '30',
             'blue' => '34',

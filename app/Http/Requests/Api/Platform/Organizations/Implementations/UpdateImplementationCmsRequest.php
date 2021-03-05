@@ -33,7 +33,7 @@ class UpdateImplementationCmsRequest extends FormRequest
             'pages.*' => 'array',
             'pages.*.content' => 'nullable|string|max:10000',
             'pages.*.external' => 'present|boolean',
-            'pages.*.external_url' => 'nullable|string|max:100',
+            'pages.*.external_url' => 'nullable|string|max:300',
         ];
     }
 

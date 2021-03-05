@@ -26,7 +26,7 @@ return [
              * Hides elements from validator panel and disable responsible
              * api endpoints when disabled
              */
-            'fund_requests' => env('ENABLE_FUND_REQUESTS_PANEL', false),
+            'fund_requests' => env('ENABLE_FUND_REQUESTS_PANEL', true),
             
             /**
              * Sponsor may set/edit fund formula products from dashboard
