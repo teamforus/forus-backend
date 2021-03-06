@@ -69,9 +69,7 @@ class StoreFundRequestRequest extends BaseFormRequest
                     $recordRepo->getRecordTypes()
                 )->firstWhere('key', $val['record_type_key'])['name'] ?? '';
 
-                $messages["records.*.value.required"] = trans('validation.required', [
-                    'attribute' => $recordTypeName
-                ]);
+                $messages["records.*.value.required"] = trans('validation.fund_request_request_field_incomplete');
             }
         }
 
