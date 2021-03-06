@@ -154,6 +154,7 @@ return [
     'validation.prevalidation_invalid_type_primary_email' => 'Het primaire e-mailadres veld is een systeemveld en kan hier niet gebruikt worden.',
     'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',
     'fund_request_request_field_incomplete' => 'Typ een bericht. Dit veld mag niet leeg zijn.',
+    'email_already_used' => 'Dit e-mailadres is al ingenomen door een ander account.',
     'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
     'business_type_id' => 'Organisatie type',
