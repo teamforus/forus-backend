@@ -2,38 +2,38 @@
 
 namespace App\Services\Forus\Notification;
 
+use App\Models\Implementation;
+
 /**
  * Class ImplementationFrom
  * @package App\Services\Forus\Notification
  */
 class EmailFrom
 {
-    private $email;
-    private $name;
-    private $informalCommunication;
+    private $email_from_name;
+    private $email_from_address;
+
+    private $implementation_key;
+    private $informal_communication;
 
     /**
      * EmailSender constructor.
-     * @param string $email
-     * @param string|null $name
-     * @param bool $informalCommunication
+     * @param Implementation $implementation
      */
-    public function __construct(
-        string $email,
-        string $name = null,
-        bool $informalCommunication = false
-    ) {
-        $this->email = $email;
-        $this->name = $name;
-        $this->informalCommunication = $informalCommunication;
+    public function __construct(Implementation $implementation) {
+        $this->email_from_name = $implementation->email_from_name ?: config('mail.from.name');
+        $this->email_from_address = $implementation->email_from_address ?: config('mail.from.address');
+
+        $this->implementation_key = $implementation->key ?: $implementation::KEY_GENERAL;
+        $this->informal_communication = $implementation->informal_communication ?? false;
     }
 
     /**
      * @return string
      */
-    public function getEmail(): string
+    public function getEmail(): ?string
     {
-        return $this->email;
+        return $this->email_from_address;
     }
 
     /**
@@ -41,7 +41,7 @@ class EmailFrom
      */
     public function getName(): ?string
     {
-        return $this->name;
+        return $this->email_from_name;
     }
 
     /**
@@ -49,7 +49,15 @@ class EmailFrom
      */
     public function isInformalCommunication(): bool
     {
-        return $this->informalCommunication;
+        return $this->informal_communication;
+    }
+
+    /**
+     * @return mixed|string
+     */
+    public function getImplementationKey(): string
+    {
+        return $this->implementation_key;
     }
 
     /**
@@ -57,6 +65,6 @@ class EmailFrom
      */
     public static function createDefault(): EmailFrom
     {
-        return new self(config('mail.from.address'), config('mail.from.name'));
+        return new self(Implementation::general());
     }
 }

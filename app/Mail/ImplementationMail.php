@@ -17,13 +17,15 @@ class ImplementationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $emailFrom;
+    public $emailFrom;
+    public $implementationKey;
 
     /**
      * @param EmailFrom|null $emailFrom
      */
     public function setMailFrom(?EmailFrom $emailFrom): void {
         $this->emailFrom = $emailFrom;
+        $this->implementationKey = $emailFrom->getImplementationKey() ?: null;
     }
 
     /**
