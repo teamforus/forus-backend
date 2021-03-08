@@ -39,8 +39,8 @@ class StoreProductRequest extends BaseFormRequest
             'media_uid'             => ['nullable', 'string', new MediaUidRule('product_photo')],
             'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
             'price_discount'        => [
-                'discount_fixed'        => 'required_if:price_type,discount_fixed|min:.1',
-                'discount_percentage'   => 'required_if:price_type,discount_percentage|between:.1,100',
+                'discount_fixed'        => 'required|numeric|min:.1',
+                'discount_percentage'   => 'required|numeric|between:.1,100',
             ][$price_type] ?? [],
             'unlimited_stock'       => 'boolean',
             'total_amount'          => [

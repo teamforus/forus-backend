@@ -40,8 +40,8 @@ class UpdateProductRequest extends BaseFormRequest
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
             'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
             'price_discount'        => [
-                'discount_fixed'        => 'required_if:price_type,discount_fixed|numeric|min:.1',
-                'discount_percentage'   => 'required_if:price_type,discount_percentage|numeric|between:.1,100',
+                'discount_fixed'        => 'required|numeric|min:.1',
+                'discount_percentage'   => 'required|numeric|between:.1,100',
             ][$price_type] ?? [],
             'total_amount'          => [
                 $product->unlimited_stock ? null : 'required',
