@@ -15,7 +15,7 @@
         html, body {
             background-color: #fff;
             color: #636b6f;
-            font-family: 'Nunito', sans-serif;
+            font-family: Montserrat;
             font-weight: 100;
             height: 100vh;
             margin: 0;
@@ -31,27 +31,49 @@
             justify-content: center;
         }
 
+        .flex-column {
+            flex-direction: column;
+        }
+
         .position-ref {
             position: relative;
         }
 
-        .code {
-            border-right: 2px solid;
-            font-size: 26px;
-            padding: 0 15px 0 15px;
+        .title {
+            font-weight: 500;
+            font-size: 36px;
+            line-height: 24px;
             text-align: center;
+            color: #000;
         }
 
-        .message {
+        .subtitle {
+            padding-top: 20px;
+            font-weight: normal;
             font-size: 18px;
+            line-height: 24px;
             text-align: center;
+            color: #000;
+        }
+
+        .image {
+            display: block;
+            margin: 20px auto;
         }
     </style>
 </head>
 <body>
-<div class="flex-center position-ref full-height">
-    <div class="message" style="padding: 10px;">
-        @yield('message')
+<div class="flex-center flex-column position-ref full-height">
+    <div class="title">
+        @yield('title')
+    </div>
+
+    <div class="subtitle">
+        @yield('subtitle')
+    </div>
+
+    <div class="image">
+        <img src="@yield('image')">
     </div>
 </div>
 </body>
