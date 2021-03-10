@@ -77,6 +77,10 @@ class SponsorProviderResource extends JsonResource
                     $providerOrganization->fund_providers()->getQuery(),
                     $fund->id
                 )->exists(),
+                'fund_provider_id' => FundProviderQuery::FundsFilter(
+                    $providerOrganization->fund_providers()->getQuery(),
+                    $fund->id
+                )->get('id')->pluck('id')->flatten(),
             ]);
         });
     }

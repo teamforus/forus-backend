@@ -53,8 +53,10 @@ class FundClosed extends ImplementationMail
      */
     public function build(): Mailable
     {
+        $this->communicationType =  $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
+
         return $this->buildBase()
-            ->subject(mail_trans('fund_closed.title', [
+            ->subject(mail_trans('fund_closed.title_' . $this->communicationType, [
                 'fund_name' => $this->fundName
             ]))
             ->view('emails.funds.fund_closed', [

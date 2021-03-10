@@ -15,7 +15,9 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
+use App\Models\Voucher;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -414,7 +416,9 @@ class FundsController extends Controller
                 'total' => $fund->getServiceCosts(),
                 'transaction_costs' => $fund->getTransactionCosts()
             ],
-            'activations' => $fund->vouchers()->whereNull(
+            'activations' => VoucherQuery::whereNotExpiredAndActive(
+                $fund->vouchers()->getQuery()
+            )->whereNull(
                 'parent_id'
             )->whereBetween('created_at', [
                 $startDate, $endDate
