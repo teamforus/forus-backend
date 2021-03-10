@@ -29,16 +29,16 @@ class ImplementationResource extends JsonResource
         return array_merge($implementation->only([
             'id', 'key', 'name', 'url_webshop', 'informal_communication',
         ]), [
-            'has_terms_page' => $this->hasTermsPage($implementation->page_terms_and_conditions),
+            'has_provider_terms_page' => $this->hasTermsPage($implementation->page_provider),
         ]);
     }
 
     /**
-     * @param ImplementationPage|null $terms
+     * @param ImplementationPage|null $page_provider
      * @return bool
      */
-    protected function hasTermsPage(?ImplementationPage $terms): bool
+    protected function hasTermsPage(?ImplementationPage $page_provider): bool
     {
-        return $terms && (bool) ($terms->external ? $terms->external_url: $terms->content);
+        return $page_provider && (bool) $page_provider->content;
     }
 }
