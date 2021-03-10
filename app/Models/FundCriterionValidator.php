@@ -16,15 +16,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\OrganizationValidator $external_validator
  * @property-read \App\Models\FundCriterion $fund_criterion
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereAccepted($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereFundCriterionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereOrganizationValidatorId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundCriterionValidator whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator whereAccepted($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator whereFundCriterionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator whereOrganizationValidatorId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundCriterionValidator whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundCriterionValidator extends Model

@@ -33,7 +33,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 
@@ -48,7 +47,7 @@ use Illuminate\Http\Request;
  * @property string $state
  * @property bool $public
  * @property bool $criteria_editable_after_start
- * @property float|null $notification_amount
+ * @property string|null $notification_amount
  * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
  * @property \Illuminate\Support\Carbon $end_date
@@ -56,35 +55,35 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $budget_vouchers
+ * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
+ * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
  * @property-read int|null $bunq_me_tabs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
+ * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
  * @property-read int|null $bunq_me_tabs_paid_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterion[] $criteria
+ * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\Digest[] $digests
+ * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees
+ * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Employee[] $employees_validators
+ * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $formula_products
+ * @property-read Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
  * @property-read \App\Models\FundConfig|null $fund_config
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfigRecord[] $fund_config_records
+ * @property-read Collection|\App\Models\FundConfigRecord[] $fund_config_records
  * @property-read int|null $fund_config_records_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
+ * @property-read Collection|\App\Models\FundFormulaProduct[] $fund_formula_products
  * @property-read int|null $fund_formula_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundFormula[] $fund_formulas
+ * @property-read Collection|\App\Models\FundFormula[] $fund_formulas
  * @property-read int|null $fund_formulas_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
+ * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
+ * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequest[] $fund_requests
+ * @property-read Collection|\App\Models\FundRequest[] $fund_requests
  * @property-read int|null $fund_requests_count
  * @property-read float $budget_left
  * @property-read float $budget_reserved
@@ -92,63 +91,63 @@ use Illuminate\Http\Request;
  * @property-read float $budget_used
  * @property-read float $budget_validated
  * @property-read \App\Models\FundTopUp $top_up_model
- * @property-read \App\Services\MediaService\Models\Media|null $logo
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Media|null $logo
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderInvitation[] $provider_invitations
+ * @property-read Collection|\App\Models\FundProviderInvitation[] $provider_invitations
  * @property-read int|null $provider_invitations_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations
  * @property-read int|null $provider_organizations_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved
  * @property-read int|null $provider_organizations_approved_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_budget
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved_budget
  * @property-read int|null $provider_organizations_approved_budget_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_approved_products
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved_products
  * @property-read int|null $provider_organizations_approved_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_declined
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations_declined
  * @property-read int|null $provider_organizations_declined_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $provider_organizations_pending
+ * @property-read Collection|\App\Models\Organization[] $provider_organizations_pending
  * @property-read int|null $provider_organizations_pending_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers
+ * @property-read Collection|\App\Models\FundProvider[] $providers
  * @property-read int|null $providers_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_allowed_products
+ * @property-read Collection|\App\Models\FundProvider[] $providers_allowed_products
  * @property-read int|null $providers_allowed_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProvider[] $providers_approved
+ * @property-read Collection|\App\Models\FundProvider[] $providers_approved
  * @property-read int|null $providers_approved_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Tag[] $tags
+ * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
+ * @property-read Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
  * @property-read int|null $top_up_transactions_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUp[] $top_ups
+ * @property-read Collection|\App\Models\FundTopUp[] $top_ups
  * @property-read int|null $top_ups_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereAutoRequestsValidation($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereCriteriaEditableAfterStart($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDefaultValidatorEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereEndDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotificationAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereNotifiedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund wherePublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereStartDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Fund whereUpdatedAt($value)
+ * @method static Builder|Fund newModelQuery()
+ * @method static Builder|Fund newQuery()
+ * @method static Builder|Fund query()
+ * @method static Builder|Fund whereAutoRequestsValidation($value)
+ * @method static Builder|Fund whereCreatedAt($value)
+ * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
+ * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
+ * @method static Builder|Fund whereDescription($value)
+ * @method static Builder|Fund whereEndDate($value)
+ * @method static Builder|Fund whereId($value)
+ * @method static Builder|Fund whereName($value)
+ * @method static Builder|Fund whereNotificationAmount($value)
+ * @method static Builder|Fund whereNotifiedAt($value)
+ * @method static Builder|Fund whereOrganizationId($value)
+ * @method static Builder|Fund wherePublic($value)
+ * @method static Builder|Fund whereStartDate($value)
+ * @method static Builder|Fund whereState($value)
+ * @method static Builder|Fund whereType($value)
+ * @method static Builder|Fund whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Fund extends Model

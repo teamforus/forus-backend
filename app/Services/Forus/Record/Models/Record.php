@@ -24,22 +24,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Services\Forus\Record\Models\RecordType $record_type
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\RecordValidation[] $validations
  * @property-read int|null $validations_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record newQuery()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record wherePrevalidationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereRecordCategoryId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereRecordTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Record\Models\Record whereValue($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Record\Models\Record withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Record newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Record newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Record onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Record query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record wherePrevalidationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereRecordCategoryId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereRecordTypeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Record whereValue($value)
+ * @method static \Illuminate\Database\Query\Builder|Record withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Record withoutTrashed()
  * @mixin \Eloquent
  */
 class Record extends Model

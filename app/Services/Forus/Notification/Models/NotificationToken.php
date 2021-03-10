@@ -15,15 +15,15 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken whereToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationToken whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken query()
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationToken whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class NotificationToken extends Model

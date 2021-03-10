@@ -12,14 +12,14 @@ namespace App\Models;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\Product $product
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProduct whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProduct whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProduct extends Model

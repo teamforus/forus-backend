@@ -18,14 +18,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $fund_criteria_validators_count
  * @property-read \App\Models\Organization $organization
  * @property-read \App\Models\Organization $validator_organization
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationValidator whereValidatorOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator query()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator whereOrganizationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationValidator whereValidatorOrganizationId($value)
  * @mixin \Eloquent
  */
 class OrganizationValidator extends Model

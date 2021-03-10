@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Provider;
 
+use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Fund;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,8 @@ class ProviderProductResource extends ProductResource
     public function toArray($request): array
     {
         return array_merge(parent::toArray($request), [
+            'sponsor_organization_id' => $this->resource->sponsor_organization_id,
+            'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
             'excluded_funds' => Fund::whereHas('providers.product_exclusions', function(
                 Builder $builder
             ) {

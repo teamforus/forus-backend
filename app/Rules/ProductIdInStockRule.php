@@ -6,6 +6,10 @@ use App\Models\Fund;
 use App\Models\Product;
 use App\Scopes\Builders\ProductQuery;
 
+/**
+ * Class ProductIdInStockRule
+ * @package App\Rules
+ */
 class ProductIdInStockRule extends BaseRule
 {
     protected $messageTransPrefix = 'validation.product_voucher.';
@@ -48,12 +52,15 @@ class ProductIdInStockRule extends BaseRule
             return $this->rejectTrans('product_price_type_not_regular');
         }
 
+        if ($product->sponsor_organization_id &&
+            ($product->sponsor_organization_id !== $this->fund->organization_id)) {
+            return $this->rejectTrans('product_price_type_not_regular');
+        }
+
         if (!$product->unlimited_stock &&
             $this->otherReservations &&
             $product->stock_amount < $this->otherReservations[$product_id]) {
-            return $this->rejectTrans('not_enough_stock', [
-                'product_name' => $product->name
-            ]);
+            return $this->rejectWithMessage(trans('validation.in'));
         }
 
         // check validity

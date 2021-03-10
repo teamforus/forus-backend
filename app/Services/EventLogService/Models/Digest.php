@@ -14,16 +14,16 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $digestable_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $digestable
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereDigestableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereDigestableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\Digest whereUpdatedAt($value)
+ * @property-read Model|\Eloquent $digestable
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest whereDigestableId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest whereDigestableType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Digest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Digest extends Model

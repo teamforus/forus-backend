@@ -74,7 +74,7 @@ class OrganizationResource extends Resource
             'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
             'email_public', 'phone_public', 'website_public',
             'is_sponsor', 'is_provider', 'is_validator',
-            'validator_auto_accept_funds', 'description'
+            'validator_auto_accept_funds', 'description', 'manage_provider_products',
         ]), $privateData,
             $ownerData, [
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),

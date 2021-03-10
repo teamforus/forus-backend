@@ -22,33 +22,33 @@ use Illuminate\Http\Request;
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestClarification[] $clarifications
+ * @property-read Collection|\App\Models\FundRequestClarification[] $clarifications
  * @property-read int|null $clarifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $clarifications_answered
+ * @property-read Collection|\App\Models\FundRequestRecord[] $clarifications_answered
  * @property-read int|null $clarifications_answered_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $clarifications_pending
+ * @property-read Collection|\App\Models\FundRequestRecord[] $clarifications_pending
  * @property-read int|null $clarifications_pending_count
  * @property-read \App\Models\Fund $fund
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records
+ * @property-read Collection|\App\Models\FundRequestRecord[] $records
  * @property-read int|null $records_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records_approved
+ * @property-read Collection|\App\Models\FundRequestRecord[] $records_approved
  * @property-read int|null $records_approved_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records_declined
+ * @property-read Collection|\App\Models\FundRequestRecord[] $records_declined
  * @property-read int|null $records_declined_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $records_pending
+ * @property-read Collection|\App\Models\FundRequestRecord[] $records_pending
  * @property-read int|null $records_pending_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequest whereUpdatedAt($value)
+ * @method static Builder|FundRequest newModelQuery()
+ * @method static Builder|FundRequest newQuery()
+ * @method static Builder|FundRequest query()
+ * @method static Builder|FundRequest whereCreatedAt($value)
+ * @method static Builder|FundRequest whereFundId($value)
+ * @method static Builder|FundRequest whereId($value)
+ * @method static Builder|FundRequest whereIdentityAddress($value)
+ * @method static Builder|FundRequest whereNote($value)
+ * @method static Builder|FundRequest whereState($value)
+ * @method static Builder|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundRequest extends Model

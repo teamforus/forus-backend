@@ -60,6 +60,7 @@ class UpdateFundProviderRequest extends FormRequest
             )],
         ], $this->fund_provider->fund->isTypeSubsidy() ? [
             'enable_products.*.amount' => 'required|numeric|min:0',
+            'enable_products.*.expire_at' => 'nullable|date_format:Y-m-d',
             'enable_products.*.limit_total' => 'required|numeric|min:0',
             'enable_products.*.limit_total_unlimited' => 'nullable|boolean',
             'enable_products.*.limit_per_identity' => 'required|numeric|min:0',

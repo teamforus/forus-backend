@@ -142,6 +142,10 @@ class RouteServiceProvider extends ServiceProvider
             return Employee::findOrFail($employee_id);
         });
 
+        $router->bind('organization_id', static function ($organization_id) {
+            return Organization::findOrFail($organization_id);
+        });
+
         $router->bind('product_with_trashed', static function ($product_id) {
             return Product::withTrashed()->findOrFail($product_id);
         });
