@@ -347,6 +347,6 @@ class VouchersController extends Controller
             abort(404, "No vouchers to be exported.");
         }
 
-        return Voucher::zipVouchersData($vouchers, $export_type, $data_only);
+        return Voucher::zipVouchersData($request, $vouchers, $export_type, $data_only);
     }
 }

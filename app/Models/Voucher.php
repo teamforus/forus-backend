@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Exports\VoucherExport;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Excel;
 use RuntimeException;
 
 /**
@@ -660,6 +662,44 @@ class Voucher extends Model
     }
 
     /**
+     * @param Request $request
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function export(Request $request) {
+        $query = self::search($request);
+
+        return $query->get()->map(static function(Voucher $voucher)  {
+            $assigned_to_identity = $voucher->identity_address && $voucher->is_granted;
+
+            return collect(array_merge([
+                //'name'    => token_generator()->generate(6, 2),
+                'granted' => $assigned_to_identity ? 'Ja': 'Nee',
+                'in_use'  => $voucher->has_transactions ? 'Ja': 'Nee',
+            ], $voucher->product ? [
+                'product_name' => $voucher->product->name,
+            ] : [], $assigned_to_identity ? [
+                'reference_bsn'  => $voucher->voucher_relation->bsn ?? null,
+                'identity_bsn'   => record_repo()->bsnByAddress($voucher->identity_address),
+                'identity_email' => record_repo()->primaryEmailByAddress($voucher->identity_address),
+            ] : [], [
+                'reference_bsn'  => $voucher->voucher_relation->bsn ?? null,
+                'identity_bsn'   => null,
+                'identity_email' => null,
+            ], [
+                'state'               => $voucher->state ?? null,
+                'activation_code'     => $voucher->activation_code ?? null,
+                'activation_code_uid' => $voucher->activation_code_uid ?? null,
+                'note'                => $voucher->note,
+                'source'              => $voucher->employee_id ? 'employee': 'user',
+                'amount'              => $voucher->amount,
+                'fund_name'           => $voucher->fund->name,
+                'created_at'          => format_date_locale($voucher->created_at),
+                'expire_at'           => format_date_locale($voucher->expire_at),
+            ]))->toArray();
+        })->values();
+    }
+
+    /**
      * @param Collection $vouchers
      * @param $exportType
      * @return string
@@ -723,12 +763,16 @@ class Voucher extends Model
     }
 
     /**
+     * @param Request $request
      * @param Collection $vouchers
      * @param string $exportType
      * @param bool|null $data_only
      * @return array
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public static function zipVouchersData(
+        Request $request,
         Collection $vouchers,
         string $exportType,
         ?bool $data_only = true
@@ -742,6 +786,14 @@ class Voucher extends Model
         if ($vouchers->count() > 0) {
             fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $data_only))->toArray()));
         }
+
+//        if (in_array($exportType, ['png', 'xls'])) {
+//            $rawXls = resolve('excel')->raw(
+//                new VoucherExport($request),
+//                Excel::XLS
+//                //date('Y-m-d H:i:s') . '.xls'
+//            );
+//        }
 
         foreach ($vouchers as $voucher) {
             do {
@@ -763,7 +815,7 @@ class Voucher extends Model
         $rawCsv = stream_get_contents($fp);
         fclose($fp);
 
-        return compact('rawCsv', 'vouchersData');
+        return compact('rawCsv', 'vouchersData', 'rawXls');
     }
 
     /**

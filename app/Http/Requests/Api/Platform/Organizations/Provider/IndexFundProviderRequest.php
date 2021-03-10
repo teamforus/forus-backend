@@ -29,6 +29,7 @@ class IndexFundProviderRequest extends FormRequest
             'allow_products'    => 'nullable|in:1,0,some',
             'per_page'          => 'numeric|between:1,100',
             'q'                 => 'nullable|string',
+            'export_format'     => 'nullable|in:csv,xls'
         ];
     }
 }
