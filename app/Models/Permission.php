@@ -10,12 +10,12 @@ namespace App\Models;
  * @property string $name
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Role[] $roles
  * @property-read int|null $roles_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Permission whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Permission newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Permission newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Permission query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Permission whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Permission whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Permission whereName($value)
  * @mixin \Eloquent
  */
 class Permission extends Model

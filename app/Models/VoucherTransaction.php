@@ -18,7 +18,7 @@ use Illuminate\Http\Request;
  * @property int|null $employee_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
- * @property float $amount
+ * @property string $amount
  * @property string|null $iban_from
  * @property string|null $iban_to
  * @property string|null $payment_time
@@ -31,31 +31,31 @@ use Illuminate\Http\Request;
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionNote[] $notes
+ * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\Organization $provider
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereAttempts($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereFundProviderProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanFrom($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereIbanTo($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereLastAttemptAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction wherePaymentTime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransaction whereVoucherId($value)
+ * @method static Builder|VoucherTransaction newModelQuery()
+ * @method static Builder|VoucherTransaction newQuery()
+ * @method static Builder|VoucherTransaction query()
+ * @method static Builder|VoucherTransaction whereAddress($value)
+ * @method static Builder|VoucherTransaction whereAmount($value)
+ * @method static Builder|VoucherTransaction whereAttempts($value)
+ * @method static Builder|VoucherTransaction whereCreatedAt($value)
+ * @method static Builder|VoucherTransaction whereEmployeeId($value)
+ * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
+ * @method static Builder|VoucherTransaction whereIbanFrom($value)
+ * @method static Builder|VoucherTransaction whereIbanTo($value)
+ * @method static Builder|VoucherTransaction whereId($value)
+ * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
+ * @method static Builder|VoucherTransaction whereOrganizationId($value)
+ * @method static Builder|VoucherTransaction wherePaymentId($value)
+ * @method static Builder|VoucherTransaction wherePaymentTime($value)
+ * @method static Builder|VoucherTransaction whereProductId($value)
+ * @method static Builder|VoucherTransaction whereState($value)
+ * @method static Builder|VoucherTransaction whereUpdatedAt($value)
+ * @method static Builder|VoucherTransaction whereVoucherId($value)
  * @mixin \Eloquent
  */
 class VoucherTransaction extends Model

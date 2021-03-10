@@ -124,6 +124,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('forus.product.expiration:check')
             ->daily()->withoutOverlapping()->onOneServer();
 
+        /**
+         * CheckActionExpirationCommand
+         */
+        $schedule->command('forus.action.expiration:check')
+            ->daily()->withoutOverlapping()->onOneServer();
+
         $this->scheduleDigest($schedule);
         $this->scheduleQueue($schedule);
     }

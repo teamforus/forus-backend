@@ -28,7 +28,6 @@ class SendVoucherMail extends ImplementationMail
         ?EmailFrom $emailFrom
     ) {
         $this->setMailFrom($emailFrom);
-
         $this->fundName = $fund_name;
         $this->fund_product_name = $fund_product_name;
         $this->qrToken = $qrToken;
@@ -38,8 +37,9 @@ class SendVoucherMail extends ImplementationMail
 
     public function build(): Mailable
     {
+        $this->communicationType =  $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
         return $this->buildBase()
-            ->subject(mail_trans('voucher_sent.title', [
+            ->subject(mail_trans('voucher_sent.title_' . $this->communicationType, [
                 'fund_name' => $this->fundName
             ]))
             ->view('emails.vouchers.voucher_sent', [

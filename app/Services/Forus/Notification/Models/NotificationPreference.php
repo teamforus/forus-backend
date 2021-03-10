@@ -14,16 +14,16 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $subscribed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference whereSubscribed($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Notification\Models\NotificationPreference whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference query()
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference whereSubscribed($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|NotificationPreference whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class NotificationPreference extends Model

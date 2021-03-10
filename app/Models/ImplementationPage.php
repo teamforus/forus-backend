@@ -18,17 +18,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $content_html
  * @property-read \App\Models\Implementation $implementation
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage whereContent($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage whereExternal($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage whereExternalUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage wherePageType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ImplementationPage whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage wherePageType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class ImplementationPage extends Model

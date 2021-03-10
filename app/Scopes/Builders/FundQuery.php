@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 
 class FundQuery
@@ -20,28 +21,32 @@ class FundQuery
 
     /**
      * @param Builder $query
-     * @param $product_id
+     * @param Product $product
      * @return Builder
      */
-    public static function whereProductsAreApprovedFilter(Builder $query, $product_id): Builder {
-        return $query->where(function(Builder $builder) use ($product_id) {
-            $builder->where(function(Builder $builder) use ($product_id) {
+    public static function whereProductsAreApprovedFilter(Builder $query, Product $product): Builder {
+        if ($product->sponsor_organization_id) {
+            $query->where('organization_id', $product->sponsor_organization_id);
+        }
+
+        return $query->where(function(Builder $builder) use ($product) {
+            $builder->where(function(Builder $builder) use ($product) {
                 $builder->where('type', '=', Fund::TYPE_BUDGET);
 
-                $builder->whereHas('providers', static function(Builder $builder) use ($product_id) {
-                    $builder->whereHas('organization.products', static function(Builder $builder) use ($product_id) {
-                        $builder->whereIn('products.id', (array) $product_id);
+                $builder->whereHas('providers', static function(Builder $builder) use ($product) {
+                    $builder->whereHas('organization.products', static function(Builder $builder) use ($product) {
+                        $builder->where('products.id', $product->id);
                     })->where('allow_products', '=', true);
                 });
             });
 
-            $builder->orWhereHas('providers', static function(Builder $builder) use ($product_id) {
-                $builder->whereDoesntHave('product_exclusions', static function(Builder $builder) use ($product_id) {
-                    $builder->whereIn('product_id', (array) $product_id);
+            $builder->orWhereHas('providers', static function(Builder $builder) use ($product) {
+                $builder->whereDoesntHave('product_exclusions', static function(Builder $builder) use ($product) {
+                    $builder->where('product_id', $product->id);
                 });
 
-                $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product_id) {
-                    $builder->whereIn('product_id', (array) $product_id);
+                $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product) {
+                    $builder->where('product_id', $product->id);
                 });
             });
         });
@@ -49,14 +54,14 @@ class FundQuery
 
     /**
      * @param Builder $query
-     * @param $product_id
+     * @param Product $product
      * @return Builder
      */
     public static function whereProductsAreApprovedAndActiveFilter(
         Builder $query,
-        $product_id
+        Product $product
     ): Builder {
-        return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product_id);
+        return self::whereProductsAreApprovedFilter(self::whereActiveFilter($query), $product);
     }
 
     /**

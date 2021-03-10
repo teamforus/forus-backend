@@ -4,25 +4,35 @@ namespace App\Exports;
 
 use App\Models\FundProvider;
 use App\Models\Organization;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
+/**
+ * Class FundProvidersExport
+ * @package App\Exports
+ */
 class FundProvidersExport implements FromCollection, WithHeadings
 {
     protected $request;
     protected $data;
     protected $headers;
 
+
+    /**
+     * FundProvidersExport constructor.
+     * @param Request $request
+     * @param Organization $organization
+     * @param Builder|null $builder
+     */
     public function __construct(
         Request $request,
-        Organization $organization
+        Organization $organization,
+        Builder $builder = null
     ) {
         $this->request = $request;
-        $this->data = FundProvider::export(
-            $this->request,
-            $organization
-        );
+        $this->data = FundProvider::export($this->request, $organization, $builder);
     }
 
     /**

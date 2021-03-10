@@ -43,10 +43,9 @@ class StoreFundProviderChatRequest extends FormRequest
             'product_id' => [
                 'required',
                 'exists:products,id',
-                Rule::exists('products', 'id')->whereNotIn(
-                    'id',
-                    $invalidProducts->toArray()
-                )
+                Rule::exists('products', 'id')
+                    ->whereNotIn('id', $invalidProducts->toArray())
+                    ->whereNull('sponsor_organization_id'),
             ],
             'message' => [
                 'required',

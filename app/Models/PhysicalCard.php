@@ -15,14 +15,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Voucher $voucher
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\PhysicalCard whereVoucherId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard query()
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard whereVoucherId($value)
  * @mixin \Eloquent
  */
 class PhysicalCard extends Model

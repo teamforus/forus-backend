@@ -1,4 +1,5 @@
 @extends('messages.__minimal')
 
-@section('title', "Email verified")
-@section('message', 'You successfully verified your email.')
+@section('title', "Gelukt!")
+@section('subtitle', "Uw e-mailadres is bevestigd.")
+@section('image', asset('/assets/img/confirm-success.svg'))

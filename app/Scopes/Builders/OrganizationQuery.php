@@ -116,17 +116,17 @@ class OrganizationQuery
 
     /**
      * @param Builder $query
-     * @param $implementation_id
+     * @param Organization $sponsorOrganization
      * @return Builder
      */
-    public static function whereImplementationIdFilter(
+    public static function whereIsProviderOrganization(
         Builder $query,
-        $implementation_id): Builder
-    {
-        return $query->whereHas('funds.fund_config', static function(
+        Organization $sponsorOrganization
+    ): Builder {
+        return $query->whereHas('fund_providers.fund', function(
             Builder $builder
-        ) use ($implementation_id) {
-            $builder->whereIn('implementation_id', (array) $implementation_id);
+        ) use ($sponsorOrganization) {
+            $builder->where('organization_id', $sponsorOrganization->id);
         });
     }
 }
