@@ -36,22 +36,9 @@ class ProvidersController extends Controller
         $this->authorize('listSponsorProviders', $organization);
 
         $query = Organization::query();
-
-        if ($q = $request->input('q')) {
-            $query->where('name', 'LIKE', "%$q%");
-        }
-
         $query->whereHas('fund_providers', function(Builder $builder) use ($request, $organization) {
             FundProvider::search($request, $organization, $builder);
         });
-
-        if ($fund_id = $request->input('fund_id')) {
-            $query->whereHas('fund_providers', function(Builder $builder) use ($organization, $fund_id) {
-                $builder->whereHas('fund', function(Builder $builder) use ($organization, $fund_id) {
-                    $builder->where('organization_id', $organization->id);
-                })->where(compact('fund_id'));
-            });
-        }
 
         return SponsorProviderResource::collection(OrganizationQuery::whereIsProviderOrganization(
             $query, $organization
@@ -99,25 +86,9 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $query = Organization::searchQuery($request);
-
-        if ($fund_id = $request->input('fund_id')) {
-            $query->whereHas('fund_providers', function(Builder $builder) use ($organization, $fund_id) {
-                $builder->whereHas('fund', function(Builder $builder) use ($organization, $fund_id) {
-                    $builder->where('organization_id', $organization->id);
-                })->where(compact('fund_id'));
-            });
-        }
-
-        /** @var Builder $fundProvidersQuery */
-        $providers = OrganizationQuery::whereIsProviderOrganization($query, $organization);
-        $fundProvidersQuery = FundProvider::whereIn('organization_id', $providers->pluck('id'));
-        $fundProvidersQuery = FundProvider::search($request, $organization, $fundProvidersQuery);
         $fileName = date('Y-m-d H:i:s') . '.xls';
+        $exportData = new FundProvidersExport($request, $organization);
 
-        return resolve('excel')->download(
-            new FundProvidersExport($request, $organization, $fundProvidersQuery),
-            $fileName
-        );
+        return resolve('excel')->download($exportData, $fileName);
     }
 }
