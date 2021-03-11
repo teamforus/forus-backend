@@ -17,7 +17,6 @@ class EmailFrom
      * @param Implementation $implementation
      */
     public function __construct(Implementation $implementation) {
-        log_debug($this->implementation);
         $this->implementation = $implementation;
     }
 
@@ -34,7 +33,7 @@ class EmailFrom
      */
     public function getName(): ?string
     {
-        return $this->implementation->email_from_name ?: config('mail.from.name');;
+        return $this->implementation->email_from_name ?: config('mail.from.name');
     }
 
     /**

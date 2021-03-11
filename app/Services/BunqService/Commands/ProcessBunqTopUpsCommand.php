@@ -5,6 +5,10 @@ namespace App\Services\BunqService\Commands;
 use App\Services\BunqService\BunqService;
 use Illuminate\Console\Command;
 
+/**
+ * Class ProcessBunqTopUpsCommand
+ * @package App\Services\BunqService\Commands
+ */
 class ProcessBunqTopUpsCommand extends Command
 {
     /**
@@ -38,6 +42,8 @@ class ProcessBunqTopUpsCommand extends Command
     public function handle() {
         try {
             BunqService::processTopUps();
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            logger()->debug(sprintf("Failed to process bunq top-ups: %s", $e->getMessage()));
+        }
     }
 }
