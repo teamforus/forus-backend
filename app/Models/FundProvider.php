@@ -400,14 +400,44 @@ class FundProvider extends Model
         }
 
         if ($allow_budget !== null) {
-            $query->where('allow_budget', (bool) $allow_budget);
+            $query->whereHas('fund', function(Builder $builder) {
+                $builder->where('type', Fund::TYPE_BUDGET);
+            })->where('allow_budget', (bool) $allow_budget);
         }
 
         if ($allow_products !== null) {
             if ($allow_products === 'some') {
-                $query->whereHas('products');
+                $query->where(function(Builder $builder) use ($allow_products) {
+                    $builder->where(function(Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function(Builder $builder) {
+                            $builder->where('type', Fund::TYPE_BUDGET);
+                        })->whereHas('products');
+                    });
+
+                    $builder->orWhere(function(Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function(Builder $builder) {
+                            $builder->where('type', Fund::TYPE_SUBSIDIES);
+                        })->whereHas('fund_provider_products.product');
+                    });
+                });
             } else {
-                $query->where('allow_products', (bool) $allow_products);
+                $query->where(function(Builder $builder) use ($allow_products) {
+                    $builder->whereHas('fund', function(Builder $builder) {
+                        $builder->where('type', Fund::TYPE_BUDGET);
+                    })->where('allow_products', (bool) $allow_products);
+                });
+
+                $query->orWhere(function(Builder $builder) use ($allow_products) {
+                    $builder->whereHas('fund', function(Builder $builder) {
+                        $builder->where('type', Fund::TYPE_SUBSIDIES);
+                    });
+
+                    if ((bool) $allow_products) {
+                        $builder->whereHas('fund_provider_products.product');
+                    } else {
+                        $builder->whereDoesntHave('fund_provider_products.product');
+                    }
+                });
             }
         }
 
@@ -437,6 +467,8 @@ class FundProvider extends Model
                 $fundProvider->fund_id
             )->count();
 
+            $hasIndividualProducts = $fundProvider->fund_provider_products()->whereHas('product')->exists();
+
             return [
                 trans("$transKey.fund") => $fundProvider->fund->name,
                 trans("$transKey.fund_type") => $fundProvider->fund->type,
@@ -452,7 +484,7 @@ class FundProvider extends Model
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
                 trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
                 trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
-                trans("$transKey.allow_some_products") => $fundProvider->allow_some_products ? 'Ja' : 'Nee',
+                trans("$transKey.allow_some_products") => $hasIndividualProducts || $fundProvider->allow_products ? 'Ja' : 'Nee',
             ];
         })->values();
     }
@@ -460,13 +492,13 @@ class FundProvider extends Model
     /**
      * @param Request $request
      * @param Organization $organization
-     * @param Builder $builder
+     * @param Builder|null $builder
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
     public static function export(
         Request $request,
         Organization $organization,
-        Builder $builder
+        ?Builder $builder = null
     ) {
         return self::exportTransform(self::search($request, $organization, $builder));
     }

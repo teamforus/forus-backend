@@ -33,8 +33,6 @@ class IdentityEmailUniqueRule implements Rule
      */
     public function message(): string
     {
-        return trans('validation.unique_record', [
-            'attribute' => trans('validation.attributes.primary_email')
-        ]);
+        return trans('validation.email_already_used');
     }
 }

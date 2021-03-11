@@ -11,6 +11,7 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -26,6 +27,7 @@ class SponsorProviderResource extends JsonResource
         'offices',
         'employees',
         'business_type',
+        'fund_providers',
     ];
 
     /**
@@ -62,25 +64,26 @@ class SponsorProviderResource extends JsonResource
     /**
      * @param Organization $sponsorOrganization
      * @param Organization $providerOrganization
-     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
+     * @return Collection
      */
     protected function getProviderFunds(
         Organization $sponsorOrganization,
         Organization $providerOrganization
-    ) {
-        return FundQuery::whereHasProviderFilter(
+    ): Collection {
+        $funds = FundQuery::whereHasProviderFilter(
             $sponsorOrganization->funds()->getQuery(),
             $providerOrganization->id
-        )->get()->map(function(Fund $fund) use ($providerOrganization) {
+        )->get();
+
+        return $funds->map(function(Fund $fund) use ($providerOrganization) {
+            $fundProvider = $providerOrganization->fund_providers->where('fund_id', $fund->id);
+
             return array_merge($fund->only('id', 'name', 'organization_id'), [
                 'active' => FundProviderQuery::whereApprovedForFundsFilter(
                     $providerOrganization->fund_providers()->getQuery(),
                     $fund->id
                 )->exists(),
-                'fund_provider_id' => FundProviderQuery::FundsFilter(
-                    $providerOrganization->fund_providers()->getQuery(),
-                    $fund->id
-                )->get('id')->pluck('id')->flatten(),
+                'fund_provider_id' => $fundProvider->pluck('id')->first(),
             ]);
         });
     }

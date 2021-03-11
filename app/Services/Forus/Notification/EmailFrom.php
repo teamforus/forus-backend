@@ -10,22 +10,30 @@ use App\Models\Implementation;
  */
 class EmailFrom
 {
-    private $implementation;
+    private $email_from_name;
+    private $email_from_address;
+
+    private $implementation_key;
+    private $informal_communication;
 
     /**
      * EmailSender constructor.
      * @param Implementation $implementation
      */
     public function __construct(Implementation $implementation) {
-        $this->implementation = $implementation;
+        $this->email_from_name = $implementation->email_from_name ?: config('mail.from.name');
+        $this->email_from_address = $implementation->email_from_address ?: config('mail.from.address');
+
+        $this->implementation_key = $implementation->key ?: $implementation::KEY_GENERAL;
+        $this->informal_communication = $implementation->informal_communication ?? false;
     }
 
     /**
      * @return string
      */
-    public function getEmail(): string
+    public function getEmail(): ?string
     {
-        return $this->implementation->email_from_address ?: config('mail.from.address');
+        return $this->email_from_address;
     }
 
     /**
@@ -33,7 +41,7 @@ class EmailFrom
      */
     public function getName(): ?string
     {
-        return $this->implementation->email_from_name ?: config('mail.from.name');
+        return $this->email_from_name;
     }
 
     /**
@@ -41,15 +49,15 @@ class EmailFrom
      */
     public function isInformalCommunication(): bool
     {
-        return $this->implementation->informal_communication;
+        return $this->informal_communication;
     }
 
     /**
-     * @return Implementation
+     * @return mixed|string
      */
-    public function getImplementation(): Implementation
+    public function getImplementationKey(): string
     {
-        return $this->implementation;
+        return $this->implementation_key;
     }
 
     /**

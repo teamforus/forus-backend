@@ -166,6 +166,8 @@ return [
     'prevalidation_invalid_record_key' => 'A field type included in the file does not exist.',
     'validation.prevalidation_invalid_type_primary_email' => 'The primary email address field is a system field and cannot be used here.',
     'validation.prevalidation_missing_primary_key' => 'The key field is missing from the file.',
+    'fund_request_request_field_incomplete' => 'Type a message. This field cannot be empty',
+    'email_already_used' => 'This emailaddress is already used by another user',
     'iban' => 'The IBAN-number is mandatory and must be valid.',
     'kvk' => 'The KVK-number is mandatory and must be valid.',
     'business_type_id' => 'Organization type',
