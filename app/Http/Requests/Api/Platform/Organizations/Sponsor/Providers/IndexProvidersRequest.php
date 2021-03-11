@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers;
 
-use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\Provider\IndexFundProviderRequest;
 use App\Models\Organization;
 
 /**
@@ -10,7 +10,7 @@ use App\Models\Organization;
  * @property-read Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers
  */
-class IndexProvidersRequest extends IndexOrganizationRequest
+class IndexProvidersRequest extends IndexFundProviderRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -19,9 +19,6 @@ class IndexProvidersRequest extends IndexOrganizationRequest
      */
     public function rules(): array
     {
-        return array_merge(parent::rules(), [
-            'q' => 'nullable|string|max:100',
-            'fund_id' => 'nullable|in:' . $this->organization->funds()->pluck('id')->join(',')
-        ]);
+        return array_merge(parent::rules());
     }
 }

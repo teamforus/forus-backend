@@ -41,13 +41,12 @@ class FundProviderQuery
                         $builder->orWhereHas('fund_provider_products', static function(
                             Builder $builder
                         ) use ($product_id) {
-                            $builder->whereIn(
-                                'fund_provider_products.product_id',
-                                (array) $product_id
-                            );
+                            $builder->whereHas('product', static function(Builder $builder) use ($product_id) {
+                                $builder->whereIn('products.id', (array) $product_id);
+                            });
                         });
                     } else {
-                        $builder->orWhereHas('fund_provider_products');
+                        $builder->orWhereHas('fund_provider_products.product');
                     }
                 }
             });
@@ -79,15 +78,6 @@ class FundProviderQuery
                 $builder->where('allow_products', false);
                 $builder->doesntHave('fund_provider_products');
             });
-        });
-    }
-
-    public static function FundsFilter(
-        Builder $query,
-        $fund_id
-    ): Builder {
-        return $query->where(function(Builder $builder) use ($fund_id) {
-            $builder->whereIn('fund_id', (array) $fund_id);
         });
     }
 
