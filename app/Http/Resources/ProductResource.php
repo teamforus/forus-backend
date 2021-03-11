@@ -63,7 +63,7 @@ class ProductResource extends Resource
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
             'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
             'deleted' => !is_null($product->deleted_at),
-            'funds' => $this->getProductFunds($product),
+            'funds' => $product->trashed() ? [] : $this->getProductFunds($product),
             'price_min' => currency_format($this->getProductSubsidyPrice($product, 'max')),
             'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
             'photo' => new MediaResource($product->photo),
@@ -75,7 +75,8 @@ class ProductResource extends Resource
     /**
      * @return Builder
      */
-    protected function fundsQuery(): Builder {
+    protected function fundsQuery(): Builder
+    {
         return Fund::query();
     }
 

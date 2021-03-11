@@ -417,7 +417,7 @@ class FundProvider extends Model
                     $builder->orWhere(function(Builder $builder) use ($allow_products) {
                         $builder->whereHas('fund', function(Builder $builder) {
                             $builder->where('type', Fund::TYPE_SUBSIDIES);
-                        })->whereHas('fund_provider_products');
+                        })->whereHas('fund_provider_products.product');
                     });
                 });
             } else {
@@ -425,6 +425,18 @@ class FundProvider extends Model
                     $builder->whereHas('fund', function(Builder $builder) {
                         $builder->where('type', Fund::TYPE_BUDGET);
                     })->where('allow_products', (bool) $allow_products);
+                });
+
+                $query->orWhere(function(Builder $builder) use ($allow_products) {
+                    $builder->whereHas('fund', function(Builder $builder) {
+                        $builder->where('type', Fund::TYPE_SUBSIDIES);
+                    });
+
+                    if ((bool) $allow_products) {
+                        $builder->whereHas('fund_provider_products.product');
+                    } else {
+                        $builder->whereDoesntHave('fund_provider_products.product');
+                    }
                 });
             }
         }
@@ -455,6 +467,8 @@ class FundProvider extends Model
                 $fundProvider->fund_id
             )->count();
 
+            $hasIndividualProducts = $fundProvider->fund_provider_products()->whereHas('product')->exists();
+
             return [
                 trans("$transKey.fund") => $fundProvider->fund->name,
                 trans("$transKey.fund_type") => $fundProvider->fund->type,
@@ -470,7 +484,7 @@ class FundProvider extends Model
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
                 trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
                 trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
-                trans("$transKey.allow_some_products") => $fundProvider->allow_some_products ? 'Ja' : 'Nee',
+                trans("$transKey.allow_some_products") => $hasIndividualProducts || $fundProvider->allow_products ? 'Ja' : 'Nee',
             ];
         })->values();
     }
