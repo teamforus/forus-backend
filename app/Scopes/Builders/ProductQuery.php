@@ -191,8 +191,8 @@ class ProductQuery
     public static function whereNotExpired(Builder $query): Builder
     {
         return $query->where(static function(Builder $builder) {
-            $builder->whereNull('expire_at');
-            $builder->orWhere('expire_at', '>', now()->endOfDay());
+            $builder->whereNull('products.expire_at');
+            $builder->orWhere('products.expire_at', '>', now()->endOfDay());
         });
     }
 

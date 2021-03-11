@@ -6,6 +6,7 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -18,7 +19,6 @@ class FundProvidersExport implements FromCollection, WithHeadings
     protected $request;
     protected $data;
     protected $headers;
-
 
     /**
      * FundProvidersExport constructor.
@@ -38,7 +38,7 @@ class FundProvidersExport implements FromCollection, WithHeadings
     /**
     * @return \Illuminate\Support\Collection
     */
-    public function collection()
+    public function collection(): Collection
     {
         return $this->data;
     }
