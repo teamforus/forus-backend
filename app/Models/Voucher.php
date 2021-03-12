@@ -418,6 +418,7 @@ class Voucher extends Model
 
         $vouchers = self::query()
             ->whereNull('product_id')
+            ->whereNotNull('identity_address')
             ->with(['fund', 'fund.organization'])
             ->whereDate('expire_at', '=', $date)
             ->get();
