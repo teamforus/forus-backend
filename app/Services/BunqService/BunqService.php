@@ -391,6 +391,14 @@ class BunqService
                 $amount = $transaction->amount;
                 $voucher = $transaction->voucher;
 
+                if ($amount <= 0) {
+                    $transaction->forceFill([
+                        'state' => 'success',
+                    ])->save();
+
+                    continue;
+                }
+
                 if ($voucher->fund->fund_config->subtract_transaction_costs) {
                     $amount = number_format($amount - .1, 2, '.', '');
                 }
