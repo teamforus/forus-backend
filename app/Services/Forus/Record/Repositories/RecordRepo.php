@@ -416,12 +416,11 @@ class RecordRepo implements IRecordRepo
             $query->whereHas('validations', static function(Builder $builder) use ($trustedDays) {
                 $builder->where(static function(Builder $builder) use ($trustedDays) {
                     $builder->whereNotNull('prevalidation_id');
-                    $builder->whereHas('prevalidation', static function(
-                        Builder $builder
-                    ) use ($trustedDays) {
+                    $builder->whereHas('prevalidation', static function(Builder $builder) use ($trustedDays) {
                         $builder->where('validated_at', '>=', now()->subDays($trustedDays));
                     });
                 });
+
                 $builder->orWhere(static function(Builder $builder) use ($trustedDays) {
                     $builder->whereNull('prevalidation_id');
                     $builder->where('created_at', '>=', now()->subDays($trustedDays));
@@ -429,13 +428,31 @@ class RecordRepo implements IRecordRepo
             });
         }
 
-        return $query->orderBy('order')->get()->map(function(Record $record) {
-            $validations = $record->validations()->where([
+        return $query->orderBy('order')->get()->map(function(Record $record) use ($trustedDays) {
+            $builder = $record->validations()->where([
                 'state' => 'approved'
             ])->select([
                 'id', 'state', 'identity_address', 'created_at', 'updated_at',
                 'organization_id', 'prevalidation_id',
-            ])->get()->load('organization')->map(function(RecordValidation $validation) {
+            ]);
+
+            if ($trustedDays) {
+                $builder->where(function(Builder $builder) use ($trustedDays) {
+                    $builder->where(static function(Builder $builder) use ($trustedDays) {
+                        $builder->whereNotNull('prevalidation_id');
+                        $builder->whereHas('prevalidation', static function(Builder $builder) use ($trustedDays) {
+                            $builder->where('validated_at', '>=', now()->subDays($trustedDays));
+                        });
+                    });
+
+                    $builder->orWhere(static function(Builder $builder) use ($trustedDays) {
+                        $builder->whereNull('prevalidation_id');
+                        $builder->where('created_at', '>=', now()->subDays($trustedDays));
+                    });
+                });
+            }
+
+            $validations = $builder->get()->load('organization')->map(function(RecordValidation $validation) {
                 $validation->setAttribute('validation_date_timestamp', $validation->validation_date->timestamp);
                 $validation->setAttribute('email', $validation->organization ? null : $this->primaryEmailByAddress(
                     $validation->identity_address
