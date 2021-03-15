@@ -2,19 +2,22 @@
 
 namespace App\Exports;
 
+use App\Models\Organization;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class VoucherExport
+class VoucherExport implements FromCollection, WithHeadings
 {
-    protected $request;
     protected $data;
+    protected $request;
     protected $headers;
 
-    public function __construct(Request $request)
+    public function __construct(Request $request, Organization $organization)
     {
         $this->request = $request;
-        $this->data = Voucher::export($this->request);
+        $this->data = Voucher::export($this->request, $organization);
     }
 
     /**
