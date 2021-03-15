@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -24,19 +25,19 @@ use Illuminate\Support\Collection as SupportCollection;
  * @property-read \Carbon\Carbon $expire_at
  * @property-read bool $expired
  * @property-read \App\Models\Organization $organization
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereAllowBudget($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereAllowProducts($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereFromFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderInvitation whereUpdatedAt($value)
+ * @method static Builder|FundProviderInvitation newModelQuery()
+ * @method static Builder|FundProviderInvitation newQuery()
+ * @method static Builder|FundProviderInvitation query()
+ * @method static Builder|FundProviderInvitation whereAllowBudget($value)
+ * @method static Builder|FundProviderInvitation whereAllowProducts($value)
+ * @method static Builder|FundProviderInvitation whereCreatedAt($value)
+ * @method static Builder|FundProviderInvitation whereFromFundId($value)
+ * @method static Builder|FundProviderInvitation whereFundId($value)
+ * @method static Builder|FundProviderInvitation whereId($value)
+ * @method static Builder|FundProviderInvitation whereOrganizationId($value)
+ * @method static Builder|FundProviderInvitation whereState($value)
+ * @method static Builder|FundProviderInvitation whereToken($value)
+ * @method static Builder|FundProviderInvitation whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderInvitation extends Model
@@ -88,12 +89,12 @@ class FundProviderInvitation extends Model
     /**
      * @param Fund $fromFund
      * @param Fund $fund
-     * @return Builder|SupportCollection
+     * @return Builder|Collection
      */
     public static function inviteFromFundToFund(
         Fund $fromFund,
         Fund $fund
-    ): Builder {
+    ): Collection {
         $recordRepo = resolve('forus.services.record');
         $token_generator = resolve('token_generator');
         $notificationService = resolve('forus.services.notification');

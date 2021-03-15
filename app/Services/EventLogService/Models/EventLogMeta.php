@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
  * App\Services\EventLogService\Models\EventLogMeta
  *
  * @property-read \App\Services\EventLogService\Models\EventLog $event_log
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLogMeta newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLogMeta newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLogMeta query()
+ * @method static \Illuminate\Database\Eloquent\Builder|EventLogMeta newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|EventLogMeta newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|EventLogMeta query()
  * @mixin \Eloquent
  */
 class EventLogMeta extends Model

@@ -4,13 +4,20 @@
     /** @var string $webshop_link Link to webshop */
 ?>
 @extends('emails.base')
-
-@section('title', mail_trans('fund_request_resolved.title', ['fund_name' => $fund_name]))
+@if ($emailFrom->isInformalCommunication())
+    @section('title', mail_trans('fund_request_resolved.title_formal', ['fund_name' => $fund_name])) 
+@else
+    @section('title', mail_trans('fund_request_resolved.title_formal', ['fund_name' => $fund_name]))   
+@endif
 @section('html')
-    {{ mail_trans('dear_citizen') }}
+    {{ mail_trans('dear_citizen') }},
     <br/>
     <br/>
-    {{ mail_trans('fund_request_resolved.message', ['status' => $request_status]) }}
+    @if ($emailFrom->isInformalCommunication())
+        {{ mail_trans('fund_request_resolved.message_informal', ['status' => $request_status]) }}
+    @else
+        {{ mail_trans('fund_request_resolved.message_formal', ['status' => $request_status]) }} 
+    @endif
     <br/>
     <br/>
     {!! mail_trans('fund_request_resolved.webshop_button', ['link' => $webshop_link]) !!}

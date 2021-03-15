@@ -8,20 +8,20 @@ namespace App\Models;
  * @property int $id
  * @property int $fund_id
  * @property int $product_id
- * @property float $price
+ * @property string $price
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\Product $product
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct wherePrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundFormulaProduct whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct wherePrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundFormulaProduct extends Model

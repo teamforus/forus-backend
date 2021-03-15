@@ -30,21 +30,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Services\Forus\Identity\Models\IdentityEmail|null $primary_email
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityProxy[] $proxies
  * @property-read int|null $proxies_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Record\Models\Record[] $records
+ * @property-read \Illuminate\Database\Eloquent\Collection|Record[] $records
  * @property-read int|null $records_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
+ * @property-read \Illuminate\Database\Eloquent\Collection|Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity wherePassphrase($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity wherePinCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity wherePrivateKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity wherePublicKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Identity\Models\Identity whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity whereAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity wherePassphrase($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity wherePinCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity wherePrivateKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity wherePublicKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Identity whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Identity extends Model

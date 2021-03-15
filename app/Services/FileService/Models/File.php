@@ -21,23 +21,23 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $fileable_type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $fileable
+ * @property-read Model|\Eloquent $fileable
  * @property-read mixed $url_public
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereExt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereFileableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereFileableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereOriginalName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File wherePath($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereSize($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereUid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\FileService\Models\File whereUpdatedAt($value)
+ * @method static Builder|File newModelQuery()
+ * @method static Builder|File newQuery()
+ * @method static Builder|File query()
+ * @method static Builder|File whereCreatedAt($value)
+ * @method static Builder|File whereExt($value)
+ * @method static Builder|File whereFileableId($value)
+ * @method static Builder|File whereFileableType($value)
+ * @method static Builder|File whereId($value)
+ * @method static Builder|File whereIdentityAddress($value)
+ * @method static Builder|File whereOriginalName($value)
+ * @method static Builder|File wherePath($value)
+ * @method static Builder|File whereSize($value)
+ * @method static Builder|File whereType($value)
+ * @method static Builder|File whereUid($value)
+ * @method static Builder|File whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class File extends Model

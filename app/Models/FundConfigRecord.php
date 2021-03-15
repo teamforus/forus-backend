@@ -11,20 +11,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property int $fund_id
- * @property \App\Services\Forus\Record\Models\RecordType $record_type
+ * @property RecordType $record_type
  * @property int|null $record_validity_days
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord whereRecordType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundConfigRecord whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereRecordType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereRecordValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfigRecord whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundConfigRecord extends Model

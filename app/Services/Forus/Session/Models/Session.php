@@ -23,20 +23,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Services\Forus\Session\Models\SessionRequest|null $last_request
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Session\Models\SessionRequest[] $requests
  * @property-read int|null $requests_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session newQuery()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Session\Models\Session onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereIdentityProxyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereLastActivityAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereUid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\Forus\Session\Models\Session whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Session\Models\Session withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Services\Forus\Session\Models\Session withoutTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Session newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Session newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Session onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Session query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereIdentityProxyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereLastActivityAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereUid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Session whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|Session withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Session withoutTrashed()
  * @mixin \Eloquent
  */
 class Session extends Model

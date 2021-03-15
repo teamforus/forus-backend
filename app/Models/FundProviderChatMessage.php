@@ -18,19 +18,19 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\FundProviderChat $fund_provider_chat
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereCounterpart($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereFundProviderChatId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereMessage($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereProviderSeen($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereSeenAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereSponsorSeen($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChatMessage whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereCounterpart($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereFundProviderChatId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereMessage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereProviderSeen($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereSeenAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereSponsorSeen($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChatMessage whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderChatMessage extends Model

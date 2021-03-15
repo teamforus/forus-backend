@@ -29,18 +29,10 @@ class ProviderResource extends Resource
             $organization->phone_public ? 'phone': '',
             $organization->website_public ? 'website': ''
         ])->merge([
-            'description_html' => resolve('markdown')->convertToHtml(
-                $organization->description ?? ''
-            ),
-            'business_type' => $organization->business_type ? new BusinessTypeResource(
-                $organization->business_type
-            ) : null,
-            'logo' => $organization->logo ? new MediaCompactResource(
-                $organization->logo
-            ) : null,
-            'offices' => OfficeResource::collection(
-                $organization->offices
-            )
+            'description_html' => $organization->description_html,
+            'business_type' => new BusinessTypeResource($organization->business_type),
+            'offices' => OfficeResource::collection($organization->offices),
+            'logo' => new MediaCompactResource($organization->logo),
         ]);
     }
 }

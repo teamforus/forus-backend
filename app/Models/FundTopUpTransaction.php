@@ -12,15 +12,15 @@ namespace App\Models;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\FundTopUp $fund_top_up
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction whereBunqTransactionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction whereFundTopUpId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUpTransaction whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereBunqTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereFundTopUpId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUpTransaction whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundTopUpTransaction extends Model

@@ -24,7 +24,7 @@ use RuntimeException;
  * @property int $id
  * @property int $fund_id
  * @property string|null $identity_address
- * @property float $amount
+ * @property string $amount
  * @property int $limit_multiplier
  * @property bool $returnable
  * @property string|null $note
@@ -45,48 +45,48 @@ use RuntimeException;
  * @property-read bool $expired
  * @property-read bool $has_transactions
  * @property-read bool $is_granted
- * @property-read \Carbon|\Illuminate\Support\Carbon $last_active_day
+ * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
  * @property-read string $type
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \App\Models\Voucher|null $parent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
+ * @property-read Voucher|null $parent
+ * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
  * @property-read int|null $physical_card_requests_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PhysicalCard[] $physical_cards
+ * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
  * @property-read \App\Models\Product|null $product
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $product_vouchers
+ * @property-read Collection|Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read \App\Models\VoucherToken|null $token_with_confirmation
  * @property-read \App\Models\VoucherToken|null $token_without_confirmation
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherToken[] $tokens
+ * @property-read Collection|\App\Models\VoucherToken[] $tokens
  * @property-read int|null $tokens_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $transactions
+ * @property-read Collection|\App\Models\VoucherTransaction[] $transactions
  * @property-read int|null $transactions_count
  * @property-read \App\Models\VoucherRelation|null $voucher_relation
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereActivationCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereActivationCodeUid($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereEmployeeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereLimitMultiplier($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereNote($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereParentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereReturnable($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Voucher whereUpdatedAt($value)
+ * @method static Builder|Voucher newModelQuery()
+ * @method static Builder|Voucher newQuery()
+ * @method static Builder|Voucher query()
+ * @method static Builder|Voucher whereActivationCode($value)
+ * @method static Builder|Voucher whereActivationCodeUid($value)
+ * @method static Builder|Voucher whereAmount($value)
+ * @method static Builder|Voucher whereCreatedAt($value)
+ * @method static Builder|Voucher whereEmployeeId($value)
+ * @method static Builder|Voucher whereExpireAt($value)
+ * @method static Builder|Voucher whereFundId($value)
+ * @method static Builder|Voucher whereId($value)
+ * @method static Builder|Voucher whereIdentityAddress($value)
+ * @method static Builder|Voucher whereLimitMultiplier($value)
+ * @method static Builder|Voucher whereNote($value)
+ * @method static Builder|Voucher whereParentId($value)
+ * @method static Builder|Voucher whereProductId($value)
+ * @method static Builder|Voucher whereReturnable($value)
+ * @method static Builder|Voucher whereState($value)
+ * @method static Builder|Voucher whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Voucher extends Model
@@ -418,6 +418,7 @@ class Voucher extends Model
 
         $vouchers = self::query()
             ->whereNull('product_id')
+            ->whereNotNull('identity_address')
             ->with(['fund', 'fund.organization'])
             ->whereDate('expire_at', '=', $date)
             ->get();

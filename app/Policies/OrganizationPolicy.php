@@ -6,25 +6,17 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * @return mixed
      */
-    public function viewAny() {
+    public function viewAny(): bool
+    {
         return true;
     }
 
@@ -33,10 +25,8 @@ class OrganizationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function show(
-        $identity_address,
-        Organization $organization
-    ): bool {
+    public function show($identity_address, Organization $organization): bool
+    {
         return $organization->identityPermissions($identity_address)->count() > 0;
     }
 
@@ -44,7 +34,8 @@ class OrganizationPolicy
      * @param $identity_address
      * @return mixed
      */
-    public function store($identity_address) {
+    public function store($identity_address): bool
+    {
         return !empty($identity_address);
     }
 
@@ -53,7 +44,8 @@ class OrganizationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function update($identity_address, Organization $organization): bool {
+    public function update($identity_address, Organization $organization): bool
+    {
         return $organization->identityCan($identity_address, [
             'manage_organization'
         ]);
@@ -64,10 +56,9 @@ class OrganizationPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function viewExternalFunds($identity_address, Organization $organization): bool {
-        return $organization->identityCan($identity_address, [
-            'manage_organization'
-        ]);
+    public function viewExternalFunds($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_organization');
     }
 
     /**
@@ -87,8 +78,32 @@ class OrganizationPolicy
             return $this->deny("Invalid fund id.");
         }
 
-        return $organization->identityCan($identity_address, [
-            'manage_organization'
-        ]);
+        return $organization->identityCan($identity_address, 'manage_organization');
+    }
+
+    /**
+     * @param $identity_address
+     * @param Organization $organization
+     * @return bool
+     */
+    public function listSponsorProviders($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_providers');
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @param Organization $provider
+     * @return bool
+     */
+    public function viewSponsorProvider(
+        string $identity_address,
+        Organization $organization,
+        Organization $provider
+    ): bool {
+        return $organization->whereHas('funds.providers', function(Builder $builder) use ($provider) {
+            $builder->where('organization_id', $provider->id);
+        })->exists() && $this->listSponsorProviders($identity_address, $organization);
     }
 }

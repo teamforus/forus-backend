@@ -17,18 +17,18 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property array $data
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $loggable
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereEvent($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereLoggableId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereLoggableType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Services\EventLogService\Models\EventLog whereUpdatedAt($value)
+ * @property-read Model|\Eloquent $loggable
+ * @method static Builder|EventLog newModelQuery()
+ * @method static Builder|EventLog newQuery()
+ * @method static Builder|EventLog query()
+ * @method static Builder|EventLog whereCreatedAt($value)
+ * @method static Builder|EventLog whereData($value)
+ * @method static Builder|EventLog whereEvent($value)
+ * @method static Builder|EventLog whereId($value)
+ * @method static Builder|EventLog whereIdentityAddress($value)
+ * @method static Builder|EventLog whereLoggableId($value)
+ * @method static Builder|EventLog whereLoggableType($value)
+ * @method static Builder|EventLog whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class EventLog extends Model

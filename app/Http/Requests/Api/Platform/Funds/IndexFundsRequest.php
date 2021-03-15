@@ -3,8 +3,11 @@
 namespace App\Http\Requests\Api\Platform\Funds;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
+/**
+ * Class IndexFundsRequest
+ * @package App\Http\Requests\Api\Platform\Funds
+ */
 class IndexFundsRequest extends FormRequest
 {
     /**
@@ -25,34 +28,12 @@ class IndexFundsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page'        => [
-                'nullable',
-                'numeric',
-                'between:1,100',
-            ],
-            'q'               => [
-                'nullable',
-                'string',
-            ],
-            'tag'             => [
-                'nullable',
-                'string',
-                'exists:tags,key',
-            ],
-            'fund_id'         => [
-                'nullable',
-                'exists:funds,id',
-            ],
-            'organization_id' => [
-                'nullable',
-                'exists:organizations,id'
-            ],
-            'state' => [
-                'nullable',
-                Rule::in([
-                    'active_and_closed', 'active',
-                ])
-            ]
+            'q' => 'nullable|string',
+            'tag' => 'nullable|string|exists:tags,key',
+            'state' => 'nullable|in:active_and_closed,active',
+            'fund_id' => 'nullable|exists:funds,id',
+            'per_page' => 'nullable|numeric|between:1,100',
+            'organization_id' => 'nullable|exists:organizations,id',
         ];
     }
 }

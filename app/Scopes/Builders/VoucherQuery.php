@@ -3,8 +3,13 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class VoucherQuery
+ * @package App\Scopes\Builders
+ */
 class VoucherQuery
 {
     /**
@@ -54,9 +59,9 @@ class VoucherQuery
     public static function whereNotExpired(Builder $builder): Builder
     {
         return $builder->where(static function(Builder $builder) {
-            $builder->where(
-                'expire_at', '>', now()->endOfDay()
-            )->whereDoesntHave('fund', static function(Builder $builder) {
+            $builder->where('vouchers.expire_at', '>', now()->endOfDay());
+
+            $builder->whereDoesntHave('fund', static function(Builder $builder) {
                 $builder->where('end_date', '<', now()->endOfDay());
             });
         });
@@ -66,12 +71,23 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
+    public static function whereNotExpiredAndActive(Builder $builder): Builder
+    {
+        return self::whereNotExpired($builder)->where(
+            'state', Voucher::STATE_ACTIVE
+        );
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
     public static function whereExpired(Builder $builder): Builder
     {
         return $builder->where(static function(Builder $builder) {
-            $builder->where(
-                'expire_at', '<=', now()->endOfDay()
-            )->orWhereHas('fund', static function(Builder $builder) {
+            $builder->where('vouchers.expire_at', '<=', now()->endOfDay());
+
+            $builder->orWhereHas('fund', static function(Builder $builder) {
                 $builder->where('end_date', '>=', now()->endOfDay());
             });
         });

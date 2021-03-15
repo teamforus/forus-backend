@@ -13,14 +13,14 @@ namespace App\Models;
  * @property-read \App\Models\Fund|null $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundTopUpTransaction[] $transactions
  * @property-read int|null $transactions_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp whereFundId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundTopUp whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp whereFundId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundTopUp whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundTopUp extends Model

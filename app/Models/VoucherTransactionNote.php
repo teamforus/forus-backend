@@ -13,17 +13,17 @@ namespace App\Models;
  * @property string $group
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote whereGroup($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote whereIcon($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote whereMessage($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote wherePinToTop($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\VoucherTransactionNote whereVoucherTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote query()
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereGroup($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereIcon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereMessage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote wherePinToTop($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereVoucherTransactionId($value)
  * @mixin \Eloquent
  */
 class VoucherTransactionNote extends Model

@@ -52,11 +52,20 @@ class ProductQuery
     public static function whereFundNotExcluded(
         Builder $query, $fund_id
     ): Builder {
-        return $query->whereHas('product_exclusions', static function(Builder $builder) use ($fund_id) {
+        $query->where(function(Builder $builder) use ($fund_id) {
+            $builder->whereNull('sponsor_organization_id');
+            $builder->orWhereHas('sponsor_organization', function(Builder $builder) use ($fund_id) {
+                $builder->whereHas('funds', function(Builder $builder) use ($fund_id) {
+                    $builder->whereIn('id', (array) $fund_id);
+                });
+            });
+        });
+
+        return $query->whereDoesntHave('product_exclusions', static function(Builder $builder) use ($fund_id) {
             $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id) {
                 $builder->whereIn('fund_id', (array) $fund_id);
             });
-        }, '<', count((array) $fund_id));
+        });
     }
 
     /**
@@ -171,12 +180,19 @@ class ProductQuery
     public static function inStockAndActiveFilter(Builder $query): Builder
     {
         return $query->where(static function(Builder $builder) {
-            return $builder
-                ->where('sold_out', false)
-                ->where(static function(Builder $builder) {
-                    $builder->whereNull('expire_at');
-                    $builder->orWhere('expire_at', '>', date('Y-m-d'));
-                });
+            self::whereNotExpired($builder->where('sold_out', false));
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereNotExpired(Builder $query): Builder
+    {
+        return $query->where(static function(Builder $builder) {
+            $builder->whereNull('products.expire_at');
+            $builder->orWhere('products.expire_at', '>', now()->endOfDay());
         });
     }
 
