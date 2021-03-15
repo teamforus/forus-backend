@@ -43,8 +43,8 @@ class ImplementationPage extends Model
 
     const TYPES = [
         self::TYPE_PROVIDER,
-        self::TYPE_PRIVACY,
         self::TYPE_EXPLANATION,
+        self::TYPE_PRIVACY,
         self::TYPE_ACCESSIBILITY,
         self::TYPE_TERMS_AND_CONDITIONS,
         self::TYPE_FOOTER_CONTACT_DETAILS,
