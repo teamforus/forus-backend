@@ -2,15 +2,16 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Product;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\MediaUidRule;
 
 /**
  * Class UpdateProductRequest
  * @property Product $product
  * @package App\Http\Requests\Api\Platform\Organizations\Products
  */
-class UpdateProductRequest extends FormRequest
+class UpdateProductRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -39,8 +40,8 @@ class UpdateProductRequest extends FormRequest
             'price'                 => 'required_if:price_type,regular|numeric|min:.2',
             'price_type'            => 'required|in:' . join(',', Product::PRICE_TYPES),
             'price_discount'        => [
-                'discount_fixed'        => 'required_if:price_type,discount_fixed|numeric|min:.1',
-                'discount_percentage'   => 'required_if:price_type,discount_percentage|numeric|between:.1,100',
+                'discount_fixed'        => 'required|numeric|min:.1',
+                'discount_percentage'   => 'required|numeric|between:.1,100',
             ][$price_type] ?? [],
             'total_amount'          => [
                 $product->unlimited_stock ? null : 'required',
@@ -49,6 +50,7 @@ class UpdateProductRequest extends FormRequest
             ],
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
+            'media_uid'             => ['nullable', new MediaUidRule('product_photo')],
         ];
     }
 

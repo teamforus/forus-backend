@@ -19,9 +19,11 @@ class OrganizationBasicResource extends Resource
      * @param  \Illuminate\Http\Request|any  $request
      * @return array|Collection
      */
-    public function toArray($request)
+    public function toArray($request): ?array
     {
-        $organization = $this->resource;
+        if (!$organization = $this->resource) {
+            return null;
+        }
 
         $privateData = [
             'email' => $organization->email_public ? $organization->email ?? null: null,

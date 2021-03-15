@@ -18,6 +18,10 @@ use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+/**
+ * Class FundProviderController
+ * @package App\Http\Controllers\Api\Platform\Organizations\Funds
+ */
 class FundProviderController extends Controller
 {
     /**
@@ -39,8 +43,12 @@ class FundProviderController extends Controller
         $query = $fund->providers()->getQuery();
         $state = $request->input('state', false);
 
-        if ($q = $request->input('q', false)) {
-            $query = FundProviderQuery::queryFilter($query, $q);
+        if ($request->input('q')) {
+            $query = FundProviderQuery::queryFilter($query, $request->input('q'));
+        }
+
+        if ($request->input('organization_id')) {
+            $query->where('organization_id', $request->input('organization_id'));
         }
 
         if ($state === FundProvider::STATE_APPROVED) {

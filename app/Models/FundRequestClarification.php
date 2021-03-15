@@ -19,17 +19,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\FileService\Models\File[] $files
  * @property-read int|null $files_count
  * @property-read \App\Models\FundRequestRecord $fund_request_record
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereAnswer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereAnsweredAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereFundRequestRecordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereQuestion($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundRequestClarification whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereAnswer($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereAnsweredAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereFundRequestRecordId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereQuestion($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundRequestClarification whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundRequestClarification extends Model

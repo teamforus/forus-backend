@@ -2,17 +2,17 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Models\Fund;
 use App\Rules\DependencyRule;
-use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Class IndexOrganizationRequest
  * @property string $dependency
  * @package App\Http\Requests\Api\Platform\Organizations
  */
-class IndexOrganizationRequest extends FormRequest
+class IndexOrganizationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -32,20 +32,19 @@ class IndexOrganizationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page'  => 'nullable|numeric|between:1,300',
-            'role' => [
-                'nullable', 'string', 'exists:roles,key'
+            'per_page'          => 'nullable|numeric|between:1,300',
+            'role'              => 'nullable|string|exists:roles,key',
+            'dependency'        => [
+                'nullable',
+                new DependencyRule(OrganizationResource::DEPENDENCIES)
             ],
-            'dependency' => ['nullable', new DependencyRule(
-                OrganizationResource::DEPENDENCIES
-            )],
-            'is_employee'   => 'nullable|boolean',
-            'is_sponsor'    => 'nullable|boolean',
-            'is_provider'   => 'nullable|boolean',
-            'is_validator'  => 'nullable|boolean',
-            'implementation' => 'nullable|boolean',
-            'has_products'  => 'nullable|boolean',
-            'fund_type'     => 'nullable|in:' . implode(',', Fund::TYPES),
+            'is_employee'       => 'nullable|boolean',
+            'is_sponsor'        => 'nullable|boolean',
+            'is_provider'       => 'nullable|boolean',
+            'is_validator'      => 'nullable|boolean',
+            'implementation'    => 'nullable|boolean',
+            'has_products'      => 'nullable|boolean',
+            'fund_type'         => 'nullable|in:' . implode(',', Fund::TYPES),
         ];
     }
 }

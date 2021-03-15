@@ -16,15 +16,22 @@ return [
     */
     
     'providers'              => [
+        'fund' => 'Fondsnaam',
+        'fund_type' => 'Fonds type',
+        'provider_last_activity' => 'Laatste activiteit',
+        'products_provider_count' => 'Totaal aanbiedingen beheer door provider',
+        'products_sponsor_count' => 'Totaal aanbiedingen beheert door sponsor',
+        'products_active_count' => 'Totaal geaccepteerde aanbiedingen',
+        'products_count' => 'Totaal aanbiedingen',
         'provider' => 'Aanbieder',
-        'email' => 'e-mail',
-        'phone' => 'telefoonnummer',
-        'categories' => 'categoriën',
-        'kvk' => 'kvk',
-        'state' => 'status',
-    'allow_budget' => 'Geaccepteerd: budget',
-    'allow_products' => 'Geaccepteerd: aanbod',
-    'allow_some_products' => 'Geaccepteerd: specifiek aanbod',
+        'email' => 'E-mailadres',
+        'phone' => 'Telefoonnummer',
+        'categories' => 'Categoriën',
+        'kvk' => 'KVK',
+        'state' => 'Status',
+        'allow_budget' => 'Geaccepteerd: budget',
+        'allow_products' => 'Geaccepteerd: aanbod',
+        'allow_some_products' => 'Geaccepteerd: specifiek aanbod',
     ],
     
     'fund_requests'              => [

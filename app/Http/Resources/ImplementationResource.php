@@ -3,8 +3,13 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
+use App\Models\ImplementationPage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * Class ImplementationResource
+ * @package App\Http\Resources
+ */
 class ImplementationResource extends JsonResource
 {
     /**
@@ -21,8 +26,19 @@ class ImplementationResource extends JsonResource
             return null;
         }
 
-        return $implementation->only([
+        return array_merge($implementation->only([
             'id', 'key', 'name', 'url_webshop', 'informal_communication',
+        ]), [
+            'has_provider_terms_page' => $this->hasTermsPage($implementation->page_provider),
         ]);
+    }
+
+    /**
+     * @param ImplementationPage|null $page_provider
+     * @return bool
+     */
+    protected function hasTermsPage(?ImplementationPage $page_provider): bool
+    {
+        return $page_provider && (bool) $page_provider->content;
     }
 }

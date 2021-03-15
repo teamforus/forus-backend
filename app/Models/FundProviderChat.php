@@ -17,15 +17,15 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChatMessage[] $messages
  * @property-read int|null $messages_count
  * @property-read \App\Models\Product|null $product
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat whereFundProviderId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat whereProductId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\FundProviderChat whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereFundProviderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereIdentityAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundProviderChat whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class FundProviderChat extends Model

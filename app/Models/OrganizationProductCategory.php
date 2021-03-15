@@ -7,9 +7,9 @@ namespace App\Models;
  *
  * @property-read \App\Models\Organization $organization
  * @property-read \App\Models\ProductCategory $product
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationProductCategory newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationProductCategory newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\OrganizationProductCategory query()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationProductCategory newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationProductCategory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|OrganizationProductCategory query()
  * @mixin \Eloquent
  */
 class OrganizationProductCategory extends Model

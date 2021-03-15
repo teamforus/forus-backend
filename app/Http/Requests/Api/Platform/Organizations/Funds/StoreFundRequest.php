@@ -35,9 +35,7 @@ class StoreFundRequest extends FormRequest
         $criteriaEditable = config('forus.features.dashboard.organizations.funds.criteria');
         $formulaProductsEditable = config('forus.features.dashboard.organizations.funds.formula_products');
 
-        $availableValidators = $this->organization
-            ->employeesOfRoleQuery('validation')->pluck('id')->toArray();
-
+        $availableEmployees = $this->organization->employeesOfRoleQuery('validation')->pluck('id');
         $start_after = now()->addDays(5)->format('Y-m-d');
         $validators = $organization->organization_validators()->pluck('id');
 
@@ -62,12 +60,8 @@ class StoreFundRequest extends FormRequest
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
         ], [
-            'auto_requests_validation' => [
-                'nullable', 'boolean'
-            ],
-            'default_validator_employee_id' => [
-                'nullable', Rule::in($availableValidators)
-            ],
+            'auto_requests_validation' => 'nullable|boolean',
+            'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),
         ], $criteriaRules, $formulaProductsEditable ? [
             'formula_products'              => 'nullable|array',
             'formula_products.*'            => [

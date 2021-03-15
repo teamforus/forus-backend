@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
+use App\Http\Requests\BaseFormRequest;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
+use App\Scopes\Builders\TrashedQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
@@ -26,17 +28,18 @@ use Illuminate\Http\Request;
  * @property int $product_category_id
  * @property string $name
  * @property string $description
- * @property float $price
+ * @property string $price
  * @property int $total_amount
  * @property bool $unlimited_stock
  * @property string $price_type
- * @property float|null $price_discount
+ * @property string|null $price_discount
  * @property int $show_on_webshop
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property bool $sold_out
+ * @property int|null $sponsor_organization_id
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderChat[] $fund_provider_chats
  * @property-read int|null $fund_provider_chats_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProduct[] $fund_provider_products
@@ -52,41 +55,43 @@ use Illuminate\Http\Request;
  * @property-read int $stock_amount
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization $organization
- * @property-read \App\Services\MediaService\Models\Media|null $photo
+ * @property-read Media|null $photo
  * @property-read \App\Models\ProductCategory $product_category
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
  * @property-read int|null $product_exclusions_count
+ * @property-read \App\Models\Organization|null $sponsor_organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Voucher[] $vouchers_reserved
  * @property-read int|null $vouchers_reserved_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product newQuery()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Product onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePrice($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePriceDiscount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product wherePriceType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereProductCategoryId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereShowOnWebshop($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereSoldOut($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereTotalAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereUnlimitedStock($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Product whereUpdatedAt($value)
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withTrashed()
- * @method static \Illuminate\Database\Query\Builder|\App\Models\Product withoutTrashed()
+ * @method static Builder|Product newModelQuery()
+ * @method static Builder|Product newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Product onlyTrashed()
+ * @method static Builder|Product query()
+ * @method static Builder|Product whereCreatedAt($value)
+ * @method static Builder|Product whereDeletedAt($value)
+ * @method static Builder|Product whereDescription($value)
+ * @method static Builder|Product whereExpireAt($value)
+ * @method static Builder|Product whereId($value)
+ * @method static Builder|Product whereName($value)
+ * @method static Builder|Product whereOrganizationId($value)
+ * @method static Builder|Product wherePrice($value)
+ * @method static Builder|Product wherePriceDiscount($value)
+ * @method static Builder|Product wherePriceType($value)
+ * @method static Builder|Product whereProductCategoryId($value)
+ * @method static Builder|Product whereShowOnWebshop($value)
+ * @method static Builder|Product whereSoldOut($value)
+ * @method static Builder|Product whereSponsorOrganizationId($value)
+ * @method static Builder|Product whereTotalAmount($value)
+ * @method static Builder|Product whereUnlimitedStock($value)
+ * @method static Builder|Product whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|Product withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Product withoutTrashed()
  * @mixin \Eloquent
  */
 class Product extends Model
@@ -128,7 +133,7 @@ class Product extends Model
     protected $fillable = [
         'name', 'description', 'organization_id', 'product_category_id',
         'price', 'total_amount', 'expire_at', 'sold_out',
-        'unlimited_stock', 'price_type', 'price_discount',
+        'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
     ];
 
     /**
@@ -149,6 +154,13 @@ class Product extends Model
      */
     public function organization(): BelongsTo {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function sponsor_organization(): BelongsTo {
+        return $this->belongsTo(Organization::class, 'sponsor_organization_id');
     }
 
     /**
@@ -385,23 +397,35 @@ class Product extends Model
 
     /**
      * @param Request $request
+     * @param Builder|null $query
      * @return Builder
      */
-    public static function searchAny(Request $request): Builder {
-        $query = self::query()->orderBy('created_at', 'desc');
+    public static function searchAny(Request $request, Builder $query = null): Builder {
+        $query = $query ?: self::query();
 
         // filter by unlimited stock
         if ($request->has('unlimited_stock') &&
             $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
-            return ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
+            ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
         }
 
         // filter by string query
         if ($request->has('q') && !empty($q = $request->input('q'))) {
-            return ProductQuery::queryFilter($query, $q);
+            ProductQuery::queryFilter($query, $q);
         }
 
-        return $query;
+        // filter by string query
+        if ($request->has('source') && !empty($source = $request->input('source'))) {
+            if ($source === 'sponsor') {
+                $query->whereNotNull('sponsor_organization_id');
+            } elseif ($source === 'provider') {
+                $query->whereNull('sponsor_organization_id');
+            } elseif ($source === 'archive') {
+                $query = TrashedQuery::onlyTrashed($query);
+            }
+        }
+
+        return $query->orderBy('created_at', 'desc');
     }
 
     /**
@@ -539,9 +563,9 @@ class Product extends Model
      */
     public function resetSubsidyApprovals(): void
     {
-        $subsidyFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(
-            Fund::query(), $this->id
-        )->where('type',  Fund::TYPE_SUBSIDIES)->get();
+        $subsidyFunds = FundQuery::whereProductsAreApprovedAndActiveFilter(Fund::query(), $this)->where([
+            'type' =>  Fund::TYPE_SUBSIDIES
+        ])->get();
 
         $subsidyFunds->each(function(Fund $fund) {
             FundProductSubsidyRemovedNotification::send(
@@ -584,5 +608,61 @@ class Product extends Model
         }
 
         return false;
+    }
+
+    /**
+     * @param Organization $organization
+     * @param BaseFormRequest $request
+     * @return $this
+     */
+    public static function storeFromRequest(Organization $organization, BaseFormRequest $request): self
+    {
+        $price_type = $request->input('price_type');
+        $total_amount = $request->input('total_amount');
+        $unlimited_stock = $request->input('unlimited_stock', false);
+        $price = $price_type === Product::PRICE_TYPE_REGULAR ? $request->input('price') : 0;
+
+        $price_discount = in_array($price_type, [
+            Product::PRICE_TYPE_DISCOUNT_FIXED,
+            Product::PRICE_TYPE_DISCOUNT_PERCENTAGE
+        ]) ? $request->input('price_discount') : 0;
+
+        /** @var Product $product */
+        $product = $organization->products()->create(array_merge($request->only([
+            'name', 'description', 'price', 'product_category_id', 'expire_at',
+        ]), [
+            'total_amount' => $unlimited_stock ? 0 : $total_amount,
+            'unlimited_stock' => $unlimited_stock
+        ], compact('price', 'price_type', 'price_discount')));
+
+        return $product->attachMediaByUid($request->input('media_uid'));
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @return $this
+     */
+    public function updateFromRequest(BaseFormRequest $request): self
+    {
+        $price_type = $request->input('price_type');
+        $total_amount = $request->input('total_amount');
+        $price = $price_type === self::PRICE_TYPE_REGULAR ? $request->input('price') : 0;
+
+        $price_discount = in_array($price_type, [
+            self::PRICE_TYPE_DISCOUNT_FIXED,
+            self::PRICE_TYPE_DISCOUNT_PERCENTAGE
+        ]) ? $request->input('price_discount') : 0;
+
+        $this->attachMediaByUid($request->input('media_uid'));
+
+        if ($this->priceWillChanged($price_type, $price, $price_discount)) {
+            $this->resetSubsidyApprovals();
+        }
+
+        return $this->updateModel(array_merge($request->only([
+            'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
+        ]), [
+            'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
+        ], compact('price', 'price_type', 'price_discount')));
     }
 }

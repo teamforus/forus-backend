@@ -25,6 +25,7 @@ class IndexFundProviderRequest extends FormRequest
     {
         return [
             'q'  => 'nullable|string|max:50',
+            'organization_id' => 'nullable|exists:organizations,id',
         ];
     }
 }

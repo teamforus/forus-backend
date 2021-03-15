@@ -19,42 +19,80 @@ use Illuminate\Http\Request;
  * @property int $service
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $children
+ * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $children
  * @property-read int|null $children_count
- * @property-read \Kalnoy\Nestedset\Collection|\App\Models\ProductCategory[] $descendants_with_products
+ * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $descendants_with_products
  * @property-read int|null $descendants_with_products_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Organization[] $organizations
+ * @property-read Collection|\App\Models\Organization[] $organizations
  * @property-read int|null $organizations_count
- * @property-read \App\Models\ProductCategory|null $parent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Product[] $products
+ * @property-read ProductCategory|null $parent
+ * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
  * @property-read \App\Models\ProductCategoryTranslation|null $translation
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductCategoryTranslation[] $translations
+ * @property-read Collection|\App\Models\ProductCategoryTranslation[] $translations
  * @property-read int|null $translations_count
  * @method static \Kalnoy\Nestedset\Collection|static[] all($columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory d()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory ancestorsAndSelf($id, array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory ancestorsOf($id, array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory applyNestedSetScope(?string $table = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory countErrors()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory d()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory defaultOrder(string $dir = 'asc')
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory descendantsAndSelf($id, array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory descendantsOf($id, array $columns = [], $andSelf = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory fixSubtree($root)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory fixTree($root = null)
  * @method static \Kalnoy\Nestedset\Collection|static[] get($columns = ['*'])
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory listsTranslations($translationField)
- * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newModelQuery()
- * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory notTranslatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslation($translationField, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orWhereTranslationLike($translationField, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory orderByTranslation($translationField, $sortMethod = 'asc')
- * @method static \Kalnoy\Nestedset\QueryBuilder|\App\Models\ProductCategory query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translated()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory translatedIn($locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereLft($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereParentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereRgt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereService($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslation($translationField, $value, $locale = null, $method = 'whereHas', $operator = '=')
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereTranslationLike($translationField, $value, $locale = null)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ProductCategory withTranslation()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory getNodeData($id, $required = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory getPlainNodeData($id, $required = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory getTotalErrors()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory hasChildren()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory hasParent()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory isBroken()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory leaves(array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory listsTranslations(string $translationField)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory makeGap(int $cut, int $height)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory moveNode($key, $position)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory newModelQuery()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory newQuery()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory notTranslatedIn(?string $locale = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory orWhereAncestorOf(bool $id, bool $andSelf = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory orWhereDescendantOf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory orWhereNodeBetween($values)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory orWhereNotDescendantOf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory orWhereTranslation(string $translationField, $value, ?string $locale = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory orWhereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory orderByTranslation(string $translationField, string $sortMethod = 'asc')
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory query()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory rebuildSubtree($root, array $data, $delete = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory rebuildTree(array $data, $delete = false, $root = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory reversed()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory root(array $columns = [])
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory translated()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory translatedIn(?string $locale = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereAncestorOf($id, $andSelf = false, $boolean = 'and')
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereAncestorOrSelf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereCreatedAt($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereDescendantOf($id, $boolean = 'and', $not = false, $andSelf = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereDescendantOrSelf(string $id, string $boolean = 'and', string $not = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereId($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereIsAfter($id, $boolean = 'and')
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereIsBefore($id, $boolean = 'and')
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereIsLeaf()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereIsRoot()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereKey($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereLft($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereNodeBetween($values, $boolean = 'and', $not = false)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereNotDescendantOf($id)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereParentId($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRgt($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereService($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslationLike(string $translationField, $value, ?string $locale = null)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereUpdatedAt($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withDepth(string $as = 'depth')
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withTranslation()
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withoutRoot()
  * @mixin \Eloquent
  */
 class ProductCategory extends Model
