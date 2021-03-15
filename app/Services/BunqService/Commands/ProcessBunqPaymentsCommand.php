@@ -5,6 +5,10 @@ namespace App\Services\BunqService\Commands;
 use App\Services\BunqService\BunqService;
 use Illuminate\Console\Command;
 
+/**
+ * Class ProcessBunqPaymentsCommand
+ * @package App\Services\BunqService\Commands
+ */
 class ProcessBunqPaymentsCommand extends Command
 {
     /**
@@ -29,6 +33,8 @@ class ProcessBunqPaymentsCommand extends Command
     public function handle(): void {
         try {
             BunqService::processQueue();
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            logger()->debug(sprintf("Failed to process bunq transactions: %s", $e->getMessage()));
+        }
     }
 }
