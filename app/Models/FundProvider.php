@@ -473,6 +473,7 @@ class FundProvider extends Model
                 trans("$transKey.fund") => $fundProvider->fund->name,
                 trans("$transKey.fund_type") => $fundProvider->fund->type,
                 trans("$transKey.provider") => $provider->name,
+                trans("$transKey.iban") => $provider->iban,
                 trans("$transKey.provider_last_activity") => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
                 trans("$transKey.products_provider_count") => $provider_products_count,
                 trans("$transKey.products_sponsor_count") => $sponsor_products_count,
