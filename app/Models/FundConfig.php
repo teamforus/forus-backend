@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
+ * @property bool $allow_direct_requests
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
@@ -77,6 +79,7 @@ class FundConfig extends Model
         'allow_fund_requests' => 'boolean',
         'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',
+        'allow_direct_requests' => 'boolean',
         'limit_generator_amount' => 'boolean',
     ];
 

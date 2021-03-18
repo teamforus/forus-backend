@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder|FundProviderProduct whereAmount($value)
  * @method static Builder|FundProviderProduct whereCreatedAt($value)
  * @method static Builder|FundProviderProduct whereDeletedAt($value)
+ * @method static Builder|FundProviderProduct whereExpireAt($value)
  * @method static Builder|FundProviderProduct whereFundProviderId($value)
  * @method static Builder|FundProviderProduct whereId($value)
  * @method static Builder|FundProviderProduct whereLimitPerIdentity($value)
