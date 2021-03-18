@@ -311,10 +311,11 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return resolve('excel')->download(
-            new VoucherExport($request, $organization),
-            date('Y-m-d H:i:s') . '.xls'
-        );
+        $fund = $organization->findFund($request->get('fund_id'));
+        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
+        $fileName = date('Y-m-d H:i:s') . '.xls';
+
+        return resolve('excel')->download(new VoucherExport($vouchers), $fileName);
     }
 
     /**
@@ -351,8 +352,6 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return array
      * @throws AuthorizationException
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function exportData(
         IndexVouchersRequest $request,

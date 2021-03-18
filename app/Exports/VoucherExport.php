@@ -2,28 +2,38 @@
 
 namespace App\Exports;
 
-use App\Models\Organization;
-use App\Models\Voucher;
-use Illuminate\Http\Request;
+use App\Models\Data\VoucherExportData;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
+/**
+ * Class VoucherExport
+ * @package App\Exports
+ */
 class VoucherExport implements FromCollection, WithHeadings
 {
     protected $data;
     protected $request;
     protected $headers;
 
-    public function __construct(Request $request, Organization $organization)
+    public function __construct(EloquentCollection $vouchers)
     {
-        $this->request = $request;
-        $this->data = Voucher::export($this->request, $organization);
+        $vouchers->load('voucher_relation', 'product', 'fund');
+        $voucherData = collect();
+
+        foreach ($vouchers as $voucher) {
+            $voucherData->push((new VoucherExportData($voucher, true))->toArray());
+        }
+
+        $this->data = $voucherData;
     }
 
     /**
      * @return \Illuminate\Support\Collection
      */
-    public function collection()
+    public function collection(): Collection
     {
         return $this->data;
     }

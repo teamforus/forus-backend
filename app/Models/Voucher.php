@@ -660,45 +660,6 @@ class Voucher extends Model
     }
 
     /**
-     * @param Request $request
-     * @param Organization $organization
-     * @return Collection|\Illuminate\Support\Collection
-     */
-    public static function export(Request $request, Organization $organization) {
-        $fund       = $organization->findFund($request->get('fund_id'));
-        $vouchers   = Voucher::searchSponsor($request, $organization, $fund);
-
-        return $vouchers->map(static function(Voucher $voucher)  {
-            $assigned_to_identity = $voucher->identity_address && $voucher->is_granted;
-
-            return collect(array_merge([
-                'granted' => $assigned_to_identity ? 'Ja': 'Nee',
-                'in_use'  => $voucher->has_transactions ? 'Ja': 'Nee',
-            ], $voucher->product ? [
-                'product_name' => $voucher->product->name,
-            ] : [], $assigned_to_identity ? [
-                'reference_bsn'  => $voucher->voucher_relation->bsn ?? null,
-                'identity_bsn'   => record_repo()->bsnByAddress($voucher->identity_address),
-                'identity_email' => record_repo()->primaryEmailByAddress($voucher->identity_address),
-            ] : [], [
-                'reference_bsn'  => $voucher->voucher_relation->bsn ?? null,
-                'identity_bsn'   => null,
-                'identity_email' => null,
-            ], [
-                'state'               => $voucher->state ?? null,
-                'activation_code'     => $voucher->activation_code ?? null,
-                'activation_code_uid' => $voucher->activation_code_uid ?? null,
-                'note'                => $voucher->note,
-                'source'              => $voucher->employee_id ? 'employee': 'user',
-                'amount'              => $voucher->amount,
-                'fund_name'           => $voucher->fund->name,
-                'created_at'          => format_date_locale($voucher->created_at),
-                'expire_at'           => format_date_locale($voucher->expire_at),
-            ]))->toArray();
-        })->values();
-    }
-
-    /**
      * @param Collection $vouchers
      * @param $exportType
      * @return string
@@ -762,13 +723,10 @@ class Voucher extends Model
     }
 
     /**
-     * @param Request $request
      * @param Collection $vouchers
      * @param string $exportType
      * @param bool|null $data_only
      * @return array
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public static function zipVouchersData(
         Collection $vouchers,
