@@ -26,6 +26,7 @@ class IndexFundProviderRequest extends FormRequest
         return [
             'q'  => 'nullable|string|max:50',
             'organization_id' => 'nullable|exists:organizations,id',
+            'approved_or_has_transactions' => 'nullable|boolean'
         ];
     }
 }

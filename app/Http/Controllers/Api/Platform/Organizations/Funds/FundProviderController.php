@@ -15,6 +15,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -52,7 +53,21 @@ class FundProviderController extends Controller
         }
 
         if ($state === FundProvider::STATE_APPROVED) {
-            $query = FundProviderQuery::whereApprovedForFundsFilter($query, $fund->id);
+            if ($request->input('approved_or_has_transactions', false)) {
+                $approved_query = FundProviderQuery::whereApprovedForFundsFilter(
+                    clone $query, $fund->id
+                );
+
+                $query = $query->where(static function(Builder $builder) use ($approved_query, $fund) {
+                    return $builder->whereHas('organization.voucher_transactions.voucher', static function(
+                        Builder $builder
+                    ) use ($fund) {
+                        return $builder->where('fund_id', $fund->id);
+                    })->orWhereIn('id', $approved_query->get()->pluck('id')->toArray());
+                });
+            } else {
+                $query = $approved_query;
+            }
         }
 
         if ($state === FundProvider::STATE_PENDING) {
