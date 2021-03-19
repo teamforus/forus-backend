@@ -301,7 +301,6 @@ class NotificationService
      * @param string $email
      * @param EmailFrom|null $emailFrom
      * @param string $fund_name
-     * @param string $fund_end_date
      * @param string $fund_contact
      * @param string $sponsor_name
      * @param string $webshop_link
@@ -311,14 +310,12 @@ class NotificationService
         string $email,
         ?EmailFrom $emailFrom,
         string $fund_name,
-        string $fund_end_date,
         string $fund_contact,
         string $sponsor_name,
         string $webshop_link
     ): bool {
         return $this->sendMail($email, new FundClosed(
             $fund_name,
-            $fund_end_date,
             $fund_contact,
             $sponsor_name,
             $webshop_link,
@@ -333,6 +330,7 @@ class NotificationService
      * @param string $email
      * @param EmailFrom|null $emailFrom
      * @param string $fund_name
+     * @param string $fund_start_date
      * @param string $fund_end_date
      * @param string $sponsor_name
      * @param string $dashboard_link
@@ -342,12 +340,14 @@ class NotificationService
         string $email,
         ?EmailFrom $emailFrom,
         string $fund_name,
+        string $fund_start_date,
         string $fund_end_date,
         string $sponsor_name,
         string $dashboard_link
     ): ?bool {
         return $this->sendMail($email, new FundClosedProvider(
             $fund_name,
+            $fund_start_date,
             $fund_end_date,
             $sponsor_name,
             $dashboard_link,
@@ -396,7 +396,7 @@ class NotificationService
      * @param EmailFrom|null $emailFrom
      * @param string $fund_name
      * @param int $voucher_amount
-     * @param string $voucher_expire_minus_day
+     * @param string $voucher_last_active_day
      * @param string $fund_product_name
      * @param string $qr_token
      * @return bool
@@ -406,7 +406,7 @@ class NotificationService
         ?EmailFrom $emailFrom,
         string $fund_name,
         int $voucher_amount,
-        string $voucher_expire_minus_day,
+        string $voucher_last_active_day,
         string $fund_product_name,
         string $qr_token
     ): bool {
@@ -415,7 +415,7 @@ class NotificationService
             $fund_product_name,
             $qr_token,
             $voucher_amount,
-            $voucher_expire_minus_day,
+            $voucher_last_active_day,
             $emailFrom
         ));
     }

@@ -15,7 +15,7 @@
         <br/>
         {{ mail_trans('voucher_sent.qr_code_under_informal',[
             'voucher_amount'      => $voucher_amount,
-            'expire_at_minus_day' => $voucher_expire_minus_day 
+            'expire_at_minus_day' => $voucher_last_active_day
         ]) }}
         <br/>
         <img style="display: block; margin: 0 auto;" alt="" src="{{ $message->embedData(make_qr_code('voucher', $qr_token), 'qr_token.png') }}" width="300" />
@@ -30,7 +30,7 @@
         <br/>
         {{ mail_trans('voucher_sent.qr_code_under_formal',[
             'voucher_amount'      => $voucher_amount,
-            'expire_at_minus_day' => $voucher_expire_minus_day 
+            'expire_at_minus_day' => $voucher_last_active_day
         ]) }}
         <br/>
         <img style="display: block; margin: 0 auto;" alt="" src="{{ $message->embedData(make_qr_code('voucher', $qr_token), 'qr_token.png') }}" width="300" />

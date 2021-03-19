@@ -192,7 +192,7 @@ class ProductQuery
     {
         return $query->where(static function(Builder $builder) {
             $builder->whereNull('products.expire_at');
-            $builder->orWhere('products.expire_at', '>', now()->endOfDay());
+            $builder->orWhere('products.expire_at', '>=', today());
         });
     }
 

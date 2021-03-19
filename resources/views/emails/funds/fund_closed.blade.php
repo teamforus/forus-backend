@@ -13,23 +13,19 @@
         {{ mail_trans('fund_closed.description_informal', [
             'fund_name'    => $fund_name,
             'sponsor_name' => $sponsor_name,
-            'end_date'     => $fund_end_date,
         ]) }} <br />
         {{ mail_trans('fund_closed.contact_informal', [
             'fund_name'    => $fund_name,
             'fund_contact' => $fund_contact,
-            'end_date'     => $fund_end_date,
         ]) }} <br />
     @else
         {{ mail_trans('fund_closed.description_formal', [
             'fund_name'    => $fund_name,
             'sponsor_name' => $sponsor_name,
-            'end_date'     => $fund_end_date,
         ]) }} <br />
         {{ mail_trans('fund_closed.contact_formal', [
             'fund_name'    => $fund_name,
             'fund_contact' => $fund_contact,
-            'end_date'     => $fund_end_date,
         ]) }} <br />
     @endif
     <br/>
