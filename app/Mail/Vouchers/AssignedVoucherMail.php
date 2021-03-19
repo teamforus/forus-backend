@@ -7,6 +7,10 @@ use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
+/**
+ * Class AssignedVoucherMail
+ * @package App\Mail\Vouchers
+ */
 class AssignedVoucherMail extends ImplementationMail
 {
     private $type;
@@ -47,9 +51,10 @@ class AssignedVoucherMail extends ImplementationMail
     /**
      * @return Mailable
      */
-    private function sendMailBudgetVoucher(): Mailable {
+    private function sendMailBudgetVoucher(): Mailable
+    {
         return $this->buildBase()->subject(
-            mail_trans('voucher_assigned_budget.title', $this->data)
+            mail_trans("voucher_assigned_budget.title_$this->communicationType", $this->data)
         )->view('emails.vouchers.voucher_assigned_budget', [
             'data' => $this->data
         ]);
@@ -58,9 +63,10 @@ class AssignedVoucherMail extends ImplementationMail
     /**
      * @return Mailable
      */
-    private function sendMailProductVoucher(): Mailable {
+    private function sendMailProductVoucher(): Mailable
+    {
         return $this->buildBase()->subject(
-            mail_trans('voucher_assigned_product.title', $this->data)
+            mail_trans("voucher_assigned_product.title_$this->communicationType", $this->data)
         )->view('emails.vouchers.voucher_assigned_product', [
             'data' => $this->data
         ]);
@@ -69,11 +75,10 @@ class AssignedVoucherMail extends ImplementationMail
     /**
      * @return Mailable
      */
-    private function sendMailBudgetSubsidies(): Mailable {
-        $this->communicationType =  $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
-
+    private function sendMailBudgetSubsidies(): Mailable
+    {
         return $this->buildBase()->subject(
-            mail_trans('voucher_assigned_subsidy.title_' . $this->communicationType, $this->data)
+            mail_trans("voucher_assigned_subsidy.title_$this->communicationType", $this->data)
         )->view('emails.vouchers.voucher_assigned_subsidy', [
             'data' => $this->data
         ]);

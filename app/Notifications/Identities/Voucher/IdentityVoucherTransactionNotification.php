@@ -20,7 +20,7 @@ class IdentityVoucherTransactionNotification extends BaseIdentityVoucherNotifica
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
 
-        notification_service()->sendMailNotification(
+        $this->getNotificationService()->sendMailNotification(
             $identity->primary_email->email,
             new PaymentSuccessMail(array_merge($this->eventLog->data, [
                 'current_budget' => $this->eventLog->data['voucher_amount_locale'],

@@ -6,6 +6,10 @@ use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
+/**
+ * Class FundRequestDeniedMail
+ * @package App\Mail\Funds\FundRequests
+ */
 class FundRequestDeniedMail extends ImplementationMail
 {
     private $fundName;
@@ -42,6 +46,16 @@ class FundRequestDeniedMail extends ImplementationMail
     }
 
     /**
+     * @return string
+     */
+    protected function getSubject(): string
+    {
+        return mail_trans("fund_request_denied.title_$this->communicationType", [
+            'fund_name' => $this->fundName
+        ]);
+    }
+
+    /**
      * Build the message.
      *
      * @return $this
@@ -49,13 +63,13 @@ class FundRequestDeniedMail extends ImplementationMail
     public function build(): Mailable
     {
         return $this->buildBase()
-            ->subject(mail_trans('fund_request_denied.title', ['fund_name' => $this->fundName]))
+            ->subject($this->getSubject())
             ->view('emails.funds.fund-requests.fund_request-denied', [
                 'fund_name'         => $this->fundName,
-                'clarification_msg' => $this->clarificationMsg,
                 'sponsor_name'      => $this->sponsorName,
                 'sponsor_phone'     => $this->sponsorPhone,
                 'sponsor_email'     => $this->sponsorEmail,
+                'clarification_msg' => $this->clarificationMsg,
             ]);
     }
 }
