@@ -14,15 +14,22 @@ class ProductReservedMail extends ImplementationMail
 {
     private $transData;
 
+    /**
+     * ProductReservedMail constructor.
+     * @param array $data
+     * @param EmailFrom|null $emailFrom
+     */
     public function __construct(
         array $data = [],
         ?EmailFrom $emailFrom = null
     ) {
         $this->setMailFrom($emailFrom);
-
         $this->transData['data'] = $data;
     }
 
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
         return $this->buildBase()

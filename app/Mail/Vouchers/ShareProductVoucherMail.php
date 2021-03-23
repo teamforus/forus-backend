@@ -12,26 +12,32 @@ use Illuminate\Mail\Mailable;
  */
 class ShareProductVoucherMail extends ImplementationMail
 {
-    private $transData;
-
     /**
      * ShareProductVoucherMail constructor.
      * @param array $data
      * @param EmailFrom|null $emailFrom
      */
-    public function __construct(
-        array $data = [],
-        ?EmailFrom $emailFrom = null
-    ) {
+    public function __construct(array $data = [], ?EmailFrom $emailFrom = null)
+    {
         $this->setMailFrom($emailFrom);
-
-        $this->transData['data'] = $data;
+        $this->mailData = $this->escapeData($data);
     }
 
+    /**
+     * @return string
+     */
+    protected function getSubject(): string
+    {
+        return mail_trans("share_product.title_$this->communicationType", $this->mailData);
+    }
+
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
         return $this->buildBase()
-            ->subject(mail_trans('share_product.title', $this->transData['data']))
-            ->view('emails.vouchers.share_product', $this->transData['data']);
+            ->subject($this->getSubject())
+            ->view('emails.vouchers.share_product', $this->mailData);
     }
 }

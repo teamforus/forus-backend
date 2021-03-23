@@ -1,23 +1,20 @@
 <?php
-    /** @var string $request_status */
-    /** @var string $fund_name */
-    /** @var string $webshop_link Link to webshop */
+/** @var string $request_status */
+/** @var string $fund_name */
+/** @var string $webshop_link Link to webshop */
+/** @var bool $informalCommunication */
+/** @var string $communicationType */
+/** @var \App\Services\Forus\Notification\EmailFrom $emailFrom */
 ?>
+
 @extends('emails.base')
-@if ($emailFrom->isInformalCommunication())
-    @section('title', mail_trans('fund_request_resolved.title_formal', ['fund_name' => $fund_name])) 
-@else
-    @section('title', mail_trans('fund_request_resolved.title_formal', ['fund_name' => $fund_name]))   
-@endif
+@section('title', mail_trans("fund_request_resolved.title_$communicationType", ['fund_name' => $fund_name]))
+
 @section('html')
     {{ mail_trans('dear_citizen') }},
     <br/>
     <br/>
-    @if ($emailFrom->isInformalCommunication())
-        {{ mail_trans('fund_request_resolved.message_informal', ['status' => $request_status]) }}
-    @else
-        {{ mail_trans('fund_request_resolved.message_formal', ['status' => $request_status]) }} 
-    @endif
+    {{ mail_trans("fund_request_resolved.message_$communicationType", ['status' => $request_status]) }}
     <br/>
     <br/>
     {!! mail_trans('fund_request_resolved.webshop_button', ['link' => $webshop_link]) !!}

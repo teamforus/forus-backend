@@ -20,6 +20,15 @@ class SendVoucherMail extends ImplementationMail
     private $voucher_last_active_day;
     public $communicationType;
 
+    /**
+     * SendVoucherMail constructor.
+     * @param string $fund_name
+     * @param string $fund_product_name
+     * @param string $qrToken
+     * @param int $voucher_amount
+     * @param string $voucher_expire_minus_day
+     * @param EmailFrom|null $emailFrom
+     */
     public function __construct(
         string $fund_name,
         string $fund_product_name,
@@ -36,6 +45,9 @@ class SendVoucherMail extends ImplementationMail
         $this->voucher_last_active_day = $voucher_last_active_day;
     }
 
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
         $this->communicationType = $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';

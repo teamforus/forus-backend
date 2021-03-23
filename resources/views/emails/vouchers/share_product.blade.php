@@ -1,5 +1,11 @@
+<?php
+/** @var bool $informalCommunication */
+/** @var string $communicationType */
+/** @var \App\Services\Forus\Notification\EmailFrom $emailFrom */
+?>
+
 @extends('emails.base')
-@section('title', mail_trans('share_product.title', ['requester_email' => $requester_email]))
+@section('title', mail_trans("share_product.title_$communicationType", ['requester_email' => $requester_email]))
 
 @section('html')
     {{ $product_name }}

@@ -7,6 +7,10 @@ use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * Class IdentityProductVoucherReservedNotification
+ * @package App\Notifications\Identities\Voucher
+ */
 class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNotification
 {
     protected $key = 'notifications_identities.product_voucher_reserved';
@@ -21,7 +25,7 @@ class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNoti
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
 
-        notification_service()->sendMailNotification(
+        $this->getNotificationService()->sendMailNotification(
             $identity->primary_email->email,
             new ProductReservedUserMail(array_merge($this->eventLog->data, [
                 'provider_organization_name' => $this->eventLog->data['provider_name'],

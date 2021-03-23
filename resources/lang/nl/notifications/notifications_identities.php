@@ -50,8 +50,8 @@ return [
     // assigned subsidy through dashboard
     'identity_voucher_assigned_subsidy' => [
         'title' => ':fund_name is aan u toegekend.',
+        'title_informal' => 'Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.',
         'description' =>
-            'Hierbij ontvangt u uw :fund_name. ' .
             'Het tegoed is geldig tot en met :voucher_expire_date_locale.',
     ],
 
@@ -65,9 +65,9 @@ return [
 
     'voucher_added_subsidy' => [
         'title' => 'Er is een :fund_name aan u toegekend.',
+        'title_informal' => 'Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.',
         'description' =>
-            'Hierbij ontvangt u uw :fund_name. ' .
-            'Het tegoed is geldig tot en met :voucher_expire_date_locale.',
+            'De QR-code is geldig tot en met  :voucher_expire_date_locale.',
     ],
 
     // bought from webshop
@@ -92,7 +92,10 @@ return [
         'description' =>
             'Uw aanvraag voor :fund_name is onvolledig. ' .
             ':sponsor_name heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question',
-    ],
+        'description_informal' =>
+            'Je aanvraag voor :fund_name is onvolledig. ' .
+            ':sponsor_name heeft meer informatie nodig om je aanvraag af te handelen. Het bericht is: :fund_request_clarification_question',
+        ],
 
     // fund request resolved
     'fund_request_resolved' => [
@@ -125,8 +128,11 @@ return [
     // product voucher reserved on webshop (voucher created)
     'product_voucher_reserved' => [
         'title' => 'U heeft :product_name gereserveerd.',
+        'title_informal' => 'Je hebt een :product_name gereserveerd.',
         'description' =>
             'U heeft :product_name gereserveerd bij :provider_name.',
+        'description' =>
+            'Je hebt :product_name gereserveerd bij :provider_name.',
     ],
 
     // product voucher shared to provider
@@ -136,6 +142,8 @@ return [
             'U heeft de aanbod gedeeld met :provider_name met het volgende bericht: ' .
             ':voucher_share_message',
     ],
+
+    // todo: duplicate of notification_vouchers.php; which one is used?
 
     // product voucher is about to expire
     'voucher_expire_soon_product' => [

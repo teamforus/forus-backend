@@ -3,6 +3,7 @@
 return [
     'created_budget' => [
         'title' => 'Er is een :fund_name tegoed aan u toegekend.',
+        'title_informal' => 'Er is een :fund_name aan je toegekend.',
         'description' => implode([
             'Hierbij ontvangt u uw :fund_name-tegoed.',
             'Het tegoed heeft een waarde van € :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
@@ -10,6 +11,7 @@ return [
     ],
     'created_product' => [
         'title' => 'Aanbod :product_name bij :provider_name gereserveerd!',
+        'title_informal' => 'Aanbod :product_name bij :provider_name gereserveerd!',
         'description' => implode([
             'Aanbod :product_name bij :provider_name gereserveerd!',
             'De reservering heeft een waarde van €:voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
@@ -17,6 +19,7 @@ return [
     ],
     'assigned' => [
         'title' => ':fund_name-tegoed is aan u toegekend.',
+        'title_informal' => ':fund_name-tegoed is aan u toegekend.',
         'description' => implode([
             'Hierbij ontvangt u uw :fund_name.',
             'Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
@@ -29,16 +32,25 @@ return [
         ], ' '),
     ],
     'expire_soon' => [
-        'title' => ':fund_name -tegoed is aan u toegekend.',
+        'title' => ':fund_name verloopt binnenkort',
         'description' => implode([
-            'Hierbij ontvangt u uw :fund_name-tegoed. ',
-            'Het tegoed heeft een waarde van €:voucher_amount en is geldig tot en met :expire_at_minus_day.'
+            'Uw :fund_name is geldig tot en met :fund_last_active_date.',
+            'Vanaf :expire_at_minus_day is het budget niet meer geldig.'
+        ], ' '),
+        'description_informal' => implode([
+            'Je :fund_name is geldig tot en met :fund_last_active_date.',
+            'Vanaf :expire_at_minus_day is het tegoed niet meer geldig.'
         ], ' '),
     ],
     'expired' => [
         'title' => 'Uw :fund_name-tegoed is verlopen.',
+        'title_informal'  => 'Je :fund_name-tegoed is verlopen',
         'description' => implode([
             'Vanaf vandaag is uw :fund_name-tegoed niet meer geldig. ',
+            'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.',
+        ], ' '),
+        'description_informal' => implode([
+            'Vanaf vandaag is je tegoed voor :fund_name niet meer geldig. ',
             'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.',
         ], ' '),
     ]

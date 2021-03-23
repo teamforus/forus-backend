@@ -12,26 +12,32 @@ use Illuminate\Mail\Mailable;
  */
 class ProductReservedUserMail extends ImplementationMail
 {
-    private $transData;
-
     /**
      * ProductReservedUserMail constructor.
      * @param array $data
      * @param EmailFrom|null $emailFrom
      */
-    public function __construct(
-        array $data = [],
-        ?EmailFrom $emailFrom = null
-    ) {
+    public function __construct(array $data = [], ?EmailFrom $emailFrom = null)
+    {
         $this->setMailFrom($emailFrom);
-
-        $this->transData['data'] = $data;
+        $this->mailData = $this->escapeData($data);
     }
 
+    /**
+     * @return string
+     */
+    protected function getSubject(): string
+    {
+        return mail_trans("product_reserved.title_$this->communicationType", $this->mailData);
+    }
+
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
         return $this->buildBase()
-            ->subject(mail_trans('product_reserved.title', $this->transData['data']))
-            ->view('emails.funds.product_reserved', $this->transData['data']);
+            ->subject($this->getSubject())
+            ->view('emails.funds.product_reserved', $this->mailData);
     }
 }

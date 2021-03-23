@@ -2,7 +2,7 @@
 // TODO: implement informal formal switch
 return [
     'title_formal' => 'Hierbij ontvangt u uw :fund_name',
-    'title_informal' => 'Hierbij ontvang je jouw :fundn_ame',
+    'title_informal' => 'Hierbij ontvang je jouw :fund_name',
     'paragraph1_formal' => 'Alstublieft, hier is uw :fund_name! Uw aanvraag is goedgekeurd.',
     'paragraph1_informal' => 'Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.',
     'paragraph2_formal' => 'Op de <a href=":link_webshop">website</a> vindt u het complete aanbod.',
