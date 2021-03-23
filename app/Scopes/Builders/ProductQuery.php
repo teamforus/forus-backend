@@ -10,6 +10,10 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class ProductQuery
+ * @package App\Scopes\Builders
+ */
 class ProductQuery
 {
     /**
@@ -45,14 +49,13 @@ class ProductQuery
     }
 
     /**
-     * @param Builder $query
+     * @param Builder $builder
      * @param $fund_id
      * @return Builder
      */
-    public static function whereFundNotExcluded(
-        Builder $query, $fund_id
-    ): Builder {
-        $query->where(function(Builder $builder) use ($fund_id) {
+    public static function whereFundNotExcluded(Builder $builder, $fund_id): Builder
+    {
+        $builder->where(function(Builder $builder) use ($fund_id) {
             $builder->whereNull('sponsor_organization_id');
             $builder->orWhereHas('sponsor_organization', function(Builder $builder) use ($fund_id) {
                 $builder->whereHas('funds', function(Builder $builder) use ($fund_id) {
@@ -61,11 +64,25 @@ class ProductQuery
             });
         });
 
-        return $query->whereDoesntHave('product_exclusions', static function(Builder $builder) use ($fund_id) {
-            $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id) {
-                $builder->whereIn('fund_id', (array) $fund_id);
-            });
+        $builder->where(function(Builder $builder) use ($fund_id) {
+            foreach ((array) $fund_id as $fundId) {
+                $builder->orWhere(function (Builder $builder) use ($fundId) {
+                    $builder->whereHas('organization', static function (Builder $builder) use ($fundId) {
+                        $builder->whereHas('fund_providers', static function (Builder $builder) use ($fundId) {
+                            $builder->where('fund_id', $fundId);
+                        });
+                    });
+
+                    $builder->whereDoesntHave('product_exclusions', static function (Builder $builder) use ($fundId) {
+                        $builder->whereHas('fund_provider', static function (Builder $builder) use ($fundId) {
+                            $builder->where('fund_id', $fundId);
+                        });
+                    });
+                });
+            }
         });
+
+        return $builder;
     }
 
     /**
@@ -73,9 +90,8 @@ class ProductQuery
      * @param $fund_id
      * @return Builder
      */
-    public static function whereHasFundApprovalHistory(
-        Builder $query, $fund_id
-    ): Builder {
+    public static function whereHasFundApprovalHistory(Builder $query, $fund_id): Builder
+    {
         return $query->whereHas('fund_provider_products', function(Builder $builder) use ($fund_id) {
             TrashedQuery::withTrashed($builder);
 
@@ -90,9 +106,8 @@ class ProductQuery
      * @param $fund_id
      * @return Builder
      */
-    public static function whereFundNotExcludedOrHasHistory(
-        Builder $query, $fund_id
-    ): Builder {
+    public static function whereFundNotExcludedOrHasHistory(Builder $query, $fund_id): Builder
+    {
         return $query->where(static function(Builder $builder) use ($fund_id) {
             $builder->where(static function(Builder $builder) use ($fund_id) {
                 self::whereFundNotExcluded($builder, $fund_id);

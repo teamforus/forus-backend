@@ -29,6 +29,10 @@ class FundQuery
             $query->where('organization_id', $product->sponsor_organization_id);
         }
 
+        $query->whereDoesntHave('providers.product_exclusions', static function(Builder $builder) use ($product) {
+            $builder->where('product_id', $product->id);
+        });
+
         return $query->where(function(Builder $builder) use ($product) {
             $builder->where(function(Builder $builder) use ($product) {
                 $builder->where('type', '=', Fund::TYPE_BUDGET);
@@ -41,10 +45,6 @@ class FundQuery
             });
 
             $builder->orWhereHas('providers', static function(Builder $builder) use ($product) {
-                $builder->whereDoesntHave('product_exclusions', static function(Builder $builder) use ($product) {
-                    $builder->where('product_id', $product->id);
-                });
-
                 $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product) {
                     $builder->where('product_id', $product->id);
                 });
