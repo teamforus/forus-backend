@@ -19,6 +19,10 @@ class ImplementationMail extends Mailable
 
     public $emailFrom;
     public $implementationKey;
+    public $informalCommunication;
+    public $communicationType;
+
+    protected $mailData = [];
 
     /**
      * @param EmailFrom|null $emailFrom
@@ -26,6 +30,8 @@ class ImplementationMail extends Mailable
     public function setMailFrom(?EmailFrom $emailFrom): void {
         $this->emailFrom = $emailFrom;
         $this->implementationKey = $emailFrom->getImplementationKey() ?: null;
+        $this->informalCommunication = $emailFrom->isInformalCommunication();
+        $this->communicationType =  $this->informalCommunication ? 'informal' : 'formal';
     }
 
     /**
@@ -33,10 +39,14 @@ class ImplementationMail extends Mailable
      */
     public function buildBase(): Mailable
     {
-        return $this->from(
-            $this->emailFrom->getEmail(),
-            $this->emailFrom->getName()
-        );
+        return $this->from($this->emailFrom->getEmail(), $this->emailFrom->getName());
+    }
+
+    /**
+     * @return string
+     */
+    protected function getSubject(): string {
+        return config('app.name');
     }
 
     /**

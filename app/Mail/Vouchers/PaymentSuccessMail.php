@@ -12,21 +12,32 @@ use Illuminate\Mail\Mailable;
  */
 class PaymentSuccessMail extends ImplementationMail
 {
-    private $transData;
-
-    public function __construct(
-        array $data = [],
-        ?EmailFrom $emailFrom = null
-    ) {
+    /**
+     * PaymentSuccessMail constructor.
+     * @param array $data
+     * @param EmailFrom|null $emailFrom
+     */
+    public function __construct(array $data = [], ?EmailFrom $emailFrom = null)
+    {
         $this->setMailFrom($emailFrom);
-
-        $this->transData['data'] = $data;
+        $this->mailData = $this->escapeData($data);
     }
 
+    /**
+     * @return string
+     */
+    protected function getSubject(): string
+    {
+        return mail_trans("payment_success.title_$this->communicationType", $this->mailData);
+    }
+
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
         return $this->buildBase()
-            ->subject(mail_trans('payment_success.title', $this->transData['data']))
-            ->view('emails.vouchers.payment_success', $this->transData['data']);
+            ->subject($this->getSubject())
+            ->view('emails.vouchers.payment_success', $this->mailData);
     }
 }

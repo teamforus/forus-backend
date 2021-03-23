@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'title' => 'Hierbij ontvangt u uw :fund_name',
+    'title_formal' => 'Hierbij ontvangt u uw :fund_name',
+    'title_informal' => 'Hierbij ontvangt u uw :fund_name',
     'you_have_been_assigned' => 'Er is een tegoed aan u toegekend. Hierbij ontvangt u uw :fund_name.',
     'voucher_details' => 'Dit tegoed heeft een waarde van € :voucher_amount en is geldig tot en met :voucher_last_active_day. '.
         'Onderstaande QR-code laat u bij de organisatie van uw keuze zien. ',

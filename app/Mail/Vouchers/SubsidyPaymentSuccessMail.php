@@ -12,8 +12,6 @@ use Illuminate\Mail\Mailable;
  */
 class SubsidyPaymentSuccessMail extends ImplementationMail
 {
-    private $transData;
-
     /**
      * SubsidyPaymentSuccessMail constructor.
      * @param array $data
@@ -24,9 +22,15 @@ class SubsidyPaymentSuccessMail extends ImplementationMail
         ?EmailFrom $emailFrom = null
     ) {
         $this->setMailFrom($emailFrom);
-        $this->transData = [
-            'data' => $this->escapeData($data)
-        ];
+        $this->mailData = $this->escapeData($data);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getSubject(): string
+    {
+        return mail_trans("subsidy_payment_success.title_$this->communicationType", $this->mailData);
     }
 
     /**
@@ -35,7 +39,9 @@ class SubsidyPaymentSuccessMail extends ImplementationMail
     public function build(): Mailable
     {
         return $this->buildBase()
-            ->subject(mail_trans('subsidy_payment_success.title', $this->transData['data']))
-            ->view('emails.vouchers.subsidy_payment_success', $this->transData);
+            ->subject($this->getSubject())
+            ->view('emails.vouchers.subsidy_payment_success', [
+                'data' => $this->mailData,
+            ]);
     }
 }

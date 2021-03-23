@@ -7,11 +7,18 @@ use App\Mail\Funds\FundRequests\FundRequestDeniedMail;
 use App\Models\FundRequest;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * Class IdentityFundRequestResolvedNotification
+ * @package App\Notifications\Identities\FundRequest
+ */
 class IdentityFundRequestResolvedNotification extends BaseIdentityFundRequestNotification
 {
     protected $key = 'notifications_identities.fund_request_resolved';
     protected $sendMail = true;
 
+    /**
+     * @param Identity $identity
+     */
     public function toMail(Identity $identity): void
     {
         /** @var FundRequest $fundRequest */
@@ -35,9 +42,6 @@ class IdentityFundRequestResolvedNotification extends BaseIdentityFundRequestNot
             );
         }
 
-        resolve('forus.services.notification')->sendMailNotification(
-            $identity->email,
-            $mailable
-        );
+        $this->getNotificationService()->sendMailNotification($identity->email, $mailable);
     }
 }
