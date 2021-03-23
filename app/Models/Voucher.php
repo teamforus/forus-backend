@@ -303,7 +303,7 @@ class Voucher extends Model
      */
     public function getExpiredAttribute(): bool
     {
-        return (bool) $this->fund->end_date->isPast() || $this->expire_at->isPast();
+        return $this->fund->end_date->endOfDay()->isPast() || $this->expire_at->endOfDay()->isPast();
     }
 
     /**
@@ -325,7 +325,7 @@ class Voucher extends Model
     public function getLastActiveDayAttribute()
     {
         return $this->isProductType() && $this->product->expire_at ?
-            $this->product->expire_at : $this->expire_at->subDay();
+            $this->product->expire_at : $this->expire_at;
     }
 
     /**
@@ -350,7 +350,7 @@ class Voucher extends Model
             $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
             $fund_product_name,
             $this->amount,
-            format_date_locale($this->expire_at->subDay(), 'long_date_locale'),
+            format_date_locale($this->expire_at, 'long_date_locale'),
             $fund_product_name,
             $voucherToken->address
         );
@@ -363,7 +363,7 @@ class Voucher extends Model
         string $email = null
     ): void {
         $mailFrom = $this->fund->fund_config->implementation->getEmailFrom();
-        $expireDate = format_date_locale($this->expire_at->subDay(), 'long_date_locale');
+        $expireDate = format_date_locale($this->expire_at, 'long_date_locale');
 
         if ($this->isBudgetType()) {
             $type = $this->fund->isTypeBudget() ? 'budget' : 'subsidies';
@@ -385,7 +385,7 @@ class Voucher extends Model
             'sponsor_phone' => $this->fund->organization->phone ?? null,
             'sponsor_description' => $this->fund->organization->description ?? null,
             'voucher_amount' => $this->amount,
-            'voucher_expire_minus_day' => $expireDate,
+            'voucher_last_active_day' => $expireDate,
         ]);
     }
 

@@ -16,7 +16,7 @@ class FundQuery
     public static function whereActiveFilter(Builder $query): Builder {
         return $query->where([
             'state' => Fund::STATE_ACTIVE
-        ])->where('end_date', '>', now());
+        ])->whereDate('end_date', '>=', today());
     }
 
     /**
