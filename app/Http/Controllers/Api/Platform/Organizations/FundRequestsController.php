@@ -156,9 +156,11 @@ class FundRequestsController extends Controller
             FundRequest::class, $organization
         ]);
 
+        $type = $request->input('export_format', 'xls');
+
         return resolve('excel')->download(
             new FundRequestsExport($request, $organization, auth_address()),
-            date('Y-m-d H:i:s') . '.xls'
+            date('Y-m-d H:i:s') . '.'. $type
         );
     }
 }

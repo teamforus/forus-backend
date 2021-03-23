@@ -12,6 +12,8 @@ class AssignedVoucherMail extends ImplementationMail
     private $type;
     private $data;
 
+    public $communicationType;
+
     /**
      * Create a new message instance.
      *

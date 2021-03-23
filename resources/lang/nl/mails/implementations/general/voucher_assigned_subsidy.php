@@ -7,7 +7,7 @@ return [
     'paragraph1_informal' => 'Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.',
     'paragraph2_formal' => 'Op de <a href=":link_webshop">website</a> vindt u het complete aanbod.',
     'paragraph2_informal' => 'Op de <a href=":link_webshop">website</a> vind je het complete aanbod.',
-    'paragraph3' => 'De QR-code is geldig tot en met :voucher_expire_minus_day.',
+    'paragraph3' => 'De QR-code is geldig tot en met :voucher_last_active_day.',
     'paragraph4_formal' =>
         'Neem bovenstaande QR-code mee naar de aanbieder als u van een actie gebruik wilt maken. ' .
         'Laat de QR-code scannen door een medewerker. ' .

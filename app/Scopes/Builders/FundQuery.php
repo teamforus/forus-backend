@@ -16,7 +16,7 @@ class FundQuery
     public static function whereActiveFilter(Builder $query): Builder {
         return $query->where([
             'state' => Fund::STATE_ACTIVE
-        ])->where('end_date', '>', now());
+        ])->whereDate('end_date', '>=', today());
     }
 
     /**
@@ -28,6 +28,10 @@ class FundQuery
         if ($product->sponsor_organization_id) {
             $query->where('organization_id', $product->sponsor_organization_id);
         }
+
+        $query->whereDoesntHave('providers.product_exclusions', static function(Builder $builder) use ($product) {
+            $builder->where('product_id', $product->id);
+        });
 
         return $query->where(function(Builder $builder) use ($product) {
             $builder->where(function(Builder $builder) use ($product) {
@@ -41,10 +45,6 @@ class FundQuery
             });
 
             $builder->orWhereHas('providers', static function(Builder $builder) use ($product) {
-                $builder->whereDoesntHave('product_exclusions', static function(Builder $builder) use ($product) {
-                    $builder->where('product_id', $product->id);
-                });
-
                 $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product) {
                     $builder->where('product_id', $product->id);
                 });

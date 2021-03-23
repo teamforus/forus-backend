@@ -35,6 +35,7 @@ class IndexTransactionsRequest extends FormRequest
             'to'            => 'date:Y-m-d',
             'amount_min'    => 'numeric|min:0',
             'amount_max'    => 'numeric|min:0',
+            'export_format' => 'nullable|in:csv,xls'
         ];
     }
 }
