@@ -41,9 +41,13 @@ return [
 
     // assigned budget through dashboard
     'identity_voucher_assigned_budget' => [
-        'title' => ':fund_name-tegoed is aan u toegekend.',
+        'title' => ':fund_name is aan u toegekend.',
+        'title_informal' => 'Alstublieft, hier is je :fund_name !',
         'description' =>
-            'Hierbij ontvangt u uw :fund_name-tegoed. Het tegoed heeft een waarde van ' .
+            'Hierbij ontvangt u uw :fund_name. Het tegoed heeft een waarde van ' .
+            ':voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
+        'description_informal' =>
+            'Hierbij ontvang je je :fund_name. Het tegoed heeft een waarde van ' .
             ':voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.',
     ],
 
@@ -75,14 +79,14 @@ return [
         'title' => 'Aanbod :product_name bij :provider_name gereserveerd!',
         'description' =>
             'Aanbod :product_name bij :provider_name gereserveerd! ' .
-            'De reservering heeft een waarde van €:voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale',
+            'De reservering heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale',
     ],
 
     // fund request submitted
     'fund_request_created' => [
         'title' => 'Aanvraag voor :fund_name is ontvangen.',
         'description' =>
-            'De aanvraag voor :fund_name is ontvangen. ' .
+            'De aanvraag voor :fund_name is ontvangen.' .
             'U ontvangt binnen twee weken een reactie op uw aanvraag.',
     ],
 
@@ -105,10 +109,11 @@ return [
 
     // budget voucher transaction
     'voucher_transaction' => [
-        'title' => 'Er is een bedrag van uw :fund_name-tegoed afgeschreven.',
+        'title' => 'Er is een bedrag van uw :fund_name afgeschreven.',
+        'title_informal' => 'Er is een bedrag van je :fund_name afgeschreven.',
         'description' =>
             'Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. ' .
-            'Het huidige bedrag van uw \':fund_name\'-voucher is :voucher_amount_locale.',
+            'Het huidige bedrag van uw :fund_name is :voucher_amount_locale.',
     ],
 
     // subsidy voucher transaction, for subsidy fund
@@ -159,13 +164,13 @@ return [
 
     // product voucher expired
     'product_voucher_expired' => [
-        'title' => ':fund_name tegoed is verlopen.',
-        'description' => 'Het tegoed op :fund_name-tegoed is verlopen.'
+        'title' => ':fund_name is verlopen.',
+        'description' => 'Het tegoed op :fund_name is verlopen.'
     ],
 
     // budget voucher expired
     'budget_voucher_expired' => [
-        'title' => ':fund_name tegoed is verlopen.',
-        'description' => 'Het tegoed op :fund_name-tegoed is verlopen.'
+        'title' => ':fund_name is verlopen.',
+        'description' => 'Het tegoed op :fund_nam is verlopen.'
     ]
 ];
