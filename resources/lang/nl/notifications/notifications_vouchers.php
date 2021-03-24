@@ -19,7 +19,7 @@ return [
     ],
     'assigned' => [
         'title' => ':fund_name-tegoed is aan u toegekend.',
-        'title_informal' => ':fund_name-tegoed is aan u toegekend.',
+        'title_informal' => 'Alsjeblieft je :fund_name QR-code.',
         'description' => implode([
             'Hierbij ontvangt u uw :fund_name.',
             'Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
