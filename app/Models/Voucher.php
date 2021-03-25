@@ -324,8 +324,7 @@ class Voucher extends Model
      */
     public function getLastActiveDayAttribute()
     {
-        return $this->isProductType() && $this->product->expire_at ?
-            $this->product->expire_at : $this->expire_at;
+        return $this->expire_at;
     }
 
     /**
