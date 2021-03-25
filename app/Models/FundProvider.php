@@ -70,6 +70,13 @@ class FundProvider extends Model
 
     public const STATE_APPROVED = 'approved';
     public const STATE_PENDING = 'pending';
+    public const STATE_APPROVED_OR_HAS_TRANSACTIONS = 'approved_or_has_transactions';
+
+    public const STATES = [
+        self::STATE_APPROVED,
+        self::STATE_PENDING,
+        self::STATE_APPROVED_OR_HAS_TRANSACTIONS,
+    ];
 
     /**
      * The attributes that are mass assignable.

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Models\FundProvider;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IndexFundProviderRequest extends FormRequest
@@ -25,8 +26,8 @@ class IndexFundProviderRequest extends FormRequest
     {
         return [
             'q'  => 'nullable|string|max:50',
+            'state' => 'nullable|in:' . join(',', FundProvider::STATES),
             'organization_id' => 'nullable|exists:organizations,id',
-            'approved_or_has_transactions' => 'nullable|boolean'
         ];
     }
 }

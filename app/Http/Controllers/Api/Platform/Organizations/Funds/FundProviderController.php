@@ -53,25 +53,25 @@ class FundProviderController extends Controller
         }
 
         if ($state === FundProvider::STATE_APPROVED) {
-            if ($request->input('approved_or_has_transactions', false)) {
-                $approved_query = FundProviderQuery::whereApprovedForFundsFilter(
-                    clone $query, $fund->id
-                );
-
-                $query = $query->where(static function(Builder $builder) use ($approved_query, $fund) {
-                    return $builder->whereHas('organization.voucher_transactions.voucher', static function(
-                        Builder $builder
-                    ) use ($fund) {
-                        return $builder->where('fund_id', $fund->id);
-                    })->orWhereIn('id', $approved_query->get()->pluck('id')->toArray());
-                });
-            } else {
-                $query = $approved_query;
-            }
+            $query = FundProviderQuery::whereApprovedForFundsFilter($query, $fund->id);
         }
 
         if ($state === FundProvider::STATE_PENDING) {
             $query = FundProviderQuery::wherePendingForFundsFilter($query, $fund->id);
+        }
+
+        if ($state === FundProvider::STATE_APPROVED_OR_HAS_TRANSACTIONS) {
+            $query->where(static function(Builder $builder) use ($fund) {
+                FundProviderQuery::whereApprovedForFundsFilter($builder, $fund->id);
+
+                $builder->orWhereHas('organization', function(Builder $builder) use ($fund) {
+                    $builder->whereHas('voucher_transactions.voucher', function(
+                        Builder $builder
+                    ) use ($fund) {
+                        return $builder->where('fund_id', $fund->id);
+                    });
+                });
+            });
         }
 
         return FundProviderResource::collection(
