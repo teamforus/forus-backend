@@ -20,7 +20,7 @@ class ProductSoldOutMail extends ImplementationMail
         string $productName,
         string $link,
         ?EmailFrom $emailFrom
-    ){
+    ) {
         $this->setMailFrom($emailFrom);
 
         $this->productName = $productName;

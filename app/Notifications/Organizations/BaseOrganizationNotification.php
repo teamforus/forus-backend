@@ -63,7 +63,7 @@ abstract class BaseOrganizationNotification extends BaseNotification
     public static function getMeta($loggable): array
     {
         return [
-            'organization_id' => static::getOrganization($loggable)->id
+            'organization_id' => static::getOrganization($loggable)->id,
         ];
     }
 

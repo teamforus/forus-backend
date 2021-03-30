@@ -6,6 +6,7 @@ use App\Models\Implementation;
 use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
@@ -112,7 +113,8 @@ class DigIdSession extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function implementation() {
+    public function implementation(): BelongsTo
+    {
         return $this->belongsTo(Implementation::class);
     }
 
@@ -148,9 +150,10 @@ class DigIdSession extends Model
 
     /**
      * @param string $goBackUrl
-     * @return bool|mixed
+     * @return bool
      */
-    public function startAuthSession(string $goBackUrl) {
+    public function startAuthSession(string $goBackUrl): bool
+    {
         try {
             $digId = $this->implementation->getDigid();
             $authRequest = $digId->makeAuthRequest(url_extend_get_params($goBackUrl, [
@@ -166,7 +169,7 @@ class DigIdSession extends Model
             'a-select-server'   => $authRequest['a-select-server'],
         ]);
 
-        return tap($this->update([
+        return $this->update([
             'state'                         => self::STATE_PENDING_AUTH,
             'digid_rid'                     => $authRequest['rid'],
             'digid_state'                   => DigIdSession::STATE_PENDING_AUTH,
@@ -174,7 +177,7 @@ class DigIdSession extends Model
             'digid_app_url'                 => $goBackUrl,
             'digid_request_aselect_server'  => $authRequest['a-select-server'],
             'digid_auth_redirect_url'       => $digidRedirectUrl
-        ]));
+        ]);
     }
 
     /**
@@ -182,7 +185,8 @@ class DigIdSession extends Model
      * @param $errorCode
      * @return bool
      */
-    private function setError($message, $errorCode) {
+    private function setError($message, $errorCode): bool
+    {
         logger()->error(sprintf(
             'Could not make digid auth request, got %s: %s',
             $errorCode,
@@ -191,13 +195,11 @@ class DigIdSession extends Model
 
         $canceled = $errorCode == DigIdRepo::DIGID_CANCELLED;
 
-        $this->update([
+        return $this->update([
             'digid_error_code'      => $errorCode,
             'digid_error_message'   => DigIdRepo::responseCodeDetails($errorCode),
             'state'                 => $canceled ? self::STATE_CANCELED: self::STATE_ERROR,
         ]);
-
-        return false;
     }
 
     /**
@@ -210,17 +212,16 @@ class DigIdSession extends Model
         string $rid,
         string $aselect_server,
         string $aselect_credentials
-    ) {
+    ): bool {
         try {
             $result = $this->implementation->getDigid()->getBsnFromResponse(
                 $rid, $aselect_server, $aselect_credentials
             );
         } catch (DigIdException $exception) {
-            return $this->setError(
-                $exception->getMessage(), $exception->getDigIdCode());
+            return $this->setError($exception->getMessage(), $exception->getDigIdCode());
         }
 
-        return tap($this)->update([
+        return $this->update([
             'digid_uid'                             => $result['uid'],
             'digid_response_aselect_server'         => $aselect_server,
             'digid_response_aselect_credentials'    => $aselect_credentials,

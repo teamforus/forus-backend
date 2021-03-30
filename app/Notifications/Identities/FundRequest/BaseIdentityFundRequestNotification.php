@@ -7,6 +7,10 @@ use App\Notifications\Identities\BaseIdentityNotification;
 use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Support\Collection;
 
+/**
+ * Class BaseIdentityFundRequestNotification
+ * @package App\Notifications\Identities\FundRequest
+ */
 abstract class BaseIdentityFundRequestNotification extends BaseIdentityNotification
 {
     /**

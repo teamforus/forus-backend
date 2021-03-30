@@ -480,7 +480,7 @@ if (!function_exists('api_dependency_requested')) {
         string $key,
         \Illuminate\Http\Request $request = null,
         bool $default = true
-    ) {
+    ): bool {
         $requestData = $request ?? request();
         $dependency = $requestData->input('dependency');
 

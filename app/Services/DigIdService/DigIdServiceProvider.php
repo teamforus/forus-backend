@@ -7,6 +7,10 @@ use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\DigIdService\Repositories\Interfaces\IDigIdRepo;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Class DigIdServiceProvider
+ * @package App\Services\DigIdService
+ */
 class DigIdServiceProvider extends ServiceProvider
 {
     public function boot()
@@ -26,8 +30,5 @@ class DigIdServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
-    {
-
-    }
+    public function register() {}
 }

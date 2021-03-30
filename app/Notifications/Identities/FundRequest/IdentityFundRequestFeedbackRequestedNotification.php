@@ -6,18 +6,25 @@ use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMa
 use App\Models\FundRequest;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * Class IdentityFundRequestFeedbackRequestedNotification
+ * @package App\Notifications\Identities\FundRequest
+ */
 class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundRequestNotification
 {
     protected $key = 'notifications_identities.fund_request_feedback_requested';
     protected $sendMail = true;
 
+    /**
+     * @param Identity $identity
+     */
     public function toMail(Identity $identity): void
     {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;
         $fund = $fundRequest->fund;
 
-        resolve('forus.services.notification')->sendMailNotification(
+        $this->getNotificationService()->sendMailNotification(
             $identity->primary_email->email,
             new FundRequestClarificationRequestedMail(
                 $this->eventLog->data['fund_name'],

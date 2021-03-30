@@ -32,11 +32,8 @@ class FundCriterionResource extends Resource
 
         return array_merge($criterion->only([
             'id', 'record_type_key', 'operator', 'value', 'show_attachment',
-            'description', 'title'
+            'title', 'description', 'description_html',
         ]), [
-            'description_html' => resolve('markdown')->convertToHtml(
-                $criterion->description
-            ),
             'external_validators' => $external_validators->map(static function(
                 FundCriterionValidator $validator
             ) {

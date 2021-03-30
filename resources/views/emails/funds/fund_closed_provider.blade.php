@@ -8,7 +8,7 @@
     {{ mail_trans('fund_closed_provider.description', [
             'fund_name' => $fund_name,
             'end_date'  => $fund_end_date,
-            'end_date_minus1' => $fund_end_date->subDay()
+            'start_date'  => $fund_start_date,
         ])
     }} <br />
     <br/>

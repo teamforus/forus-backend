@@ -22,7 +22,7 @@ return [
     'ended' => [
         'title' => ':fund_name is geëindigd.',
         'description' =>
-            ':fund_name liep van :fund_start_date_locale: tot :fund_end_date_locale: en is vanaf vandaag niet meer geldig. ' .
+            ':fund_name liep van :fund_start_date_locale: en met :fund_end_date_locale: en is vanaf vandaag niet meer geldig. ' .
             'Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name.',
     ],
     'started' => [

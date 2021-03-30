@@ -5,8 +5,11 @@ namespace App\Notifications\Identities;
 use App\Notifications\BaseNotification;
 use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 
+/**
+ * Class BaseIdentityNotification
+ * @package App\Notifications\Identities
+ */
 abstract class BaseIdentityNotification extends BaseNotification
 {
     protected $scope = self::SCOPE_WEBSHOP;

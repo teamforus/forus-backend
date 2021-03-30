@@ -1,13 +1,13 @@
 <?php
     /** @var string $request_status */
     /** @var string $fund_name */
+    /** @var bool $informalCommunication */
+    /** @var string $communicationType */
+    /** @var \App\Services\Forus\Notification\EmailFrom $emailFrom */
 ?>
 @extends('emails.base')
-@if ($emailFrom->isInformalCommunication())
-    @section('title', mail_trans('fund_request_resolved.title_informal', ['fund_name' => $fund_name])) 
-@else
-    @section('title', mail_trans('fund_request_resolved.title_formal', ['fund_name' => $fund_name]))   
-@endif
+
+@section('title', mail_trans("fund_request_resolved.title_$communicationType", ['fund_name' => $fund_name]))
 @section('html')
     {{ mail_trans('dear_citizen') }},
     <br/>
@@ -19,11 +19,8 @@
         <br/>
     @endif
 
-    @if ($emailFrom->isInformalCommunication())
-        {!! mail_trans('fund_request_resolved.contact_us_informal', ['fund_name' => $fund_name]) !!} 
-    @else
-        {!! mail_trans('fund_request_resolved.contact_us_formal', ['fund_name' => $fund_name]) !!}
-    @endif
+    {!! mail_trans("fund_request_resolved.contact_us_$communicationType", ['fund_name' => $fund_name]) !!}
+
     <br/>
     <br/>
     {{ $sponsor_name }}
