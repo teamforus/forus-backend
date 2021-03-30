@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Exceptions\AuthorizationJsonException;
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
@@ -236,6 +237,34 @@ class VoucherPolicy
         }
 
         return $this->show($identity_address, $voucher);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return bool|null
+     * @throws AuthorizationJsonException
+     */
+    public function storePhysicalCardSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): ?bool {
+        if (!$voucher->fund->fund_config->allow_physical_cards) {
+            $this->deny("physical_cards_not_allowed");
+        }
+
+        if ($voucher->physical_cards()->exists()) {
+            $this->deny("physical_card_already_attached");
+        }
+
+        if (!$voucher->isBudgetType()) {
+            $this->deny("only_budget_vouchers");
+        }
+
+        return $voucher->fund->organization_id == $organization->id &&
+            $organization->identityCan($identity_address, ['manage_vouchers']);
     }
 
     /**

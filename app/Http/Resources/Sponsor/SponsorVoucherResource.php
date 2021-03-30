@@ -4,6 +4,7 @@ namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
+use App\Http\Resources\PhysicalCardResource;
 use App\Models\Voucher;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -25,6 +26,9 @@ class SponsorVoucherResource extends Resource
         $recordRepo = resolve('forus.services.record');
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
+        $physicalCard = $voucher->physical_cards()->exists()
+            ? $voucher->physical_cards()->first()->only(['id', 'code'])
+            : null;
 
         if ($voucher->is_granted && $voucher->identity_address) {
             $identity_bsn = $recordRepo->bsnByAddress($voucher->identity_address);
@@ -40,7 +44,8 @@ class SponsorVoucherResource extends Resource
             'identity_email' => $identity_email ?? null,
             'relation_bsn' => $voucher->voucher_relation->bsn ?? null,
             'address' => $address ?? null,
-            'fund' => $voucher->fund->only('id', 'name', 'organization_id', 'state'),
+            'fund' => $voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'),
+            'physical_card' => $physicalCard,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),

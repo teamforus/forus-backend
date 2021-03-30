@@ -337,6 +337,17 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
+        'sponsor/{organization_id}/vouchers/{voucher}/physical-cards',
+        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardsController", [
+        'only' => [
+            'store', 'destroy',
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
+
+    $router->resource(
         'vouchers/{voucher_token_address}/physical-card-requests',
         "Api\Platform\Vouchers\PhysicalCardRequestsController", [
         'only' => [
