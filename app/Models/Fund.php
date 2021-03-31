@@ -326,6 +326,39 @@ class Fund extends Model
     }
 
     /**
+     * @param string|null $email
+     * @return bool
+     */
+    public function sendFundClosedRequesterEmailNotification(?string $email): bool
+    {
+        return $email ? notification_service()->fundClosed(
+            $email,
+            $this->fund_config->implementation->getEmailFrom(),
+            $this->name,
+            $this->organization->email,
+            $this->organization->name,
+            $this->fund_config->implementation->url_webshop
+        ) : false;
+    }
+
+    /**
+     * @param Organization $organization
+     * @return bool
+     */
+    public function sendFundClosedProviderEmailNotification(Organization $organization): bool
+    {
+        return notification_service()->fundClosedProvider(
+            $organization->email,
+            $this->fund_config->implementation->getEmailFrom(),
+            $this->name,
+            format_date_locale($this->start_date),
+            format_date_locale($this->end_date),
+            $organization->name,
+            $this->fund_config->implementation->url_provider ?? env('PANEL_PROVIDER_URL')
+        );
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnusedPrivateMethodInspection
      */
@@ -887,12 +920,9 @@ class Fund extends Model
      */
     public static function checkStateQueue(): void {
         /** @var Collection|Fund[] $funds */
-        $funds = self::query()
-            ->whereHas('fund_config', static function (Builder $query) {
-                return $query->where('is_configured', true);
-            })
-            ->whereDate('start_date', '<=', now())
-            ->get();
+        $funds = self::query()->whereHas('fund_config', static function (Builder $query) {
+            return $query->where('is_configured', true);
+        })->whereDate('start_date', '<=', now())->get();
 
         foreach($funds as $fund) {
             if ($fund->state === self::STATE_PAUSED &&
@@ -906,11 +936,11 @@ class Fund extends Model
             ])->exists();
 
             if (!$expirationNotified && $fund->state !== self::STATE_CLOSED &&
-                $fund->end_date->endOfDay()->clone()->subDays(14)->isPast()) {
+                $fund->end_date->clone()->subDays(14)->isPast()) {
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if ($fund->state !== self::STATE_CLOSED && $fund->end_date->endOfDay()->isPast()) {
+            if ($fund->state !== self::STATE_CLOSED && $fund->end_date->isPast()) {
                 $fund->changeState(self::STATE_CLOSED);
                 FundEndedEvent::dispatch($fund);
             }
@@ -922,13 +952,11 @@ class Fund extends Model
      */
     public static function checkConfigStateQueue(): void
     {
-        $funds = self::query()
-            ->whereHas('fund_config', static function (Builder $query) {
-                return $query->where('is_configured', true);
-            })
-            ->where('state', self::STATE_WAITING)
-            ->whereDate('start_date', '>', now())
-            ->get();
+        $funds = self::query()->whereHas('fund_config', static function (Builder $query) {
+            return $query->where('is_configured', true);
+        })->where([
+            'state' => self::STATE_WAITING
+        ])->whereDate('start_date', '>=', now())->get();
 
         /** @var self $fund */
         foreach($funds as $fund) {

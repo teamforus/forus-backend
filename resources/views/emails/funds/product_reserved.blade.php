@@ -1,8 +1,17 @@
+<?php
+/** @var string $provider_organization_name */
+/** @var string $product_price */
+/** @var string $product_name */
+/** @var bool $informalCommunication */
+/** @var string $communicationType */
+/** @var \App\Services\Forus\Notification\EmailFrom $emailFrom */
+?>
+
 @extends('emails.base')
-@section('title', mail_trans('product_reserved.title', [
-        'product_name' => $product_name,
-        'provider_organization_name' => $provider_organization_name
-    ]))
+@section('title', mail_trans("product_reserved.title_$communicationType", [
+    'product_name' => $product_name,
+    'provider_organization_name' => $provider_organization_name
+]))
 @section('html')
     {{ mail_trans('dear_user') }},
     <br/>

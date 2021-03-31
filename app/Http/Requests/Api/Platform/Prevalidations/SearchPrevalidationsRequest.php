@@ -40,7 +40,8 @@ class SearchPrevalidationsRequest extends FormRequest
                 'nullable', Rule::in(Prevalidation::STATES)
             ],
             'per_page' => 'nullable|numeric|between:1,2500',
-            'exported' => 'boolean'
+            'exported' => 'boolean',
+            'export_format' => 'nullable|in:csv,xls'
         ];
     }
 }

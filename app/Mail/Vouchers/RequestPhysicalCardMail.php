@@ -6,6 +6,10 @@ use App\Mail\ImplementationMail;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
+/**
+ * Class RequestPhysicalCardMail
+ * @package App\Mail\Vouchers
+ */
 class RequestPhysicalCardMail extends ImplementationMail
 {
     private $data;
@@ -25,6 +29,9 @@ class RequestPhysicalCardMail extends ImplementationMail
         $this->setMailFrom($email_from);
     }
 
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
         return $this->buildBase()

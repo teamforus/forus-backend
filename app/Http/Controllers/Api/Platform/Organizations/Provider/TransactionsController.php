@@ -56,9 +56,11 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
+        $type = $request->input('export_format', 'xls');
+
         return resolve('excel')->download(
             new VoucherTransactionsProviderExport($request, $organization),
-            date('Y-m-d H:i:s') . '.xls'
+            date('Y-m-d H:i:s') . '.' . $type
         );
     }
 

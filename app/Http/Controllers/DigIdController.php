@@ -97,11 +97,9 @@ class DigIdController extends Controller
         // check if digid request went well and redirect to final url with
         // error core if not
         if (!$session->isAuthorized()) {
-            $redirectParams = $session->digid_error_code !== DigIdRepo::DIGID_CANCELLED ? [
+            return redirect(url_extend_get_params($session->session_final_url, [
                 'digid_error' => $session->getErrorKey()
-            ] : [];
-
-            return redirect(url_extend_get_params($session->session_final_url, $redirectParams));
+            ]));
         }
 
         switch ($session->session_request) {

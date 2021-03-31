@@ -132,14 +132,7 @@ class FundSubscriber
         }
 
         foreach ($fund->provider_organizations_approved as $organization) {
-            $this->notificationService->fundClosedProvider(
-                $organization->email,
-                $fund->fund_config->implementation->getEmailFrom(),
-                $fund->name,
-                $fund->end_date,
-                $organization->name,
-                $fund->fund_config->implementation->url_provider ?? env('PANEL_PROVIDER_URL')
-            );
+            $fund->sendFundClosedProviderEmailNotification($organization);
         }
 
         $identities = $fund->vouchers()->whereNotNull(
@@ -151,15 +144,7 @@ class FundSubscriber
         });
 
         foreach ($emails as $email) {
-            $this->notificationService->fundClosed(
-                $email,
-                $fund->fund_config->implementation->getEmailFrom(),
-                $fund->name,
-                $fund->end_date,
-                $fund->organization->email,
-                $fund->organization->name,
-                $fund->fund_config->implementation->url_webshop
-            );
+            $fund->sendFundClosedRequesterEmailNotification($email);
         }
     }
 

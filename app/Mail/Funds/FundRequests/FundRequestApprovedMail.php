@@ -34,16 +34,24 @@ class FundRequestApprovedMail extends ImplementationMail
     }
 
     /**
+     * @return string
+     */
+    protected function getSubject(): string
+    {
+        return mail_trans("fund_request_approved.title_$this->communicationType", [
+            'fund_name' => $this->fundName
+        ]);
+    }
+
+    /**
      * Build the message.
      *
      * @return $this
      */
     public function build(): Mailable
     {
-        $this->communicationType =  $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
-
         return $this->buildBase()
-            ->subject(mail_trans('fund_request_approved.title_' . $this->communicationType, ['fund_name' => $this->fundName]))
+            ->subject($this->getSubject())
             ->view('emails.funds.fund-requests.fund_request-approved', [
                 'fund_name'     => $this->fundName,
                 'app_link'      => $this->appLink,

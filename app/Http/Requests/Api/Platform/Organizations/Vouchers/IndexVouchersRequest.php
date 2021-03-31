@@ -45,7 +45,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'type'              => 'required|in:fund_voucher,product_voucher',
             'unassigned'        => 'nullable|boolean',
             'source'            => 'required|in:all,user,employee',
-            'export_type'       => 'nullable|in:pdf,png',
+            'export_type'       => 'nullable|in:pdf,xls,csv,png',
             'sort_by'           => 'nullable|in:amount,expire_at,created_at',
             'state'             => 'nullable|in:' . implode(',', Voucher::STATES),
             'sort_order'        => 'nullable|in:asc,desc',

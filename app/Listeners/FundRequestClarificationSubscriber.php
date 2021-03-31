@@ -7,8 +7,16 @@ use App\Models\FundRequest;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Class FundRequestClarificationSubscriber
+ * @package App\Listeners
+ */
 class FundRequestClarificationSubscriber
 {
+    /**
+     * @param FundRequestClarificationCreated $clarificationCreated
+     * @noinspection PhpUnused
+     */
     public function onFundRequestClarificationCreated(
         FundRequestClarificationCreated $clarificationCreated
     ) {

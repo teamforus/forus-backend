@@ -33,6 +33,7 @@ class IndexFundRequestsRequest extends BaseFormRequest
             'to'            => 'nullable|date:Y-m-d',
             'sort_by'       => 'nullable|in:created_at,note,state',
             'sort_order'    => 'nullable|in:asc,desc',
+            'export_format' => 'nullable|in:csv,xls'
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Exports\VoucherExport;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
@@ -300,6 +301,28 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return BinaryFileResponse
      * @throws AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function exportXls(
+        IndexVouchersRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+
+        $fund = $organization->findFund($request->get('fund_id'));
+        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
+        $fileName = date('Y-m-d H:i:s') . '.xls';
+
+        return resolve('excel')->download(new VoucherExport($vouchers), $fileName);
+    }
+
+    /**
+     * @param IndexVouchersRequest $request
+     * @param Organization $organization
+     * @return BinaryFileResponse
+     * @throws AuthorizationException
      * @noinspection PhpUnused
      */
     public function export(
@@ -329,7 +352,6 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return array
      * @throws AuthorizationException
-     * @noinspection PhpUnused
      */
     public function exportData(
         IndexVouchersRequest $request,

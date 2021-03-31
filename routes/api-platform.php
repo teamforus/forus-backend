@@ -752,6 +752,11 @@ $router->group(['middleware' => [
     );
 
     $router->get(
+        'organizations/{organization}/sponsor/vouchers/export-xls',
+        "Api\Platform\Organizations\Sponsor\VouchersController@exportXls"
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/vouchers/export-data',
         "Api\Platform\Organizations\Sponsor\VouchersController@exportData"
     );

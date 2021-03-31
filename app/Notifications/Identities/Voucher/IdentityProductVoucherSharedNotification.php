@@ -20,7 +20,7 @@ class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotifi
         $voucher = $this->eventLog->loggable;
 
         if ($this->eventLog->data['voucher_share_send_copy'] ?? false) {
-            notification_service()->sendMailNotification(
+            $this->getNotificationService()->sendMailNotification(
                 $identity->primary_email->email,
                 new ShareProductVoucherMail(array_merge($this->eventLog->data, [
                     'reason'   => $this->eventLog->data['voucher_share_message'] ?? '',
@@ -30,7 +30,7 @@ class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotifi
             );
         }
 
-        notification_service()->sendMailNotification(
+        $this->getNotificationService()->sendMailNotification(
             $voucher->product->organization->email,
             new ShareProductVoucherMail(array_merge($this->eventLog->data, [
                 'reason'   => $this->eventLog->data['voucher_share_message'] ?? '',

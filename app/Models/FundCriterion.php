@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criterion_validators
  * @property-read int|null $fund_criterion_validators_count
+ * @property-read string $description_html
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion query()
@@ -80,5 +81,14 @@ class FundCriterion extends Model
     public function external_validator_organizations(): BelongsToMany
     {
         return $this->belongsToMany(OrganizationValidator::class, FundCriterionValidator::class);
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getDescriptionHtmlAttribute(): string
+    {
+        return resolve('markdown')->convertToHtml($this->description ?? '');
     }
 }

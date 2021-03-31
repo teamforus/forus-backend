@@ -43,6 +43,7 @@ return [
 
     'extensions' => [
         \App\Libs\Markdown\Extensions\Youtube\YouTubeIframeExtension::class,
+        \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension::class,
     ],
 
     /*
@@ -71,6 +72,13 @@ return [
      */
     'youtube_iframe_allowfullscreen' => true,
     'youtube_iframe_wrapper_class' => 'youtube-root',
+
+    /**
+     * Open links in new window
+     */
+    'external_link' => [
+        'open_in_new_window' => true
+    ],
 
     /*
     |--------------------------------------------------------------------------

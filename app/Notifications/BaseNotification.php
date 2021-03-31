@@ -9,6 +9,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notification;
 
+/**
+ * Class BaseNotification
+ * @package App\Notifications
+ */
 abstract class BaseNotification extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -36,6 +40,14 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         $this->queue = config('forus.notifications.notifications_queue_name');
         $this->meta = array_merge($this->meta, $meta);
         $this->eventLog = $eventLog;
+    }
+
+    /**
+     * @return \App\Services\Forus\Notification\NotificationService|\Illuminate\Contracts\Foundation\Application|mixed
+     */
+    public function getNotificationService()
+    {
+        return notification_service();
     }
 
     /**
@@ -77,16 +89,17 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public static function send(EventLog $event): bool
     {
         try {
-            \Illuminate\Support\Facades\Notification::send(
-                static::eligibleIdentities($event->loggable),
-                new static($event, static::getMeta($event->loggable))
-            );
+            $identities = static::eligibleIdentities($event->loggable);
+            $meta = new static($event, static::getMeta($event->loggable));
+
+            \Illuminate\Support\Facades\Notification::send($identities, $meta);
         } catch (\Exception $exception) {
             if ($logger = logger()) {
                 $logger->error(sprintf(
-                    "Unable to create notification:\n %s",
-                    $exception->getMessage())
-                );
+                    "Unable to create notification:\n %s \n %s",
+                    $exception->getMessage(),
+                    $exception->getTraceAsString()
+                ));
             }
 
             return false;

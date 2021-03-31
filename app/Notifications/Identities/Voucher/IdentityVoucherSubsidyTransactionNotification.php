@@ -24,7 +24,7 @@ class IdentityVoucherSubsidyTransactionNotification extends BaseIdentityVoucherN
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
 
-        notification_service()->sendMailNotification(
+        $this->getNotificationService()->sendMailNotification(
             $identity->primary_email->email,
             new SubsidyPaymentSuccessMail(array_merge($this->eventLog->data, [
                 'webshop_link' => $voucher->fund->urlWebshop(),
