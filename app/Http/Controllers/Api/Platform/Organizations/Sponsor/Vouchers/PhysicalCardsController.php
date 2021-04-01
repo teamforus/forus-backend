@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor\Vouchers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCards\StorePhysicalCardRequest;
 use App\Http\Resources\PhysicalCardResource;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\Voucher;
-use App\Models\VoucherToken;
-use App\Http\Requests\Api\Platform\Vouchers\PhysicalCards\StorePhysicalCardRequest;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Response;
 
@@ -29,7 +28,6 @@ class PhysicalCardsController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @return PhysicalCardResource
-     * @throws \App\Exceptions\AuthorizationJsonException
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
@@ -37,7 +35,6 @@ class PhysicalCardsController extends Controller
         Organization $organization,
         Voucher $voucher
     ): PhysicalCardResource {
-//        $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucher, $organization]);
         $this->authorize('storePhysicalCardSponsor', [$voucher, $organization]);

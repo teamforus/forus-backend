@@ -26,9 +26,7 @@ class SponsorVoucherResource extends Resource
         $recordRepo = resolve('forus.services.record');
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
-        $physicalCard = $voucher->physical_cards()->exists()
-            ? $voucher->physical_cards()->first()->only(['id', 'code'])
-            : null;
+        $physical_cards = $voucher->physical_cards()->first();
 
         if ($voucher->is_granted && $voucher->identity_address) {
             $identity_bsn = $recordRepo->bsnByAddress($voucher->identity_address);
@@ -45,7 +43,7 @@ class SponsorVoucherResource extends Resource
             'relation_bsn' => $voucher->voucher_relation->bsn ?? null,
             'address' => $address ?? null,
             'fund' => $voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'),
-            'physical_card' => $physicalCard,
+            'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),

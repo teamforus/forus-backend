@@ -38,6 +38,7 @@ class VoucherResource extends Resource
         'fund.provider_organizations_approved.offices.organization.logo.presets',
         'fund.logo.presets',
         'fund.organization.logo.presets',
+        'physical_cards'
     ];
 
     /**
@@ -64,7 +65,7 @@ class VoucherResource extends Resource
     public function toArray($request): array
     {
         $voucher = $this->resource;
-        $physical_cards = $voucher->physical_cards()->first();
+        $physical_cards = $voucher->physical_cards->first();
 
         return array_merge($voucher->only([
             'identity_address', 'fund_id', 'returnable'
