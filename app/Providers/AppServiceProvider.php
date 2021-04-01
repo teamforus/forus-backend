@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Media\CmsMediaConfig;
 use App\Media\FundLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
@@ -50,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         MediaService::setMediaConfigs([
+            new CmsMediaConfig(),
             new FundLogoMediaConfig(),
             new OfficePhotoMediaConfig(),
             new ProductPhotoMediaConfig(),
