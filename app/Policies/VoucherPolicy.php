@@ -3,13 +3,14 @@
 namespace App\Policies;
 
 use App\Exceptions\AuthorizationJsonException;
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
+use App\Models\PhysicalCard;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class VoucherPolicy
@@ -146,10 +147,8 @@ class VoucherPolicy
      * @param Voucher $voucher
      * @return bool
      */
-    public function redeem(
-        string $identity_address,
-        Voucher $voucher
-    ): bool {
+    public function redeem(string $identity_address, Voucher $voucher): bool
+    {
         return ($identity_address && $voucher) &&
             (bool) $voucher->activation_code && !$voucher->identity_address;
     }
@@ -159,6 +158,7 @@ class VoucherPolicy
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function sendByEmailSponsor(
         string $identity_address,
@@ -172,9 +172,8 @@ class VoucherPolicy
      * @param string $identity_address
      * @return bool
      */
-    public function store(
-        string $identity_address
-    ): bool {
+    public function store(string $identity_address): bool
+    {
         return !empty($identity_address);
     }
 
@@ -183,10 +182,8 @@ class VoucherPolicy
      * @param Voucher $voucher
      * @return bool
      */
-    public function show(
-        string $identity_address,
-        Voucher $voucher
-    ) : bool {
+    public function show(string $identity_address, Voucher $voucher) : bool
+    {
         return strcmp($identity_address, $voucher->identity_address) === 0;
     }
 
@@ -195,10 +192,8 @@ class VoucherPolicy
      * @param Voucher $voucher
      * @return bool
      */
-    public function sendEmail(
-        string $identity_address,
-        Voucher $voucher
-    ): bool {
+    public function sendEmail(string $identity_address, Voucher $voucher): bool
+    {
         return $this->show($identity_address, $voucher) && !$voucher->expired;
     }
 
@@ -207,77 +202,19 @@ class VoucherPolicy
      * @param Voucher $voucher
      * @return bool
      */
-    public function shareVoucher(
-        string $identity_address,
-        Voucher $voucher
-    ): bool {
+    public function shareVoucher(string $identity_address, Voucher $voucher): bool
+    {
         return $this->sendEmail($identity_address, $voucher);
     }
 
     /**
      * @param string $identity_address
      * @param Voucher $voucher
-     * @return bool|null
-     * @throws AuthorizationJsonException
+     * @return bool
      */
-    public function storePhysicalCard(
-        string $identity_address,
-        Voucher $voucher
-    ): ?bool {
-        if (!$voucher->fund->fund_config->allow_physical_cards) {
-            $this->deny("physical_cards_not_allowed");
-        }
-
-        if ($voucher->physical_cards()->exists()) {
-            $this->deny("physical_card_already_attached");
-        }
-
-        if (!$voucher->isBudgetType()) {
-            $this->deny("only_budget_vouchers");
-        }
-
-        return $this->show($identity_address, $voucher);
-    }
-
-    /**
-     * @param string $identity_address
-     * @param Organization $organization
-     * @param Voucher $voucher
-     * @return bool|null
-     * @throws AuthorizationJsonException
-     */
-    public function storePhysicalCardSponsor(
-        string $identity_address,
-        Voucher $voucher,
-        Organization $organization
-    ): ?bool {
-        if (!$voucher->fund->fund_config->allow_physical_cards) {
-            $this->deny("physical_cards_not_allowed");
-        }
-
-        if ($voucher->physical_cards()->exists()) {
-            $this->deny("physical_card_already_attached");
-        }
-
-        if (!$voucher->isBudgetType()) {
-            $this->deny("only_budget_vouchers");
-        }
-
-        return $voucher->fund->organization_id == $organization->id &&
-            $organization->identityCan($identity_address, ['manage_vouchers']);
-    }
-
-    /**
-     * @param string $identity_address
-     * @param Voucher $voucher
-     * @return bool|null
-     * @throws AuthorizationJsonException
-     */
-    public function requestPhysicalCard(
-        string $identity_address,
-        Voucher $voucher
-    ): ?bool {
-        return $this->storePhysicalCard($identity_address, $voucher);
+    public function requestPhysicalCard(string $identity_address, Voucher $voucher): bool
+    {
+        return Gate::forUser($identity_address)->allows('create', [PhysicalCard::class, $voucher]);
     }
 
     /**
@@ -286,10 +223,8 @@ class VoucherPolicy
      * @return bool
      * @throws AuthorizationJsonException
      */
-    public function useAsProvider(
-        string $identity_address,
-        Voucher $voucher
-    ): bool {
+    public function useAsProvider(string $identity_address, Voucher $voucher): bool
+    {
         $fund = $voucher->fund;
 
         // fund should not be expired
@@ -424,12 +359,12 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $error
+     * @param string $message
      * @throws AuthorizationJsonException
      */
-    protected function deny(string $error): void {
-        $key = $error;
-        $message = trans("validation.voucher.{$error}");
+    protected function deny(string $message): void {
+        $key = $message;
+        $message = trans("validation.voucher.{$message}");
 
         throw new AuthorizationJsonException(json_encode(
             compact('error', 'message', 'key')

@@ -8,8 +8,7 @@ use App\Http\Resources\PhysicalCardResource;
 use App\Models\Organization;
 use App\Models\PhysicalCard;
 use App\Models\Voucher;
-use App\Traits\ThrottleWithMeta;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class PhysicalCardsController
@@ -17,11 +16,6 @@ use Illuminate\Http\Response;
  */
 class PhysicalCardsController extends Controller
 {
-    use ThrottleWithMeta;
-
-    private $maxAttempts = 5;
-    private $decayMinutes = 60 * 24;
-
     /**
      * Link existing physical card to existing voucher
      * @param StorePhysicalCardRequest $request
@@ -37,7 +31,7 @@ class PhysicalCardsController extends Controller
     ): PhysicalCardResource {
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucher, $organization]);
-        $this->authorize('storePhysicalCardSponsor', [$voucher, $organization]);
+        $this->authorize('createSponsor', [PhysicalCard::class, $voucher, $organization]);
 
         return new PhysicalCardResource($voucher->physical_cards()->create(
             $request->only('code')
@@ -50,21 +44,22 @@ class PhysicalCardsController extends Controller
      * @param Organization $organization
      * @param Voucher $voucher
      * @param PhysicalCard $physicalCard
-     * @return Response
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function destroy(
         Organization $organization,
         Voucher $voucher,
         PhysicalCard $physicalCard
-    ): Response {
+    ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucher, $organization]);
+        $this->authorize('deleteSponsor', [$physicalCard, $voucher, $organization]);
 
         $voucher->physical_cards()->where([
             'physical_cards.id' => $physicalCard->id
         ])->delete();
 
-        return new Response('', 200);
+        return response()->json([]);
     }
 }
