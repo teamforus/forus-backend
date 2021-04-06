@@ -17,6 +17,11 @@ class CmsMediaConfig extends MediaImageConfig
     protected $name = 'cms_media';
 
     /**
+     * @var string
+     */
+    protected $type = self::TYPE_MULTIPLE;
+
+    /**
      * FundLogoMediaConfig constructor.
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */

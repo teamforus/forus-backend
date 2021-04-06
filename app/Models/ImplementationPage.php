@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -33,6 +33,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ImplementationPage extends Model
 {
+    use HasMedia;
+
     const TYPE_EXPLANATION = 'explanation';
     const TYPE_PROVIDER = 'provider';
     const TYPE_PRIVACY = 'privacy';
