@@ -23,7 +23,7 @@ class ImplementationPrivateResource extends JsonResource
         }
 
         $data = $implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'title', 'description',
+            'id', 'key', 'name', 'url_webshop', 'title', 'description', 'informal_communication',
         ]);
 
         $data = array_merge($data, [
