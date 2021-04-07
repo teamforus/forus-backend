@@ -50,6 +50,7 @@ class VoucherExportData
     public function toArray(): array
     {
         $assigned_to_identity = $this->voucher->identity_address && $this->voucher->is_granted;
+        $identity = $this->voucher->identity;
 
         return array_merge($this->data_only ? [] : [
             'name' => $this->name,
@@ -61,7 +62,7 @@ class VoucherExportData
         ] : [], $assigned_to_identity ? [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
             'identity_bsn' => record_repo()->bsnByAddress($this->voucher->identity_address),
-            'identity_email' => record_repo()->primaryEmailByAddress($this->voucher->identity_address),
+            'identity_email' => $identity ? $identity->primary_email->email : null,
         ] : [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
             'identity_bsn' => null,
