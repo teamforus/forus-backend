@@ -6,6 +6,10 @@ use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * Class IdentityVoucherTransactionNotification
+ * @package App\Notifications\Identities\Voucher
+ */
 class IdentityVoucherTransactionNotification extends BaseIdentityVoucherNotification
 {
     protected $key = 'notifications_identities.voucher_transaction';
