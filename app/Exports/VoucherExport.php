@@ -20,8 +20,11 @@ class VoucherExport implements FromCollection, WithHeadings
 
     public function __construct(EloquentCollection $vouchers)
     {
-        $vouchers->load('voucher_relation', 'product', 'fund');
         $voucherData = collect();
+        $vouchers->load(
+            'transactions', 'voucher_relation', 'product', 'fund',
+            'token_without_confirmation', 'identity.primary_email'
+        );
 
         foreach ($vouchers as $voucher) {
             $voucherData->push((new VoucherExportData($voucher, true))->toArray());
