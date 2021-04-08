@@ -6,6 +6,10 @@ use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * Class ImplementationPrivateResource
+ * @package App\Http\Resources
+ */
 class ImplementationPrivateResource extends JsonResource
 {
     /**
