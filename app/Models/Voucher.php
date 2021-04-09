@@ -9,6 +9,7 @@ use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\Forus\Identity\Models\Identity;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -50,6 +51,7 @@ use RuntimeException;
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
+ * @property-read Identity $identity
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -158,6 +160,14 @@ class Voucher extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function identity(): BelongsTo
+    {
+        return $this->belongsTo(Identity::class, 'identity_address', 'address');
     }
 
     /**
@@ -735,7 +745,10 @@ class Voucher extends Model
     ): array {
         $vouchersData = [];
         $vouchersDataNames = [];
-        $vouchers->load('voucher_relation', 'product', 'fund');
+        $vouchers->load(
+            'transactions', 'voucher_relation', 'product', 'fund',
+            'token_without_confirmation', 'identity.primary_email'
+        );
 
         $fp = fopen('php://temp/maxmemory:1048576', 'wb');
 
@@ -744,6 +757,7 @@ class Voucher extends Model
         }
 
         foreach ($vouchers as $voucher) {
+            /** @var Voucher $voucher */
             do {
                 $voucherData = new VoucherExportData($voucher, $data_only);
             } while(!$data_only && in_array($voucherData->getName(), $vouchersDataNames, true));

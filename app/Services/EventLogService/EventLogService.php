@@ -65,10 +65,10 @@ class EventLogService implements IEventLogService
      * @return array
      */
     protected function fundMeta(Fund $fund): array {
-        // TODO: migrate logs "en met" names
         return [
             'fund_id' => $fund->id,
             'fund_name' => $fund->name,
+            'fund_type' => $fund->type,
             'fund_start_date' => $fund->start_date->format('Y-m-d'),
             'fund_end_date' => $fund->start_date->clone()->addDay()->format('Y-m-d'),
             'fund_end_date_minus1' => $fund->end_date->format('Y-m-d'),
