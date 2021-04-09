@@ -76,9 +76,9 @@ class ImplementationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        $implementation->update($request->only([
+        $implementation->updateModel($request->only([
             'title', 'description', 'informal_communication',
-        ]));
+        ]))->appendMedia($request->input('media_uid', []), 'cms_media');
 
         return new ImplementationPrivateResource($implementation->updatePages(
             $request->input('pages', [])

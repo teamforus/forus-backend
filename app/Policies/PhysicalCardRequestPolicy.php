@@ -6,6 +6,10 @@ use App\Models\Voucher;
 use App\Models\PhysicalCardRequest;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
+/**
+ * Class PhysicalCardRequestPolicy
+ * @package App\Policies
+ */
 class PhysicalCardRequestPolicy
 {
     use HandlesAuthorization;
@@ -17,10 +21,8 @@ class PhysicalCardRequestPolicy
      * @param Voucher $voucher
      * @return mixed
      */
-    public function showAny(
-        string $identity_address,
-        Voucher $voucher
-    ) {
+    public function showAny(string $identity_address, Voucher $voucher): bool
+    {
         return $voucher->identity_address === $identity_address;
     }
 
@@ -36,7 +38,7 @@ class PhysicalCardRequestPolicy
         string $identity_address,
         Voucher $voucher,
         PhysicalCardRequest $physicalCardRequest
-    ) {
+    ): bool {
         return ($voucher->identity_address === $identity_address) &&
             ($physicalCardRequest->voucher_id === $voucher->id);
     }
