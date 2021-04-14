@@ -11,6 +11,7 @@ use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use App\Services\SponsorApiService\SponsorApi;
 
 /**
  * Class DigIdController
@@ -175,6 +176,7 @@ class DigIdController extends Controller
 
         Prevalidation::assignAvailableToIdentityByBsn($identity);
         Voucher::assignAvailableToIdentityByBsn($identity);
+        Fund::find(1)->checkEligibilityByApi($bsn);
 
         return redirect(url_extend_get_params($session->session_final_url, [
             'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in'

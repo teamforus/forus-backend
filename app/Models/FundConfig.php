@@ -26,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_requests
  * @property bool $is_configured
  * @property bool $limit_generator_amount
+ * @property string|null $sponsor_api_token
+ * @property string|null $sponsor_api_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -52,6 +54,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereSponsorApiToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereSponsorApiUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereSubtractTransactionCosts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent

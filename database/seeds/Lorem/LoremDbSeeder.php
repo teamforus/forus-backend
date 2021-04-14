@@ -86,6 +86,13 @@ class LoremDbSeeder extends Seeder
         'Stadjerspas'
     ];
 
+    private $sponsorsWithApiConfig = [
+        'Nijmegen' => [
+            'url' => 'https://server.sponsor-api.com',
+            'token' => 'BjHrATtUVgFD2sS3csrGZuMjZ93QmzUKcc3Gh5as4qXqsLNvh8m2VwtxznfccVyH',
+        ]
+    ];
+
     private $fundKeyOverwrite = [
         'Nijmegen' => 'meedoen_2020',
     ];
@@ -657,6 +664,12 @@ class LoremDbSeeder extends Seeder
             'hash_bsn'              => $hashBsn,
             'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
             'bunq_key'              => config('forus.seeders.lorem_db_seeder.bunq_key'),
+            'sponsor_api_token'     => key_exists($fund->name, $this->sponsorsWithApiConfig)
+                                            ? $this->sponsorsWithApiConfig[$fund->name]['token']
+                                            : null,
+            'sponsor_api_url'       => key_exists($fund->name, $this->sponsorsWithApiConfig)
+                                            ? $this->sponsorsWithApiConfig[$fund->name]['url']
+                                            : null,
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'

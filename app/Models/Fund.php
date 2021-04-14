@@ -81,6 +81,8 @@ use Illuminate\Http\Request;
  * @property-read int|null $fund_formulas_count
  * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
+ * @property-read Collection|\App\Models\FundLog[] $fund_logs
+ * @property-read int|null $fund_logs_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
@@ -323,6 +325,14 @@ class Fund extends Model
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => true
         ]);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function fund_logs(): HasMany
+    {
+        return $this->hasMany(FundLog::class);
     }
 
     /**
@@ -1630,5 +1640,22 @@ class Fund extends Model
     public function getMaxAmountSumVouchers(): float
     {
         return (float) ($this->limitGeneratorAmount() ? $this->budget_left : 1000000);
+    }
+
+    /**
+     * @param $bsn
+     * @return mixed|void
+     */
+    public function checkEligibilityByApi($bsn)
+    {
+        return resolve('sponsor_api')->eligibilityCheck($this, $bsn);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSponsorApiConfigured(): bool
+    {
+        return $this->fund_config->sponsor_api_token && $this->fund_config->sponsor_api_url;
     }
 }

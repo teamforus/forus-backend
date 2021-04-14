@@ -217,6 +217,8 @@ return [
         Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
 
         App\Services\EventLogService\EventLogServiceProvider::class,
+
+        \App\Services\SponsorApiService\SponsorApiServiceProvider::class,
     ],
 
     /*
@@ -273,6 +275,7 @@ return [
         'RecordService' => \App\Services\Forus\Record\Facades\RecordService::class,
         'NotificationService' => \App\Services\Forus\Notification\Facades\Notification::class,
         'SessionService' => \App\Services\Forus\Session\Facades\Session::class,
+        "SponsorApi" => \App\Services\SponsorApiService\Facades\SponsorApi::class,
 
     ],
 
