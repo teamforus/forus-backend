@@ -1652,6 +1652,15 @@ class Fund extends Model
     }
 
     /**
+     * @param $bsn
+     * @return void
+     */
+    public function reportReceivedByApi($bsn)
+    {
+        return resolve('sponsor_api')->reportReceived($this, $bsn);
+    }
+
+    /**
      * @return bool
      */
     public function isSponsorApiConfigured(): bool

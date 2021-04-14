@@ -12,17 +12,21 @@ use GuzzleHttp\Exception\GuzzleException;
 class SponsorApi
 {
     protected $guzzleClient;
+    protected $serviceRecord;
 
     protected $requiredPemFiles = ['server-ca-crt.pem', 'client-crt.pem', 'client-key.pem'];
+
+    protected const ENDPOINT = '/api/v1/funds';
 
     protected const PEM_PASSPHRASE = 'password';
 
     protected const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
+    protected const ACTION_REPORT_RECEIVED = 'received';
+    protected const ACTION_REPORT_FIRST_USE = 'first_use';
 
     protected const STATE_PENDING = 'pending';
     protected const STATE_SUCCESS = 'success';
     protected const STATE_ERROR = 'error';
-
 
     /**
      * SponsorApi constructor.
@@ -30,17 +34,56 @@ class SponsorApi
     public function __construct()
     {
         $this->guzzleClient = new Client();
+        $this->serviceRecord = resolve('forus.services.record');
     }
 
     /**
      * @param Fund $fund
      * @param string $bsn
+     * @return array|mixed
      */
     public function eligibilityCheck(Fund $fund, string $bsn)
     {
-        $endpoint = '/api/v1/funds';
-        $identityAddress = resolve('forus.services.record')
-            ->identityAddressByBsn($bsn);
+        $result = $this->requestApi($fund, $bsn, self::ACTION_ELIGIBILITY_CHECK);
+        $identityAddress = $this->serviceRecord->identityAddressByBsn($bsn);
+
+        if (count($result) && isset($result['eligible']) && $result['eligible']) {
+            $fund->makeVoucher($identityAddress);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $bsn
+     * @return array|mixed
+     */
+    public function reportReceived(Fund $fund, string $bsn)
+    {
+        return $this->requestApi($fund, $bsn, self::ACTION_REPORT_RECEIVED);
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $bsn
+     * @return array|mixed
+     */
+    public function reportFirstUse(Fund $fund, string $bsn)
+    {
+        return $this->requestApi($fund, $bsn, self::ACTION_REPORT_FIRST_USE);
+    }
+
+    /**
+     * @param Fund $fund
+     * @param string $bsn
+     * @param string $action
+     * @return array|mixed
+     */
+    public function requestApi(Fund $fund, string $bsn, string $action): array
+    {
+        $result = [];
+        $identityAddress = $this->serviceRecord->identityAddressByBsn($bsn);
 
         if ($fund->isSponsorApiConfigured() && $this->certificateExists() && $bsn) {
             $url = $fund->fund_config->sponsor_api_url;
@@ -53,13 +96,13 @@ class SponsorApi
 
             $content = [
                 "bsn"=> $bsn,
-                "action" => self::ACTION_ELIGIBILITY_CHECK,
+                "action" => $action,
                 "fund_key"=> $fund->fund_config->key
             ];
 
             try {
                 $response = $this->guzzleClient->post(
-                    $url . $endpoint, [
+                    $url . self::ENDPOINT, [
                         'json' => $content,
                         'headers' => $headers,
                         'connect_timeout' => 650,
@@ -71,30 +114,28 @@ class SponsorApi
 
                 if (in_array($response->getStatusCode(), [200, 201])) {
 
-                    $responseArr = json_decode(
+                    $result = json_decode(
                         $response->getBody()->getContents(),
                         true
                     );
 
-                    if (isset($responseArr['eligible']) && $responseArr['eligible']) {
-                        $fund->makeVoucher($identityAddress);
-                        $fund->fund_logs()->create([
-                            'identity_address'  => $identityAddress,
-                            'identity_bsn'      => $bsn,
-                            'action'            => self::ACTION_ELIGIBILITY_CHECK,
-                            'response_id'       => $responseArr['id'] ?? null,
-                            'state'             => self::STATE_SUCCESS,
-                            'attempts'          => 1,
-                            'last_attempt_at'   => Carbon::now(),
-                        ]);
-                    }
+                    $fund->fund_logs()->create([
+                        'identity_address'  => $identityAddress ?? 1,
+                        'identity_bsn'      => $bsn,
+                        'action'            => $action,
+                        'response_id'       => $result['id'] ?? null,
+                        'state'             => self::STATE_SUCCESS,
+                        'attempts'          => 1,
+                        'last_attempt_at'   => Carbon::now(),
+                    ]);
+
                 }
 
             } catch (GuzzleException $e) {
                 $fund->fund_logs()->create([
-                    'identity_address'  => $identityAddress,
+                    'identity_address'  => $identityAddress ?? 1,
                     'identity_bsn'      => $bsn,
-                    'action'            => self::ACTION_ELIGIBILITY_CHECK,
+                    'action'            => $action,
                     'state'             => self::STATE_ERROR,
                     'error_code'        => $e->getCode(),
                     'error_message'     => $e->getMessage(),
@@ -102,8 +143,9 @@ class SponsorApi
                     'last_attempt_at'   => Carbon::now(),
                 ]);
             }
-
         }
+
+        return $result;
     }
 
     /**

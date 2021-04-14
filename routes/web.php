@@ -28,5 +28,5 @@ $router->get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsContro
 $router->get('/email-verification/{identity_email_token}', 'Api\Identity\IdentityEmailsController@emailVerificationToken');
 
 $router->get('/test', function () {
-    return Fund::find(2)->checkEligibilityByApi(123456789);;
+    return Fund::find(2)->checkEligibilityByApi(123456789);
 });
