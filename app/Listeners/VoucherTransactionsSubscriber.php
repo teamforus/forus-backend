@@ -25,6 +25,11 @@ class VoucherTransactionsSubscriber
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
         $product = $voucher->product;
+        $bsn = resolve('forus.services.record')->bsnByAddress($voucher->identity_address);
+
+        if ($voucher->transactions_count == 1 && $bsn) {
+            $fund->reportFirstUseByApi($bsn);
+        }
 
         if ($product) {
             $voucher->product->updateSoldOutState();
