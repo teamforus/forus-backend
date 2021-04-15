@@ -1643,12 +1643,19 @@ class Fund extends Model
     }
 
     /**
+     * @param $identity_address
      * @param $bsn
-     * @return array
+     * @return Voucher|null
      */
-    public function checkEligibilityByApi($bsn): array
+    public function checkEligibilityByApi($identity_address, $bsn): ?Voucher
     {
-        return resolve('sponsor_api')->eligibilityCheck($this, $bsn);
+        if (!VoucherQuery::whereNotExpiredAndActive(Voucher::where(
+            compact('identity_address')
+        ))->exists()) {
+            return resolve('sponsor_api')->eligibilityCheck($this, $bsn);
+        }
+
+        return null;
     }
 
     /**

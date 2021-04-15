@@ -6,6 +6,7 @@ namespace App\Services\SponsorApiService;
 
 use App\Models\Fund;
 use App\Models\FundLog;
+use App\Models\Voucher;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -43,19 +44,21 @@ class SponsorApi
     /**
      * @param Fund $fund
      * @param string $bsn
-     * @return array
+     * @return \App\Models\Voucher|
      */
-    public function eligibilityCheck(Fund $fund, string $bsn): array
+    public function eligibilityCheck(Fund $fund, string $bsn): ?Voucher
     {
         $result = $this->requestApi($fund, $bsn, self::ACTION_ELIGIBILITY_CHECK);
         $identityAddress = $this->serviceRecord->identityAddressByBsn($bsn);
 
         if (count($result) && isset($result['eligible']) && $result['eligible']) {
-            $fund->makeVoucher($identityAddress);
+            $voucher = $fund->makeVoucher($identityAddress);
             $this->reportReceived($fund, $bsn);
+
+            return $voucher;
         }
 
-        return $result;
+        return null;
     }
 
     /**
