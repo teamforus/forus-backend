@@ -5,9 +5,11 @@ namespace App\Services\SponsorApiService;
 
 
 use App\Models\Fund;
+use App\Models\FundLog;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Database\Eloquent\Builder;
 
 class SponsorApi
 {
@@ -15,6 +17,8 @@ class SponsorApi
     protected $serviceRecord;
 
     protected $requiredPemFiles = ['server-ca-crt.pem', 'client-crt.pem', 'client-key.pem'];
+
+    protected $errorActionsToRetry = ['received', 'first_use'];
 
     protected const ENDPOINT = '/api/v1/funds';
 
@@ -24,7 +28,6 @@ class SponsorApi
     protected const ACTION_REPORT_RECEIVED = 'received';
     protected const ACTION_REPORT_FIRST_USE = 'first_use';
 
-    protected const STATE_PENDING = 'pending';
     protected const STATE_SUCCESS = 'success';
     protected const STATE_ERROR = 'error';
 
@@ -40,15 +43,16 @@ class SponsorApi
     /**
      * @param Fund $fund
      * @param string $bsn
-     * @return array|mixed
+     * @return array
      */
-    public function eligibilityCheck(Fund $fund, string $bsn)
+    public function eligibilityCheck(Fund $fund, string $bsn): array
     {
         $result = $this->requestApi($fund, $bsn, self::ACTION_ELIGIBILITY_CHECK);
         $identityAddress = $this->serviceRecord->identityAddressByBsn($bsn);
 
         if (count($result) && isset($result['eligible']) && $result['eligible']) {
             $fund->makeVoucher($identityAddress);
+            $this->reportReceived($fund, $bsn);
         }
 
         return $result;
@@ -57,9 +61,9 @@ class SponsorApi
     /**
      * @param Fund $fund
      * @param string $bsn
-     * @return array|mixed
+     * @return array
      */
-    public function reportReceived(Fund $fund, string $bsn)
+    public function reportReceived(Fund $fund, string $bsn): array
     {
         return $this->requestApi($fund, $bsn, self::ACTION_REPORT_RECEIVED);
     }
@@ -67,9 +71,9 @@ class SponsorApi
     /**
      * @param Fund $fund
      * @param string $bsn
-     * @return array|mixed
+     * @return array
      */
-    public function reportFirstUse(Fund $fund, string $bsn)
+    public function reportFirstUse(Fund $fund, string $bsn): array
     {
         return $this->requestApi($fund, $bsn, self::ACTION_REPORT_FIRST_USE);
     }
@@ -78,9 +82,10 @@ class SponsorApi
      * @param Fund $fund
      * @param string $bsn
      * @param string $action
-     * @return array|mixed
+     * @param FundLog|null $log
+     * @return array
      */
-    public function requestApi(Fund $fund, string $bsn, string $action): array
+    public function requestApi(Fund $fund, string $bsn, string $action, FundLog $log = null): array
     {
         $result = [];
         $identityAddress = $this->serviceRecord->identityAddressByBsn($bsn);
@@ -119,29 +124,36 @@ class SponsorApi
                         true
                     );
 
-                    $fund->fund_logs()->create([
-                        'identity_address'  => $identityAddress ?? 1,
+                    $logSuccess = [
+                        'identity_address'  => $identityAddress ?? 0,
                         'identity_bsn'      => $bsn,
                         'action'            => $action,
                         'response_id'       => $result['id'] ?? null,
                         'state'             => self::STATE_SUCCESS,
-                        'attempts'          => 1,
+                        'attempts'          => $log->exists ? $log->attempts + 1 : 1,
                         'last_attempt_at'   => Carbon::now(),
-                    ]);
+                    ];
+                    $log->exists
+                        ? $log->update($logSuccess)
+                        : $fund->fund_logs()->create($logSuccess);
 
                 }
 
             } catch (GuzzleException $e) {
-                $fund->fund_logs()->create([
-                    'identity_address'  => $identityAddress ?? 1,
+                $logError = [
+                    'identity_address'  => $identityAddress ?? 0,
                     'identity_bsn'      => $bsn,
                     'action'            => $action,
                     'state'             => self::STATE_ERROR,
                     'error_code'        => $e->getCode(),
                     'error_message'     => $e->getMessage(),
-                    'attempts'          => 1,
+                    'attempts'          => $log->exists ? $log->attempts + 1 : 1,
                     'last_attempt_at'   => Carbon::now(),
-                ]);
+                ];
+
+                $log->exists
+                    ? $log->update($logError)
+                    : $fund->fund_logs()->create($logError);
             }
         }
 
@@ -159,4 +171,44 @@ class SponsorApi
 
         return count($missingPemFiles) == 0;
     }
+
+    public function getNextErrorLogInQueueQuery()
+    {
+        return FundLog::query()->orderBy('updated_at', 'ASC')
+            ->whereIn('action', $this->errorActionsToRetry)
+            ->where('state', '=', self::STATE_ERROR)
+            ->where('attempts', '<', 5)
+            ->where(function(Builder $query) {
+                $query->whereNull('last_attempt_at')->orWhere(
+                    'last_attempt_at', '<', Carbon::now()->subHours(8)
+                );
+            });
+    }
+
+    /**
+     * @return FundLog|null
+     */
+    public function getNextErrorLogInQueue(): ?FundLog
+    {
+        /** @var  FundLog $errorLog */
+        if (!$errorLog = $this->getNextErrorLogInQueueQuery()->first()) {
+            return null;
+        }
+
+        return $errorLog;
+    }
+
+    public function retryActionsFromErrorLogs() {
+        /** @var FundLog $errorLog */
+        while ($errorLog = $this->getNextErrorLogInQueue()) {
+            $this->requestApi(
+                Fund::find($errorLog->fund_id),
+                $errorLog->identity_bsn,
+                $errorLog->action,
+                $errorLog
+            );
+        }
+    }
+
+
 }

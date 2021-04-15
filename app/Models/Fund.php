@@ -1644,20 +1644,29 @@ class Fund extends Model
 
     /**
      * @param $bsn
-     * @return mixed|void
+     * @return array
      */
-    public function checkEligibilityByApi($bsn)
+    public function checkEligibilityByApi($bsn): array
     {
         return resolve('sponsor_api')->eligibilityCheck($this, $bsn);
     }
 
     /**
      * @param $bsn
-     * @return void
+     * @return array
      */
-    public function reportReceivedByApi($bsn)
+    public function reportReceivedByApi($bsn): array
     {
         return resolve('sponsor_api')->reportReceived($this, $bsn);
+    }
+
+    /**
+     * @param $bsn
+     * @return array
+     */
+    public function reportFirstUseByApi($bsn): array
+    {
+        return resolve('sponsor_api')->reportFirstUse($this, $bsn);
     }
 
     /**

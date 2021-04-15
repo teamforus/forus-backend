@@ -275,7 +275,7 @@ return [
         'RecordService' => \App\Services\Forus\Record\Facades\RecordService::class,
         'NotificationService' => \App\Services\Forus\Notification\Facades\Notification::class,
         'SessionService' => \App\Services\Forus\Session\Facades\Session::class,
-        "SponsorApi" => \App\Services\SponsorApiService\Facades\SponsorApi::class,
+        "SponsorApi" => \App\Services\SponsorApiService\Facades\SponsorApiFacade::class,
 
     ],
 
