@@ -8,10 +8,8 @@ use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use App\Services\SponsorApiService\SponsorApi;
 
 /**
  * Class DigIdController
@@ -72,7 +70,7 @@ class DigIdController extends Controller
      * @param IIdentityRepo $identityRepo
      * @param ResolveDigIdRequest $request
      * @param DigIdSession $session
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      * @throws \Exception
      */
     public function resolve(
@@ -105,7 +103,7 @@ class DigIdController extends Controller
 
         switch ($session->session_request) {
             case 'auth': return $this->_resolveAuth($recordRepo, $identityRepo, $session);
-            case 'fund_request': return $this->_resolveFundRequest($recordRepo, $session);
+            case 'fund_request': return $this->_resolveFundRequest($recordRepo, $session, $request);
         }
 
         abort(503, 'Unknown session type.');
@@ -145,11 +143,13 @@ class DigIdController extends Controller
     /**
      * @param IRecordRepo $recordRepo
      * @param DigIdSession $session
+     * @param ResolveDigIdRequest $request
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     private function _resolveFundRequest(
         IRecordRepo $recordRepo,
-        DigIdSession $session
+        DigIdSession $session,
+        ResolveDigIdRequest $request
     ) {
         $bsn = $session->digid_uid;
         $identity = $session->identity_address;
@@ -176,7 +176,7 @@ class DigIdController extends Controller
 
         Prevalidation::assignAvailableToIdentityByBsn($identity);
         Voucher::assignAvailableToIdentityByBsn($identity);
-        Fund::find(1)->checkEligibilityByApi($bsn);
+        Fund::find($request->input('fund_id'))->checkEligibilityByApi($bsn);
 
         return redirect(url_extend_get_params($session->session_final_url, [
             'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in'
