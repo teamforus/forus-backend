@@ -1,9 +1,14 @@
-<?php /** @noinspection PhpIllegalPsrClassPathInspection */
+<?php
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * Class CreateMediaTable
+ * @noinspection PhpIllegalPsrClassPathInspection
+ * @noinspection PhpUnused
+ */
 class CreateMediaTable extends Migration
 {
     /**

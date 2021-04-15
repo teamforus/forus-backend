@@ -6,6 +6,10 @@ use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * Class ImplementationPrivateResource
+ * @package App\Http\Resources
+ */
 class ImplementationPrivateResource extends JsonResource
 {
     /**
@@ -22,8 +26,12 @@ class ImplementationPrivateResource extends JsonResource
             return null;
         }
 
-        $data = $implementation->only([
+        $data = array_merge($implementation->only([
             'id', 'key', 'name', 'url_webshop', 'title', 'description',
+            'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+        ]), [
+            'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
+            'banner' => new MediaResource($implementation->banner),
         ]);
 
         $data = array_merge($data, [

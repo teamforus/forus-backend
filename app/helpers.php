@@ -735,3 +735,25 @@ if (!function_exists('user_agent_data')) {
         return Browser::getAgentData($user_agent ?: request()->userAgent());
     }
 }
+
+/**
+ * @param $color
+ * @return float
+ */
+function get_color_brightness($color): float {
+    $color = ltrim($color, '#');
+
+    $r = hexdec(substr($color,0,2));
+    $g = hexdec(substr($color,2,2));
+    $b = hexdec(substr($color,4,2));
+
+    return ($r * $r * .299) + ($g * $g * .587) + ($b * $b * .114);
+}
+
+/**
+ * @param $color
+ * @return bool
+ */
+function is_color_dark($color): bool {
+    return get_color_brightness($color) > pow(70, 2);
+}

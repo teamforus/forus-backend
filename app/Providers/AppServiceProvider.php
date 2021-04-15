@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Media\FundLogoMediaConfig;
+use App\Media\ImplementationBannerMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
@@ -55,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
             new ProductPhotoMediaConfig(),
             new OrganizationLogoMediaConfig(),
             new RecordCategoryIconMediaConfig(),
+            new ImplementationBannerMediaConfig(),
         ]);
 
         FundProvider::observe(FundProviderObserver::class);
