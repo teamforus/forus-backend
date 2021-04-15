@@ -14,6 +14,7 @@ class AddApiColumnsFundConfigsTable extends Migration
     public function up()
     {
         Schema::table('fund_configs', function (Blueprint $table) {
+            $table->string('sponsor_api_error_action')->nullable()->after('limit_generator_amount');
             $table->string('sponsor_api_url')->nullable()->after('limit_generator_amount');
             $table->string('sponsor_api_token')->nullable()->after('limit_generator_amount');
         });
@@ -27,7 +28,7 @@ class AddApiColumnsFundConfigsTable extends Migration
     public function down()
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn(['sponsor_api_url', 'sponsor_api_token']);
+            $table->dropColumn(['sponsor_api_url', 'sponsor_api_token', 'sponsor_api_error_action']);
         });
     }
 }
