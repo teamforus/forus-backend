@@ -27,7 +27,7 @@ class ImplementationPrivateResource extends JsonResource
         }
 
         $data = array_merge($implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'title', 'description',
+            'id', 'key', 'name', 'url_webshop', 'title', 'description', 'informal_communication',
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         ]), [
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
