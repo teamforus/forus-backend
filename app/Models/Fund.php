@@ -1513,6 +1513,27 @@ class Fund extends Model
     }
 
     /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return Fund[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function exportTransform(Request $request, Organization $organization) {
+        $transKey = "export.funds";
+
+        return $organization->funds->map(static function(
+            Fund $fund
+        ) use ($transKey) {
+            return [
+                trans("$transKey.name") => $fund->name,
+                trans("$transKey.total") => currency_format($fund->budget_total),
+                trans("$transKey.current") => currency_format($fund->budget_left),
+                trans("$transKey.expenses") => currency_format($fund->budget_used),
+                trans("$transKey.transactions") => currency_format($fund->getTransactionCosts()),
+            ];
+        })->values();
+    }
+
+    /**
      * @return EmailFrom
      */
     public function getEmailFrom(): EmailFrom {

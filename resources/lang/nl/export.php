@@ -62,5 +62,13 @@ return [
         'used'      => 'Geactiveerd',
         'used_yes'  => 'Ja',
         'used_no'   => 'Nee'
+    ],
+
+    'funds' => [
+        'name'      => 'Fondsnaam',
+        'total'     => 'Totaal gestort',
+        'current'   => 'Huidig saldo',
+        'expenses'  => 'Uitgaven',
+        'transactions' => 'Transactiekosten',
     ]
 ];
