@@ -1520,17 +1520,47 @@ class Fund extends Model
     public static function exportTransform(Request $request, Organization $organization) {
         $transKey = "export.funds";
 
-        return $organization->funds->map(static function(
-            Fund $fund
-        ) use ($transKey) {
-            return [
-                trans("$transKey.name") => $fund->name,
-                trans("$transKey.total") => currency_format($fund->budget_total),
-                trans("$transKey.current") => currency_format($fund->budget_left),
-                trans("$transKey.expenses") => currency_format($fund->budget_used),
-                trans("$transKey.transactions") => currency_format($fund->getTransactionCosts()),
-            ];
-        })->values();
+        $total_budget = $total_budget_left = $total_budget_used = 0;
+        $total_transaction_costs = $total_reserved = 0;
+        $total_active_vouchers = $total_inactive_vouchers = 0;
+
+        foreach ($organization->funds as $fund) {
+            $total_budget += $fund->budget_total;
+            $total_budget_left += $fund->budget_left;
+            $total_budget_used += $fund->budget_used;
+            $total_transaction_costs += $fund->getTransactionCosts();
+
+            $total_reserved += round(VoucherQuery::whereNotExpiredAndActive(
+                $fund->budget_vouchers()->getQuery()
+            )->sum('amount'), 2);
+
+            $total_active_vouchers += round($fund->budget_vouchers()->where(
+                'state', Voucher::STATE_ACTIVE
+            )->sum('amount'), 2);
+
+            $total_inactive_vouchers += round($fund->budget_vouchers()->where(
+                'state', '!=', Voucher::STATE_ACTIVE
+            )->sum('amount'), 2);
+        }
+
+        return [
+            'totals' => compact(
+                $total_budget, $total_budget_left, $total_budget_used,
+                $total_transaction_costs, $total_reserved,
+                $total_active_vouchers, $total_inactive_vouchers
+            ),
+            'data'   => $organization->funds->map(static function(
+                Fund $fund
+            ) use ($transKey) {
+                return [
+                    trans("$transKey.name") => $fund->name,
+                    trans("$transKey.total") => currency_format($fund->budget_total),
+                    trans("$transKey.current") => currency_format($fund->budget_left),
+                    trans("$transKey.expenses") => currency_format($fund->budget_used),
+                    trans("$transKey.transactions") => currency_format($fund->getTransactionCosts()),
+                ];
+            })->values()
+        ];
     }
 
     /**

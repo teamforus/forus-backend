@@ -125,6 +125,18 @@ class FundResource extends Resource
      * @return array
      */
     public function getBudgetData(Fund $fund): array {
+        $active_vouchers_query = VoucherQuery::whereNotExpired(
+            $fund->budget_vouchers()->where(
+                'state', Voucher::STATE_ACTIVE
+            )->getQuery()
+        );
+
+        $inactive_vouchers_query = VoucherQuery::whereNotExpired(
+            $fund->budget_vouchers()->where(
+                'state', '!=',Voucher::STATE_ACTIVE
+            )->getQuery()
+        );
+
         return [
             'total'     => currency_format($fund->budget_total),
             'validated' => currency_format($fund->budget_validated),
@@ -135,21 +147,13 @@ class FundResource extends Resource
                 $fund->budget_vouchers()->getQuery()
             )->sum('amount'), 2),
             'active'    => currency_format(round(
-                $fund->budget_vouchers()->where(
-                    'state', Voucher::STATE_ACTIVE
-                )->sum('amount'), 2)
+                $active_vouchers_query->sum('amount'), 2)
             ),
-            'active_count' => $fund->budget_vouchers()->where(
-                'state', Voucher::STATE_ACTIVE
-            )->count(),
+            'active_count' => $active_vouchers_query->count(),
             'inactive' => currency_format(round(
-                $fund->budget_vouchers()->where(
-                    'state', '!=', Voucher::STATE_ACTIVE
-                )->sum('amount'), 2)
+                $inactive_vouchers_query->sum('amount'), 2)
             ),
-            'inactive_count' => $fund->budget_vouchers()->where(
-                'state', '!=', Voucher::STATE_ACTIVE
-            )->count(),
+            'inactive_count' => $inactive_vouchers_query->count(),
             'count'          => $fund->budget_vouchers()->count(),
         ];
     }

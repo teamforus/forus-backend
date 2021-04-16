@@ -67,12 +67,16 @@ class FundsController extends Controller
                 $fund->budget_vouchers()->getQuery()
             )->sum('amount'), 2);
 
-            $total_active_vouchers += round($fund->budget_vouchers()->where(
-                'state', Voucher::STATE_ACTIVE
+            $total_active_vouchers += round(VoucherQuery::whereNotExpired(
+                $fund->budget_vouchers()->where(
+                    'state', Voucher::STATE_ACTIVE
+                )->getQuery()
             )->sum('amount'), 2);
 
-            $total_inactive_vouchers += round($fund->budget_vouchers()->where(
-                'state', '!=', Voucher::STATE_ACTIVE
+            $total_inactive_vouchers += round(VoucherQuery::whereNotExpired(
+                $fund->budget_vouchers()->where(
+                    'state', '!=',Voucher::STATE_ACTIVE
+                )->getQuery()
             )->sum('amount'), 2);
         }
 
