@@ -77,6 +77,20 @@ trait HasMedia
     }
 
     /**
+     * @param string|array $uid
+     * @param string $mediaConfigType
+     * @return bool
+     */
+    public function appendMedia($uid, string $mediaConfigType): bool
+    {
+        $uid = $this->medias()->where([
+            'type' => $mediaConfigType,
+        ])->pluck('uid')->merge((array) $uid)->toArray();
+
+        return $this->syncMedia($uid, $mediaConfigType);
+    }
+
+    /**
      * Remove medias by uid
      * @param array|string $uid
      */

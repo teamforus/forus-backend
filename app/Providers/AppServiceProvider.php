@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Media\CmsMediaConfig;
 use App\Media\FundLogoMediaConfig;
 use App\Media\ImplementationBannerMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
@@ -10,6 +11,8 @@ use App\Media\ProductPhotosMediaConfig;
 use App\Media\RecordCategoryIconMediaConfig;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
+use App\Models\Implementation;
+use App\Models\ImplementationPage;
 use App\Observers\FundProviderObserver;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
@@ -39,18 +42,21 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         Relation::morphMap([
-            'fund'              => Fund::class,
-            'office'            => Office::class,
-            'voucher'           => Voucher::class,
-            'product'           => Product::class,
-            'employees'         => Employee::class,
-            'fund_request'      => FundRequest::class,
-            'fund_provider'     => FundProvider::class,
-            'organization'      => Organization::class,
-            'product_category'  => ProductCategory::class,
+            'fund'                  => Fund::class,
+            'office'                => Office::class,
+            'voucher'               => Voucher::class,
+            'product'               => Product::class,
+            'employees'             => Employee::class,
+            'fund_request'          => FundRequest::class,
+            'fund_provider'         => FundProvider::class,
+            'organization'          => Organization::class,
+            'product_category'      => ProductCategory::class,
+            'implementation'        => Implementation::class,
+            'implementation_page'   => ImplementationPage::class,
         ]);
 
         MediaService::setMediaConfigs([
+            new CmsMediaConfig(),
             new FundLogoMediaConfig(),
             new OfficePhotoMediaConfig(),
             new ProductPhotoMediaConfig(),

@@ -34,7 +34,7 @@ class PhysicalCardsController extends Controller
         VoucherToken $voucherToken
     ): PhysicalCardResource {
         $this->throttleWithKey('to_many_attempts', $request, 'physical_cards');
-        $this->authorize('storePhysicalCard', $voucherToken->voucher);
+        $this->authorize('create', [PhysicalCard::class, $voucherToken->voucher]);
 
         return new PhysicalCardResource($voucherToken->voucher->physical_cards()->create(
             $request->only('code')
@@ -54,6 +54,7 @@ class PhysicalCardsController extends Controller
         PhysicalCard $physicalCard
     ): Response {
         $this->authorize('show', $voucherToken->voucher);
+        $this->authorize('delete', [$physicalCard, $voucherToken->voucher]);
 
         $voucherToken->voucher->physical_cards()->where([
             'physical_cards.id' => $physicalCard->id
