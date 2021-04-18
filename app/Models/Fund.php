@@ -15,7 +15,6 @@ use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
@@ -1513,18 +1512,47 @@ class Fund extends Model
     }
 
     /**
-     * @param Request $request
-     * @param Organization $organization
-     * @return Fund[]|Collection|\Illuminate\Support\Collection
+     * @return array
      */
-    public static function exportTransform(Request $request, Organization $organization) {
-        $transKey = "export.funds";
+    public function getFundDetails() : array {
+        $active_vouchers_query = VoucherQuery::whereNotExpired(
+            $this->budget_vouchers()->where(
+                'state', Voucher::STATE_ACTIVE
+            )->getQuery()
+        );
 
+        $inactive_vouchers_query = VoucherQuery::whereNotExpired(
+            $this->budget_vouchers()->where(
+                'state', '!=',Voucher::STATE_ACTIVE
+            )->getQuery()
+        );
+
+        return [
+            'reserved'        => round(VoucherQuery::whereNotExpiredAndActive(
+                $this->budget_vouchers()->getQuery()
+            )->sum('amount'), 2),
+            'active_amount'   => currency_format(round(
+                $active_vouchers_query->sum('amount'), 2)
+            ),
+            'active_count'    => $active_vouchers_query->count(),
+            'inactive_amount' => currency_format(round(
+                $inactive_vouchers_query->sum('amount'), 2)
+            ),
+            'inactive_count' => $inactive_vouchers_query->count(),
+            'count'          => $this->budget_vouchers()->count(),
+        ];
+    }
+
+    /**
+     * @param Collection|Fund[] $funds
+     * @return array
+     */
+    public static function getFundTotals(Collection $funds) : array {
         $total_budget = $total_budget_left = $total_budget_used = 0;
         $total_transaction_costs = $total_reserved = 0;
         $total_active_vouchers = $total_inactive_vouchers = 0;
 
-        foreach ($organization->funds as $fund) {
+        foreach ($funds as $fund) {
             $total_budget += $fund->budget_total;
             $total_budget_left += $fund->budget_left;
             $total_budget_used += $fund->budget_used;
@@ -1534,32 +1562,68 @@ class Fund extends Model
                 $fund->budget_vouchers()->getQuery()
             )->sum('amount'), 2);
 
-            $total_active_vouchers += round($fund->budget_vouchers()->where(
+            $total_active_vouchers += round(VoucherQuery::whereNotExpiredAndActive(
+                $fund->budget_vouchers()->where(
                 'state', Voucher::STATE_ACTIVE
-            )->sum('amount'), 2);
+            )->getQuery())->sum('amount'), 2);
 
-            $total_inactive_vouchers += round($fund->budget_vouchers()->where(
-                'state', '!=', Voucher::STATE_ACTIVE
-            )->sum('amount'), 2);
+            $total_inactive_vouchers += round(VoucherQuery::whereNotExpiredAndActive(
+                $fund->budget_vouchers()->where(
+                    'state', '!=', Voucher::STATE_ACTIVE
+            )->getQuery())->sum('amount'), 2);
         }
 
-        return [
-            'totals' => compact(
-                $total_budget, $total_budget_left, $total_budget_used,
-                $total_transaction_costs, $total_reserved,
-                $total_active_vouchers, $total_inactive_vouchers
-            ),
-            'data'   => $organization->funds->map(static function(
+        return compact(
+            'total_budget', 'total_budget_left', 'total_budget_used',
+            'total_transaction_costs', 'total_reserved',
+            'total_active_vouchers', 'total_inactive_vouchers'
+        );
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return array
+     */
+    public static function exportTransform(Request $request, Organization $organization) : array {
+        $transKey = "export.funds";
+
+        $is_detailed = $request->input('detailed', false);
+        $funds  = Fund::search($request, $organization->funds()->getQuery())->get();
+        $totals = self::getFundTotals($funds);
+
+        if (!$is_detailed) {
+            $data = $funds->map(static function(
                 Fund $fund
             ) use ($transKey) {
                 return [
-                    trans("$transKey.name") => $fund->name,
-                    trans("$transKey.total") => currency_format($fund->budget_total),
-                    trans("$transKey.current") => currency_format($fund->budget_left),
+                    trans("$transKey.name")     => $fund->name,
+                    trans("$transKey.total")    => currency_format($fund->budget_total),
+                    trans("$transKey.current")  => currency_format($fund->budget_left),
                     trans("$transKey.expenses") => currency_format($fund->budget_used),
                     trans("$transKey.transactions") => currency_format($fund->getTransactionCosts()),
                 ];
-            })->values()
+            })->values();
+        } else {
+            $data = $funds->map(static function(
+                Fund $fund
+            ) use ($transKey, $totals) {
+                $details = $fund->getFundDetails();
+
+                return [
+                    trans("$transKey.name")     => $fund->name,
+                    trans("$transKey.total")    => currency_format($fund->budget_total),
+                    trans("$transKey.active")   => currency_format($details['active_amount']),
+                    trans("$transKey.inactive") => currency_format($details['inactive_amount']),
+                    trans("$transKey.expenses") => currency_format($fund->budget_used),
+                    trans("$transKey.left") => currency_format($fund->budget_left),
+                ];
+            })->values();
+        }
+
+        return [
+            'totals' => $totals,
+            'data'   => $data
         ];
     }
 

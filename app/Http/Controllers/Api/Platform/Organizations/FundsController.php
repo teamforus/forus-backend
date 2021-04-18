@@ -16,7 +16,6 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
-use App\Models\Voucher;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\MediaService\Models\Media;
@@ -53,41 +52,15 @@ class FundsController extends Controller
             ]);
         }
 
-        $total_budget = $total_budget_left = $total_budget_used = 0;
-        $total_transaction_costs = $total_reserved = 0;
-        $total_active_vouchers = $total_inactive_vouchers = 0;
-
-        foreach ($organization->funds as $fund) {
-            $total_budget += $fund->budget_total;
-            $total_budget_left += $fund->budget_left;
-            $total_budget_used += $fund->budget_used;
-            $total_transaction_costs += $fund->getTransactionCosts();
-
-            $total_reserved += round(VoucherQuery::whereNotExpiredAndActive(
-                $fund->budget_vouchers()->getQuery()
-            )->sum('amount'), 2);
-
-            $total_active_vouchers += round(VoucherQuery::whereNotExpired(
-                $fund->budget_vouchers()->where(
-                    'state', Voucher::STATE_ACTIVE
-                )->getQuery()
-            )->sum('amount'), 2);
-
-            $total_inactive_vouchers += round(VoucherQuery::whereNotExpired(
-                $fund->budget_vouchers()->where(
-                    'state', '!=',Voucher::STATE_ACTIVE
-                )->getQuery()
-            )->sum('amount'), 2);
-        }
-
+        $totals = Fund::getFundTotals($query->get());
         $meta = [
-            'total_amount'      => currency_format($total_budget),
-            'left'              => currency_format($total_budget_left),
-            'used'              => currency_format($total_budget_used),
-            'reserved'          => currency_format($total_reserved),
-            'transaction_costs' => currency_format($total_transaction_costs),
-            'vouchers_active'   => currency_format($total_active_vouchers),
-            'vouchers_inactive' => currency_format($total_inactive_vouchers),
+            'total_amount'      => currency_format($totals['total_budget']),
+            'left'              => currency_format($totals['total_budget_left']),
+            'used'              => currency_format($totals['total_budget_used']),
+            'reserved'          => currency_format($totals['total_reserved']),
+            'transaction_costs' => currency_format($totals['total_transaction_costs']),
+            'vouchers_active'   => currency_format($totals['total_active_vouchers']),
+            'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
         ];
 
         return FundResource::collection(FundQuery::sortByState($query, [
@@ -515,11 +488,13 @@ class FundsController extends Controller
     ) {
         $this->authorize('show', $organization);
 
+        $export_type = $request->get('export_type', 'xls');
+
         return resolve('excel')->download(
             new FundsExport(
                 $request,
                 $organization
-            ), date('Y-m-d H:i:s') . '.xls'
+            ), date('Y-m-d H:i:s') . '.'. $export_type
         );
     }
 }

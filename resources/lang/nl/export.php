@@ -70,5 +70,8 @@ return [
         'current'   => 'Huidig saldo',
         'expenses'  => 'Uitgaven',
         'transactions' => 'Transactiekosten',
+        'active'    => 'Actief',
+        'inactive'  => 'Inactief',
+        'left'      => 'Restant',
     ]
 ];

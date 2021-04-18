@@ -5,7 +5,6 @@ namespace App\Http\Resources;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
-use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
 use Gate;
 use Illuminate\Http\Resources\Json\Resource;
@@ -125,17 +124,7 @@ class FundResource extends Resource
      * @return array
      */
     public function getBudgetData(Fund $fund): array {
-        $active_vouchers_query = VoucherQuery::whereNotExpired(
-            $fund->budget_vouchers()->where(
-                'state', Voucher::STATE_ACTIVE
-            )->getQuery()
-        );
-
-        $inactive_vouchers_query = VoucherQuery::whereNotExpired(
-            $fund->budget_vouchers()->where(
-                'state', '!=',Voucher::STATE_ACTIVE
-            )->getQuery()
-        );
+        $details = $fund->getFundDetails();
 
         return [
             'total'     => currency_format($fund->budget_total),
@@ -146,14 +135,10 @@ class FundResource extends Resource
             'reserved'  => round(VoucherQuery::whereNotExpiredAndActive(
                 $fund->budget_vouchers()->getQuery()
             )->sum('amount'), 2),
-            'active'    => currency_format(round(
-                $active_vouchers_query->sum('amount'), 2)
-            ),
-            'active_count' => $active_vouchers_query->count(),
-            'inactive' => currency_format(round(
-                $inactive_vouchers_query->sum('amount'), 2)
-            ),
-            'inactive_count' => $inactive_vouchers_query->count(),
+            'active'         => $details['active_amount'],
+            'active_count'   => $details['active_count'],
+            'inactive'       => $details['inactive_amount'],
+            'inactive_count' => $details['inactive_count'],
             'count'          => $fund->budget_vouchers()->count(),
         ];
     }
