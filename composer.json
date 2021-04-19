@@ -17,7 +17,7 @@
         "barryvdh/laravel-dompdf": "^0.8.6",
         "barryvdh/laravel-ide-helper": "^2.7",
         "bunq/sdk_php": "^1.13.1",
-        "doctrine/dbal": "^2.10",
+        "doctrine/dbal": "2.13.1",
         "dusterio/laravel-aws-worker": "^0.1",
         "fideloper/proxy": "^4.2",
         "fruitcake/laravel-cors": "^1.0",
