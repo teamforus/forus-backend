@@ -25,9 +25,9 @@ class VoucherTransactionsSubscriber
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
         $product = $voucher->product;
-        $bsn = resolve('forus.services.record')->bsnByAddress($voucher->identity_address);
+        $bsn = record_repo()->bsnByAddress($voucher->identity_address);
 
-        if ($voucher->transactions_count == 1 && $bsn) {
+        if ($bsn && $voucher->transactions()->count() == 1 && $fund->isBackofficeApiAvailable()) {
             $fund->reportFirstUseByApi($bsn);
         }
 

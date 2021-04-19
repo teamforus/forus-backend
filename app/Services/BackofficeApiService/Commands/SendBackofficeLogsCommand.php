@@ -1,24 +1,29 @@
 <?php
 
-namespace App\Services\SponsorApiService\Commands;
+namespace App\Services\BackofficeApiService\Commands;
 
+use App\Services\BackofficeApiService\BackofficeApi;
 use Illuminate\Console\Command;
 
-class RetryActionsFromErrorLogsCommand extends Command
+/**
+ * Class SendBackofficeLogsCommand
+ * @package App\Services\BackofficeApiService\Commands
+ */
+class SendBackofficeLogsCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'sponsor.api.actions:retry';
+    protected $signature = 'funds.backoffice:send-logs';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Send backoffice logs.';
 
     /**
      * Create a new command instance.
@@ -37,6 +42,6 @@ class RetryActionsFromErrorLogsCommand extends Command
      */
     public function handle()
     {
-        resolve('sponsor_api')->retryActionsFromErrorLogs();
+        BackofficeApi::sendLogs();
     }
 }

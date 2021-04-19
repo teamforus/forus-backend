@@ -39,6 +39,7 @@ class FundResource extends Resource
             'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
             'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
             'allow_direct_requests' => $fund->fund_config->allow_direct_requests ?? false,
+            'backoffice_fallback' => $fund->fund_config->backoffice_fallback ?? false,
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
@@ -67,6 +68,8 @@ class FundResource extends Resource
             ]), [
                 'criteria_editable' => $fund->criteriaIsEditable(),
             ]);
+
+            $data['backoffice'] = $this->getBackofficeData($fund);
         }
 
         if ($organization->identityCan(auth()->id(), 'validate_records')) {
@@ -133,5 +136,17 @@ class FundResource extends Resource
                 $fund->budget_vouchers()->getQuery()
             )->sum('amount'), 2)
         ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array|null
+     */
+    private function getBackofficeData(Fund $fund): ?array
+    {
+        return $fund->fund_config ? $fund->fund_config->only([
+            'backoffice_enabled', 'backoffice_url',
+            'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
+        ]): null;
     }
 }

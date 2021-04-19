@@ -189,6 +189,7 @@ return [
         App\Providers\RepositoryServiceProvider::class,
 
         \Astrotomic\Translatable\TranslatableServiceProvider::class,
+        \Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
 
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
         App\Services\ApiRequestService\ApiRequestServiceProvider::class,
@@ -214,11 +215,9 @@ return [
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
         App\Services\DigIdService\DigIdServiceProvider::class,
         App\Services\Forus\Session\SessionServiceProvider::class,
-        Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
 
         App\Services\EventLogService\EventLogServiceProvider::class,
-
-        \App\Services\SponsorApiService\SponsorApiServiceProvider::class,
+        App\Services\BackofficeApiService\BackofficeApiServiceProvider::class,
     ],
 
     /*
@@ -275,7 +274,6 @@ return [
         'RecordService' => \App\Services\Forus\Record\Facades\RecordService::class,
         'NotificationService' => \App\Services\Forus\Notification\Facades\Notification::class,
         'SessionService' => \App\Services\Forus\Session\Facades\Session::class,
-        "SponsorApi" => \App\Services\SponsorApiService\Facades\SponsorApiFacade::class,
 
     ],
 

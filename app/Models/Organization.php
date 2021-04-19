@@ -43,6 +43,7 @@ use Illuminate\Http\Request;
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
  * @property bool $manage_provider_products
+ * @property bool $backoffice_available
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -99,6 +100,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|Organization newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Organization newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Organization query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBackofficeAvailable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBtw($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBusinessTypeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Organization whereCreatedAt($value)
@@ -138,6 +140,7 @@ class Organization extends Model
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description',
+        'backoffice_available',
     ];
 
     /**
@@ -151,6 +154,7 @@ class Organization extends Model
         'is_sponsor'                    => 'boolean',
         'is_provider'                   => 'boolean',
         'is_validator'                  => 'boolean',
+        'backoffice_available'          => 'boolean',
         'manage_provider_products'      => 'boolean',
         'validator_auto_accept_funds'   => 'boolean',
     ];
@@ -500,7 +504,7 @@ class Organization extends Model
 
     /**
      * @param string|array $role
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     * @return Collection|\Illuminate\Database\Eloquent\Builder[]
      */
     public function employeesOfRole($role) {
         return $this->employeesOfRoleQuery($role)->get();
@@ -508,7 +512,7 @@ class Organization extends Model
 
     /**
      * @param string|array $permission
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     * @return Collection|\Illuminate\Database\Eloquent\Builder[]
      */
     public function employeesWithPermissions($permission) {
         return $this->employeesWithPermissionsQuery($permission)->get();
@@ -677,22 +681,20 @@ class Organization extends Model
 
     /**
      * @param string $identity_address
-     * @return Model|Employee|null|object
+     * @return Employee|\Illuminate\Database\Eloquent\Model|null
      */
-    public function findEmployee(
-        string $identity_address
-    ) {
+    public function findEmployee(string $identity_address): ?Employee
+    {
         return $this->employees()->where(compact('identity_address'))->first();
     }
 
     /**
      * @param $fund_id
-     * @return Fund|null
+     * @return Fund|\Illuminate\Database\Eloquent\Model|null
      */
-    public function findFund($fund_id): ?Fund {
-        /** @var Fund|null $fund */
-        $fund = $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
-        return $fund;
+    public function findFund($fund_id): ?Fund
+    {
+        return $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
     }
 
     /**

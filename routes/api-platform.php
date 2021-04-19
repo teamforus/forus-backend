@@ -427,6 +427,14 @@ $router->group(['middleware' => [
         'organizations/{organization}/funds/{fund}/criteria',
         "Api\Platform\Organizations\FundsController@updateCriteria");
 
+    $router->patch(
+        'organizations/{organization}/funds/{fund}/backoffice',
+        "Api\Platform\Organizations\FundsController@updateBackoffice");
+
+    $router->post(
+        'organizations/{organization}/funds/{fund}/backoffice-test',
+        "Api\Platform\Organizations\FundsController@testBackofficeConnection");
+
 
     $router->resource(
         'organizations.funds',

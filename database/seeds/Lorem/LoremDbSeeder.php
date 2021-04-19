@@ -78,19 +78,12 @@ class LoremDbSeeder extends Seeder
         'Nijmegen'
     ];
 
-    private $fundsWithSponsorProducts = [
-        'Stadjerspas'
-    ];
-
     private $sponsorsWithSponsorProducts = [
         'Stadjerspas'
     ];
 
-    private $sponsorsWithApiConfig = [
-        'Nijmegen' => [
-            'url' => 'https://server.sponsor-api.com',
-            'token' => 'BjHrATtUVgFD2sS3csrGZuMjZ93QmzUKcc3Gh5as4qXqsLNvh8m2VwtxznfccVyH',
-        ]
+    private $sponsorsWithBackoffice = [
+        'Zuidhorn', 'Nijmegen',
     ];
 
     private $fundKeyOverwrite = [
@@ -272,8 +265,8 @@ class LoremDbSeeder extends Seeder
                 /** @var FundProvider $provider */
                 $provider = $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'allow_budget'      => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
-                    'allow_products'    => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
+                    'allow_budget'      => $fund->isTypeBudget() && random_int(0, 2),
+                    'allow_products'    => $fund->isTypeBudget() && random_int(0, 2),
                 ]);
 
                 FundProviderApplied::dispatch($provider);
@@ -473,10 +466,12 @@ class LoremDbSeeder extends Seeder
             'email_public' => true,
             'business_type_id' => BusinessType::pluck('id')->random(),
             'manage_provider_products' => in_array($name, $this->sponsorsWithSponsorProducts),
+            'backoffice_available' => in_array($name, $this->sponsorsWithBackoffice),
         ], $fields, compact('name', 'identity_address')), [
             'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
+            'backoffice_available',
         ]));
 
         OrganizationCreated::dispatch($organization);
@@ -653,6 +648,8 @@ class LoremDbSeeder extends Seeder
         array $fields = []
     ): void {
         $hashBsn = in_array($fund->name, $this->fundsWithPhysicalCards, true);
+        $backofficeConfig = in_array($fund->organization->name, $this->sponsorsWithBackoffice) ?
+            $this->getBackofficeConfigs() : [];
 
         $fund->fund_config()->create(collect([
             'implementation_id'     => $implementation->id,
@@ -664,16 +661,10 @@ class LoremDbSeeder extends Seeder
             'hash_bsn'              => $hashBsn,
             'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
             'bunq_key'              => config('forus.seeders.lorem_db_seeder.bunq_key'),
-            'sponsor_api_token'     => key_exists($fund->name, $this->sponsorsWithApiConfig)
-                                            ? $this->sponsorsWithApiConfig[$fund->name]['token']
-                                            : null,
-            'sponsor_api_url'       => key_exists($fund->name, $this->sponsorsWithApiConfig)
-                                            ? $this->sponsorsWithApiConfig[$fund->name]['url']
-                                            : null,
         ])->merge(collect($fields)->only([
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
             'csv_primary_key', 'is_configured'
-        ]))->toArray());
+        ]))->merge($backofficeConfig)->toArray());
 
         $eligibility_key = sprintf("%s_eligible", $fund->fund_config->key);
         $criteria = [];
@@ -714,6 +705,26 @@ class LoremDbSeeder extends Seeder
                 'multiplier' => 1,
             ]);
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getBackofficeConfigs (): array
+    {
+        $url = $this->config('backoffice_url');
+        $key = $this->config('backoffice_key');
+        $cert = $this->config('backoffice_cert');
+        $fallback = $this->config('backoffice_fallback');
+
+        return $url && $key && $cert ? [
+            'backoffice_enabled' => true,
+            'backoffice_status' => true,
+            'backoffice_url' => $url,
+            'backoffice_key' => $key,
+            'backoffice_certificate' => $cert,
+            'backoffice_fallback' => $fallback,
+        ]: [];
     }
 
     /**
@@ -1010,20 +1021,20 @@ class LoremDbSeeder extends Seeder
      * @param string $msg
      */
     public function info(string $msg): void {
-        echo "\e[0;34m{$msg}\e[0m\n";
+        echo "\e[0;34m$msg\e[0m\n";
     }
 
     /**
      * @param string $msg
      */
     public function success(string $msg): void {
-        echo "\e[0;32m{$msg}\e[0m\n";
+        echo "\e[0;32m$msg\e[0m\n";
     }
 
     /**
      * @param string $msg
      */
     public function error(string $msg): void {
-        echo "\e[0;31m{$msg}\e[0m\n";
+        echo "\e[0;31m$msg\e[0m\n";
     }
 }

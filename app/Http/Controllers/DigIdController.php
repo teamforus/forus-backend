@@ -8,8 +8,6 @@ use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Services\DigIdService\Models\DigIdSession;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
 /**
  * Class DigIdController
@@ -27,22 +25,7 @@ class DigIdController extends Controller
             $this->middleware('api.auth');
         }
 
-        if (!$finalRedirect = self::makeFinalRedirectUrl($request)) {
-            abort(404);
-        }
-
-        $digidSession = DigIdSession::createSession(
-            $request->auth_address(),
-            $request->implementation_model(),
-            $request->client_type(),
-            self::makeFinalRedirectUrl($request),
-            $request->input('request')
-        );
-
-        $digidSession->startAuthSession(url(sprintf(
-            '/api/v1/platform/digid/%s/resolve',
-            $digidSession->session_uid
-        )));
+        $digidSession = DigIdSession::createSession($request)->startAuthSession();
 
         if ($digidSession->state !== DigIdSession::STATE_PENDING_AUTH) {
             abort(503, 'Unable to handle the request at the moment.', [
@@ -51,9 +34,7 @@ class DigIdController extends Controller
         }
 
         return [
-            'redirect_url' => url(sprintf('/api/v1/platform/digid/%s/redirect',
-                $digidSession->session_uid
-            ))
+            'redirect_url' => $digidSession->getRedirectUrl(),
         ];
     }
 
@@ -61,24 +42,19 @@ class DigIdController extends Controller
      * @param DigIdSession $session
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    public function redirect(DigIdSession $session) {
+    public function redirect(DigIdSession $session)
+    {
         return redirect($session->digid_auth_redirect_url);
     }
 
     /**
-     * @param IRecordRepo $recordRepo
-     * @param IIdentityRepo $identityRepo
      * @param ResolveDigIdRequest $request
      * @param DigIdSession $session
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      * @throws \Exception
      */
-    public function resolve(
-        IRecordRepo $recordRepo,
-        IIdentityRepo $identityRepo,
-        ResolveDigIdRequest $request,
-        DigIdSession $session
-    ) {
+    public function resolve(ResolveDigIdRequest $request, DigIdSession $session)
+    {
         // check if session secret is match records
         if ($request->get('session_secret') !== $session->session_secret) {
             return redirect(url_extend_get_params($session->session_final_url, [
@@ -102,26 +78,24 @@ class DigIdController extends Controller
         }
 
         switch ($session->session_request) {
-            case 'auth': return $this->_resolveAuth($recordRepo, $identityRepo, $session);
-            case 'fund_request': return $this->_resolveFundRequest($recordRepo, $session, $request);
+            case 'auth': return $this->_resolveAuth($request, $session);
+            case 'fund_request': return $this->_resolveFundRequest($request, $session);
         }
 
-        abort(503, 'Unknown session type.');
+        return redirect(url_extend_get_params($session->session_final_url, [
+            'digid_error' => 'unknown_session_type',
+        ]));
     }
 
     /**
-     * @param IRecordRepo $recordRepo
-     * @param IIdentityRepo $identityRepo
+     * @param ResolveDigIdRequest $request
      * @param DigIdSession $session
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      * @throws \Exception
      */
-    private function _resolveAuth(
-        IRecordRepo $recordRepo,
-        IIdentityRepo $identityRepo,
-        DigIdSession $session
-    ) {
-        $identity = $recordRepo->identityAddressByBsn($session->digid_uid);
+    private function _resolveAuth(ResolveDigIdRequest $request, DigIdSession $session)
+    {
+        $identity = $request->records_repo()->identityAddressByBsn($session->digid_uid);
 
         if (empty($identity)) {
             return redirect(sprintf(
@@ -130,6 +104,7 @@ class DigIdController extends Controller
             ));
         }
 
+        $identityRepo = $request->identity_repo();
         $proxy = $identityRepo->makeAuthorizationShortTokenProxy();
         $identityRepo->activateAuthorizationShortTokenProxy($identity, $proxy['exchange_token']);
 
@@ -141,20 +116,19 @@ class DigIdController extends Controller
     }
 
     /**
-     * @param IRecordRepo $recordRepo
-     * @param DigIdSession $session
      * @param ResolveDigIdRequest $request
+     * @param DigIdSession $session
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
-    private function _resolveFundRequest(
-        IRecordRepo $recordRepo,
-        DigIdSession $session,
-        ResolveDigIdRequest $request
-    ) {
+    private function _resolveFundRequest(ResolveDigIdRequest $request, DigIdSession $session)
+    {
+        $recordRepo = $request->records_repo();
         $bsn = $session->digid_uid;
+        $fund = Fund::find($session->meta['fund_id']);
         $identity = $session->identity_address;
         $identity_bsn = $recordRepo->bsnByAddress($identity);
         $bsn_identity = $recordRepo->identityAddressByBsn($bsn);
+        $params = [];
 
         if ($identity_bsn && $bsn !== $identity_bsn) {
             return redirect(url_extend_get_params($session->session_final_url, [
@@ -169,6 +143,7 @@ class DigIdController extends Controller
         }
 
         $isFirstSignUp = !$identity_bsn && !$bsn_identity;
+        $hasBackoffice = $fund && $fund->fund_config && $fund->organization->backoffice_available;
 
         if ($isFirstSignUp) {
             $recordRepo->setBsnRecord($identity, $bsn);
@@ -176,29 +151,18 @@ class DigIdController extends Controller
 
         Prevalidation::assignAvailableToIdentityByBsn($identity);
         Voucher::assignAvailableToIdentityByBsn($identity);
-        Fund::find($request->input('fund_id'))->checkEligibilityByApi($bsn);
 
-        return redirect(url_extend_get_params($session->session_final_url, [
-            'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in'
-        ]));
-    }
+        if ($hasBackoffice) {
+            $backofficeResponse = $fund->checkBackofficeIfAvailable($identity);
 
-    /**
-     * @param StartDigIdRequest $request
-     * @return string|null
-     */
-    private static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string {
-        $implementationModel = $request->implementation_model();
-        $fund = Fund::find($request->input('fund_id'));
-
-        if ($request->input('request') === 'fund_request') {
-            return $fund->urlWebshop(sprintf('/funds/%s/activate', $fund->id));
+            if ($backofficeResponse && !$backofficeResponse->getLog()->success()) {
+                $params['backoffice_error'] = 1;
+                $params['backoffice_fallback'] = $fund->fund_config->backoffice_fallback;
+            }
         }
 
-        if (($request->input('request') === 'auth') && $implementationModel) {
-            return $implementationModel->urlFrontend($request->client_type());
-        }
-
-        return null;
+        return redirect(url_extend_get_params($session->session_final_url, array_merge([
+            'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in',
+        ], $params)));
     }
 }

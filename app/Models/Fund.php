@@ -9,6 +9,7 @@ use App\Events\Funds\FundStartedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Scopes\Builders\VoucherQuery;
+use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
@@ -25,6 +26,7 @@ use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\BackofficeApiService\BackofficeApi;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -55,6 +57,8 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
+ * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
+ * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
  * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
@@ -81,8 +85,6 @@ use Illuminate\Http\Request;
  * @property-read int|null $fund_formulas_count
  * @property-read Collection|\App\Models\FundLimitMultiplier[] $fund_limit_multipliers
  * @property-read int|null $fund_limit_multipliers_count
- * @property-read Collection|\App\Models\FundLog[] $fund_logs
- * @property-read int|null $fund_logs_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $fund_request_records
  * @property-read int|null $fund_request_records_count
  * @property-read Collection|\App\Models\FundRequest[] $fund_requests
@@ -330,9 +332,9 @@ class Fund extends Model
     /**
      * @return HasMany
      */
-    public function fund_logs(): HasMany
+    public function backoffice_logs(): HasMany
     {
-        return $this->hasMany(FundLog::class);
+        return $this->hasMany(FundBackofficeLog::class);
     }
 
     /**
@@ -341,14 +343,14 @@ class Fund extends Model
      */
     public function sendFundClosedRequesterEmailNotification(?string $email): bool
     {
-        return $email ? notification_service()->fundClosed(
+        return $email && notification_service()->fundClosed(
             $email,
             $this->fund_config->implementation->getEmailFrom(),
             $this->name,
             $this->organization->email,
             $this->organization->name,
             $this->fund_config->implementation->url_webshop
-        ) : false;
+        );
     }
 
     /**
@@ -860,9 +862,9 @@ class Fund extends Model
             return null;
         }
 
-        if($fundFormula->filter(static function (FundFormula $formula){
+        if ($fundFormula->filter(static function (FundFormula $formula){
             return $formula->type !== 'fixed';
-        })->count()){
+        })->count()) {
             return null;
         }
 
@@ -870,13 +872,14 @@ class Fund extends Model
     }
 
     /**
-     * @return BunqService|string
+     * @return BunqService
      */
-    public function getBunq() {
+    public function getBunq(): ?BunqService
+    {
         $fundBunq = $this->getBunqKey();
 
         if (empty($fundBunq) || empty($fundBunq['key'])) {
-            return false;
+            return null;
         }
 
         return BunqService::create(
@@ -1643,44 +1646,68 @@ class Fund extends Model
     }
 
     /**
-     * @param $identity_address
-     * @param $bsn
-     * @return Voucher|null
+     * @param string $identity_address
+     * @return bool
      */
-    public function checkEligibilityByApi($identity_address, $bsn): ?Voucher
+    public function identityHasActiveVoucher(string $identity_address): bool
     {
-        if (!VoucherQuery::whereNotExpiredAndActive(Voucher::where(
+        return VoucherQuery::whereNotExpired($this->vouchers()->getQuery())->where(
             compact('identity_address')
-        ))->exists()) {
-            return resolve('sponsor_api')->eligibilityCheck($this, $bsn);
+        )->exists();
+    }
+
+    /**
+     * @param string $identity_address
+     * @return EligibilityResponse|null
+     */
+    public function checkBackofficeIfAvailable(string $identity_address): ?EligibilityResponse
+    {
+        $bsn = record_repo()->bsnByAddress($identity_address);
+        $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
+
+        if ($bsn && !$alreadyHasActiveVoucher &&  $this->isBackofficeApiAvailable()) {
+            $backofficeApi = $this->getBackofficeApi();
+            $response = $backofficeApi->eligibilityCheck($bsn);
+
+            // check again for active vouchers
+            if ($response->isEligible() && !$this->identityHasActiveVoucher($identity_address)) {
+                $this->makeVoucher($identity_address)->updateModel([
+                    'fund_backoffice_log_id' => $response->getLog()->id,
+                ]);
+
+                $backofficeApi->reportReceived($bsn);
+            }
+
+            return $response;
         }
 
         return null;
     }
 
     /**
-     * @param $bsn
-     * @return array
+     * @return ?BackofficeApi
      */
-    public function reportReceivedByApi($bsn): array
+    public function getBackofficeApi(): ?BackofficeApi
     {
-        return resolve('sponsor_api')->reportReceived($this, $bsn);
+        return $this->isBackofficeApiAvailable() ? new BackofficeApi(record_repo(), $this) : null;
     }
 
     /**
      * @param $bsn
-     * @return array
      */
-    public function reportFirstUseByApi($bsn): array
+    public function reportFirstUseByApi($bsn): void
     {
-        return resolve('sponsor_api')->reportFirstUse($this, $bsn);
+        if ($backofficeApi = $this->getBackofficeApi()) {
+            $backofficeApi->reportFirstUse($bsn);
+        }
     }
 
     /**
      * @return bool
      */
-    public function isSponsorApiConfigured(): bool
+    public function isBackofficeApiAvailable(): bool
     {
-        return $this->fund_config->sponsor_api_token && $this->fund_config->sponsor_api_url;
+        return $this->organization->backoffice_available &&
+            $this->fund_config->backoffice_enabled;
     }
 }

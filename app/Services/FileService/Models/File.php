@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Model|\Eloquent $fileable
- * @property-read mixed $url_public
+ * @property-read string $url_public
  * @method static Builder|File newModelQuery()
  * @method static Builder|File newQuery()
  * @method static Builder|File query()
@@ -45,7 +45,7 @@ class File extends Model
     /**
      * @return MorphTo
      */
-    public function fileable() {
+    public function fileable(): MorphTo {
         return $this->morphTo();
     }
 
@@ -59,29 +59,37 @@ class File extends Model
         'fileable_type', 'ext', 'uid', 'path', 'size', 'type',
     ];
 
-    public function getUrlPublicAttribute() {
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getUrlPublicAttribute(): string
+    {
         return $this->urlPublic();
     }
 
     /**
      * @param $uid
-     * @return self|Builder|Model|object|null
+     * @return File|Model
      */
-    public static function findByUid($uid) {
+    public static function findByUid($uid): ?File
+    {
         return self::where(compact('uid'))->first();
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function urlPublic() {
+    public function urlPublic(): string
+    {
         return resolve('file')->urlPublic(ltrim($this->path, '/'));
     }
 
     /**
      * @return mixed
      */
-    public function download() {
+    public function download()
+    {
         return resolve('file')->download(ltrim($this->path, '/'));
     }
 
@@ -89,7 +97,8 @@ class File extends Model
      * @return bool|null
      * @throws \Exception
      */
-    public function unlink() {
+    public function unlink(): ?bool
+    {
         return resolve('file')->unlink($this);
     }
 }
