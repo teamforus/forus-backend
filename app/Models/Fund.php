@@ -1515,16 +1515,12 @@ class Fund extends Model
      * @return array
      */
     public function getFundDetails() : array {
-        $active_vouchers_query = VoucherQuery::whereNotExpired(
-            $this->budget_vouchers()->where(
-                'state', Voucher::STATE_ACTIVE
-            )->getQuery()
+        $active_vouchers_query = VoucherQuery::whereNotExpiredAndActive(
+            $this->budget_vouchers()->getQuery()
         );
 
-        $inactive_vouchers_query = VoucherQuery::whereNotExpired(
-            $this->budget_vouchers()->where(
-                'state', '!=',Voucher::STATE_ACTIVE
-            )->getQuery()
+        $inactive_vouchers_query = $this->budget_vouchers()->whereNotIn(
+            'id', $active_vouchers_query->pluck('id')
         );
 
         return [
@@ -1539,7 +1535,11 @@ class Fund extends Model
                 $inactive_vouchers_query->sum('amount'), 2)
             ),
             'inactive_count' => $inactive_vouchers_query->count(),
+            'inactive_percentage' => $this->budget_vouchers()->count() ?
+                $inactive_vouchers_query->count() / $this->budget_vouchers()->count() * 100 : 0,
             'count'          => $this->budget_vouchers()->count(),
+            'total_vouchers_amount' => round($this->budget_vouchers()->sum('amount'), 2),
+            'total_vouchers_count'  => $this->budget_vouchers()->count(),
         ];
     }
 
@@ -1551,6 +1551,8 @@ class Fund extends Model
         $total_budget = $total_budget_left = $total_budget_used = 0;
         $total_transaction_costs = $total_reserved = 0;
         $total_active_vouchers = $total_inactive_vouchers = 0;
+        $total_vouchers_count = $total_inactive_vouchers_count = 0;
+        $total_vouchers_amount = 0;
 
         foreach ($funds as $fund) {
             $total_budget += $fund->budget_total;
@@ -1562,21 +1564,31 @@ class Fund extends Model
                 $fund->budget_vouchers()->getQuery()
             )->sum('amount'), 2);
 
-            $total_active_vouchers += round(VoucherQuery::whereNotExpiredAndActive(
-                $fund->budget_vouchers()->where(
-                'state', Voucher::STATE_ACTIVE
-            )->getQuery())->sum('amount'), 2);
+            $active_vouchers_query = VoucherQuery::whereNotExpiredAndActive(
+                $fund->budget_vouchers()->getQuery()
+            );
 
-            $total_inactive_vouchers += round(VoucherQuery::whereNotExpiredAndActive(
-                $fund->budget_vouchers()->where(
-                    'state', '!=', Voucher::STATE_ACTIVE
-            )->getQuery())->sum('amount'), 2);
+            $inactive_vouchers_query = $fund->budget_vouchers()->whereNotIn(
+                'id', $active_vouchers_query->pluck('id')
+            );
+
+            $total_vouchers_amount   += round($fund->budget_vouchers()->sum('amount'), 2);
+            $total_active_vouchers   += round($active_vouchers_query->sum('amount'), 2);
+            $total_inactive_vouchers += round($inactive_vouchers_query->sum('amount'), 2);
+
+            $total_vouchers_count    += $fund->budget_vouchers()->count();
+            $total_inactive_vouchers_count += $inactive_vouchers_query->count();
         }
 
+        $inactive_vouchers_percentage = $total_vouchers_count ?
+            $total_inactive_vouchers_count / $total_vouchers_count * 100 : 0;
+
         return compact(
-            'total_budget', 'total_budget_left', 'total_budget_used',
-            'total_transaction_costs', 'total_reserved',
-            'total_active_vouchers', 'total_inactive_vouchers'
+            'total_budget', 'total_budget_left',
+            'total_budget_used', 'total_transaction_costs',
+            'total_reserved', 'total_active_vouchers', 'total_inactive_vouchers',
+            'total_vouchers_count', 'total_inactive_vouchers_count',
+            'inactive_vouchers_percentage', 'total_vouchers_amount'
         );
     }
 
@@ -1612,11 +1624,18 @@ class Fund extends Model
 
                 return [
                     trans("$transKey.name")     => $fund->name,
-                    trans("$transKey.total")    => currency_format($fund->budget_total),
-                    trans("$transKey.active")   => currency_format($details['active_amount']),
-                    trans("$transKey.inactive") => currency_format($details['inactive_amount']),
-                    trans("$transKey.expenses") => currency_format($fund->budget_used),
-                    trans("$transKey.left") => currency_format($fund->budget_left),
+                    trans("$transKey.amount_per_voucher")       => $fund->getMaxAmountPerVoucher(),
+                    trans("$transKey.average_per_voucher")      => $fund->getMaxAmountSumVouchers(),
+                    trans("$transKey.total_vouchers_amount")    => currency_format($details['total_vouchers_amount']),
+                    trans("$transKey.total_vouchers_count")     => $details['total_vouchers_count'],
+                    trans("$transKey.vouchers_inactive_amount") => currency_format($details['inactive_amount']),
+                    trans("$transKey.vouchers_inactive_percentage") => $details['inactive_percentage'].' %',
+                    trans("$transKey.vouchers_inactive_count")  => $details['inactive_count'],
+                    trans("$transKey.vouchers_active_amount")   => currency_format($details['active_amount']),
+                    trans("$transKey.total_spent_amount")       => currency_format($fund->budget_used),
+                    trans("$transKey.total_spent_percentage")   =>
+                        currency_format($fund->budget_total ? ($fund->budget_used / $fund->budget_total * 100) : 0).' %',
+                    trans("$transKey.total_left")               => currency_format($fund->budget_left),
                 ];
             })->values();
         }

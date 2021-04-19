@@ -70,18 +70,18 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
             AfterSheet::class => function(AfterSheet $event) {
                 $lastRow = $event->sheet->getHighestRow() + 1;
 
-                $event->sheet->setCellValue('A'. $lastRow, 'Total');
-                $event->sheet->setCellValue('B'. $lastRow, $this->totals['total_budget']);
-
                 if (!$this->is_detailed) {
+                    $event->sheet->setCellValue('A'. $lastRow, 'Total');
+                    $event->sheet->setCellValue('B'. $lastRow, $this->totals['total_budget']);
+
                     $event->sheet->setCellValue('C'. $lastRow, $this->totals['total_budget_left']);
                     $event->sheet->setCellValue('D'. $lastRow, $this->totals['total_budget_used']);
                     $event->sheet->setCellValue('E'. $lastRow, $this->totals['total_transaction_costs']);
                 } else {
-                    $event->sheet->setCellValue('C'. $lastRow, $this->totals['total_active_vouchers']);
-                    $event->sheet->setCellValue('D'. $lastRow, $this->totals['total_inactive_vouchers']);
-                    $event->sheet->setCellValue('E'. $lastRow, $this->totals['total_budget_used']);
-                    $event->sheet->setCellValue('F'. $lastRow, $this->totals['total_budget_left']);
+//                    $event->sheet->setCellValue('C'. $lastRow, $this->totals['total_active_vouchers']);
+//                    $event->sheet->setCellValue('D'. $lastRow, $this->totals['total_inactive_vouchers']);
+//                    $event->sheet->setCellValue('E'. $lastRow, $this->totals['total_budget_used']);
+//                    $event->sheet->setCellValue('F'. $lastRow, $this->totals['total_budget_left']);
                 }
             }
         ];
