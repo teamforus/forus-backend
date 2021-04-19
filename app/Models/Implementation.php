@@ -8,6 +8,7 @@ use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
+use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
@@ -87,6 +88,8 @@ use Illuminate\Http\Request;
  */
 class Implementation extends Model
 {
+    use HasMedia;
+
     public const KEY_GENERAL = 'general';
 
     public const FRONTEND_WEBSHOP = 'webshop';
@@ -617,16 +620,17 @@ class Implementation extends Model
     public function updatePages(array $pages): self
     {
         foreach ($pages as $pageType => $pageData) {
+            /** @var ImplementationPage $pageModel */
             $pageModel = $this->pages()->firstOrCreate([
                 'page_type' => $pageType,
             ]);
 
-            $pageModel->update(array_merge(array_only($pageData, [
+            $pageModel->updateModel(array_merge(array_only($pageData, [
                 'content', 'external', 'external_url',
             ]), in_array($pageType, ImplementationPage::TYPES_INTERNAL) ? [
                 'external' => 0,
                 'external_url' => null,
-            ] : []));
+            ] : []))->appendMedia($pageData['media_uid'] ?? [], 'cms_media');
         }
 
         return $this;
