@@ -53,7 +53,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param bool $allow
      * @return $this
      */
-    public function setTransparency($allow = true) {
+    public function setTransparency($allow = true): MediaImagePreset
+    {
         $this->allow_transparency = $allow;
         return $this;
     }
@@ -61,8 +62,10 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     /**
      * @param string $hex_color
      * @return $this
+     * @noinspection PhpUnused
      */
-    public function setTransparencyBgColor(string $hex_color = "#ffffff") {
+    public function setTransparencyBgColor(string $hex_color = "#ffffff"): MediaImagePreset
+    {
         $this->transparent_bg_color = $hex_color;
         return $this;
     }
@@ -71,7 +74,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $format
      * @return $this
      */
-    public function setFormat($format = 'jpg') {
+    public function setFormat($format = 'jpg'): MediaImagePreset
+    {
         $this->allow_transparency = $format;
         return $this;
     }
@@ -80,7 +84,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param bool $preserve_aspect_ratio
      * @return $this
      */
-    public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true) {
+    public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true): MediaImagePreset
+    {
         $this->preserve_aspect_ratio = $preserve_aspect_ratio;
         return $this;
     }
@@ -115,7 +120,8 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $name
      * @return MediaImagePreset
      */
-    public static function createOriginal(string $name) {
+    public static function createOriginal(string $name): MediaImagePreset
+    {
         return (new self($name))->setUseOriginal(true);
     }
 
@@ -179,7 +185,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $storagePath
      * @param MediaPreset $presetModel
      * @param Media $media
-     * @return \Illuminate\Database\Eloquent\Model|mixed
+     * @return \Illuminate\Database\Eloquent\Model|MediaPreset
      * @throws \Exception
      */
     public function copyPresetModel(
@@ -187,7 +193,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
         string $storagePath,
         MediaPreset $presetModel,
         Media $media
-    ) {
+    ): MediaPreset {
         $format = $this->format ?: $media->ext;
         $outPath = $this->makeUniquePath($storage, $storagePath, $format);
         $storage->copy($presetModel->path, $outPath);

@@ -2,6 +2,7 @@
 
 namespace App\Services\MediaService\Models;
 
+use App\Helpers\Color;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -121,6 +122,6 @@ class Media extends Model
      */
     public function getIsDarkAttribute(): ?bool
     {
-        return $this->dominant_color ? is_color_dark($this->dominant_color) : null;
+        return $this->dominant_color ? Color::createFromHex($this->dominant_color)->isDark() : null;
     }
 }
