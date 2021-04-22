@@ -2,7 +2,7 @@
 
 namespace App\Notifications\Identities\Voucher;
 
-use App\Mail\Vouchers\SubsidyPaymentSuccessMail;
+use App\Mail\Vouchers\PaymentSuccessMail;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
@@ -26,7 +26,7 @@ class IdentityVoucherSubsidyTransactionNotification extends BaseIdentityVoucherN
 
         $this->getNotificationService()->sendMailNotification(
             $identity->primary_email->email,
-            new SubsidyPaymentSuccessMail(array_merge($this->eventLog->data, [
+            new PaymentSuccessMail(array_merge($this->eventLog->data, [
                 'webshop_link' => $voucher->fund->urlWebshop(),
             ]), $voucher->fund->fund_config->implementation->getEmailFrom())
         );
