@@ -135,11 +135,12 @@ class FundResource extends Resource
             'reserved'  => round(VoucherQuery::whereNotExpiredAndActive(
                 $fund->budget_vouchers()->getQuery()
             )->sum('amount'), 2),
-            'active'         => $details['active_amount'],
-            'active_count'   => $details['active_count'],
-            'inactive'       => $details['inactive_amount'],
-            'inactive_count' => $details['inactive_count'],
-            'count'          => $fund->budget_vouchers()->count(),
+            'vouchers_amount'               => $details['vouchers_amount'],
+            'vouchers_count'                => $details['vouchers_count'],
+            'active_vouchers_amount'        => $details['active_amount'],
+            'active_vouchers_count'         => $details['active_count'],
+            'inactive_vouchers_amount'      => $details['inactive_amount'],
+            'inactive_vouchers_count'       => $details['inactive_count'],
         ];
     }
 }

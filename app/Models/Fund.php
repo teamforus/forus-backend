@@ -1527,6 +1527,11 @@ class Fund extends Model
             'reserved'        => round(VoucherQuery::whereNotExpiredAndActive(
                 $this->budget_vouchers()->getQuery()
             )->sum('amount'), 2),
+            'vouchers_amount' => currency_format(round(
+                $active_vouchers_query->sum('amount') +
+                $inactive_vouchers_query->sum('amount'), 2)
+            ),
+            'vouchers_count'  => $this->budget_vouchers()->count(),
             'active_amount'   => currency_format(round(
                 $active_vouchers_query->sum('amount'), 2)
             ),
@@ -1537,7 +1542,6 @@ class Fund extends Model
             'inactive_count' => $inactive_vouchers_query->count(),
             'inactive_percentage' => $this->budget_vouchers()->count() ?
                 $inactive_vouchers_query->count() / $this->budget_vouchers()->count() * 100 : 0,
-            'count'          => $this->budget_vouchers()->count(),
             'total_vouchers_amount' => round($this->budget_vouchers()->sum('amount'), 2),
             'total_vouchers_count'  => $this->budget_vouchers()->count(),
         ];
@@ -1627,7 +1631,7 @@ class Fund extends Model
                     trans("$transKey.amount_per_voucher")       => $fund->getMaxAmountPerVoucher(),
                     trans("$transKey.average_per_voucher")      => $fund->getMaxAmountSumVouchers(),
                     trans("$transKey.total_vouchers_amount")    => currency_format($details['total_vouchers_amount']),
-                    trans("$transKey.total_vouchers_count")     => $details['total_vouchers_count'],
+                    trans("$transKey.total_vouchers_count")     => $details['active_count'] + $details['inactive_count'],
                     trans("$transKey.vouchers_inactive_amount") => currency_format($details['inactive_amount']),
                     trans("$transKey.vouchers_inactive_percentage") => $details['inactive_percentage'].' %',
                     trans("$transKey.vouchers_inactive_count")  => $details['inactive_count'],

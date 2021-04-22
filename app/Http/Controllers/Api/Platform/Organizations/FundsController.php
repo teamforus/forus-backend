@@ -59,6 +59,7 @@ class FundsController extends Controller
             'used'              => currency_format($totals['total_budget_used']),
             'reserved'          => currency_format($totals['total_reserved']),
             'transaction_costs' => currency_format($totals['total_transaction_costs']),
+            'vouchers_amount'   => currency_format($totals['total_vouchers_amount']),
             'vouchers_active'   => currency_format($totals['total_active_vouchers']),
             'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
         ];
