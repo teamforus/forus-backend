@@ -696,6 +696,89 @@ class Organization extends Model
     }
 
     /**
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    private static function exportFinancesTransform(\Illuminate\Database\Eloquent\Builder $builder) {
+        $transKey = "export.finances";
+
+        return $builder->get()->map(static function(Organization $organization) use ($transKey) {
+            $totals = FundProvider::getOrganizationProviderFinances($organization);
+
+            return [
+                trans("$transKey.provider")             => $organization->name,
+                trans("$transKey.total_amount")         => currency_format($totals['total_spent']),
+                trans("$transKey.highest_transaction")  => currency_format($totals['highest_transaction']),
+                trans("$transKey.nr_transactions")      => $totals['nr_transactions'] ?: '0',
+            ];
+        })->values();
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param Builder|null $builder
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function exportFinances(
+        Request $request,
+        Organization $organization,
+        ?Builder $builder = null
+    ) {
+        $organizationQuery = self::getProviderOrganizations($request, $organization);
+
+        return Organization::exportFinancesTransform($organizationQuery);
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function getProviderOrganizations(
+        Request $request,
+        Organization $organization
+    ) {
+        $query = Organization::query();
+        $query->whereHas('fund_providers', function(\Illuminate\Database\Eloquent\Builder $builder) use ($request, $organization) {
+            FundProvider::search($request, $organization, $builder);
+        });
+
+        $providerOrganizations = OrganizationQuery::whereIsProviderOrganization(
+            $query, $organization
+        );
+
+        $provider_ids = $request->get('provider_ids');
+        if ($provider_ids) {
+            $providerOrganizations->whereIn('id', $provider_ids);
+        }
+
+        $postcodes = $request->get('postcodes');
+        if ($postcodes) {
+            $postcodes = explode(',', $postcodes);
+
+            $providerOrganizations->whereHas(
+                'offices', static function(
+                \Illuminate\Database\Eloquent\Builder $builder
+            ) use ($postcodes) {
+                $builder->whereIn('postal_code', (array) $postcodes);
+            });
+        }
+
+        $productCategoryIds = $request->get('product_category_ids');
+        if ($productCategoryIds) {
+            $providerOrganizations->whereHas(
+                'fund_providers.fund_provider_products', static function(
+                \Illuminate\Database\Eloquent\Builder $builder
+            ) use ($productCategoryIds) {
+                $builder->whereIn('product_id', (array) $productCategoryIds);
+            });
+        }
+
+        return $providerOrganizations;
+    }
+
+    /**
      * @return array
      */
     public function productsMeta(): array

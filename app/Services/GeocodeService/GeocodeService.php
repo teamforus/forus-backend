@@ -58,4 +58,34 @@ class GeocodeService
             return false;
         }
     }
+
+    /**
+     * Get postal code
+     *
+     * @param $address
+     * @return string|bool
+     */
+    public function getPostalCode($address)
+    {
+        try {
+            $client = new Client();
+            $res = $client->get($this->getApiUrl($address));
+
+            $coordinates = $res->getBody();
+            $coordinates = json_decode($coordinates);
+
+            $address_components = $coordinates->results[0]->address_components;
+
+            $postal_code = null;
+            foreach ($address_components as $address_component) {
+                if (in_array('postal_code', $address_component->types)) {
+                    $postal_code = $address_component->long_name;
+                }
+            }
+
+            return $postal_code;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

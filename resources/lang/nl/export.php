@@ -62,5 +62,12 @@ return [
         'used'      => 'Geactiveerd',
         'used_yes'  => 'Ja',
         'used_no'   => 'Nee'
+    ],
+
+    'finances'      => [
+        'provider'            => 'Aanbieder',
+        'total_amount'        => 'Totaal uitgegeven bij',
+        'highest_transaction' => 'Hoogste aankoopbedrag',
+        'nr_transactions'     => 'Aantal transaction',
     ]
 ];

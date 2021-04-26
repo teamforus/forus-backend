@@ -19,6 +19,16 @@ class IndexProvidersRequest extends IndexFundProviderRequest
      */
     public function rules(): array
     {
-        return array_merge(parent::rules());
+        $funds = $this->organization->funds->pluck('id');
+
+        return array_merge(parent::rules(), [
+            'fund_ids'          => 'nullable|array',
+            'fund_ids.*'        => 'required|exists:funds,id|in:' . $funds->join(','),
+            'postcodes'         => 'nullable|string|max:100',
+            'provider_ids'      => 'nullable|array',
+            'provider_ids.*'    => 'nullable|exists:organizations,id',
+            'product_category_ids'   => 'nullable|array',
+            'product_category_ids.*' => 'nullable|exists:product_categories,id',
+        ]);
     }
 }

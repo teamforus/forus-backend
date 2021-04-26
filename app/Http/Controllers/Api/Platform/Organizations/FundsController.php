@@ -16,6 +16,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\MediaService\Models\Media;
@@ -252,24 +253,33 @@ class FundsController extends Controller
     /**
      * @param FinanceRequest $request
      * @param Organization $organization
-     * @param Fund $fund
      * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function finances(
         FinanceRequest $request,
-        Organization $organization,
-        Fund $fund
+        Organization $organization
     ): array {
         $this->authorize('show', $organization);
-        $this->authorize('showFinances', [$fund, $organization]);
+
+        // Funds
+        $funds = $organization->funds();
+        if ($fund_ids = $request->input('fund_ids')) {
+            $funds->whereIn('id', $fund_ids);
+        }
+        $funds = $funds->get();
+
+        // Organization providers
+        $providerOrganizations = Organization::getProviderOrganizations(
+            $request, $organization
+        )->get();
 
         $dates = collect();
 
         $type = $request->input('type');
         $year = $request->input('year');
         $nth = $request->input('nth', 1);
-        $product_category_id = $request->input('product_category');
+        $product_category_ids = $request->input('product_category_ids');
 
         if ($type === 'quarter') {
             $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
@@ -319,17 +329,16 @@ class FundsController extends Controller
             exit();
         }
 
-        if ($product_category_id === -1) {
-            $categories = false;
-        } elseif ($product_category_id) {
-            $categories = ProductCategory::find($product_category_id)
-                ->descendants->pluck('id')->push($product_category_id);
+        if ($product_category_ids) {
+            $categories = ProductCategory::find($product_category_ids)->pluck('id')->push($product_category_ids);
         } else {
             $categories = null;
         }
 
+        $fundVouchersQuery = Voucher::whereIn('fund_id', $funds->pluck('id'));
+
         $dates = $dates->map(function (Carbon $date, $key) use (
-            $fund, $dates, $categories, $type
+            $fundVouchersQuery, $dates, $categories, $type, $providerOrganizations
         ) {
             $previousIntervalEntry = $date;
 
@@ -342,7 +351,17 @@ class FundsController extends Controller
                 ];
             }
 
-            $voucherQuery = $fund->voucher_transactions()->whereBetween(
+            $voucherQuery = VoucherTransaction::whereIn(
+                'voucher_id', $fundVouchersQuery->pluck('id')
+            );
+
+            if ($providerOrganizations) {
+                $voucherQuery = $voucherQuery->whereIn(
+                    'organization_id', $providerOrganizations->pluck('id')
+                );
+            }
+
+            $voucherQuery = $voucherQuery->whereBetween(
                 'voucher_transactions.created_at', [
                     $previousIntervalEntry->copy()->endOfDay(),
                     $date->copy()->endOfDay()
@@ -394,18 +413,24 @@ class FundsController extends Controller
 
         $dates->shift();
 
-        $providers = $fund->voucher_transactions()->whereBetween(
+        $providers = VoucherTransaction::whereIn(
+            'voucher_id', $fundVouchersQuery->pluck('id')
+        )->whereBetween(
             'voucher_transactions.created_at', [
             $startDate, $endDate
         ]);
 
-        if ($product_category_id === -1){
-            $providers = $providers->whereNull('voucher_transactions.product_id');
-        } elseif ($product_category_id) {
+        $service_costs = $transaction_costs = 0;
+        $funds->each(function (Fund $fund) use (&$service_costs, &$transaction_costs) {
+            $service_costs += $fund->getServiceCosts();
+            $transaction_costs += $fund->getTransactionCosts();
+        });
+
+        if ($product_category_ids) {
             $providers = $providers->whereHas('product', function (
                 Builder $query
-            ) use ($product_category_id) {
-                return $query->where('product_category_id', $product_category_id);
+            ) use ($product_category_ids) {
+                return $query->where('product_category_id', $product_category_ids);
             });
         }
 
@@ -413,11 +438,11 @@ class FundsController extends Controller
             'dates' => $dates,
             'usage' => $dates->sum('value'),
             'service_costs' => [
-                'total' => $fund->getServiceCosts(),
-                'transaction_costs' => $fund->getTransactionCosts()
+                'total' => $service_costs,
+                'transaction_costs' => $transaction_costs
             ],
             'activations' => VoucherQuery::whereNotExpiredAndActive(
-                $fund->vouchers()->getQuery()
+                Voucher::whereIn('fund_id', $funds->pluck('id'))
             )->whereNull(
                 'parent_id'
             )->whereBetween('created_at', [

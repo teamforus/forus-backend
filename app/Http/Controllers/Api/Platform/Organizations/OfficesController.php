@@ -77,6 +77,12 @@ class OfficesController extends Controller
             $office->update($coordinates);
         }
 
+        if ($postal_code = $this->geocodeService->getPostalCode(
+            $office->address
+        )) {
+            $office->update(compact('postal_code'));
+        }
+
         if ($media instanceof Media && $media->type === 'office_photo') {
             $office->attachMedia($media);
         }
@@ -131,6 +137,12 @@ class OfficesController extends Controller
             $office->address
         )) {
             $office->update($coordinates);
+        }
+
+        if ($postal_code = $this->geocodeService->getPostalCode(
+            $office->address
+        )) {
+            $office->update(compact('postal_code'));
         }
 
         if ($media instanceof Media && $media->type === 'office_photo') {

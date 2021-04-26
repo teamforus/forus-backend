@@ -360,6 +360,149 @@ class FundProvider extends Model
     }
 
     /**
+     * @param array $fundProviders
+     * @param Organization[]|Collection $providerOrganizations
+     * @return array
+     */
+    public static function getFundProviderTotals(
+        array $fundProviders,
+        $providerOrganizations
+    ): array {
+        $transactions = collect([]);
+        $avgTransaction = 0;
+        $fundUsageTotal = $providerUsageTotal = 0;
+
+        $usageTotal = 0;
+        $nrTransactions = 0;
+        $highestTransactionAmount = 0;
+        $highestTransactionProvider = null;
+        $highestDailyTotal = 0;
+        $highestDateTotal  = null;
+
+        foreach ($fundProviders as $fundProvider) {
+            $fundProvider = self::find($fundProvider['id']);
+
+            $fund = $fundProvider->fund;
+
+            $transactions = $fund->voucher_transactions()->where([
+                'organization_id' => $fundProvider->organization_id
+            ]);
+            $fundUsageTotal     = $fund->voucher_transactions()->sum('voucher_transactions.amount');
+            $providerUsageTotal = $transactions->sum('voucher_transactions.amount');
+            $avgTransaction     = $transactions->average('voucher_transactions.amount');
+            $maxTransaction     = $fund->voucher_transactions->max('amount');
+
+            // Totals
+            $usageTotal += $providerUsageTotal;
+            $nrTransactions += $transactions->count();
+
+            if ($maxTransaction > $highestTransactionAmount) {
+                $highestTransactionAmount = $maxTransaction;
+                $highestTransactionProvider = $fundProvider->organization->name;
+            }
+        }
+
+        $transactionsByDay = VoucherTransaction::query()->whereIn(
+            'organization_id',
+            $providerOrganizations->pluck('id')->toArray()
+        )->selectRaw("SUM(amount) as total_amount, created_at")->groupBy(
+            \DB::raw('DAY(voucher_transactions.created_at)')
+        );
+
+        $transactionsByDay->each(function ($transactionByDay) use (&$highestDailyTotal, &$highestDateTotal) {
+            $day = $transactionByDay->created_at;
+            $amount = $transactionByDay->total_amount;
+
+            if ($amount > $highestDailyTotal) {
+                $highestDailyTotal = $amount;
+                $highestDateTotal  = $day;
+            }
+        });
+
+        return [
+            'share_total'           => round($fundUsageTotal > 0 ? $providerUsageTotal / $fundUsageTotal : 0, 2),
+            'transactions'          => $transactions->count(),
+            'avg_transaction'       => round($avgTransaction ?: 0, 2),
+            'usage_total'           => round($usageTotal, 2),
+            'nr_transactions'       => $nrTransactions,
+            'highest_transaction'   => [
+                'amount'    => $highestTransactionAmount,
+                'provider'  => $highestTransactionProvider,
+            ],
+            'highest_daily_transaction'   => [
+                'amount'    => $highestDailyTotal,
+                'date'      => format_date_locale($highestDateTotal ?? null)
+            ]
+        ];
+    }
+
+    /**
+     * @param Organization $organization
+     * @return array
+     */
+    public static function getOrganizationProviderFinances(Organization $organization) : array {
+        $fundProviders = $organization->fund_providers;
+
+        $highestTransaction = 0;
+        $totalTransactions = 0;
+        $nrTransactions = 0;
+
+        foreach ($fundProviders as $fundProvider) {
+            $fund = $fundProvider->fund;
+
+            $transactions = $fund->voucher_transactions()->where([
+                'organization_id' => $fundProvider->organization_id
+            ]);
+            $totalTransactions  += $transactions->sum('voucher_transactions.amount');
+            $nrTransactions     += $transactions->count();
+            $amount = $transactions->max('voucher_transactions.amount');
+
+            if ($amount > $highestTransaction) {
+                $highestTransaction = $amount;
+            }
+        }
+
+        return [
+            'organization'          => $organization,
+            'highest_transaction'   => $highestTransaction,
+            'nr_transactions'       => $nrTransactions,
+            'total_spent'           => $totalTransactions,
+        ];
+    }
+
+    /**
+     * @param $providerOrganizations
+     * @return array
+     */
+    public static function getFundProviders($providerOrganizations) : array {
+        $fundProviders = collect([]);
+
+        $providerOrganizations->each(function (Organization $organization) use (&$fundProviders) {
+            foreach ($organization->fund_providers as $fund_provider) {
+                if (!$fundProviders->contains('id', $fund_provider->id)) {
+                    $fundProviders->push($fund_provider);
+                }
+            }
+        });
+
+        return $fundProviders->toArray();
+    }
+
+    /**
+     * @param Organization[]|Collection $providerOrganizations
+     * @return array
+     */
+    public static function getTotalsPerFundProvider($providerOrganizations) : array {
+        $totals = [];
+
+        $providerOrganizations->each(function (Organization $organization) use (&$fundProviders, &$totals) {
+            $totals[] = FundProvider::getOrganizationProviderFinances($organization);
+        });
+
+        return $totals;
+    }
+
+    /**
      * @param Request $request
      * @param Organization $organization
      * @param Builder|null $query
@@ -371,6 +514,7 @@ class FundProvider extends Model
         Builder $query = null
     ): Builder {
         $fund_id = $request->input('fund_id');
+        $fund_ids = $request->input('fund_ids');
         $organization_id = $request->input('organization_id');
         $dismissed = $request->input('dismissed');
         $allow_products = $request->input('allow_products');
@@ -396,6 +540,10 @@ class FundProvider extends Model
 
         if ($fund_id) {
             $query->where('fund_id', $fund_id);
+        }
+
+        if ($fund_ids) {
+            $query->whereIn('fund_id', $fund_ids);
         }
 
         if ($organization_id) {

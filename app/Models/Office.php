@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
  * @property string|null $phone
  * @property string|null $lon
  * @property string|null $lat
+ * @property string|null $postal_code
  * @property int $parsed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -54,7 +55,7 @@ class Office extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed'
+        'organization_id', 'address', 'phone', 'lon', 'lat', 'postal_code', 'parsed'
     ];
 
     /**

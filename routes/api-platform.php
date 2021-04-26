@@ -423,7 +423,7 @@ $router->group(['middleware' => [
         "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
 
     $router->get(
-        'organizations/{organization}/funds/{fund}/finances',
+        'organizations/{organization}/funds-finances',
         "Api\Platform\Organizations\FundsController@finances");
 
     $router->post(
@@ -787,6 +787,11 @@ $router->group(['middleware' => [
             ]
         ]
     );
+
+    $router->get('organizations/{organization}/sponsor/providers/postcodes',"Api\Platform\Organizations\Sponsor\ProvidersController@getPostcodes");
+    $router->get('organizations/{organization}/sponsor/providers/finances-totals',"Api\Platform\Organizations\Sponsor\ProvidersController@getFinancesTotals");
+    $router->get('organizations/{organization}/sponsor/providers/finances-provider',"Api\Platform\Organizations\Sponsor\ProvidersController@getFinancesPerProvider");
+    $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
 
     $router->get('organizations/{organization}/sponsor/providers/export', "Api\Platform\Organizations\Sponsor\ProvidersController@export");
 
