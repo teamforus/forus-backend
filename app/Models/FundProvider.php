@@ -376,7 +376,7 @@ class FundProvider extends Model
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
 
-        $query = $query ? $query : self::query();
+        $query = $query ?: self::query();
         $query = $query->whereIn('fund_id', $organization->funds()->pluck('id'));
 
         if ($q = $request->input('q')) {
@@ -429,21 +429,23 @@ class FundProvider extends Model
                 });
             } else {
                 $query->where(function(Builder $builder) use ($allow_products) {
-                    $builder->whereHas('fund', function(Builder $builder) {
-                        $builder->where('type', Fund::TYPE_BUDGET);
-                    })->where('allow_products', (bool) $allow_products);
-                });
-
-                $query->orWhere(function(Builder $builder) use ($allow_products) {
-                    $builder->whereHas('fund', function(Builder $builder) {
-                        $builder->where('type', Fund::TYPE_SUBSIDIES);
+                    $builder->where(function(Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function(Builder $builder) {
+                            $builder->where('type', Fund::TYPE_BUDGET);
+                        })->where('allow_products', (bool) $allow_products);
                     });
 
-                    if ((bool) $allow_products) {
-                        $builder->whereHas('fund_provider_products.product');
-                    } else {
-                        $builder->whereDoesntHave('fund_provider_products.product');
-                    }
+                    $builder->orWhere(function(Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function(Builder $builder) {
+                            $builder->where('type', Fund::TYPE_SUBSIDIES);
+                        });
+
+                        if ($allow_products) {
+                            $builder->whereHas('fund_provider_products.product');
+                        } else {
+                            $builder->whereDoesntHave('fund_provider_products.product');
+                        }
+                    });
                 });
             }
         }
