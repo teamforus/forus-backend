@@ -27,7 +27,8 @@ class ImplementationPrivateResource extends JsonResource
         }
 
         $data = $implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'title', 'description', 'informal_communication',
+            'id', 'key', 'name', 'url_webshop', 'title', 'description', 'description_html',
+            'informal_communication',
         ]);
 
         $data = array_merge($data, [
@@ -61,7 +62,7 @@ class ImplementationPrivateResource extends JsonResource
     protected function pageDetails(?ImplementationPage $page): ?array
     {
         return $page ? $page->only([
-            'page_type', 'content', 'external', 'external_url',
+            'page_type', 'content', 'content_html', 'external', 'external_url',
         ]) : null;
     }
 }
