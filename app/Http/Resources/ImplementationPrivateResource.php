@@ -25,10 +25,13 @@ class ImplementationPrivateResource extends JsonResource
         if (is_null($implementation = $this->resource)) {
             return null;
         }
-
-        $data = $implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'title', 'description', 'description_html',
-            'informal_communication',
+      
+        $data = array_merge($implementation->only([
+            'id', 'key', 'name', 'url_webshop', 'title', 'description', 'description_html', 'informal_communication',
+            'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+        ]), [
+            'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
+            'banner' => new MediaResource($implementation->banner),
         ]);
 
         $data = array_merge($data, [

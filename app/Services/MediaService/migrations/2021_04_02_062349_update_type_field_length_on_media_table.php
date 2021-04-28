@@ -1,23 +1,26 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class RenameMediaSizesToMediaPresetsTable
+ * Class UpdateTypeFieldLengthOnMediaTable
  * @noinspection PhpIllegalPsrClassPathInspection
  * @noinspection PhpUnused
  */
-class RenameMediaSizesToMediaPresetsTable extends Migration
+class UpdateTypeFieldLengthOnMediaTable extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up(): void
+    public function up()
     {
-        Schema::rename('media_sizes', 'media_presets');
+        Schema::table('media', function(Blueprint $table) {
+            $table->string('type',30)->change();
+        });
     }
 
     /**
@@ -25,8 +28,8 @@ class RenameMediaSizesToMediaPresetsTable extends Migration
      *
      * @return void
      */
-    public function down(): void
+    public function down()
     {
-        Schema::rename('media_presets', 'media_sizes');
+        //
     }
 }

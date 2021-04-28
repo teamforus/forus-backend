@@ -82,14 +82,16 @@ abstract class MediaConfig
     /**
      * @return string|null
      */
-    public function getName() {
+    public function getName(): ?string
+    {
         return $this->name ?? null;
     }
 
     /**
      * @return string|null
      */
-    public function getType() {
+    public function getType(): ?string
+    {
         return $this->type ?? null;
     }
 
@@ -102,7 +104,7 @@ abstract class MediaConfig
     protected function addPreset(
         MediaPreset $mediaPreset,
         bool $overwriteIfExists = false
-    ) {
+    ): MediaPreset {
         if (!$overwriteIfExists && isset($this->presets[$mediaPreset->name])) {
             throw new MediaPresetAlreadyExistsException(sprintf(
                 "Media config '%s' already has '%s' preset.",
@@ -117,28 +119,32 @@ abstract class MediaConfig
     /**
      * @return MediaPreset[]
      */
-    public function getPresets() {
+    public function getPresets(): array
+    {
         return $this->presets ?? [];
     }
 
     /**
      * @return string
      */
-    public function getRegenerationPresetName() {
+    public function getRegenerationPresetName(): string
+    {
         return $this->regenerate_source;
     }
 
     /**
      * @return string[]
      */
-    public function getSourceExtensions() {
+    public function getSourceExtensions(): array
+    {
         return $this->source_extensions ?? [];
     }
 
     /**
      * @return string[]
      */
-    public function getSourceMimeTypes() {
+    public function getSourceMimeTypes(): array
+    {
         return $this->source_mime_types ?? [];
     }
 
@@ -146,21 +152,24 @@ abstract class MediaConfig
      * @param int $default
      * @return int
      */
-    public function getMaxSourceFileSize(int $default) {
+    public function getMaxSourceFileSize(int $default): int
+    {
         return $this->max_source_file_size ?: $default;
     }
 
     /**
      * @return bool
      */
-    public function useQueue() {
+    public function useQueue(): bool
+    {
         return $this->use_queue;
     }
 
     /**
-     * @return array|bool
+     * @return array
      */
-    public function getSyncPresets() {
+    public function getSyncPresets(): array
+    {
         return $this->regenerate_source ? array_merge(
             $this->sync_presets, (array) $this->regenerate_source
         ): $this->sync_presets;
