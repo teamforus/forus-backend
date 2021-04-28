@@ -19,7 +19,7 @@ class OrganizationLogoMediaConfig extends MediaImageConfig
     /**
      * @var int
      */
-    protected $preview_aspect_ratio = 1.33;
+    protected $preview_aspect_ratio = 1;
 
     /**
      * OrganizationLogoMediaConfig constructor.
