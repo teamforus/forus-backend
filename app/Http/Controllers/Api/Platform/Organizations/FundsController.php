@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreated;
+use App\Exports\FundsExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Class FundsController
@@ -53,9 +55,39 @@ class FundsController extends Controller
             ]);
         }
 
+        $queryTotals = clone($query);
+        $queryTotalsBudget = clone($query);
+
+        $totals = Fund::getFundTotals($queryTotals->get());
+
+        $totalsBudget = Fund::getFundTotals($queryTotalsBudget->where([
+            'type' => Fund::TYPE_BUDGET,
+        ])->get());
+
+        $meta = [
+            'total_amount'      => currency_format($totals['total_budget']),
+            'left'              => currency_format($totals['total_budget_left']),
+            'used'              => currency_format($totals['total_budget_used']),
+            'reserved'          => currency_format($totals['total_reserved']),
+            'transaction_costs' => currency_format($totals['total_transaction_costs']),
+            'vouchers_amount'   => currency_format($totals['total_vouchers_amount']),
+            'vouchers_active'   => currency_format($totals['total_active_vouchers']),
+            'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
+            'budget' => [
+                'total_amount'      => currency_format($totalsBudget['total_budget']),
+                'left'              => currency_format($totalsBudget['total_budget_left']),
+                'used'              => currency_format($totalsBudget['total_budget_used']),
+                'reserved'          => currency_format($totalsBudget['total_reserved']),
+                'transaction_costs' => currency_format($totalsBudget['total_transaction_costs']),
+                'vouchers_amount'   => currency_format($totalsBudget['total_vouchers_amount']),
+                'vouchers_active'   => currency_format($totalsBudget['total_active_vouchers']),
+                'vouchers_inactive' => currency_format($totalsBudget['total_inactive_vouchers']),
+            ]
+        ];
+
         return FundResource::collection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed'
-        ])->paginate($request->input('per_page')));
+        ])->paginate($request->input('per_page')))->additional(compact('meta'));
     }
 
     /**
@@ -489,5 +521,31 @@ class FundsController extends Controller
         $fund->delete();
 
         return response()->json([]);
+    }
+
+    /**
+     * Export funds data
+     *
+     * @param IndexFundRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexFundRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+
+        $export_type = $request->get('export_type', 'xls');
+
+        return resolve('excel')->download(
+            new FundsExport(
+                $request,
+                $organization
+            ), date('Y-m-d H:i:s') . '.'. $export_type
+        );
     }
 }

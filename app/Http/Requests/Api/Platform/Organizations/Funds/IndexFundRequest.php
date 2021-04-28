@@ -30,6 +30,8 @@ class IndexFundRequest extends FormRequest
             'per_page' => 'numeric|between:1,100',
             'organization_id' => 'nullable|exists:organizations,id',
             'implementation_id' => 'nullable|exists:implementations,id',
+            'export_type'       => 'nullable|in:xls,csv',
+            'detailed'          => 'nullable|boolean',
         ];
     }
 }

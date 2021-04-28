@@ -178,6 +178,11 @@ $router->group([
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/funds/export',
+        "Api\Platform\Organizations\FundsController@export"
+    );
+
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [

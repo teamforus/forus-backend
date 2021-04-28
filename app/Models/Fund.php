@@ -1513,6 +1513,145 @@ class Fund extends Model
     }
 
     /**
+     * @return array
+     */
+    public function getFundDetails() : array {
+        $active_vouchers_query = VoucherQuery::whereNotExpiredAndActive(
+            $this->budget_vouchers()->getQuery()
+        );
+
+        $inactive_vouchers_query = $this->budget_vouchers()->whereNotIn(
+            'id', $active_vouchers_query->pluck('id')
+        );
+
+        return [
+            'reserved'        => round(VoucherQuery::whereNotExpiredAndActive(
+                $this->budget_vouchers()->getQuery()
+            )->sum('amount'), 2),
+            'vouchers_amount' => currency_format(round(
+                    $active_vouchers_query->sum('amount') +
+                    $inactive_vouchers_query->sum('amount'), 2)
+            ),
+            'vouchers_count'  => $this->budget_vouchers()->count(),
+            'active_amount'   => currency_format(round(
+                    $active_vouchers_query->sum('amount'), 2)
+            ),
+            'active_count'    => $active_vouchers_query->count(),
+            'inactive_amount' => currency_format(round(
+                    $inactive_vouchers_query->sum('amount'), 2)
+            ),
+            'inactive_count' => $inactive_vouchers_query->count(),
+            'inactive_percentage' => $this->budget_vouchers()->count() ?
+                $inactive_vouchers_query->count() / $this->budget_vouchers()->count() * 100 : 0,
+            'total_vouchers_amount' => round($this->budget_vouchers()->sum('amount'), 2),
+            'total_vouchers_count'  => $this->budget_vouchers()->count(),
+        ];
+    }
+
+    /**
+     * @param Collection|Fund[] $funds
+     * @return array
+     */
+    public static function getFundTotals(Collection $funds) : array {
+        $total_budget = $total_budget_left = $total_budget_used = 0;
+        $total_transaction_costs = $total_reserved = 0;
+        $total_active_vouchers = $total_inactive_vouchers = 0;
+        $total_vouchers_count = $total_inactive_vouchers_count = 0;
+        $total_vouchers_amount = 0;
+
+        foreach ($funds as $fund) {
+            $total_budget += $fund->budget_total;
+            $total_budget_left += $fund->budget_left;
+            $total_budget_used += $fund->budget_used;
+            $total_transaction_costs += $fund->getTransactionCosts();
+
+            $total_reserved += round(VoucherQuery::whereNotExpiredAndActive(
+                $fund->budget_vouchers()->getQuery()
+            )->sum('amount'), 2);
+
+            $active_vouchers_query = VoucherQuery::whereNotExpiredAndActive(
+                $fund->budget_vouchers()->getQuery()
+            );
+
+            $inactive_vouchers_query = $fund->budget_vouchers()->whereNotIn(
+                'id', $active_vouchers_query->pluck('id')
+            );
+
+            $total_vouchers_amount   += round($fund->budget_vouchers()->sum('amount'), 2);
+            $total_active_vouchers   += round($active_vouchers_query->sum('amount'), 2);
+            $total_inactive_vouchers += round($inactive_vouchers_query->sum('amount'), 2);
+
+            $total_vouchers_count    += $fund->budget_vouchers()->count();
+            $total_inactive_vouchers_count += $inactive_vouchers_query->count();
+        }
+
+        $inactive_vouchers_percentage = $total_vouchers_count ?
+            $total_inactive_vouchers_count / $total_vouchers_count * 100 : 0;
+
+        return compact(
+            'total_budget', 'total_budget_left',
+            'total_budget_used', 'total_transaction_costs',
+            'total_reserved', 'total_active_vouchers', 'total_inactive_vouchers',
+            'total_vouchers_count', 'total_inactive_vouchers_count',
+            'inactive_vouchers_percentage', 'total_vouchers_amount'
+        );
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return array
+     */
+    public static function exportTransform(Request $request, Organization $organization) : array {
+        $transKey = "export.funds";
+
+        $is_detailed = $request->input('detailed', false);
+        $funds  = Fund::search($request, $organization->funds()->getQuery())->get();
+        $totals = self::getFundTotals($funds);
+
+        if (!$is_detailed) {
+            $data = $funds->map(static function(
+                Fund $fund
+            ) use ($transKey) {
+                return [
+                    trans("$transKey.name")     => $fund->name,
+                    trans("$transKey.total")    => currency_format($fund->budget_total),
+                    trans("$transKey.current")  => currency_format($fund->budget_left),
+                    trans("$transKey.expenses") => currency_format($fund->budget_used),
+                    trans("$transKey.transactions") => currency_format($fund->getTransactionCosts()),
+                ];
+            })->values();
+        } else {
+            $data = $funds->map(static function(
+                Fund $fund
+            ) use ($transKey, $totals) {
+                $details = $fund->getFundDetails();
+
+                return [
+                    trans("$transKey.name")     => $fund->name,
+                    trans("$transKey.amount_per_voucher")       => $fund->getMaxAmountPerVoucher(),
+                    trans("$transKey.average_per_voucher")      => $fund->getMaxAmountSumVouchers(),
+                    trans("$transKey.total_vouchers_amount")    => currency_format($details['total_vouchers_amount']),
+                    trans("$transKey.total_vouchers_count")     => $details['active_count'] + $details['inactive_count'],
+                    trans("$transKey.vouchers_inactive_amount") => currency_format($details['inactive_amount']),
+                    trans("$transKey.vouchers_inactive_percentage") => $details['inactive_percentage'].' %',
+                    trans("$transKey.vouchers_inactive_count")  => $details['inactive_count'],
+                    trans("$transKey.vouchers_active_amount")   => currency_format($details['active_amount']),
+                    trans("$transKey.total_spent_amount")       => currency_format($fund->budget_used),
+                    trans("$transKey.total_spent_percentage")   =>
+                        currency_format($fund->budget_total ? ($fund->budget_used / $fund->budget_total * 100) : 0).' %',
+                    trans("$transKey.total_left")               => currency_format($fund->budget_left),
+                ];
+            })->values();
+        }
+
+        return [
+            'totals' => $totals,
+            'data'   => $data
+        ];
+    }
+
+    /**
      * @return EmailFrom
      */
     public function getEmailFrom(): EmailFrom {
