@@ -40,9 +40,9 @@ class ProductResource extends Resource
         $product = $this->resource;
 
         return array_merge($product->only([
-            'id', 'name', 'description', 'product_category_id', 'sold_out', 'organization_id',
+            'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
+            'organization_id',
         ]), [
-            'description_html' => $product->description_html,
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
 

@@ -12,6 +12,7 @@
       "schedule": ["after 9pm on sunday"]
     }
   ],
+  "rangeStrategy": "update-lockfile",
   "composer": {
     "enabled": true
   }

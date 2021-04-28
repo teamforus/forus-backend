@@ -45,11 +45,12 @@ class LoremDbSeeder extends Seeder
 
     private $implementations = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
-        'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk',
+        'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk', 'Potjeswijzer',
     ];
 
     private $implementationsWithFunds = [
-        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas',
+        'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
+        'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk', 'Potjeswijzer',
     ];
 
     private $implementationsWithMultipleFunds = [
@@ -76,10 +77,6 @@ class LoremDbSeeder extends Seeder
 
     private $fundsWithAutoValidation = [
         'Nijmegen'
-    ];
-
-    private $fundsWithSponsorProducts = [
-        'Stadjerspas'
     ];
 
     private $sponsorsWithSponsorProducts = [
