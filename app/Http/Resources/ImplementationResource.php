@@ -39,6 +39,6 @@ class ImplementationResource extends JsonResource
      */
     protected function hasTermsPage(?ImplementationPage $page_provider): bool
     {
-        return $page_provider && (bool) $page_provider->content;
+        return $page_provider && $page_provider->content;
     }
 }
