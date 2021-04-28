@@ -33,7 +33,7 @@ class StorePhysicalCardRequest extends FormRequest
                 'required',
                 'string',
                 'size:12',
-                'starts_with:1001',
+                'starts_with:100',
                 Rule::unique('physical_cards', 'code')
             ]
         ];
