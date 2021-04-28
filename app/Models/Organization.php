@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 
@@ -157,11 +158,11 @@ class Organization extends Model
 
     /**
      * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return EloquentBuilder
      */
-    public static function searchQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    public static function searchQuery(Request $request): EloquentBuilder
     {
-        /** @var \Illuminate\Database\Eloquent\Builder $query */
+        /** @var EloquentBuilder $query */
         $query = self::query();
         $has_products = $request->input('has_products');
         $fund_type    = $request->input('fund_type', 'budget');
@@ -192,7 +193,7 @@ class Organization extends Model
 
         if ($request->input('implementation', false)) {
             $query->whereHas('funds', static function(
-                \Illuminate\Database\Eloquent\Builder $builder
+                EloquentBuilder $builder
             ) {
                 $funds = Implementation::queryFundsByState('active')->pluck('id')->toArray();
                 $builder->whereIn('funds.id', $funds);
@@ -200,7 +201,7 @@ class Organization extends Model
         }
 
         if ($has_products) {
-            $query->whereHas('products', static function(\Illuminate\Database\Eloquent\Builder $builder) use ($fund_type) {
+            $query->whereHas('products', static function(EloquentBuilder $builder) use ($fund_type) {
                 $activeFunds = Implementation::activeFundsQuery()->where(
                     'type', $fund_type
                 )->pluck('id')->toArray();
@@ -220,7 +221,7 @@ class Organization extends Model
 
     /**
      * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection
+     * @return EloquentBuilder[]|Collection
      * @noinspection PhpUnused
      */
     public static function search(Request $request)
@@ -378,9 +379,9 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+        )->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_budget', true);
-            $builder->orWhere(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->orWhere(function(EloquentBuilder $builder) {
                 $builder->where('fund_providers.allow_products', true);
                 $builder->orWhere('fund_providers.allow_some_products', true);
             });
@@ -396,7 +397,7 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+        )->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_budget', true);
         });
     }
@@ -410,7 +411,7 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where(static function(\Illuminate\Database\Eloquent\Builder $builder) {
+        )->where(static function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_products', true);
         });
     }
@@ -476,11 +477,11 @@ class Organization extends Model
 
     /**
      * @param $role
-     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function employeesOfRoleQuery($role) {
         return $this->employees()->whereHas('roles', function(
-            \Illuminate\Database\Eloquent\Builder $query
+            EloquentBuilder $query
         ) use ($role) {
             $query->whereIn('key', (array) $role);
         });
@@ -488,11 +489,11 @@ class Organization extends Model
 
     /**
      * @param $permission
-     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function employeesWithPermissionsQuery($permission) {
         return $this->employees()->whereHas('roles.permissions', static function(
-            \Illuminate\Database\Eloquent\Builder $query
+            EloquentBuilder $query
         ) use ($permission) {
             $query->whereIn('permissions.key', (array) $permission);
         });
@@ -500,17 +501,19 @@ class Organization extends Model
 
     /**
      * @param string|array $role
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     * @return Collection|Employee[]
      */
-    public function employeesOfRole($role) {
+    public function employeesOfRole($role): Collection
+    {
         return $this->employeesOfRoleQuery($role)->get();
     }
 
     /**
      * @param string|array $permission
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Database\Eloquent\Relations\HasMany[]
+     * @return Collection|Employee[]
      */
-    public function employeesWithPermissions($permission) {
+    public function employeesWithPermissions($permission): Collection
+    {
         return $this->employeesWithPermissionsQuery($permission)->get();
     }
 
@@ -595,12 +598,12 @@ class Organization extends Model
     /**
      * @param $identityAddress string
      * @param string|array|bool $permissions
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return EloquentBuilder
      */
     public static function queryByIdentityPermissions (
         string $identityAddress,
         $permissions = false
-    ): \Illuminate\Database\Eloquent\Builder {
+    ): EloquentBuilder {
         // convert string to array
         if (is_string($permissions)) {
             $permissions = (array) $permissions;
@@ -610,7 +613,7 @@ class Organization extends Model
          * Query all the organizations where identity_address has permissions
          * or is the creator
          */
-        return self::query()->where(static function(\Illuminate\Database\Eloquent\Builder $builder) use (
+        return self::query()->where(static function(EloquentBuilder $builder) use (
             $identityAddress, $permissions
         ) {
             return $builder->whereIn('id', function(Builder $query) use (
@@ -696,17 +699,18 @@ class Organization extends Model
     }
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Support\Collection
+     * @param Organization $sponsor
+     * @param Collection $providers
+     * @return Collection|\Illuminate\Support\Collection
      */
-    private static function exportFinancesTransform(\Illuminate\Database\Eloquent\Builder $builder) {
+    private static function exportFinancesTransform(Organization $sponsor, Collection $providers) {
         $transKey = "export.finances";
 
-        return $builder->get()->map(static function(Organization $organization) use ($transKey) {
-            $totals = FundProvider::getOrganizationProviderFinances($organization);
+        return $providers->map(static function(Organization $provider) use ($transKey, $sponsor) {
+            $totals = FundProvider::getOrganizationProviderFinances($sponsor, $provider);
 
             return [
-                trans("$transKey.provider")             => $organization->name,
+                trans("$transKey.provider")             => $provider->name,
                 trans("$transKey.total_amount")         => currency_format($totals['total_spent']),
                 trans("$transKey.highest_transaction")  => currency_format($totals['highest_transaction']),
                 trans("$transKey.nr_transactions")      => $totals['nr_transactions'] ?: '0',
@@ -717,65 +721,61 @@ class Organization extends Model
     /**
      * @param Request $request
      * @param Organization $organization
-     * @param Builder|null $builder
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection|\Illuminate\Support\Collection
+     * @return Collection|\Illuminate\Support\Collection
      */
-    public static function exportFinances(
-        Request $request,
-        Organization $organization,
-        ?Builder $builder = null
-    ) {
-        $organizationQuery = self::getProviderOrganizations($request, $organization);
+    public static function exportFinances(Request $request, Organization $organization)
+    {
+        $providers = self::getProviderOrganizations($request, $organization)->get();
 
-        return Organization::exportFinancesTransform($organizationQuery);
+        return Organization::exportFinancesTransform($organization, $providers);
     }
 
     /**
      * @param Request $request
      * @param Organization $organization
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return EloquentBuilder
      */
     public static function getProviderOrganizations(
         Request $request,
         Organization $organization
-    ) {
-        $query = Organization::query();
-        $query->whereHas('fund_providers', function(\Illuminate\Database\Eloquent\Builder $builder) use ($request, $organization) {
-            FundProvider::search($request, $organization, $builder);
-        });
-
-        $providerOrganizations = OrganizationQuery::whereIsProviderOrganization(
-            $query, $organization
-        );
-
-        $provider_ids = $request->get('provider_ids');
-        if ($provider_ids) {
-            $providerOrganizations->whereIn('id', $provider_ids);
-        }
+    ): EloquentBuilder {
+        $from = $request->get('from');
+        $to = $request->get('to');
 
         $postcodes = $request->get('postcodes');
-        if ($postcodes) {
-            $postcodes = explode(',', $postcodes);
+        $provider_ids = $request->get('provider_ids');
+        $productCategoryIds = $request->get('product_category_ids');
 
-            $providerOrganizations->whereHas(
-                'offices', static function(
-                \Illuminate\Database\Eloquent\Builder $builder
-            ) use ($postcodes) {
-                $builder->whereIn('postal_code', (array) $postcodes);
+        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $organization);
+
+        if ($provider_ids) {
+            $query->whereIn('id', $provider_ids);
+        }
+
+        if ($postcodes) {
+            $query->whereHas('offices', static function(EloquentBuilder $builder) use ($postcodes) {
+                $builder->whereIn('postcode_number', (array) $postcodes);
             });
         }
 
-        $productCategoryIds = $request->get('product_category_ids');
         if ($productCategoryIds) {
-            $providerOrganizations->whereHas(
-                'fund_providers.fund_provider_products', static function(
-                \Illuminate\Database\Eloquent\Builder $builder
+            $query->whereHas('fund_providers.fund_provider_products', static function(
+                EloquentBuilder $builder
             ) use ($productCategoryIds) {
                 $builder->whereIn('product_id', (array) $productCategoryIds);
             });
         }
 
-        return $providerOrganizations;
+        if ($from && $to) {
+            $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($from, $to) {
+                $builder->whereBetween('created_at', [
+                    Carbon::parse($from)->startOfDay(),
+                    Carbon::parse($to)->endOfDay(),
+                ]);
+            });
+        }
+
+        return $query;
     }
 
     /**

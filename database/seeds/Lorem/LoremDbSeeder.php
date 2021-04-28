@@ -401,8 +401,9 @@ class LoremDbSeeder extends Seeder
                     'product_id' => null,
                     'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
+                    'created_at' => now()->subDays(random_int(0, 90)),
                     'state' => VoucherTransaction::STATE_SUCCESS,
-                    'attempts' => /* It's Over */ 9000
+                    'attempts' => /* It's Over */ 9000,
                 ]);
 
                 VoucherTransactionCreated::dispatch($transaction);
@@ -510,10 +511,21 @@ class LoremDbSeeder extends Seeder
         Organization $organization,
         array $fields = []
     ): Office {
+        $postCodes = [
+            9700, 9701, 9702, 9703, 9704, 9711, 9712, 9713, 9714, 9715, 9716, 9717,
+            9718, 9721, 9722, 9723, 9724, 9725, 9726, 9727, 9728, 9731, 9732, 9733,
+            9734, 9735, 9736, 9737, 9738, 9741, 9742, 9743, 9744, 9745, 9746, 9747,
+        ];
+
+        $postCode = $postCodes[random_int(0, count($postCodes) - 1)];
+
         $office = Office::create(array_merge([
             'organization_id'   => $organization->id,
-            'address'           => 'Osloweg 131, 9723BK, Groningen',
+            'address'           => "Osloweg 131, $postCode BK, Groningen",
             'phone'             => '0123456789',
+            'postcode'          => "$postCode BK",
+            'postcode_number'   => $postCode,
+            'postcode_addition' => 'BK',
             'lon'               => 6.606065989043237 + (random_int(-1000, 1000) / 10000),
             'lat'               => 53.21694230132835 + (random_int(-1000, 1000) / 10000),
             'parsed'            => true

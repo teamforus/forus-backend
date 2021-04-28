@@ -11,6 +11,10 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
+/**
+ * Class ProviderFinancesExport
+ * @package App\Exports
+ */
 class ProviderFinancesExport implements FromCollection, WithHeadings
 {
     protected $request;

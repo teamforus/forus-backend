@@ -4,13 +4,16 @@ namespace App\Models;
 
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
+use App\Http\Resources\OrganizationBasicResource;
 use App\Scopes\Builders\FundProviderChatQuery;
+use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
@@ -122,7 +125,10 @@ class FundProvider extends Model
      */
     public function fund_provider_products_with_trashed(): HasMany
     {
-        return $this->hasMany(FundProviderProduct::class)->withTrashed();
+        /** @var HasMany|SoftDeletes $hasMany */
+        $hasMany = $this->hasMany(FundProviderProduct::class);
+
+        return $hasMany->withTrashed();
     }
 
     /**
@@ -360,113 +366,51 @@ class FundProvider extends Model
     }
 
     /**
-     * @param array $fundProviders
-     * @param Organization[]|Collection $providerOrganizations
+     * @param Organization $sponsor
+     * @param Organization $provider
      * @return array
      */
-    public static function getFundProviderTotals(
-        array $fundProviders,
-        $providerOrganizations
-    ): array {
-        $transactions = collect([]);
-        $avgTransaction = 0;
-        $fundUsageTotal = $providerUsageTotal = 0;
+    public static function getOrganizationProviderFinances(
+        Organization $sponsor,
+        Organization $provider
+    ) : array {
+        $dateFrom = Carbon::parse(request()->get('from'));
+        $dateTo = Carbon::parse(request()->get('to'));
 
-        $usageTotal = 0;
-        $nrTransactions = 0;
-        $highestTransactionAmount = 0;
-        $highestTransactionProvider = null;
-        $highestDailyTotal = 0;
-        $highestDateTotal  = null;
+        $fund_ids = request()->get('fund_ids');
+        $postcodes = request()->get('postcodes');
 
-        foreach ($fundProviders as $fundProvider) {
-            $fundProvider = self::find($fundProvider['id']);
+        $funds = $sponsor->funds();
+        $funds = ($fund_ids ? $funds->whereIn('id', $fund_ids) : $funds)->get();
 
-            $fund = $fundProvider->fund;
-
-            $transactions = $fund->voucher_transactions()->where([
-                'organization_id' => $fundProvider->organization_id
-            ]);
-            $fundUsageTotal     = $fund->voucher_transactions()->sum('voucher_transactions.amount');
-            $providerUsageTotal = $transactions->sum('voucher_transactions.amount');
-            $avgTransaction     = $transactions->average('voucher_transactions.amount');
-            $maxTransaction     = $fund->voucher_transactions->max('amount');
-
-            // Totals
-            $usageTotal += $providerUsageTotal;
-            $nrTransactions += $transactions->count();
-
-            if ($maxTransaction > $highestTransactionAmount) {
-                $highestTransactionAmount = $maxTransaction;
-                $highestTransactionProvider = $fundProvider->organization->name;
-            }
-        }
-
-        $transactionsByDay = VoucherTransaction::query()->whereIn(
-            'organization_id',
-            $providerOrganizations->pluck('id')->toArray()
-        )->selectRaw("SUM(amount) as total_amount, created_at")->groupBy(
-            \DB::raw('DAY(voucher_transactions.created_at)')
-        );
-
-        $transactionsByDay->each(function ($transactionByDay) use (&$highestDailyTotal, &$highestDateTotal) {
-            $day = $transactionByDay->created_at;
-            $amount = $transactionByDay->total_amount;
-
-            if ($amount > $highestDailyTotal) {
-                $highestDailyTotal = $amount;
-                $highestDateTotal  = $day;
-            }
+        // global filter sponsor organization
+        $transactionsQuery = VoucherTransaction::whereHas('voucher', function(Builder $builder) use ($sponsor) {
+            return $builder->whereHas('fund', function(Builder $builder) use ($sponsor) {
+                $builder->where('funds.organization_id', $sponsor->id);
+            });
         });
 
-        return [
-            'share_total'           => round($fundUsageTotal > 0 ? $providerUsageTotal / $fundUsageTotal : 0, 2),
-            'transactions'          => $transactions->count(),
-            'avg_transaction'       => round($avgTransaction ?: 0, 2),
-            'usage_total'           => round($usageTotal, 2),
-            'nr_transactions'       => $nrTransactions,
-            'highest_transaction'   => [
-                'amount'    => $highestTransactionAmount,
-                'provider'  => $highestTransactionProvider,
-            ],
-            'highest_daily_transaction'   => [
-                'amount'    => $highestDailyTotal,
-                'date'      => format_date_locale($highestDateTotal ?? null)
-            ]
-        ];
-    }
+        // Filter by selected funds
+        $transactionsQuery->whereHas('voucher', function(Builder $builder) use ($funds) {
+            $builder->whereIn('vouchers.fund_id', $funds->pluck('id')->toArray());
+        });
 
-    /**
-     * @param Organization $organization
-     * @return array
-     */
-    public static function getOrganizationProviderFinances(Organization $organization) : array {
-        $fundProviders = $organization->fund_providers;
+        // Filter by selected provider
+        $transactionsQuery->whereHas('provider', function(Builder $builder) use ($provider, $postcodes) {
+            $builder->whereIn('id', [$provider->id]);
+            $postcodes && OrganizationQuery::whereHasPostcodes($builder, $postcodes);
+        });
 
-        $highestTransaction = 0;
-        $totalTransactions = 0;
-        $nrTransactions = 0;
-
-        foreach ($fundProviders as $fundProvider) {
-            $fund = $fundProvider->fund;
-
-            $transactions = $fund->voucher_transactions()->where([
-                'organization_id' => $fundProvider->organization_id
-            ]);
-            $totalTransactions  += $transactions->sum('voucher_transactions.amount');
-            $nrTransactions     += $transactions->count();
-            $amount = $transactions->max('voucher_transactions.amount');
-
-            if ($amount > $highestTransaction) {
-                $highestTransaction = $amount;
-            }
-        }
+        // filter by interval
+        $transactionsQuery->whereBetween('voucher_transactions.created_at', [
+            $dateFrom, $dateTo
+        ]);
 
         return [
-            'organization'          => $organization,
-            'highest_transaction'   => $highestTransaction,
-            'nr_transactions'       => $nrTransactions,
-            'total_spent'           => $totalTransactions,
+            'highest_transaction'   => $transactionsQuery->max('voucher_transactions.amount') ?: null,
+            'nr_transactions'       => $transactionsQuery->count(),
+            'total_spent'           => $transactionsQuery->sum('voucher_transactions.amount') ?: null,
+            'provider'              => (new OrganizationBasicResource($provider))->toArray(request()),
         ];
     }
 
@@ -489,20 +433,6 @@ class FundProvider extends Model
     }
 
     /**
-     * @param Organization[]|Collection $providerOrganizations
-     * @return array
-     */
-    public static function getTotalsPerFundProvider($providerOrganizations) : array {
-        $totals = [];
-
-        $providerOrganizations->each(function (Organization $organization) use (&$fundProviders, &$totals) {
-            $totals[] = FundProvider::getOrganizationProviderFinances($organization);
-        });
-
-        return $totals;
-    }
-
-    /**
      * @param Request $request
      * @param Organization $organization
      * @param Builder|null $query
@@ -520,20 +450,20 @@ class FundProvider extends Model
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
 
-        $query = $query ? $query : self::query();
+        $query = $query ?: self::query();
         $query = $query->whereIn('fund_id', $organization->funds()->pluck('id'));
 
         if ($q = $request->input('q')) {
             $query->where(static function(Builder $builder) use ($q) {
                 $builder->whereHas('organization', function (Builder $query) use ($q) {
-                    $query->where('name', 'like', "%{$q}%");
-                    $query->orWhere('kvk', 'like', "%{$q}%");
-                    $query->orWhere('email', 'like', "%{$q}%");
-                    $query->orWhere('phone', 'like', "%{$q}%");
+                    $query->where('name', 'like', "%$q%");
+                    $query->orWhere('kvk', 'like', "%$q%");
+                    $query->orWhere('email', 'like', "%$q%");
+                    $query->orWhere('phone', 'like', "%$q%");
                 });
 
                 $builder->orWhereHas('fund', function (Builder $query) use ($q) {
-                    $query->where('name', 'like', "%{$q}%");
+                    $query->where('name', 'like', "%$q%");
                 });
             });
         }
@@ -587,7 +517,7 @@ class FundProvider extends Model
                         $builder->where('type', Fund::TYPE_SUBSIDIES);
                     });
 
-                    if ((bool) $allow_products) {
+                    if ($allow_products) {
                         $builder->whereHas('fund_provider_products.product');
                     } else {
                         $builder->whereDoesntHave('fund_provider_products.product');
@@ -730,13 +660,13 @@ class FundProvider extends Model
      * @param Product $product
      * @param string $message
      * @param string $identity_address
-     * @return mixed
+     * @return FundProviderChatMessage
      */
     public function startChat(
         Product $product,
         string $message,
         string $identity_address
-    ) {
+    ): FundProviderChatMessage {
         /** @var FundProviderChat $chat */
         $chat = $this->fund_provider_chats()->create([
             'product_id' => $product->id,

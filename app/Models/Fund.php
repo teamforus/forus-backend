@@ -331,14 +331,14 @@ class Fund extends Model
      */
     public function sendFundClosedRequesterEmailNotification(?string $email): bool
     {
-        return $email ? notification_service()->fundClosed(
+        return $email && notification_service()->fundClosed(
             $email,
             $this->fund_config->implementation->getEmailFrom(),
             $this->name,
             $this->organization->email,
             $this->organization->name,
             $this->fund_config->implementation->url_webshop
-        ) : false;
+        );
     }
 
     /**

@@ -32,6 +32,16 @@ class OrganizationPolicy
 
     /**
      * @param $identity_address
+     * @param Organization $organization
+     * @return bool
+     */
+    public function showFinances($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'view_finances');
+    }
+
+    /**
+     * @param $identity_address
      * @return mixed
      */
     public function store($identity_address): bool
@@ -88,7 +98,9 @@ class OrganizationPolicy
      */
     public function listSponsorProviders($identity_address, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_providers');
+        return $organization->identityCan($identity_address, [
+            'manage_providers', 'view_finances'
+        ], false);
     }
 
     /**

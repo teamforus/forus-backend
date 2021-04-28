@@ -24,7 +24,8 @@ class IndexProvidersRequest extends IndexFundProviderRequest
         return array_merge(parent::rules(), [
             'fund_ids'          => 'nullable|array',
             'fund_ids.*'        => 'required|exists:funds,id|in:' . $funds->join(','),
-            'postcodes'         => 'nullable|string|max:100',
+            'postcodes'         => 'nullable|array',
+            'postcodes.*'      => 'nullable|string|max:100',
             'provider_ids'      => 'nullable|array',
             'provider_ids.*'    => 'nullable|exists:organizations,id',
             'product_category_ids'   => 'nullable|array',

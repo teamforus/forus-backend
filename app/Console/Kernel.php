@@ -130,12 +130,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('forus.action.expiration:check')
             ->daily()->withoutOverlapping()->onOneServer();
 
-        /**
-         * CheckFundConfigCommand:
-         */
-        $schedule->command('forus.providers.postcodes:check')
-            ->hourly()->withoutOverlapping()->onOneServer();
-
         $this->scheduleDigest($schedule);
         $this->scheduleQueue($schedule);
     }

@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Fund;
-use App\Models\Office;
 use App\Models\Organization;
 use Illuminate\Console\Command;
 
+/**
+ * Class CheckOrganizationOfficePostcodesCommand
+ * @package App\Console\Commands
+ * @noinspection PhpUnused
+ */
 class CheckOrganizationOfficePostcodesCommand extends Command
 {
     /**
@@ -47,13 +50,9 @@ class CheckOrganizationOfficePostcodesCommand extends Command
             $organizations = $organization_id ? [Organization::find($organization_id)] : Organization::all();
 
             foreach ($organizations as $organization) {
-                $organization->offices->each(function (Office $office) use (&$postcodes) {
-                    $postal_code = resolve('geocode_api')->getPostalCode(
-                        $office->address
-                    );
-
-                    $office->update(compact('postal_code'));
-                });
+                foreach ($organization->offices as $office) {
+                    $office->updateGeoData();
+                }
             }
         } catch (\Exception $e) {}
     }
@@ -63,7 +62,8 @@ class CheckOrganizationOfficePostcodesCommand extends Command
      * @param null $default
      * @return array|string|null
      */
-    protected function getOption(string $argument, $default = null) {
+    protected function getOption(string $argument, $default = null)
+    {
         return $this->hasOption($argument) ? $this->option($argument) : $default;
     }
 }

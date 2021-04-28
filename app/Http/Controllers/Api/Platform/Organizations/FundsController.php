@@ -14,14 +14,14 @@ use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-use App\Models\ProductCategory;
-use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\VoucherQuery;
+use App\Scopes\Builders\OrganizationQuery;
+use App\Scopes\Builders\ProductQuery;
 use App\Services\MediaService\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -221,33 +221,33 @@ class FundsController extends Controller
     /**
      * @param StoreFundCriteriaRequest $request
      * @param Organization $organization
-     * @return mixed
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function storeCriteriaValidate(
         StoreFundCriteriaRequest $request,
         Organization $organization
-    ) {
+    ): JsonResponse {
         $this->authorize('show', $organization);
 
-        return response()->json([]);
+        return response()->json([], $request ? 200 : 403);
     }
 
     /**
      * @param UpdateFundCriteriaRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return mixed
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function updateCriteriaValidate(
         UpdateFundCriteriaRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): JsonResponse {
         $this->authorize('show', $organization);
 
-        return response()->json([], $fund ? 200 : 403);
+        return response()->json([], $request && $fund ? 200 : 403);
     }
 
     /**
@@ -256,33 +256,36 @@ class FundsController extends Controller
      * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function finances(
-        FinanceRequest $request,
-        Organization $organization
-    ): array {
+    public function finances(FinanceRequest $request, Organization $organization): array
+    {
         $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
 
-        // Funds
-        $funds = $organization->funds();
-        if ($fund_ids = $request->input('fund_ids')) {
-            $funds->whereIn('id', $fund_ids);
-        }
-        $funds = $funds->get();
+        $product_category_ids = $request->input('product_category_ids');
+        $provider_ids = $request->input('provider_ids');
+        $fund_ids = $request->input('fund_ids');
 
-        // Organization providers
-        $providerOrganizations = Organization::getProviderOrganizations(
-            $request, $organization
-        )->get();
-
-        $dates = collect();
+        $postcodes = $request->input('postcodes');
 
         $type = $request->input('type');
-        $year = $request->input('year');
-        $nth = $request->input('nth', 1);
-        $product_category_ids = $request->input('product_category_ids');
+        $type_value = $request->input('type_value');
 
-        if ($type === 'quarter') {
-            $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
+        $funds = $organization->funds();
+        $funds = ($fund_ids ? $funds->whereIn('id', $fund_ids) : $funds)->get();
+
+        $dates = [];
+
+        if ($type === 'year') {
+            $startDate = Carbon::createFromDate($type_value)->startOfYear();
+
+            do {
+                $dates[] = [
+                    'from' => $startDate->copy()->startOfDay(),
+                    'to' => $startDate->copy()->endOfMonth()->endOfDay(),
+                ];
+            } while ($startDate->addMonth()->year == $type_value);
+        } // elseif ($type === 'quarter') {
+            /*$startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfQuarter()->endOfDay();
 
             $dates->push($startDate);
@@ -291,9 +294,9 @@ class FundsController extends Controller
             $dates->push($startDate->copy()->addMonths()->addDays(14));
             $dates->push($startDate->copy()->addMonths(2));
             $dates->push($startDate->copy()->addMonths(2)->addDays(14));
-            $dates->push($endDate);
-        } elseif ($type === 'month') {
-            $startDate = Carbon::createFromDate($year, $nth, 1)->startOfDay();
+            $dates->push($endDate);*/
+        // } elseif ($type === 'month') {
+            /*$startDate = Carbon::createFromDate($year, $nth, 1)->startOfDay();
             $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
             $dates->push($startDate);
@@ -302,9 +305,9 @@ class FundsController extends Controller
             $dates->push($startDate->copy()->addDays(14));
             $dates->push($startDate->copy()->addDays(19));
             $dates->push($startDate->copy()->addDays(24));
-            $dates->push($endDate);
-        } elseif ($type === 'week') {
-            $startDate = Carbon::now()->setISODate(
+            $dates->push($endDate);*/
+        // } elseif ($type === 'week') {
+            /*$startDate = Carbon::now()->setISODate(
                 $year, $nth
             )->startOfWeek()->startOfDay();
             $endDate = $startDate->copy()->endOfWeek()->endOfDay();
@@ -313,112 +316,109 @@ class FundsController extends Controller
 
             $dates->prepend(
                 $dates[0]->copy()->subDay()->endOfDay()
-            );
+            );*/
+        // }
 
-        } elseif ($type === 'all') {
-            $startDate = Carbon::createFromDate($year, 1, 1)->startOfDay();
-            $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
+        foreach ($dates as $index => $dateItem) {
+            /** @var Carbon $dateFrom */
+            $dateFrom = $dateItem['from'];
 
-            $dates->push($startDate);
-            $dates->push($startDate->copy()->addQuarters());
-            $dates->push($startDate->copy()->addQuarters(2));
-            $dates->push($startDate->copy()->addQuarters(3));
-            $dates->push($endDate);
-        } else {
-            abort(403);
-            exit();
-        }
+            /** @var Carbon $dateTo */
+            $dateTo = $dateItem['to'];
 
-        if ($product_category_ids) {
-            $categories = ProductCategory::find($product_category_ids)->pluck('id')->push($product_category_ids);
-        } else {
-            $categories = null;
-        }
+            // global filter sponsor organization
+            $voucherQuery = VoucherTransaction::whereHas('voucher', function(Builder $builder) use ($organization) {
+                return $builder->whereHas('fund', function(Builder $builder) use ($organization) {
+                    $builder->where('funds.organization_id', $organization->id);
+                });
+            });
 
-        $fundVouchersQuery = Voucher::whereIn('fund_id', $funds->pluck('id'));
+            // Filter by selected funds
+            $voucherQuery->whereHas('voucher', function(Builder $builder) use ($funds) {
+                $builder->whereIn('vouchers.fund_id', $funds->pluck('id')->toArray());
+            });
 
-        $dates = $dates->map(function (Carbon $date, $key) use (
-            $fundVouchersQuery, $dates, $categories, $type, $providerOrganizations
-        ) {
-            $previousIntervalEntry = $date;
+            // Filter by selected provider
+            $voucherQuery->whereHas('provider', function(
+                Builder $builder
+            ) use ($organization, $provider_ids, $postcodes) {
+                OrganizationQuery::whereIsProviderOrganization($builder, $organization);
 
-            if ($key > 0) {
-                $previousIntervalEntry = $dates[$key - 1];
-            } else if ($key === 0 && $type !== 'week') {
-                return [
-                    "key" => null,
-                    "value" => null
-                ];
-            }
+                $provider_ids && $builder->whereIn('id', $provider_ids);
+                $postcodes && OrganizationQuery::whereHasPostcodes($builder, $postcodes);
+            });
 
-            $voucherQuery = VoucherTransaction::whereIn(
-                'voucher_id', $fundVouchersQuery->pluck('id')
-            );
+            // filter by interval
+            $voucherQuery->whereBetween('voucher_transactions.created_at', [
+                $dateFrom, $dateTo
+            ]);
 
-            if ($providerOrganizations) {
-                $voucherQuery = $voucherQuery->whereIn(
-                    'organization_id', $providerOrganizations->pluck('id')
-                );
-            }
+            // filter by category (include children categories)
+            if ($product_category_ids) {
+                $voucherQuery->where(function(Builder $builder) use ($product_category_ids) {
+                    $builder->whereHas('product', function(Builder $builder) use ($product_category_ids) {
+                        ProductQuery::productCategoriesFilter($builder, $product_category_ids);
+                    });
 
-            $voucherQuery = $voucherQuery->whereBetween(
-                'voucher_transactions.created_at', [
-                    $previousIntervalEntry->copy()->endOfDay(),
-                    $date->copy()->endOfDay()
-                ]
-            );
-
-            if ($categories === false) {
-                $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
-            } else if ($categories) {
-                $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($categories) {
-                    return $query->whereIn('product_category_id', $categories->toArray());
+                    $builder->orWhereHas('voucher.product', function(Builder $builder) use ($product_category_ids) {
+                        ProductQuery::productCategoriesFilter($builder, $product_category_ids);
+                    });
                 });
             }
 
-            switch ($type) {
-                case 'quarter':
-                    return [
-                        "key" => trans('time.to', [
-                            'from_time' => $previousIntervalEntry->copy()->endOfDay()->formatLocalized('%d %h'),
-                            'to_time' =>  $date->formatLocalized('%d %h')
-                        ]),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                case 'month':
-                    return [
-                        "key" => trans('time.to', [
-                            'from_time' => $previousIntervalEntry->copy()->endOfDay()->formatLocalized('%d'),
-                            'to_time' =>  $date->formatLocalized('%d')
-                        ]),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                case 'week':
-                    return [
-                        "key" => $date->formatLocalized('%A'),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                case 'all':
-                    return [
-                        "key" => trans('time.quarter') . " " . $key,
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                default:
-                    return [
-                        "key" => $date->formatLocalized('Y-m-d'),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-            }
-        });
+            /**
+             * @param $voucherQuery VoucherTransaction|Builder
+             * @param $format string
+             * @return array
+             */
+            $getDateData = function(Builder $voucherQuery, string $format) use ($dateFrom, $dateTo): array  {
+                $getTransactionData = function(?VoucherTransaction $transaction): ?array {
+                    return $transaction ? array_merge($transaction->only('id', 'amount'), [
+                        'provider' => $transaction->provider->name,
+                    ]) : null;
+                };
 
-        $dates->shift();
+                $lowest_transaction = clone($voucherQuery);
+                $highest_transaction = clone($voucherQuery);
+                $highest_daily_transaction = clone($voucherQuery);
 
-        $providers = VoucherTransaction::whereIn(
-            'voucher_id', $fundVouchersQuery->pluck('id')
-        )->whereBetween(
-            'voucher_transactions.created_at', [
-            $startDate, $endDate
-        ]);
+                /** @var VoucherTransaction|Model|null $lowest_transaction */
+                $lowest_transaction = $lowest_transaction->orderBy('amount')->first();
+
+                /** @var VoucherTransaction|Model|null $highest_transaction */
+                $highest_transaction = $highest_transaction->orderByDesc('amount')->first();
+
+                /** @var VoucherTransaction|Model|null $highest_daily_transaction */
+                $highest_daily_transaction = $highest_daily_transaction->groupBy(
+                    DB::raw('Date(created_at)')
+                )->orderByDesc('amount')->select(
+                    DB::raw('sum(`voucher_transactions`.`amount`) as `amount`, Date(created_at) as date')
+                )->first();
+
+                return [
+                    "key" => $dateFrom->copy()->startOfDay()->formatLocalized($format),
+                    "amount" => $voucherQuery->sum('voucher_transactions.amount'),
+                    "count" => $voucherQuery->count(),
+                    "transactions" => $voucherQuery->pluck('amount'),
+                    "lowest_transaction" => $getTransactionData($lowest_transaction),
+                    "highest_transaction" => $getTransactionData($highest_transaction),
+                    "highest_daily_transaction" => $highest_daily_transaction ? array_merge($highest_daily_transaction->toArray(), [
+                        'date_locale' => format_date_locale($highest_daily_transaction->date ?? null),
+                    ]) : $highest_daily_transaction,
+                ];
+            };
+
+            $formats = [
+                'year' => '%B, %Y',
+                'quarter' => '%d %h',
+                'month' => '%d',
+                'week' => '%A',
+            ];
+
+            $dates[$index] = $getDateData($voucherQuery, $formats[$type]);
+        }
+
+        // $providers = $providerOrganizations;
 
         $service_costs = $transaction_costs = 0;
         $funds->each(function (Fund $fund) use (&$service_costs, &$transaction_costs) {
@@ -426,29 +426,34 @@ class FundsController extends Controller
             $transaction_costs += $fund->getTransactionCosts();
         });
 
-        if ($product_category_ids) {
+        /*if ($product_category_ids) {
             $providers = $providers->whereHas('product', function (
                 Builder $query
             ) use ($product_category_ids) {
                 return $query->where('product_category_id', $product_category_ids);
             });
-        }
+        }*/
+
+        $dates = collect($dates);
+
+        $lowest_transaction = $dates->pluck('lowest_transaction')->sortBy('amount')->first();
+        $highest_transaction = $dates->pluck('highest_transaction')->sortByDesc('amount')->first();
+        $highest_daily_transaction = $dates->pluck('highest_daily_transaction')->sortByDesc('amount')->first();
 
         return [
-            'dates' => $dates,
-            'usage' => $dates->sum('value'),
+            'dates' => $dates->toArray(),
+            'totals' => [
+                'amount' => $dates->sum('amount'),
+                'count' => $dates->sum('count'),
+            ],
+            "lowest_transaction" => $lowest_transaction,
+            "highest_transaction" => $highest_transaction,
+            "highest_daily_transaction" => $highest_daily_transaction,
             'service_costs' => [
                 'total' => $service_costs,
                 'transaction_costs' => $transaction_costs
             ],
-            'activations' => VoucherQuery::whereNotExpiredAndActive(
-                Voucher::whereIn('fund_id', $funds->pluck('id'))
-            )->whereNull(
-                'parent_id'
-            )->whereBetween('created_at', [
-                $startDate, $endDate
-            ])->count(),
-            'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
+            // 'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
         ];
     }
 
@@ -457,11 +462,10 @@ class FundsController extends Controller
      * @param Fund $fund
      * @return TopUpResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
-    public function topUp(
-        Organization $organization,
-        Fund $fund
-    ): TopUpResource {
+    public function topUp(Organization $organization, Fund $fund): TopUpResource
+    {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
 
@@ -476,10 +480,8 @@ class FundsController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
-    public function destroy(
-        Organization $organization,
-        Fund $fund
-    ): JsonResponse {
+    public function destroy(Organization $organization, Fund $fund): JsonResponse
+    {
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$fund, $organization]);
 

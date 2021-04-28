@@ -12,6 +12,10 @@ use App\Http\Controllers\Controller;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Class OfficesController
+ * @package App\Http\Controllers\Api\Platform\Organizations
+ */
 class OfficesController extends Controller
 {
     protected $geocodeService;
@@ -70,18 +74,7 @@ class OfficesController extends Controller
         );
 
         $office->updateSchedule($request->input('schedule', []));
-
-        if ($coordinates = $this->geocodeService->getCoordinates(
-            $office->address
-        )) {
-            $office->update($coordinates);
-        }
-
-        if ($postal_code = $this->geocodeService->getPostalCode(
-            $office->address
-        )) {
-            $office->update(compact('postal_code'));
-        }
+        $office->updateGeoData();
 
         if ($media instanceof Media && $media->type === 'office_photo') {
             $office->attachMedia($media);
@@ -132,18 +125,7 @@ class OfficesController extends Controller
 
         $office->update($request->only(['name', 'address', 'phone', 'email']));
         $office->updateSchedule($request->input('schedule', []));
-
-        if ($coordinates = $this->geocodeService->getCoordinates(
-            $office->address
-        )) {
-            $office->update($coordinates);
-        }
-
-        if ($postal_code = $this->geocodeService->getPostalCode(
-            $office->address
-        )) {
-            $office->update(compact('postal_code'));
-        }
+        $office->updateGeoData();
 
         if ($media instanceof Media && $media->type === 'office_photo') {
             $office->attachMedia($media);
