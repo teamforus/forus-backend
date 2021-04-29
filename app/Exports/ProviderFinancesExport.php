@@ -4,10 +4,8 @@ namespace App\Exports;
 
 use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Scopes\Builders\OrganizationQuery;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -17,21 +15,46 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
  */
 class ProviderFinancesExport implements FromCollection, WithHeadings
 {
-    protected $request;
     protected $data;
     protected $headers;
 
-    public function __construct(Request $request, Organization $organization)
+    public function __construct(Organization $sponsor, EloquentCollection $providers)
     {
-        $this->request = $request;
-
-        $this->data = Organization::exportFinances($request, $organization);
+        $this->data = $this->exportTransform($sponsor, $providers);
     }
 
     /**
-    * @return \Illuminate\Support\Collection
+     * @param Organization $sponsor
+     * @param \Illuminate\Database\Eloquent\Collection $providers
+     * @return Collection
+     */
+    protected function exportTransform(Organization $sponsor, Collection $providers): Collection
+    {
+        return $providers->map(function(Organization $provider) use ($sponsor) {
+            $totals = FundProvider::getOrganizationProviderFinances($sponsor, $provider);
+
+            return [
+                $this->trans("provider")             => $provider->name,
+                $this->trans("total_amount")         => currency_format($totals['total_spent']),
+                $this->trans("highest_transaction")  => currency_format($totals['highest_transaction']),
+                $this->trans("nr_transactions")      => $totals['nr_transactions'] ?: '0',
+            ];
+        })->values();
+    }
+
+    /**
+     * @param string $key
+     * @return string|null
+     */
+    protected function trans(string $key): ?string
+    {
+        return trans("export.finances.$key");
+    }
+
+    /**
+    * @return Collection
     */
-    public function collection()
+    public function collection(): Collection
     {
         return $this->data;
     }

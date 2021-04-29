@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreated;
 use App\Exports\FundsExport;
+use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
@@ -55,39 +56,9 @@ class FundsController extends Controller
             ]);
         }
 
-        $queryTotals = clone($query);
-        $queryTotalsBudget = clone($query);
-
-        $totals = Fund::getFundTotals($queryTotals->get());
-
-        $totalsBudget = Fund::getFundTotals($queryTotalsBudget->where([
-            'type' => Fund::TYPE_BUDGET,
-        ])->get());
-
-        $meta = [
-            'total_amount'      => currency_format($totals['total_budget']),
-            'left'              => currency_format($totals['total_budget_left']),
-            'used'              => currency_format($totals['total_budget_used']),
-            'reserved'          => currency_format($totals['total_reserved']),
-            'transaction_costs' => currency_format($totals['total_transaction_costs']),
-            'vouchers_amount'   => currency_format($totals['total_vouchers_amount']),
-            'vouchers_active'   => currency_format($totals['total_active_vouchers']),
-            'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
-            'budget' => [
-                'total_amount'      => currency_format($totalsBudget['total_budget']),
-                'left'              => currency_format($totalsBudget['total_budget_left']),
-                'used'              => currency_format($totalsBudget['total_budget_used']),
-                'reserved'          => currency_format($totalsBudget['total_reserved']),
-                'transaction_costs' => currency_format($totalsBudget['total_transaction_costs']),
-                'vouchers_amount'   => currency_format($totalsBudget['total_vouchers_amount']),
-                'vouchers_active'   => currency_format($totalsBudget['total_active_vouchers']),
-                'vouchers_inactive' => currency_format($totalsBudget['total_inactive_vouchers']),
-            ]
-        ];
-
         return FundResource::collection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed'
-        ])->paginate($request->input('per_page')))->additional(compact('meta'));
+        ])->paginate($request->input('per_page')));
     }
 
     /**
@@ -283,12 +254,85 @@ class FundsController extends Controller
     }
 
     /**
-     * @param FinanceRequest $request
+     * @param FinanceOverviewRequest $request
      * @param Organization $organization
-     * @return array
+     * @return JsonResponse
+     * @noinspection PhpUnused
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function finances(FinanceRequest $request, Organization $organization): array
+    public function financesOverview(
+        FinanceOverviewRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
+
+        $totals = Fund::getFundTotals($organization->funds()->get());
+
+        $totalsBudget = Fund::getFundTotals($organization->funds()->where([
+            'type' => Fund::TYPE_BUDGET,
+        ])->where('state', '!=', Fund::STATE_WAITING)->getQuery()->get());
+
+        return $request ? response()->json([
+            'total_amount'      => currency_format($totals['total_budget']),
+            'left'              => currency_format($totals['total_budget_left']),
+            'used'              => currency_format($totals['total_budget_used']),
+            'reserved'          => currency_format($totals['total_reserved']),
+            'transaction_costs' => currency_format($totals['total_transaction_costs']),
+            'vouchers_amount'   => currency_format($totals['total_vouchers_amount']),
+            'vouchers_active'   => currency_format($totals['total_active_vouchers']),
+            'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
+            'budget' => [
+                'total_amount'      => currency_format($totalsBudget['total_budget']),
+                'left'              => currency_format($totalsBudget['total_budget_left']),
+                'used'              => currency_format($totalsBudget['total_budget_used']),
+                'reserved'          => currency_format($totalsBudget['total_reserved']),
+                'transaction_costs' => currency_format($totalsBudget['total_transaction_costs']),
+                'vouchers_amount'   => currency_format($totalsBudget['total_vouchers_amount']),
+                'vouchers_active'   => currency_format($totalsBudget['total_active_vouchers']),
+                'vouchers_inactive' => currency_format($totalsBudget['total_inactive_vouchers']),
+            ]
+        ]) : response()->json([], 403);
+    }
+
+    /**
+     * Export funds data
+     *
+     * @param FinanceOverviewRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @noinspection PhpUnused
+     */
+    public function financesOverviewExport(
+        FinanceOverviewRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
+
+        $detailed = $request->input('detailed', false);
+        $exportType = $request->input('export_type', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+
+        $fundsQuery = ($detailed ? $organization->funds()->where([
+            'type' => Fund::TYPE_BUDGET
+        ]) : $organization->funds())->where('state', '!=', Fund::STATE_WAITING)->getQuery();
+
+        $exportData = new FundsExport(Fund::search($request, $fundsQuery)->get(), $detailed);
+
+        return resolve('excel')->download($exportData, $fileName);
+    }
+
+    /**
+     * @param FinanceRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function finances(FinanceRequest $request, Organization $organization): JsonResponse
     {
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
@@ -296,7 +340,6 @@ class FundsController extends Controller
         $product_category_ids = $request->input('product_category_ids');
         $provider_ids = $request->input('provider_ids');
         $fund_ids = $request->input('fund_ids');
-
         $postcodes = $request->input('postcodes');
 
         $type = $request->input('type');
@@ -304,7 +347,6 @@ class FundsController extends Controller
 
         $funds = $organization->funds();
         $funds = ($fund_ids ? $funds->whereIn('id', $fund_ids) : $funds)->get();
-
         $dates = [];
 
         if ($type === 'year') {
@@ -472,7 +514,7 @@ class FundsController extends Controller
         $highest_transaction = $dates->pluck('highest_transaction')->sortByDesc('amount')->first();
         $highest_daily_transaction = $dates->pluck('highest_daily_transaction')->sortByDesc('amount')->first();
 
-        return [
+        return response()->json([
             'dates' => $dates->toArray(),
             'totals' => [
                 'amount' => $dates->sum('amount'),
@@ -486,7 +528,7 @@ class FundsController extends Controller
                 'transaction_costs' => $transaction_costs
             ],
             // 'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
-        ];
+        ]);
     }
 
     /**
@@ -521,31 +563,5 @@ class FundsController extends Controller
         $fund->delete();
 
         return response()->json([]);
-    }
-
-    /**
-     * Export funds data
-     *
-     * @param IndexFundRequest $request
-     * @param Organization $organization
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
-     */
-    public function export(
-        IndexFundRequest $request,
-        Organization $organization
-    ): BinaryFileResponse {
-        $this->authorize('show', $organization);
-
-        $export_type = $request->get('export_type', 'xls');
-
-        return resolve('excel')->download(
-            new FundsExport(
-                $request,
-                $organization
-            ), date('Y-m-d H:i:s') . '.'. $export_type
-        );
     }
 }

@@ -2,13 +2,16 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
 
 /**
- * Class IndexFundRequest
+ * Class FinanceOverviewRequest
+ * @property Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
+ * @noinspection PhpUnused
  */
-class IndexFundRequest extends FormRequest
+class FinanceOverviewRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -17,7 +20,7 @@ class IndexFundRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->organization->identityCan($this->auth_address(), 'view_finances');
     }
 
     /**
@@ -28,12 +31,8 @@ class IndexFundRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => 'nullable|string|max:100',
-            'tag' => 'nullable|string|exists:tags,key',
-            'fund_id' => 'nullable|exists:funds,id',
-            'per_page' => 'numeric|between:1,100',
-            'organization_id' => 'nullable|exists:organizations,id',
-            'implementation_id' => 'nullable|exists:implementations,id',
+            'export_type'       => 'nullable|in:xls,csv',
+            'detailed'          => 'nullable|boolean',
         ];
     }
 }

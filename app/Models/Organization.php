@@ -682,9 +682,8 @@ class Organization extends Model
      * @param string $identity_address
      * @return Model|Employee|null|object
      */
-    public function findEmployee(
-        string $identity_address
-    ) {
+    public function findEmployee(string $identity_address)
+    {
         return $this->employees()->where(compact('identity_address'))->first();
     }
 
@@ -699,43 +698,11 @@ class Organization extends Model
     }
 
     /**
-     * @param Organization $sponsor
-     * @param Collection $providers
-     * @return Collection|\Illuminate\Support\Collection
-     */
-    private static function exportFinancesTransform(Organization $sponsor, Collection $providers) {
-        $transKey = "export.finances";
-
-        return $providers->map(static function(Organization $provider) use ($transKey, $sponsor) {
-            $totals = FundProvider::getOrganizationProviderFinances($sponsor, $provider);
-
-            return [
-                trans("$transKey.provider")             => $provider->name,
-                trans("$transKey.total_amount")         => currency_format($totals['total_spent']),
-                trans("$transKey.highest_transaction")  => currency_format($totals['highest_transaction']),
-                trans("$transKey.nr_transactions")      => $totals['nr_transactions'] ?: '0',
-            ];
-        })->values();
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @return Collection|\Illuminate\Support\Collection
-     */
-    public static function exportFinances(Request $request, Organization $organization)
-    {
-        $providers = self::getProviderOrganizations($request, $organization)->get();
-
-        return Organization::exportFinancesTransform($organization, $providers);
-    }
-
-    /**
      * @param Request $request
      * @param Organization $organization
      * @return EloquentBuilder
      */
-    public static function getProviderOrganizations(
+    public static function searchProviderOrganizations(
         Request $request,
         Organization $organization
     ): EloquentBuilder {

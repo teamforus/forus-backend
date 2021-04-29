@@ -96,6 +96,10 @@ class FundResource extends Resource
      */
     public function getFinancialData(Fund $fund): array
     {
+        if (!Gate::allows('funds.showFinances', [$fund, $fund->organization])) {
+            return [];
+        }
+
         $approvedCount = $fund->provider_organizations_approved;
         $providersEmployeeCount = $approvedCount->map(function (Organization $organization) {
             return $organization->employees->count();
@@ -109,14 +113,14 @@ class FundResource extends Resource
             $fund->vouchers()->getQuery()
         )->whereNull('parent_id')->count();
 
-        return Gate::allows('funds.showFinances', [$fund, $fund->organization]) ? [
+        return [
             'sponsor_count'                 => $fund->organization->employees->count(),
             'provider_organizations_count'  => $fund->provider_organizations_approved->count(),
             'provider_employees_count'      => $providersEmployeeCount,
             'validators_count'              => $validatorsCount,
             'requester_count'               => $requesterCount,
             'budget'                        => $this->getBudgetData($fund),
-        ] : [];
+        ];
     }
 
     /**

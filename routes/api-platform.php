@@ -178,11 +178,6 @@ $router->group([
         ]
     ]);
 
-    $router->get(
-        'organizations/{organization}/funds/export',
-        "Api\Platform\Organizations\FundsController@export"
-    );
-
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
@@ -426,10 +421,6 @@ $router->group(['middleware' => [
     $router->post(
         'organizations/{organization}/funds/criteria/validate',
         "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
-
-    $router->get(
-        'organizations/{organization}/funds-finances',
-        "Api\Platform\Organizations\FundsController@finances");
 
     $router->post(
         'organizations/{organization}/funds/{fund}/top-up',
@@ -712,6 +703,19 @@ $router->group(['middleware' => [
                 'transactions' => 'transaction_address',
             ]
         ]
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances',
+        "Api\Platform\Organizations\FundsController@finances");
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances-overview',
+        "Api\Platform\Organizations\FundsController@financesOverview");
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances-overview-export',
+        "Api\Platform\Organizations\FundsController@financesOverviewExport"
     );
 
     $router->get(

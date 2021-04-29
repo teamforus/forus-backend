@@ -22,6 +22,8 @@ class IndexProvidersRequest extends IndexFundProviderRequest
         $funds = $this->organization->funds->pluck('id');
 
         return array_merge(parent::rules(), [
+            'from'              => 'nullable|date_format:Y-m-d',
+            'to'                => 'nullable|date_format:Y-m-d',
             'fund_ids'          => 'nullable|array',
             'fund_ids.*'        => 'required|exists:funds,id|in:' . $funds->join(','),
             'postcodes'         => 'nullable|array',

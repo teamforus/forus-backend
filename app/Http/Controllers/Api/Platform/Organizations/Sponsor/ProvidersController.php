@@ -110,7 +110,7 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $providers = Organization::getProviderOrganizations($request, $organization)->paginate(
+        $providers = Organization::searchProviderOrganizations($request, $organization)->paginate(
             $request->input('per_page')
         );
 
@@ -130,13 +130,16 @@ class ProvidersController extends Controller
         Organization $organization
     ): BinaryFileResponse {
         $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
+        $providers = Organization::searchProviderOrganizations($request, $organization)->get();
+
         $type = $request->input('export_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;
-        $exportData = new ProviderFinancesExport($request, $organization);
+        $fileData = new ProviderFinancesExport($organization, $providers);
 
-        return resolve('excel')->download($exportData, $fileName);
+        return resolve('excel')->download($fileData, $fileName);
     }
 }
