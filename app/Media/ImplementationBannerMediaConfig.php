@@ -16,7 +16,7 @@ class ImplementationBannerMediaConfig extends MediaImageConfig
      */
     protected $name = 'implementation_banner';
 
-    protected $preview_aspect_ratio = 4;
+    protected $preview_aspect_ratio = 3.33;
     protected $save_dominant_color = true;
 
     /**
