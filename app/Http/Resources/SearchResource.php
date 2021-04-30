@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Product;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class SearchResource extends JsonResource
@@ -14,6 +15,8 @@ class SearchResource extends JsonResource
      */
     public function toArray($request)
     {
-        return parent::toArray($request);
+        return array_merge(parent::toArray($request), [
+            'price_locale' => $this->resource->price && Product::find($this->resource->id)->exists ? Product::find($this->resource->id)->price_locale : null,
+        ]);
     }
 }

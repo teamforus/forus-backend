@@ -11,6 +11,7 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Pagination\Paginator;
 
 class SearchController extends Controller
 {
@@ -23,16 +24,16 @@ class SearchController extends Controller
         $overview = $request->get('overview');
 
         $products = Product::search($request)->select([
-            'id', 'name', 'description', 'created_at', 'price',
-        ])->with('photo');;
+            'id', 'name', 'description', 'created_at', 'price', 'organization_id'
+        ])->selectRaw('"product" as item_type')->with(['organization', 'photo']);
 
-        $funds = Fund::search($request, Fund::query())->select([
-            'id', 'name', 'description', 'created_at', 'type',
-        ])->with('logo');
+        $funds = Fund::search($request, Fund::query())->selectRaw(
+            'id, name, description, created_at, NULL as price, organization_id, "fund" as item_type'
+        )->with(['organization', 'logo']);
 
-        $providers = Implementation::searchProviders($request)->select([
-            'id', 'name', 'description', 'created_at', 'phone',
-        ])->with('logo');
+        $providers = Implementation::searchProviders($request)->selectRaw(
+            'id, name, description, created_at, NULL as price, id as organization_id, "provider" as item_type'
+        )->with(['logo']);
 
         if ($overview) {
             $typesArr = $request->get('search_item_types');
