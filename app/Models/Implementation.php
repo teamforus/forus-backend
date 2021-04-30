@@ -511,6 +511,14 @@ class Implementation extends Model
             $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
         });
 
+        if ($request->has('keyword')) {
+            $keyword = $request->get('keyword');
+            $query->where(function(Builder $builder) use ($keyword) {
+                $builder->where('name', 'like', "%$keyword%");
+                $builder->orWhere('description', 'like', "%$keyword%");
+            });
+        }
+
         if ($request->has('business_type_id') && (
             $business_type = $request->input('business_type_id'))
         ) {
@@ -564,7 +572,9 @@ class Implementation extends Model
             });
         }
 
-        return $query;
+        return $query->orderBy(
+            $request->input('order_by', 'created_at'),
+            $request->input('order_by_dir', 'desc'));
     }
 
     /**

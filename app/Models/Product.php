@@ -348,6 +348,14 @@ class Product extends Model
             $query = self::filterFundType($query, $fund_type);
         }
 
+        if ($request->has('keyword')) {
+            $keyword = $request->get('keyword');
+            $query->where(function(Builder $builder) use ($keyword) {
+                $builder->where('name', 'like', "%$keyword%");
+                $builder->orWhere('description', 'like', "%$keyword%");
+            });
+        }
+
         if ($category_id = $request->input('product_category_id')) {
             $query = ProductQuery::productCategoriesFilter($query, $category_id);
         }

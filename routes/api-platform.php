@@ -52,6 +52,14 @@ $router->group([
         ]
     ]);
 
+    $router->resource(
+        'search',
+        "Api\Platform\SearchController", [
+        'only' => [
+            'index',
+        ]
+    ]);
+
     if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
         $router->resource(
             'funds/{fund}/requests',

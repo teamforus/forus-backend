@@ -35,7 +35,9 @@ class SearchProvidersRequest extends BaseFormRequest
             ],
             'business_type_id'   => [
                 Rule::exists('business_types', 'id')
-            ]
+            ],
+            'order_by'              => 'nullable|in:created_at',
+            'order_by_dir'          => 'nullable|in:asc,desc',
         ];
     }
 }

@@ -813,6 +813,14 @@ class Fund extends Model
             $query = $newQuery;
         }
 
+        if ($request->has('keyword')) {
+            $keyword = $request->get('keyword');
+            $query->where(function(Builder $builder) use ($keyword) {
+                $builder->where('name', 'like', "%$keyword%");
+                $builder->orWhere('description', 'like', "%$keyword%");
+            });
+        }
+
         if ($request->has('tag')) {
             $query->whereHas('tags', static function(Builder $query) use ($request) {
                 return $query->where('key', $request->input('tag'));
@@ -838,7 +846,9 @@ class Fund extends Model
             );
         }
 
-        return $query;
+        return $query->orderBy(
+            $request->input('order_by', 'created_at'),
+            $request->input('order_by_dir', 'desc'));
     }
 
     /**
