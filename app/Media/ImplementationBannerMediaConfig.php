@@ -16,7 +16,7 @@ class ImplementationBannerMediaConfig extends MediaImageConfig
      */
     protected $name = 'implementation_banner';
 
-    protected $preview_aspect_ratio = 4;
+    protected $preview_aspect_ratio = 3.33;
     protected $save_dominant_color = true;
 
     /**
@@ -28,9 +28,9 @@ class ImplementationBannerMediaConfig extends MediaImageConfig
         $this->use_queue = config('media.use_queue');
 
         $this->addPreset(new MediaImagePreset('thumbnail', 100, 100, false, 90));
-        $this->addPreset((new MediaImagePreset('medium', 1000, 250, false, 80, null))
+        $this->addPreset((new MediaImagePreset('medium', 1000, 300, false, 80, null))
             ->setTransparency(true));
-        $this->addPreset((new MediaImagePreset('large', 2000, 500, false, 80, null))
+        $this->addPreset((new MediaImagePreset('large', 2000, 600, false, 80, null))
             ->setTransparency(true));
         $this->addPreset(MediaImagePreset::createOriginal('original'));
     }
