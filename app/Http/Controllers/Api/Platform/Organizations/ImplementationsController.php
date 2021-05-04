@@ -78,7 +78,11 @@ class ImplementationsController extends Controller
 
         $implementation->updateModel($request->only([
             'title', 'description', 'informal_communication',
-        ]))->appendMedia($request->input('media_uid', []), 'cms_media');
+            'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+        ]));
+
+        $implementation->attachMediaByUid($request->input('banner_media_uid'));
+        $implementation->appendMedia($request->input('media_uid', []), 'cms_media');
 
         return new ImplementationPrivateResource($implementation->updatePages(
             $request->input('pages', [])
