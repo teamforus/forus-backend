@@ -6,16 +6,19 @@ use App\Exports\VoucherExport;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\DeactivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
+use App\Mail\Vouchers\DeactivationVoucherMail;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Http\Controllers\Controller;
+use App\Services\Forus\Notification\NotificationService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -248,7 +251,44 @@ class VouchersController extends Controller
 
         $request->authorize() ? $voucher->update([
             'state' => $voucher::STATE_ACTIVE,
+            'deactivation_reason' => null,
         ]) : null;
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param ActivateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException|Exception
+     * @noinspection PhpUnused
+     */
+    public function deactivate(
+        DeactivateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('deactivateSponsor', [$voucher, $organization]);
+
+        $reason = $request->get('deactivation_reason');
+
+        $voucher->update([
+            'state' => $voucher::STATE_DEACTIVATED,
+            'deactivation_reason' => $reason,
+        ]);
+
+        if ($voucher->identity_address && $request->get('notification')) {
+            $identityEmail = resolve('forus.services.record')
+                ->primaryEmailByAddress($voucher->identity_address);
+
+            resolve(NotificationService::class)->sendMailNotification(
+                $identityEmail,
+                new DeactivationVoucherMail($voucher, $reason)
+            );
+        }
 
         return new SponsorVoucherResource($voucher);
     }

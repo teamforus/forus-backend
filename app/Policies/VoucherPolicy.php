@@ -132,6 +132,23 @@ class VoucherPolicy
      * @param Organization $organization
      * @return bool
      */
+    public function deactivateSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity_address, [
+                'manage_vouchers'
+            ]) && ($voucher->fund->organization_id === $organization->id) &&
+            !$voucher->expired;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
     public function makeActivationCodeSponsor(
         string $identity_address,
         Voucher $voucher,

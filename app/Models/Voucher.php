@@ -114,6 +114,7 @@ class Voucher extends Model
 
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
+    public const STATE_DEACTIVATED = 'deactivated';
 
     public const TYPES = [
         self::TYPE_BUDGET,
@@ -137,7 +138,7 @@ class Voucher extends Model
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
-        'activation_code', 'activation_code_uid',
+        'activation_code', 'activation_code_uid', 'deactivation_reason',
     ];
 
     /**
