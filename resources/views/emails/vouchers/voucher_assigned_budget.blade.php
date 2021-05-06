@@ -1,6 +1,6 @@
 @extends('emails.base')
 
-@section('title', mail_trans('voucher_assigned_budget.title', $data))
+@section('title', mail_trans('voucher_assigned_budget.title_' . $communicationType, $data))
 @section('html')
     {{ mail_trans('dear_user') }}
     <br/>
