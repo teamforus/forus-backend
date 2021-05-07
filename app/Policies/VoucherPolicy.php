@@ -364,6 +364,7 @@ class VoucherPolicy
      */
     protected function deny(string $message): void {
         $key = $message;
+        $error = $message;
         $message = trans("validation.voucher.{$message}");
 
         throw new AuthorizationJsonException(json_encode(
