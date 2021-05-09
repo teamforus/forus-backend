@@ -12,16 +12,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $implementation_id
  * @property string|null $page_type
  * @property string|null $content
+ * @property string $content_alignment
  * @property string|null $external_url
  * @property bool $external
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $content_html
  * @property-read \App\Models\Implementation $implementation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContentAlignment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
@@ -63,7 +67,8 @@ class ImplementationPage extends Model
      * @var string[]
      */
     protected $fillable = [
-        'implementation_id', 'page_type', 'content', 'external', 'external_url',
+        'implementation_id', 'page_type', 'content', 'content_alignment',
+        'external', 'external_url',
     ];
 
     /**

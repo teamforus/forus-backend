@@ -51,7 +51,7 @@ use RuntimeException;
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
- * @property-read Identity $identity
+ * @property-read Identity|null $identity
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
