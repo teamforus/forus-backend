@@ -106,4 +106,16 @@ class OrganizationPolicy
             $builder->where('organization_id', $provider->id);
         })->exists() && $this->listSponsorProviders($identity_address, $organization);
     }
+
+    /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @return bool
+     */
+    public function resolveAsOwner(
+        string $identity_address,
+        Organization $organization
+    ): bool {
+        return $organization->identity_address == $identity_address;
+    }
 }

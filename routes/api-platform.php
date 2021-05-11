@@ -670,6 +670,11 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/employees/transfer-ownership',
+        "Api\Platform\Organizations\EmployeesController@transferOrganizationOwnership"
+    );
+
     $router->resource(
         'organizations.employees',
         "Api\Platform\Organizations\EmployeesController", [

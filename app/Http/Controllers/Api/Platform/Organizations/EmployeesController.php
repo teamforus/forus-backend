@@ -7,6 +7,7 @@ use App\Events\Employees\EmployeeDeleted;
 use App\Events\Employees\EmployeeUpdated;
 use App\Http\Requests\Api\Platform\Organizations\Employees\IndexEmployeesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
+use App\Http\Requests\Api\Platform\Organizations\Employees\TransferOrganizationOwnershipRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
@@ -165,6 +166,27 @@ class EmployeesController extends Controller
         EmployeeDeleted::broadcast($employee);
 
         $employee->delete();
+
+        return response()->json([]);
+    }
+
+    /**
+     * @param TransferOrganizationOwnershipRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function transferOrganizationOwnership(
+        TransferOrganizationOwnershipRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', [$organization]);
+        $this->authorize('resolveAsOwner', [$organization]);
+
+        $to_employee = Employee::find($request->input('to_employee'));
+        $organization->update([
+            'identity_address' => $to_employee->identity_address
+        ]);
 
         return response()->json([]);
     }
