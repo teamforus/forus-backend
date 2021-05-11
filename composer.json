@@ -25,6 +25,7 @@
         "graham-campbell/markdown": "^12.0",
         "guzzlehttp/guzzle": "^6.5",
         "intervention/image": "^2.5",
+        "itsgoingd/clockwork": "^5.0",
         "kalnoy/nestedset": "^5.0",
         "laravel-notification-channels/apn": "^0.6",
         "laravel-notification-channels/fcm": "^1.7",

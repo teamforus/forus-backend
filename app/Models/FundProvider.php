@@ -4,9 +4,7 @@ namespace App\Models;
 
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
-use App\Http\Resources\OrganizationBasicResource;
 use App\Scopes\Builders\FundProviderChatQuery;
-use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Collection;
@@ -362,55 +360,6 @@ class FundProvider extends Model
             'avg_transaction' => round($avgTransaction ?: 0, 2),
             'share_in_range' => round($fundUsageInRange > 0 ? $providerUsageInRange / $fundUsageInRange : 0, 2),
             'share_total' => round($fundUsageTotal > 0 ? $providerUsageTotal / $fundUsageTotal : 0, 2),
-        ];
-    }
-
-    /**
-     * @param Organization $sponsor
-     * @param Organization $provider
-     * @return array
-     */
-    public static function getOrganizationProviderFinances(
-        Organization $sponsor,
-        Organization $provider
-    ) : array {
-        $dateFrom = Carbon::parse(request()->get('from'));
-        $dateTo = Carbon::parse(request()->get('to'));
-
-        $fund_ids = request()->get('fund_ids');
-        $postcodes = request()->get('postcodes');
-
-        $funds = $sponsor->funds();
-        $funds = ($fund_ids ? $funds->whereIn('id', $fund_ids) : $funds)->get();
-
-        // global filter sponsor organization
-        $transactionsQuery = VoucherTransaction::whereHas('voucher', function(Builder $builder) use ($sponsor) {
-            return $builder->whereHas('fund', function(Builder $builder) use ($sponsor) {
-                $builder->where('funds.organization_id', $sponsor->id);
-            });
-        });
-
-        // Filter by selected funds
-        $transactionsQuery->whereHas('voucher', function(Builder $builder) use ($funds) {
-            $builder->whereIn('vouchers.fund_id', $funds->pluck('id')->toArray());
-        });
-
-        // Filter by selected provider
-        $transactionsQuery->whereHas('provider', function(Builder $builder) use ($provider, $postcodes) {
-            $builder->whereIn('id', [$provider->id]);
-            $postcodes && OrganizationQuery::whereHasPostcodes($builder, $postcodes);
-        });
-
-        // filter by interval
-        $transactionsQuery->whereBetween('voucher_transactions.created_at', [
-            $dateFrom, $dateTo
-        ]);
-
-        return [
-            'highest_transaction'   => $transactionsQuery->max('voucher_transactions.amount') ?: null,
-            'nr_transactions'       => $transactionsQuery->count(),
-            'total_spent'           => $transactionsQuery->sum('voucher_transactions.amount') ?: null,
-            'provider'              => (new OrganizationBasicResource($provider))->toArray(request()),
         ];
     }
 

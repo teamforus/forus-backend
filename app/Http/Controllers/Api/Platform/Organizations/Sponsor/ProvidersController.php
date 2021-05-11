@@ -11,6 +11,7 @@ use App\Http\Resources\Sponsor\SponsorProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -110,11 +111,19 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $providers = Organization::searchProviderOrganizations($request, $organization)->paginate(
-            $request->input('per_page')
-        );
+        $from = $request->input('from');
+        $to = $request->input('to');
 
-        return ProviderFinancialResource::collection($providers);
+        $providers = Organization::searchProviderOrganizations($organization, array_merge($request->only([
+            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids'
+        ]), [
+            'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
+            'date_to' => $from ? Carbon::parse($to)->endOfDay() : null,
+        ]))->with(ProviderFinancialResource::$load);
+
+        return ProviderFinancialResource::collection($providers->paginate(
+            $request->input('per_page')
+        ));
     }
 
     /**
@@ -134,7 +143,15 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $providers = Organization::searchProviderOrganizations($request, $organization)->get();
+        $from = $request->input('from');
+        $to = $request->input('to');
+
+        $providers = Organization::searchProviderOrganizations($organization, array_merge($request->only([
+            'product_category_ids', 'provider_ids', 'postcodes', 'fund_ids'
+        ]), [
+            'date_from' => $from ? Carbon::parse($from)->startOfDay() : null,
+            'date_to' => $from ? Carbon::parse($to)->endOfDay() : null,
+        ]))->with(ProviderFinancialResource::$load)->get();
 
         $type = $request->input('export_format', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.' . $type;

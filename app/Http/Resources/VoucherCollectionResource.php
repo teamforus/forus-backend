@@ -17,15 +17,21 @@ class VoucherCollectionResource extends VoucherResource
      */
     public static $load = [
         'parent',
-        'tokens',
+        'token_with_confirmation',
+        'token_without_confirmation',
+        'transactions:id,amount',
         'last_transaction',
+        'product_vouchers.fund',
         'product_vouchers.product.photo.presets',
+        'product_vouchers.token_with_confirmation',
+        'product_vouchers.token_without_confirmation',
         'product.photo.presets',
         'product.product_category.translations',
         'product.organization.logo.presets',
         'fund.fund_config.implementation',
         'fund.logo.presets',
         'fund.organization.logo.presets',
+        'physical_cards',
     ];
 
     /**

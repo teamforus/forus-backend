@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $content_html
  * @property-read \App\Models\Implementation $implementation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()

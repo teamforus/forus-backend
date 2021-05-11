@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -31,13 +30,11 @@ class ProviderFinancesExport implements FromCollection, WithHeadings
     protected function exportTransform(Organization $sponsor, Collection $providers): Collection
     {
         return $providers->map(function(Organization $provider) use ($sponsor) {
-            $totals = FundProvider::getOrganizationProviderFinances($sponsor, $provider);
-
             return [
                 $this->trans("provider")             => $provider->name,
-                $this->trans("total_amount")         => currency_format($totals['total_spent']),
-                $this->trans("highest_transaction")  => currency_format($totals['highest_transaction']),
-                $this->trans("nr_transactions")      => $totals['nr_transactions'] ?: '0',
+                $this->trans("total_amount")         => (string) ($provider->total_spent ?? '0'),
+                $this->trans("highest_transaction")  => (string) ($provider->highest_transaction ?? '0'),
+                $this->trans("nr_transactions")      => (string) ($provider->nr_transactions ?? '0'),
             ];
         })->values();
     }

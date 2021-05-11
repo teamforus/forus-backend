@@ -11,6 +11,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
+use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -97,30 +98,30 @@ use Illuminate\Http\Request;
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static \Illuminate\Database\Eloquent\Builder|Organization newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Organization newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Organization query()
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBtw($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBusinessTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereEmailPublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsProvider($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsSponsor($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsValidator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereKvk($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereManageProviderProducts($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization wherePhonePublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereValidatorAutoAcceptFunds($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereWebsite($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereWebsitePublic($value)
+ * @method static EloquentBuilder|Organization newModelQuery()
+ * @method static EloquentBuilder|Organization newQuery()
+ * @method static EloquentBuilder|Organization query()
+ * @method static EloquentBuilder|Organization whereBtw($value)
+ * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
+ * @method static EloquentBuilder|Organization whereCreatedAt($value)
+ * @method static EloquentBuilder|Organization whereDescription($value)
+ * @method static EloquentBuilder|Organization whereEmail($value)
+ * @method static EloquentBuilder|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder|Organization whereIban($value)
+ * @method static EloquentBuilder|Organization whereId($value)
+ * @method static EloquentBuilder|Organization whereIdentityAddress($value)
+ * @method static EloquentBuilder|Organization whereIsProvider($value)
+ * @method static EloquentBuilder|Organization whereIsSponsor($value)
+ * @method static EloquentBuilder|Organization whereIsValidator($value)
+ * @method static EloquentBuilder|Organization whereKvk($value)
+ * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
+ * @method static EloquentBuilder|Organization whereName($value)
+ * @method static EloquentBuilder|Organization wherePhone($value)
+ * @method static EloquentBuilder|Organization wherePhonePublic($value)
+ * @method static EloquentBuilder|Organization whereUpdatedAt($value)
+ * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
+ * @method static EloquentBuilder|Organization whereWebsite($value)
+ * @method static EloquentBuilder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
  */
 class Organization extends Model
@@ -682,41 +683,38 @@ class Organization extends Model
      * @param string $identity_address
      * @return Model|Employee|null|object
      */
-    public function findEmployee(string $identity_address)
+    public function findEmployee(string $identity_address): ?Employee
     {
         return $this->employees()->where(compact('identity_address'))->first();
     }
 
     /**
      * @param $fund_id
-     * @return Fund|null
+     * @return Model|Fund|null|object
      */
-    public function findFund($fund_id): ?Fund {
-        /** @var Fund|null $fund */
-        $fund = $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
-        return $fund;
+    public function findFund($fund_id = null): ?Fund
+    {
+        return $this->funds()->where('funds.id', $fund_id)->first();
     }
 
     /**
-     * @param Request $request
-     * @param Organization $organization
+     * @param Organization $sponsor
+     * @param array $options
      * @return EloquentBuilder
      */
     public static function searchProviderOrganizations(
-        Request $request,
-        Organization $organization
+        Organization $sponsor,
+        array $options
     ): EloquentBuilder {
-        $from = $request->get('from');
-        $to = $request->get('to');
+        $postcodes = array_get($options, 'postcodes');
+        $providerIds = array_get($options, 'provider_ids');
+        $dateFrom = array_get($options, 'date_from');
+        $dateTo = array_get($options, 'date_to');
 
-        $postcodes = $request->get('postcodes');
-        $provider_ids = $request->get('provider_ids');
-        $productCategoryIds = $request->get('product_category_ids');
+        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor);
 
-        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $organization);
-
-        if ($provider_ids) {
-            $query->whereIn('id', $provider_ids);
+        if ($providerIds) {
+            $query->whereIn('id', $providerIds);
         }
 
         if ($postcodes) {
@@ -725,22 +723,20 @@ class Organization extends Model
             });
         }
 
-        if ($productCategoryIds) {
-            $query->whereHas('fund_providers.fund_provider_products', static function(
-                EloquentBuilder $builder
-            ) use ($productCategoryIds) {
-                $builder->whereIn('product_id', (array) $productCategoryIds);
+        if ($dateFrom && $dateTo) {
+            $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($dateFrom, $dateTo) {
+                $builder->whereBetween('created_at', [$dateFrom, $dateTo]);
             });
         }
 
-        if ($from && $to) {
-            $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($from, $to) {
-                $builder->whereBetween('created_at', [
-                    Carbon::parse($from)->startOfDay(),
-                    Carbon::parse($to)->endOfDay(),
-                ]);
-            });
-        }
+        $queryTransactions = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options);
+        $queryTransactions->whereColumn('organization_id', 'organizations.id');
+
+        $query->addSelect([
+            'total_spent' => (clone $queryTransactions)->selectRaw('sum(`amount`)'),
+            'highest_transaction' => (clone $queryTransactions)->selectRaw('max(`amount`)'),
+            'nr_transactions' => (clone $queryTransactions)->selectRaw('count(`id`)'),
+        ])->orderByDesc('total_spent');
 
         return $query;
     }
@@ -752,12 +748,8 @@ class Organization extends Model
     {
         return [
             'total_archived' => Product::onlyTrashed()->where('organization_id', $this->id)->count(),
-            'total_provider' => Product::whereOrganizationId($this->id)->whereNull(
-                'sponsor_organization_id'
-            )->count(),
-            'total_sponsor' => Product::whereOrganizationId($this->id)->whereNotNull(
-                'sponsor_organization_id'
-            )->count(),
+            'total_provider' => $this->products()->whereNull('sponsor_organization_id')->count(),
+            'total_sponsor' => $this->products()->whereNotNull('sponsor_organization_id')->count(),
         ];
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,6 +12,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class ProviderFinancialResource extends JsonResource
 {
+    public static $load = [
+        'logo',
+        'business_type.translations',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -21,9 +25,10 @@ class ProviderFinancialResource extends JsonResource
      */
     public function toArray($request): array
     {
-        /** @var Organization $sponsor */
-        $sponsor = $request->organization ?? abort(403);
-
-        return FundProvider::getOrganizationProviderFinances($sponsor, $this->resource);
+        return array_merge($this->resource->only([
+            'highest_transaction', 'nr_transactions', 'total_spent',
+        ]), [
+            'provider' => new OrganizationBasicResource($this->resource),
+        ]);
     }
 }
