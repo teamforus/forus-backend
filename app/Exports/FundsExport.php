@@ -95,9 +95,9 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
                 $this->trans("vouchers_inactive_percentage") => $details['inactive_percentage'].' %',
                 $this->trans("vouchers_inactive_count")  => (string) $details['inactive_count'],
                 $this->trans("vouchers_active_amount")   => currency_format($details['active_amount']),
-                $this->trans("total_spent_amount")       => currency_format($fund->budget_used),
+                $this->trans("total_spent_amount")       => currency_format($fund->budget_used_active_vouchers),
                 $this->trans("total_spent_percentage")   => currency_format(
-                    $fund->budget_total ? ($fund->budget_used / $fund->budget_total * 100) : 0) . ' %',
+                    $fund->budget_total ? ($fund->budget_used_active_vouchers / $fund->budget_total * 100) : 0) . ' %',
                 $this->trans("total_left")               => currency_format($fund->budget_left),
             ];
         });
