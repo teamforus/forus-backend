@@ -2,6 +2,7 @@
 
 namespace App\Services\GeocodeService;
 use GuzzleHttp\Client;
+use Illuminate\Support\Arr;
 
 /**
  * Class GeocodeService
@@ -24,10 +25,9 @@ class GeocodeService
      * @param $address
      * @return string
      */
-    public function getApiUrl($address) {
+    public function getApiUrl($address): string {
         return sprintf(
-            "%sgeocode/json?address=%s&key=%s",
-            $this->api_url,
+            "%sgeocode/json?address=%s&key=%s", $this->api_url,
             $address,
             $this->api_key
         );
@@ -39,23 +39,41 @@ class GeocodeService
      * @param $address
      * @return array|bool
      */
-    public function getCoordinates($address)
+    public function getLocation($address)
     {
         try {
             $client = new Client();
             $res = $client->get($this->getApiUrl($address));
 
             $coordinates = $res->getBody();
-            $coordinates = json_decode($coordinates);
+            $coordinates = json_decode($coordinates, true);
 
-            $location = $coordinates->results[0]->geometry->location;
+            $result = $coordinates['results'][0];
+            $postalData = $this->addressComponentsToPostcode($result['address_components']);
+            $coordinatesData = Arr::only($result['geometry']['location'], ['lng', 'lat']);
 
-            return [
-                'lat' => $location->lat,
-                'lon' => $location->lng,
-            ];
+            return array_merge($coordinatesData, $postalData);
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * @param array $address_components
+     * @return array
+     */
+    protected function addressComponentsToPostcode(array $address_components): array
+    {
+        $postalCode = array_first(array_filter($address_components, function($component) {
+            return in_array('postal_code', $component['types']);
+        }))['long_name'] ?? null;
+
+        $postalCodeData = $postalCode ? explode(' ', $postalCode) : [];
+
+        return [
+            'postcode' => $postalCode ?? null,
+            'postcode_number' => $postalCodeData[0] ?? null,
+            'postcode_addition' => $postalCodeData[1] ?? null,
+        ];
     }
 }

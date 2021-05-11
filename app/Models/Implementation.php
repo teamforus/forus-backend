@@ -29,6 +29,7 @@ use Illuminate\Http\Request;
  * @property string $name
  * @property string|null $title
  * @property string|null $description
+ * @property string $description_alignment
  * @property bool $overlay_enabled
  * @property string $overlay_type
  * @property string $header_text_color
@@ -72,6 +73,7 @@ use Illuminate\Http\Request;
  * @method static Builder|Implementation query()
  * @method static Builder|Implementation whereCreatedAt($value)
  * @method static Builder|Implementation whereDescription($value)
+ * @method static Builder|Implementation whereDescriptionAlignment($value)
  * @method static Builder|Implementation whereDigidASelectServer($value)
  * @method static Builder|Implementation whereDigidAppId($value)
  * @method static Builder|Implementation whereDigidEnabled($value)
@@ -126,7 +128,7 @@ class Implementation extends Model
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
-        'title', 'description', 'informal_communication',
+        'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
     ];
@@ -478,7 +480,8 @@ class Implementation extends Model
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'communication_type' => ($implementation->informal_communication ?? false ? 'informal' : 'formal'),
                 'settings' => array_merge($implementation->only([
-                    'title', 'description', 'description_html', 'overlay_enabled', 'overlay_type',
+                    'title', 'description', 'description_alignment', 'description_html',
+                    'overlay_enabled', 'overlay_type',
                 ]), [
                     'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
                     'banner_text_color' => $implementation->getBannerTextColor(),
@@ -661,7 +664,7 @@ class Implementation extends Model
             ]);
 
             $pageModel->updateModel(array_merge(array_only($pageData, [
-                'content', 'external', 'external_url',
+                'content', 'content_alignment', 'external', 'external_url',
             ]), in_array($pageType, ImplementationPage::TYPES_INTERNAL) ? [
                 'external' => 0,
                 'external_url' => null,
@@ -693,7 +696,7 @@ class Implementation extends Model
         }
 
         return $pages->map(static function(ImplementationPage $page) {
-            return array_merge($page->only('page_type', 'external'), [
+            return array_merge($page->only('page_type', 'external', 'content_alignment'), [
                 'content_html' => $page->external ? '' : $page->content_html,
                 'external_url' => $page->external ? $page->external_url : '',
             ]);

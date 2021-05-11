@@ -77,7 +77,7 @@ class ImplementationsController extends Controller
         $this->authorize('updateCMS', [$implementation, $organization]);
 
         $implementation->updateModel($request->only([
-            'title', 'description', 'informal_communication',
+            'title', 'description', 'description_alignment', 'informal_communication',
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         ]));
 

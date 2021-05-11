@@ -32,6 +32,7 @@ class UpdateImplementationCmsRequest extends FormRequest
         return [
             'title' => 'nullable|string|max:50',
             'description' => 'nullable|string|max:4000',
+            'description_alignment' => 'nullable|in:left,center,right',
             'informal_communication' => 'nullable|boolean',
             'banner_media_uid' => ['nullable', new MediaUidRule('implementation_banner')],
             'media_uid' => 'nullable|array',
@@ -39,6 +40,7 @@ class UpdateImplementationCmsRequest extends FormRequest
             'pages' => ['array', new ImplementationPagesArrayKeysRule()],
             'pages.*' => 'array',
             'pages.*.content' => 'nullable|string|max:10000',
+            'pages.*.content_alignment' => 'nullable|in:left,center,right',
             'pages.*.external' => 'present|boolean',
             'pages.*.external_url' => 'nullable|string|max:300',
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\FundProviderChat
@@ -64,7 +65,7 @@ class FundProviderChat extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function messages() {
+    public function messages(): HasMany {
         return $this->hasMany(FundProviderChatMessage::class);
     }
 
@@ -72,28 +73,26 @@ class FundProviderChat extends Model
      * @param string $counterpart
      * @param string $message
      * @param string|null $identity_address
-     * @return FundProviderChatMessage|string
+     * @return FundProviderChatMessage|Model
      */
     public function addMessage(
         string $counterpart,
         string $message,
         ?string $identity_address = null
-    ) {
+    ): FundProviderChatMessage {
         /** @var FundProviderChatMessage $message */
-        $message = $this->messages()->create(array_merge(compact(
+        return $this->messages()->create(array_merge(compact(
             'identity_address', 'message', 'counterpart'
         ), [
             'sponsor_seen' => $counterpart == 'sponsor',
             'provider_seen' => $counterpart == 'provider',
         ]));
-
-        return $message;
     }
 
     /**
      * @param string $message
      * @param string $identity_address
-     * @return FundProviderChatMessage|string
+     * @return FundProviderChatMessage
      */
     public function addSponsorMessage(string $message, string $identity_address) {
         return $this->addMessage(self::TYPE_SPONSOR, $message, $identity_address);
@@ -102,7 +101,7 @@ class FundProviderChat extends Model
     /**
      * @param string $message
      * @param string $identity_address
-     * @return FundProviderChatMessage|string
+     * @return FundProviderChatMessage
      */
     public function addProviderMessage(string $message, string $identity_address) {
         return $this->addMessage(self::TYPE_PROVIDER, $message, $identity_address);
@@ -111,7 +110,7 @@ class FundProviderChat extends Model
     /**
      * @param string $message
      * @param string|null $identity_address
-     * @return FundProviderChatMessage|string
+     * @return FundProviderChatMessage
      */
     public function addSystemMessage(string $message, ?string $identity_address = null) {
         return $this->addMessage(self::TYPE_SYSTEM, $message, $identity_address);
