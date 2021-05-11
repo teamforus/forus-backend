@@ -16,13 +16,17 @@ class FundProviderResource extends Resource
     public static $load = [
         'fund.logo.presets',
         'fund.providers',
-        'fund.organization',
+        'fund.organization.logo',
+        'fund.organization.business_type.translations',
         'fund.employees',
         'fund.top_up_transactions',
         'fund.provider_organizations_approved.employees',
-        'organization.offices',
+        'organization.offices.organization.business_type.translations',
+        'organization.offices.organization.logo',
+        'organization.offices.photo',
         'organization.products',
-        'organization.logo.presets',
+        'organization.logo',
+        'organization.employees.roles.translations',
         'organization.business_type.translations',
         'fund_provider_products'
     ];

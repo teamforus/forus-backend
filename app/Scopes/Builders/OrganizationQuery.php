@@ -36,13 +36,13 @@ class OrganizationQuery
      * @param Builder $builder
      * @param string $identityAddress
      * @param $permissions
-     * @return Organization|Builder|mixed
+     * @return Builder
      */
     public static function whereHasPermissions(
         Builder $builder,
         string $identityAddress,
         $permissions
-    ) {
+    ): Builder {
         return $builder->where(static function(
             Builder $builder
         ) use ($identityAddress, $permissions) {
@@ -64,13 +64,13 @@ class OrganizationQuery
      * @param Builder $query
      * @param string $identity_address
      * @param Voucher $voucher
-     * @return Organization|Builder
+     * @return Builder
      */
     public static function whereHasPermissionToScanVoucher(
         Builder $query,
         string $identity_address,
         Voucher $voucher
-    ) {
+    ): Builder {
         return self::whereHasPermissions(
             $query, $identity_address,'scan_vouchers'
         )->whereHas('fund_providers', static function(
@@ -127,6 +127,18 @@ class OrganizationQuery
             Builder $builder
         ) use ($sponsorOrganization) {
             $builder->where('organization_id', $sponsorOrganization->id);
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @param array $postcodes
+     * @return Builder
+     */
+    public static function whereHasPostcodes(Builder $builder, array $postcodes): Builder
+    {
+        return $builder->whereHas('offices', function(Builder $builder) use ($postcodes) {
+            $builder->whereIn('postcode_number', $postcodes);
         });
     }
 }

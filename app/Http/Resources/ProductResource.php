@@ -16,18 +16,21 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class ProductResource extends Resource
 {
-    public static $load = [
-        'voucher_transactions',
-        'vouchers_reserved',
-        'photo.presets',
-        'product_category.translations',
-        'organization.offices.photo.presets',
-        'organization.offices.schedules',
-        'organization.offices.organization',
-        'organization.offices.organization.logo.presets',
-        'organization.logo.presets',
-        'organization.business_type.translations',
-    ];
+    public static function load(): array
+    {
+        return [
+            'voucher_transactions',
+            'vouchers_reserved',
+            'photo.presets',
+            'product_category.translations',
+            'organization.offices.photo.presets',
+            'organization.offices.schedules',
+            'organization.offices.organization',
+            'organization.offices.organization.logo.presets',
+            'organization.logo.presets',
+            'organization.business_type.translations',
+        ];
+    }
 
     /**
      * Transform the resource into an array.

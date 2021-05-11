@@ -119,14 +119,14 @@ class VouchersController extends Controller
      *
      * @param StoreBatchVoucherRequest $request
      * @param Organization $organization
-     * @return SponsorVoucherResource|AnonymousResourceCollection
+     * @return AnonymousResourceCollection
      * @throws AuthorizationException
      * @noinspection PhpUnused
      */
     public function storeBatch(
         StoreBatchVoucherRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $fund = Fund::find($request->post('fund_id'));
 
         $this->authorize('show', $organization);
@@ -246,9 +246,11 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('activateSponsor', [$voucher, $organization]);
 
-        $request->authorize() ? $voucher->update([
-            'state' => $voucher::STATE_ACTIVE,
-        ]) : null;
+        if ($request->authorize()) {
+            $voucher->update([
+                'state' => $voucher::STATE_ACTIVE,
+            ]);
+        }
 
         return new SponsorVoucherResource($voucher);
     }

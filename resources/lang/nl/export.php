@@ -62,5 +62,37 @@ return [
         'used'      => 'Geactiveerd',
         'used_yes'  => 'Ja',
         'used_no'   => 'Nee'
+    ],
+
+    'finances'      => [
+        'provider'            => 'Aanbieder',
+        'total_amount'        => 'Totaal uitgegeven bij',
+        'highest_transaction' => 'Hoogste aankoopbedrag',
+        'nr_transactions'     => 'Aantal transaction',
+    ],
+
+    'funds' => [
+        // Overview funds
+        'name'      => 'Fondsnaam',
+        'total'     => 'Totaal gestort',
+        'current'   => 'Huidig saldo',
+        'expenses'  => 'Uitgaven',
+        'transactions' => 'Transactiekosten',
+
+        // Statistics funds
+        'active'    => 'Actief',
+        'inactive'  => 'Inactief',
+        'left'      => 'Restant',
+        'amount_per_voucher'            => 'Per tegoed €',
+        'average_per_voucher'           => 'Gem per tegoed €',
+        'total_vouchers_amount'         => 'Totaal tegoeden €',
+        'total_vouchers_count'          => 'Totaal tegoeden aantal',
+        'vouchers_inactive_amount'      => 'Totaal tegoeden inactief €',
+        'vouchers_inactive_percentage'  => 'Totaal tegoeden inactief %',
+        'vouchers_inactive_count'       => 'Totaal tegoeden inactief aantal',
+        'vouchers_active_amount'        => 'Totaal tegoeden actief',
+        'total_spent_amount'            => 'Uitgaven €',
+        'total_spent_percentage'        => 'Uitgaven %',
+        'total_left'                    => 'Restant actieve tegoeden',
     ]
 ];
