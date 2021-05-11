@@ -134,6 +134,7 @@ class FundResource extends Resource
             'total'     => currency_format($fund->budget_total),
             'validated' => currency_format($fund->budget_validated),
             'used'      => currency_format($fund->budget_used),
+            'used_active_vouchers'      => currency_format($fund->budget_used_active_vouchers),
             'left'      => currency_format($fund->budget_left),
             'transaction_costs' => currency_format($fund->getTransactionCosts()),
             'reserved'  => round(VoucherQuery::whereNotExpiredAndActive(
