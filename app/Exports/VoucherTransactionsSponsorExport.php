@@ -8,7 +8,12 @@ use App\Models\VoucherTransaction;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
+/**
+ * Class VoucherTransactionsSponsorExport
+ * @package App\Exports
+ */
 class VoucherTransactionsSponsorExport implements FromCollection, WithHeadings
 {
     protected $request;
@@ -39,9 +44,9 @@ class VoucherTransactionsSponsorExport implements FromCollection, WithHeadings
     }
 
     /**
-    * @return \Illuminate\Support\Collection
+    * @return Collection
     */
-    public function collection()
+    public function collection(): Collection
     {
         return $this->data;
     }

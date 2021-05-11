@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection as SupportCollection;
 use Carbon\Carbon;
+use App\Scopes\Builders\ProductQuery;
 use App\Models\Organization;
 use App\Models\ProductCategory;
 use App\Models\Office;
@@ -262,7 +263,7 @@ class LoremDbSeeder extends Seeder
                 /** @var FundProvider $provider */
                 $provider = $fund->providers()->create([
                     'organization_id'   => $organization->id,
-                    'allow_budget'      => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
+                    'allow_budget'      => $fund->isTypeBudget() && (bool)random_int(0, 2),
                     'allow_products'    => $fund->isTypeBudget() ? (bool) random_int(0, 2) : false,
                 ]);
 
@@ -387,19 +388,28 @@ class LoremDbSeeder extends Seeder
                 'state' => 'used'
             ]);
 
-            $voucher = $prevalidation->fund->makeVoucher($identity_address);
+            $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
 
-            while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 2)) {
+            /** @var Product $product */
+            $voucher = $prevalidation->fund->makeVoucher($identity_address);
+            $product = $productsQuery->inRandomOrder()->first();
+            $productIds = $productsQuery->inRandomOrder()->pluck('id');
+
+            $voucher->buyProductVoucher($product);
+            $voucher->buyProductVoucher($product);
+
+            while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 3)) {
                 $transaction = $voucher->transactions()->create([
                     'amount' => random_int(
                         (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_min'),
                         (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_max')
                     ),
-                    'product_id' => null,
+                    'product_id' => random_int(0, 10) > 4 ? null : $productIds->random(),
                     'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
+                    'created_at' => now()->subDays(random_int(0, 360)),
                     'state' => VoucherTransaction::STATE_SUCCESS,
-                    'attempts' => /* It's Over */ 9000
+                    'attempts' => /* It's Over */ 9000,
                 ]);
 
                 VoucherTransactionCreated::dispatch($transaction);
@@ -507,10 +517,21 @@ class LoremDbSeeder extends Seeder
         Organization $organization,
         array $fields = []
     ): Office {
+        $postCodes = [
+            9700, 9701, 9702, 9703, 9704, 9711, 9712, 9713, 9714, 9715, 9716, 9717,
+            9718, 9721, 9722, 9723, 9724, 9725, 9726, 9727, 9728, 9731, 9732, 9733,
+            9734, 9735, 9736, 9737, 9738, 9741, 9742, 9743, 9744, 9745, 9746, 9747,
+        ];
+
+        $postCode = $postCodes[random_int(0, count($postCodes) - 1)];
+
         $office = Office::create(array_merge([
             'organization_id'   => $organization->id,
-            'address'           => 'Osloweg 131, 9723BK, Groningen',
+            'address'           => "Osloweg 131, $postCode BK, Groningen",
             'phone'             => '0123456789',
+            'postcode'          => "$postCode BK",
+            'postcode_number'   => $postCode,
+            'postcode_addition' => 'BK',
             'lon'               => 6.606065989043237 + (random_int(-1000, 1000) / 10000),
             'lat'               => 53.21694230132835 + (random_int(-1000, 1000) / 10000),
             'parsed'            => true

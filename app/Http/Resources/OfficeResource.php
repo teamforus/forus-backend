@@ -33,7 +33,8 @@ class OfficeResource extends Resource
         $organization = $office->organization;
 
         return array_merge($office->only([
-            'id', 'organization_id', 'address', 'phone', 'lon', 'lat'
+            'id', 'organization_id', 'address', 'phone', 'lon', 'lat',
+            'postcode', 'postcode_number', 'postcode_addition',
         ]), [
             'photo' => new MediaResource($office->photo),
             'organization' => new OrganizationBasicResource($organization),
