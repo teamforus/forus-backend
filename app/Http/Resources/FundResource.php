@@ -128,24 +128,24 @@ class FundResource extends Resource
      * @return array
      */
     public function getBudgetData(Fund $fund): array {
-        $details = $fund->getFundDetails();
+        $details = Fund::getFundDetails($fund->budget_vouchers()->getQuery());
+        $reservedQuery = $fund->budget_vouchers()->getQuery();
+        $reservedAmount = VoucherQuery::whereNotExpiredAndActive($reservedQuery)->sum('amount');
 
         return [
-            'total'     => currency_format($fund->budget_total),
-            'validated' => currency_format($fund->budget_validated),
-            'used'      => currency_format($fund->budget_used),
+            'total'                     => currency_format($fund->budget_total),
+            'validated'                 => currency_format($fund->budget_validated),
+            'used'                      => currency_format($fund->budget_used),
             'used_active_vouchers'      => currency_format($fund->budget_used_active_vouchers),
-            'left'      => currency_format($fund->budget_left),
-            'transaction_costs' => currency_format($fund->getTransactionCosts()),
-            'reserved'  => round(VoucherQuery::whereNotExpiredAndActive(
-                $fund->budget_vouchers()->getQuery()
-            )->sum('amount'), 2),
-            'vouchers_amount'               => $details['vouchers_amount'],
-            'vouchers_count'                => $details['vouchers_count'],
-            'active_vouchers_amount'        => $details['active_amount'],
-            'active_vouchers_count'         => $details['active_count'],
-            'inactive_vouchers_amount'      => $details['inactive_amount'],
-            'inactive_vouchers_count'       => $details['inactive_count'],
+            'left'                      => currency_format($fund->budget_left),
+            'transaction_costs'         => currency_format($fund->getTransactionCosts()),
+            'reserved'                  => round($reservedAmount, 2),
+            'vouchers_amount'           => $details['vouchers_amount'],
+            'vouchers_count'            => $details['vouchers_count'],
+            'active_vouchers_amount'    => $details['active_amount'],
+            'active_vouchers_count'     => $details['active_count'],
+            'inactive_vouchers_amount'  => $details['inactive_amount'],
+            'inactive_vouchers_count'   => $details['inactive_count'],
         ];
     }
 }
