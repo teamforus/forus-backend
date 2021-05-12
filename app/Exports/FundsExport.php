@@ -102,9 +102,6 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
             $activeVouchersPercentage = $details['vouchers_amount'] ?
                 ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
 
-            // vouchers_amount
-            //used_active_vouchers
-
             return collect([
                 "name"                          => $fund->name,
                 "amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),

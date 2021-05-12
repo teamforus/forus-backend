@@ -21,7 +21,7 @@ class StoreProductVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return !empty($this->auth_address());
+        return $this->isAuthenticated();
     }
 
     /**
@@ -31,14 +31,12 @@ class StoreProductVoucherRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $identity_address = auth_address();
-
         return [
             'voucher_address' => [
                 'required',
                 'exists:voucher_tokens,address',
                 new IdentityVoucherAddressRule(
-                    $identity_address,
+                    $this->auth_address(),
                     Voucher::TYPE_BUDGET,
                     Fund::TYPE_BUDGET
                 )
