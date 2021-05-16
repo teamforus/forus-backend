@@ -16,6 +16,7 @@ use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -152,6 +153,28 @@ class FundProviderController extends Controller
         ]);
 
         return new FundProviderResource($fundProvider);
+    }
+
+    /**
+     * Delete fund provider
+     * @param Organization $organization
+     * @param Fund $fund
+     * @param FundProvider $fundProvider
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function destroy(
+        Organization $organization,
+        Fund $fund,
+        FundProvider $fundProvider
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$fund, $organization]);
+        $this->authorize('deleteSponsor', [$fundProvider, $organization, $fund]);
+
+        $fundProvider->delete();
+
+        return response()->json([]);
     }
 
     /**

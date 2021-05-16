@@ -170,6 +170,22 @@ class FundProviderPolicy
     /**
      * @param $identity_address
      * @param FundProvider $organizationFund
+     * @param Organization|null $organization
+     * @param Fund|null $fund
+     * @return bool
+     */
+    public function deleteSponsor(
+        $identity_address,
+        FundProvider $organizationFund,
+        Organization $organization,
+        Fund $fund
+    ): bool {
+        return $this->updateSponsor($identity_address, $organizationFund, $organization, $fund);
+    }
+
+    /**
+     * @param $identity_address
+     * @param FundProvider $organizationFund
      * @param Organization $organization
      * @return bool
      */
