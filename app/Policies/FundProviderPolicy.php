@@ -186,4 +186,18 @@ class FundProviderPolicy
             'manage_provider_funds'
         ]);
     }
+
+    /**
+     * @param $identity_address
+     * @param FundProvider $organizationFund
+     * @param Organization $organization
+     * @return bool
+     */
+    public function deleteProvider(
+        $identity_address,
+        FundProvider $organizationFund,
+        Organization $organization
+    ) {
+        return $this->updateProvider($identity_address, $organizationFund, $organization);
+    }
 }

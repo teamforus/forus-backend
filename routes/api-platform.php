@@ -683,7 +683,7 @@ $router->group(['middleware' => [
         'organizations/{organization}/provider/funds',
         "Api\Platform\Organizations\Provider\FundProviderController", [
         'only' => [
-            'index', 'show', 'store', 'update'
+            'index', 'show', 'store', 'update', 'destroy'
         ],
         'parameters' => [
             'funds' => 'organization_fund'

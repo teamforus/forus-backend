@@ -13,6 +13,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\Tag;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -151,5 +152,24 @@ class FundProviderController extends Controller
         ]));
 
         return new FundProviderResource($organizationFund);
+    }
+
+    /**
+     * Delete the specified resource
+     * 
+     * @param Organization $organization
+     * @param FundProvider $organizationFund
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function destroy(
+        Organization $organization,
+        FundProvider $organizationFund
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('deleteProvider', [$organizationFund, $organization]);
+
+        $organizationFund->delete();
+
+        return response()->json([]);
     }
 }
