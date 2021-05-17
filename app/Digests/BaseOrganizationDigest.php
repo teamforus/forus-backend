@@ -79,7 +79,6 @@ abstract class BaseOrganizationDigest
         MailBodyBuilder $emailBody,
         NotificationService $notificationService
     ): void {
-        /** @var Employee[] $employees */
         $employees = $organization->employeesWithPermissions($this->employeePermissions);
 
         foreach ($employees as $employee) {

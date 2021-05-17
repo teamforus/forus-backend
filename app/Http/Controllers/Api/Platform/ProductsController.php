@@ -27,7 +27,7 @@ class ProductsController extends Controller
         $this->authorize('viewAnyPublic', Product::class);
 
         return ProductResource::collection(Product::search($request)->with(
-            ProductResource::$load
+            ProductResource::load()
         )->where($request->input('show_all', false) ? [] : [
             'show_on_webshop' => true,
         ])->paginate($request->input('per_page', 15)));
@@ -49,14 +49,14 @@ class ProductsController extends Controller
             ->whereHas('medias')
             ->where('show_on_webshop', true)
             ->take($per_page)->groupBy('organization_id')->distinct()
-            ->with(ProductResource::$load)->get();
+            ->with(ProductResource::load())->get();
 
         if ($resultProducts->count() < 6) {
             $resultProducts = $resultProducts->merge(
                 Product::searchSample($request)->whereKeyNot($resultProducts->pluck('id'))
                     ->take($per_page - $resultProducts->count())
                     ->where('show_on_webshop', true)
-                    ->with(ProductResource::$load)->get()
+                    ->with(ProductResource::load())->get()
             );
         }
 
@@ -71,6 +71,6 @@ class ProductsController extends Controller
     public function show(Product $product): ProductResource {
         $this->authorize('showPublic', $product);
 
-        return new ProductResource($product->load(ProductResource::$load));
+        return new ProductResource($product->load(ProductResource::load()));
     }
 }

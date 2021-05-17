@@ -27,7 +27,8 @@ class ImplementationPrivateResource extends JsonResource
         }
       
         $data = array_merge($implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'title', 'description', 'description_html', 'informal_communication',
+            'id', 'key', 'name', 'url_webshop', 'title',
+            'description', 'description_alignment', 'description_html', 'informal_communication',
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         ]), [
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
@@ -65,7 +66,7 @@ class ImplementationPrivateResource extends JsonResource
     protected function pageDetails(?ImplementationPage $page): ?array
     {
         return $page ? $page->only([
-            'page_type', 'content', 'content_html', 'external', 'external_url',
+            'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url',
         ]) : null;
     }
 }

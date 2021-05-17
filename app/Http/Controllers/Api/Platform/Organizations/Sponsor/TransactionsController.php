@@ -8,6 +8,8 @@ use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use App\Statistics\Funds\FinancialStatisticQueries;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -34,15 +36,22 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
-        $transactionsQuery = VoucherTransaction::searchSponsor($request, $organization);
+        $query = VoucherTransaction::searchSponsor($request, $organization);
+        $total_amount = currency_format((clone $query)->sum('amount'));
 
-        $meta = [
-            'total_amount' => currency_format($transactionsQuery->sum('amount'))
-        ];
+        $options = $request->only(array_merge([
+            'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids',
+        ], [
+            'date_to' => $request->input('to') ? Carbon::parse($request->input('to')) : null,
+            'date_from' => $request->input('from') ? Carbon::parse($request->input('from')) : null,
+        ]));
 
-        return SponsorVoucherTransactionResource::collection(
-            $transactionsQuery->paginate($request->input('per_page', 25))
-        )->additional(compact('meta'));
+        $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
+        $meta = compact('total_amount');
+
+        return SponsorVoucherTransactionResource::collection($query->with(
+            SponsorVoucherTransactionResource::load()
+        )->paginate($request->input('per_page')))->additional(compact('meta'));
     }
 
     /**
@@ -85,6 +94,8 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucherTransaction, $organization]);
 
-        return new SponsorVoucherTransactionResource($voucherTransaction);
+        return new SponsorVoucherTransactionResource($voucherTransaction->load(
+            SponsorVoucherTransactionResource::load()
+        ));
     }
 }

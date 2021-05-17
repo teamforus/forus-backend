@@ -51,7 +51,7 @@ use RuntimeException;
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
- * @property-read Identity $identity
+ * @property-read Identity|null $identity
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -872,9 +872,11 @@ class Voucher extends Model
     {
         $queryUnused = self::whereHas('fund', function(Builder $builder) {
             $builder->where('organization_id', $this->fund->organization_id);
-        })->whereNull('identity_address')->where([
-            'activation_code_uid' => $activation_code_uid
-        ]);
+        })->whereNull('identity_address')->where(compact('activation_code_uid'));
+
+        $queryUsed = self::whereHas('fund', function(Builder $builder) {
+            $builder->where('organization_id', $this->fund->organization_id);
+        })->whereNotNull('identity_address')->where(compact('activation_code_uid'));
 
         if (!is_null($activation_code_uid) && $queryUnused->exists()) {
             /** @var Voucher $voucher */
@@ -885,6 +887,10 @@ class Voucher extends Model
                 return Prevalidation::whereUid($value)->doesntExist() &&
                     Voucher::whereActivationCode($value)->doesntExist();
             }, 4, 2);
+        }
+
+        if ($oldVoucher = $queryUsed->first()) {
+            $this->assignToIdentity($oldVoucher->identity_address);
         }
 
         return $this->updateModel([

@@ -24,9 +24,12 @@ class SponsorProviderResource extends JsonResource
     public const WITH = [
         'logo',
         'funds',
-        'offices',
-        'employees',
-        'business_type',
+        'offices.photo',
+        'offices.organization.employees.roles.translations',
+        'offices.organization.logo',
+        'offices.organization.business_type.translations',
+        'employees.roles.translations',
+        'business_type.translations',
         'fund_providers',
     ];
 

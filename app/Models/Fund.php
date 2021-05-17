@@ -89,6 +89,7 @@ use Illuminate\Http\Request;
  * @property-read float $budget_reserved
  * @property-read float $budget_total
  * @property-read float $budget_used
+ * @property-read float $budget_used_active_vouchers
  * @property-read float $budget_validated
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read Media|null $logo
@@ -331,14 +332,14 @@ class Fund extends Model
      */
     public function sendFundClosedRequesterEmailNotification(?string $email): bool
     {
-        return $email ? notification_service()->fundClosed(
+        return $email && notification_service()->fundClosed(
             $email,
             $this->fund_config->implementation->getEmailFrom(),
             $this->name,
             $this->organization->email,
             $this->organization->name,
             $this->fund_config->implementation->url_webshop
-        ) : false;
+        );
     }
 
     /**
@@ -446,6 +447,17 @@ class Fund extends Model
      * @return float
      * @noinspection PhpUnused
      */
+    public function getBudgetUsedActiveVouchersAttribute(): float
+    {
+        return round($this->voucher_transactions()
+            ->where('vouchers.expire_at', '>', now())
+            ->sum('voucher_transactions.amount'), 2);
+    }
+
+    /**
+     * @return float
+     * @noinspection PhpUnused
+     */
     public function getBudgetLeftAttribute(): float
     {
         return round($this->budget_total - $this->budget_used, 2);
@@ -463,21 +475,14 @@ class Fund extends Model
     /**
      * @return float
      */
-    public function getServiceCosts(): float
+    public function getTransactionCosts(): float
     {
-        return $this->getTransactionCosts();
-    }
-
-    /**
-     * @return float
-     */
-    public function getTransactionCosts (): float
-    {
-        if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
-            return $this->voucher_transactions()->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
+        if (!$this->fund_config || $this->fund_config->subtract_transaction_costs) {
+            return 0.0;
         }
 
-        return 0.0;
+        return $this->voucher_transactions()
+                ->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
     }
 
     /**
@@ -1510,6 +1515,74 @@ class Fund extends Model
                 $fundRequest->resignEmployee($employee);
             }
         }
+    }
+
+    /**
+     * @param Builder $vouchersQuery
+     * @return array
+     */
+    public static function getFundDetails(Builder $vouchersQuery) : array
+    {
+        $vouchersQuery = VoucherQuery::whereNotExpired($vouchersQuery);
+        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
+
+        $vouchers_count = $vouchersQuery->count();
+        $inactive_count = $inactiveVouchersQuery->count();
+        $active_count = $activeVouchersQuery->count();
+        $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
+
+        return [
+            'reserved'              => currency_format($activeVouchersQuery->sum('amount')),
+            'vouchers_amount'       => currency_format($vouchersQuery->sum('amount')),
+            'vouchers_count'        => $vouchers_count,
+            'active_amount'         => currency_format($activeVouchersQuery->sum('amount')),
+            'active_count'          => $active_count,
+            'inactive_amount'       => currency_format($inactiveVouchersQuery->sum('amount')),
+            'inactive_count'        => $inactive_count,
+            'inactive_percentage'   => currency_format($inactive_percentage),
+        ];
+    }
+
+    /**
+     * @param Collection|Fund[] $funds
+     * @return array
+     */
+    public static function getFundTotals(Collection $funds) : array
+    {
+        $budget = 0;
+        $budget_left = 0;
+        $budget_used = 0;
+        $budget_used_active_vouchers = 0;
+        $transaction_costs = 0;
+
+        $query = Voucher::query()->whereNull('parent_id')->whereIn('fund_id', $funds->pluck('id'));
+        $vouchersQuery = VoucherQuery::whereNotExpired($query);
+        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
+
+        $vouchers_amount = currency_format($vouchersQuery->sum('amount'));
+        $active_vouchers_amount = currency_format($activeVouchersQuery->sum('amount'));
+        $inactive_vouchers_amount = currency_format($inactiveVouchersQuery->sum('amount'));
+
+        $vouchers_count = $vouchersQuery->count();
+        $active_vouchers_count = $activeVouchersQuery->count();
+        $inactive_vouchers_count = $inactiveVouchersQuery->count();
+
+        foreach ($funds as $fund) {
+            $budget += $fund->budget_total;
+            $budget_left += $fund->budget_left;
+            $budget_used += $fund->budget_used;
+            $budget_used_active_vouchers += $fund->budget_used_active_vouchers;
+            $transaction_costs += $fund->getTransactionCosts();
+        }
+
+        return compact(
+            'budget', 'budget_left',
+            'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
+            'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
+            'inactive_vouchers_amount', 'inactive_vouchers_count'
+        );
     }
 
     /**

@@ -36,7 +36,7 @@ abstract class BaseOrganizationNotification extends BaseNotification
             ));
         }
 
-        return (array) static::$permissions;
+        return static::$permissions;
     }
 
     /**

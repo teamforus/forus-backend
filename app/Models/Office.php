@@ -21,6 +21,9 @@ use Illuminate\Http\Request;
  * @property string|null $phone
  * @property string|null $lon
  * @property string|null $lat
+ * @property string|null $postcode
+ * @property string|null $postcode_number
+ * @property string|null $postcode_addition
  * @property int $parsed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -41,6 +44,9 @@ use Illuminate\Http\Request;
  * @method static Builder|Office whereOrganizationId($value)
  * @method static Builder|Office whereParsed($value)
  * @method static Builder|Office wherePhone($value)
+ * @method static Builder|Office wherePostcode($value)
+ * @method static Builder|Office wherePostcodeAddition($value)
+ * @method static Builder|Office wherePostcodeNumber($value)
  * @method static Builder|Office whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -54,7 +60,8 @@ class Office extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed'
+        'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed',
+        'postcode', 'postcode_number', 'postcode_addition'
     ];
 
     /**
@@ -62,9 +69,7 @@ class Office extends Model
      *
      * @var array
      */
-    protected $with = [
-        'schedules'
-    ];
+    protected $with = [];
 
     public static function search(Request $request): Builder
     {
@@ -137,5 +142,18 @@ class Office extends Model
         $this->load('schedules');
 
         return $this;
+    }
+
+    /**
+     * Update postcode and coordinates by google api
+     */
+    public function updateGeoData()
+    {
+        $geocodeService = resolve('geocode_api');
+        $location = $geocodeService->getLocation($this->address);
+
+        if (is_array($location)) {
+            $this->update($location);
+        }
     }
 }
