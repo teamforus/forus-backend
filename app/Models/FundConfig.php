@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property bool $backoffice_enabled
@@ -32,8 +34,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $backoffice_key
  * @property string|null $backoffice_certificate
  * @property bool $backoffice_fallback
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\Implementation|null $implementation
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()

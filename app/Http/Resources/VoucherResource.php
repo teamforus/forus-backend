@@ -21,13 +21,19 @@ class VoucherResource extends Resource
     public static $load = [
         'parent',
         'tokens',
+        'token_with_confirmation',
+        'token_without_confirmation',
         'last_transaction',
         'transactions.voucher.fund.logo.presets',
         'transactions.provider.logo.presets',
         'transactions.product.photo.presets',
         'product_vouchers.product.photo.presets',
+        'product_vouchers.tokens',
+        'product_vouchers.token_with_confirmation',
+        'product_vouchers.token_without_confirmation',
         'product.photo.presets',
         'product.product_category.translations',
+        'product.organization.business_type.translations',
         'product.organization.logo.presets',
         'product.organization.offices.schedules',
         'product.organization.offices.photo.presets',
@@ -38,6 +44,7 @@ class VoucherResource extends Resource
         'fund.provider_organizations_approved.offices.organization.logo.presets',
         'fund.logo.presets',
         'fund.organization.logo.presets',
+        'physical_cards'
     ];
 
     /**
@@ -64,7 +71,7 @@ class VoucherResource extends Resource
     public function toArray($request): array
     {
         $voucher = $this->resource;
-        $physical_cards = $voucher->physical_cards()->first();
+        $physical_cards = $voucher->physical_cards->first();
 
         return array_merge($voucher->only([
             'identity_address', 'fund_id', 'returnable'

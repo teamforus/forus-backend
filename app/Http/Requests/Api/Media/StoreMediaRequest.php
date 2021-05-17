@@ -49,9 +49,9 @@ class StoreMediaRequest extends FormRequest
             ],
             'sync_presets.*' => [
                 'nullable',
-                Rule::in(array_map(static function(MediaPreset $mediaPreset) {
+                $type ? Rule::in(array_map(static function(MediaPreset $mediaPreset) {
                     return $mediaPreset->name;
-                }, $type->getPresets()))
+                }, $type->getPresets())) : []
             ],
 
         ];

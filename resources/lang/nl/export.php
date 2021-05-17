@@ -20,14 +20,14 @@ return [
         'fund_type' => 'Fonds type',
         'iban' => 'IBAN',
         'provider_last_activity' => 'Laatste activiteit',
-        'products_provider_count' => 'Totaal aanbiedingen beheer door provider',
+        'products_provider_count' => 'Totaal aanbiedingen beheer door aanbieder',
         'products_sponsor_count' => 'Totaal aanbiedingen beheert door sponsor',
         'products_active_count' => 'Totaal geaccepteerde aanbiedingen',
         'products_count' => 'Totaal aanbiedingen',
         'provider' => 'Aanbieder',
         'email' => 'E-mailadres',
         'phone' => 'Telefoonnummer',
-        'categories' => 'Categoriën',
+        'categories' => 'Categorieën',
         'kvk' => 'KVK',
         'state' => 'Status',
         'allow_budget' => 'Geaccepteerd: budget',
@@ -62,5 +62,37 @@ return [
         'used'      => 'Geactiveerd',
         'used_yes'  => 'Ja',
         'used_no'   => 'Nee'
+    ],
+
+    'finances'      => [
+        'provider'            => 'Aanbieder',
+        'total_amount'        => 'Totaal uitgegeven bij',
+        'highest_transaction' => 'Hoogste aankoopbedrag',
+        'nr_transactions'     => 'Aantal transacties',
+    ],
+
+    'funds' => [
+        // Overview funds
+        'name'      => 'Fondsnaam',
+        'total'     => 'Totaal gestort',
+        'current'   => 'Huidig saldo',
+        'expenses'  => 'Uitgaven',
+        'transactions' => 'Transactiekosten',
+
+        // Statistics funds
+        'active'    => 'Actief',
+        'inactive'  => 'Inactief',
+        'left'      => 'Restant',
+        'amount_per_voucher'            => 'Per tegoed €',
+        'average_per_voucher'           => 'Gem per tegoed €',
+        'total_vouchers_amount'         => 'Totaal tegoeden €',
+        'total_vouchers_count'          => 'Totaal tegoeden aantal',
+        'vouchers_inactive_amount'      => 'Totaal tegoeden inactief €',
+        'vouchers_inactive_percentage'  => 'Totaal tegoeden inactief %',
+        'vouchers_inactive_count'       => 'Totaal tegoeden inactief aantal',
+        'vouchers_active_amount'        => 'Totaal tegoeden actief',
+        'total_spent_amount'            => 'Uitgaven €',
+        'total_spent_percentage'        => 'Uitgaven %',
+        'total_left'                    => 'Restant actieve tegoeden',
     ]
 ];

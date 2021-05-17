@@ -6,8 +6,10 @@ use App\Http\Requests\Api\Media\StoreMediaRequest;
 use App\Http\Resources\MediaResource;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MediaController extends Controller
 {
@@ -31,9 +33,8 @@ class MediaController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        Request $request
-    ) {
+    public function index(Request $request): AnonymousResourceCollection
+    {
         $this->authorize('viewAny', Media::class);
 
         $media = Media::query()->where([
@@ -54,7 +55,7 @@ class MediaController extends Controller
      * @return MediaResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
-    public function store(StoreMediaRequest $request)
+    public function store(StoreMediaRequest $request): MediaResource
     {
         $this->authorize('store', Media::class);
         $file = $request->file('file');
@@ -89,7 +90,7 @@ class MediaController extends Controller
      * @return MediaResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Media $media)
+    public function show(Media $media): MediaResource
     {
         $this->authorize('show', $media);
 
@@ -101,15 +102,15 @@ class MediaController extends Controller
      * Remove the specified resource from storage.
      *
      * @param Media $media
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
-    public function destroy(Media $media)
+    public function destroy(Media $media): JsonResponse
     {
         $this->authorize('destroy', $media);
 
         $this->mediaService->unlink($media);
 
-        return response();
+        return response()->json([]);
     }
 }

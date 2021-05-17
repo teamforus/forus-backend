@@ -12,28 +12,26 @@ use Illuminate\Contracts\Filesystem\FileNotFoundException;
 abstract class MediaImageConfig extends MediaConfig
 {
     /**
-     * @var int
+     * @var float
      */
     protected $preview_aspect_ratio = 1;
 
     /**
-     * @return string|null
+     * @return float|null
      */
-    public function getPreviewAspectRatio() {
-        return $this->preview_aspect_ratio ?? null;
+    public function getPreviewAspectRatio(): ?float
+    {
+        return floatval($this->preview_aspect_ratio) ?? null;
     }
 
     /**
      * @param Media $media
      * @param bool $fromQueue
-     * @return mixed|void
+     * @return void
      */
-    public function onMediaPresetsUpdated(Media $media, bool $fromQueue = false)
+    public function onMediaPresetsUpdated(Media $media, bool $fromQueue = false): void
     {
-        if ($fromQueue &&
-            $this->save_dominant_color &&
-            $media->presets()->count() > 0
-        ) {
+        if (!$fromQueue && $this->save_dominant_color && $media->presets()->count() > 0) {
             try {
                 $file = new TmpFile($media->findPreset(
                     $this->getRegenerationPresetName()

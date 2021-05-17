@@ -17,9 +17,8 @@ class VouchersController extends Controller
      * @return ProviderVoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        VoucherToken $voucherToken
-    ): ProviderVoucherResource {
+    public function show(VoucherToken $voucherToken): ProviderVoucherResource
+    {
         $this->authorize('useAsProvider', $voucherToken->voucher);
 
         return new ProviderVoucherResource($voucherToken);

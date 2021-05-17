@@ -18,9 +18,7 @@ class GeocodeServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('geocode_api', function () {
-            return new GeocodeService(
-                env("GOOGLE_API_KEY")
-            );
+            return new GeocodeService(env("GOOGLE_API_KEY"));
         });
     }
 }

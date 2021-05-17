@@ -11,6 +11,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
+use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 
@@ -97,31 +99,31 @@ use Illuminate\Http\Request;
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
  * @property-read int|null $vouchers_count
- * @method static \Illuminate\Database\Eloquent\Builder|Organization newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Organization newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Organization query()
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBackofficeAvailable($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBtw($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBusinessTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereEmailPublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIdentityAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsProvider($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsSponsor($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereIsValidator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereKvk($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereManageProviderProducts($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization wherePhone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization wherePhonePublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereValidatorAutoAcceptFunds($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereWebsite($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Organization whereWebsitePublic($value)
+ * @method static EloquentBuilder|Organization newModelQuery()
+ * @method static EloquentBuilder|Organization newQuery()
+ * @method static EloquentBuilder|Organization query()
+ * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder|Organization whereBtw($value)
+ * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
+ * @method static EloquentBuilder|Organization whereCreatedAt($value)
+ * @method static EloquentBuilder|Organization whereDescription($value)
+ * @method static EloquentBuilder|Organization whereEmail($value)
+ * @method static EloquentBuilder|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder|Organization whereIban($value)
+ * @method static EloquentBuilder|Organization whereId($value)
+ * @method static EloquentBuilder|Organization whereIdentityAddress($value)
+ * @method static EloquentBuilder|Organization whereIsProvider($value)
+ * @method static EloquentBuilder|Organization whereIsSponsor($value)
+ * @method static EloquentBuilder|Organization whereIsValidator($value)
+ * @method static EloquentBuilder|Organization whereKvk($value)
+ * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
+ * @method static EloquentBuilder|Organization whereName($value)
+ * @method static EloquentBuilder|Organization wherePhone($value)
+ * @method static EloquentBuilder|Organization wherePhonePublic($value)
+ * @method static EloquentBuilder|Organization whereUpdatedAt($value)
+ * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
+ * @method static EloquentBuilder|Organization whereWebsite($value)
+ * @method static EloquentBuilder|Organization whereWebsitePublic($value)
  * @mixin \Eloquent
  */
 class Organization extends Model
@@ -161,11 +163,11 @@ class Organization extends Model
 
     /**
      * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return EloquentBuilder
      */
-    public static function searchQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    public static function searchQuery(Request $request): EloquentBuilder
     {
-        /** @var \Illuminate\Database\Eloquent\Builder $query */
+        /** @var EloquentBuilder $query */
         $query = self::query();
         $has_products = $request->input('has_products');
         $fund_type    = $request->input('fund_type', 'budget');
@@ -196,7 +198,7 @@ class Organization extends Model
 
         if ($request->input('implementation', false)) {
             $query->whereHas('funds', static function(
-                \Illuminate\Database\Eloquent\Builder $builder
+                EloquentBuilder $builder
             ) {
                 $funds = Implementation::queryFundsByState('active')->pluck('id')->toArray();
                 $builder->whereIn('funds.id', $funds);
@@ -204,7 +206,7 @@ class Organization extends Model
         }
 
         if ($has_products) {
-            $query->whereHas('products', static function(\Illuminate\Database\Eloquent\Builder $builder) use ($fund_type) {
+            $query->whereHas('products', static function(EloquentBuilder $builder) use ($fund_type) {
                 $activeFunds = Implementation::activeFundsQuery()->where(
                     'type', $fund_type
                 )->pluck('id')->toArray();
@@ -224,7 +226,7 @@ class Organization extends Model
 
     /**
      * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder[]|Collection
+     * @return EloquentBuilder[]|Collection
      * @noinspection PhpUnused
      */
     public static function search(Request $request)
@@ -382,9 +384,9 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+        )->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_budget', true);
-            $builder->orWhere(function(\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->orWhere(function(EloquentBuilder $builder) {
                 $builder->where('fund_providers.allow_products', true);
                 $builder->orWhere('fund_providers.allow_some_products', true);
             });
@@ -400,7 +402,7 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+        )->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_budget', true);
         });
     }
@@ -414,7 +416,7 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where(static function(\Illuminate\Database\Eloquent\Builder $builder) {
+        )->where(static function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_products', true);
         });
     }
@@ -480,11 +482,11 @@ class Organization extends Model
 
     /**
      * @param $role
-     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function employeesOfRoleQuery($role) {
         return $this->employees()->whereHas('roles', function(
-            \Illuminate\Database\Eloquent\Builder $query
+            EloquentBuilder $query
         ) use ($role) {
             $query->whereIn('key', (array) $role);
         });
@@ -492,11 +494,11 @@ class Organization extends Model
 
     /**
      * @param $permission
-     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function employeesWithPermissionsQuery($permission) {
         return $this->employees()->whereHas('roles.permissions', static function(
-            \Illuminate\Database\Eloquent\Builder $query
+            EloquentBuilder $query
         ) use ($permission) {
             $query->whereIn('permissions.key', (array) $permission);
         });
@@ -504,17 +506,27 @@ class Organization extends Model
 
     /**
      * @param string|array $role
+<<<<<<< HEAD
      * @return Collection|\Illuminate\Database\Eloquent\Builder[]
+=======
+     * @return Collection|Employee[]
+>>>>>>> develop
      */
-    public function employeesOfRole($role) {
+    public function employeesOfRole($role): Collection
+    {
         return $this->employeesOfRoleQuery($role)->get();
     }
 
     /**
      * @param string|array $permission
+<<<<<<< HEAD
      * @return Collection|\Illuminate\Database\Eloquent\Builder[]
+=======
+     * @return Collection|Employee[]
+>>>>>>> develop
      */
-    public function employeesWithPermissions($permission) {
+    public function employeesWithPermissions($permission): Collection
+    {
         return $this->employeesWithPermissionsQuery($permission)->get();
     }
 
@@ -599,12 +611,12 @@ class Organization extends Model
     /**
      * @param $identityAddress string
      * @param string|array|bool $permissions
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return EloquentBuilder
      */
     public static function queryByIdentityPermissions (
         string $identityAddress,
         $permissions = false
-    ): \Illuminate\Database\Eloquent\Builder {
+    ): EloquentBuilder {
         // convert string to array
         if (is_string($permissions)) {
             $permissions = (array) $permissions;
@@ -614,7 +626,7 @@ class Organization extends Model
          * Query all the organizations where identity_address has permissions
          * or is the creator
          */
-        return self::query()->where(static function(\Illuminate\Database\Eloquent\Builder $builder) use (
+        return self::query()->where(static function(EloquentBuilder $builder) use (
             $identityAddress, $permissions
         ) {
             return $builder->whereIn('id', function(Builder $query) use (
@@ -692,9 +704,53 @@ class Organization extends Model
      * @param $fund_id
      * @return Fund|\Illuminate\Database\Eloquent\Model|null
      */
-    public function findFund($fund_id): ?Fund
+    public function findFund($fund_id = null): ?Fund
     {
-        return $fund_id ? $this->funds()->where('funds.id', '=', $fund_id)->first() : null;
+        return $this->funds()->where('funds.id', $fund_id)->first();
+    }
+
+    /**
+     * @param Organization $sponsor
+     * @param array $options
+     * @return EloquentBuilder
+     */
+    public static function searchProviderOrganizations(
+        Organization $sponsor,
+        array $options
+    ): EloquentBuilder {
+        $postcodes = array_get($options, 'postcodes');
+        $providerIds = array_get($options, 'provider_ids');
+        $dateFrom = array_get($options, 'date_from');
+        $dateTo = array_get($options, 'date_to');
+
+        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $sponsor);
+
+        if ($providerIds) {
+            $query->whereIn('id', $providerIds);
+        }
+
+        if ($postcodes) {
+            $query->whereHas('offices', static function(EloquentBuilder $builder) use ($postcodes) {
+                $builder->whereIn('postcode_number', (array) $postcodes);
+            });
+        }
+
+        if ($dateFrom && $dateTo) {
+            $query->whereHas('voucher_transactions', function(EloquentBuilder $builder) use ($dateFrom, $dateTo) {
+                $builder->whereBetween('created_at', [$dateFrom, $dateTo]);
+            });
+        }
+
+        $queryTransactions = (new FinancialStatisticQueries())->getFilterTransactionsQuery($sponsor, $options);
+        $queryTransactions->whereColumn('organization_id', 'organizations.id');
+
+        $query->addSelect([
+            'total_spent' => (clone $queryTransactions)->selectRaw('sum(`amount`)'),
+            'highest_transaction' => (clone $queryTransactions)->selectRaw('max(`amount`)'),
+            'nr_transactions' => (clone $queryTransactions)->selectRaw('count(`id`)'),
+        ])->orderByDesc('total_spent');
+
+        return $query;
     }
 
     /**
@@ -704,12 +760,8 @@ class Organization extends Model
     {
         return [
             'total_archived' => Product::onlyTrashed()->where('organization_id', $this->id)->count(),
-            'total_provider' => Product::whereOrganizationId($this->id)->whereNull(
-                'sponsor_organization_id'
-            )->count(),
-            'total_sponsor' => Product::whereOrganizationId($this->id)->whereNotNull(
-                'sponsor_organization_id'
-            )->count(),
+            'total_provider' => $this->products()->whereNull('sponsor_organization_id')->count(),
+            'total_sponsor' => $this->products()->whereNotNull('sponsor_organization_id')->count(),
         ];
     }
 }

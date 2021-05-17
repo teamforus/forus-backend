@@ -337,6 +337,17 @@ $router->group(['middleware' => [
     ]);
 
     $router->resource(
+        'sponsor/{organization_id}/vouchers/{voucher}/physical-cards',
+        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardsController", [
+        'only' => [
+            'store', 'destroy',
+        ],
+        'params' => [
+            'physical-cards' => 'physical_card',
+        ]
+    ]);
+
+    $router->resource(
         'vouchers/{voucher_token_address}/physical-card-requests',
         "Api\Platform\Vouchers\PhysicalCardRequestsController", [
         'only' => [
@@ -410,10 +421,6 @@ $router->group(['middleware' => [
     $router->post(
         'organizations/{organization}/funds/criteria/validate',
         "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
-
-    $router->get(
-        'organizations/{organization}/funds/{fund}/finances',
-        "Api\Platform\Organizations\FundsController@finances");
 
     $router->post(
         'organizations/{organization}/funds/{fund}/top-up',
@@ -707,6 +714,19 @@ $router->group(['middleware' => [
     );
 
     $router->get(
+        'organizations/{organization}/sponsor/finances',
+        "Api\Platform\Organizations\FundsController@finances");
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances-overview',
+        "Api\Platform\Organizations\FundsController@financesOverview");
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances-overview-export',
+        "Api\Platform\Organizations\FundsController@financesOverviewExport"
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/transactions/export',
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
@@ -784,6 +804,9 @@ $router->group(['middleware' => [
             ]
         ]
     );
+
+    $router->get('organizations/{organization}/sponsor/providers/finances',"Api\Platform\Organizations\Sponsor\ProvidersController@finances");
+    $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
 
     $router->get('organizations/{organization}/sponsor/providers/export', "Api\Platform\Organizations\Sponsor\ProvidersController@export");
 
