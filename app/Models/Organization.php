@@ -11,6 +11,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
+use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,6 +44,7 @@ use Illuminate\Http\Request;
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
  * @property bool $manage_provider_products
+ * @property int $backoffice_available
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -63,6 +65,7 @@ use Illuminate\Http\Request;
  * @property-read Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
  * @property-read int|null $funds_voucher_transactions_count
  * @property-read string $description_html
+ * @property-read string $description_text
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -99,6 +102,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder|Organization newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Organization newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Organization query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBackofficeAvailable($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBtw($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Organization whereBusinessTypeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Organization whereCreatedAt($value)
@@ -124,7 +128,7 @@ use Illuminate\Http\Request;
  */
 class Organization extends Model
 {
-    use HasMedia, HasTags, HasLogs, HasDigests;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
 
     public const GENERIC_KVK = "00000000";
 
@@ -463,15 +467,6 @@ class Organization extends Model
         )->latest('last_activity_at')->first();
 
         return $session ? $session->last_activity_at : null;
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getDescriptionHtmlAttribute(): string
-    {
-        return resolve('markdown')->convertToHtml($this->description ?? '');
     }
 
     /**

@@ -34,8 +34,8 @@ class IndexFundsRequest extends FormRequest
             'fund_id' => 'nullable|exists:funds,id',
             'per_page' => 'nullable|numeric|between:1,100',
             'organization_id' => 'nullable|exists:organizations,id',
-            'order_by'              => 'nullable|in:created_at',
-            'order_by_dir'          => 'nullable|in:asc,desc',
+            'order_by' => 'nullable|in:created_at',
+            'order_by_dir' => 'nullable|in:asc,desc',
         ];
     }
 }

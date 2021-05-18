@@ -44,7 +44,10 @@ class FundsController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
-        $query = Fund::search($request, $organization->funds()->getQuery());
+
+        $query = Fund::search($request->only([
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+        ]), $organization->funds()->getQuery());
 
         if (!auth()->id()) {
             $query->where([

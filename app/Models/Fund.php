@@ -25,6 +25,7 @@ use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -47,12 +48,12 @@ use Illuminate\Http\Request;
  * @property string $state
  * @property bool $public
  * @property bool $criteria_editable_after_start
- * @property string|null $notification_amount
- * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
  * @property \Illuminate\Support\Carbon $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $notification_amount
+ * @property \Illuminate\Support\Carbon|null $notified_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
@@ -90,6 +91,8 @@ use Illuminate\Http\Request;
  * @property-read float $budget_total
  * @property-read float $budget_used
  * @property-read float $budget_validated
+ * @property-read string $description_html
+ * @property-read string $description_text
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -152,7 +155,7 @@ use Illuminate\Http\Request;
  */
 class Fund extends Model
 {
-    use HasMedia, HasTags, HasLogs, HasDigests;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_PROVIDER_APPLIED = 'provider_applied';
@@ -799,56 +802,39 @@ class Fund extends Model
     }
 
     /**
-     * @param Request $request
-     * @param Builder $query
+     * @param array $options
+     * @param Builder|null $query
      * @return Builder
      */
-    public static function search(
-        Request $request,
-        Builder $query
-    ): Builder {
-        if (is_null($query)) {
-            /** @var Builder $newQuery */
-            $newQuery = self::query();
-            $query = $newQuery;
-        }
+    public static function search(array $options, Builder $query = null): Builder
+    {
+        $query = $query ?: self::query();
 
-        if ($request->has('keyword')) {
-            $keyword = $request->get('keyword');
-            $query->where(function(Builder $builder) use ($keyword) {
-                $builder->where('name', 'like', "%$keyword%");
-                $builder->orWhere('description', 'like', "%$keyword%");
+        if ($tag = array_get($options, 'tag')) {
+            $query->whereHas('tags', static function(Builder $query) use ($tag) {
+                return $query->where('key', $tag);
             });
         }
 
-        if ($request->has('tag')) {
-            $query->whereHas('tags', static function(Builder $query) use ($request) {
-                return $query->where('key', $request->input('tag'));
-            });
+        if ($organization_id = array_get($options, 'organization_id')) {
+            $query->where('organization_id', $organization_id);
         }
 
-        if ($request->has('organization_id')) {
-            $query->where('organization_id', $request->input('organization_id'));
+        if ($fund_id = array_get($options, 'fund_id')) {
+            $query->where('id', $fund_id);
         }
 
-        if ($request->has('fund_id')) {
-            $query->where('id', $request->input('fund_id'));
-        }
-
-        if ($request->has('q') && !empty($q = $request->input('q'))) {
+        if ($q = array_get($options, 'q')) {
             $query = FundQuery::whereQueryFilter($query, $q);
         }
 
-        if ($request->has('implementation_id')) {
-            $query = FundQuery::whereImplementationIdFilter(
-                $query,
-                $request->input('implementation_id')
-            );
+        if ($implementation_id = array_get($options, 'implementation_id')) {
+            $query = FundQuery::whereImplementationIdFilter($query, $implementation_id);
         }
 
         return $query->orderBy(
-            $request->input('order_by', 'created_at'),
-            $request->input('order_by_dir', 'desc'));
+            array_get($options, 'order_by', 'created_at'),
+            array_get($options, 'order_by_dir', 'desc'));
     }
 
     /**

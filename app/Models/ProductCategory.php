@@ -14,11 +14,12 @@ use Illuminate\Http\Request;
  * @property int $id
  * @property string $key
  * @property int|null $parent_id
+ * @property int|null $root_id
  * @property int $_lft
  * @property int $_rgt
- * @property int $service
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int $service
  * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $children
  * @property-read int|null $children_count
  * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $descendants_with_products
@@ -86,6 +87,7 @@ use Illuminate\Http\Request;
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereNotDescendantOf($id)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereParentId($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRgt($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRootId($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereService($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslationLike(string $translationField, $value, ?string $locale = null)

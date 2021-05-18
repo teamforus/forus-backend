@@ -32,6 +32,7 @@ use RuntimeException;
  * @property int|null $employee_id
  * @property string|null $activation_code
  * @property string|null $activation_code_uid
+ * @property int|null $fund_backoffice_log_id
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -51,7 +52,7 @@ use RuntimeException;
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
- * @property-read Identity $identity
+ * @property-read Identity|null $identity
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -79,6 +80,7 @@ use RuntimeException;
  * @method static Builder|Voucher whereCreatedAt($value)
  * @method static Builder|Voucher whereEmployeeId($value)
  * @method static Builder|Voucher whereExpireAt($value)
+ * @method static Builder|Voucher whereFundBackofficeLogId($value)
  * @method static Builder|Voucher whereFundId($value)
  * @method static Builder|Voucher whereId($value)
  * @method static Builder|Voucher whereIdentityAddress($value)

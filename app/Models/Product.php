@@ -11,6 +11,7 @@ use App\Scopes\Builders\TrashedQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -49,6 +50,7 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
+ * @property-read string $description_text
  * @property-read bool $expired
  * @property-read string $price_discount_locale
  * @property-read string $price_locale
@@ -96,7 +98,7 @@ use Illuminate\Http\Request;
  */
 class Product extends Model
 {
-    use HasMedia, SoftDeletes, HasLogs;
+    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_SOLD_OUT = 'sold_out';
@@ -336,56 +338,47 @@ class Product extends Model
     }
 
     /**
-     * @param Request $request
+     * @param array $options
+     * @param Builder|null $builder
      * @return Builder
      */
-    public static function search(Request $request): Builder
+    public static function search(array $options, Builder $builder = null): Builder
     {
-        $query = self::searchQuery();
-        $fund_type = $request->input('fund_type');
+        $query = $builder ?: self::searchQuery();
 
-        if ($fund_type) {
+        if ($fund_type = array_get($options, 'fund_type')) {
             $query = self::filterFundType($query, $fund_type);
         }
 
-        if ($request->has('keyword')) {
-            $keyword = $request->get('keyword');
-            $query->where(function(Builder $builder) use ($keyword) {
-                $builder->where('name', 'like', "%$keyword%");
-                $builder->orWhere('description', 'like', "%$keyword%");
-            });
+        if ($product_category_id = array_get($options, 'product_category_id')) {
+            $query = ProductQuery::productCategoriesFilter($query, $product_category_id);
         }
 
-        if ($category_id = $request->input('product_category_id')) {
-            $query = ProductQuery::productCategoriesFilter($query, $category_id);
-        }
-
-        if ($request->has('fund_id') && $fund_id = $request->input('fund_id')) {
+        if ($fund_id = array_get($options, 'fund_id')) {
             $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
         }
 
-        if ($request->has('price_type')) {
-            $query = $query->where('price_type', $request->input('price_type'));
+        if ($price_type = array_get($options, 'price_type')) {
+            $query = $query->where('price_type', $price_type);
         }
 
-        if ($request->has('unlimited_stock') &&
-            $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
-            return ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
+        if (filter_bool(array_get($options, 'unlimited_stock'))) {
+            return ProductQuery::unlimitedStockFilter($query, array_get($options, 'unlimited_stock'));
         }
 
-        if ($request->has('organization_id')) {
-            $query = $query->where('organization_id', $request->input('organization_id'));
+        if ($organization_id = array_get($options, 'organization_id')) {
+            $query = $query->where('organization_id', $organization_id);
         }
 
         $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
-        if ($request->has('q') && !empty($q = $request->input('q'))) {
-            return ProductQuery::queryDeepFilter($query, $q);
+        if ($q = array_get($options, 'q')) {
+            ProductQuery::queryDeepFilter($query, $q);
         }
 
         return $query->orderBy(
-            $request->input('order_by', 'created_at'),
-            $request->input('order_by_dir', 'desc')
+            array_get($options, 'order_by', 'created_at'),
+            array_get($options, 'order_by_dir', 'desc')
         )->orderBy('price_type')->orderBy('price_discount')->orderBy('created_at', 'desc');
     }
 
@@ -449,14 +442,6 @@ class Product extends Model
             $this->name,
             Implementation::active()['url_provider']
         );
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getDescriptionHtmlAttribute(): string {
-        return resolve('markdown')->convertToHtml(e($this->description));
     }
 
     /**

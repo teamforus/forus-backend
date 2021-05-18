@@ -21,6 +21,9 @@ use Illuminate\Http\Request;
  * @property string|null $phone
  * @property string|null $lon
  * @property string|null $lat
+ * @property string|null $postcode
+ * @property string|null $postcode_number
+ * @property string|null $postcode_addition
  * @property int $parsed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -41,6 +44,9 @@ use Illuminate\Http\Request;
  * @method static Builder|Office whereOrganizationId($value)
  * @method static Builder|Office whereParsed($value)
  * @method static Builder|Office wherePhone($value)
+ * @method static Builder|Office wherePostcode($value)
+ * @method static Builder|Office wherePostcodeAddition($value)
+ * @method static Builder|Office wherePostcodeNumber($value)
  * @method static Builder|Office whereUpdatedAt($value)
  * @mixin \Eloquent
  */

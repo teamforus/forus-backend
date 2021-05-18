@@ -5,60 +5,55 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\SearchRequest;
 use App\Http\Resources\SearchResource;
-use App\Models\Fund;
-use App\Models\Implementation;
-use App\Models\Product;
+use App\Searches\WebshopGenericSearch;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Pagination\Paginator;
 
+/**
+ * Class SearchController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class SearchController extends Controller
 {
     /**
-     * @param Request $request
+     * @param SearchRequest $request
      * @return JsonResponse|AnonymousResourceCollection
+     * @throws \Exception
      */
     public function index(SearchRequest $request)
     {
-        $overview = $request->get('overview');
+        $overview = $request->get('overview', false);
+        $search = new WebshopGenericSearch($request->only([
+            'q', 'fund_id', 'fund_type', 'product_category_id', 'organization_id',
+        ]));
 
-        $products = Product::search($request)->select([
-            'id', 'name', 'description', 'created_at', 'price', 'organization_id'
-        ])->selectRaw('"product" as item_type')->with(['organization', 'photo']);
-
-        $funds = Fund::search($request, Fund::query())->selectRaw(
-            'id, name, description, created_at, NULL as price, organization_id, "fund" as item_type'
-        )->with(['organization', 'logo']);
-
-        $providers = Implementation::searchProviders($request)->selectRaw(
-            'id, name, description, created_at, NULL as price, id as organization_id, "provider" as item_type'
-        )->with(['logo']);
-
-        if ($overview) {
-            $typesArr = $request->get('search_item_types');
-            $types = ['products', 'providers', 'funds'];
-            if ($typesArr && $typesArr[0]) {
-                $query = null;
-                foreach ($request->get('search_item_types') as $key => $type) {
-                    $key == 0 && in_array($type, $types) ?
-                        $query = $$type :
-                        $query->union($$type);
-                }
-            } else {
-                $query = $products->union($funds->getQuery())->union($providers);
-            }
-
-            return $query ?
-                SearchResource::collection($query->paginate($request->get('per_page', 15))) :
-                response()->json(['data' => []]);
+        if (!$overview) {
+            return SearchResource::collection($search->query(
+                $request->input('search_item_types', [])
+            )->orderBy(
+                $request->input('order_by', 'created_at'),
+                $request->input('order_by_dir', 'desc')
+            )->paginate($request->get('per_page', 15)));
         }
+
+        $providers = $search->query('providers');
+        $products = $search->query('products');
+        $funds = $search->query('funds');
 
         return response()->json([
             'data' => [
-                'products' => $products->take(3)->get(),
-                'funds' => $funds->take(3)->get(),
-                'providers' => $providers->take(3)->get(),
+                'products' => [
+                    'items' => SearchResource::collection((clone $products)->take(3)->get()),
+                    'count' => $products->count()
+                ],
+                'funds' => [
+                    'items' => SearchResource::collection((clone $funds)->take(3)->get()),
+                    'count' => $funds->count()
+                ],
+                'providers' => [
+                    'items' => SearchResource::collection((clone $providers)->take(3)->get()),
+                    'count' => $providers->count()
+                ],
             ]
         ]);
     }

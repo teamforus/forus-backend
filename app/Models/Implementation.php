@@ -15,7 +15,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\Implementation
@@ -26,6 +25,11 @@ use Illuminate\Http\Request;
  * @property string $name
  * @property string|null $title
  * @property string|null $description
+ * @property string $description_alignment
+ * @property int $overlay_enabled
+ * @property string $overlay_type
+ * @property string $header_text_color
+ * @property int $overlay_opacity
  * @property string $url_webshop
  * @property string $url_sponsor
  * @property string $url_provider
@@ -49,6 +53,8 @@ use Illuminate\Http\Request;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
  * @property-read \App\Models\ImplementationPage|null $page_explanation
@@ -62,6 +68,7 @@ use Illuminate\Http\Request;
  * @method static Builder|Implementation query()
  * @method static Builder|Implementation whereCreatedAt($value)
  * @method static Builder|Implementation whereDescription($value)
+ * @method static Builder|Implementation whereDescriptionAlignment($value)
  * @method static Builder|Implementation whereDigidASelectServer($value)
  * @method static Builder|Implementation whereDigidAppId($value)
  * @method static Builder|Implementation whereDigidEnabled($value)
@@ -70,6 +77,7 @@ use Illuminate\Http\Request;
  * @method static Builder|Implementation whereDigidSharedSecret($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
  * @method static Builder|Implementation whereEmailFromName($value)
+ * @method static Builder|Implementation whereHeaderTextColor($value)
  * @method static Builder|Implementation whereId($value)
  * @method static Builder|Implementation whereInformalCommunication($value)
  * @method static Builder|Implementation whereKey($value)
@@ -77,6 +85,9 @@ use Illuminate\Http\Request;
  * @method static Builder|Implementation whereLon($value)
  * @method static Builder|Implementation whereName($value)
  * @method static Builder|Implementation whereOrganizationId($value)
+ * @method static Builder|Implementation whereOverlayEnabled($value)
+ * @method static Builder|Implementation whereOverlayOpacity($value)
+ * @method static Builder|Implementation whereOverlayType($value)
  * @method static Builder|Implementation whereTitle($value)
  * @method static Builder|Implementation whereUpdatedAt($value)
  * @method static Builder|Implementation whereUrlApp($value)
@@ -239,14 +250,11 @@ class Implementation extends Model
 
     /**
      * @param $key
-     * @return Implementation
+     * @return Implementation|null|Model
      */
-    public static function byKey($key): Implementation
+    public static function byKey($key): ?Implementation
     {
-        /** @var self $model */
-        $model = self::where(compact('key'))->first();
-
-        return $model;
+        return self::where(compact('key'))->first();
     }
 
     /**
@@ -499,48 +507,35 @@ class Implementation extends Model
     }
 
     /**
-     * @param Request $request
-     * @return Organization|Builder
+     * @param array $options
+     * @param Builder|null $query
+     * @return Builder
      */
-    public static function searchProviders(Request $request)
+    public static function searchProviders(array $options, Builder $query = null): Builder
     {
-        /** @var Builder $query */
-        $query = Organization::query();
+        $query = $query ?: Organization::query();
 
         $query->whereHas('supplied_funds_approved', static function (Builder $builder) {
-            $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
+            $builder->addWhereExistsQuery(self::activeFundsQuery()->getQuery());
         });
 
-        if ($request->has('keyword')) {
-            $keyword = $request->get('keyword');
-            $query->where(function(Builder $builder) use ($keyword) {
-                $builder->where('name', 'like', "%$keyword%");
-                $builder->orWhere('description', 'like', "%$keyword%");
-            });
+        if ($business_type_id = array_get($options, 'business_type_id')) {
+            $query->where('business_type_id', $business_type_id);
         }
 
-        if ($request->has('business_type_id') && (
-            $business_type = $request->input('business_type_id'))
-        ) {
-            $query->whereHas('business_type', static function (
-                Builder $builder
-            ) use ($business_type) {
-                $builder->where('id', $business_type);
-            });
+        if ($organization_id = array_get($options, 'organization_id')) {
+            $query->where('id', $organization_id);
         }
 
-        if ($request->has('fund_id') && ($fund_id = $request->input('fund_id'))) {
-            $query->whereHas('supplied_funds_approved', static function (
-                Builder $builder
-            ) use ($fund_id) {
+        if ($fund_id = array_get($options, 'fund_id')) {
+            $query->whereHas('supplied_funds_approved', static function (Builder $builder) use ($fund_id) {
                 $builder->where('funds.id', $fund_id);
             });
         }
 
-        if ($request->has('q') && ($q = $request->input('q'))) {
+        if ($q = array_get($options, 'q')) {
             $query->where(static function (Builder $builder) use ($q) {
                 $like = '%' . $q . '%';
-
                 $builder->where('name', 'LIKE', $like);
 
                 $builder->orWhere(static function (Builder $builder) use ($like) {
@@ -573,8 +568,8 @@ class Implementation extends Model
         }
 
         return $query->orderBy(
-            $request->input('order_by', 'created_at'),
-            $request->input('order_by_dir', 'desc'));
+            array_get($options, 'order_by', 'created_at'),
+            array_get($options, 'order_by_dir', 'desc'));
     }
 
     /**
