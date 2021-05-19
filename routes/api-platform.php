@@ -430,10 +430,6 @@ $router->group(['middleware' => [
         'organizations/{organization}/funds/criteria/validate',
         "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
 
-    $router->get(
-        'organizations/{organization}/funds/{fund}/finances',
-        "Api\Platform\Organizations\FundsController@finances");
-
     $router->post(
         'organizations/{organization}/funds/{fund}/top-up',
         "Api\Platform\Organizations\FundsController@topUp");
@@ -718,6 +714,19 @@ $router->group(['middleware' => [
     );
 
     $router->get(
+        'organizations/{organization}/sponsor/finances',
+        "Api\Platform\Organizations\FundsController@finances");
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances-overview',
+        "Api\Platform\Organizations\FundsController@financesOverview");
+
+    $router->get(
+        'organizations/{organization}/sponsor/finances-overview-export',
+        "Api\Platform\Organizations\FundsController@financesOverviewExport"
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/transactions/export',
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
@@ -795,6 +804,9 @@ $router->group(['middleware' => [
             ]
         ]
     );
+
+    $router->get('organizations/{organization}/sponsor/providers/finances',"Api\Platform\Organizations\Sponsor\ProvidersController@finances");
+    $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
 
     $router->get('organizations/{organization}/sponsor/providers/export', "Api\Platform\Organizations\Sponsor\ProvidersController@export");
 

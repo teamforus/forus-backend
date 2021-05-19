@@ -33,6 +33,10 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
+ * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes_provider
+ * @property-read int|null $notes_provider_count
+ * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes_sponsor
+ * @property-read int|null $notes_sponsor_count
  * @property-read \App\Models\Product|null $product
  * @property-read \App\Models\Organization $provider
  * @property-read \App\Models\Voucher $voucher
@@ -60,6 +64,8 @@ use Illuminate\Http\Request;
  */
 class VoucherTransaction extends Model
 {
+    protected $perPage = 25;
+
     public const STATE_PENDING = 'pending';
     public const STATE_SUCCESS = 'success';
 
@@ -116,6 +122,20 @@ class VoucherTransaction extends Model
      */
     public function notes(): HasMany {
         return $this->hasMany(VoucherTransactionNote::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notes_sponsor(): HasMany {
+        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'sponsor');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notes_provider(): HasMany {
+        return $this->hasMany(VoucherTransactionNote::class)->where('group', 'provider');
     }
 
     /**
@@ -191,23 +211,22 @@ class VoucherTransaction extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function search(
-        Request $request
-    ): Builder {
+    public static function search(Request $request): Builder
+    {
         /** @var Builder $query */
         $query = self::query();
 
         if ($request->has('q') && $q = $request->input('q', '')) {
             $query->where(static function (Builder $query) use ($q) {
                 $query->whereHas('provider', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%{$q}%");
+                    $query->where('name', 'LIKE', "%$q%");
                 });
 
                 $query->orWhereHas('voucher.fund', static function (Builder $query) use ($q) {
-                    $query->where('name', 'LIKE', "%{$q}%");
+                    $query->where('name', 'LIKE', "%$q%");
                 });
 
-                $query->orWhere('voucher_transactions.id','LIKE', "%{$q}%");
+                $query->orWhere('voucher_transactions.id','LIKE', "%$q%");
             });
         }
 
@@ -249,9 +268,7 @@ class VoucherTransaction extends Model
             });
         }
 
-        $query = $query->latest();
-
-        return $query;
+        return $query->latest();
     }
 
     /**
@@ -267,9 +284,7 @@ class VoucherTransaction extends Model
         Fund $fund = null,
         Organization $provider = null
     ): Builder {
-        $builder = self::search(
-            $request
-        )->whereHas('voucher.fund.organization', static function (
+        $builder = self::search($request)->whereHas('voucher.fund.organization', function (
             Builder $query
         ) use ($organization) {
             $query->where('id', $organization->id);
@@ -280,9 +295,7 @@ class VoucherTransaction extends Model
         }
 
         if ($fund) {
-            $builder->whereHas('voucher', static function (
-                Builder $builder
-            ) use ($fund) {
+            $builder->whereHas('voucher', static function (Builder $builder) use ($fund) {
                 $builder->where('fund_id', $fund->id);
             });
         }
@@ -340,9 +353,7 @@ class VoucherTransaction extends Model
                 trans("$transKey.date_payment") => format_datetime_locale($transaction->payment_time),
                 trans("$transKey.fund") => $transaction->voucher->fund->name,
                 trans("$transKey.provider") => $transaction->provider->name,
-                trans("$transKey.state") => trans(
-                    "$transKey.state-values.{$transaction->state}"
-                ),
+                trans("$transKey.state") => trans("$transKey.state-values.$transaction->state"),
             ];
         })->values();
     }
@@ -356,9 +367,7 @@ class VoucherTransaction extends Model
         Request $request,
         Organization $organization
     ) {
-        return self::exportTransform(
-            self::searchProvider($request, $organization)
-        );
+        return self::exportTransform(self::searchProvider($request, $organization));
     }
 
     /**
@@ -374,16 +383,14 @@ class VoucherTransaction extends Model
         Fund $fund = null,
         Organization $provider = null
     ) {
-        return self::exportTransform(
-            self::searchSponsor($request, $organization, $fund, $provider)
-        );
+        return self::exportTransform(self::searchSponsor($request, $organization, $fund, $provider));
     }
     /**
      * @param string $group
      * @param string $note
      * @return \Illuminate\Database\Eloquent\Model|VoucherTransactionNote
      */
-    public function addNote(string $group, string $note)
+    public function addNote(string $group, string $note): VoucherTransactionNote
     {
         return $this->notes()->create([
             'message' => $note,

@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use App\Http\Resources\MediaResource;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
+use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $title
  * @property string|null $description
  * @property string $description_alignment
- * @property int $overlay_enabled
+ * @property bool $overlay_enabled
  * @property string $overlay_type
  * @property string $header_text_color
  * @property int $overlay_opacity
@@ -48,12 +51,13 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_a_select_server
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Media|null $banner
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
  * @property-read \App\Models\ImplementationPage|null $page_accessibility
@@ -123,8 +127,9 @@ class Implementation extends Model
     protected $fillable = [
         'id', 'key', 'name', 'url_webshop', 'url_sponsor', 'url_provider',
         'url_validator', 'lon', 'lat', 'email_from_address', 'email_from_name',
-        'title', 'description', 'informal_communication',
+        'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
+        'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
     ];
 
     /**
@@ -143,6 +148,8 @@ class Implementation extends Model
         'lat' => 'float',
         'digid_enabled' => 'boolean',
         'digid_required' => 'boolean',
+        'overlay_opacity' => 'int',
+        'overlay_enabled' => 'boolean',
         'informal_communication' => 'boolean',
     ];
 
@@ -173,6 +180,17 @@ class Implementation extends Model
     {
         return $this->hasOne(ImplementationPage::class)->where([
             'page_type' => ImplementationPage::TYPE_PROVIDER,
+        ]);
+    }
+
+    /**
+     * Get fund banner
+     * @return MorphOne
+     */
+    public function banner(): MorphOne
+    {
+        return $this->morphOne(Media::class, 'mediable')->where([
+            'type' => 'implementation_banner'
         ]);
     }
 
@@ -450,6 +468,7 @@ class Implementation extends Model
 
         if (is_array($config)) {
             $implementation = self::active();
+            $banner = $implementation->banner;
 
             $config = array_merge($config, [
                 'media' => self::getPlatformMediaConfig(),
@@ -458,11 +477,20 @@ class Implementation extends Model
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'communication_type' => ($implementation->informal_communication ?? false ? 'informal' : 'formal'),
-                'settings' => $implementation->only('title', 'description', 'description_html'),
+                'settings' => array_merge($implementation->only([
+                    'title', 'description', 'description_alignment', 'description_html',
+                    'overlay_enabled', 'overlay_type',
+                ]), [
+                    'overlay_opacity' => min(max($implementation->overlay_opacity, 0), 100) / 100,
+                    'banner_text_color' => $implementation->getBannerTextColor(),
+                ]),
                 'fronts' => $implementation->only([
-                    'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app'
+                    'url_webshop', 'url_sponsor', 'url_provider', 'url_validator', 'url_app',
                 ]),
                 'map' => $implementation->only('lon', 'lat'),
+                'banner' => $banner ? array_only((new MediaResource($banner))->toArray(request()), [
+                    'dominant_color', 'ext', 'sizes', 'uid', 'is_bright',
+                ]): null,
                 'implementation_name' => $implementation->name,
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
@@ -631,7 +659,7 @@ class Implementation extends Model
             ]);
 
             $pageModel->updateModel(array_merge(array_only($pageData, [
-                'content', 'external', 'external_url',
+                'content', 'content_alignment', 'external', 'external_url',
             ]), in_array($pageType, ImplementationPage::TYPES_INTERNAL) ? [
                 'external' => 0,
                 'external_url' => null,
@@ -663,10 +691,22 @@ class Implementation extends Model
         }
 
         return $pages->map(static function(ImplementationPage $page) {
-            return array_merge($page->only('page_type', 'external'), [
+            return array_merge($page->only('page_type', 'external', 'content_alignment'), [
                 'content_html' => $page->external ? '' : $page->content_html,
                 'external_url' => $page->external ? $page->external_url : '',
             ]);
         })->keyBy('page_type');
+    }
+
+    /**
+     * @return string
+     */
+    private function getBannerTextColor(): string
+    {
+        if ($this->header_text_color == 'auto') {
+            return $this->banner ? ($this->banner->is_dark ? 'bright' : 'dark') : 'dark';
+        }
+
+        return $this->header_text_color;
     }
 }

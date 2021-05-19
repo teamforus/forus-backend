@@ -6,6 +6,9 @@ use App\Models\Traits\NodeTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 
 /**
@@ -29,6 +32,7 @@ use Illuminate\Http\Request;
  * @property-read ProductCategory|null $parent
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
+ * @property-read ProductCategory $root_category
  * @property-read \App\Models\ProductCategoryTranslation|null $translation
  * @property-read Collection|\App\Models\ProductCategoryTranslation[] $translations
  * @property-read int|null $translations_count
@@ -107,7 +111,7 @@ class ProductCategory extends Model
      * @var array
      */
     protected $fillable = [
-        'key', 'parent_id', 'service',
+        'key', 'parent_id', 'root_id', 'service',
     ];
 
     /**
@@ -129,14 +133,17 @@ class ProductCategory extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function products() {
+    public function products(): HasMany
+    {
         return $this->hasMany(Product::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function descendants_with_products() {
+    public function descendants_with_products(): HasMany
+    {
         return $this->hasMany(ProductCategory::class, 'parent_id')
             ->where(function(Builder $builder) {
                 $builder->has('products');
@@ -145,9 +152,18 @@ class ProductCategory extends Model
     }
 
     /**
+     * @return BelongsTo
+     */
+    public function root_category(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'root_od');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function organizations() {
+    public function organizations(): BelongsToMany
+    {
         return $this->belongsToMany(
             Organization::class,
             'organization_product_categories'
@@ -158,7 +174,8 @@ class ProductCategory extends Model
      * @param Request $request
      * @return ProductCategory|\Illuminate\Database\Query\Builder|\Kalnoy\Nestedset\QueryBuilder
      */
-    public static function search(Request $request) {
+    public static function search(Request $request)
+    {
         $query = self::query();
         $parent_id = $request->input('parent_id', false);
         $onlyUsed = $request->input('used', false);
@@ -202,7 +219,7 @@ class ProductCategory extends Model
             'id', (new self)->getLftName(), (new self)->getRgtName(),
         ])->with(['descendants_min']);
 
-        $queryHash = hash('md5', $sql_with_bindings = str_replace_array(
+        $queryHash = hash('md5', str_replace_array(
             '?', $query->getBindings(), $query->toSql()
         ));
 

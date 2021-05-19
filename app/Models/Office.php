@@ -60,7 +60,8 @@ class Office extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed'
+        'organization_id', 'address', 'phone', 'lon', 'lat', 'parsed',
+        'postcode', 'postcode_number', 'postcode_addition'
     ];
 
     /**
@@ -68,9 +69,7 @@ class Office extends Model
      *
      * @var array
      */
-    protected $with = [
-        'schedules'
-    ];
+    protected $with = [];
 
     public static function search(Request $request): Builder
     {
@@ -143,5 +142,18 @@ class Office extends Model
         $this->load('schedules');
 
         return $this;
+    }
+
+    /**
+     * Update postcode and coordinates by google api
+     */
+    public function updateGeoData()
+    {
+        $geocodeService = resolve('geocode_api');
+        $location = $geocodeService->getLocation($this->address);
+
+        if (is_array($location)) {
+            $this->update($location);
+        }
     }
 }

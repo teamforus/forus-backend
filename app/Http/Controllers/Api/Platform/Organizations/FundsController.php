@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreated;
+use App\Exports\FundsExport;
+use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
@@ -14,16 +16,12 @@ use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-use App\Models\ProductCategory;
-use App\Models\Voucher;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\VoucherQuery;
 use App\Services\MediaService\Models\Media;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
+use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Class FundsController
@@ -223,211 +221,129 @@ class FundsController extends Controller
     /**
      * @param StoreFundCriteriaRequest $request
      * @param Organization $organization
-     * @return mixed
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function storeCriteriaValidate(
         StoreFundCriteriaRequest $request,
         Organization $organization
-    ) {
+    ): JsonResponse {
         $this->authorize('show', $organization);
 
-        return response()->json([]);
+        return response()->json([], $request ? 200 : 403);
     }
 
     /**
      * @param UpdateFundCriteriaRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return mixed
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function updateCriteriaValidate(
         UpdateFundCriteriaRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): JsonResponse {
         $this->authorize('show', $organization);
 
-        return response()->json([], $fund ? 200 : 403);
+        return response()->json([], $request && $fund ? 200 : 403);
+    }
+
+    /**
+     * @param FinanceOverviewRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @noinspection PhpUnused
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function financesOverview(
+        FinanceOverviewRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
+
+        $totals = Fund::getFundTotals($organization->funds()->get());
+
+        $totalsBudget = Fund::getFundTotals($organization->funds()->where([
+            'type' => Fund::TYPE_BUDGET,
+        ])->where('state', '!=', Fund::STATE_WAITING)->getQuery()->get());
+
+        return $request ? response()->json([
+            'total_amount'      => currency_format($totals['total_budget']),
+            'left'              => currency_format($totals['total_budget_left']),
+            'used'              => currency_format($totals['total_budget_used']),
+            'reserved'          => currency_format($totals['total_reserved']),
+            'transaction_costs' => currency_format($totals['total_transaction_costs']),
+            'vouchers_amount'   => currency_format($totals['total_vouchers_amount']),
+            'vouchers_active'   => currency_format($totals['total_active_vouchers']),
+            'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
+            'budget' => [
+                'total_amount'      => currency_format($totalsBudget['total_budget']),
+                'left'              => currency_format($totalsBudget['total_budget_left']),
+                'used'              => currency_format($totalsBudget['total_budget_used']),
+                'reserved'          => currency_format($totalsBudget['total_reserved']),
+                'transaction_costs' => currency_format($totalsBudget['total_transaction_costs']),
+                'vouchers_amount'   => currency_format($totalsBudget['total_vouchers_amount']),
+                'vouchers_active'   => currency_format($totalsBudget['total_active_vouchers']),
+                'vouchers_inactive' => currency_format($totalsBudget['total_inactive_vouchers']),
+            ]
+        ]) : response()->json([], 403);
+    }
+
+    /**
+     * Export funds data
+     *
+     * @param FinanceOverviewRequest $request
+     * @param Organization $organization
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @noinspection PhpUnused
+     */
+    public function financesOverviewExport(
+        FinanceOverviewRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('showFinances', $organization);
+
+        $detailed = $request->input('detailed', false);
+        $exportType = $request->input('export_type', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
+
+        $fundsQuery = ($detailed ? $organization->funds()->where([
+            'type' => Fund::TYPE_BUDGET
+        ]) : $organization->funds())->where('state', '!=', Fund::STATE_WAITING)->getQuery();
+
+        $exportData = new FundsExport(Fund::search($request, $fundsQuery)->get(), $detailed);
+
+        return resolve('excel')->download($exportData, $fileName);
     }
 
     /**
      * @param FinanceRequest $request
      * @param Organization $organization
-     * @param Fund $fund
-     * @return array
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function finances(
-        FinanceRequest $request,
-        Organization $organization,
-        Fund $fund
-    ): array {
+    public function finances(FinanceRequest $request, Organization $organization): JsonResponse
+    {
         $this->authorize('show', $organization);
-        $this->authorize('showFinances', [$fund, $organization]);
+        $this->authorize('showFinances', $organization);
 
-        $dates = collect();
+        $filters = $request->input('filters');
+        $financialStatistic = new FinancialStatistic();
 
-        $type = $request->input('type');
-        $year = $request->input('year');
-        $nth = $request->input('nth', 1);
-        $product_category_id = $request->input('product_category');
+        $data = $filters ? $financialStatistic->getFilters($organization, $request->only([
+            'type', 'type_value',
+        ])) : $financialStatistic->getStatistics($organization, $request->only([
+            'type', 'type_value', 'fund_ids', 'postcodes', 'provider_ids', 'product_category_ids'
+        ]));
 
-        if ($type === 'quarter') {
-            $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
-            $endDate = $startDate->copy()->endOfQuarter()->endOfDay();
-
-            $dates->push($startDate);
-            $dates->push($startDate->copy()->addDays(14));
-            $dates->push($startDate->copy()->addMonths());
-            $dates->push($startDate->copy()->addMonths()->addDays(14));
-            $dates->push($startDate->copy()->addMonths(2));
-            $dates->push($startDate->copy()->addMonths(2)->addDays(14));
-            $dates->push($endDate);
-        } elseif ($type === 'month') {
-            $startDate = Carbon::createFromDate($year, $nth, 1)->startOfDay();
-            $endDate = $startDate->copy()->endOfMonth()->endOfDay();
-
-            $dates->push($startDate);
-            $dates->push($startDate->copy()->addDays(4));
-            $dates->push($startDate->copy()->addDays(9));
-            $dates->push($startDate->copy()->addDays(14));
-            $dates->push($startDate->copy()->addDays(19));
-            $dates->push($startDate->copy()->addDays(24));
-            $dates->push($endDate);
-        } elseif ($type === 'week') {
-            $startDate = Carbon::now()->setISODate(
-                $year, $nth
-            )->startOfWeek()->startOfDay();
-            $endDate = $startDate->copy()->endOfWeek()->endOfDay();
-
-            $dates = range_between_dates($startDate, $endDate);
-
-            $dates->prepend(
-                $dates[0]->copy()->subDay()->endOfDay()
-            );
-
-        } elseif ($type === 'all') {
-            $startDate = Carbon::createFromDate($year, 1, 1)->startOfDay();
-            $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
-
-            $dates->push($startDate);
-            $dates->push($startDate->copy()->addQuarters());
-            $dates->push($startDate->copy()->addQuarters(2));
-            $dates->push($startDate->copy()->addQuarters(3));
-            $dates->push($endDate);
-        } else {
-            abort(403);
-            exit();
-        }
-
-        if ($product_category_id === -1) {
-            $categories = false;
-        } elseif ($product_category_id) {
-            $categories = ProductCategory::find($product_category_id)
-                ->descendants->pluck('id')->push($product_category_id);
-        } else {
-            $categories = null;
-        }
-
-        $dates = $dates->map(function (Carbon $date, $key) use (
-            $fund, $dates, $categories, $type
-        ) {
-            $previousIntervalEntry = $date;
-
-            if ($key > 0) {
-                $previousIntervalEntry = $dates[$key - 1];
-            } else if ($key === 0 && $type !== 'week') {
-                return [
-                    "key" => null,
-                    "value" => null
-                ];
-            }
-
-            $voucherQuery = $fund->voucher_transactions()->whereBetween(
-                'voucher_transactions.created_at', [
-                    $previousIntervalEntry->copy()->endOfDay(),
-                    $date->copy()->endOfDay()
-                ]
-            );
-
-            if ($categories === false) {
-                $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
-            } else if ($categories) {
-                $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($categories) {
-                    return $query->whereIn('product_category_id', $categories->toArray());
-                });
-            }
-
-            switch ($type) {
-                case 'quarter':
-                    return [
-                        "key" => trans('time.to', [
-                            'from_time' => $previousIntervalEntry->copy()->endOfDay()->formatLocalized('%d %h'),
-                            'to_time' =>  $date->formatLocalized('%d %h')
-                        ]),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                case 'month':
-                    return [
-                        "key" => trans('time.to', [
-                            'from_time' => $previousIntervalEntry->copy()->endOfDay()->formatLocalized('%d'),
-                            'to_time' =>  $date->formatLocalized('%d')
-                        ]),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                case 'week':
-                    return [
-                        "key" => $date->formatLocalized('%A'),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                case 'all':
-                    return [
-                        "key" => trans('time.quarter') . " " . $key,
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-                default:
-                    return [
-                        "key" => $date->formatLocalized('Y-m-d'),
-                        "value" => $voucherQuery->sum('voucher_transactions.amount')
-                    ];
-            }
-        });
-
-        $dates->shift();
-
-        $providers = $fund->voucher_transactions()->whereBetween(
-            'voucher_transactions.created_at', [
-            $startDate, $endDate
-        ]);
-
-        if ($product_category_id === -1){
-            $providers = $providers->whereNull('voucher_transactions.product_id');
-        } elseif ($product_category_id) {
-            $providers = $providers->whereHas('product', function (
-                Builder $query
-            ) use ($product_category_id) {
-                return $query->where('product_category_id', $product_category_id);
-            });
-        }
-
-        return [
-            'dates' => $dates,
-            'usage' => $dates->sum('value'),
-            'service_costs' => [
-                'total' => $fund->getServiceCosts(),
-                'transaction_costs' => $fund->getTransactionCosts()
-            ],
-            'activations' => VoucherQuery::whereNotExpiredAndActive(
-                $fund->vouchers()->getQuery()
-            )->whereNull(
-                'parent_id'
-            )->whereBetween('created_at', [
-                $startDate, $endDate
-            ])->count(),
-            'providers' => $providers->count(DB::raw('DISTINCT organization_id'))
-        ];
+        return response()->json($data);
     }
 
     /**
@@ -435,11 +351,10 @@ class FundsController extends Controller
      * @param Fund $fund
      * @return TopUpResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
-    public function topUp(
-        Organization $organization,
-        Fund $fund
-    ): TopUpResource {
+    public function topUp(Organization $organization, Fund $fund): TopUpResource
+    {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
 
@@ -454,10 +369,8 @@ class FundsController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
-    public function destroy(
-        Organization $organization,
-        Fund $fund
-    ): JsonResponse {
+    public function destroy(Organization $organization, Fund $fund): JsonResponse
+    {
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$fund, $organization]);
 

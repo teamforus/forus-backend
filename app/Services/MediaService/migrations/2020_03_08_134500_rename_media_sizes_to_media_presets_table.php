@@ -1,8 +1,13 @@
-<?php /** @noinspection PhpIllegalPsrClassPathInspection */
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Class RenameMediaSizesToMediaPresetsTable
+ * @noinspection PhpIllegalPsrClassPathInspection
+ * @noinspection PhpUnused
+ */
 class RenameMediaSizesToMediaPresetsTable extends Migration
 {
     /**

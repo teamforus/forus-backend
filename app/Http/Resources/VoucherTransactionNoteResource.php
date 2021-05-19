@@ -18,7 +18,7 @@ class VoucherTransactionNoteResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         return collect($this->resource)->only([
             'id', 'message', 'icon', 'group', 'created_at', 'created_at'

@@ -13,10 +13,22 @@ class FundQuery
      * @param Builder $query
      * @return Builder
      */
-    public static function whereActiveFilter(Builder $query): Builder {
+    public static function whereActiveFilter(Builder $query): Builder
+    {
         return $query->where([
             'state' => Fund::STATE_ACTIVE
         ])->whereDate('end_date', '>=', today());
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereActiveOrClosedFilter(Builder $query): Builder
+    {
+        return $query->whereIn('state', [
+            Fund::STATE_ACTIVE, Fund::STATE_CLOSED
+        ]);
     }
 
     /**

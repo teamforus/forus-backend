@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
@@ -122,7 +123,10 @@ class FundProvider extends Model
      */
     public function fund_provider_products_with_trashed(): HasMany
     {
-        return $this->hasMany(FundProviderProduct::class)->withTrashed();
+        /** @var HasMany|SoftDeletes $hasMany */
+        $hasMany = $this->hasMany(FundProviderProduct::class);
+
+        return $hasMany->withTrashed();
     }
 
     /**
@@ -360,6 +364,24 @@ class FundProvider extends Model
     }
 
     /**
+     * @param $providerOrganizations
+     * @return array
+     */
+    public static function getFundProviders($providerOrganizations) : array {
+        $fundProviders = collect([]);
+
+        $providerOrganizations->each(function (Organization $organization) use (&$fundProviders) {
+            foreach ($organization->fund_providers as $fund_provider) {
+                if (!$fundProviders->contains('id', $fund_provider->id)) {
+                    $fundProviders->push($fund_provider);
+                }
+            }
+        });
+
+        return $fundProviders->toArray();
+    }
+
+    /**
      * @param Request $request
      * @param Organization $organization
      * @param Builder|null $query
@@ -371,31 +393,36 @@ class FundProvider extends Model
         Builder $query = null
     ): Builder {
         $fund_id = $request->input('fund_id');
+        $fund_ids = $request->input('fund_ids');
         $organization_id = $request->input('organization_id');
         $dismissed = $request->input('dismissed');
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
 
-        $query = $query ? $query : self::query();
+        $query = $query ?: self::query();
         $query = $query->whereIn('fund_id', $organization->funds()->pluck('id'));
 
         if ($q = $request->input('q')) {
             $query->where(static function(Builder $builder) use ($q) {
                 $builder->whereHas('organization', function (Builder $query) use ($q) {
-                    $query->where('name', 'like', "%{$q}%");
-                    $query->orWhere('kvk', 'like', "%{$q}%");
-                    $query->orWhere('email', 'like', "%{$q}%");
-                    $query->orWhere('phone', 'like', "%{$q}%");
+                    $query->where('name', 'like', "%$q%");
+                    $query->orWhere('kvk', 'like', "%$q%");
+                    $query->orWhere('email', 'like', "%$q%");
+                    $query->orWhere('phone', 'like', "%$q%");
                 });
 
                 $builder->orWhereHas('fund', function (Builder $query) use ($q) {
-                    $query->where('name', 'like', "%{$q}%");
+                    $query->where('name', 'like', "%$q%");
                 });
             });
         }
 
         if ($fund_id) {
             $query->where('fund_id', $fund_id);
+        }
+
+        if ($fund_ids) {
+            $query->whereIn('fund_id', $fund_ids);
         }
 
         if ($organization_id) {
@@ -429,21 +456,23 @@ class FundProvider extends Model
                 });
             } else {
                 $query->where(function(Builder $builder) use ($allow_products) {
-                    $builder->whereHas('fund', function(Builder $builder) {
-                        $builder->where('type', Fund::TYPE_BUDGET);
-                    })->where('allow_products', (bool) $allow_products);
-                });
-
-                $query->orWhere(function(Builder $builder) use ($allow_products) {
-                    $builder->whereHas('fund', function(Builder $builder) {
-                        $builder->where('type', Fund::TYPE_SUBSIDIES);
+                    $builder->where(function(Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function(Builder $builder) {
+                            $builder->where('type', Fund::TYPE_BUDGET);
+                        })->where('allow_products', (bool) $allow_products);
                     });
 
-                    if ((bool) $allow_products) {
-                        $builder->whereHas('fund_provider_products.product');
-                    } else {
-                        $builder->whereDoesntHave('fund_provider_products.product');
-                    }
+                    $builder->orWhere(function(Builder $builder) use ($allow_products) {
+                        $builder->whereHas('fund', function(Builder $builder) {
+                            $builder->where('type', Fund::TYPE_SUBSIDIES);
+                        });
+
+                        if ($allow_products) {
+                            $builder->whereHas('fund_provider_products.product');
+                        } else {
+                            $builder->whereDoesntHave('fund_provider_products.product');
+                        }
+                    });
                 });
             }
         }
@@ -582,13 +611,13 @@ class FundProvider extends Model
      * @param Product $product
      * @param string $message
      * @param string $identity_address
-     * @return mixed
+     * @return FundProviderChatMessage
      */
     public function startChat(
         Product $product,
         string $message,
         string $identity_address
-    ) {
+    ): FundProviderChatMessage {
         /** @var FundProviderChat $chat */
         $chat = $this->fund_provider_chats()->create([
             'product_id' => $product->id,

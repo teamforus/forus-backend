@@ -4,6 +4,10 @@ namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Class IndexFundRequest
+ * @package App\Http\Requests\Api\Platform\Organizations\Funds
+ */
 class IndexFundRequest extends FormRequest
 {
     /**

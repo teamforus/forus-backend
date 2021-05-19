@@ -67,7 +67,8 @@ class ImplementationPage extends Model
      * @var string[]
      */
     protected $fillable = [
-        'implementation_id', 'page_type', 'content', 'external', 'external_url',
+        'implementation_id', 'page_type', 'content', 'content_alignment',
+        'external', 'external_url',
     ];
 
     /**

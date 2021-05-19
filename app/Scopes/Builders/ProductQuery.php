@@ -7,7 +7,6 @@ use App\Models\Fund;
 use App\Models\FundProviderProduct;
 use App\Models\Implementation;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -121,32 +120,26 @@ class ProductQuery
 
     /**
      * @param Builder $query
-     * @param int|array $product_category_id
-     * @param bool $andSubcategories
+     * @param $productCategoryId
+     * @param bool $withChildes
      * @return Builder
      */
     public static function productCategoriesFilter(
         Builder $query,
-        $product_category_id,
-        bool $andSubcategories = true
+        $productCategoryId,
+        bool $withChildes = true
     ): Builder {
-        $productCategories = [];
+        $query->whereHas('product_category', function(Builder $builder) use ($productCategoryId, $withChildes) {
+            $categoriesQuery = $builder->whereIn('id', (array) $productCategoryId);
 
-        if (is_numeric($product_category_id) && $andSubcategories) {
-            $productCategories = ProductCategory::descendantsAndSelf(
-                $product_category_id
-            )->pluck('id')->toArray();
-        } elseif (is_array($product_category_id) && $andSubcategories) {
-            foreach ($product_category_id as $_product_category_id) {
-                foreach (ProductCategory::descendantsAndSelf(
-                    $_product_category_id
-                )->pluck('id') as $id) {
-                    $productCategories[] = $id;
-                }
+            if ($withChildes) {
+                $categoriesQuery->orWhereHas('ancestors', function(Builder $builder) use ($productCategoryId) {
+                    $builder->whereIn('id', (array) $productCategoryId);
+                });
             }
-        }
+        });
 
-        return $query->whereIn('product_category_id', $productCategories);
+        return $query;
     }
 
     /**
@@ -157,8 +150,8 @@ class ProductQuery
     public static function queryFilter(Builder $query, string $q = ''): Builder
     {
         return $query->where(static function (Builder $query) use ($q) {
-            $query->where('products.name', 'LIKE', "%{$q}%");
-            $query->orWhere('products.description', 'LIKE', "%{$q}%");
+            $query->where('products.name', 'LIKE', "%$q%");
+            $query->orWhere('products.description', 'LIKE', "%$q%");
         });
     }
 
@@ -170,10 +163,10 @@ class ProductQuery
     public static function queryDeepFilter(Builder $query, string $q = ''): Builder
     {
         return $query->where(static function (Builder $query) use ($q) {
-            $query->where('products.name', 'LIKE', "%{$q}%");
-            $query->orWhere('products.description', 'LIKE', "%{$q}%");
+            $query->where('products.name', 'LIKE', "%$q%");
+            $query->orWhere('products.description', 'LIKE', "%$q%");
             $query->orWhereHas('organization', static function(Builder $builder) use ($q) {
-                $builder->where('organizations.name', 'LIKE', "%{$q}%");
+                $builder->where('organizations.name', 'LIKE', "%$q%");
             });
         });
     }
@@ -246,7 +239,7 @@ class ProductQuery
         ]);
 
         /** @var Builder $query */
-        $query = Product::fromSub($builder, 'products');
+        $query = Product::fromSub($builder->getQuery(), 'products');
 
         $query->selectRaw(
             '*, ' .

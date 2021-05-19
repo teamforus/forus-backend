@@ -32,16 +32,24 @@ class UpdateImplementationCmsRequest extends FormRequest
         return [
             'title' => 'nullable|string|max:50',
             'description' => 'nullable|string|max:4000',
+            'description_alignment' => 'nullable|in:left,center,right',
             'informal_communication' => 'nullable|boolean',
-            'media_uuid' => 'nullable|array',
-            'media_uuid.*' => $this->mediaRule(),
+            'banner_media_uid' => ['nullable', new MediaUidRule('implementation_banner')],
+            'media_uid' => 'nullable|array',
+            'media_uid.*' => $this->mediaRule(),
             'pages' => ['array', new ImplementationPagesArrayKeysRule()],
             'pages.*' => 'array',
             'pages.*.content' => 'nullable|string|max:10000',
+            'pages.*.content_alignment' => 'nullable|in:left,center,right',
             'pages.*.external' => 'present|boolean',
             'pages.*.external_url' => 'nullable|string|max:300',
-            'pages.*.media_uuid' => 'nullable|array',
-            'pages.*.media_uuid.*' => $this->mediaRule(),
+
+            'overlay_enabled' => 'nullable|bool',
+            'overlay_type' => 'nullable|in:color,dots,lines,points,circles',
+            'overlay_opacity' => 'nullable|numeric|min:0|max:100',
+            'header_text_color' => 'nullable|in:bright,dark,auto',
+            'pages.*.media_uid' => 'nullable|array',
+            'pages.*.media_uid.*' => $this->mediaRule(),
         ];
     }
 

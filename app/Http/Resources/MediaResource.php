@@ -25,17 +25,15 @@ class MediaResource extends Resource
             return null;
         }
 
-        $presets = $media->presets->filter(static function(MediaPreset $preset) {
+        $sizes = $media->presets->filter(static function(MediaPreset $preset) {
             return $preset->key !== 'original';
         })->keyBy('key')->map(static function(MediaPreset $preset) {
             return $preset->urlPublic();
         });
 
         return array_merge($media->only([
-            'identity_address', 'original_name', 'type', 'ext', 'uid',
-        ]), [
-            'dominant_color' => $media->dominant_color ?? null,
-            'sizes' => $presets
-        ]);
+            'identity_address', 'original_name', 'type', 'ext', 'uid', 'dominant_color',
+            'is_dark',
+        ]), compact('sizes'));
     }
 }
