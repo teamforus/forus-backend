@@ -40,9 +40,9 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
     public function collection(): Collection
     {
         return $this->data->merge(!$this->detailed ? [[
-            $this->trans("name") => 'Total',
-            $this->trans("total") => currency_format($this->data->sum($this->trans("total"))),
-            $this->trans("current") => currency_format($this->data->sum($this->trans("current"))),
+            $this->trans("name") => $this->trans("total"),
+            $this->trans("total_top_up") => currency_format($this->data->sum($this->trans("total_top_up"))),
+            $this->trans("balance") => currency_format($this->data->sum($this->trans("balance"))),
             $this->trans("expenses") => currency_format($this->data->sum($this->trans("expenses"))),
             $this->trans("transactions") => currency_format($this->data->sum($this->trans("transactions"))),
         ]] : []);
@@ -74,8 +74,8 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
             return $funds->map(function(Fund $fund) {
                 return [
                     $this->trans("name") => $fund->name,
-                    $this->trans("total") => currency_format($fund->budget_total),
-                    $this->trans("current") => currency_format($fund->budget_left),
+                    $this->trans("total_top_up") => currency_format($fund->budget_total),
+                    $this->trans("balance") => currency_format($fund->budget_left),
                     $this->trans("expenses") => currency_format($fund->budget_used),
                     $this->trans("transactions") => currency_format($fund->getTransactionCosts()),
                 ];
@@ -83,23 +83,45 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
         }
 
         return $funds->map(function(Fund $fund) {
-            $details = $fund->getFundDetails();
+            $details = Fund::getFundDetails($fund->budget_vouchers()->getQuery());
 
-            return [
-                $this->trans("name") => $fund->name,
-                $this->trans("amount_per_voucher")       => $fund->getMaxAmountPerVoucher(),
-                $this->trans("average_per_voucher")      => $fund->getMaxAmountSumVouchers(),
-                $this->trans("total_vouchers_amount")    => currency_format($details['total_vouchers_amount']),
-                $this->trans("total_vouchers_count")     => (string) ($details['active_count'] + $details['inactive_count']),
-                $this->trans("vouchers_inactive_amount") => currency_format($details['inactive_amount']),
-                $this->trans("vouchers_inactive_percentage") => $details['inactive_percentage'].' %',
-                $this->trans("vouchers_inactive_count")  => (string) $details['inactive_count'],
-                $this->trans("vouchers_active_amount")   => currency_format($details['active_amount']),
-                $this->trans("total_spent_amount")       => currency_format($fund->budget_used),
-                $this->trans("total_spent_percentage")   => currency_format(
-                    $fund->budget_total ? ($fund->budget_used / $fund->budget_total * 100) : 0) . ' %',
-                $this->trans("total_left")               => currency_format($fund->budget_left),
-            ];
+            $budgetUsedPercentage = $details['vouchers_amount'] ? (
+                $fund->budget_used_active_vouchers / $details['vouchers_amount'] * 100) : 0;
+
+            $averagePerVoucher = $details['vouchers_count'] ?
+                $details['vouchers_amount'] / $details['vouchers_count'] : 0;
+
+            $budgetLeft = $details['vouchers_amount'] - $fund->budget_used_active_vouchers;
+
+            $budgetLeftPercentage = $details['vouchers_amount'] ?
+                (($details['vouchers_amount'] - $fund->budget_used_active_vouchers) / $details['vouchers_amount'] * 100) : 0;
+
+            $inactiveVouchersPercentage = $details['vouchers_amount'] ?
+                ($details['inactive_amount'] / $details['vouchers_amount'] * 100) : 0;
+
+            $activeVouchersPercentage = $details['vouchers_amount'] ?
+                ($details['active_amount'] / $details['vouchers_amount'] * 100) : 0;
+
+            return collect([
+                "name"                          => $fund->name,
+                "amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
+                "average_per_voucher"           => currency_format($averagePerVoucher),
+                "total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
+                "total_spent_percentage"        => currency_format($budgetUsedPercentage) . ' %',
+                "total_left"                    => currency_format($budgetLeft),
+                "total_left_percentage"         => currency_format($budgetLeftPercentage) . ' %',
+
+                "vouchers_amount"               => currency_format($details['vouchers_amount']),
+                "vouchers_count"                => (string) $details['vouchers_count'],
+                "vouchers_inactive_count"       => currency_format($details['inactive_count'], 0),
+                "vouchers_inactive_amount"      => currency_format($details['inactive_amount']),
+                "vouchers_inactive_percentage"  => currency_format($inactiveVouchersPercentage) . ' %',
+                "vouchers_active_amount"        => (string) $details['active_amount'],
+                "vouchers_active_percentage"    => currency_format($activeVouchersPercentage) . ' %',
+                "vouchers_active_count"         => currency_format($details['active_count'], 0),
+            ])->mapWithKeys(function($value, $key) {
+                return [$this->trans($key) => $value];
+            })->toArray();
         });
     }
 

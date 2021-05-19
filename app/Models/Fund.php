@@ -90,6 +90,7 @@ use Illuminate\Http\Request;
  * @property-read float $budget_reserved
  * @property-read float $budget_total
  * @property-read float $budget_used
+ * @property-read float $budget_used_active_vouchers
  * @property-read float $budget_validated
  * @property-read string $description_html
  * @property-read string $description_text
@@ -449,6 +450,17 @@ class Fund extends Model
      * @return float
      * @noinspection PhpUnused
      */
+    public function getBudgetUsedActiveVouchersAttribute(): float
+    {
+        return round($this->voucher_transactions()
+            ->where('vouchers.expire_at', '>', now())
+            ->sum('voucher_transactions.amount'), 2);
+    }
+
+    /**
+     * @return float
+     * @noinspection PhpUnused
+     */
     public function getBudgetLeftAttribute(): float
     {
         return round($this->budget_total - $this->budget_used, 2);
@@ -466,21 +478,14 @@ class Fund extends Model
     /**
      * @return float
      */
-    public function getServiceCosts(): float
+    public function getTransactionCosts(): float
     {
-        return $this->getTransactionCosts();
-    }
-
-    /**
-     * @return float
-     */
-    public function getTransactionCosts (): float
-    {
-        if ($this->fund_config && !$this->fund_config->subtract_transaction_costs) {
-            return $this->voucher_transactions()->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
+        if (!$this->fund_config || $this->fund_config->subtract_transaction_costs) {
+            return 0.0;
         }
 
-        return 0.0;
+        return $this->voucher_transactions()
+                ->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
     }
 
     /**
@@ -1509,38 +1514,29 @@ class Fund extends Model
     }
 
     /**
+     * @param Builder $vouchersQuery
      * @return array
      */
-    public function getFundDetails() : array {
-        $active_vouchers_query = VoucherQuery::whereNotExpiredAndActive(
-            $this->budget_vouchers()->getQuery()
-        );
+    public static function getFundDetails(Builder $vouchersQuery) : array
+    {
+        $vouchersQuery = VoucherQuery::whereNotExpired($vouchersQuery);
+        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
 
-        $inactive_vouchers_query = $this->budget_vouchers()->whereNotIn(
-            'id', $active_vouchers_query->pluck('id')
-        );
+        $vouchers_count = $vouchersQuery->count();
+        $inactive_count = $inactiveVouchersQuery->count();
+        $active_count = $activeVouchersQuery->count();
+        $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
 
         return [
-            'reserved'        => round(VoucherQuery::whereNotExpiredAndActive(
-                $this->budget_vouchers()->getQuery()
-            )->sum('amount'), 2),
-            'vouchers_amount' => currency_format(round(
-                    $active_vouchers_query->sum('amount') +
-                    $inactive_vouchers_query->sum('amount'), 2)
-            ),
-            'vouchers_count'  => $this->budget_vouchers()->count(),
-            'active_amount'   => currency_format(round(
-                    $active_vouchers_query->sum('amount'), 2)
-            ),
-            'active_count'    => $active_vouchers_query->count(),
-            'inactive_amount' => currency_format(round(
-                    $inactive_vouchers_query->sum('amount'), 2)
-            ),
-            'inactive_count' => $inactive_vouchers_query->count(),
-            'inactive_percentage' => $this->budget_vouchers()->count() ?
-                $inactive_vouchers_query->count() / $this->budget_vouchers()->count() * 100 : 0,
-            'total_vouchers_amount' => round($this->budget_vouchers()->sum('amount'), 2),
-            'total_vouchers_count'  => $this->budget_vouchers()->count(),
+            'reserved'              => currency_format($activeVouchersQuery->sum('amount')),
+            'vouchers_amount'       => currency_format($vouchersQuery->sum('amount')),
+            'vouchers_count'        => $vouchers_count,
+            'active_amount'         => currency_format($activeVouchersQuery->sum('amount')),
+            'active_count'          => $active_count,
+            'inactive_amount'       => currency_format($inactiveVouchersQuery->sum('amount')),
+            'inactive_count'        => $inactive_count,
+            'inactive_percentage'   => currency_format($inactive_percentage),
         ];
     }
 
@@ -1550,47 +1546,38 @@ class Fund extends Model
      */
     public static function getFundTotals(Collection $funds) : array
     {
-        $total_budget = $total_budget_left = $total_budget_used = 0;
-        $total_transaction_costs = $total_reserved = 0;
-        $total_active_vouchers = $total_inactive_vouchers = 0;
-        $total_vouchers_count = $total_inactive_vouchers_count = 0;
-        $total_vouchers_amount = 0;
+        $budget = 0;
+        $budget_left = 0;
+        $budget_used = 0;
+        $budget_used_active_vouchers = 0;
+        $transaction_costs = 0;
+
+        $query = Voucher::query()->whereNull('parent_id')->whereIn('fund_id', $funds->pluck('id'));
+        $vouchersQuery = VoucherQuery::whereNotExpired($query);
+        $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
+        $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
+
+        $vouchers_amount = currency_format($vouchersQuery->sum('amount'));
+        $active_vouchers_amount = currency_format($activeVouchersQuery->sum('amount'));
+        $inactive_vouchers_amount = currency_format($inactiveVouchersQuery->sum('amount'));
+
+        $vouchers_count = $vouchersQuery->count();
+        $active_vouchers_count = $activeVouchersQuery->count();
+        $inactive_vouchers_count = $inactiveVouchersQuery->count();
 
         foreach ($funds as $fund) {
-            $total_budget += $fund->budget_total;
-            $total_budget_left += $fund->budget_left;
-            $total_budget_used += $fund->budget_used;
-            $total_transaction_costs += $fund->getTransactionCosts();
-
-            $total_reserved += round(VoucherQuery::whereNotExpiredAndActive(
-                $fund->budget_vouchers()->getQuery()
-            )->sum('amount'), 2);
-
-            $active_vouchers_query = VoucherQuery::whereNotExpiredAndActive(
-                $fund->budget_vouchers()->getQuery()
-            );
-
-            $inactive_vouchers_query = $fund->budget_vouchers()->whereNotIn(
-                'id', $active_vouchers_query->pluck('id')
-            );
-
-            $total_vouchers_amount   += round($fund->budget_vouchers()->sum('amount'), 2);
-            $total_active_vouchers   += round($active_vouchers_query->sum('amount'), 2);
-            $total_inactive_vouchers += round($inactive_vouchers_query->sum('amount'), 2);
-
-            $total_vouchers_count    += $fund->budget_vouchers()->count();
-            $total_inactive_vouchers_count += $inactive_vouchers_query->count();
+            $budget += $fund->budget_total;
+            $budget_left += $fund->budget_left;
+            $budget_used += $fund->budget_used;
+            $budget_used_active_vouchers += $fund->budget_used_active_vouchers;
+            $transaction_costs += $fund->getTransactionCosts();
         }
 
-        $inactive_vouchers_percentage = $total_vouchers_count ?
-            $total_inactive_vouchers_count / $total_vouchers_count * 100 : 0;
-
         return compact(
-            'total_budget', 'total_budget_left',
-            'total_budget_used', 'total_transaction_costs',
-            'total_reserved', 'total_active_vouchers', 'total_inactive_vouchers',
-            'total_vouchers_count', 'total_inactive_vouchers_count',
-            'inactive_vouchers_percentage', 'total_vouchers_amount'
+            'budget', 'budget_left',
+            'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
+            'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
+            'inactive_vouchers_amount', 'inactive_vouchers_count'
         );
     }
 

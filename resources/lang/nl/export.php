@@ -72,27 +72,33 @@ return [
     ],
 
     'funds' => [
+        'total'             => 'Totaal',
+
         // Overview funds
-        'name'      => 'Fondsnaam',
-        'total'     => 'Totaal gestort',
-        'current'   => 'Huidig saldo',
-        'expenses'  => 'Uitgaven',
-        'transactions' => 'Transactiekosten',
+        'name'              => 'Fondsnaam',
+        'total_top_up'      => 'Totaal gestort',
+        'balance'           => 'Huidig saldo',
+        'expenses'          => 'Uitgaven',
+        'transactions'      => 'Transactiekosten',
 
         // Statistics funds
-        'active'    => 'Actief',
-        'inactive'  => 'Inactief',
-        'left'      => 'Restant',
+        'active'                        => 'Actief',
+        'inactive'                      => 'Inactief',
+        'left'                          => 'Restant',
+
         'amount_per_voucher'            => 'Per tegoed €',
         'average_per_voucher'           => 'Gem per tegoed €',
-        'total_vouchers_amount'         => 'Totaal tegoeden €',
-        'total_vouchers_count'          => 'Totaal tegoeden aantal',
+        'vouchers_amount'               => 'Totaal tegoeden €',
+        'vouchers_count'                => 'Totaal tegoeden aantal',
         'vouchers_inactive_amount'      => 'Totaal tegoeden inactief €',
         'vouchers_inactive_percentage'  => 'Totaal tegoeden inactief %',
         'vouchers_inactive_count'       => 'Totaal tegoeden inactief aantal',
-        'vouchers_active_amount'        => 'Totaal tegoeden actief',
+        'vouchers_active_amount'        => 'Totaal tegoeden actief €',
+        'vouchers_active_percentage'    => 'Totaal percentage actief %',
+        'vouchers_active_count'         => 'Totaalaantal actief',
         'total_spent_amount'            => 'Uitgaven €',
         'total_spent_percentage'        => 'Uitgaven %',
         'total_left'                    => 'Restant actieve tegoeden',
+        'total_left_percentage'         => 'Totaal percentage restant',
     ]
 ];
