@@ -19,7 +19,7 @@ class VoucherCollectionResource extends VoucherResource
         'parent',
         'token_with_confirmation',
         'token_without_confirmation',
-        'transactions:id,amount',
+        'transactions:id,amount,voucher_id',
         'last_transaction',
         'product_vouchers.fund',
         'product_vouchers.product.photo.presets',
