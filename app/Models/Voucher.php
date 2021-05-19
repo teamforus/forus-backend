@@ -650,12 +650,14 @@ class Voucher extends Model
     ) {
         $price = (float) (!$price && ($price !== 0) ? $product->price : $price);
 
-        $voucherExpireAt = $product->expire_at && $this->fund->end_date->gt(
-            $product->expire_at
-        ) ? $product->expire_at : $this->fund->end_date;
+        $voucherExpireAt = array_first(array_sort(array_filter([
+            $product->expire_at,
+            $this->expire_at,
+            $this->fund->end_date
+        ])));
 
         $voucher = self::create([
-            'identity_address' => auth_address(),
+            'identity_address' => $this->identity_address,
             'parent_id'        => $this->id,
             'fund_id'          => $this->fund_id,
             'product_id'       => $product->id,

@@ -261,31 +261,14 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $totals = Fund::getFundTotals($organization->funds()->get());
-
-        $totalsBudget = Fund::getFundTotals($organization->funds()->where([
+        $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
+        $activeFundsQuery = $organization->funds()->where([
             'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '!=', Fund::STATE_WAITING)->getQuery()->get());
+        ])->where('state', '=', Fund::STATE_ACTIVE);
 
         return $request ? response()->json([
-            'total_amount'      => currency_format($totals['total_budget']),
-            'left'              => currency_format($totals['total_budget_left']),
-            'used'              => currency_format($totals['total_budget_used']),
-            'reserved'          => currency_format($totals['total_reserved']),
-            'transaction_costs' => currency_format($totals['total_transaction_costs']),
-            'vouchers_amount'   => currency_format($totals['total_vouchers_amount']),
-            'vouchers_active'   => currency_format($totals['total_active_vouchers']),
-            'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
-            'budget' => [
-                'total_amount'      => currency_format($totalsBudget['total_budget']),
-                'left'              => currency_format($totalsBudget['total_budget_left']),
-                'used'              => currency_format($totalsBudget['total_budget_used']),
-                'reserved'          => currency_format($totalsBudget['total_reserved']),
-                'transaction_costs' => currency_format($totalsBudget['total_transaction_costs']),
-                'vouchers_amount'   => currency_format($totalsBudget['total_vouchers_amount']),
-                'vouchers_active'   => currency_format($totalsBudget['total_active_vouchers']),
-                'vouchers_inactive' => currency_format($totalsBudget['total_inactive_vouchers']),
-            ]
+            'funds' => Fund::getFundTotals($fundsQuery->get()),
+            'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
         ]) : response()->json([], 403);
     }
 
@@ -311,11 +294,12 @@ class FundsController extends Controller
         $exportType = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
 
-        $fundsQuery = ($detailed ? $organization->funds()->where([
-            'type' => Fund::TYPE_BUDGET
-        ]) : $organization->funds())->where('state', '!=', Fund::STATE_WAITING)->getQuery();
+        $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
+        $activeFundsQuery = $organization->funds()->where([
+            'type' => Fund::TYPE_BUDGET,
+        ])->where('state', '=', Fund::STATE_ACTIVE);
 
-        $exportData = new FundsExport(Fund::search($request, $fundsQuery)->get(), $detailed);
+        $exportData = new FundsExport(($detailed ? $activeFundsQuery : $fundsQuery)->get(), $detailed);
 
         return resolve('excel')->download($exportData, $fileName);
     }
