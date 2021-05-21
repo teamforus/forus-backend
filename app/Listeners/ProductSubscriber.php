@@ -17,6 +17,7 @@ use App\Models\Product;
 use App\Notifications\Organizations\Products\ProductApprovedNotification;
 use App\Notifications\Organizations\Products\ProductExpiredNotification;
 use App\Notifications\Organizations\Products\ProductReservedNotification;
+use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
 use Illuminate\Events\Dispatcher;
 
@@ -126,7 +127,7 @@ class ProductSubscriber
 
         FundProductRevokedEvent::dispatch($fund, $product);
 
-        ProductReservedNotification::send($product->log(Product::EVENT_REVOKED, [
+        ProductRevokedNotification::send($product->log(Product::EVENT_REVOKED, [
             'product' => $product,
             'fund' => $fund,
             'sponsor' => $fund->organization,
