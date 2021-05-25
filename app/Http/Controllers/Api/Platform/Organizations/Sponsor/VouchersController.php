@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherR
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\DeactivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\ReactivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
@@ -289,6 +290,29 @@ class VouchersController extends Controller
                 new DeactivationVoucherMail($voucher, $reason)
             );
         }
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param ReactivateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException
+     */
+    public function reactivate(
+        ReactivateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('reactivateSponsor', [$voucher, $organization]);
+
+        $voucher->update([
+            'state' => $voucher::STATE_ACTIVE,
+            'deactivation_reason' => null,
+        ]);
 
         return new SponsorVoucherResource($voucher);
     }

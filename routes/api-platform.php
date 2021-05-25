@@ -777,6 +777,11 @@ $router->group(['middleware' => [
     );
 
     $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher}/reactivate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@reactivate"
+    );
+
+    $router->patch(
         'organizations/{organization}/sponsor/vouchers/{voucher}/activation-code',
         "Api\Platform\Organizations\Sponsor\VouchersController@makeActivationCode"
     );
