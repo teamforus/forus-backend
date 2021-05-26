@@ -105,7 +105,7 @@ class WebshopGenericSearch
      */
     protected function queryFunds(array $options): Builder
     {
-        return Fund::search($options);
+        return Fund::search($options, Implementation::activeFundsQuery());
     }
 
     /**
