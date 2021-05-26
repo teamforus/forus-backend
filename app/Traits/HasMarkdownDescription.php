@@ -17,6 +17,15 @@ trait HasMarkdownDescription {
      */
     public function getDescriptionHtmlAttribute(): string
     {
+        return $this->descriptionToHtml();
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function descriptionToHtml(): string
+    {
         return resolve('markdown')->convertToHtml(e($this->description));
     }
 
@@ -24,8 +33,8 @@ trait HasMarkdownDescription {
      * @return string
      * @noinspection PhpUnused
      */
-    public function getDescriptionTextAttribute(): string
+    public function descriptionToText(): string
     {
-        return trim(preg_replace('/\s+/', ' ', e(strip_tags($this->description_html))));
+        return trim(preg_replace('/\s+/', ' ', e(strip_tags($this->descriptionToHtml()))));
     }
 }

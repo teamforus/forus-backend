@@ -70,10 +70,14 @@ class WebshopGenericSearch
     protected function queryOfType(string $type, array $options): Builder
     {
         switch ($type) {
-            case "products": return $this->queryProducts($options);
-            case "providers": return $this->queryProviders($options);
-            case "funds": return $this->queryFunds($options);
-            default: throw new Exception("Unknown query type");
+            case "products":
+                return $this->queryProducts($options);
+            case "providers":
+                return $this->queryProviders($options);
+            case "funds":
+                return $this->queryFunds($options);
+            default:
+                throw new Exception("Unknown query type");
         }
     }
 
@@ -110,26 +114,20 @@ class WebshopGenericSearch
     private function selectByType(Builder $query, string $type): Builder
     {
         switch ($type) {
-            case "products": {
-                return $query
-                    ->select('id', 'name', 'description', 'created_at', 'organization_id', 'price', 'price_type')
-                    ->selectRaw('"product" as `item_type`')
-                    ->with('organization', 'photo');
-            }
-
-            case "providers": {
-                return $query
-                    ->select('id', 'name', 'description', 'created_at')
-                    ->selectRaw('NULL as `organization_id`,  NULL as `price`, NULL as `price_type`, "provider" as `item_type`')
-                    ->with('logo');
-            }
-
-            case "funds": return $query
-                ->select('id', 'name', 'description', 'created_at', 'organization_id')
-                ->selectRaw('NULL as `price`, NULL as `price_type`, "fund" as `item_type`')
-                ->with('organization', 'logo');
-
-            default: throw new Exception("Unknown query type");
+            case "funds":
+                return $query->select([
+                    'id', 'name', 'created_at'
+                ])->selectRaw('"fund" as `item_type`');
+            case "products":
+                return $query->select([
+                    'id', 'name', 'created_at'
+                ])->selectRaw('"product" as `item_type`');
+            case "providers":
+                return $query->select([
+                    'id', 'name', 'created_at'
+                ])->selectRaw('"provider" as `item_type`');
+            default:
+                throw new Exception("Unknown query type");
         }
     }
 }

@@ -143,7 +143,7 @@ class Organization extends Model
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds', 'manage_provider_products', 'description',
+        'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
     ];
 
     /**
@@ -193,7 +193,10 @@ class Organization extends Model
         }
 
         if ($q = $request->input('q')) {
-            $query->where('name', 'LIKE', "%$q%");
+            return $query->where(function(Builder $builder) use ($q) {
+                $builder->where('name', 'LIKE', "%$q%");
+                $builder->orWhere('description_text', 'LIKE', "%$q%");
+            });
         }
 
         if ($request->input('implementation', false)) {

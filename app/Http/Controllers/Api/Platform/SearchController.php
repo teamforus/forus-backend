@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\SearchRequest;
+use App\Http\Resources\SearchLiteResource;
 use App\Http\Resources\SearchResource;
 use App\Searches\WebshopGenericSearch;
 use Illuminate\Http\JsonResponse;
@@ -43,15 +44,15 @@ class SearchController extends Controller
         return response()->json([
             'data' => [
                 'products' => [
-                    'items' => SearchResource::collection((clone $products)->take(3)->get()),
+                    'items' => SearchLiteResource::collection((clone $products)->take(3)->get()),
                     'count' => $products->count()
                 ],
                 'funds' => [
-                    'items' => SearchResource::collection((clone $funds)->take(3)->get()),
+                    'items' => SearchLiteResource::collection((clone $funds)->take(3)->get()),
                     'count' => $funds->count()
                 ],
                 'providers' => [
-                    'items' => SearchResource::collection((clone $providers)->take(3)->get()),
+                    'items' => SearchLiteResource::collection((clone $providers)->take(3)->get()),
                     'count' => $providers->count()
                 ],
             ]

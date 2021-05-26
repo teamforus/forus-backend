@@ -35,7 +35,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\Fund
@@ -201,7 +200,7 @@ class Fund extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'state', 'name', 'description', 'start_date',
+        'organization_id', 'state', 'name', 'description', 'description_text', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type',
