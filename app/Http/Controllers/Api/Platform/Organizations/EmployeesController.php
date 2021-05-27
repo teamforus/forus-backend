@@ -169,25 +169,4 @@ class EmployeesController extends Controller
 
         return response()->json([]);
     }
-
-    /**
-     * @param TransferOrganizationOwnershipRequest $request
-     * @param Organization $organization
-     * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function transferOrganizationOwnership(
-        TransferOrganizationOwnershipRequest $request,
-        Organization $organization
-    ): JsonResponse {
-        $this->authorize('show', [$organization]);
-        $this->authorize('resolveAsOwner', [$organization]);
-
-        $to_employee = Employee::find($request->input('to_employee'));
-        $organization->update([
-            'identity_address' => $to_employee->identity_address
-        ]);
-
-        return response()->json([]);
-    }
 }

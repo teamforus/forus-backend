@@ -438,6 +438,10 @@ $router->group(['middleware' => [
         'organizations/{organization}/funds/{fund}/criteria',
         "Api\Platform\Organizations\FundsController@updateCriteria");
 
+    $router->patch(
+        'organizations/{organization}/transfer-ownership',
+        "Api\Platform\OrganizationsController@transferOwnership"
+    );
 
     $router->resource(
         'organizations.funds',
@@ -669,11 +673,6 @@ $router->group(['middleware' => [
             'validators' => 'validator_organization'
         ]
     ]);
-
-    $router->post(
-        'organizations/{organization}/employees/transfer-ownership',
-        "Api\Platform\Organizations\EmployeesController@transferOrganizationOwnership"
-    );
 
     $router->resource(
         'organizations.employees',
