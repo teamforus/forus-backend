@@ -73,13 +73,13 @@ class EmployeesController extends Controller
      *
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
-     * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @return EmployeeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreEmployeeRequest $request,
         Organization $organization
-    ) {
+    ): EmployeeResource {
         $this->throttleWithKey('to_many_attempts', $request, 'invite_employee');
 
         $this->authorize('show', [$organization]);

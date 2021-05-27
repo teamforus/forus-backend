@@ -76,6 +76,7 @@ class OrganizationPolicy
      * @param Organization $organization
      * @param Fund $externalFund
      * @return bool|\Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function updateExternalFunds(
         $identity_address,
@@ -117,5 +118,16 @@ class OrganizationPolicy
         return $organization->whereHas('funds.providers', function(Builder $builder) use ($provider) {
             $builder->where('organization_id', $provider->id);
         })->exists() && $this->listSponsorProviders($identity_address, $organization);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function transferOwnership(string $identity_address, Organization $organization): bool
+    {
+        return $identity_address && ($organization->identity_address === $identity_address);
     }
 }
