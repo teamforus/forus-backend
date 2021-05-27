@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform;
 
 use App\Events\Organizations\OrganizationCreated;
 use App\Events\Organizations\OrganizationUpdated;
+use App\Http\Requests\Api\Platform\Organizations\TransferOrganizationOwnershipRequest;
 use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
@@ -11,11 +12,17 @@ use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\MediaService\Models\Media;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class OrganizationsController
+ * @package App\Http\Controllers\Api\Platform
+ */
 class OrganizationsController extends Controller
 {
     /**
@@ -165,5 +172,30 @@ class OrganizationsController extends Controller
         ])));
 
         return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param TransferOrganizationOwnershipRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function transferOwnership(
+        TransferOrganizationOwnershipRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', [$organization]);
+        $this->authorize('transferOwnership', [$organization]);
+
+        /** @var Employee $employee */
+        $employee_id = $request->input('employee_id');
+        $employee = $organization->employeesOfRoleQuery('admin')->find($employee_id);
+
+        $organization->update([
+            'identity_address' => $employee->identity_address
+        ]);
+
+        return response()->json([]);
     }
 }
