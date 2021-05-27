@@ -7,7 +7,6 @@ use App\Events\Employees\EmployeeDeleted;
 use App\Events\Employees\EmployeeUpdated;
 use App\Http\Requests\Api\Platform\Organizations\Employees\IndexEmployeesRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\StoreEmployeeRequest;
-use App\Http\Requests\Api\Platform\Organizations\Employees\TransferOrganizationOwnershipRequest;
 use App\Http\Requests\Api\Platform\Organizations\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
@@ -74,13 +73,13 @@ class EmployeesController extends Controller
      *
      * @param StoreEmployeeRequest $request
      * @param Organization $organization
-     * @return EmployeeResource|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @return EmployeeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function store(
         StoreEmployeeRequest $request,
         Organization $organization
-    ) {
+    ): EmployeeResource {
         $this->throttleWithKey('to_many_attempts', $request, 'invite_employee');
 
         $this->authorize('show', [$organization]);

@@ -21,7 +21,7 @@ class TransferOrganizationOwnershipRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->organization->identity_address === $this->auth_address();
     }
 
     /**
