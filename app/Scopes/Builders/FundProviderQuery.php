@@ -6,6 +6,10 @@ namespace App\Scopes\Builders;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class FundProviderQuery
+ * @package App\Scopes\Builders
+ */
 class FundProviderQuery
 {
     /**
@@ -66,10 +70,8 @@ class FundProviderQuery
      * @param $fund_id
      * @return Builder
      */
-    public static function wherePendingForFundsFilter(
-        Builder $query,
-        $fund_id
-    ): Builder {
+    public static function wherePendingForFundsFilter(Builder $query, $fund_id): Builder
+    {
         return $query->where(function(Builder $builder) use ($fund_id) {
             $builder->whereIn('fund_id', (array) $fund_id);
 
@@ -77,6 +79,20 @@ class FundProviderQuery
                 $builder->where('allow_budget', false);
                 $builder->where('allow_products', false);
                 $builder->doesntHave('fund_provider_products');
+            });
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @param $fund_id
+     * @return Builder
+     */
+    public static function whereHasTransactions(Builder $query, $fund_id): Builder
+    {
+        return $query->whereHas('organization', function(Builder $builder) use ($fund_id) {
+            $builder->whereHas('voucher_transactions.voucher', function(Builder $builder) use ($fund_id) {
+                return $builder->whereIn('fund_id', (array) $fund_id);
             });
         });
     }
@@ -91,10 +107,10 @@ class FundProviderQuery
         string $q = ''
     ): Builder {
         return $query->whereHas('organization', function(Builder $builder) use ($q) {
-            return $builder->where('name', 'LIKE', "%{$q}%")
-                ->orWhere('kvk', 'LIKE', "%{$q}%")
-                ->orWhere('email', 'LIKE', "%{$q}%")
-                ->orWhere('phone', 'LIKE', "%{$q}%");
+            return $builder->where('name', 'LIKE', "%$q%")
+                ->orWhere('kvk', 'LIKE', "%$q%")
+                ->orWhere('email', 'LIKE', "%$q%")
+                ->orWhere('phone', 'LIKE', "%$q%");
         });
     }
 

@@ -19,6 +19,10 @@ use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class FundProviderController
+ * @package App\Http\Controllers\Api\Platform\Organizations\Provider
+ */
 class FundProviderController extends Controller
 {
     /**
@@ -156,10 +160,11 @@ class FundProviderController extends Controller
 
     /**
      * Delete the specified resource
-     * 
+     *
      * @param Organization $organization
      * @param FundProvider $organizationFund
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
         Organization $organization,

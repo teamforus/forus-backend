@@ -12,16 +12,6 @@ class FundProviderPolicy
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * @param $identity_address
      * @param Organization $organization
      * @param Fund|null $fund
@@ -189,15 +179,19 @@ class FundProviderPolicy
 
     /**
      * @param $identity_address
-     * @param FundProvider $organizationFund
+     * @param FundProvider $fundProvider
      * @param Organization $organization
      * @return bool
      */
     public function deleteProvider(
         $identity_address,
-        FundProvider $organizationFund,
+        FundProvider $fundProvider,
         Organization $organization
-    ) {
-        return $this->updateProvider($identity_address, $organizationFund, $organization);
+    ): bool {
+        $isPending = !$fundProvider->isApproved();
+        $hasPermission = $this->updateProvider($identity_address, $fundProvider, $organization);
+        $doesntHaveTransactions = !$fundProvider->hasTransactions();
+
+        return $isPending && $hasPermission && $doesntHaveTransactions;
     }
 }
