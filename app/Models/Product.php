@@ -340,7 +340,7 @@ class Product extends Model
     /**
      * @param array $options
      * @param Builder|null $builder
-     * @return Builder
+     * @return Builder|SoftDeletes
      */
     public static function search(array $options, Builder $builder = null): Builder
     {
