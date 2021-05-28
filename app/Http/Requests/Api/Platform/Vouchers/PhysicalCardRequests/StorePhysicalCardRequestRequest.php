@@ -24,7 +24,7 @@ class StorePhysicalCardRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'address' => 'required|string|between:5,100',
+            'address' => 'required|string|between:3,100',
             'house' => 'required|string|between:1,20',
             'house_addition' => 'nullable|string|between:0,20',
             'postcode' => 'required|string|between:0,20',
