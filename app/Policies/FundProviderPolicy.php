@@ -153,7 +153,7 @@ class FundProviderPolicy
         FundProvider $organizationFund,
         Organization $organization,
         Fund $fund
-    ) {
+    ): bool {
         if ($organization->id != $organizationFund->fund->organization_id) {
             return false;
         }

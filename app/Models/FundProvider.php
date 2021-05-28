@@ -58,7 +58,7 @@ use Carbon\Carbon;
  */
 class FundProvider extends Model
 {
-    use HasLogs;
+    use HasLogs, SoftDeletes;
 
     public const EVENT_APPROVED_BUDGET = 'approved_budget';
     public const EVENT_REVOKED_BUDGET = 'revoked_budget';

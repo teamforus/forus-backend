@@ -161,7 +161,7 @@ class FundProviderController extends Controller
      * @param Fund $fund
      * @param FundProvider $fundProvider
      * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function destroy(
         Organization $organization,
