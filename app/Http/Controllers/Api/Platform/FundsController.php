@@ -41,15 +41,17 @@ class FundsController extends Controller
      * @param IndexFundsRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(
-        IndexFundsRequest $request
-    ): AnonymousResourceCollection {
+    public function index(IndexFundsRequest $request): AnonymousResourceCollection
+    {
         $state = $request->input('state') === 'active_and_closed' ? [
             Fund::STATE_CLOSED,
             Fund::STATE_ACTIVE,
         ] : Fund::STATE_ACTIVE;
 
-        $query = Fund::search($request, Implementation::queryFundsByState($state));
+        $query = Fund::search($request->only([
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+        ]), Implementation::queryFundsByState($state));
+
         $meta = [
             'organizations' => $query->with('organization')->get()->pluck(
                 'organization.name', 'organization.id'

@@ -54,7 +54,9 @@ class FundProviderController extends Controller
             }),
         ];
 
-        return FundResource::collection(Fund::search($request, $fundsQuery)->latest()->paginate(
+        return FundResource::collection(Fund::search($request->only([
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+        ]), $fundsQuery)->latest()->paginate(
             $request->input('per_page', 10))
         )->additional(compact('meta'));
     }

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $implementation_id
  * @property string|null $client_type
  * @property string|null $identity_address
+ * @property mixed $meta
  * @property string $session_uid
  * @property string $session_secret
  * @property string $session_final_url
@@ -56,6 +57,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereMeta($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionFinalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionRequest($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionSecret($value)

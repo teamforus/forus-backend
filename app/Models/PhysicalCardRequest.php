@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $voucher_id
  * @property string $address
  * @property string $house
- * @property string $house_addition
+ * @property string|null $house_addition
  * @property string $postcode
  * @property string $city
  * @property \Illuminate\Support\Carbon|null $created_at

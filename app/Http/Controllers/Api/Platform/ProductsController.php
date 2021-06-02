@@ -26,7 +26,10 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', Product::class);
 
-        return ProductResource::collection(Product::search($request)->with(
+        return ProductResource::collection(Product::search($request->only([
+            'fund_type', 'product_category_id', 'fund_id', 'price_type',
+            'unlimited_stock', 'organization_id', 'q', 'order_by', 'order_by_dir'
+        ]))->with(
             ProductResource::load()
         )->where($request->input('show_all', false) ? [] : [
             'show_on_webshop' => true,
