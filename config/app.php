@@ -189,6 +189,7 @@ return [
         App\Providers\RepositoryServiceProvider::class,
 
         \Astrotomic\Translatable\TranslatableServiceProvider::class,
+        \Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
 
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
         App\Services\ApiRequestService\ApiRequestServiceProvider::class,
@@ -214,9 +215,9 @@ return [
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,
         App\Services\DigIdService\DigIdServiceProvider::class,
         App\Services\Forus\Session\SessionServiceProvider::class,
-        Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
 
         App\Services\EventLogService\EventLogServiceProvider::class,
+        App\Services\BackofficeApiService\BackofficeApiServiceProvider::class,
     ],
 
     /*

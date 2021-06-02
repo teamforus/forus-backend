@@ -40,6 +40,7 @@ use RuntimeException;
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\FundBackofficeLog|null $fund_backoffice_log
  * @property-read float $amount_available
  * @property-read float $amount_available_cached
  * @property-read string|null $created_at_string
@@ -139,7 +140,7 @@ class Voucher extends Model
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
-        'activation_code', 'activation_code_uid',
+        'activation_code', 'activation_code_uid', 'fund_backoffice_log_id',
     ];
 
     /**
@@ -162,6 +163,15 @@ class Voucher extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_backoffice_log(): BelongsTo
+    {
+        return $this->belongsTo(FundBackofficeLog::class);
     }
 
     /**
@@ -624,7 +634,7 @@ class Voucher extends Model
     /**
      * Assign voucher to identity
      *
-     * @param $identity_address
+     * @param string $identity_address
      * @return $this
      */
     public function assignToIdentity(string $identity_address): self
@@ -835,16 +845,14 @@ class Voucher extends Model
      * Set voucher relation to bsn number.
      *
      * @param string $bsn
-     * @return VoucherRelation
+     * @return VoucherRelation|\Illuminate\Database\Eloquent\Model
      */
     public function setBsnRelation(string $bsn): VoucherRelation
     {
         $this->voucher_relation()->delete();
 
         /** @var VoucherRelation $voucher_relation */
-        $voucher_relation = $this->voucher_relation()->create(compact('bsn'));
-
-        return $voucher_relation;
+        return $this->voucher_relation()->create(compact('bsn'));
     }
 
     /**

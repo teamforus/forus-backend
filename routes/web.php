@@ -11,6 +11,8 @@
 |
 */
 
+use App\Models\Fund;
+
 $router = resolve('router');
 
 /**

@@ -9,6 +9,7 @@ use App\Events\Funds\FundStartedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Scopes\Builders\VoucherQuery;
+use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
@@ -25,6 +26,7 @@ use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\RecordRepo;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Services\BackofficeApiService\BackofficeApi;
 use App\Traits\HasMarkdownDescription;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,6 +57,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property \Illuminate\Support\Carbon|null $notified_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
+ * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
+ * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
  * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
@@ -326,6 +330,14 @@ class Fund extends Model
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => true
         ]);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function backoffice_logs(): HasMany
+    {
+        return $this->hasMany(FundBackofficeLog::class);
     }
 
     /**
@@ -850,9 +862,9 @@ class Fund extends Model
             return null;
         }
 
-        if($fundFormula->filter(static function (FundFormula $formula){
+        if ($fundFormula->filter(static function (FundFormula $formula){
             return $formula->type !== 'fixed';
-        })->count()){
+        })->count()) {
             return null;
         }
 
@@ -860,13 +872,14 @@ class Fund extends Model
     }
 
     /**
-     * @return BunqService|string
+     * @return BunqService
      */
-    public function getBunq() {
+    public function getBunq(): ?BunqService
+    {
         $fundBunq = $this->getBunqKey();
 
         if (empty($fundBunq) || empty($fundBunq['key'])) {
-            return false;
+            return null;
         }
 
         return BunqService::create(
@@ -1698,5 +1711,71 @@ class Fund extends Model
     public function getMaxAmountSumVouchers(): float
     {
         return (float) ($this->limitGeneratorAmount() ? $this->budget_left : 1000000);
+    }
+
+    /**
+     * @param string $identity_address
+     * @return bool
+     */
+    public function identityHasActiveVoucher(string $identity_address): bool
+    {
+        return VoucherQuery::whereNotExpired($this->vouchers()->getQuery())->where(
+            compact('identity_address')
+        )->exists();
+    }
+
+    /**
+     * @param string $identity_address
+     * @return EligibilityResponse|null
+     */
+    public function checkBackofficeIfAvailable(string $identity_address): ?EligibilityResponse
+    {
+        $bsn = record_repo()->bsnByAddress($identity_address);
+        $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
+
+        if ($bsn && !$alreadyHasActiveVoucher &&  $this->isBackofficeApiAvailable()) {
+            $backofficeApi = $this->getBackofficeApi();
+            $response = $backofficeApi->eligibilityCheck($bsn);
+
+            // check again for active vouchers
+            if ($response->isEligible() && !$this->identityHasActiveVoucher($identity_address)) {
+                $this->makeVoucher($identity_address)->updateModel([
+                    'fund_backoffice_log_id' => $response->getLog()->id,
+                ]);
+
+                $backofficeApi->reportReceived($bsn);
+            }
+
+            return $response;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return ?BackofficeApi
+     */
+    public function getBackofficeApi(): ?BackofficeApi
+    {
+        return $this->isBackofficeApiAvailable() ? new BackofficeApi(record_repo(), $this) : null;
+    }
+
+    /**
+     * @param $bsn
+     */
+    public function reportFirstUseByApi($bsn): void
+    {
+        if ($backofficeApi = $this->getBackofficeApi()) {
+            $backofficeApi->reportFirstUse($bsn);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBackofficeApiAvailable(): bool
+    {
+        return $this->organization->backoffice_available &&
+            $this->fund_config->backoffice_enabled;
     }
 }

@@ -1,12 +1,12 @@
 <?php
 
 use App\Models\Implementation;
-use \Carbon\Carbon;
-use \Illuminate\Contracts\Auth\Access\Gate;
+use Carbon\Carbon;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
-use \App\Services\Forus\Session\Services\Browser;
+use App\Services\Forus\Session\Services\Browser;
 use Illuminate\Support\Facades\Config;
 
 if (!function_exists('auth_user')) {
@@ -15,7 +15,7 @@ if (!function_exists('auth_user')) {
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    function auth_user()
+    function auth_user(): ?\Illuminate\Contracts\Auth\Authenticatable
     {
         return auth()->user();
     }
@@ -29,10 +29,8 @@ if (!function_exists('auth_address')) {
      * @param int $errorCode
      * @return string|null
      */
-    function auth_address(
-        $abortOnFail = false,
-        $errorCode = 403
-    ) {
+    function auth_address($abortOnFail = false, $errorCode = 403): ?string
+    {
         $auth = auth_model($abortOnFail, $errorCode);
 
         return $auth && method_exists($auth, 'getAddress') ? $auth->getAddress() : null;
@@ -47,10 +45,7 @@ if (!function_exists('auth_proxy_id')) {
      * @param int $errorCode
      * @return string|null
      */
-    function auth_proxy_id(
-        $abortOnFail = false,
-        $errorCode = 403
-    ) {
+    function auth_proxy_id($abortOnFail = false, $errorCode = 403): ?string {
         $auth = auth_model($abortOnFail, $errorCode);
 
         return $auth && method_exists($auth, 'getProxyId') ? $auth->getProxyId() : null;

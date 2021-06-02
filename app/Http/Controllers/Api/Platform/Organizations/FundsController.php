@@ -9,9 +9,11 @@ use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
@@ -48,10 +50,8 @@ class FundsController extends Controller
             'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
         ]), $organization->funds()->getQuery());
 
-        if (!auth()->id()) {
-            $query->where([
-                'public' => true
-            ]);
+        if (!$request->isAuthenticated()) {
+            $query->where('public', true);
         }
 
         return FundResource::collection(FundQuery::sortByState($query, [
@@ -112,6 +112,21 @@ class FundsController extends Controller
         FundCreated::dispatch($fund);
 
         return new FundResource($fund);
+    }
+
+    /**
+     * @param StoreFundCriteriaRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function storeCriteriaValidate(
+        StoreFundCriteriaRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+
+        return response()->json([], $request ? 200 : 403);
     }
 
     /**
@@ -218,21 +233,6 @@ class FundsController extends Controller
     }
 
     /**
-     * @param StoreFundCriteriaRequest $request
-     * @param Organization $organization
-     * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function storeCriteriaValidate(
-        StoreFundCriteriaRequest $request,
-        Organization $organization
-    ): JsonResponse {
-        $this->authorize('show', $organization);
-
-        return response()->json([], $request ? 200 : 403);
-    }
-
-    /**
      * @param UpdateFundCriteriaRequest $request
      * @param Organization $organization
      * @param Fund $fund
@@ -243,10 +243,59 @@ class FundsController extends Controller
         UpdateFundCriteriaRequest $request,
         Organization $organization,
         Fund $fund
-    ): JsonResponse {
+    ): JsonResponse{
         $this->authorize('show', $organization);
 
         return response()->json([], $request && $fund ? 200 : 403);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateFundBackofficeRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return FundResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updateBackoffice(
+        UpdateFundBackofficeRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): FundResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateBackoffice', [$fund, $organization]);
+
+        $fund->fund_config->update($request->only([
+            'backoffice_enabled', 'backoffice_url', 'backoffice_key',
+            'backoffice_certificate', 'backoffice_fallback',
+        ]));
+
+        return new FundResource($fund);
+    }
+
+    /**
+     * Test fund backoffice connection
+     *
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function testBackofficeConnection(
+        BaseFormRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('updateBackoffice', [$fund, $organization]);
+
+        $log = $fund->getBackofficeApi()->checkStatus();
+
+        return response()->json($log->only('state', 'response_code'), $request ? 200 : 403);
     }
 
     /**

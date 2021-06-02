@@ -46,7 +46,7 @@ use Illuminate\Http\Request;
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
  * @property bool $manage_provider_products
- * @property int $backoffice_available
+ * @property bool $backoffice_available
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -144,6 +144,7 @@ class Organization extends Model
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
+        'backoffice_available',
     ];
 
     /**
@@ -157,6 +158,7 @@ class Organization extends Model
         'is_sponsor'                    => 'boolean',
         'is_provider'                   => 'boolean',
         'is_validator'                  => 'boolean',
+        'backoffice_available'          => 'boolean',
         'manage_provider_products'      => 'boolean',
         'validator_auto_accept_funds'   => 'boolean',
     ];
@@ -679,7 +681,7 @@ class Organization extends Model
 
     /**
      * @param string $identity_address
-     * @return Model|Employee|null|object
+     * @return Employee|\Illuminate\Database\Eloquent\Model|null
      */
     public function findEmployee(string $identity_address): ?Employee
     {
@@ -688,7 +690,7 @@ class Organization extends Model
 
     /**
      * @param $fund_id
-     * @return Model|Fund|null|object
+     * @return Fund|\Illuminate\Database\Eloquent\Model|null
      */
     public function findFund($fund_id = null): ?Fund
     {

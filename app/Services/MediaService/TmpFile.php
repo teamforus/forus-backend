@@ -3,14 +3,13 @@
 
 namespace App\Services\MediaService;
 
-
 /**
  * Class TmpFile
  * @package App\Services\MediaService
  */
 class TmpFile
 {
-    private $resource = null;
+    private $resource;
 
     /**
      * TmpFile constructor.

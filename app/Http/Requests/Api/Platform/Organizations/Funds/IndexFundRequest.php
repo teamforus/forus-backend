@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
 /**
  * Class IndexFundRequest
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class IndexFundRequest extends FormRequest
+class IndexFundRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
