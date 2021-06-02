@@ -140,7 +140,10 @@ class FundQuery
      * @return Builder
      */
     public static function whereQueryFilter(Builder $query, string $q): Builder {
-        return $query->where('name', 'LIKE', "%{$q}%");
+        return $query->where(function(Builder $builder) use ($q) {
+            $builder->where('name', 'LIKE', "%$q%");
+            $builder->orWhere('description_text', 'LIKE', "%$q%");
+        });
     }
 
     /**

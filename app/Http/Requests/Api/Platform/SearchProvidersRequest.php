@@ -3,8 +3,14 @@
 namespace App\Http\Requests\Api\Platform;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Implementation;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
+/**
+ * Class SearchProvidersRequest
+ * @package App\Http\Requests\Api\Platform
+ */
 class SearchProvidersRequest extends BaseFormRequest
 {
     /**
@@ -24,18 +30,28 @@ class SearchProvidersRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $implementation = $this->implementation_model();
-
         return [
-            'per_page'  => 'numeric|max:1000',
-            'fund_id'   => [
-                $implementation->isGeneral() || !$implementation ? null : (
-                    Rule::in($implementation->funds()->pluck('funds.id'))
-                )
-            ],
-            'business_type_id'   => [
-                Rule::exists('business_types', 'id')
-            ]
+            'q'                 => 'nullable|string',
+            'business_type_id'  => 'nullable|exists:business_types,id',
+            'fund_id'           => $this->fundIdRules($this->implementation_model()),
+            'per_page'          => 'numeric|max:1000',
+            'order_by'          => 'nullable|in:created_at',
+            'order_by_dir'      => 'nullable|in:asc,desc',
+        ];
+    }
+
+    /**
+     * @param Implementation|null $implementation
+     * @return array
+     */
+    protected function fundIdRules(?Implementation $implementation = null): array {
+        return [
+            'nullable',
+            Rule::exists('funds', 'id')->where(function(Builder $builder) use ($implementation) {
+                if ($implementation && !$implementation->isGeneral()) {
+                    $builder->addWhereExistsQuery($implementation->funds()->getBaseQuery());
+                }
+            })
         ];
     }
 }

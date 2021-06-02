@@ -14,6 +14,7 @@ use App\Events\Funds\FundProviderApplied;
 use App\Events\Funds\FundProviderChatMessage;
 use App\Events\Funds\FundProviderChatMessageEvent;
 use App\Events\Funds\FundStartedEvent;
+use App\Events\Funds\FundUpdatedEvent;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Implementation;
@@ -57,6 +58,10 @@ class FundSubscriber
     public function onFundCreated(FundCreated $event): void {
         $fund = $event->getFund();
 
+        $fund->update([
+            'description_text' => $fund->descriptionToText(),
+        ]);
+
         FundCreatedNotification::send($fund->log(Fund::EVENT_CREATED, [
             'fund' => $fund,
             'sponsor' => $fund->organization,
@@ -70,6 +75,18 @@ class FundSubscriber
                 $fund->organization->name
             );
         }
+    }
+
+    /**
+     * @param FundUpdatedEvent $event
+     * @noinspection PhpUnused
+     */
+    public function onFundUpdated(FundUpdatedEvent $event): void {
+        $fund = $event->getFund();
+
+        $fund->update([
+            'description_text' => $fund->descriptionToText(),
+        ]);
     }
 
     /**
@@ -274,6 +291,7 @@ class FundSubscriber
     public function subscribe(Dispatcher $events)
     {
         $events->listen(FundCreated::class,'\App\Listeners\FundSubscriber@onFundCreated');
+        $events->listen(FundUpdatedEvent::class,'\App\Listeners\FundSubscriber@onFundUpdated');
         $events->listen(FundEndedEvent::class, '\App\Listeners\FundSubscriber@onFundEnded');
         $events->listen(FundStartedEvent::class, '\App\Listeners\FundSubscriber@onFundStarted');
         $events->listen(FundExpiringEvent::class, '\App\Listeners\FundSubscriber@onFundExpiring');

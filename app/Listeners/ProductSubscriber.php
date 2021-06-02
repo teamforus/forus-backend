@@ -21,13 +21,22 @@ use App\Notifications\Organizations\Products\ProductRevokedNotification;
 use App\Notifications\Organizations\Products\ProductSoldOutNotification;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Class ProductSubscriber
+ * @package App\Listeners
+ */
 class ProductSubscriber
 {
     /**
      * @param ProductCreated $productCreated
      */
-    public function onProductCreated(ProductCreated $productCreated): void {
+    public function onProductCreated(ProductCreated $productCreated): void
+    {
         $product = $productCreated->getProduct();
+
+        $product->update([
+            'description_text' => $product->descriptionToText(),
+        ]);
 
         $product->log(Product::EVENT_CREATED, [
             'product' => $product,
@@ -42,10 +51,15 @@ class ProductSubscriber
     /**
      * @param ProductUpdated $productUpdated
      */
-    public function onProductUpdated(ProductUpdated $productUpdated): void {
+    public function onProductUpdated(ProductUpdated $productUpdated): void
+    {
         /** @var FundProviderChat[] $chats */
         $product = $productUpdated->getProduct();
         $chats = $product->fund_provider_chats()->get();
+
+        $product->update([
+            'description_text' => $product->descriptionToText(),
+        ]);
 
         foreach ($chats as $chat) {
             $chat->addSystemMessage('Aanbieding aangepast.', auth_address());
@@ -57,7 +71,8 @@ class ProductSubscriber
     /**
      * @param ProductSoldOut $productSoldOut
      */
-    public function onProductSoldOut(ProductSoldOut $productSoldOut): void {
+    public function onProductSoldOut(ProductSoldOut $productSoldOut): void
+    {
         $product = $productSoldOut->getProduct();
         $product->sendSoldOutEmail();
 
@@ -70,7 +85,8 @@ class ProductSubscriber
     /**
      * @param ProductExpired $productExpired
      */
-    public function onProductExpired(ProductExpired $productExpired): void {
+    public function onProductExpired(ProductExpired $productExpired): void
+    {
         $product = $productExpired->getProduct();
 
         ProductExpiredNotification::send($product->log(Product::EVENT_EXPIRED, [
@@ -82,7 +98,8 @@ class ProductSubscriber
     /**
      * @param ProductReserved $productReserved
      */
-    public function onProductReserved(ProductReserved $productReserved): void {
+    public function onProductReserved(ProductReserved $productReserved): void
+    {
         $product = $productReserved->getProduct();
         $voucher = $productReserved->getVoucher();
 
@@ -97,7 +114,8 @@ class ProductSubscriber
     /**
      * @param ProductApproved $productApproved
      */
-    public function onProductApproved(ProductApproved $productApproved): void {
+    public function onProductApproved(ProductApproved $productApproved): void
+    {
         $fund = $productApproved->getFund();
         $product = $productApproved->getProduct();
 
@@ -121,7 +139,8 @@ class ProductSubscriber
     /**
      * @param ProductRevoked $productRevoked
      */
-    public function onProductRevoked(ProductRevoked $productRevoked): void {
+    public function onProductRevoked(ProductRevoked $productRevoked): void
+    {
         $fund = $productRevoked->getFund();
         $product = $productRevoked->getProduct();
 

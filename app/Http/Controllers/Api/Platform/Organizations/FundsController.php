@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreated;
+use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
@@ -42,7 +43,10 @@ class FundsController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
-        $query = Fund::search($request, $organization->funds()->getQuery());
+
+        $query = Fund::search($request->only([
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+        ]), $organization->funds()->getQuery());
 
         if (!auth()->id()) {
             $query->where([
@@ -118,10 +122,8 @@ class FundsController extends Controller
      * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        Organization $organization,
-        Fund $fund
-    ): FundResource {
+    public function show(Organization $organization, Fund $fund): FundResource
+    {
         $this->authorize('show', [$fund, $organization]);
 
         return new FundResource($fund);
@@ -173,7 +175,7 @@ class FundsController extends Controller
             ]);
         }
 
-        $fund->update($params);
+        FundUpdatedEvent::dispatch($fund->updateModel($params));
 
         if ($media instanceof Media && $media->type === 'fund_logo') {
             $fund->attachMedia($media);

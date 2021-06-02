@@ -17,8 +17,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $original_name
  * @property string $type
  * @property string $ext
- * @property string $dominant_color
  * @property int $order
+ * @property string $dominant_color
  * @property string $identity_address
  * @property int|null $mediable_id
  * @property string|null $mediable_type
