@@ -57,9 +57,8 @@ class VouchersController extends Controller
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(
-        StoreProductVoucherRequest $request
-    ): VoucherResource {
+    public function store(StoreProductVoucherRequest $request): VoucherResource
+    {
         $this->authorize('store', Voucher::class);
 
         $product = Product::find($request->input('product_id'));

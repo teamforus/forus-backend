@@ -442,6 +442,9 @@ $router->group(['middleware' => [
         'organizations/{organization}/funds/{fund}/backoffice-test',
         "Api\Platform\Organizations\FundsController@testBackofficeConnection");
 
+    $router->patch(
+        'organizations/{organization}/transfer-ownership',
+        "Api\Platform\OrganizationsController@transferOwnership");
 
     $router->resource(
         'organizations.funds',
