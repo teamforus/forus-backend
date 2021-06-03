@@ -11,6 +11,8 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\ProductQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -48,13 +50,14 @@ class SponsorProviderResource extends JsonResource
         $organizationData = (new OrganizationWithPrivateResource($this->resource))->toArray($request);
 
         $funds = $this->getProviderFunds($sponsorOrganization, $organization);
+        $productsQuery = $this->getProviderProductsQuery($organization, $funds);
 
         return array_merge($organizationData, [
             'logo' => new MediaCompactResource($organization->logo),
             'offices' => OfficeResource::collection($organization->offices),
             'business_type' => new BusinessTypeResource($organization->business_type),
             'employees' => EmployeeResource::collection($organization->employees),
-            'products_count' => $organization->products_count,
+            'products_count' => $productsQuery->count(),
             'last_activity' => $lastActivity ? $lastActivity->format('Y-m-d H:i:s') : null,
             'last_activity_locale' => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
             'funds' => $funds,
@@ -62,6 +65,25 @@ class SponsorProviderResource extends JsonResource
                 return $fund['active'];
             })->count(),
         ]);
+    }
+
+    /**
+     * @param Organization $providerOrganization
+     * @param Collection $funds
+     * @return Builder
+     */
+    protected function getProviderProductsQuery(
+        Organization $providerOrganization,
+        Collection $funds
+    ): Builder {
+        $productsQuery = $providerOrganization->products()->getQuery();
+        $productsQuery = ProductQuery::whereNotExpired($productsQuery);
+        $productsQuery = ProductQuery::whereFundNotExcludedOrHasHistory(
+            $productsQuery, $funds->pluck('id')->toArray()
+        );
+        $productsQuery->whereNull('sponsor_organization_id');
+
+        return $productsQuery;
     }
 
     /**
