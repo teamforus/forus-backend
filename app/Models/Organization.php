@@ -510,6 +510,18 @@ class Organization extends Model
     }
 
     /**
+     * @param array|int $fund_id
+     * @return EloquentBuilder
+     */
+    public function providerProductsQuery($fund_id = []): EloquentBuilder
+    {
+        $productsQuery = ProductQuery::whereNotExpired($this->products()->getQuery());
+        $productsQuery = ProductQuery::whereFundNotExcludedOrHasHistory($productsQuery, $fund_id);
+
+        return $productsQuery->whereNull('sponsor_organization_id');
+    }
+
+    /**
      * @param string|array $permission
      * @return Collection|Employee[]
      */
