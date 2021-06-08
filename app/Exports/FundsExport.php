@@ -8,14 +8,16 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 /**
  * Class FundsExport
  * @package App\Exports
  */
-class FundsExport implements FromCollection, WithHeadings, WithEvents
+class FundsExport implements FromCollection, WithHeadings, WithColumnFormatting, WithEvents
 {
     use Exportable, RegistersEventListeners;
 
@@ -24,11 +26,11 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
     protected $headers;
 
     /**
-     * VoucherTransactionsSponsorExport constructor.
+     * FundsExport constructor.
      * @param EloquentCollection $funds
      * @param bool $detailed
      */
-    public function __construct(EloquentCollection $funds, $detailed = true)
+    public function __construct(EloquentCollection $funds, bool $detailed = true)
     {
         $this->detailed = $detailed;
         $this->data = $this->exportTransform($funds);
@@ -46,6 +48,19 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
             $this->trans("expenses") => currency_format($this->data->sum($this->trans("expenses"))),
             $this->trans("transactions") => currency_format($this->data->sum($this->trans("transactions"))),
         ]] : []);
+    }
+
+    /**
+     * @return array
+     */
+    public function columnFormats(): array
+    {
+        return [
+            'E' => NumberFormat::FORMAT_PERCENTAGE,
+            'G' => NumberFormat::FORMAT_PERCENTAGE,
+            'L' => NumberFormat::FORMAT_PERCENTAGE,
+            'N' => NumberFormat::FORMAT_PERCENTAGE,
+        ];
     }
 
     /**
@@ -107,17 +122,17 @@ class FundsExport implements FromCollection, WithHeadings, WithEvents
                 "amount_per_voucher"            => currency_format($fund->fund_formulas->sum('amount')),
                 "average_per_voucher"           => currency_format($averagePerVoucher),
                 "total_spent_amount"            => currency_format($fund->budget_used_active_vouchers),
-                "total_spent_percentage"        => currency_format($budgetUsedPercentage) . ' %',
+                "total_spent_percentage"        => currency_format($budgetUsedPercentage / 100),
                 "total_left"                    => currency_format($budgetLeft),
-                "total_left_percentage"         => currency_format($budgetLeftPercentage) . ' %',
+                "total_left_percentage"         => currency_format($budgetLeftPercentage / 100),
 
                 "vouchers_amount"               => currency_format($details['vouchers_amount']),
                 "vouchers_count"                => (string) $details['vouchers_count'],
                 "vouchers_inactive_count"       => currency_format($details['inactive_count'], 0),
                 "vouchers_inactive_amount"      => currency_format($details['inactive_amount']),
-                "vouchers_inactive_percentage"  => currency_format($inactiveVouchersPercentage) . ' %',
-                "vouchers_active_amount"        => (string) $details['active_amount'],
-                "vouchers_active_percentage"    => currency_format($activeVouchersPercentage) . ' %',
+                "vouchers_inactive_percentage"  => currency_format($inactiveVouchersPercentage / 100),
+                "vouchers_active_amount"        => currency_format($details['active_amount']),
+                "vouchers_active_percentage"    => currency_format($activeVouchersPercentage / 100),
                 "vouchers_active_count"         => currency_format($details['active_count'], 0),
             ])->mapWithKeys(function($value, $key) {
                 return [$this->trans($key) => $value];

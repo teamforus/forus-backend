@@ -143,11 +143,11 @@ class FundResource extends Resource
             'left'                      => currency_format($fund->budget_left),
             'transaction_costs'         => currency_format($fund->getTransactionCosts()),
             'reserved'                  => round($reservedAmount, 2),
-            'vouchers_amount'           => $details['vouchers_amount'],
+            'vouchers_amount'           => currency_format($details['vouchers_amount']),
             'vouchers_count'            => $details['vouchers_count'],
-            'active_vouchers_amount'    => $details['active_amount'],
+            'active_vouchers_amount'    => currency_format($details['active_amount']),
             'active_vouchers_count'     => $details['active_count'],
-            'inactive_vouchers_amount'  => $details['inactive_amount'],
+            'inactive_vouchers_amount'  => currency_format($details['inactive_amount']),
             'inactive_vouchers_count'   => $details['inactive_count'],
         ];
     }
