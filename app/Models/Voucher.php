@@ -45,6 +45,8 @@ use RuntimeException;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $expired
  * @property-read bool $has_transactions
+ * @property-read bool $has_reservations
+ * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
  * @property-read string $type
@@ -617,6 +619,24 @@ class Voucher extends Model
     public function getHasTransactionsAttribute(): bool
     {
         return count($this->transactions) > 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasReservationsAttribute(): bool
+    {
+        return count($this->product_vouchers) > 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getInUseAttribute(): bool
+    {
+        return $this->has_transactions || $this->has_reservations;
     }
 
     /**
