@@ -56,7 +56,7 @@ class VoucherExportData
             'name' => $this->name,
         ], [
             'granted' => $assigned_to_identity ? 'Ja': 'Nee',
-            'in_use' => $this->voucher->has_transactions ? 'Ja': 'Nee',
+            'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
         ], $this->voucher->product ? [
             'product_name' => $this->voucher->product->name,
         ] : [], $assigned_to_identity ? [
