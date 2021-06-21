@@ -116,8 +116,9 @@ class FundProviderProduct extends Model
         $count_transactions = VoucherTransaction::where([
             'product_id' => $this->product_id,
             'organization_id' => $this->product->organization_id,
-        ])->whereHas('voucher', static function(Builder $builder) use ($identity_address) {
+        ])->whereHas('voucher', function(Builder $builder) use ($identity_address) {
             $builder->where('identity_address', '=', $identity_address);
+            $builder->where('fund_id', '=', $this->fund_provider->fund_id);
         })->count();
 
         return max($limitAvailable - $count_transactions, 0);
