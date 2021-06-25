@@ -125,11 +125,10 @@ class PrevalidationController extends Controller
         $this->authorize('viewAny', Prevalidation::class);
 
         $type = $request->input('export_format', 'xls');
+        $fileName = date('Y-m-d H:i:s') . '.'. $type;
+        $fileData = new PrevalidationsExport($request);
 
-        return resolve('excel')->download(
-            new PrevalidationsExport($request),
-            date('Y-m-d H:i:s') . '.'. $type
-        );
+        return resolve('excel')->download($fileData, $fileName);
     }
 
     /**
