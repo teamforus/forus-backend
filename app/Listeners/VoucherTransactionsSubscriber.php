@@ -24,15 +24,14 @@ class VoucherTransactionsSubscriber
         $transaction = $voucherTransactionEvent->getVoucherTransaction();
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
-        $product = $voucher->product;
         $bsn = record_repo()->bsnByAddress($voucher->identity_address);
 
         if ($bsn && $voucher->transactions()->count() == 1 && $fund->isBackofficeApiAvailable()) {
             $fund->reportFirstUseByApi($bsn);
         }
 
-        if ($product) {
-            $voucher->product->updateSoldOutState();
+        if ($transaction->product) {
+            $transaction->product->updateSoldOutState();
         }
 
         $eventMeta = [

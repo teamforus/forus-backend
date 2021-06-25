@@ -4,7 +4,10 @@
 namespace App\Scopes\Builders;
 
 use App\Models\FundProvider;
+use App\Models\ProductReservation;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
+use Illuminate\Database\Query\Builder as QBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -28,14 +31,12 @@ class FundProviderProductQuery
      * @param array|int|null $organization_id
      * @return Builder
      */
-    public static function whereAvailableForVoucherFilter(
+    public static function whereAvailableForSubsidyVoucherFilter(
         Builder $query,
         Voucher $voucher,
         $organization_id = null
     ): Builder {
-        $query->whereHas('product', static function(
-            Builder $query
-        ) use ($voucher, $organization_id) {
+        $query->whereHas('product', static function(Builder $query) use ($voucher, $organization_id) {
             $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
                 $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
                     FundProvider::query(), $voucher->fund_id,'subsidy', $voucher->product_id
@@ -67,30 +68,41 @@ class FundProviderProductQuery
         Builder $builder,
         Voucher $voucher
     ): Builder {
-        $limit_per_identity = \DB::raw(sprintf(
-            "(`fund_provider_products`.`limit_per_identity` * %s)",
-            $voucher->limit_multiplier
-        ));
+        $limit_per_identity = sprintf("(`fund_provider_products`.`limit_per_identity` * %s)", $voucher->limit_multiplier);
+        $limit_total = '`fund_provider_products`.`limit_total`';
 
-        $builder->where(static function (Builder $builder) use ($voucher) {
-            $limit_total = \DB::raw('`fund_provider_products`.`limit_total`');
+        $builder->whereHas('product', static function(Builder $builder) use ($voucher, $limit_total, $limit_per_identity) {
+            $builder->whereExists(function(QBuilder $builder) use ($voucher, $limit_per_identity, $limit_total) {
+                $builder->selectSub(VoucherTransaction::query()
+                    ->select([])
+                    ->selectRaw('count(*) as `count_transactions`')
+                    ->where('state', '!=', VoucherTransaction::STATE_CANCELED)
+                    ->whereColumn('product_id', '=', 'products.id')
+                    ->where('voucher_id', '=', $voucher->id), 'count_transactions');
 
-            $builder->whereHas('product.voucher_transactions', static function(Builder $builder) use ($voucher) {
-                // nesting is required, do not replace with 'product.voucher_transactions.voucher'
-                $builder->whereHas('voucher', static function(Builder $builder) use ($voucher) {
-                    $builder->where('vouchers.fund_id', '=', $voucher->fund_id);
-                });
-            },'<', $limit_total);
+                $builder->selectSub(Voucher::query()
+                    ->select([])
+                    ->selectRaw('count(*)')
+                    ->whereDoesntHave('product_reservation')
+                    ->whereColumn('vouchers.product_id', '=', 'products.id')
+                    ->where('parent_id', '=', $voucher->id), 'count_vouchers');
 
-            $builder->orWhere('limit_total_unlimited', '=', true);
-        });
+                $builder->selectSub(ProductReservation::query()
+                    ->select([])
+                    ->selectRaw('count(*)')
+                    ->whereNotIn('state', [
+                        ProductReservation::STATE_CANCELED,
+                        ProductReservation::STATE_REJECTED,
+                    ])
+                    ->whereDoesntHave('voucher_transaction')
+                    ->whereColumn('product_id', '=', 'products.id')
+                    ->where('voucher_id', '=', $voucher->id), 'count_reservations');
 
-        $builder->whereHas('product.voucher_transactions', static function(Builder $builder) use ($voucher) {
-            // nesting is required, do not replace with 'product.voucher_transactions.voucher'
-            return $builder->whereHas('voucher', static function(Builder $builder) use ($voucher) {
-                $builder->where('vouchers.id', '=', $voucher->id);
+                $sumQuery = "(`count_transactions` + `count_vouchers` + `count_reservations`)";
+                $builder->havingRaw("($sumQuery < ($limit_per_identity))");
+                $builder->havingRaw("(($sumQuery < ($limit_total)) or (`limit_total_unlimited` = true))");
             });
-        }, '<', $limit_per_identity);
+        });
 
         return $builder;
     }

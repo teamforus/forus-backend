@@ -172,18 +172,35 @@ return [
     'kvk' => 'The KVK-number is mandatory and must be valid.',
     'business_type_id' => 'Organization type',
     'voucher' => [
-        'expired' => 'This voucher is expired',
+        'expired' => 'This voucher is expired.',
+        'pending' => 'This voucher is pending.',
         'product_voucher_used' => 'This product voucher is already used.',
         'provider_not_applied' => 'You can not scan this voucher! You are not applied for this fund.',
         'provider_pending' => 'You can not scan this voucher! Your application for this fund is still pending.',
         'provider_denied' => 'You can not scan this voucher! Your application for this fund is denied.',
         'fund_not_active' => 'Your can not scan this voucher! The fund is not active (anymore).',
         'not_enough_funds' => 'Not enough credit on voucher.',
+        'product_sold_out' => 'Your offer is sold out, increase the number that is still for sale in your management environment.',
+        'reservation_used' => 'The voucher is already used.',
+        'reservation_product_removed' => 'The product removed by the provider.',
     ],
     'product_voucher' => [
         'product_not_found' => 'Invalid product id.',
         'product_sold_out' => 'Product sold out.',
         'not_enough_stock' => 'Not enough stock available for product :product_name.',
+        'reservation_used' => 'The voucher is already used.',
+        'reservation_product_removed' => 'The product removed by the provider.',
+    ],
+    'product_reservation' => [
+        'product_not_found' => 'Invalid product id.',
+        'product_sold_out' => 'Product sold out.',
+        'not_enough_stock' => 'Not enough stock available for product :product_name.',
+        'reservation_not_enabled' => 'Reservation is not available for this product.',
+        'no_identity_stock' => 'Limit stock per user reached.',
+        'reservation_not_pending' => join(" ", [
+            'The reservation (#:code) is not pending, the current state is ":state".',
+            'Please go to the dashboard to review and accept the reservation.'
+        ]),
     ],
     'attributes' => [
         'pin_code' => "Pin code",

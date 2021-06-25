@@ -17,9 +17,8 @@ class NotificationsController extends Controller
      * NotificationsController constructor.
      * @param INotificationRepo $notificationRepo
      */
-    public function __construct(
-        INotificationRepo $notificationRepo
-    ) {
+    public function __construct(INotificationRepo $notificationRepo)
+    {
         $this->notificationRepo = $notificationRepo;
         $this->middleware('throttle', [10, 1]);
     }
@@ -28,36 +27,27 @@ class NotificationsController extends Controller
      * @param string $token
      * @return View
      */
-    public function unsubscribe(
-        string $token
-    ): View {
-        $email = $this->notificationRepo->emailByUnsubscribeToken($token) ??
-            abort('404');
+    public function unsubscribe(string $token): View
+    {
+        $email = $this->notificationRepo->emailByUnsubscribeToken($token) ?? abort('404');
 
         $reSubLink = $this->notificationRepo->makeReSubLink($email, $token);
         $this->notificationRepo->unsubscribeEmail($email);
 
-        return view('pages.notifications.unsubscribed', compact(
-            'email', 'reSubLink'
-        ));
+        return view('pages.notifications.unsubscribed', compact('email', 'reSubLink'));
     }
 
     /**
      * @param string $token
      * @return View
      */
-    public function subscribe(
-        string $token
-    ): View {
-        $email = $this->notificationRepo->emailByUnsubscribeToken(
-                $token
-            ) ?? abort(404);
+    public function subscribe(string $token): View
+    {
+        $email = $this->notificationRepo->emailByUnsubscribeToken($token) ?? abort(404);
 
         $unSubLink = $this->notificationRepo->makeUnsubLink($email, $token);
         $this->notificationRepo->reSubscribeEmail($email);
 
-        return view('pages.notifications.subscribed', compact(
-            'email', 'unSubLink'
-        ));
+        return view('pages.notifications.subscribed', compact('email', 'unSubLink'));
     }
 }

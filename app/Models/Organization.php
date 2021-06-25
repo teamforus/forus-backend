@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
@@ -22,7 +23,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\Organization
@@ -31,6 +31,7 @@ use Illuminate\Http\Request;
  * @property string|null $identity_address
  * @property string $name
  * @property string|null $description
+ * @property string|null $description_text
  * @property string $iban
  * @property string $email
  * @property bool $email_public
@@ -45,6 +46,9 @@ use Illuminate\Http\Request;
  * @property bool $is_provider
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
+ * @property bool $reservations_budget_enabled
+ * @property bool $reservations_subsidy_enabled
+ * @property bool $reservations_auto_accept
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -67,7 +71,6 @@ use Illuminate\Http\Request;
  * @property-read Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
  * @property-read int|null $funds_voucher_transactions_count
  * @property-read string $description_html
- * @property-read string $description_text
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -109,6 +112,7 @@ use Illuminate\Http\Request;
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
  * @method static EloquentBuilder|Organization whereCreatedAt($value)
  * @method static EloquentBuilder|Organization whereDescription($value)
+ * @method static EloquentBuilder|Organization whereDescriptionText($value)
  * @method static EloquentBuilder|Organization whereEmail($value)
  * @method static EloquentBuilder|Organization whereEmailPublic($value)
  * @method static EloquentBuilder|Organization whereIban($value)
@@ -122,6 +126,9 @@ use Illuminate\Http\Request;
  * @method static EloquentBuilder|Organization whereName($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
+ * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
+ * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
+ * @method static EloquentBuilder|Organization whereReservationsSubsidyEnabled($value)
  * @method static EloquentBuilder|Organization whereUpdatedAt($value)
  * @method static EloquentBuilder|Organization whereValidatorAutoAcceptFunds($value)
  * @method static EloquentBuilder|Organization whereWebsite($value)
@@ -144,39 +151,46 @@ class Organization extends Model
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
-        'backoffice_available',
+        'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
+        'reservations_auto_accept',
     ];
 
     /**
      * @var string[]
      */
     protected $casts = [
-        'btw'                           => 'string',
-        'email_public'                  => 'boolean',
-        'phone_public'                  => 'boolean',
-        'website_public'                => 'boolean',
-        'is_sponsor'                    => 'boolean',
-        'is_provider'                   => 'boolean',
-        'is_validator'                  => 'boolean',
-        'backoffice_available'          => 'boolean',
-        'manage_provider_products'      => 'boolean',
-        'validator_auto_accept_funds'   => 'boolean',
+        'btw'                                   => 'string',
+        'email_public'                          => 'boolean',
+        'phone_public'                          => 'boolean',
+        'website_public'                        => 'boolean',
+        'is_sponsor'                            => 'boolean',
+        'is_provider'                           => 'boolean',
+        'is_validator'                          => 'boolean',
+        'backoffice_available'                  => 'boolean',
+        'manage_provider_products'              => 'boolean',
+        'validator_auto_accept_funds'           => 'boolean',
+        'reservations_budget_enabled'           => 'boolean',
+        'reservations_subsidy_enabled'          => 'boolean',
+        'reservations_auto_accept'              => 'boolean',
     ];
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
+     * @param EloquentBuilder|null $builder
      * @return EloquentBuilder
      */
-    public static function searchQuery(Request $request): EloquentBuilder
-    {
-        /** @var EloquentBuilder $query */
-        $query = self::query();
+    public static function searchQuery(
+        BaseFormRequest $request,
+        EloquentBuilder $builder = null
+    ): EloquentBuilder {
+        $query = $builder ?: self::query();
+        $fund_type = $request->input('fund_type', 'budget');
         $has_products = $request->input('has_products');
-        $fund_type    = $request->input('fund_type', 'budget');
+        $has_reservations = $request->input('has_reservations');
 
         if ($request->input('is_employee', true)) {
-            if (auth_address()) {
-                $query = OrganizationQuery::whereIsEmployee($query, auth_address());
+            if ($request->isAuthenticated()) {
+                $query = OrganizationQuery::whereIsEmployee($query, $request->auth_address());
             } else {
                 $query = $query->whereIn('id', []);
             }
@@ -202,11 +216,16 @@ class Organization extends Model
         }
 
         if ($request->input('implementation', false)) {
-            $query->whereHas('funds', static function(
-                EloquentBuilder $builder
-            ) {
-                $funds = Implementation::queryFundsByState('active')->pluck('id')->toArray();
-                $builder->whereIn('funds.id', $funds);
+            $query->whereHas('funds', static function(EloquentBuilder $builder) {
+                $builder->addWhereExistsQuery(Implementation::activeFundsQuery()->getQuery());
+            });
+        }
+
+        if ($has_reservations && $request->isAuthenticated()) {
+            $query->whereHas('products.product_reservations', function(EloquentBuilder $builder) use ($request) {
+                $builder->whereHas('voucher', function(EloquentBuilder $builder) use ($request) {
+                    $builder->where('identity_address', $request->auth_address());
+                });
             });
         }
 
@@ -230,11 +249,11 @@ class Organization extends Model
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @return EloquentBuilder[]|Collection
      * @noinspection PhpUnused
      */
-    public static function search(Request $request)
+    public static function search(BaseFormRequest $request)
     {
         return self::searchQuery($request)->get();
     }
@@ -561,13 +580,13 @@ class Organization extends Model
     /**
      * @param string|null $identityAddress string
      * @param array|string $permissions
-     * @param $all boolean
+     * @param boolean $all
      * @return bool
      */
     public function identityCan(
         string $identityAddress = null,
         $permissions = [],
-        $all = true
+        bool $all = true
     ): bool {
         if (!$identityAddress) {
             return false;
@@ -579,14 +598,10 @@ class Organization extends Model
         }
 
         // retrieving the list of all the permissions that identity have
-        $identityPermissionKeys = $this->identityPermissions(
-            $identityAddress
-        )->pluck('key');
+        $identityPermissionKeys = $this->identityPermissions($identityAddress)->pluck('key');
 
         // convert string to array
-        if (is_string($permissions)) {
-            $permissions = [$permissions];
-        }
+        $permissions = (array) $permissions;
 
         if (!$all) {
             return $identityPermissionKeys->intersect($permissions)->count() > 0;
@@ -601,14 +616,11 @@ class Organization extends Model
      * @param string|array|bool $permissions
      * @return EloquentBuilder
      */
-    public static function queryByIdentityPermissions (
+    public static function queryByIdentityPermissions(
         string $identityAddress,
         $permissions = false
     ): EloquentBuilder {
-        // convert string to array
-        if (is_string($permissions)) {
-            $permissions = (array) $permissions;
-        }
+        $permissions = (array) $permissions;
 
         /**
          * Query all the organizations where identity_address has permissions

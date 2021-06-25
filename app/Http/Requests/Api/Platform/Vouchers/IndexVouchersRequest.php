@@ -4,6 +4,10 @@ namespace App\Http\Requests\Api\Platform\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
 
+/**
+ * Class IndexVouchersRequest
+ * @package App\Http\Requests\Api\Platform\Vouchers
+ */
 class IndexVouchersRequest extends BaseFormRequest
 {
     /**
@@ -25,6 +29,7 @@ class IndexVouchersRequest extends BaseFormRequest
     {
         return [
             'per_page' => 'nullable|numeric|between:1,100',
+            'product_id' => 'nullable|exists:products,id'
         ];
     }
 }

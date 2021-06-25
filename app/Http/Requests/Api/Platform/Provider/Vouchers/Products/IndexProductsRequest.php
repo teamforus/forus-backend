@@ -7,6 +7,10 @@ use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Validation\Rule;
 
+/**
+ * Class IndexProductsRequest
+ * @package App\Http\Requests\Api\Platform\Provider\Vouchers\Products
+ */
 class IndexProductsRequest extends BaseFormRequest
 {
     /**
@@ -30,6 +34,7 @@ class IndexProductsRequest extends BaseFormRequest
             'organization_id' => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
                 Organization::query(), $this->auth_address(), 'scan_vouchers'
             )->pluck('id')->toArray())],
+            'reservable' => 'nullable|boolean',
             'per_page' => 'numeric|between:1,100',
         ];
     }

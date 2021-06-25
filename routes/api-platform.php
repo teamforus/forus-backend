@@ -17,9 +17,7 @@ $router = resolve('router');
 /**
  * Public api routes
  */
-$router->group([
-    'middleware' => []
-], static function() use ($router) {
+$router->group([], static function() use ($router) {
     $router->resource(
         'product-categories',
         "Api\Platform\ProductCategoryController", [
@@ -226,9 +224,7 @@ $router->post('/share/email', 'Api\Platform\ShareController@sendEmail');
 /**
  * Authorization required
  */
-$router->group(['middleware' => [
-    'api.auth',
-]], static function() use ($router) {
+$router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->patch(
         'organizations/{organization}/update-business',
         "Api\Platform\OrganizationsController@updateBusinessType"
@@ -239,19 +235,20 @@ $router->group(['middleware' => [
         "Api\Platform\OrganizationsController@updateRoles"
     );
 
-    $router->resource(
-        'organizations',
-        "Api\Platform\OrganizationsController", [
+    $router->patch(
+        'organizations/{organization}/accept-reservations',
+        "Api\Platform\OrganizationsController@updateAcceptReservations"
+    );
+
+    $router->resource('organizations', "Api\Platform\OrganizationsController", [
         'only' => [
             'show', 'store', 'update'
         ]
     ]);
 
-    $router->resource(
-        'roles',
-        "Api\Platform\RolesController", [
+    $router->resource('roles', "Api\Platform\RolesController", [
         'only' => [
-            'index', 'show'
+            'index', 'show',
         ]
     ]);
 
@@ -260,21 +257,23 @@ $router->group(['middleware' => [
         "Api\Platform\FundsController@apply"
     );
 
-    $router->resource(
-        'vouchers',
-        "Api\Platform\VouchersController", [
+    $router->resource('vouchers', "Api\Platform\VouchersController", [
         'only' => [
-            'index', 'show', 'store', 'destroy'
+            'index', 'show', 'destroy',
         ],
         'parameters' => [
             'vouchers' => 'voucher_token_address'
         ]
     ]);
 
+    $router->resource('product-reservations', "Api\Platform\ProductReservationsController", [
+        'only' => [
+            'index', 'store', 'show', 'update', 'destroy'
+        ]
+    ]);
+
     $router->group(['prefix' => '/provider'], static function() use ($router) {
-        $router->resource(
-            'vouchers',
-            "Api\Platform\Provider\VouchersController", [
+        $router->resource('vouchers', "Api\Platform\Provider\VouchersController", [
             'only' => [
                 'show'
             ],
@@ -551,9 +550,7 @@ $router->group(['middleware' => [
     $router->resource(
         'organizations.providers',
         "Api\Platform\Organizations\FundProviderController", [
-        'only' => [
-            'index'
-        ],
+        'only' => ['index'],
         'parameters' => [
             'providers' => 'organization_fund'
         ]
@@ -578,9 +575,7 @@ $router->group(['middleware' => [
     $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
-        'only' => [
-            'update'
-        ],
+        'only' => ['update'],
         'parameters' => [
             'providers' => 'fund_provider'
         ]
@@ -589,9 +584,7 @@ $router->group(['middleware' => [
     $router->resource(
         'organizations.funds.providers.chats',
         "Api\Platform\Organizations\Funds\FundProviders\FundProviderChatsController", [
-        'only' => [
-            'index', 'show', 'store'
-        ],
+        'only' => ['index', 'show', 'store'],
         'parameters' => [
             'providers' => 'fund_provider',
             'chats' => 'fund_provider_chats',
@@ -601,9 +594,7 @@ $router->group(['middleware' => [
     $router->resource(
         'organizations.funds.providers.products',
         "Api\Platform\Organizations\Funds\FundProviders\ProductsController", [
-        'only' => [
-            'index', 'show'
-        ],
+        'only' => ['index', 'show'],
         'parameters' => [
             'providers' => 'fund_provider',
         ]
@@ -612,9 +603,7 @@ $router->group(['middleware' => [
     $router->resource(
         'organizations.funds.providers.chats.messages',
         "Api\Platform\Organizations\Funds\FundProviders\FundProviderChats\FundProviderChatMessagesController", [
-        'only' => [
-            'index', 'show', 'store'
-        ],
+        'only' => ['index', 'show', 'store'],
         'parameters' => [
             'providers' => 'fund_provider',
             'chats' => 'fund_provider_chats',
@@ -630,17 +619,29 @@ $router->group(['middleware' => [
     $router->resource(
         'organizations.products',
         "Api\Platform\Organizations\ProductsController", [
-        'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
-        ]
+        'only' => ['index', 'show', 'store', 'update', 'destroy']
+    ]);
+
+    $router->post(
+        'organizations/{organization}/product-reservations/{product_reservation}/accept',
+        "Api\Platform\Organizations\ProductReservationsController@accept"
+    );
+
+    $router->post(
+        'organizations/{organization}/product-reservations/{product_reservation}/reject',
+        "Api\Platform\Organizations\ProductReservationsController@reject"
+    );
+
+    $router->resource(
+        'organizations.product-reservations',
+        "Api\Platform\Organizations\ProductReservationsController", [
+        'only' => ['index', 'store', 'show']
     ]);
 
     $router->resource(
         'organizations.products.funds',
         "Api\Platform\Organizations\Products\FundsController", [
-        'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
-        ]
+        'only' => ['index', 'show', 'store', 'update', 'destroy']
     ]);
 
     $router->resource(

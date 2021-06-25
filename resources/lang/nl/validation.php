@@ -168,11 +168,26 @@ return [
         'fund_not_active' => 'U mag dit tegoed nog niet scannen! Het fonds is niet actief.',
         'not_enough_funds' => 'Onvoldoende tegoed.',
         'product_sold_out' => 'Uw aanbod is uitverkocht, verhoog in uw beheeromgeving het aantal dat nog te koop is.',
+        'reservation_used' => 'The voucher is already used.',
+        'reservation_product_removed' => 'The product removed by the provider.',
     ],
     'product_voucher' => [
         'product_not_found' => 'Product niet gevonden.',
         'product_sold_out' => 'Product uitverkocht.',
         'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
+        'reservation_used' => 'The voucher is already used.',
+        'reservation_product_removed' => 'The product removed by the provider.',
+    ],
+    'product_reservation' => [
+        'product_not_found' => 'Product niet gevonden.',
+        'product_sold_out' => 'Product uitverkocht.',
+        'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
+        'reservation_not_enabled' => 'Reservation is not available for this product.',
+        'no_identity_stock' => 'Limit stock per user reached.',
+        'reservation_not_pending' => join(" ", [
+            'The reservation (#:code) is not pending, the current state is ":state".',
+            'Please go to the dashboard to review and accept the reservation.'
+        ]),
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',

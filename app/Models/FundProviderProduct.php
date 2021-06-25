@@ -23,6 +23,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\FundProvider $fund_provider
+ * @property-read float $user_price
+ * @property-read string $user_price_locale
  * @property-read \App\Models\Product $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
@@ -69,30 +71,104 @@ class FundProviderProduct extends Model
     /**
      * @return BelongsTo
      */
-    public function product(): BelongsTo {
+    public function product(): BelongsTo
+    {
         return $this->belongsTo(Product::class);
     }
 
     /**
      * @return BelongsTo
      */
-    public function fund_provider(): BelongsTo {
+    public function fund_provider(): BelongsTo
+    {
         return $this->belongsTo(FundProvider::class);
     }
 
     /**
      * @return HasMany
      */
-    public function voucher_transactions(): HasMany {
+    public function voucher_transactions(): HasMany
+    {
         return $this->hasMany(VoucherTransaction::class);
+    }
+
+    /**
+     * @return float
+     */
+    public function getUserPriceAttribute(): float
+    {
+        return $this->getUserPrice($this->product->price);
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getUserPriceLocaleAttribute(): string
+    {
+        return $this->getUserPriceLocale(
+            $this->getUserPrice($this->product->price),
+            $this->product->price_type,
+            $this->product->price_discount
+        );
+    }
+
+    /**
+     * @param float $price
+     * @return float
+     */
+    public function getUserPrice(float $price): float
+    {
+        return currency_format(max(0, $price - $this->amount));
+    }
+
+    /**
+     * @param float $price
+     * @param string $price_type
+     * @param string $price_discount
+     * @return string
+     */
+    public function getUserPriceLocale(
+        float $price,
+        string $price_type,
+        string $price_discount
+    ): string {
+        switch ($price_type) {
+            case $this->product::PRICE_TYPE_REGULAR: return currency_format_locale($price);
+            case $this->product::PRICE_TYPE_FREE: return 'Gratis';
+            case $this->product::PRICE_TYPE_DISCOUNT_FIXED:
+            case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+                return 'Korting: ' . $this->getPriceDiscountLocale($price_type, $price_discount);
+            }
+            default: return '';
+        }
+    }
+
+
+    /**
+     * @param string $price_type
+     * @param string $price_discount
+     * @return string
+     */
+    public function getPriceDiscountLocale(string $price_type, string $price_discount): string
+    {
+        switch ($price_type) {
+            case $this->product::PRICE_TYPE_DISCOUNT_FIXED: return currency_format_locale($price_discount);
+            case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+                $isWhole = (double) ($price_discount - round($price_discount)) === (double) 0;
+                return currency_format($price_discount, $isWhole ? 0 : 2) . '%';
+            }
+            default: return '';
+        }
     }
 
     /**
      * @param string $identity_address
      * @return int|null
      */
-    public function stockAvailableForIdentity(string $identity_address): ?int {
-        if (!$limitAvailable = $this->fund_provider->fund->isTypeSubsidy()) {
+    public function stockAvailableForIdentity(string $identity_address): ?int
+    {
+        if (!$this->fund_provider->fund->isTypeSubsidy()) {
             return null;
         }
 
@@ -101,6 +177,7 @@ class FundProviderProduct extends Model
         ]);
 
         $limit_multiplier = $query->exists() ? $query->sum('limit_multiplier') : 1;
+
         $limit_per_identity = $this->limit_per_identity * $limit_multiplier;
         $limiters = [$limit_per_identity];
 
@@ -113,13 +190,32 @@ class FundProviderProduct extends Model
         }
 
         $limitAvailable = (int) collect($limiters)->min();
+
         $count_transactions = VoucherTransaction::where([
             'product_id' => $this->product_id,
             'organization_id' => $this->product->organization_id,
-        ])->whereHas('voucher', static function(Builder $builder) use ($identity_address) {
+        ])->whereHas('voucher', function(Builder $builder) use ($identity_address) {
             $builder->where('identity_address', '=', $identity_address);
-        })->count();
+            $builder->where('fund_id', '=', $this->fund_provider->fund_id);
+            $builder->whereDoesntHave('product_reservation');
+        })->where('state', '!=', VoucherTransaction::STATE_CANCELED)->count();
 
-        return max($limitAvailable - $count_transactions, 0);
+        $count_vouchers = Voucher::where([
+            'fund_id' => $this->fund_provider->fund_id,
+            'product_id' => $this->product_id,
+            'identity_address' => $identity_address,
+        ])->whereDoesntHave('product_reservation')->count();
+
+        $count_reservations = ProductReservation::where([
+            'product_id' => $this->product_id,
+        ])->whereNotIn('state', [
+            ProductReservation::STATE_CANCELED,
+            ProductReservation::STATE_REJECTED,
+        ])->whereHas('voucher', function(Builder $builder) use ($identity_address) {
+            $builder->where('identity_address', '=', $identity_address);
+            $builder->where('fund_id', '=', $this->fund_provider->fund_id);
+        })->whereDoesntHave('voucher_transaction')->count();
+
+        return max($limitAvailable - ($count_transactions + $count_vouchers + $count_reservations), 0);
     }
 }

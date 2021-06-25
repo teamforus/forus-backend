@@ -43,6 +43,8 @@ class ProviderVoucherTransactionEmployeeResource extends JsonResource
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
             'amount' => currency_format($transaction->amount),
             'product_price' => $product_price ? currency_format($product_price) : null,
+            'cancelable' => $transaction->isCancelable(),
+            'transaction_in' => max($transaction->transfer_at->diffInDays(now()), 0),
             "organization" => array_merge($transaction->provider->only([
                 "id", "name"
             ]), [

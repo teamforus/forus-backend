@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Vouchers;
+namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
-use App\Models\Voucher;
-use App\Rules\ProductIdToVoucherRule;
+use App\Models\Organization;
+use App\Rules\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
 
 /**
- * Class StoreProductVoucherRequest
- * @package App\Http\Requests\Api\Platform\Vouchers
+ * Class AcceptProductReservationRequest
+ * @property Organization $organization
+ * @package App\Http\Requests\Api\Platform\Organizations\ProductReservations
  */
-class StoreProductVoucherRequest extends BaseFormRequest
+class StoreProductReservationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,7 +21,7 @@ class StoreProductVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->isAuthenticated();
+        return $this->isAuthenticated() && $this->organization->identityCan('scan_vouchers');
     }
 
     /**
@@ -35,17 +35,13 @@ class StoreProductVoucherRequest extends BaseFormRequest
             'voucher_address' => [
                 'required',
                 'exists:voucher_tokens,address',
-                new IdentityVoucherAddressRule(
-                    $this->auth_address(),
-                    Voucher::TYPE_BUDGET,
-                    Fund::TYPE_BUDGET
-                )
             ],
             'product_id' => [
                 'required',
                 'exists:products,id',
-                new ProductIdToVoucherRule($this->input('voucher_address'))
+                new ProductIdToReservationRule($this->input('voucher_address'))
             ],
+            'note' => 'nullable|string|max:2000',
         ];
     }
 }

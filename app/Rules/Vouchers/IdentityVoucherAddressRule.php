@@ -39,7 +39,6 @@ class IdentityVoucherAddressRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        /** @var Builder $query */
         $query = Voucher::whereHas('tokens', function(Builder $builder) use ($value) {
             $builder->where('address', $value);
         })->where('identity_address', '=', $this->identity_address);

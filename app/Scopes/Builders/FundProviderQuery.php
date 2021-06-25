@@ -21,9 +21,7 @@ class FundProviderQuery
         $type = null,
         $product_id = null
     ): Builder {
-        return $query->where(static function(Builder $builder) use (
-            $fund_id, $type, $product_id
-        ) {
+        return $query->where(static function(Builder $builder) use ($fund_id, $type, $product_id) {
             $builder->whereIn('fund_id', (array) $fund_id);
 
             $builder->where(static function(Builder $builder) use ($type, $product_id) {
@@ -38,9 +36,7 @@ class FundProviderQuery
 
                 if ($type === null || $type === 'product' || $type === 'subsidy') {
                     if ($product_id) {
-                        $builder->orWhereHas('fund_provider_products', static function(
-                            Builder $builder
-                        ) use ($product_id) {
+                        $builder->orWhereHas('fund_provider_products', static function(Builder $builder) use ($product_id) {
                             $builder->whereHas('product', static function(Builder $builder) use ($product_id) {
                                 $builder->whereIn('products.id', (array) $product_id);
                             });
@@ -52,9 +48,7 @@ class FundProviderQuery
             });
 
             if ($type === 'product' && $product_id) {
-                $builder->whereHas('organization.products', static function(
-                    Builder $builder
-                ) use ($product_id) {
+                $builder->whereHas('organization.products', static function(Builder $builder) use ($product_id) {
                     $builder->whereIn('products.id', (array) $product_id);
                 });
             }

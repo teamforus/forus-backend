@@ -35,8 +35,10 @@ class FundQuery
      * @param Builder $query
      * @param Product $product
      * @return Builder
+     * @noinspection PhpUnused
      */
-    public static function whereProductsAreApprovedFilter(Builder $query, Product $product): Builder {
+    public static function whereProductsAreApprovedFilter(Builder $query, Product $product): Builder
+    {
         if ($product->sponsor_organization_id) {
             $query->where('organization_id', $product->sponsor_organization_id);
         }

@@ -93,6 +93,17 @@ class OrganizationPolicy
     }
 
     /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @return bool|\Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
+     */
+    public function updateAutoAllowReservations(string $identity_address, Organization $organization): bool
+    {
+        return $identity_address && ($organization->identity_address === $identity_address);
+    }
+
+    /**
      * @param $identity_address
      * @param Organization $organization
      * @return bool
