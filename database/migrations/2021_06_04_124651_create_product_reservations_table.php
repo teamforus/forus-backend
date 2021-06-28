@@ -35,7 +35,7 @@ class CreateProductReservationsTable extends Migration
             $table->decimal('amount');
             $table->decimal('price');
             $table->decimal('price_discount');
-            $table->string('code',  20);
+            $table->string('code', 20);
             $table->enum('price_type', $priceTypes);
             $table->enum('state', $states)->default('pending');
             $table->string('note', 2000)->nullable();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\IndexProductReservationsRequest;
+use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationBatchRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
@@ -67,7 +68,7 @@ class ProductReservationsController extends Controller
         $this->authorize('createProvider', [ProductReservation::class, $organization]);
 
         $product = Product::find($request->input('product_id'));
-        $voucher = Voucher::findByAddress($request->input('voucher_address'));
+        $voucher = Voucher::findByAddressOrPhysicalCard($request->input('number'));
 
         $reservation = $voucher->reserveProduct($product, $request->input('note'));
 
@@ -76,6 +77,42 @@ class ProductReservationsController extends Controller
         }
 
         return new ProductReservationResource($reservation->load(
+            ProductReservationResource::load()
+        ));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param StoreProductReservationBatchRequest $request
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function storeBatch(
+        StoreProductReservationBatchRequest $request,
+        Organization $organization
+    ): AnonymousResourceCollection {
+        $this->authorize('createProvider', [ProductReservation::class, $organization]);
+
+        $createdItems = [];
+
+        foreach ($request->input('reservations') as $data) {
+            $product = Product::find(array_get($data, 'product_id'));
+            $voucher = Voucher::findByAddressOrPhysicalCard(array_get($data, 'number'));
+
+            $reservation = $voucher->reserveProduct($product, array_get($data, 'note'));
+
+            if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
+                $reservation->acceptProvider();
+            }
+
+            $createdItems[] = $reservation->id;
+        }
+
+        $reservations = ProductReservation::query()->whereIn('id', $createdItems)->get();
+
+        return ProductReservationResource::collection($reservations->load(
             ProductReservationResource::load()
         ));
     }
@@ -128,6 +165,7 @@ class ProductReservationsController extends Controller
      * @param \App\Models\ProductReservation $productReservation
      * @return ProductReservationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function reject(
         RejectProductReservationRequest $request,
@@ -137,7 +175,9 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('rejectProvider', [$productReservation, $organization]);
 
-        $productReservation->rejectOrCancelProvider($organization->findEmployee($request->auth_address()));
+        $productReservation->rejectOrCancelProvider($organization->findEmployee(
+            $request->auth_address()
+        ));
 
         return new ProductReservationResource($productReservation);
     }

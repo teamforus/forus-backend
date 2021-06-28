@@ -4,7 +4,7 @@ namespace App\Rules;
 
 use App\Models\FundProviderProduct;
 use App\Models\Product;
-use App\Models\VoucherToken;
+use App\Models\Voucher;
 use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\ProductQuery;
 
@@ -39,12 +39,10 @@ class ProductIdToReservationRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        $product_id = $value;
-        $product = Product::find($product_id);
-        $voucherToken = VoucherToken::whereAddress($this->voucherAddress)->first();
+        $product = Product::find($value);
+        $voucher = Voucher::findByAddressOrPhysicalCard($this->voucherAddress);
 
-        // optional check for human readable output
-        if (!$this->voucherAddress || !$voucherToken || (!$voucher = $voucherToken->voucher)) {
+        if (!$this->voucherAddress || !$voucher) {
             return $this->rejectTrans('voucher_address_required');
         }
 
@@ -52,7 +50,7 @@ class ProductIdToReservationRule extends BaseRule
             return $this->rejectTrans('product_not_found');
         }
 
-        if (!$product->reservationsEnabled($voucherToken->voucher->fund)) {
+        if (!$product->reservationsEnabled($voucher->fund)) {
             return $this->rejectTrans('reservation_not_enabled');
         }
 
@@ -72,16 +70,20 @@ class ProductIdToReservationRule extends BaseRule
         if ($voucher->fund->isTypeSubsidy()) {
             $fundProviderProduct = $product->getSubsidyDetailsForFund($voucher->fund);
 
-            if ($fundProviderProduct->stockAvailableForIdentity(auth_address()) < 1) {
+            if (!$fundProviderProduct) {
+                return $this->rejectTrans('product_not_available');
+            }
+
+            if ($fundProviderProduct->stockAvailableForIdentity($voucher->identity_address) < 1) {
                 return $this->rejectTrans('no_identity_stock');
             }
 
             $query = FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(
                 FundProviderProduct::query(),
-                $voucherToken->voucher
+                $voucher
             );
 
-            if (!$query->where('product_id', $product_id)->exists()) {
+            if (!$query->where('product_id', $product->id)->exists()) {
                 return $this->rejectTrans('no_identity_stock');
             }
         }

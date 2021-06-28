@@ -77,6 +77,40 @@ class FundProviderProductQuery
                     ->select([])
                     ->selectRaw('count(*) as `count_transactions`')
                     ->where('state', '!=', VoucherTransaction::STATE_CANCELED)
+                    ->whereColumn('product_id', '=', 'products.id'),
+                    'count_transactions'
+                );
+
+                $builder->selectSub(Voucher::query()
+                    ->select([])
+                    ->selectRaw('count(*)')
+                    ->whereDoesntHave('product_reservation')
+                    ->whereDoesntHave('transactions')
+                    ->whereColumn('vouchers.product_id', '=', 'products.id'),
+                    'count_vouchers'
+                );
+
+                $builder->selectSub(ProductReservation::query()
+                    ->select([])
+                    ->selectRaw('count(*)')
+                    ->whereNotIn('state', [
+                        ProductReservation::STATE_CANCELED,
+                        ProductReservation::STATE_REJECTED,
+                    ])
+                    ->whereDoesntHave('voucher_transaction')
+                    ->whereColumn('product_id', '=', 'products.id'),
+                    'count_reservations'
+                );
+
+                $sumQuery = "(`count_transactions` + `count_vouchers` + `count_reservations`)";
+                $builder->havingRaw("(($sumQuery < ($limit_total)) or (`limit_total_unlimited` = true))");
+            });
+
+            $builder->whereExists(function(QBuilder $builder) use ($voucher, $limit_per_identity, $limit_total) {
+                $builder->selectSub(VoucherTransaction::query()
+                    ->select([])
+                    ->selectRaw('count(*) as `count_transactions`')
+                    ->where('state', '!=', VoucherTransaction::STATE_CANCELED)
                     ->whereColumn('product_id', '=', 'products.id')
                     ->where('voucher_id', '=', $voucher->id), 'count_transactions');
 
@@ -84,6 +118,7 @@ class FundProviderProductQuery
                     ->select([])
                     ->selectRaw('count(*)')
                     ->whereDoesntHave('product_reservation')
+                    ->whereDoesntHave('transactions')
                     ->whereColumn('vouchers.product_id', '=', 'products.id')
                     ->where('parent_id', '=', $voucher->id), 'count_vouchers');
 
@@ -100,7 +135,6 @@ class FundProviderProductQuery
 
                 $sumQuery = "(`count_transactions` + `count_vouchers` + `count_reservations`)";
                 $builder->havingRaw("($sumQuery < ($limit_per_identity))");
-                $builder->havingRaw("(($sumQuery < ($limit_total)) or (`limit_total_unlimited` = true))");
             });
         });
 

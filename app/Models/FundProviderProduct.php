@@ -164,19 +164,32 @@ class FundProviderProduct extends Model
 
     /**
      * @param string $identity_address
+     * @param Voucher|null $voucher
      * @return int|null
      */
-    public function stockAvailableForIdentity(string $identity_address): ?int
-    {
+    public function stockAvailableForIdentity(
+        string $identity_address,
+        Voucher $voucher = null
+    ): ?int {
         if (!$this->fund_provider->fund->isTypeSubsidy()) {
             return null;
         }
 
-        $query = $this->fund_provider->fund->budget_vouchers()->where([
-            'identity_address' => $identity_address
-        ]);
+        // get total and identity reservations
+        $allReservations = $this->countReservations();
+        $identityReservations = $this->countReservations($identity_address);
 
-        $limit_multiplier = $query->exists() ? $query->sum('limit_multiplier') : 1;
+        // product total limit exceeded
+        if (!$this->limit_total_unlimited && ($allReservations >= ($this->limit_total))) {
+            return 0;
+        }
+
+        // limit multiplier
+        $limit_multiplier = $this->fund_provider->fund->budget_vouchers()->where([
+            'identity_address' => $identity_address
+        ])->where(function(Builder $builder) use ($voucher) {
+            $voucher && $builder->where('vouchers.id', $voucher->id);
+        })->sum('limit_multiplier');
 
         $limit_per_identity = $this->limit_per_identity * $limit_multiplier;
         $limiters = [$limit_per_identity];
@@ -186,36 +199,54 @@ class FundProviderProduct extends Model
         }
 
         if (!$this->limit_total_unlimited) {
-            $limiters[] = $this->limit_total;
+            $limiters[] = max($this->limit_total - ($allReservations - $identityReservations), 0);
         }
 
-        $limitAvailable = (int) collect($limiters)->min();
+        return max((int) collect($limiters)->min() - $identityReservations, 0);
+    }
 
+    /**
+     * @param string|null $identity_address
+     * @return int
+     */
+    public function countReservations(string $identity_address = null): int
+    {
+        // All non canceled transactions
         $count_transactions = VoucherTransaction::where([
             'product_id' => $this->product_id,
             'organization_id' => $this->product->organization_id,
         ])->whereHas('voucher', function(Builder $builder) use ($identity_address) {
-            $builder->where('identity_address', '=', $identity_address);
+            if ($identity_address) {
+                $builder->where('identity_address', '=', $identity_address);
+            }
+
             $builder->where('fund_id', '=', $this->fund_provider->fund_id);
-            $builder->whereDoesntHave('product_reservation');
         })->where('state', '!=', VoucherTransaction::STATE_CANCELED)->count();
 
+        // All vouchers not from reservation
         $count_vouchers = Voucher::where([
             'fund_id' => $this->fund_provider->fund_id,
             'product_id' => $this->product_id,
-            'identity_address' => $identity_address,
-        ])->whereDoesntHave('product_reservation')->count();
+        ])->where(function(Builder $builder) use ($identity_address) {
+            if ($identity_address) {
+                $builder->where('identity_address', '=', $identity_address);
+            }
+        })->whereDoesntHave('product_reservation')->whereDoesntHave('transactions')->count();
 
+        // All reservations without transactions
         $count_reservations = ProductReservation::where([
             'product_id' => $this->product_id,
         ])->whereNotIn('state', [
             ProductReservation::STATE_CANCELED,
             ProductReservation::STATE_REJECTED,
         ])->whereHas('voucher', function(Builder $builder) use ($identity_address) {
-            $builder->where('identity_address', '=', $identity_address);
+            if ($identity_address) {
+                $builder->where('identity_address', '=', $identity_address);
+            }
+
             $builder->where('fund_id', '=', $this->fund_provider->fund_id);
         })->whereDoesntHave('voucher_transaction')->count();
 
-        return max($limitAvailable - ($count_transactions + $count_vouchers + $count_reservations), 0);
+        return $count_vouchers + $count_reservations + $count_transactions;
     }
 }

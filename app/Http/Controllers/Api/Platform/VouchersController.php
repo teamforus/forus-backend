@@ -33,6 +33,14 @@ class VouchersController extends Controller
             ->whereDoesntHave('product_reservation')
             ->orderByDesc('created_at');
 
+        if ($request->input('type') === 'budget') {
+            $query->whereNull('product_id');
+        }
+
+        if ($request->input('type') === 'product') {
+            $query->whereNotNull('product_id');
+        }
+
         // todo: remove fallback pagination 1000, when apps are ready
         return VoucherCollectionResource::collection($query->with(
             VoucherCollectionResource::load()

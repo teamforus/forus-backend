@@ -102,8 +102,7 @@ use RuntimeException;
  */
 class Voucher extends Model
 {
-    use HasLogs;
-    use HasFormattedTimestamps;
+    use HasLogs, HasFormattedTimestamps;
 
     public const EVENT_CREATED_BUDGET = 'created_budget';
     public const EVENT_CREATED_PRODUCT = 'created_product';
@@ -705,6 +704,7 @@ class Voucher extends Model
 
     /**
      * @param Product $product
+     * @param string|null $note
      * @return ProductReservation
      * @throws \Exception
      */

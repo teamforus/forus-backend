@@ -518,9 +518,8 @@ class Product extends Model
     public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct
     {
         return $this->fund_provider_products()->whereHas('fund_provider.fund', function(Builder $builder) use ($fund) {
-            $builder
-                ->where('fund_id', $fund->id)
-                ->where('type', $fund::TYPE_SUBSIDIES);
+            $builder->where('funds.id', $fund->id);
+            $builder->where('funds.type', $fund::TYPE_SUBSIDIES);
         })->first();
     }
 

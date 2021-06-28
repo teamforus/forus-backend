@@ -154,7 +154,8 @@ class VoucherResource extends Resource
 
         if ($voucher->fund->isTypeSubsidy()) {
             return FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(
-                FundProviderProduct::query(), $voucher
+                FundProviderProduct::query(),
+                $voucher
             )->where('product_id', $product->id)->exists();
         }
 
@@ -171,10 +172,13 @@ class VoucherResource extends Resource
             return null;
         }
 
+        $fund = $voucher->fund;
         $expireDate = $voucher->calcExpireDateForProduct($product);
+        $fundProviderProduct = $fund->isTypeSubsidy() ? $product->getSubsidyDetailsForFund($fund) : null;
 
         return [
             'reservable' => $this->isProductReservable($voucher, $product),
+            'reservable_count' => $fundProviderProduct ? $fundProviderProduct->stockAvailableForIdentity($voucher->identity_address, $voucher) : null,
             'reservable_expire_at' => $expireDate ? $expireDate->format('Y-m-d') : null,
             'reservable_expire_at_locale' => format_date_locale($expireDate ?? null),
         ];

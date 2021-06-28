@@ -74,10 +74,9 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return is_null($voucher->parent_id) && $organization->identityCan(
-            $identity_address, [
-            'manage_vouchers'
-        ]) && ($voucher->fund->organization_id === $organization->id);
+        return $voucher->employee_id &&
+            ($voucher->fund->organization_id === $organization->id) &&
+            $organization->identityCan($identity_address, 'manage_vouchers');
     }
 
     /**
@@ -91,9 +90,9 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity_address, [
-            'manage_vouchers'
-        ]) && ($voucher->fund->organization_id === $organization->id) && !$voucher->is_granted;
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            ($voucher->fund->organization_id === $organization->id) &&
+            !$voucher->is_granted;
     }
 
     /**
@@ -108,7 +107,8 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization) &&
-            !$voucher->is_granted && !$voucher->expired;
+            !$voucher->is_granted &&
+            !$voucher->expired;
     }
 
     /**

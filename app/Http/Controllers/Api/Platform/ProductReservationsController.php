@@ -37,7 +37,7 @@ class ProductReservationsController extends Controller
 
         $search = new ProductReservationsSearch($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
-        ], $builder));
+        ]), $builder);
 
         return ProductReservationResource::collection($search->query()->with(
             ProductReservationResource::load()

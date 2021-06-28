@@ -260,10 +260,6 @@ class ProductReservation extends Model
             $this->voucher_transaction->cancelPending();
         }
 
-        if ($this->product_voucher) {
-            $this->product_voucher->delete();
-        }
-
         if ($isAccepted) {
             ProductReservationCanceled::dispatch($this);
         } else {

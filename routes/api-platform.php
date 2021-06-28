@@ -623,6 +623,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     ]);
 
     $router->post(
+        'organizations/{organization}/product-reservations/batch',
+        "Api\Platform\Organizations\ProductReservationsController@storeBatch"
+    );
+
+    $router->post(
         'organizations/{organization}/product-reservations/{product_reservation}/accept',
         "Api\Platform\Organizations\ProductReservationsController@accept"
     );

@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Rules\ProductIdToReservationRule;
+use App\Rules\ProviderProductReservationBatchItemRule;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Support\Facades\Gate;
 
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Gate;
  * @property Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\ProductReservations
  */
-class StoreProductReservationRequest extends BaseFormRequest
+class StoreProductReservationBatchRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -33,28 +34,13 @@ class StoreProductReservationRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $voucher = Voucher::findByAddressOrPhysicalCard($this->input('number'));
-
-        $sponsorIsValid = OrganizationQuery::whereHasPermissionToScanVoucher(
-            Organization::query(),
-            $this->auth_address(),
-            $voucher
-        )->where('organizations.id', $this->organization->id)->exists();
-
-        $addressIsValid = Gate::allows('useAsProvider', $voucher);
-
         return [
-            'number' => [
+            'reservations' => 'required|array|min:1',
+            'reservations.*' => [
                 'required',
-                'exists:physical_cards,code',
-                $sponsorIsValid && $addressIsValid ? null : 'in:'
+                'array',
+                new ProviderProductReservationBatchItemRule($this->organization),
             ],
-            'product_id' => [
-                'required',
-                'exists:products,id',
-                new ProductIdToReservationRule($this->input('number')),
-            ],
-            'note' => 'nullable|string|max:2000',
         ];
     }
 }
