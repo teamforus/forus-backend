@@ -1542,12 +1542,12 @@ class Fund extends Model
         $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
 
         return [
-            'reserved'              => currency_format($activeVouchersQuery->sum('amount')),
-            'vouchers_amount'       => currency_format($vouchersQuery->sum('amount')),
+            'reserved'              => $activeVouchersQuery->sum('amount'),
+            'vouchers_amount'       => $vouchersQuery->sum('amount'),
             'vouchers_count'        => $vouchers_count,
-            'active_amount'         => currency_format($activeVouchersQuery->sum('amount')),
+            'active_amount'         => $activeVouchersQuery->sum('amount'),
             'active_count'          => $active_count,
-            'inactive_amount'       => currency_format($inactiveVouchersQuery->sum('amount')),
+            'inactive_amount'       => $inactiveVouchersQuery->sum('amount'),
             'inactive_count'        => $inactive_count,
             'inactive_percentage'   => currency_format($inactive_percentage),
         ];

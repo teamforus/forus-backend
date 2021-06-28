@@ -160,4 +160,22 @@ class FundProviderPolicy
 
         return $organizationFund->organization->identityCan($identity_address, 'manage_provider_funds');
     }
+
+    /**
+     * @param $identity_address
+     * @param FundProvider $fundProvider
+     * @param Organization $organization
+     * @return bool
+     */
+    public function deleteProvider(
+        $identity_address,
+        FundProvider $fundProvider,
+        Organization $organization
+    ): bool {
+        $isPending = !$fundProvider->isApproved();
+        $hasPermission = $this->updateProvider($identity_address, $fundProvider, $organization);
+        $doesntHaveTransactions = !$fundProvider->hasTransactions();
+
+        return $isPending && $hasPermission && $doesntHaveTransactions;
+    }
 }
