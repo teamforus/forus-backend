@@ -2,6 +2,8 @@
 
 namespace App\Services\DigIdService\Models;
 
+use App\Http\Requests\DigID\StartDigIdRequest;
+use App\Models\Fund;
 use App\Models\Implementation;
 use App\Services\DigIdService\DigIdException;
 use App\Services\DigIdService\Repositories\DigIdRepo;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $implementation_id
  * @property string|null $client_type
  * @property string|null $identity_address
+ * @property mixed $meta
  * @property string $session_uid
  * @property string $session_secret
  * @property string $session_final_url
@@ -56,6 +59,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereImplementationId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereMeta($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionFinalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionRequest($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DigIdSession whereSessionSecret($value)
@@ -99,7 +103,7 @@ class DigIdSession extends Model
     protected $table = 'digid_sessions';
 
     protected $fillable = [
-        'state', 'implementation_id', 'client_type', 'identity_address',
+        'state', 'implementation_id', 'client_type', 'identity_address', 'meta',
 
         'session_uid', 'session_secret', 'session_final_url',
         'session_request',
@@ -110,6 +114,22 @@ class DigIdSession extends Model
         'digid_response_aselect_server', 'digid_response_aselect_credentials',
     ];
 
+    protected $casts = [
+        'meta' => 'array',
+    ];
+
+    /**
+     * @param array $attributes
+     * @param array $options
+     * @return $this
+     */
+    public function updateModel(array $attributes = [], array $options = []): self
+    {
+        $this->update($attributes, $options);
+
+        return $this;
+    }
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -119,48 +139,41 @@ class DigIdSession extends Model
     }
 
     /**
-     * @param string|null $identity_address
-     * @param Implementation $implementation
-     * @param string $client_type
-     * @param string $finalRedirectUrl
-     * @param string $requestType
+     * @param StartDigIdRequest $request
      * @return DigIdSession|Model
      */
-    public static function createSession(
-        ?string $identity_address,
-        Implementation $implementation,
-        string $client_type,
-        string $finalRedirectUrl,
-        string $requestType
-    ) {
+    public static function createSession(StartDigIdRequest $request)
+    {
         $token_generator = resolve('token_generator');
 
         return self::create([
-            'client_type'            => $client_type,
-            'identity_address'      => $identity_address,
-            'implementation_id'     => $implementation->id,
+            'client_type'           => $request->client_type(),
+            'identity_address'      => $request->auth_address(),
+            'implementation_id'     => $request->implementation_model()->id,
             'state'                 => DigIdSession::STATE_CREATED,
-
             'session_uid'           => $token_generator->generate(100),
             'session_secret'        => $token_generator->generate(200),
-            'session_final_url'     => $finalRedirectUrl,
-            'session_request'       => $requestType,
+            'session_final_url'     => self::makeFinalRedirectUrl($request),
+            'session_request'       => $request->input('request'),
+            'meta'                  => self::makeSessionMeta($request),
         ]);
     }
 
     /**
-     * @param string $goBackUrl
-     * @return bool
+     * @return $this
      */
-    public function startAuthSession(string $goBackUrl): bool
+    public function startAuthSession(): self
     {
+        $goBackUrl = url(sprintf('/api/v1/platform/digid/%s/resolve', $this->session_uid));
+
         try {
             $digId = $this->implementation->getDigid();
             $authRequest = $digId->makeAuthRequest(url_extend_get_params($goBackUrl, [
                 'session_secret' => $this->session_secret,
             ]));
         } catch (DigIdException $exception) {
-            return $this->setError($exception->getMessage(), $exception->getDigIdCode());
+            $this->setError($exception->getMessage(), $exception->getDigIdCode());
+            return $this;
         }
 
         // Build redirect URL.
@@ -169,7 +182,7 @@ class DigIdSession extends Model
             'a-select-server'   => $authRequest['a-select-server'],
         ]);
 
-        return $this->update([
+        return $this->updateModel([
             'state'                         => self::STATE_PENDING_AUTH,
             'digid_rid'                     => $authRequest['rid'],
             'digid_state'                   => DigIdSession::STATE_PENDING_AUTH,
@@ -187,11 +200,9 @@ class DigIdSession extends Model
      */
     private function setError($message, $errorCode): bool
     {
-        logger()->error(sprintf(
-            'Could not make digid auth request, got %s: %s',
-            $errorCode,
-            $message
-        ));
+        logger()->error(
+            sprintf('Could not make digid auth request, got %s: %s', $errorCode, $message)
+        );
 
         $canceled = $errorCode == DigIdRepo::DIGID_CANCELLED;
 
@@ -246,5 +257,44 @@ class DigIdSession extends Model
             'error%s',
             $this->digid_error_code ? "_" . $this->digid_error_code : ""
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getRedirectUrl(): string
+    {
+        return url(sprintf('/api/v1/platform/digid/%s/redirect', $this->session_uid));
+    }
+
+    /**
+     * @param StartDigIdRequest $request
+     * @return string|null
+     */
+    protected static function makeFinalRedirectUrl(StartDigIdRequest $request): ?string {
+        if ($request->input('request') === 'fund_request') {
+            $fund = Fund::find($request->input('fund_id'));
+
+            return $fund->urlWebshop(sprintf('/funds/%s/activate', $fund->id));
+        }
+
+        if (($request->input('request') === 'auth')) {
+            return $request->implementation_model()->urlFrontend($request->client_type());
+        }
+
+        return null;
+    }
+
+    /**
+     * @param StartDigIdRequest $request
+     * @return array
+     */
+    private static function makeSessionMeta(StartDigIdRequest $request): array
+    {
+        if ($request->input('request') === 'fund_request') {
+            return $request->only('fund_id');
+        }
+
+        return [];
     }
 }

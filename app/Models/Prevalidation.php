@@ -19,8 +19,6 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property string|null $uid
  * @property string $identity_address
  * @property string|null $redeemed_by_address
- * @property int|null $fund_id
- * @property int|null $organization_id
  * @property string $state
  * @property string|null $uid_hash
  * @property string|null $records_hash
@@ -29,6 +27,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $fund_id
+ * @property int|null $organization_id
  * @property-read \App\Models\Fund|null $fund
  * @property-read bool $is_used
  * @property-read \App\Models\Organization|null $organization
@@ -185,14 +185,14 @@ class Prevalidation extends Model
 
         if ($request->has('q') && $q = $request->input('q')) {
             $prevalidations->where(static function(Builder $query) use ($q) {
-                $query->where('uid', 'like', "%{$q}%");
+                $query->where('uid', 'like', "%$q%");
                 $query->orWhereIn('id', static function(
                     \Illuminate\Database\Query\Builder $query
                 ) use ($q) {
                     $query->from(
                         (new PrevalidationRecord)->getTable()
                     )->where(
-                        'value', 'like', "%{$q}%"
+                        'value', 'like', "%$q%"
                     )->select('prevalidation_id');
                 });
             });
@@ -232,26 +232,25 @@ class Prevalidation extends Model
     public static function export(Request $request): Collection {
         $transKey = "export.prevalidations";
 
-        $query = self::search($request);
-        $query->update([
-            'exported' => true
+        $query = self::search($request)->with([
+            'prevalidation_records.record_type.translations',
         ]);
 
-        return $query->with([
-            'prevalidation_records.record_type.translations'
-        ])->get()->map(static function(Prevalidation $prevalidation) use ($transKey)  {
+        $data = $query->get()->map(static function(Prevalidation $prevalidation) use ($transKey)  {
             return collect([
                 trans("$transKey.code") => $prevalidation->uid,
                 trans("$transKey.used") => $prevalidation->state === self::STATE_USED ?
                     trans("$transKey.used_yes") : trans("$transKey.used_no"),
-            ])->merge($prevalidation->prevalidation_records->filter(static function(
-                PrevalidationRecord $record
-            ) {
+            ])->merge($prevalidation->prevalidation_records->filter(function(PrevalidationRecord $record) {
                 return strpos($record->record_type->key, '_eligible') === false;
-            })->pluck(
-                'value', 'record_type.name'
-            ))->toArray();
+            })->pluck('value', 'record_type.name'))->toArray();
         })->values();
+
+        (clone($query))->update([
+            'exported' => true
+        ]);
+
+        return $data;
     }
 
     /**

@@ -48,13 +48,14 @@ class SponsorProviderResource extends JsonResource
         $organizationData = (new OrganizationWithPrivateResource($this->resource))->toArray($request);
 
         $funds = $this->getProviderFunds($sponsorOrganization, $organization);
+        $fundsIds = $funds->pluck('id')->toArray();
 
         return array_merge($organizationData, [
             'logo' => new MediaCompactResource($organization->logo),
             'offices' => OfficeResource::collection($organization->offices),
             'business_type' => new BusinessTypeResource($organization->business_type),
             'employees' => EmployeeResource::collection($organization->employees),
-            'products_count' => $organization->products_count,
+            'products_count' => $organization->providerProductsQuery($fundsIds)->count(),
             'last_activity' => $lastActivity ? $lastActivity->format('Y-m-d H:i:s') : null,
             'last_activity_locale' => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
             'funds' => $funds,

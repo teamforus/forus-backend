@@ -11,6 +11,7 @@ use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
+use App\Traits\HasMarkdownDescription;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -45,6 +46,7 @@ use Illuminate\Http\Request;
  * @property bool $is_validator
  * @property bool $validator_auto_accept_funds
  * @property bool $manage_provider_products
+ * @property bool $backoffice_available
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -65,6 +67,7 @@ use Illuminate\Http\Request;
  * @property-read Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
  * @property-read int|null $funds_voucher_transactions_count
  * @property-read string $description_html
+ * @property-read string $description_text
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -101,6 +104,7 @@ use Illuminate\Http\Request;
  * @method static EloquentBuilder|Organization newModelQuery()
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
+ * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
  * @method static EloquentBuilder|Organization whereCreatedAt($value)
@@ -126,7 +130,7 @@ use Illuminate\Http\Request;
  */
 class Organization extends Model
 {
-    use HasMedia, HasTags, HasLogs, HasDigests;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
 
     public const GENERIC_KVK = "00000000";
 
@@ -139,7 +143,8 @@ class Organization extends Model
         'identity_address', 'name', 'iban', 'email', 'email_public',
         'phone', 'phone_public', 'kvk', 'btw', 'website', 'website_public',
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
-        'validator_auto_accept_funds', 'manage_provider_products', 'description',
+        'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
+        'backoffice_available',
     ];
 
     /**
@@ -153,6 +158,7 @@ class Organization extends Model
         'is_sponsor'                    => 'boolean',
         'is_provider'                   => 'boolean',
         'is_validator'                  => 'boolean',
+        'backoffice_available'          => 'boolean',
         'manage_provider_products'      => 'boolean',
         'validator_auto_accept_funds'   => 'boolean',
     ];
@@ -189,7 +195,10 @@ class Organization extends Model
         }
 
         if ($q = $request->input('q')) {
-            $query->where('name', 'LIKE', "%$q%");
+            return $query->where(function(Builder $builder) use ($q) {
+                $builder->where('name', 'LIKE', "%$q%");
+                $builder->orWhere('description_text', 'LIKE', "%$q%");
+            });
         }
 
         if ($request->input('implementation', false)) {
@@ -468,15 +477,6 @@ class Organization extends Model
     }
 
     /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getDescriptionHtmlAttribute(): string
-    {
-        return resolve('markdown')->convertToHtml($this->description ?? '');
-    }
-
-    /**
      * @param $role
      * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -507,6 +507,18 @@ class Organization extends Model
     public function employeesOfRole($role): Collection
     {
         return $this->employeesOfRoleQuery($role)->get();
+    }
+
+    /**
+     * @param array|int $fund_id
+     * @return EloquentBuilder
+     */
+    public function providerProductsQuery($fund_id = []): EloquentBuilder
+    {
+        $productsQuery = ProductQuery::whereNotExpired($this->products()->getQuery());
+        $productsQuery = ProductQuery::whereFundNotExcludedOrHasHistory($productsQuery, $fund_id);
+
+        return $productsQuery->whereNull('sponsor_organization_id');
     }
 
     /**
@@ -681,7 +693,7 @@ class Organization extends Model
 
     /**
      * @param string $identity_address
-     * @return Model|Employee|null|object
+     * @return Employee|\Illuminate\Database\Eloquent\Model|null
      */
     public function findEmployee(string $identity_address): ?Employee
     {
@@ -690,7 +702,7 @@ class Organization extends Model
 
     /**
      * @param $fund_id
-     * @return Model|Fund|null|object
+     * @return Fund|\Illuminate\Database\Eloquent\Model|null
      */
     public function findFund($fund_id = null): ?Fund
     {

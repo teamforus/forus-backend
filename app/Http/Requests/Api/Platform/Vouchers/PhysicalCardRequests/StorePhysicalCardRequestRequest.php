@@ -25,7 +25,7 @@ class StorePhysicalCardRequestRequest extends FormRequest
     {
         return [
             'address' => 'required|string|between:3,100',
-            'house' => 'required|string|between:1,20',
+            'house' => 'required|numeric|between:1,20000',
             'house_addition' => 'nullable|string|between:0,20',
             'postcode' => 'required|string|between:0,20',
             'city' => 'required|string|between:1,20',

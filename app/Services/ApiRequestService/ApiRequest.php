@@ -30,7 +30,7 @@ class ApiRequest
     {
         $httpClient = new GuzzleClient();
 
-        $httpClient->get($url, [
+        return $httpClient->get($url, [
             'http_errors' => false,
             RequestOptions::QUERY => $body
         ]);

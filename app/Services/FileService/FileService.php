@@ -134,7 +134,7 @@ class FileService
      * @return bool|null
      * @throws \Exception
      */
-    public function unlink(File $file) {
+    public function unlink(File $file): ?bool {
         self::deleteFile($this->urlPublic($file->path));
 
         return $file->delete();
@@ -230,9 +230,9 @@ class FileService
 
     /**
      * @param string $path
-     * @return mixed
+     * @return string
      */
-    public function urlPublic(string $path) {
+    public function urlPublic(string $path): string {
         return $this->storage()->url(ltrim($path, '/'));
     }
 

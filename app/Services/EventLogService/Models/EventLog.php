@@ -41,9 +41,9 @@ class EventLog extends Model
         'data' => 'array',
     ];
 
-    /*protected $hidden = [
+    protected $hidden = [
         'event', 'data', 'identity_address'
-    ];*/
+    ];
 
     /**
      * @return MorphTo

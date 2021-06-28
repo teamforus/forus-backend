@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\Organization;
-use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class FundPolicy
@@ -21,11 +20,9 @@ class FundPolicy
         $identity_address,
         Organization $organization
     ): bool {
-        return $organization->identityCan(
-            $identity_address, [
-                'manage_funds', 'view_finances', 'view_funds',
-            ], false
-        );
+        return $organization->identityCan($identity_address, [
+            'manage_funds', 'view_finances', 'view_funds',
+        ], false);
     }
 
     /**
@@ -33,14 +30,9 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function store(
-        $identity_address,
-        Organization $organization
-    ): bool {
-        return $organization->identityCan(
-            $identity_address,
-            'manage_funds'
-        );
+    public function store($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_funds');
     }
 
     /**
@@ -49,11 +41,8 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function show(
-        $identity_address,
-        Fund $fund,
-        Organization $organization
-    ): bool {
+    public function show($identity_address, Fund $fund, Organization $organization): bool
+    {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
@@ -71,16 +60,26 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function update(
-        $identity_address,
-        Fund $fund,
-        Organization $organization
-    ): bool {
+    public function update($identity_address, Fund $fund, Organization $organization): bool
+    {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
 
         return $fund->organization->identityCan($identity_address, 'manage_funds');
+    }
+
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function updateBackoffice($identity_address, Fund $fund, Organization $organization): bool
+    {
+        return $organization->backoffice_available && $fund->fund_config &&
+            $this->update($identity_address, $fund, $organization);
     }
 
     /**
@@ -103,9 +102,7 @@ class FundPolicy
         }
 
         // The same identity can't apply twice to the same fund
-        if (VoucherQuery::whereNotExpired($fund->vouchers()->getQuery())->where(
-            compact('identity_address')
-        )->exists()) {
+        if ($fund->identityHasActiveVoucher($identity_address)) {
             return $this->deny(trans('fund.already_received'));
         }
 
@@ -133,19 +130,14 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function showFinances(
-        $identity_address,
-        Fund $fund,
-        Organization $organization
-    ): bool {
+    public function showFinances($identity_address, Fund $fund, Organization $organization): bool
+    {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
 
-        return $fund->public || $fund->organization->identityCan(
-            $identity_address,
-            'view_finances'
-        );
+        return $fund->public ||
+            $fund->organization->identityCan($identity_address, 'view_finances');
     }
 
     /**
@@ -154,11 +146,8 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function manageVouchers(
-        $identity_address,
-        Fund $fund,
-        Organization $organization
-    ): bool {
+    public function manageVouchers($identity_address, Fund $fund, Organization $organization): bool
+    {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
@@ -172,18 +161,14 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function destroy(
-        $identity_address,
-        Fund $fund,
-        Organization $organization
-    ): bool {
+    public function destroy($identity_address, Fund $fund, Organization $organization): bool
+    {
         if ($fund->organization_id !== $organization->id) {
             return false;
         }
 
-        return $organization->identityCan($identity_address, [
-            'manage_funds'
-        ]) && $fund->state === Fund::STATE_WAITING;
+        return $organization->identityCan($identity_address, 'manage_funds') &&
+            $fund->state === Fund::STATE_WAITING;
     }
 
     /**
@@ -191,11 +176,8 @@ class FundPolicy
      * @param Fund $fund
      * @return bool
      */
-    public function idealRequest(
-        $identity_address,
-        Fund $fund
-    ): bool {
-        // identity_address not required
+    public function idealRequest($identity_address, Fund $fund): bool
+    {
         return $identity_address && $fund->public;
     }
 }

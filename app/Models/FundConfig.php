@@ -24,10 +24,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
- * @property bool $is_configured
- * @property bool $limit_generator_amount
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property bool $is_configured
+ * @property bool $limit_generator_amount
+ * @property bool $backoffice_enabled
+ * @property bool $backoffice_status
+ * @property string|null $backoffice_url
+ * @property string|null $backoffice_key
+ * @property string|null $backoffice_certificate
+ * @property bool $backoffice_fallback
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\Implementation|null $implementation
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()
@@ -37,6 +43,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPrevalidations($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqAllowedIp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqSandbox($value)
@@ -58,6 +70,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundConfig extends Model
 {
+    protected $fillable = [
+        'backoffice_enabled', 'backoffice_url', 'backoffice_key',
+        'backoffice_certificate', 'backoffice_fallback',
+    ];
+
     /**
      * @var string[]
      */
@@ -65,8 +82,9 @@ class FundConfig extends Model
         'bunq_key', 'bunq_sandbox', 'bunq_allowed_ip', 'formula_amount',
         'formula_multiplier', 'is_configured', 'allow_physical_cards',
         'csv_primary_key', 'subtract_transaction_costs',
-        'implementation_id', 'implementation', 'hash_partner_deny',
-        'limit_generator_amount',
+        'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
+        'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
+        'backoffice_certificate', 'backoffice_fallback',
     ];
 
     /**
@@ -76,6 +94,9 @@ class FundConfig extends Model
         'hash_bsn' => 'boolean',
         'is_configured' => 'boolean',
         'hash_partner_deny' => 'boolean',
+        'backoffice_status' => 'boolean',
+        'backoffice_enabled' => 'boolean',
+        'backoffice_fallback' => 'boolean',
         'allow_fund_requests' => 'boolean',
         'allow_prevalidations' => 'boolean',
         'allow_physical_cards' => 'boolean',

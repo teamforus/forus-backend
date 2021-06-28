@@ -52,6 +52,14 @@ $router->group([
         ]
     ]);
 
+    $router->resource(
+        'search',
+        "Api\Platform\SearchController", [
+        'only' => [
+            'index',
+        ]
+    ]);
+
     if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
         $router->resource(
             'funds/{fund}/requests',
@@ -435,9 +443,16 @@ $router->group(['middleware' => [
         "Api\Platform\Organizations\FundsController@updateCriteria");
 
     $router->patch(
+        'organizations/{organization}/funds/{fund}/backoffice',
+        "Api\Platform\Organizations\FundsController@updateBackoffice");
+
+    $router->post(
+        'organizations/{organization}/funds/{fund}/backoffice-test',
+        "Api\Platform\Organizations\FundsController@testBackofficeConnection");
+
+    $router->patch(
         'organizations/{organization}/transfer-ownership',
-        "Api\Platform\OrganizationsController@transferOwnership"
-    );
+        "Api\Platform\OrganizationsController@transferOwnership");
 
     $router->resource(
         'organizations.funds',
@@ -687,7 +702,7 @@ $router->group(['middleware' => [
         'organizations/{organization}/provider/funds',
         "Api\Platform\Organizations\Provider\FundProviderController", [
         'only' => [
-            'index', 'show', 'store', 'update'
+            'index', 'show', 'store', 'update', 'destroy'
         ],
         'parameters' => [
             'funds' => 'organization_fund'

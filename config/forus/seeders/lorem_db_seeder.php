@@ -65,4 +65,9 @@ return [
         'DB_SEED_URL_APP',
         "https://dev.:key.forus.io/me/#!/"
     ),
+
+    'backoffice_url' => env('DB_SEED_BACKOFFICE_URL'),
+    'backoffice_key' => env('DB_SEED_BACKOFFICE_KEY', ""),
+    'backoffice_cert' => env('DB_SEED_BACKOFFICE_CERT', ""),
+    'backoffice_fallback' => env('DB_SEED_BACKOFFICE_FALLBACK', true),
 ];

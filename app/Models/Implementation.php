@@ -18,7 +18,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Http\Request;
 
 /**
  * App\Models\Implementation
@@ -269,11 +268,10 @@ class Implementation extends Model
 
     /**
      * @param $key
-     * @return Implementation
+     * @return Implementation|null|Model
      */
-    public static function byKey($key): Implementation
+    public static function byKey($key): ?Implementation
     {
-        /** @var self $model */
         return self::where(compact('key'))->first();
     }
 
@@ -537,40 +535,35 @@ class Implementation extends Model
     }
 
     /**
-     * @param Request $request
+     * @param array $options
+     * @param Builder|null $query
      * @return Builder
      */
-    public static function searchProviders(Request $request): Builder
+    public static function searchProviders(array $options, Builder $query = null): Builder
     {
-        /** @var Builder $query */
-        $query = Organization::query();
+        $query = $query ?: Organization::query();
 
         $query->whereHas('supplied_funds_approved', static function (Builder $builder) {
             $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
         });
 
-        if ($request->has('business_type_id') && (
-            $business_type = $request->input('business_type_id'))
-        ) {
-            $query->whereHas('business_type', static function (
-                Builder $builder
-            ) use ($business_type) {
-                $builder->where('id', $business_type);
-            });
+        if ($business_type_id = array_get($options, 'business_type_id')) {
+            $query->where('business_type_id', $business_type_id);
         }
 
-        if ($request->has('fund_id') && ($fund_id = $request->input('fund_id'))) {
-            $query->whereHas('supplied_funds_approved', static function (
-                Builder $builder
-            ) use ($fund_id) {
+        if ($organization_id = array_get($options, 'organization_id')) {
+            $query->where('id', $organization_id);
+        }
+
+        if ($fund_id = array_get($options, 'fund_id')) {
+            $query->whereHas('supplied_funds_approved', static function (Builder $builder) use ($fund_id) {
                 $builder->where('funds.id', $fund_id);
             });
         }
 
-        if ($request->has('q') && ($q = $request->input('q'))) {
+        if ($q = array_get($options, 'q')) {
             $query->where(static function (Builder $builder) use ($q) {
                 $like = '%' . $q . '%';
-
                 $builder->where('name', 'LIKE', $like);
 
                 $builder->orWhere(static function (Builder $builder) use ($like) {
@@ -602,7 +595,9 @@ class Implementation extends Model
             });
         }
 
-        return $query;
+        return $query->orderBy(
+            array_get($options, 'order_by', 'created_at'),
+            array_get($options, 'order_by_dir', 'desc'));
     }
 
     /**

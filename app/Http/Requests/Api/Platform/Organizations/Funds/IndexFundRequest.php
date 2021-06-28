@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
 /**
  * Class IndexFundRequest
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class IndexFundRequest extends FormRequest
+class IndexFundRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -34,6 +34,8 @@ class IndexFundRequest extends FormRequest
             'per_page' => 'numeric|between:1,100',
             'organization_id' => 'nullable|exists:organizations,id',
             'implementation_id' => 'nullable|exists:implementations,id',
+            'order_by' => 'nullable|in:created_at',
+            'order_by_dir' => 'nullable|in:asc,desc',
         ];
     }
 }
