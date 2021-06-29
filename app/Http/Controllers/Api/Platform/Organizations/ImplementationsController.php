@@ -81,7 +81,12 @@ class ImplementationsController extends Controller
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         ]));
 
-        $implementation->attachMediaByUid($request->input('banner_media_uid'));
+        if ($banner_media_uid = $request->input('banner_media_uid')) {
+            $implementation->attachMediaByUid($banner_media_uid);
+        } else {
+            $implementation->unlinkMedias($implementation->medias()->pluck('uid'));
+        }
+
         $implementation->appendMedia($request->input('media_uid', []), 'cms_media');
 
         return new ImplementationPrivateResource($implementation->updatePages(
