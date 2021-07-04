@@ -100,6 +100,18 @@ class PhysicalCardRequestsController extends Controller
     }
 
     /**
+     * Validate store a physical card
+     *
+     * @param StorePhysicalCardRequestRequest $request
+     * @param VoucherToken $voucherToken
+     * @noinspection PhpUnused
+     */
+    public function storeValidate(
+        StorePhysicalCardRequestRequest $request,
+        VoucherToken $voucherToken
+    ): void {}
+
+    /**
      * Display the specified resource.
      *
      * @param VoucherToken $voucherToken
