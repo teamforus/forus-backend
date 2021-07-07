@@ -36,7 +36,7 @@ class ProviderProductReservationBatchRule extends BaseRule
     {
         // check for required fields
         if (!$this->validateRequiredFields($value, ['number', 'product_id'])) {
-            return $this->reject('Missing required fields.');
+            return $this->reject('Er ontbreekt een verplichte kolom of kolommen.');
         }
 
         return true;
