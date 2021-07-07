@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Employee;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -58,6 +59,16 @@ class MediaPolicy
         $identity_address,
         Media $media
     ) {
-        return strcmp($media->identity_address, $identity_address) == 0;
+        $identityCan = false;
+
+        if ($media->type != 'implementation_banner') {
+            return strcmp($media->identity_address, $identity_address) == 0;
+        } elseif ($employee = Employee::getEmployee($identity_address)) {
+            $identityCan = $employee->organization->identityCan(
+                $identity_address, 'manage_implementation_cms'
+            );
+        }
+
+        return $identityCan || strcmp($media->identity_address, $identity_address) == 0;
     }
 }
