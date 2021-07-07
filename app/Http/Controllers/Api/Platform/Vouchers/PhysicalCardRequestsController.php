@@ -80,7 +80,7 @@ class PhysicalCardRequestsController extends Controller
         $fund = $voucherToken->voucher->fund;
 
         $this->mailService->requestPhysicalCard(
-            $this->identityRepo->getPrimaryEmail(auth_address()),
+            $this->identityRepo->getPrimaryEmail($request->auth_address()),
             $fund->getEmailFrom(), [
                 'postcode'       => $request->input('postcode'),
                 'house_number'   => $request->input('house'),
