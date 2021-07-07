@@ -116,7 +116,6 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     private function getAvailableSubsidyProductIds($voucher): array
     {
         $query = Product::whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
-            // $organizations = Organization::queryByIdentityPermissions($this->auth_address(), 'scan_vouchers');
             $organizations = $this->getValidOrganizations($voucher);
 
             FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(

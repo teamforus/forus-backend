@@ -12,7 +12,6 @@ use App\Services\Forus\Notification\NotificationService;
 
 /**
  * Class BaseOrganizationDigest
- * @property IIdentityRepo $identityRepo
  * @package App\Digests
  */
 abstract class BaseOrganizationDigest

@@ -3,9 +3,10 @@
 namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
-use App\Rules\ProductIdToReservationRule;
+use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Support\Facades\Gate;
 

@@ -69,7 +69,7 @@ return [
             "Voor elk fonds zijn specifieke rechten aan u toegekend.\n" .
             "Bekijk het dashboard voor de volledige context en status.",
         'product' =>
-            "- :product_name voor €:product_price_locale",
+            "- :product_name voor :product_price_locale",
     ],
 
     'feedback' => [
@@ -81,7 +81,7 @@ return [
             'U heeft feedback ontvangen op :count_products product of dienst.',
             'U heeft feedback ontvangen op :count_products producten of diensten.',
         ]),
-        'product_title' => "Nieuwe berichten op :product_name voor €:product_price_locale",
+        'product_title' => "Nieuwe berichten op :product_name voor :product_price_locale",
         'product_details' => implode('|', [
             "- :sponsor_name - heeft :count_messages bericht gestuurd op uw aanmelding voor :fund_name.\n",
             "- :sponsor_name - heeft :count_messages berichten gestuurd op uw aanmelding voor :fund_name.\n",

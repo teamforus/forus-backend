@@ -32,6 +32,7 @@ class ProductReservationSubscriber
             'sponsor' =>  $productReservation->voucher->fund->organization,
             'provider' =>  $productReservation->product->organization,
             'voucher' => $productReservation->voucher,
+            'employee' => $productReservation->employee,
         ]);
 
         IdentityProductReservationCreatedNotification::send($logEvent);

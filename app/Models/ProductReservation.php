@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $code
  * @property string $price_type
  * @property string $state
- * @property string $note
+ * @property string|null $note
  * @property \Illuminate\Support\Carbon|null $accepted_at
  * @property \Illuminate\Support\Carbon|null $canceled_at
  * @property \Illuminate\Support\Carbon|null $rejected_at
@@ -86,6 +86,16 @@ class ProductReservation extends Model
     public const STATE_CANCELED = 'canceled';
 
     /**
+     * The events of the product reservation.
+     */
+    public const EVENTS = [
+        self::EVENT_CREATED,
+        self::EVENT_REJECTED,
+        self::EVENT_ACCEPTED,
+        self::EVENT_CANCELED,
+    ];
+
+    /**
      * The states of the product reservation.
      */
     public const STATES = [
@@ -106,7 +116,7 @@ class ProductReservation extends Model
     protected $fillable = [
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
-        'price', 'price_type', 'price_discount', 'code', 'note',
+        'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
     ];
 
     /**

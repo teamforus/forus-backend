@@ -17,7 +17,7 @@ return [
     ],
     'balance_supplied' => [
         'title' => 'Het budget voor ":fund_name" is opgehoogd.',
-        'description' => 'Het budget voor ":fund_name" is opgehoogd met €:fund_top_up_amount_locale.',
+        'description' => 'Het budget voor ":fund_name" is opgehoogd met :fund_top_up_amount_locale.',
     ],
     'ended' => [
         'title' => ':fund_name is geëindigd.',

@@ -3,10 +3,10 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
-use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Models\Voucher;
-use App\Scopes\Builders\FundProviderProductQuery;
+use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\ProductSubQuery;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\Resource;
@@ -146,41 +146,44 @@ class VoucherResource extends Resource
         ];
     }
 
-    public function isProductReservable(Voucher $voucher, Product $product): bool
-    {
-        if (!$voucher->isBudgetType()) {
-            return false;
-        }
-
-        if ($voucher->fund->isTypeSubsidy()) {
-            return FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(
-                FundProviderProduct::query(),
-                $voucher
-            )->where('product_id', $product->id)->exists();
-        }
-
-        if ($voucher->fund->isTypeBudget()) {
-            return $voucher->amount_available > $product->price;
-        }
-
-        return false;
-    }
-
+    /**
+     * @param Voucher $voucher
+     * @param int|null $product_id
+     * @return array|null
+     */
     public function queryProduct(Voucher $voucher, ?int $product_id = null): ?array
     {
-        if (!$product_id || !$product = Product::find($product_id)) {
+        /** @var Product|null $product */
+        $product = $product_id ? ProductSubQuery::appendReservationStats([
+            'voucher_id' => $voucher->id
+        ], Product::whereId($product_id))->first() : null;
+
+        if (!$product) {
             return null;
         }
 
-        $fund = $voucher->fund;
-        $expireDate = $voucher->calcExpireDateForProduct($product);
-        $fundProviderProduct = $fund->isTypeSubsidy() ? $product->getSubsidyDetailsForFund($fund) : null;
+        $expire_at = $voucher->calcExpireDateForProduct($product);
+        $reservable = false;
+        $reservable_count = $product['limit_available'] ?? null;
+        $reservable_count = is_numeric($reservable_count) ? intval($reservable_count) : null;
+        $reservable_expire_at = $expire_at ? $expire_at->format('Y-m-d') : null;
+
+        if ($voucher->isBudgetType()) {
+            if ($voucher->fund->isTypeSubsidy()) {
+                $reservable = $reservable_count > 0;
+            } else if ($voucher->fund->isTypeBudget()) {
+                $reservable = FundQuery::whereProductsAreApprovedAndActiveFilter(
+                    Fund::whereId($voucher->fund_id), $product
+                )->exists() && $voucher->amount_available > $product->price;
+            }
+        }
 
         return [
-            'reservable' => $this->isProductReservable($voucher, $product),
-            'reservable_count' => $fundProviderProduct ? $fundProviderProduct->stockAvailableForIdentity($voucher->identity_address, $voucher) : null,
-            'reservable_expire_at' => $expireDate ? $expireDate->format('Y-m-d') : null,
-            'reservable_expire_at_locale' => format_date_locale($expireDate ?? null),
+            'reservable' => $reservable,
+            'reservable_count' => $reservable_count,
+            'reservable_enabled' => $product['reservations_subsidy_enabled'] ?? false,
+            'reservable_expire_at' => $reservable_expire_at,
+            'reservable_expire_at_locale' => format_date_locale($reservable_expire_at ?? null),
         ];
     }
 

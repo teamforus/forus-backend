@@ -184,6 +184,7 @@ return [
         'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
         'reservation_not_enabled' => 'Reserveren staat niet aan voor dit aanbod.',
         'no_identity_stock' => 'Limiet van dit tegoed is bereikt.',
+        'no_total_stock' => 'Limiet per persoon is bereikt.',
         'reservation_not_pending' => join(" ", [
             'De reservering (#:code) kan niet gescant worden, de status van deze reservering is ":state".',
             'Ga naar de beheeromgeving om de reservaring te beoordelen.'

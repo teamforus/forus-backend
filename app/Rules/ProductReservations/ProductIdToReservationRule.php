@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Rules;
+namespace App\Rules\ProductReservations;
 
-use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Models\Voucher;
-use App\Scopes\Builders\FundProviderProductQuery;
+use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductQuery;
+use App\Scopes\Builders\ProductSubQuery;
 
 /**
  * Class ProductIdToReservationRule
@@ -39,8 +39,11 @@ class ProductIdToReservationRule extends BaseRule
      */
     public function passes($attribute, $value): bool
     {
-        $product = Product::find($value);
+        /** @var Product $product */
         $voucher = Voucher::findByAddressOrPhysicalCard($this->voucherAddress);
+        $product = ProductSubQuery::appendReservationStats([
+            'voucher_id', $voucher->id ?? null,
+        ], Product::whereId($value))->first();
 
         if (!$this->voucherAddress || !$voucher) {
             return $this->rejectTrans('voucher_address_required');
@@ -68,23 +71,12 @@ class ProductIdToReservationRule extends BaseRule
 
         // validate per-identity limit
         if ($voucher->fund->isTypeSubsidy()) {
-            $fundProviderProduct = $product->getSubsidyDetailsForFund($voucher->fund);
-
-            if (!$fundProviderProduct) {
-                return $this->rejectTrans('product_not_available');
+            if (($product['limit_total_available'] ?? 0) < 1) {
+                return $this->reject(trans('validation.product_reservation.no_total_stock'));
             }
 
-            if ($fundProviderProduct->stockAvailableForIdentity($voucher->identity_address) < 1) {
-                return $this->rejectTrans('no_identity_stock');
-            }
-
-            $query = FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(
-                FundProviderProduct::query(),
-                $voucher
-            );
-
-            if (!$query->where('product_id', $product->id)->exists()) {
-                return $this->rejectTrans('no_identity_stock');
+            if (($product['limit_available'] ?? 0) < 1) {
+                return $this->reject(trans('validation.product_reservation.no_identity_stock'));
             }
         }
 

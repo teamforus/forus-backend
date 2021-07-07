@@ -1,10 +1,14 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Digests;
 
 use App\Digests\ValidatorDigest;
 use Illuminate\Console\Command;
 
+/**
+ * Class SendValidatorDigestCommand
+ * @package App\Console\Commands
+ */
 class SendValidatorDigestCommand extends Command
 {
     /**
