@@ -86,6 +86,18 @@ class ProductReservationPolicy
     }
 
     /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @return bool
+     */
+    public function createProviderBatch(string $identity_address, Organization $organization): bool
+    {
+        return $identity_address &&
+            $organization->allow_batch_reservations &&
+            $organization->identityCan($identity_address, 'scan_vouchers');
+    }
+
+    /**
      * Determine whether the user can update the product reservation.
      *
      * @param string $identity_address

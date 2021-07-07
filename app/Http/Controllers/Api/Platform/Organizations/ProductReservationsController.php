@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProduc
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
 use App\Http\Resources\ProductReservationResource;
+use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -86,35 +87,55 @@ class ProductReservationsController extends Controller
      *
      * @param StoreProductReservationBatchRequest $request
      * @param Organization $organization
-     * @return AnonymousResourceCollection
+     * @return array
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function storeBatch(
         StoreProductReservationBatchRequest $request,
         Organization $organization
-    ): AnonymousResourceCollection {
-        $this->authorize('createProvider', [ProductReservation::class, $organization]);
+    ): array {
+        $this->authorize('createProviderBatch', [ProductReservation::class, $organization]);
 
+        $reservations = $request->input('reservations');
+        $employee = $organization->findEmployee($request->auth_address());
+
+        $index = 0;
         $createdItems = [];
+        $errorsItems = [];
 
-        foreach ($request->input('reservations') as $data) {
-            $product = Product::find(array_get($data, 'product_id'));
-            $voucher = Voucher::findByAddressOrPhysicalCard(array_get($data, 'number'));
+        while (count($reservations) > $index) {
+            $slice = array_slice($reservations, $index++, 1, true);
+            $item = array_slice($slice, 0, 1)[0];
+            $validator = $request->validateRows($slice);
 
-            $reservation = $voucher->reserveProduct($product, array_get($data, 'note'));
+            if ($validator->passes()) {
+                $note = array_get($item, 'note');
+                $product = Product::find(array_get($item, 'product_id'));
+                $voucher = Voucher::findByAddressOrPhysicalCard(array_get($item, 'number'));
+                $reservation = $voucher->reserveProduct($product, $employee, $note);
 
-            if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
-                $reservation->acceptProvider();
+                if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
+                    $reservation->acceptProvider($employee);
+                }
+
+                $createdItems[] = $reservation->id;
+            } else {
+                $errorsItems[] = $validator->messages()->toArray();
             }
-
-            $createdItems[] = $reservation->id;
         }
 
         $reservations = ProductReservation::query()->whereIn('id', $createdItems)->get();
-
-        return ProductReservationResource::collection($reservations->load(
+        $reserved = ProductReservationResource::collection($reservations->load(
             ProductReservationResource::load()
         ));
+
+        return [
+            'reserved' => $reserved,
+            'errors' => array_reduce($errorsItems, function($array, $item) {
+                return array_merge($array, $item);
+            }, []),
+        ];
     }
 
     /**

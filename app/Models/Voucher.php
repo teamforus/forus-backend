@@ -704,12 +704,16 @@ class Voucher extends Model
 
     /**
      * @param Product $product
+     * @param Employee|null $employee
      * @param string|null $note
      * @return ProductReservation
      * @throws \Exception
      */
-    public function reserveProduct(Product $product, string $note = null): ProductReservation
-    {
+    public function reserveProduct(
+        Product $product,
+        ?Employee $employee = null,
+        string $note = null
+    ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $isSubsidy ? $product->getSubsidyDetailsForFund($this->fund) : null;
         $amount = $isSubsidy && $fundProviderProduct ? $fundProviderProduct->amount : $product->price;
@@ -719,7 +723,9 @@ class Voucher extends Model
             'code'                      => ProductReservation::makeCode(),
             'note'                      => $note,
             'amount'                    => $amount,
+            'state'                     => ProductReservation::STATE_PENDING,
             'product_id'                => $product->id,
+            'employee_id'               => $employee ? $employee->id : null,
             'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
             'expire_at'                 => $this->calcExpireDateForProduct($product)
         ], $product->only('price', 'price_type', 'price_discount')));
@@ -875,32 +881,44 @@ class Voucher extends Model
     /**
      * @param string $address
      * @param string|null $identity_address
-     * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model
+     * @return Voucher|null
      */
     public static function findByAddress(
         string $address,
         ?string $identity_address = null
-    ) {
+    ): ?Voucher {
         return self::whereHas('tokens', static function(Builder $builder) use ($address) {
             $builder->where('address', '=', $address);
         })->where(static function(Builder $builder) use ($identity_address) {
-            if ($identity_address) {
-                $builder->where('identity_address', '=', $identity_address);
-            }
+            $identity_address && $builder->where('identity_address', '=', $identity_address);
         })->firstOrFail();
     }
 
     /**
-     * @param $code_or_address
-     * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model|object|null
+     * @param string $number
+     * @param string|null $identity_address
+     * @return Voucher|null
      */
-    public static function findByAddressOrPhysicalCard($code_or_address)
-    {
+    public static function findByPhysicalCard(
+        string $number,
+        ?string $identity_address = null
+    ): ?Voucher {
         return self::whereHas('fund.fund_config', static function (Builder $builder) {
             $builder->where('allow_physical_cards', '=', true);
-        })->whereHas('physical_cards', static function (Builder $builder) use ($code_or_address) {
-            $builder->where('code', '=', $code_or_address);
-        })->first() ?: self::findByAddress($code_or_address);
+        })->whereHas('physical_cards', static function (Builder $builder) use ($number) {
+            $builder->where('code', '=', $number);
+        })->where(static function(Builder $builder) use ($identity_address) {
+            $identity_address && $builder->where('identity_address', '=', $identity_address);
+        })->first();
+    }
+
+    /**
+     * @param $value
+     * @return Voucher|null
+     */
+    public static function findByAddressOrPhysicalCard($value): ?Voucher
+    {
+        return self::findByPhysicalCard($value) ?: self::findByAddress($value);
     }
 
     /**
@@ -969,6 +987,15 @@ class Voucher extends Model
             'activation_code' => $activation_code,
             'activation_code_uid' => $activation_code_uid,
         ]);
+    }
+
+    /**
+     * @param string $code
+     * @return PhysicalCard|Model|mixed
+     */
+    public function addPhysicalCard(string $code): PhysicalCard
+    {
+        return $this->physical_cards()->create(compact('code'));
     }
 
     /**

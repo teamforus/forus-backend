@@ -4,6 +4,10 @@ namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Class StorePhysicalCardRequestRequest
+ * @package App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests
+ */
 class StorePhysicalCardRequestRequest extends FormRequest
 {
     /**

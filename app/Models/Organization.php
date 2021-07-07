@@ -51,6 +51,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $reservations_auto_accept
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
+ * @property bool $allow_batch_reservations
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BusinessType|null $business_type
@@ -107,6 +108,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization newModelQuery()
  * @method static EloquentBuilder|Organization newQuery()
  * @method static EloquentBuilder|Organization query()
+ * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
@@ -172,6 +174,7 @@ class Organization extends Model
         'reservations_budget_enabled'           => 'boolean',
         'reservations_subsidy_enabled'          => 'boolean',
         'reservations_auto_accept'              => 'boolean',
+        'allow_batch_reservations'              => 'boolean',
     ];
 
     /**
@@ -620,7 +623,7 @@ class Organization extends Model
         string $identityAddress,
         $permissions = false
     ): EloquentBuilder {
-        $permissions = (array) $permissions;
+        $permissions = $permissions === false ? false : (array) $permissions;
 
         /**
          * Query all the organizations where identity_address has permissions

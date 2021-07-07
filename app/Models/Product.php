@@ -206,7 +206,14 @@ class Product extends Model
      */
     public function vouchers_reserved(): HasMany
     {
-        return $this->hasMany(Voucher::class)->whereDoesntHave('transactions');
+        return $this->hasMany(Voucher::class)
+            ->whereHas('product_reservations', function(Builder $builder) {
+                $builder->whereNotIn('state', [
+                    ProductReservation::STATE_REJECTED,
+                    ProductReservation::STATE_CANCELED
+                ]);
+            })
+            ->whereDoesntHave('transactions');
     }
 
     /**
@@ -299,7 +306,7 @@ class Product extends Model
      * @return int
      */
     public function countReserved(): int {
-        return $this->vouchers()->doesntHave('transactions')->count();
+        return $this->vouchers_reserved()->count();
     }
 
     /**

@@ -42,7 +42,7 @@ class EventLog extends Model
     ];
 
     protected $hidden = [
-        'event', 'data', 'identity_address'
+        /*'event',*/ 'data', 'identity_address'
     ];
 
     /**
@@ -54,6 +54,7 @@ class EventLog extends Model
     }
 
     /**
+     * todo: migrate all eventsOfTypeQuery to eventsOfTypeQuery2
      * @param string $loggable_class
      * @param int|array $loggable_key
      * @return Builder
@@ -67,6 +68,25 @@ class EventLog extends Model
         $query->whereHasMorph('loggable', $loggable_class);
         $query->where(static function(Builder $builder) use ($loggable_key) {
             $builder->whereIn('loggable_id', (array) $loggable_key);
+        });
+
+        return $query;
+    }
+
+    /**
+     * @param string $loggableType
+     * @param Builder $loggableQuery
+     * @return Builder
+     */
+    public static function eventsOfTypeQuery2(
+        string $loggableType,
+        Builder $loggableQuery
+    ): Builder {
+        $query = self::query();
+
+        $query->whereHasMorph('loggable', $loggableType);
+        $query->where(static function(Builder $builder) use ($loggableQuery) {
+            $builder->whereIn('loggable_id', $loggableQuery->select('id'));
         });
 
         return $query;

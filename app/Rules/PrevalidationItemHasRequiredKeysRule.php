@@ -32,11 +32,11 @@ class PrevalidationItemHasRequiredKeysRule extends BaseRule
         $required_keys = $this->fund->requiredPrevalidationKeys()->toArray();
 
         if (!($this->fund && is_array($value))) {
-            return $this->rejectWithMessage(trans('validation.required'));
+            return $this->reject(trans('validation.required'));
         }
 
         if (count(array_diff($required_keys, array_keys($value))) !== 0) {
-            return $this->rejectWithMessage(trans('validation.in'));
+            return $this->reject(trans('validation.in'));
         }
 
         return true;

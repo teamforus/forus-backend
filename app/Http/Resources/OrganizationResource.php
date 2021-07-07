@@ -79,6 +79,7 @@ class OrganizationResource extends Resource
             'validator_auto_accept_funds', 'description', 'description_html',
             'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
+            'allow_batch_reservations',
         ]), $privateData,
             $ownerData, [
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),

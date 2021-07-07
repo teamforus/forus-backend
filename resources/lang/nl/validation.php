@@ -184,6 +184,7 @@ return [
         'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
         'reservation_not_enabled' => 'Reservation is not available for this product.',
         'no_identity_stock' => 'Limit stock per user reached.',
+        'no_total_stock' => 'Limit stock per user reached.',
         'reservation_not_pending' => join(" ", [
             'The reservation (#:code) is not pending, the current state is ":state".',
             'Please go to the dashboard to review and accept the reservation.'

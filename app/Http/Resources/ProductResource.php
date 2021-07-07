@@ -3,9 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
-use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\ProductSubQuery;
 use Illuminate\Http\Resources\Json\Resource;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -92,8 +92,6 @@ class ProductResource extends Resource
         $fundsQuery->with('organization');
 
         return $fundsQuery->get()->map(function(Fund $fund) use ($product) {
-            $fundProviderProduct = $fund->isTypeSubsidy() ? $product->getSubsidyDetailsForFund($fund) : null;
-
             $data = [
                 'id' => $fund->id,
                 'name' => $fund->name,
@@ -105,31 +103,23 @@ class ProductResource extends Resource
                 'reservations_enabled' => $product->reservationsEnabled($fund),
             ];
 
-            return array_merge($data, $fund->isTypeSubsidy() && $fundProviderProduct ? [
-                'limit_total' => $fundProviderProduct->limit_total,
-                'limit_total_unlimited' => $fundProviderProduct->limit_total_unlimited,
-                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
-                'limit_available' => $this->getLimitAvailable($fundProviderProduct),
+            if (!$fund->isTypeSubsidy()) {
+                return $data;
+            }
+
+            $fundProviderProduct = $product->getSubsidyDetailsForFund($fund);
+            $productData = ProductSubQuery::appendReservationStats([
+                'identity_address' => auth_address(),
+                'fund_id' => $fund->id
+            ], Product::whereId($product->id))->first()->only([
+                'limit_total', 'limit_per_identity', 'limit_available'
+            ]);
+
+            return array_merge($data, $productData, [
                 'price' => $fundProviderProduct->user_price,
                 'price_locale' => $fundProviderProduct->user_price_locale,
-            ] : []);
+            ]);
         })->values();
-    }
-
-    /**
-     * @param FundProviderProduct $providerProduct
-     * @return int|null
-     */
-    private function getLimitAvailable(FundProviderProduct $providerProduct): ?int
-    {
-        if ($authAddress = auth_address()) {
-            return $providerProduct->stockAvailableForIdentity($authAddress);
-        }
-
-        return !$providerProduct->limit_total_unlimited ? min(
-            $providerProduct->limit_total,
-            $providerProduct->limit_per_identity
-        ) : $providerProduct->limit_per_identity;
     }
 
     /**

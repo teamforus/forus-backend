@@ -185,9 +185,7 @@ class VoucherTransaction extends Model
                 if ($fundProviderProduct && $this->voucher->identity_address) {
                     $transData = array_merge($transData, [
                         "product_name" => $this->product->name,
-                        "new_limit"    => $fundProviderProduct->stockAvailableForIdentity(
-                            $this->voucher->identity_address
-                        )
+                        "new_limit"    => $fundProviderProduct->stockAvailableForVoucher($this->voucher),
                     ]);
                 }
             }

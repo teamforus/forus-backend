@@ -245,10 +245,7 @@ class Fund extends Model
      */
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Product::class,
-            'fund_products'
-        );
+        return $this->belongsToMany(Product::class, 'fund_products');
     }
 
     /**

@@ -60,7 +60,7 @@ class ProductIdInStockRule extends BaseRule
         if (!$product->unlimited_stock &&
             $this->otherReservations &&
             $product->stock_amount < $this->otherReservations[$product_id]) {
-            return $this->rejectWithMessage(trans('validation.in'));
+            return $this->reject(trans('validation.in'));
         }
 
         // check validity

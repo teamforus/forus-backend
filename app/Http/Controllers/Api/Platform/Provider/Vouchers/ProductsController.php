@@ -68,6 +68,10 @@ class ProductsController extends Controller
             )->paginate($request->input('per_page', 10)));
         }
 
+
+        // todo: refactoring
+        // For dashboard
+
         $query = Product::query()->where('price', '<=', $voucherToken->voucher->amount_available);
         ProductQuery::approvedForFundsAndActiveFilter($query, $voucherToken->voucher->fund_id);
 

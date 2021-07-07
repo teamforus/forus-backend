@@ -1,25 +1,29 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Digests;
 
-use App\Digests\RequesterDigest;
+use App\Digests\SponsorDigest;
 use Illuminate\Console\Command;
 
-class SendRequesterDigestCommand extends Command
+/**
+ * Class SendSponsorDigestCommand
+ * @package App\Console\Commands
+ */
+class SendSponsorDigestCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'forus.digest.requester:send';
+    protected $signature = 'forus.digest.sponsor:send';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send requester digest.';
+    protected $description = 'Send sponsor digest.';
 
     /**
      * Execute the console command.
@@ -28,6 +32,6 @@ class SendRequesterDigestCommand extends Command
      */
     public function handle(): void
     {
-        RequesterDigest::dispatchNow();
+        SponsorDigest::dispatchNow();
     }
 }

@@ -16,8 +16,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
 /**
- * Class ValidatorDigest
- * @package App\Digests
+ * Class ProviderFundsDigest
+ * @package App\DigestsNieuw aanbod op de webshop
  */
 class ProviderFundsDigest extends BaseOrganizationDigest
 {

@@ -50,7 +50,7 @@ class FundProviderProductSubsidyRule extends BaseRule
         }
 
         if (!is_numeric($amount) || $amount > $this->maxAmount || $amount < 0) {
-            return $this->rejectWithMessage(trans('validation.max.numeric', [
+            return $this->reject(trans('validation.max.numeric', [
                 'max' => currency_format_locale($product->price),
                 'attribute' => trans('validation.attributes.amount')
             ]));
@@ -58,14 +58,14 @@ class FundProviderProductSubsidyRule extends BaseRule
 
         if (!$product->unlimited_stock) {
             if (!is_numeric($limit) || $product->stock_amount < $limit) {
-                return $this->rejectWithMessage(trans('validation.max.numeric', [
+                return $this->reject(trans('validation.max.numeric', [
                     'max' => $product->stock_amount,
                     'attribute' => trans('validation.attributes.limit_total')
                 ]));
             }
 
             if (!is_numeric($limit_per_identity) || $product->stock_amount < $limit_per_identity) {
-                return $this->rejectWithMessage(trans('validation.max.numeric', [
+                return $this->reject(trans('validation.max.numeric', [
                     'max' => $product->stock_amount,
                     'attribute' => trans('validation.attributes.limit_total_per_identity')
                 ]));
