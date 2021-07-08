@@ -116,7 +116,7 @@ class ProviderVoucherResource extends Resource
             'allowed_organizations' => $this->getAllowedOrganizations($voucher, $identityAddress),
             'product' => collect($voucher->product)->only([
                 'id', 'name', 'description', 'total_amount', 'sold_amount',
-                'product_category_id', 'organization_id'
+                'product_category_id', 'organization_id',
             ])->merge([
                 'price' => currency_format($voucher->product->price),
                 'photo' => new MediaResource($voucher->product->photo),

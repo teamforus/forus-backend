@@ -7,6 +7,10 @@ namespace App\Services\EventLogService\Interfaces;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 
+/**
+ * Interface IEventLogService
+ * @package App\Services\EventLogService\Interfaces
+ */
 interface IEventLogService
 {
     /**
@@ -17,7 +21,6 @@ interface IEventLogService
      * @return EventLog
      */
     public function log($loggable, string $action, array $models = [], array $raw_meta = []): EventLog;
-
 
     /**
      * @param string $type

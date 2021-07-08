@@ -392,29 +392,40 @@ class LoremDbSeeder extends Seeder
                 'state' => 'used'
             ]);
 
-            $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
+            if (env('DB_SEED_NO_VOUCHERS', false)) {
+                continue;
+            }
+
+            $voucher = $prevalidation->fund->makeVoucher($identity_address);
+
+            if (env('DB_SEED_NO_PRODUCT_VOUCHERS', false)) {
+                continue;
+            }
 
             /** @var Product $product */
-            $voucher = $prevalidation->fund->makeVoucher($identity_address);
+            $productsQuery = ProductQuery::approvedForFundsAndActiveFilter(Product::query(), $prevalidation->fund->id);
             $product = $productsQuery->inRandomOrder()->first();
             $productIds = $productsQuery->inRandomOrder()->pluck('id');
 
-            $voucher->buyProductVoucher($product);
-            $voucher->buyProductVoucher($product);
+            if ($product && !$product->sold_out) {
+                $voucher->buyProductVoucher($product);
+            }
 
             while ($voucher->fund->isTypeBudget() && $voucher->amount_available > ($voucher->amount / 3)) {
+                $product = Product::find((random_int(0, 10) > 6 && $productIds->count()) ? $productIds->random() : null);
+
                 $transaction = $voucher->transactions()->create([
-                    'amount' => random_int(
+                    'amount' => ($product && !$product->sold_out) ? $product->price : random_int(
                         (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_min'),
                         (int) config('forus.seeders.lorem_db_seeder.voucher_transaction_max')
                     ),
-                    'product_id' => random_int(0, 10) > 4 ? null : $productIds->random(),
+                    'product_id' => ($product && !$product->sold_out) ? $product->id : null,
                     'address' => $this->tokenGenerator->address(),
                     'organization_id' => $voucher->fund->provider_organizations_approved->pluck('id')->random(),
                     'created_at' => now()->subDays(random_int(0, 360)),
                     'state' => VoucherTransaction::STATE_SUCCESS,
                     'attempts' => /* It's Over */ 9000,
-                ]);
+                ])->fresh();
 
                 VoucherTransactionCreated::dispatch($transaction);
             }

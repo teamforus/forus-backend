@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\ProductSubQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +24,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\FundProvider $fund_provider
+ * @property-read float $user_price
+ * @property-read string $user_price_locale
  * @property-read \App\Models\Product $product
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
@@ -69,57 +72,105 @@ class FundProviderProduct extends Model
     /**
      * @return BelongsTo
      */
-    public function product(): BelongsTo {
+    public function product(): BelongsTo
+    {
         return $this->belongsTo(Product::class);
     }
 
     /**
      * @return BelongsTo
      */
-    public function fund_provider(): BelongsTo {
+    public function fund_provider(): BelongsTo
+    {
         return $this->belongsTo(FundProvider::class);
     }
 
     /**
      * @return HasMany
      */
-    public function voucher_transactions(): HasMany {
+    public function voucher_transactions(): HasMany
+    {
         return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
-     * @param string $identity_address
+     * @return float
+     */
+    public function getUserPriceAttribute(): float
+    {
+        return $this->getUserPrice($this->product->price);
+    }
+
+    /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getUserPriceLocaleAttribute(): string
+    {
+        return $this->getUserPriceLocale(
+            $this->getUserPrice($this->product->price),
+            $this->product->price_type,
+            $this->product->price_discount
+        );
+    }
+
+    /**
+     * @param float $price
+     * @return float
+     */
+    public function getUserPrice(float $price): float
+    {
+        return currency_format(max(0, $price - $this->amount));
+    }
+
+    /**
+     * @param float $price
+     * @param string $price_type
+     * @param string $price_discount
+     * @return string
+     */
+    public function getUserPriceLocale(
+        float $price,
+        string $price_type,
+        string $price_discount
+    ): string {
+        switch ($price_type) {
+            case $this->product::PRICE_TYPE_REGULAR: return currency_format_locale($price);
+            case $this->product::PRICE_TYPE_FREE: return 'Gratis';
+            case $this->product::PRICE_TYPE_DISCOUNT_FIXED:
+            case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+                return 'Korting: ' . $this->getPriceDiscountLocale($price_type, $price_discount);
+            }
+            default: return '';
+        }
+    }
+
+
+    /**
+     * @param string $price_type
+     * @param string $price_discount
+     * @return string
+     */
+    public function getPriceDiscountLocale(string $price_type, string $price_discount): string
+    {
+        switch ($price_type) {
+            case $this->product::PRICE_TYPE_DISCOUNT_FIXED: return currency_format_locale($price_discount);
+            case $this->product::PRICE_TYPE_DISCOUNT_PERCENTAGE: {
+                $isWhole = (double) ($price_discount - round($price_discount)) === (double) 0;
+                return currency_format($price_discount, $isWhole ? 0 : 2) . '%';
+            }
+            default: return '';
+        }
+    }
+
+    /**
+     * @param Voucher|null $voucher
      * @return int|null
      */
-    public function stockAvailableForIdentity(string $identity_address): ?int {
-        if (!$limitAvailable = $this->fund_provider->fund->isTypeSubsidy()) {
-            return null;
-        }
-
-        $query = $this->fund_provider->fund->budget_vouchers()->where([
-            'identity_address' => $identity_address
-        ]);
-
-        $limit_multiplier = $query->exists() ? $query->sum('limit_multiplier') : 1;
-        $limit_per_identity = $this->limit_per_identity * $limit_multiplier;
-        $limiters = [$limit_per_identity];
-
-        if (!$this->product->unlimited_stock) {
-            $limiters[] = $this->product->stock_amount;
-        }
-
-        if (!$this->limit_total_unlimited) {
-            $limiters[] = $this->limit_total;
-        }
-
-        $limitAvailable = (int) collect($limiters)->min();
-        $count_transactions = VoucherTransaction::where([
-            'product_id' => $this->product_id,
-            'organization_id' => $this->product->organization_id,
-        ])->whereHas('voucher', static function(Builder $builder) use ($identity_address) {
-            $builder->where('identity_address', '=', $identity_address);
-        })->count();
-
-        return max($limitAvailable - $count_transactions, 0);
+    public function stockAvailableForVoucher(Voucher $voucher): ?int
+    {
+        return (int) max(ProductSubQuery::appendReservationStats([
+            'voucher_id' => $voucher->id,
+        ], Product::whereId($this->product_id))->first()['limit_available'] ?? 0, 0);
     }
 }

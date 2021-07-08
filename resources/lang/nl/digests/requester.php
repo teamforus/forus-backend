@@ -23,7 +23,7 @@ return [
             // plural
             ":sponsor_name heeft :count_products nieuwe producten of diensten aan de webshop toegevoegd van :fund_name."
         ]),
-        'price' => "- :product_name voor €:product_price_locale",
+        'price' => "- :product_name voor :product_price_locale",
     ],
 
     'button_webshop' => 'GA NAAR DE WEBSHOP',

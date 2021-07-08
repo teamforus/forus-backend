@@ -51,10 +51,20 @@ class TransactionsController extends Controller
     ): VoucherTransactionResource {
         $this->authorize('useAsProvider', $voucherToken->voucher);
 
-        $product = false;
-        $needsReview = false;
+        $note = $request->input('note', false);
         $voucher = $voucherToken->voucher;
         $transactionState = VoucherTransaction::STATE_PENDING;
+
+        if ($voucher->product_reservation) {
+            $this->authorize('acceptProvider', [
+                $voucher->product_reservation,
+                $voucher->product_reservation->product->organization
+            ]);
+
+            return new VoucherTransactionResource(
+                $voucher->product_reservation->acceptByApp($request->auth_address(), $note)
+            );
+        }
 
         if ($voucher->fund->isTypeBudget()) {
             if ($voucher->isBudgetType()) {
@@ -81,34 +91,21 @@ class TransactionsController extends Controller
             }
         }
 
-        // TODO: cleanup
-        if ($threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5)) {
-            $needsReview = $voucher->transactions()->where(
-                'created_at', '>=', now()->subSeconds($threshold)
-            )->exists();
-        }
-
-        if (!$employee = $organization->findEmployee(auth_address())) {
-            abort(404);
-        }
-
         /** @var VoucherTransaction $transaction */
         $transaction = $voucher->transactions()->create(array_merge([
             'amount' => $amount,
             'product_id' => $product->id ?? null,
-            'employee_id' => $employee->id,
+            'employee_id' => $organization->findEmployee($request->auth_address())->id,
             'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProductId ?? null,
             'address' => token_generator()->address(),
             'organization_id' => $organization->id,
-        ], $needsReview ? [
+        ], $voucher->needsTransactionReview() ? [
             'attempts' => 50,
             'last_attempt_at' => now()
         ] : []));
 
-        if ($note = $request->input('note')) {
-            $transaction->addNote('provider', $note);
-        }
+        $note && $transaction->addNote('provider', $note);
 
         VoucherTransactionCreated::dispatch($transaction);
 

@@ -7,16 +7,17 @@ use App\Events\Organizations\OrganizationUpdated;
 use App\Http\Requests\Api\Platform\Organizations\TransferOrganizationOwnershipRequest;
 use App\Http\Requests\Api\Platform\Organizations\IndexOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\StoreOrganizationRequest;
+use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationAcceptReservationsRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationBusinessTypeRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRequest;
 use App\Http\Requests\Api\Platform\Organizations\UpdateOrganizationRolesRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\OrganizationResource;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -36,11 +37,9 @@ class OrganizationsController extends Controller
     {
         $this->authorize('viewAny', Organization::class);
 
-        return OrganizationResource::collection(
-            Organization::searchQuery($request)->with(
-                OrganizationResource::load($request)
-            )->paginate($request->input('per_page', 10))
-        );
+        return OrganizationResource::collection(Organization::searchQuery($request)->with(
+            OrganizationResource::load($request)
+        )->orderBy('name')->paginate($request->input('per_page', 10)));
     }
 
     /**
@@ -50,9 +49,8 @@ class OrganizationsController extends Controller
      * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(
-        StoreOrganizationRequest $request
-    ): OrganizationResource {
+    public function store(StoreOrganizationRequest $request): OrganizationResource
+    {
         $this->authorize('store', Organization::class);
 
         if ($media = media()->findByUid($request->post('media_uid'))) {
@@ -84,20 +82,16 @@ class OrganizationsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        Request $request,
-        Organization $organization
-    ): OrganizationResource {
+    public function show(BaseFormRequest $request, Organization $organization): OrganizationResource
+    {
         $this->authorize('show', $organization);
 
-        return new OrganizationResource(
-            $organization->load(OrganizationResource::load($request))
-        );
+        return new OrganizationResource($organization->load(OrganizationResource::load($request)));
     }
 
     /**
@@ -118,13 +112,13 @@ class OrganizationsController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        $organization->update(collect($request->only([
+        $organization->update(array_merge($request->only([
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'business_type_id', 'description',
-        ]))->merge([
+        ]), $request->has('iban') ? [
             'iban' => strtoupper($request->get('iban'))
-        ])->toArray());
+        ]: []));
 
         if ($media instanceof Media && $media->type === 'organization_logo') {
             $organization->attachMedia($media);
@@ -169,6 +163,25 @@ class OrganizationsController extends Controller
         OrganizationUpdated::dispatch($organization->updateModel($request->only([
             'is_sponsor', 'is_provider', 'is_validator',
             'validator_auto_accept_funds'
+        ])));
+
+        return new OrganizationResource($organization);
+    }
+
+    /**
+     * @param UpdateOrganizationAcceptReservationsRequest $request
+     * @param Organization $organization
+     * @return OrganizationResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function updateAcceptReservations(
+        UpdateOrganizationAcceptReservationsRequest $request,
+        Organization $organization
+    ): OrganizationResource {
+        $this->authorize('updateAutoAllowReservations', $organization);
+
+        OrganizationUpdated::dispatch($organization->updateModel($request->only([
+            'reservations_auto_accept'
         ])));
 
         return new OrganizationResource($organization);

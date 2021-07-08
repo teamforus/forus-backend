@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCards;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 /**
  * Class StorePhysicalCardRequest
@@ -30,11 +29,7 @@ class StorePhysicalCardRequest extends FormRequest
     {
         return [
             'code' => [
-                'required',
-                'string',
-                'size:12',
-                'starts_with:100',
-                Rule::unique('physical_cards', 'code')
+                'required|string|size:12|starts_with:100|unique:physical_cards,code',
             ]
         ];
     }

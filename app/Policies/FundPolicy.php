@@ -16,10 +16,8 @@ class FundPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function viewAny(
-        $identity_address,
-        Organization $organization
-    ): bool {
+    public function viewAny($identity_address, Organization $organization): bool
+    {
         return $organization->identityCan($identity_address, [
             'manage_funds', 'view_finances', 'view_funds',
         ], false);

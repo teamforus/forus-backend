@@ -18,7 +18,7 @@ trait ThrottleWithMeta {
     /**
      * @var string
      */
-    private $throttle_key_prefix = '';
+    private $throttleKeyPrefix = '';
 
     /**
      * @param string $error
@@ -35,7 +35,7 @@ trait ThrottleWithMeta {
         ?string $key = null,
         $code = 429
     ): void {
-        $this->throttle_key_prefix = ($key ?: $type) . '_';
+        $this->throttleKeyPrefix = ($key ?: $type) . '_';
         $this->throttle($error, $request, $type, $code);
     }
 
@@ -61,15 +61,14 @@ trait ThrottleWithMeta {
 
     /**
      * @param Request $request
-     * @param $key
+     * @param string $key
+     * @noinspection PhpUnused
      */
-    protected function clearLoginAttemptsWithKey(
-        Request $request,
-        string $key
-    ): void {
-        $this->throttle_key_prefix = $key . '_';
+    protected function clearLoginAttemptsWithKey(Request $request, string $key): void
+    {
+        $this->throttleKeyPrefix = $key . '_';
         $this->clearLoginAttempts($request);
-        $this->throttle_key_prefix = '';
+        $this->throttleKeyPrefix = '';
     }
 
     /**
@@ -95,8 +94,8 @@ trait ThrottleWithMeta {
             'attempts' => $this->limiter()->attempts($key),
             'available_in' => $available_in,
             'available_in_min' => $available_in_min,
-            'decay_minutes' => (int) $this->decayMinutes(),
-            'max_attempts' => (int) $this->maxAttempts(),
+            'decay_minutes' => $this->decayMinutes(),
+            'max_attempts' => $this->maxAttempts(),
         ];
 
         $title = trans("throttles/$type.$error.title", $meta);
@@ -120,6 +119,6 @@ trait ThrottleWithMeta {
      */
     protected function throttleKey(Request $request): string
     {
-        return Str::lower(($this->throttle_key_prefix ?: '') . $request->ip());
+        return Str::lower(($this->throttleKeyPrefix ?: '') . $request->ip());
     }
 }

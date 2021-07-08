@@ -15,6 +15,7 @@ foreach (array_keys($emailBody) as $key) {
     }, "");
 }
 
+
 ?>
 <style>
     body {

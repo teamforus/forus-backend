@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $implementation_id
  * @property string|null $client_type
  * @property string|null $identity_address
- * @property mixed $meta
+ * @property array $meta
  * @property string $session_uid
  * @property string $session_secret
  * @property string $session_final_url

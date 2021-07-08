@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\Platform\Provider\Vouchers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Vouchers\ProductsVouchers\IndexProductVouchersRequest;
 use App\Http\Resources\Provider\ProviderVoucherResource;
+use App\Models\ProductReservation;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\VoucherQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -16,11 +18,9 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 class ProductVouchersController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
      * @param IndexProductVouchersRequest $request
      * @param VoucherToken $voucherToken
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
@@ -29,13 +29,21 @@ class ProductVouchersController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('useAsProvider', $voucherToken->voucher);
 
-        $product_vouchers = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
+        $productVouchersQuery = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
             $voucherToken->voucher->product_vouchers()->getQuery(),
             $request->auth_address(),
             $voucherToken->voucher->fund_id
-        )->whereDoesntHave('transactions');
+        );
 
-        return ProviderVoucherResource::collection($product_vouchers->paginate(
+        $productVouchersQuery->where(function(Builder $builder) {
+            $builder->whereDoesntHave('transactions');
+            $builder->whereDoesntHave('product_reservation', function(Builder $builder) {
+                $builder->where('state', '!=', ProductReservation::STATE_PENDING);
+                $builder->orWhereDate('expire_at', '<', now());
+            });
+        });
+
+        return ProviderVoucherResource::collection($productVouchersQuery->paginate(
             $request->input('per_page', 10)
         ));
     }

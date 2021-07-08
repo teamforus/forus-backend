@@ -7,19 +7,13 @@ use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
+/**
+ * Class VoucherTransactionPolicy
+ * @package App\Policies
+ */
 class VoucherTransactionPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
 
     /**
      * @param string $identity_address
@@ -60,6 +54,7 @@ class VoucherTransactionPolicy
      * @param Fund|null $fund
      * @param Organization|null $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function viewAnyPublic(
         string $identity_address,
@@ -128,9 +123,7 @@ class VoucherTransactionPolicy
             return false;
         }
 
-        return $transaction->provider->identityCan(
-            $identity_address, 'view_finances'
-        );
+        return $transaction->provider->identityCan($identity_address, 'view_finances');
     }
 
     /**
@@ -139,6 +132,7 @@ class VoucherTransactionPolicy
      * @param Fund $fund
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showPublic(
         string $identity_address,

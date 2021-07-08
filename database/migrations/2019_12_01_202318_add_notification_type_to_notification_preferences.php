@@ -14,9 +14,7 @@ class AddNotificationTypeToNotificationPreferences extends Migration
     public function up(): void
     {
         Schema::table('notification_preferences', function(Blueprint $table) {
-            $table->enum('type', ['email', 'push'])->default(
-                'email'
-            )->after('mail_key');
+            $table->enum('type', ['email', 'push'])->default('email')->after('mail_key');
 
             $table->renameColumn('mail_key', 'key');
         });
