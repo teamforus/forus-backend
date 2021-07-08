@@ -179,7 +179,7 @@ class ProductSubQuery
         /** @var string|null $identity_address */
         $identity_address = array_get($options, 'identity_address');
 
-        $builder =  FundProviderProduct::query()->where(function(Builder $builder) use ($fund_id) {
+        $builder = FundProviderProduct::query()->where(function(Builder $builder) use ($fund_id) {
             $fund_id && $builder->whereHas('fund_provider', function(Builder $builder) use ($fund_id) {
                 $builder->whereIn('fund_providers.fund_id', (array) $fund_id);
             });

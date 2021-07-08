@@ -28,9 +28,7 @@ class StorePhysicalCardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => [
-                'required|string|size:12|starts_with:100|unique:physical_cards,code',
-            ]
+            'code' => 'required|string|size:12|starts_with:100|unique:physical_cards,code',
         ];
     }
 }

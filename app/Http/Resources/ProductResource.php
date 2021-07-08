@@ -127,12 +127,13 @@ class ProductResource extends Resource
      * @param string $type
      * @return float
      */
-    private function getProductSubsidyPrice(Product $product, string $type): float {
+    private function getProductSubsidyPrice(Product $product, string $type): float
+    {
         return max($product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
         ])->whereHas('fund_provider.fund', function(Builder $builder) {
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
-            $builder->addWhereExistsQuery($this->fundsQuery()->getQuery());
+            $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);
     }
 }
