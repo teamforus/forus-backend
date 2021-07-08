@@ -190,7 +190,7 @@ class VoucherPolicy
      */
     public function requestPhysicalCard(string $identity_address, Voucher $voucher): bool
     {
-        return Gate::forUser($identity_address)->allows('create', [PhysicalCard::class, $voucher]);
+        return $identity_address && Gate::allows('create', [PhysicalCard::class, $voucher]);
     }
 
     /**

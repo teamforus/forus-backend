@@ -354,6 +354,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->post(
+        'vouchers/{voucher_token_address}/physical-card-requests/validate',
+        "Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate"
+    );
+
     $router->resource(
         'vouchers/{voucher_token_address}/physical-card-requests',
         "Api\Platform\Vouchers\PhysicalCardRequestsController", [
