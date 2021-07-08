@@ -919,7 +919,7 @@ class Voucher extends Model
             }, 4, 2);
         }
 
-        if ($oldVoucher = $queryUsed->first()) {
+        if (!is_null($activation_code_uid) && $oldVoucher = $queryUsed->first()) {
             $this->assignToIdentity($oldVoucher->identity_address);
         }
 
