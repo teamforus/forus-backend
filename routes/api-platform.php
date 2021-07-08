@@ -355,6 +355,11 @@ $router->group(['middleware' => [
         ]
     ]);
 
+    $router->post(
+        'vouchers/{voucher_token_address}/physical-card-requests/validate',
+        "Api\Platform\Vouchers\PhysicalCardRequestsController@storeValidate"
+    );
+
     $router->resource(
         'vouchers/{voucher_token_address}/physical-card-requests',
         "Api\Platform\Vouchers\PhysicalCardRequestsController", [
