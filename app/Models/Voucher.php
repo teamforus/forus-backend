@@ -49,6 +49,8 @@ use RuntimeException;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $expired
  * @property-read bool $has_transactions
+ * @property-read bool $has_product_vouchers
+ * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
  * @property-read string $type
@@ -654,6 +656,24 @@ class Voucher extends Model
     }
 
     /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasProductVouchersAttribute(): bool
+    {
+        return $this->product_vouchers->count() > 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getInUseAttribute(): bool
+    {
+        return $this->has_transactions || $this->has_product_vouchers;
+    }
+
+    /**
      * Assign voucher to identity
      *
      * @param string $identity_address
@@ -979,7 +999,7 @@ class Voucher extends Model
             }, 4, 2);
         }
 
-        if ($oldVoucher = $queryUsed->first()) {
+        if (!is_null($activation_code_uid) && $oldVoucher = $queryUsed->first()) {
             $this->assignToIdentity($oldVoucher->identity_address);
         }
 

@@ -544,7 +544,7 @@ class Implementation extends Model
         $query = $query ?: Organization::query();
 
         $query->whereHas('supplied_funds_approved', static function (Builder $builder) {
-            $builder->addWhereExistsQuery(self::activeFundsQuery()->getQuery());
+            $builder->whereIn('funds.id', self::activeFundsQuery()->pluck('funds.id'));
         });
 
         if ($business_type_id = array_get($options, 'business_type_id')) {

@@ -4,7 +4,6 @@ namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
-use App\Http\Resources\PhysicalCardResource;
 use App\Models\Voucher;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -36,7 +35,7 @@ class SponsorVoucherResource extends Resource
         return array_merge($voucher->only([
             'id', 'amount', 'note', 'identity_address', 'state', 'is_granted',
             'expired', 'activation_code', 'activation_code_uid', 'has_transactions',
-            'limit_multiplier',
+            'in_use', 'limit_multiplier',
         ]), [
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'identity_bsn' => $identity_bsn ?? null,

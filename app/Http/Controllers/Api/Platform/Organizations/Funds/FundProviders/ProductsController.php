@@ -36,15 +36,11 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
-        $query = $fundProvider->organization->products()->getQuery();
-        $query = ProductQuery::whereNotExpired($query);
-        $query = ProductQuery::whereFundNotExcludedOrHasHistory($query, $fund->id);
+        $query = $fundProvider->organization->providerProductsQuery($fund->id);
 
         if ($request->input('q')) {
             $query = ProductQuery::queryFilter($query, $request->input('q'));
         }
-
-        $query->whereNull('sponsor_organization_id');
 
         return SponsorProviderProductResource::collection($query->with(
             SponsorProviderProductResource::$load
