@@ -3,12 +3,14 @@
 namespace App\Http\Requests\Api\Platform\Organizations\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Scopes\Builders\OrganizationQuery;
+use App\Traits\ThrottleWithMeta;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 /**
  * Class AcceptProductReservationRequest
@@ -17,13 +19,24 @@ use Illuminate\Support\Facades\Gate;
  */
 class StoreProductReservationRequest extends BaseFormRequest
 {
+    use ThrottleWithMeta;
+
+    protected $maxAttempts = 100;
+    protected $decayMinutes = 180;
+
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
+     * @throws \App\Exceptions\AuthorizationJsonException
      */
     public function authorize(): bool
     {
+        $this->throttleKeyPrefix = 'provider_reservations';
+        $this->maxAttempts = $this->organization->provider_throttling_value;
+
+        $this->throttleWithKey('to_many_attempts', $this, 'provider_reservation_store');
+
         return $this->isAuthenticated() && $this->organization->identityCan('scan_vouchers');
     }
 
@@ -57,5 +70,16 @@ class StoreProductReservationRequest extends BaseFormRequest
             ],
             'note' => 'nullable|string|max:2000',
         ];
+    }
+
+    /**
+     * Get the throttle key for the given request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return string
+     */
+    protected function throttleKey(Request $request): string
+    {
+        return Str::lower(($this->throttleKeyPrefix ?: '') . $this->organization->id);
     }
 }
