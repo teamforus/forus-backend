@@ -72,10 +72,7 @@ class ProductReservationsController extends Controller
         $voucher = Voucher::findByAddressOrPhysicalCard($request->input('number'));
 
         $reservation = $voucher->reserveProduct($product, $request->input('note'));
-
-        if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
-            $reservation->acceptProvider();
-        }
+        $reservation->acceptProvider();
 
         return new ProductReservationResource($reservation->load(
             ProductReservationResource::load()
@@ -115,11 +112,7 @@ class ProductReservationsController extends Controller
                 $voucher = Voucher::findByAddressOrPhysicalCard(array_get($item, 'number'));
                 $reservation = $voucher->reserveProduct($product, $employee, $note);
 
-                if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
-                    $reservation->acceptProvider($employee);
-                }
-
-                $createdItems[] = $reservation->id;
+                $createdItems[] = $reservation->acceptProvider($employee)->id;
             } else {
                 $errorsItems[] = $validator->messages()->toArray();
             }

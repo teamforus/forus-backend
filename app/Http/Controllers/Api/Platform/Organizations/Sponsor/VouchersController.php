@@ -74,11 +74,12 @@ class VouchersController extends Controller
         $expire_at  = $request->input('expire_at', false);
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
+        $multiplier = $request->input('limit_multiplier');
 
         if ($product_id) {
             $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
         } else {
-            $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note);
+            $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note, $multiplier);
         }
 
         if ($bsn = $request->input('bsn', false)) {
@@ -142,9 +143,10 @@ class VouchersController extends Controller
             $expire_at  = $voucher['expire_at'] ?? false;
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
+            $multiplier = $voucher['limit_multiplier'] ?? null;
 
             if (!$product_id) {
-                $voucherModel = $fund->makeVoucher($identity, $amount, $expire_at, $note);
+                $voucherModel = $fund->makeVoucher($identity, $amount, $expire_at, $note, $multiplier);
             } else {
                 $voucherModel = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
             }
