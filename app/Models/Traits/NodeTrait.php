@@ -22,11 +22,10 @@ trait NodeTrait
      * Get query for descendants of the node.
      *
      * @return DescendantsRelation
+     * @noinspection PhpUnused
      */
-    public function descendants_min()
+    public function descendants_min(): DescendantsRelation
     {
-        return $this->descendants()->select([
-            'id', $this->getRgtName(), $this->getLftName()
-        ]);
+        return $this->descendants()->select('id', $this->getRgtName(), $this->getLftName());
     }
 }

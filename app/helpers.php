@@ -730,3 +730,18 @@ if (!function_exists('user_agent_data')) {
         return Browser::getAgentData($user_agent ?: request()->userAgent());
     }
 }
+
+if (!function_exists('query_to_sql')) {
+    /**
+     * @param Builder|\Illuminate\Database\Query\Builder $builder
+     * @return string
+     */
+    function query_to_sql(Builder $builder): string
+    {
+        $bindings = array_map(function($binding) {
+            return '"' . htmlspecialchars($binding) . '"';
+        }, $builder->getBindings());
+
+        return str_replace_array('?', $bindings, $builder->toSql());
+    }
+}

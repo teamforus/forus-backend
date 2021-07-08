@@ -48,8 +48,11 @@ class StoreProductRequest extends BaseFormRequest
                 'numeric',
                 'min:1'
             ],
+
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
+            'reservation_enabled'   => 'nullable|boolean',
+            'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
         ];
     }
 

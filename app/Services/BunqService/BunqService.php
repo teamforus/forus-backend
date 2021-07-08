@@ -21,7 +21,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
-use \Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Contracts\Filesystem\Filesystem;
 
 /**
  * Class BunqService
@@ -281,7 +281,7 @@ class BunqService
     /**
      * Get payment details.
      *
-     * @param $paymentId
+     * @param int $paymentId
      * @return Payment
      */
     public function paymentDetails(int $paymentId): Payment
@@ -321,15 +321,18 @@ class BunqService
      *
      * @return VoucherTransaction|Builder|\Illuminate\Database\Query\Builder
      */
-    private static function getNextPendingTransactionsInQueueQuery()
+    public static function getNextPendingTransactionsInQueueQuery()
     {
         return VoucherTransaction::query()->orderBy('updated_at', 'ASC')
             ->where('state', '=', 'pending')
             ->where('attempts', '<', 5)
             ->where(function(Builder $query) {
-                $query->whereNull('last_attempt_at')->orWhere(
-                    'last_attempt_at', '<', Carbon::now()->subHours(8)
-                );
+                $query->whereNull('transfer_at');
+                $query->orWhereDate('transfer_at', '<', now());
+            })
+            ->where(function(Builder $query) {
+                $query->whereNull('last_attempt_at');
+                $query->orWhereDate('last_attempt_at', '<', now()->subHours(8));
             });
     }
 

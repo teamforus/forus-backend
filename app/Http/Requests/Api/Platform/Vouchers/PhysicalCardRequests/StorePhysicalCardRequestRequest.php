@@ -2,9 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class StorePhysicalCardRequestRequest extends FormRequest
+/**
+ * Class StorePhysicalCardRequestRequest
+ * @package App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests
+ */
+class StorePhysicalCardRequestRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

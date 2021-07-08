@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property string|null $uid
  * @property string $identity_address
  * @property string|null $redeemed_by_address
+ * @property int|null $fund_id
+ * @property int|null $organization_id
  * @property string $state
  * @property string|null $uid_hash
  * @property string|null $records_hash
@@ -27,8 +29,6 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property int|null $fund_id
- * @property int|null $organization_id
  * @property-read \App\Models\Fund|null $fund
  * @property-read bool $is_used
  * @property-read \App\Models\Organization|null $organization

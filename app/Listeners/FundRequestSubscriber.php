@@ -7,7 +7,7 @@ use App\Events\FundRequests\FundRequestResolved;
 use App\Models\FundRequest;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestResolvedRequesterNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
+use App\Notifications\Identities\FundRequest\IdentityProductReservationCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use Illuminate\Events\Dispatcher;
 
@@ -46,7 +46,7 @@ class FundRequestSubscriber
         ]);
 
         FundRequestCreatedValidatorNotification::send($event);
-        IdentityFundRequestCreatedNotification::send($event);
+        IdentityProductReservationCreatedNotification::send($event);
     }
 
     /**

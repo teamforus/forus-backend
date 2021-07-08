@@ -98,7 +98,7 @@ class VouchersController extends Controller
         }
 
         return new SponsorVoucherResource($voucher->updateModel([
-            'employee_id' => Employee::getEmployee($request->auth_address())->id
+            'employee_id' => $organization->findEmployee($request->auth_address())->id
         ]));
     }
 

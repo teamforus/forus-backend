@@ -29,7 +29,7 @@ return [
             ':provider_name (:products_count aanbieding)',
             ':provider_name (:products_count aanbiedingen)'
         ]),
-        'item' => ':product_name €:product_price_locale',
+        'item' => ':product_name :product_price_locale',
     ],
 
     // new provider feedback

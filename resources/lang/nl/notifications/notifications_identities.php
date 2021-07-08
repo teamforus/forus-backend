@@ -172,5 +172,15 @@ return [
     'budget_voucher_expired' => [
         'title' => ':fund_name is verlopen.',
         'description' => 'Het tegoed op :fund_nam is verlopen.'
+    ],
+
+    'product_reservation_accepted' => [
+        'title' => 'Reserverving is geaccepteerd.',
+        'description' => 'De reservering van :product_name is geaccepteerd door :provider_name',
+    ],
+
+    'product_reservation_rejected' => [
+        'title' => 'Reservering is geweigerd.',
+        'description' => 'De reservind van :product_name is geweigerd door :provider_name. Neem contact met de aanbieder voor meer informatie.',
     ]
 ];

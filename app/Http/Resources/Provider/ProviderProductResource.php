@@ -24,9 +24,7 @@ class ProviderProductResource extends ProductResource
         return array_merge(parent::toArray($request), [
             'sponsor_organization_id' => $this->resource->sponsor_organization_id,
             'sponsor_organization' => new OrganizationBasicResource($this->resource->sponsor_organization),
-            'excluded_funds' => Fund::whereHas('providers.product_exclusions', function(
-                Builder $builder
-            ) {
+            'excluded_funds' => Fund::whereHas('providers.product_exclusions', function(Builder $builder) {
                 $builder->where('product_id', '=', $this->resource->id);
                 $builder->orWhereNull('product_id');
             })->select([

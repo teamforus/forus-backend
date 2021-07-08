@@ -24,19 +24,21 @@ use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotifica
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
+use App\Services\TokenGeneratorService\TokenGenerator;
 use Illuminate\Events\Dispatcher;
 
 /**
  * Class VoucherSubscriber
  * @property IRecordRepo $recordService
  * @property NotificationService $mailService
+ * @property TokenGenerator $tokenGenerator
  * @package App\Listeners
  */
 class VoucherSubscriber
 {
-    private $mailService;
-    private $recordService;
-    private $tokenGenerator;
+    protected $mailService;
+    protected $recordService;
+    protected $tokenGenerator;
 
     /**
      * VoucherSubscriber constructor.
@@ -52,9 +54,8 @@ class VoucherSubscriber
      * @param VoucherCreated $voucherCreated
      * @noinspection PhpUnused
      */
-    public function onVoucherCreated(
-        VoucherCreated $voucherCreated
-    ): void {
+    public function onVoucherCreated(VoucherCreated $voucherCreated): void
+    {
         $voucher = $voucherCreated->getVoucher();
         $product = $voucher->product;
 
@@ -81,9 +82,11 @@ class VoucherSubscriber
                 'sponsor' => $voucher->fund->organization,
             ]);
 
-            IdentityProductVoucherAddedNotification::send($event);
+            if ($voucherCreated->shouldNotifyRequesterAdded()) {
+                IdentityProductVoucherAddedNotification::send($event);
+            }
 
-            if ($voucherCreated->isNotifyRequester()) {
+            if ($voucherCreated->shouldNotifyRequesterReserved()) {
                 IdentityProductVoucherReservedNotification::send($event);
             }
         } else if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {

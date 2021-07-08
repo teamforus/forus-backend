@@ -19,16 +19,14 @@ abstract class BaseRule implements Rule
      * @return bool
      */
     public function rejectTrans($messageKey, $replace = []): bool {
-        return $this->rejectWithMessage(
-            trans($this->messageTransPrefix . $messageKey, $replace)
-        );
+        return $this->reject(trans($this->messageTransPrefix . $messageKey, $replace));
     }
 
     /**
      * @param $message
      * @return bool
      */
-    public function rejectWithMessage($message): bool {
+    public function reject($message): bool {
         $this->messageText = $message;
 
         return false;

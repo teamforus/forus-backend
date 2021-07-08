@@ -9,11 +9,16 @@ use App\Listeners\FundRequestRecordSubscriber;
 use App\Listeners\FundRequestSubscriber;
 use App\Listeners\FundSubscriber;
 use App\Listeners\OrganizationSubscriber;
+use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
 use App\Listeners\VoucherSubscriber;
 use App\Listeners\VoucherTransactionsSubscriber;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
+/**
+ * Class EventServiceProvider
+ * @package App\Providers
+ */
 class EventServiceProvider extends ServiceProvider
 {
     /**
@@ -28,6 +33,7 @@ class EventServiceProvider extends ServiceProvider
         EmployeeSubscriber::class,
         FundRequestSubscriber::class,
         OrganizationSubscriber::class,
+        ProductReservationSubscriber::class,
         FundProviderSubscriber::class,
         FundRequestRecordSubscriber::class,
         VoucherTransactionsSubscriber::class,

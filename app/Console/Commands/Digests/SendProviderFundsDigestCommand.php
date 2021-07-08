@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Digests;
 
 use App\Digests\ProviderFundsDigest;
-use App\Digests\ProviderProductsDigest;
-use App\Digests\RequesterDigest;
-use App\Digests\SponsorDigest;
-use App\Digests\ValidatorDigest;
 use Illuminate\Console\Command;
 
-class SendAllDigestsCommand extends Command
+/**
+ * Class SendProviderFundsDigestCommand
+ * @package App\Console\Commands
+ */
+class SendProviderFundsDigestCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'forus.digest.all:send';
+    protected $signature = 'forus.digest.provider_funds:send';
 
     /**
      * The console command description.
@@ -33,9 +33,5 @@ class SendAllDigestsCommand extends Command
     public function handle(): void
     {
         ProviderFundsDigest::dispatchNow();
-        ProviderProductsDigest::dispatchNow();
-        RequesterDigest::dispatchNow();
-        SponsorDigest::dispatchNow();
-        ValidatorDigest::dispatchNow();
     }
 }

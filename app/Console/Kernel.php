@@ -12,18 +12,22 @@ use App\Console\Commands\MediaCleanupCommand;
 use App\Console\Commands\MediaRegenerateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
-use App\Console\Commands\SendAllDigestsCommand;
-use App\Console\Commands\SendDigestMailCommand;
-use App\Console\Commands\SendProviderFundsDigestCommand;
-use App\Console\Commands\SendProviderProductsDigestCommand;
-use App\Console\Commands\SendRequesterDigestCommand;
-use App\Console\Commands\SendSponsorDigestCommand;
-use App\Console\Commands\SendValidatorDigestCommand;
+use App\Console\Commands\Digests\SendAllDigestsCommand;
+use App\Console\Commands\Digests\SendDigestMailCommand;
+use App\Console\Commands\Digests\SendProviderFundsDigestCommand;
+use App\Console\Commands\Digests\SendProviderProductsDigestCommand;
+use App\Console\Commands\Digests\SendRequesterDigestCommand;
+use App\Console\Commands\Digests\SendSponsorDigestCommand;
+use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateVoucherTransactionDetailsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
+/**
+ * Class Kernel
+ * @package App\Console
+ */
 class Kernel extends ConsoleKernel
 {
     /**
@@ -155,6 +159,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('forus.digest.provider_products:send')
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();
+
+        $schedule->command('forus.digest.provider_reservations:send')
+            ->weeklyOn(1, "18:00")->withoutOverlapping()->onOneServer();
 
         $schedule->command('forus.digest.sponsor:send')
             ->dailyAt("18:00")->withoutOverlapping()->onOneServer();

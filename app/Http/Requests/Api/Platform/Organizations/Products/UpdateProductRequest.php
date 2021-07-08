@@ -48,9 +48,12 @@ class UpdateProductRequest extends BaseFormRequest
                 'numeric',
                 $product->unlimited_stock ? null : 'min:' . $minAmount,
             ],
+
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
             'media_uid'             => ['nullable', new MediaUidRule('product_photo')],
+            'reservation_enabled'   => 'nullable|boolean',
+            'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
         ];
     }
 
@@ -63,7 +66,7 @@ class UpdateProductRequest extends BaseFormRequest
             'price_discount.required_if' => 'Het kortingsveld is verplicht.',
             'expire_at.after' => trans('validation.after', [
                 'date' => trans('validation.attributes.today')
-            ])
+            ]),
         ];
     }
 }

@@ -73,9 +73,7 @@ class VoucherQuery
      */
     public static function whereNotExpiredAndActive(Builder $builder): Builder
     {
-        return self::whereNotExpired($builder)->where(
-            'state', Voucher::STATE_ACTIVE
-        );
+        return self::whereNotExpired($builder)->where('state', Voucher::STATE_ACTIVE);
     }
 
     /**
@@ -84,9 +82,7 @@ class VoucherQuery
      */
     public static function whereNotExpiredAndPending(Builder $builder): Builder
     {
-        return self::whereNotExpired($builder)->where(
-            'state', Voucher::STATE_PENDING
-        );
+        return self::whereNotExpired($builder)->where('state', Voucher::STATE_PENDING);
     }
 
     /**
@@ -112,9 +108,9 @@ class VoucherQuery
     public static function whereSearchSponsorQuery(Builder $builder, string $query): Builder
     {
         return $builder->where(static function (Builder $builder) use ($query) {
-            $builder->where('note', 'LIKE', "%{$query}%");
-            $builder->orWhere('activation_code', 'LIKE', "%{$query}%");
-            $builder->orWhere('activation_code_uid', 'LIKE', "%{$query}%");
+            $builder->where('note', 'LIKE', "%$query%");
+            $builder->orWhere('activation_code', 'LIKE', "%$query%");
+            $builder->orWhere('activation_code_uid', 'LIKE', "%$query%");
 
             if ($email_identities = identity_repo()->identityAddressesByEmailSearch($query)) {
                 $builder->orWhereIn('identity_address', $email_identities);
@@ -125,7 +121,7 @@ class VoucherQuery
             }
 
             $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($query) {
-                return $builder->where('bsn', 'LIKE', "%{$query}%");
+                return $builder->where('bsn', 'LIKE', "%$query%");
             });
         });
     }

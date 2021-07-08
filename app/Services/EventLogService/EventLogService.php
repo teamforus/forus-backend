@@ -9,6 +9,7 @@ use App\Models\FundRequestClarification;
 use App\Models\FundTopUpTransaction;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
@@ -55,6 +56,7 @@ class EventLogService implements IEventLogService
             case 'voucher': $modelMeta = $this->voucherMeta($model); break;
             case 'organization': $modelMeta = $this->organizationMeta($model); break;
             case 'employee': $modelMeta = $this->employeeMeta($model); break;
+            case 'product_reservation': $modelMeta = $this->productReservationMeta($model); break;
         }
 
         return $modelMeta;
@@ -164,6 +166,19 @@ class EventLogService implements IEventLogService
             'employee_email' => record_repo()->primaryEmailByAddress(
                 $employee->identity_address
             ),
+        ];
+    }
+
+    /**
+     * @param ProductReservation $reservation
+     * @return array
+     */
+    protected function productReservationMeta(ProductReservation $reservation): array {
+        return [
+            'product_reservation_id' => $reservation->id,
+            'product_reservation_state' => $reservation->state,
+            'product_reservation_amount' => currency_format($reservation->amount),
+            'product_reservation_amount_locale' => currency_format_locale($reservation->amount),
         ];
     }
 

@@ -17,7 +17,7 @@ class Model extends \Illuminate\Database\Eloquent\Model
      * @param array $options
      * @return bool|$this
      */
-    public function updateModel(array $attributes = [], array $options = [])
+    public function updateModel(array $attributes = [], array $options = []): self
     {
         return tap($this)->update($attributes, $options);
     }
