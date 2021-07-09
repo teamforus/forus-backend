@@ -181,6 +181,16 @@ return [
 
     'product_reservation_rejected' => [
         'title' => 'Reservering is geweigerd.',
-        'description' => 'De reservind van :product_name is geweigerd door :provider_name. Neem contact met de aanbieder voor meer informatie.',
+        'description' => 'De reserving van :product_name is geweigerd door :provider_name. Neem contact met de aanbieder voor meer informatie.',
+    ],
+
+    'product_reservation_created' => [
+        'title' => 'Reserverving is aangemaakt.',
+        'description' => 'De reservering van :product_name is aangemaakt.',
+    ],
+
+    'product_reservation_canceled' => [
+        'title' => 'Reservering is geannuleerd.',
+        'description' => 'De reserving van :product_name is geannuleerd. Neem eventueel contact met de aanbieder voor meer informatie.',
     ]
 ];
