@@ -166,6 +166,7 @@ class FundProviderProduct extends Model
     /**
      * @param Voucher|null $voucher
      * @return int|null
+     * @throws \Exception
      */
     public function stockAvailableForVoucher(Voucher $voucher): ?int
     {

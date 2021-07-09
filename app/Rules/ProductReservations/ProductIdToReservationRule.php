@@ -33,16 +33,17 @@ class ProductIdToReservationRule extends BaseRule
     /**
      * Determine if the validation rule passes.
      *
-     * @param  string|any  $attribute
-     * @param  mixed  $value
+     * @param string|any $attribute
+     * @param mixed $value
      * @return bool
+     * @throws \Exception
      */
     public function passes($attribute, $value): bool
     {
         /** @var Product $product */
         $voucher = Voucher::findByAddressOrPhysicalCard($this->voucherAddress);
         $product = ProductSubQuery::appendReservationStats([
-            'voucher_id', $voucher->id ?? null,
+            'voucher_id' => $voucher->id ?? null,
         ], Product::whereId($value))->first();
 
         if (!$this->voucherAddress || !$voucher) {
