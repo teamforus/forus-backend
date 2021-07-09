@@ -17,6 +17,7 @@ class VoucherTransactionsSubscriber
 {
     /**
      * @param VoucherTransactionCreated $voucherTransactionEvent
+     * @throws \Exception
      */
     public function onVoucherTransactionCreated(
         VoucherTransactionCreated $voucherTransactionEvent

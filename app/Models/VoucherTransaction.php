@@ -167,6 +167,7 @@ class VoucherTransaction extends Model
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function sendPushNotificationTransaction(): void {
         $mailService = resolve('forus.services.notification');
