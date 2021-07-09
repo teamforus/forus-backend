@@ -1154,13 +1154,14 @@ class Fund extends Model
         string $identity_address = null,
         float $voucherAmount = null,
         Carbon $expire_at = null,
-        string $note = null
+        string $note = null,
+        ?int $limit_multiplier = null
     ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
-        $limit_multiplier = $this->multiplierForIdentity($identity_address);
+        $limit_multiplier = $limit_multiplier ?: $this->multiplierForIdentity($identity_address);
         $voucher = null;
 
         if ($this->fund_formulas->count() > 0) {

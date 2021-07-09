@@ -66,6 +66,7 @@ class StoreVoucherRequest extends BaseFormRequest
             'activation_code'       => 'boolean',
             'activation_code_uid'   => 'nullable|string|max:20',
             'assign_by_type'        => 'required|in:email,bsn,activation_code_uid',
+            'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
         ];
     }
 
