@@ -93,9 +93,10 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         if ($target_products_count > $product['limit_total_available']) {
             return sprintf("Het aanbod \"%s\" heeft het limiet bereikt!", $product['limit_total'], $product->name);
         }
+
         // The total limit of %s for the voucher was reached!
         if ($target_voucher_products_count > $product['limit_available']) {
-            return sprintf('Het aanbod %s heeft het limiet bereikt!', $product['limit_per_identity']);
+            return sprintf('Het aanbod \"%s\" heeft het limiet bereikt!', $product['limit_per_identity']);
         }
 
         return true;

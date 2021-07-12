@@ -173,15 +173,13 @@ return [
     ],
     'product_voucher' => [
         'product_not_found' => 'Aanbod niet gevonden.',
-        'product_sold_out' => 'Aanbod uitverkocht.',
-        'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
+        'product_sold_out' => 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.',
         'reservation_used' => 'De reservering is al gebruikt',
         'reservation_product_removed' => 'Het aanbod is verwijderd van deze reservering.',
     ],
     'product_reservation' => [
         'product_not_found' => 'Aanbod niet gevonden.',
-        'product_sold_out' => 'Aanbod uitverkocht.',
-        'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
+        'product_sold_out' => 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.',
         'reservation_not_enabled' => 'Reserveren staat niet aan voor dit aanbod.',
         'no_identity_stock' => 'Het aanbod heeft het limiet bereikt!',
         'no_total_stock' => 'Het aanbod heeft het limiet bereikt!',

@@ -58,17 +58,17 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
 
         // note has to be string
         if (!is_string($note)) {
-            return $this->reject("Not field has to be string.");
+            return $this->reject("Notitieveld mag alleen tekst bevatten.");
         }
 
         // product existence
         if (!$product) {
-            return $this->reject("Product not found.");
+            return $this->reject("Aanbod niet gevonden.");
         }
 
         // product existence
         if (!$voucher) {
-            return $this->reject("Voucher not found.");
+            return $this->reject("Tegoed niet gevonden.");
         }
 
         // validate voucher and provider organization
@@ -92,7 +92,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
     {
         // only regular vouchers can be used for reservations
         if (!$voucher->isBudgetType()) {
-            return "Not a budget voucher.";
+            return "Dit tegoed heeft geen budget.";
         }
 
         $sponsorIsValid = OrganizationQuery::whereHasPermissionToScanVoucher(
@@ -117,22 +117,22 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
     {
         // The provider didn't enabled subsidy products reservation
         if ($voucher->fund->isTypeSubsidy() && !$product['reservations_subsidy_enabled']) {
-            return 'Subsidy product reservations are not allowed by the provider.';
+            return 'U mag geen reserveringen plaatsen voor actie fondsen.';
         }
 
         // The provider didn't enabled budget products reservation
         if ($voucher->fund->isTypeBudget() && !$product['reservations_budget_enabled']) {
-            return 'Subsidy product reservations are not allowed by the provider.';
+            return 'U mag geen reserveringen plaatsen voor budget fondsen.';
         }
 
         // product belongs to another organization
         if ($product->organization_id !== $this->organization->id) {
-            return 'Target product does not belong to your organization.';
+            return 'Dit aanbod is niet geplaatst door uw organisatie.';
         }
 
         // product sold out
         if ($product->sold_out) {
-            return 'Target product is not in stock.';
+            return 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.';
         }
 
         $allowed = false;
@@ -153,7 +153,8 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
             })->exists();
         }
 
-        return $allowed ?: "This product was not approved for this found.";
+        // This product was not approved for this found.
+        return $allowed ?: "Dit aanbod is niet geaccepteerd voor dit fonds.";
     }
 
     public function reject($message): bool
@@ -168,6 +169,6 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
      */
     public function message(): string
     {
-        return sprintf('Line: %s: %s', $this->index + 1, ($this->messageText ?: ''));
+        return sprintf('Rij: %s: %s', $this->index + 1, ($this->messageText ?: ''));
     }
 }
