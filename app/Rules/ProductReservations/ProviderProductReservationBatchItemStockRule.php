@@ -91,11 +91,12 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
         // Sponsor total limit for the product reached.
         // Total limit of %s for the product \"%s\" reached!
         if ($target_products_count > $product['limit_total_available']) {
-            return sprintf("Het totale limiet van %s voor aanbod \"%s\" is bereikt!", $product['limit_total'], $product->name);
+            return sprintf("Het aanbod \"%s\" heeft het limiet bereikt!", $product['limit_total'], $product->name);
         }
+
         // The total limit of %s for the voucher was reached!
         if ($target_voucher_products_count > $product['limit_available']) {
-            return sprintf('Het totale limiet van %s voor dit tegoed is bereikt!', $product['limit_per_identity']);
+            return sprintf('Het aanbod \"%s\" heeft het limiet bereikt!', $product['limit_per_identity']);
         }
 
         return true;
@@ -131,6 +132,6 @@ class ProviderProductReservationBatchItemStockRule extends BaseRule
      */
     public function message(): string
     {
-        return sprintf('Lijn: %s: %s', $this->index + 1, ($this->messageText ?: ''));
+        return sprintf('Rij: %s: %s', $this->index + 1, ($this->messageText ?: ''));
     }
 }
