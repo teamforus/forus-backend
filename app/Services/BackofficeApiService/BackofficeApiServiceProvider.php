@@ -2,9 +2,7 @@
 
 namespace App\Services\BackofficeApiService;
 
-use App\Models\Fund;
 use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\ServiceProvider;
 

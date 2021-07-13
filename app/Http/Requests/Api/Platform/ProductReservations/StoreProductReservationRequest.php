@@ -5,13 +5,9 @@ namespace App\Http\Requests\Api\Platform\ProductReservations;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
-use App\Models\VoucherToken;
 use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
-use Illuminate\Database\Eloquent\Builder as EBuilder;
 
 /**
  * Class StoreProductReservationRequest
