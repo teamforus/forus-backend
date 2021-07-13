@@ -11,7 +11,6 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
-use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;

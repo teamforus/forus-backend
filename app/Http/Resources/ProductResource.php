@@ -118,6 +118,7 @@ class ProductResource extends Resource
             return array_merge($data, $productData, [
                 'price' => $fundProviderProduct->user_price,
                 'price_locale' => $fundProviderProduct->user_price_locale,
+                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
             ]);
         })->values();
     }

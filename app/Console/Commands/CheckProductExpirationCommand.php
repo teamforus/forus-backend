@@ -3,11 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Events\Products\ProductExpired;
-use App\Events\Products\ProductSoldOut;
 use App\Models\Product;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Class CheckProductExpirationCommand
+ * @package App\Console\Commands
+ */
 class CheckProductExpirationCommand extends Command
 {
     /**
@@ -23,16 +26,6 @@ class CheckProductExpirationCommand extends Command
      * @var string
      */
     protected $description = 'Command description';
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * Execute the console command.

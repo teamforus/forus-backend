@@ -4,7 +4,6 @@ namespace App\Digests;
 
 use App\Mail\Digest\BaseDigestMail;
 use App\Mail\MailBodyBuilder;
-use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;

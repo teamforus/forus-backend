@@ -4,7 +4,6 @@
 namespace App\Scopes\Builders;
 
 use App\Models\ProductReservation;
-use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
