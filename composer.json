@@ -37,7 +37,7 @@
         "philkra/elastic-apm-laravel": "^6.0",
         "predis/predis": "^1.1",
         "ralouphie/getallheaders": "2.0.5",
-        "simplesoftwareio/simple-qrcode": "^2.0",
+        "simplesoftwareio/simple-qrcode": "^4.0",
         "twilio/sdk": "^6.8.0",
         "whichbrowser/parser": "^2.0.42",
         "zoon/commonmark-ext-youtube-iframe": "^1.1"
