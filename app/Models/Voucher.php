@@ -48,8 +48,8 @@ use RuntimeException;
  * @property-read string|null $created_at_string
  * @property-read string|null $created_at_string_locale
  * @property-read bool $expired
- * @property-read bool $has_transactions
  * @property-read bool $has_product_vouchers
+ * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
@@ -272,11 +272,18 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
      */
     public function product_vouchers(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
+            $builder->whereDoesntHave('product_reservation');
+            $builder->orWhereHas('product_reservation', function (Builder $builder) {
+                $builder->whereIn('state', [
+                    ProductReservation::STATE_PENDING,
+                    ProductReservation::STATE_ACCEPTED
+                ]);
+            });
+        });
     }
 
     /**
