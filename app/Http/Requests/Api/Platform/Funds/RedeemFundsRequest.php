@@ -28,7 +28,7 @@ class RedeemFundsRequest extends BaseFormRequest
         $this->maxAttempts = env('ACTIVATION_CODE_ATTEMPTS', 3);
         $this->decayMinutes = env('ACTIVATION_CODE_DECAY', 180);
 
-        if ((bool) $this->auth_address()) {
+        if ($this->isAuthenticated()) {
             $prevalidation = $this->getPrevalidation();
             $vouchersAvailable = $this->getAvailableVouchers();
             $vouchersUsed = $this->getUsedVouchers();

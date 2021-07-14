@@ -183,7 +183,7 @@ class MailBodyBuilder
         string $text = '',
         $styles = []
     ): MailBodyBuilder {
-        $this->mailBody[] = [[$type] + (array) $styles, $text];
+        $this->mailBody[] = [array_merge((array) $type, (array) $styles), $text];
         return $this;
     }
 

@@ -14,7 +14,7 @@ return [
         'title_informal' => 'Aanbod :product_name bij :provider_name gereserveerd!',
         'description' => implode([
             'Aanbod :product_name bij :provider_name gereserveerd!',
-            'De reservering heeft een waarde van €:voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
+            'De reservering heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.'
         ], ' '),
     ],
     'assigned' => [

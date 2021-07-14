@@ -2,7 +2,6 @@
 
 namespace App\Events\Funds;
 
-use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 use Illuminate\Queue\SerializesModels;
@@ -10,6 +9,10 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
+/**
+ * Class FundProviderChatMessageEvent
+ * @package App\Events\Funds
+ */
 class FundProviderChatMessageEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -44,7 +47,7 @@ class FundProviderChatMessageEvent
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel|array
+     * @return \Illuminate\Broadcasting\Channel
      */
     public function broadcastOn()
     {

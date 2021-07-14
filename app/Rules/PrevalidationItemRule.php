@@ -47,16 +47,16 @@ class PrevalidationItemRule extends BaseRule
 
         if (!$this->record_types->has($key) ||
             $this->fund->requiredPrevalidationKeys()->search($key, true) === false) {
-            return $this->rejectWithMessage("Invalid record key!");
+            return $this->reject("Invalid record key!");
         }
 
         if (!$this->fund) {
-            return $this->rejectWithMessage(trans('validation.required'));
+            return $this->reject(trans('validation.required'));
         }
 
         if ($this->fund->fund_config->csv_primary_key === $key) {
             if ($this->doesPrimaryKeyExists($value)) {
-                return $this->rejectWithMessage(trans('validation.exists'));
+                return $this->reject(trans('validation.exists'));
             }
 
             return true;
@@ -112,7 +112,7 @@ class PrevalidationItemRule extends BaseRule
         } elseif ($typeKey === 'string') {
             $operatorRule = \Illuminate\Validation\Rule::in($fundCriterion->value);
         } else {
-            return $this->rejectWithMessage("Invalid fund criteria rule!");
+            return $this->reject("Invalid fund criteria rule!");
         }
 
         try {
@@ -120,7 +120,7 @@ class PrevalidationItemRule extends BaseRule
                 $fundCriterion->record_type_key => ['required', $typeKey, $operatorRule]
             ])->validate();
         } catch (ValidationException $e) {
-            return $this->rejectWithMessage(trans(
+            return $this->reject(trans(
                 'validation.' . rtrim($operator, ':') . '.' . $typeKey,
                 $fundCriterion->only('value'))
             );

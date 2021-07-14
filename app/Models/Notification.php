@@ -85,7 +85,7 @@ class Notification extends DatabaseNotification
             $request, client_type(), $seen, $identity->notifications()->getQuery()
         )->paginate($per_page);
 
-        if ((bool) $request->input('mark_read', false)) {
+        if ($request->input('mark_read', false)) {
             self::whereKey(
                 array_pluck($notifications->items(), 'id')
             )->whereNull('read_at')->update([

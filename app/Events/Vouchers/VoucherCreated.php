@@ -8,25 +8,33 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
+/**
+ * Class VoucherCreated
+ * @package App\Events\Vouchers
+ */
 class VoucherCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     private $voucher;
-    private $notifyRequester;
+    private $notifyRequesterAdded;
+    private $notifyRequesterReserved;
 
     /**
      * Create a new event instance.
      *
      * @param Voucher $voucher
-     * @param bool $notifyRequester
+     * @param bool $notifyRequesterReserved
+     * @param bool $notifyRequesterAdded
      */
     public function __construct(
         Voucher $voucher,
-        bool $notifyRequester = true
+        bool $notifyRequesterReserved = true,
+        bool $notifyRequesterAdded = true
     ) {
         $this->voucher = $voucher;
-        $this->notifyRequester = $notifyRequester;
+        $this->notifyRequesterAdded = $notifyRequesterAdded;
+        $this->notifyRequesterReserved = $notifyRequesterReserved;
     }
 
     /**
@@ -34,7 +42,7 @@ class VoucherCreated
      *
      * @return Voucher
      */
-    public function getVoucher()
+    public function getVoucher(): Voucher
     {
         return $this->voucher;
     }
@@ -42,7 +50,7 @@ class VoucherCreated
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel|array
+     * @return \Illuminate\Broadcasting\Channel
      */
     public function broadcastOn()
     {
@@ -52,8 +60,16 @@ class VoucherCreated
     /**
      * @return bool
      */
-    public function isNotifyRequester(): bool
+    public function shouldNotifyRequesterReserved(): bool
     {
-        return $this->notifyRequester;
+        return $this->notifyRequesterReserved;
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldNotifyRequesterAdded(): bool
+    {
+        return $this->notifyRequesterAdded;
     }
 }

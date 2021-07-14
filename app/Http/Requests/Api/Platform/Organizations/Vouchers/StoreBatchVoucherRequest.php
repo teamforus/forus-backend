@@ -50,6 +50,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'vouchers.*.activate'               => 'boolean',
             'vouchers.*.activation_code'        => 'boolean',
             'vouchers.*.activation_code_uid'    => 'nullable|string|max:20',
+            'vouchers.*.limit_multiplier'       => 'nullable|numeric|min:1|max:1000',
         ];
     }
 

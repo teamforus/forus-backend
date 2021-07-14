@@ -14,7 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
 /**
- * Class ValidatorDigest
+ * Class ProviderProductsDigest
  * @package App\Digests
  */
 class ProviderProductsDigest extends BaseOrganizationDigest

@@ -20,9 +20,9 @@ use Illuminate\Http\Request;
  * @property int|null $root_id
  * @property int $_lft
  * @property int $_rgt
+ * @property int $service
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property int $service
  * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $children
  * @property-read int|null $children_count
  * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $descendants_with_products

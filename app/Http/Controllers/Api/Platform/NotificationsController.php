@@ -21,9 +21,8 @@ class NotificationsController extends Controller
      * @param IndexNotificationsRequest $request
      * @return AnonymousResourceCollection
      */
-    public function index(
-        IndexNotificationsRequest $request
-    ): AnonymousResourceCollection {
+    public function index(IndexNotificationsRequest $request): AnonymousResourceCollection
+    {
         $identity = Identity::findByAddress(auth_address()) or abort(403);
 
         $notifications = Notification::paginateFromRequest($request, $identity);

@@ -7,6 +7,10 @@ use App\Models\FundProvider;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
+/**
+ * Class FundProviderPolicy
+ * @package App\Policies
+ */
 class FundProviderPolicy
 {
     use HandlesAuthorization;
@@ -21,10 +25,8 @@ class FundProviderPolicy
         $identity_address,
         Organization $organization,
         Fund $fund = null
-    ) {
-        if ($fund && $organization ? (
-            $fund->organization_id != $organization->id
-        ) : false) {
+    ): bool {
+        if ($fund && $organization && ($fund->organization_id != $organization->id)) {
             return false;
         }
 
@@ -32,8 +34,7 @@ class FundProviderPolicy
             return true;
         }
 
-        return $identity_address &&
-            $organization->identityCan($identity_address, [
+        return $identity_address && $organization->identityCan($identity_address, [
             'view_finances', 'manage_providers'
         ], false);
     }
@@ -43,12 +44,10 @@ class FundProviderPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function viewAnyProvider(
-        $identity_address,
-        Organization $organization
-    ) {
+    public function viewAnyProvider($identity_address, Organization $organization): bool
+    {
         return $organization->identityCan($identity_address, [
-            'manage_provider_funds'
+            'manage_provider_funds', 'scan_vouchers'
         ], false);
     }
 
@@ -57,13 +56,9 @@ class FundProviderPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function storeSponsor(
-        $identity_address,
-        Organization $organization
-    ) {
-        return $organization->identityCan($identity_address, [
-            'manage_providers'
-        ], false);
+    public function storeSponsor($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_providers');
     }
 
     /**
@@ -71,13 +66,9 @@ class FundProviderPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function storeProvider(
-        $identity_address,
-        Organization $organization
-    ) {
-        return $organization->identityCan($identity_address, [
-            'manage_provider_funds'
-        ], false);
+    public function storeProvider($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_provider_funds');
     }
 
     /**
@@ -92,7 +83,7 @@ class FundProviderPolicy
         FundProvider $fundProvider,
         Organization $organization,
         Fund $fund
-    ) {
+    ): bool {
         if ($organization->id != $fundProvider->fund->organization_id) {
             return false;
         }
@@ -105,10 +96,9 @@ class FundProviderPolicy
             return true;
         }
 
-        return $identity_address && $organization->identityCan(
-            $identity_address, [
-                'manage_funds', 'view_finances'
-            ], false);
+        return $identity_address && $organization->identityCan($identity_address, [
+            'manage_funds', 'view_finances'
+        ], false);
     }
 
     /**
@@ -121,14 +111,12 @@ class FundProviderPolicy
         $identity_address,
         FundProvider $organizationFund,
         Organization $organization
-    ) {
+    ): bool {
         if ($organization->id != $organizationFund->organization_id) {
             return false;
         }
 
-        return $organizationFund->organization->identityCan($identity_address, [
-            'manage_provider_funds'
-        ], false);
+        return $organizationFund->organization->identityCan($identity_address, 'manage_provider_funds');
     }
 
     /**
@@ -143,7 +131,7 @@ class FundProviderPolicy
         FundProvider $organizationFund,
         Organization $organization,
         Fund $fund
-    ) {
+    ): bool {
         if ($organization->id != $organizationFund->fund->organization_id) {
             return false;
         }
@@ -152,9 +140,7 @@ class FundProviderPolicy
             return false;
         }
 
-        return $organizationFund->fund->organization->identityCan($identity_address, [
-            'manage_funds'
-        ]);
+        return $organizationFund->fund->organization->identityCan($identity_address, 'manage_funds');
     }
 
     /**
@@ -167,14 +153,12 @@ class FundProviderPolicy
         $identity_address,
         FundProvider $organizationFund,
         Organization $organization
-    ) {
+    ): bool {
         if ($organization->id != $organizationFund->organization_id) {
             return false;
         }
 
-        return $organizationFund->organization->identityCan($identity_address, [
-            'manage_provider_funds'
-        ]);
+        return $organizationFund->organization->identityCan($identity_address, 'manage_provider_funds');
     }
 
     /**

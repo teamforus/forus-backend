@@ -28,6 +28,7 @@ class IndexFundProviderProductsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'q' => 'nullable|string',
             'per_page' => 'nullable|numeric|between:1,100',
         ];
     }

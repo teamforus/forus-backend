@@ -45,16 +45,17 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property int $organization_id
  * @property string $name
  * @property string|null $description
+ * @property string|null $description_text
  * @property string $type
  * @property string $state
  * @property bool $public
  * @property bool $criteria_editable_after_start
+ * @property string|null $notification_amount
+ * @property \Illuminate\Support\Carbon|null $notified_at
  * @property \Illuminate\Support\Carbon|null $start_date
  * @property \Illuminate\Support\Carbon $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $notification_amount
- * @property \Illuminate\Support\Carbon|null $notified_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
@@ -92,11 +93,10 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property-read float $budget_left
  * @property-read float $budget_reserved
  * @property-read float $budget_total
- * @property-read float $budget_used
  * @property-read float $budget_used_active_vouchers
+ * @property-read float $budget_used
  * @property-read float $budget_validated
  * @property-read string $description_html
- * @property-read string $description_text
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -144,6 +144,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
  * @method static Builder|Fund whereDescription($value)
+ * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
  * @method static Builder|Fund whereId($value)
  * @method static Builder|Fund whereName($value)
@@ -244,10 +245,7 @@ class Fund extends Model
      */
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Product::class,
-            'fund_products'
-        );
+        return $this->belongsToMany(Product::class, 'fund_products');
     }
 
     /**
@@ -282,7 +280,7 @@ class Fund extends Model
      */
     public function budget_vouchers(): HasMany
     {
-        return $this->hasMany(Voucher::class)->whereNull('parent_id');
+        return $this->hasMany(Voucher::class)->whereNull('product_id');
     }
 
     /**
@@ -1156,13 +1154,14 @@ class Fund extends Model
         string $identity_address = null,
         float $voucherAmount = null,
         Carbon $expire_at = null,
-        string $note = null
+        string $note = null,
+        ?int $limit_multiplier = null
     ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
         $returnable = false;
         $expire_at = $expire_at ?: $this->end_date;
         $fund_id = $this->id;
-        $limit_multiplier = $this->multiplierForIdentity($identity_address);
+        $limit_multiplier = $limit_multiplier ?: $this->multiplierForIdentity($identity_address);
         $voucher = null;
 
         if ($this->fund_formulas->count() > 0) {

@@ -17,6 +17,7 @@ use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
 use App\Models\Product;
+use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Policies\BunqMeTabPolicy;
@@ -36,6 +37,7 @@ use App\Policies\PrevalidationPolicy;
 use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\ProductReservationPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
@@ -77,6 +79,7 @@ class AuthServiceProvider extends ServiceProvider
         FundProviderChat::class         => FundProviderChatPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
+        ProductReservation::class       => ProductReservationPolicy::class,
         PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,

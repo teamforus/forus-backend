@@ -80,7 +80,7 @@ class PhysicalCardRequestsController extends Controller
         $fund = $voucherToken->voucher->fund;
 
         $this->mailService->requestPhysicalCard(
-            $this->identityRepo->getPrimaryEmail(auth_address()),
+            $this->identityRepo->getPrimaryEmail($request->auth_address()),
             $fund->getEmailFrom(), [
                 'postcode'       => $request->input('postcode'),
                 'house_number'   => $request->input('house'),
@@ -98,6 +98,18 @@ class PhysicalCardRequestsController extends Controller
 
         return new PhysicalCardRequestResource($cardRequest);
     }
+
+    /**
+     * Validate store a physical card
+     *
+     * @param StorePhysicalCardRequestRequest $request
+     * @param VoucherToken $voucherToken
+     * @noinspection PhpUnused
+     */
+    public function storeValidate(
+        StorePhysicalCardRequestRequest $request,
+        VoucherToken $voucherToken
+    ): void {}
 
     /**
      * Display the specified resource.

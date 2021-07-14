@@ -21,22 +21,11 @@ class VoucherPolicy
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * @param string $identity_address
      * @return bool
      */
-    public function viewAny(
-        string $identity_address
-    ): bool {
+    public function viewAny(string $identity_address): bool
+    {
         return !empty($identity_address);
     }
 
@@ -45,13 +34,9 @@ class VoucherPolicy
      * @param Organization $organization
      * @return bool
      */
-    public function viewAnySponsor(
-        string $identity_address,
-        Organization $organization
-    ): bool{
-        return $organization->identityCan($identity_address, [
-            'manage_vouchers'
-        ]);
+    public function viewAnySponsor(string $identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_vouchers');
     }
 
     /**
@@ -89,10 +74,9 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return is_null($voucher->parent_id) && $organization->identityCan(
-            $identity_address, [
-            'manage_vouchers'
-        ]) && ($voucher->fund->organization_id === $organization->id);
+        return ($voucher->isBudgetType() || ($voucher->isProductType() && $voucher->employee_id)) &&
+            ($voucher->fund->organization_id === $organization->id) &&
+            $organization->identityCan($identity_address, 'manage_vouchers');
     }
 
     /**
@@ -106,9 +90,9 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity_address, [
-            'manage_vouchers'
-        ]) && ($voucher->fund->organization_id === $organization->id) && !$voucher->is_granted;
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            ($voucher->fund->organization_id === $organization->id) &&
+            !$voucher->is_granted;
     }
 
     /**
@@ -123,7 +107,8 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization) &&
-            !$voucher->is_granted && !$voucher->expired;
+            !$voucher->is_granted &&
+            !$voucher->expired;
     }
 
     /**
@@ -150,7 +135,7 @@ class VoucherPolicy
     public function redeem(string $identity_address, Voucher $voucher): bool
     {
         return ($identity_address && $voucher) &&
-            (bool) $voucher->activation_code && !$voucher->identity_address;
+            $voucher->activation_code && !$voucher->identity_address;
     }
 
     /**
@@ -166,15 +151,6 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization);
-    }
-
-    /**
-     * @param string $identity_address
-     * @return bool
-     */
-    public function store(string $identity_address): bool
-    {
-        return !empty($identity_address);
     }
 
     /**
@@ -214,7 +190,7 @@ class VoucherPolicy
      */
     public function requestPhysicalCard(string $identity_address, Voucher $voucher): bool
     {
-        return Gate::forUser($identity_address)->allows('create', [PhysicalCard::class, $voucher]);
+        return $identity_address && Gate::allows('create', [PhysicalCard::class, $voucher]);
     }
 
     /**
@@ -242,6 +218,33 @@ class VoucherPolicy
             $this->deny('fund_not_active');
         }
 
+        // reservation used
+        if ($voucher->product_reservation && $voucher->product_reservation->isAccepted()) {
+            $this->deny('reservation_used');
+        }
+
+        // reservation used
+        if ($voucher->product_reservation && $voucher->product_reservation->hasExpired()) {
+            $this->deny('reservation_expired');
+        }
+
+        // reservation product removed
+        if ($voucher->product_reservation && $voucher->product_reservation->product->trashed()) {
+            $this->deny('reservation_product_removed');
+        }
+
+        // reservation is pending
+        if ($voucher->product_reservation && !$voucher->product_reservation->isPending()) {
+            $this->deny([
+                'key' => 'reservation_pending',
+                'error' => 'reservation_pending',
+                'message' => trans(
+                    "validation.product_reservation.reservation_not_pending",
+                    $voucher->product_reservation->only('code', 'state')
+                ),
+            ]);
+        }
+
         if ($voucher->fund->isTypeBudget()) {
             if ($voucher->isBudgetType()) {
                 $providersApproved = $fund->providers()->where([
@@ -260,6 +263,10 @@ class VoucherPolicy
             } else {
                 if ($voucher->product->expired) {
                     $this->deny('product_expired');
+                }
+
+                if ($voucher->product->trashed()) {
+                    $this->deny('product_no_longer_available');
                 }
 
                 if (!$voucher->product->unlimited_stock &&
@@ -303,10 +310,7 @@ class VoucherPolicy
         }
 
         $providersApplied = $fund->providers()->pluck('organization_id');
-
-        $providers = Organization::queryByIdentityPermissions($identity_address, [
-            'scan_vouchers'
-        ])->pluck('id');
+        $providers = Organization::queryByIdentityPermissions($identity_address, 'scan_vouchers')->pluck('id');
 
         // None of identity organizations applied to the fund
         if ($providers->intersect($providersApplied)->count() === 0) {
@@ -336,11 +340,8 @@ class VoucherPolicy
                 $this->deny('product_voucher_used');
             }
 
-            // The identity should be allowed to scan voucher for
-            // the provider organization
-            return $voucher->product->organization->identityCan($identity_address, [
-                'scan_vouchers'
-            ]);
+            // The identity should be allowed to scan voucher for the provider organization
+            return $voucher->product->organization->identityCan($identity_address, 'scan_vouchers');
         }
 
         return false;
@@ -359,16 +360,21 @@ class VoucherPolicy
     }
 
     /**
-     * @param string $message
+     * @param string|array|AuthorizationJsonException $message
      * @throws AuthorizationJsonException
      */
-    protected function deny(string $message): void {
-        $key = $message;
-        $error = $message;
-        $message = trans("validation.voucher.{$message}");
+    protected function deny($message, $code = 403): void
+    {
+        $message = is_array($message) ? $message : [
+            'key' => $message,
+            'error' => $message,
+            'message' => trans("validation.voucher.$message"),
+        ];
 
-        throw new AuthorizationJsonException(json_encode(
-            compact('error', 'message', 'key')
-        ), 403);
+        if ($message instanceof AuthorizationJsonException) {
+            throw $message;
+        }
+
+        throw new AuthorizationJsonException(json_encode($message), $code);
     }
 }
