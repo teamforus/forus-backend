@@ -26,7 +26,7 @@
         "guzzlehttp/guzzle": "^6.5",
         "intervention/image": "^2.5",
         "itsgoingd/clockwork": "^5.0",
-        "kalnoy/nestedset": "^5.0",
+        "kalnoy/nestedset": "^6.0",
         "laravel-notification-channels/apn": "^0.6",
         "laravel-notification-channels/fcm": "^1.7",
         "laravel/framework": "6.20.*",
