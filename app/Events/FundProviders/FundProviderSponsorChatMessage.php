@@ -2,7 +2,6 @@
 
 namespace App\Events\FundProviders;
 
-use App\Models\FundProvider;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -44,7 +43,7 @@ class FundProviderSponsorChatMessage
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel|array
+     * @return \Illuminate\Broadcasting\Channel
      */
     public function broadcastOn()
     {

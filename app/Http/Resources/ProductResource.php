@@ -118,6 +118,7 @@ class ProductResource extends Resource
             return array_merge($data, $productData, [
                 'price' => $fundProviderProduct->user_price,
                 'price_locale' => $fundProviderProduct->user_price_locale,
+                'limit_per_identity' => $fundProviderProduct->limit_per_identity,
             ]);
         })->values();
     }
@@ -127,12 +128,13 @@ class ProductResource extends Resource
      * @param string $type
      * @return float
      */
-    private function getProductSubsidyPrice(Product $product, string $type): float {
+    private function getProductSubsidyPrice(Product $product, string $type): float
+    {
         return max($product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
         ])->whereHas('fund_provider.fund', function(Builder $builder) {
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
-            $builder->addWhereExistsQuery($this->fundsQuery()->getQuery());
+            $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);
     }
 }

@@ -68,8 +68,9 @@ class VoucherResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request|any  $request
+     * @param \Illuminate\Http\Request|any $request
      * @return array
+     * @throws \Exception
      */
     public function toArray($request): array
     {
@@ -150,6 +151,7 @@ class VoucherResource extends Resource
      * @param Voucher $voucher
      * @param int|null $product_id
      * @return array|null
+     * @throws \Exception
      */
     public function queryProduct(Voucher $voucher, ?int $product_id = null): ?array
     {
@@ -167,6 +169,7 @@ class VoucherResource extends Resource
         $reservable_count = $product['limit_available'] ?? null;
         $reservable_count = is_numeric($reservable_count) ? intval($reservable_count) : null;
         $reservable_expire_at = $expire_at ? $expire_at->format('Y-m-d') : null;
+        $reservable_enabled = $product->reservationsEnabled($voucher->fund);
 
         if ($voucher->isBudgetType()) {
             if ($voucher->fund->isTypeSubsidy()) {
@@ -179,9 +182,9 @@ class VoucherResource extends Resource
         }
 
         return [
-            'reservable' => $reservable,
+            'reservable' => $reservable_enabled && $reservable,
             'reservable_count' => $reservable_count,
-            'reservable_enabled' => $product['reservations_subsidy_enabled'] ?? false,
+            'reservable_enabled' => $reservable_enabled,
             'reservable_expire_at' => $reservable_expire_at,
             'reservable_expire_at_locale' => format_date_locale($reservable_expire_at ?? null),
         ];

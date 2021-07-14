@@ -9,7 +9,6 @@ use App\Http\Requests\Api\Platform\Organizations\ProductReservations\StoreProduc
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\AcceptProductReservationRequest;
 use App\Http\Requests\Api\Platform\Organizations\ProductReservations\RejectProductReservationRequest;
 use App\Http\Resources\ProductReservationResource;
-use App\Models\Employee;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -70,12 +69,10 @@ class ProductReservationsController extends Controller
 
         $product = Product::find($request->input('product_id'));
         $voucher = Voucher::findByAddressOrPhysicalCard($request->input('number'));
+        $employee = $organization->findEmployee($request->auth_address());
 
-        $reservation = $voucher->reserveProduct($product, $request->input('note'));
-
-        if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
-            $reservation->acceptProvider();
-        }
+        $reservation = $voucher->reserveProduct($product, $employee, $request->input('note'));
+        $reservation->acceptProvider();
 
         return new ProductReservationResource($reservation->load(
             ProductReservationResource::load()
@@ -115,11 +112,7 @@ class ProductReservationsController extends Controller
                 $voucher = Voucher::findByAddressOrPhysicalCard(array_get($item, 'number'));
                 $reservation = $voucher->reserveProduct($product, $employee, $note);
 
-                if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
-                    $reservation->acceptProvider($employee);
-                }
-
-                $createdItems[] = $reservation->id;
+                $createdItems[] = $reservation->acceptProvider($employee)->id;
             } else {
                 $errorsItems[] = $validator->messages()->toArray();
             }
