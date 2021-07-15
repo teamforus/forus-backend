@@ -4,7 +4,7 @@ namespace App\Listeners;
 
 use App\Events\FundRequestClarifications\FundRequestClarificationCreated;
 use App\Models\FundRequest;
-use App\Notifications\Identities\FundRequest\IdentityProductReservationAcceptedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -31,7 +31,7 @@ class FundRequestClarificationSubscriber
             'sponsor_name' => $fundRequest->fund->organization->name
         ]);
 
-        IdentityProductReservationAcceptedNotification::send($eventLog);
+        IdentityFundRequestFeedbackRequestedNotification::send($eventLog);
     }
 
     /**
