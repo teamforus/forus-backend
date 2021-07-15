@@ -50,6 +50,35 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
     protected $use_original = false;
 
     /**
+     * @var bool
+     */
+    protected $upscale = true;
+
+    /**
+     * MediaImagePreset constructor.
+     * @param string $name
+     * @param int $width
+     * @param int|null $height
+     * @param bool $preserveAspectRatio
+     * @param int $quality
+     * @param string|null $format
+     */
+    public function __construct(
+        string $name,
+        int $width = 1000,
+        int $height = 1000,
+        bool $preserveAspectRatio = true,
+        int $quality = 75,
+        ?string $format = 'jpg'
+    ) {
+        $this->width = $width;
+        $this->height = $height;
+        $this->preserve_aspect_ratio = $preserveAspectRatio;
+
+        parent::__construct($name, $format, $quality);
+    }
+
+    /**
      * @param bool $allow
      * @return $this
      */
@@ -74,7 +103,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param string $format
      * @return $this
      */
-    public function setFormat($format = 'jpg'): MediaImagePreset
+    public function setFormat($format = 'jpg'): self
     {
         $this->allow_transparency = $format;
         return $this;
@@ -84,34 +113,21 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
      * @param bool $preserve_aspect_ratio
      * @return $this
      */
-    public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true): MediaImagePreset
+    public function setPreserveAspectRatio(bool $preserve_aspect_ratio = true): self
     {
         $this->preserve_aspect_ratio = $preserve_aspect_ratio;
         return $this;
     }
 
     /**
-     * MediaImagePreset constructor.
-     * @param string $name
-     * @param int $width
-     * @param int|null $height
-     * @param bool $preserveAspectRatio
-     * @param int $quality
-     * @param string|null $format
+     * @param bool $upscale
+     * @return $this
      */
-    public function __construct(
-        string $name,
-        int $width = 1000,
-        int $height = 1000,
-        bool $preserveAspectRatio = true,
-        int $quality = 75,
-        ?string $format = 'jpg'
-    ) {
-        $this->width = $width;
-        $this->height = $height;
-        $this->preserve_aspect_ratio = $preserveAspectRatio;
+    public function setUpscale(bool $upscale): self
+    {
+        $this->upscale = $upscale;
 
-        parent::__construct($name, $format, $quality);
+        return $this;
     }
 
     /**
@@ -147,14 +163,15 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
             $outPath = $this->makeUniquePath($storage, $storagePath, $format);
             $image = \Image::make(file_get_contents($sourcePath))->backup();
 
+            $width = $this->upscale ? $this->width : min($this->width, $image->width());
+            $height = $this->upscale ? $this->height : min($this->height, $image->height());
+
             if ($this->preserve_aspect_ratio) {
-                $image = $image->resize($this->width, $this->height, function (
-                    Constraint $constraint
-                ) {
+                $image = $image->resize($width, $height, function (Constraint $constraint) {
                     $constraint->aspectRatio();
                 });
             } else {
-                $image = $image->fit($this->width, $this->height);
+                $image = $image->fit($width, $height);
             }
 
             if ($format !== 'png' || !$this->allow_transparency) {

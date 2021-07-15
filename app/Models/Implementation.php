@@ -699,9 +699,9 @@ class Implementation extends Model
     }
 
     /**
-     * @return string
+     * @return ?string
      */
-    private function getBannerTextColor(): string
+    private function getBannerTextColor(): ?string
     {
         if ($this->header_text_color == 'auto') {
             return $this->banner ? ($this->banner->is_dark ? 'bright' : 'dark') : 'dark';
