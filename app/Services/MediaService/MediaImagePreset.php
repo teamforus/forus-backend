@@ -164,7 +164,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
             $image = \Image::make(file_get_contents($sourcePath))->backup();
 
             $width = $this->upscale ? $this->width : min($this->width, $image->width());
-            $height = $this->upscale ? $this->height : min($this->height, $image->width());
+            $height = $this->upscale ? $this->height : min($this->height, $image->height());
 
             if ($this->preserve_aspect_ratio) {
                 $image = $image->resize($width, $height, function (Constraint $constraint) {
