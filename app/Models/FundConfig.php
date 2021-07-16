@@ -19,7 +19,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array $bunq_allowed_ip
  * @property int $bunq_sandbox
  * @property string|null $csv_primary_key
- * @property int $subtract_transaction_costs
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
@@ -64,7 +63,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereSubtractTransactionCosts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
  */
