@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Voucher;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Class VoucherResource
@@ -20,6 +19,7 @@ class VoucherCollectionResource extends VoucherResource
         'token_with_confirmation',
         'token_without_confirmation',
         'last_transaction',
+        'transactions',
         'product_vouchers.fund',
         'product_vouchers.product.photo.presets',
         'product_vouchers.token_with_confirmation',
@@ -27,83 +27,20 @@ class VoucherCollectionResource extends VoucherResource
         'product.photo.presets',
         'product.product_category.translations',
         'product.organization.logo.presets',
+        'product.organization.business_type.translations',
         'fund.fund_config.implementation',
         'fund.logo.presets',
         'fund.organization.logo.presets',
+        'fund.organization.business_type.translations',
         'physical_cards',
     ];
 
     /**
-     * @return array|string[]
-     */
-    public static function load(): array
-    {
-        $load = static::$load;
-
-        if (!env('REMOVE_VOUCHERS_LIST_TRANSACTIONS_SOFT', FALSE)) {
-            $load = array_merge($load, [
-                'transactions.voucher.fund.logo.presets',
-                'transactions.provider.logo.presets',
-                'transactions.product.photo.presets',
-            ]);
-        }
-
-        if (!env('REMOVE_VOUCHERS_LIST_OFFICES_SOFT', FALSE)) {
-            $load = array_merge($load, [
-                'product.organization.offices.schedules',
-                'product.organization.offices.photo.presets',
-                'product.organization.offices.organization.logo.presets',
-                'fund.provider_organizations_approved.offices.schedules',
-                'fund.provider_organizations_approved.offices.photo.presets',
-                'fund.provider_organizations_approved.offices.organization.logo.presets',
-            ]);
-        }
-
-        return $load;
-    }
-
-    /**
-     * @param any|\Illuminate\Http\Request $request
+     * @param Voucher $voucher
      * @return array
      */
-    public function toArray($request): array
+    protected function getOptionalFields(Voucher $voucher): array
     {
-        $data = parent::toArray($request);
-
-        if (env('REMOVE_VOUCHERS_LIST_TRANSACTIONS_HARD', FALSE)) {
-            unset($data['transactions']);
-        }
-
-        if (env('REMOVE_VOUCHERS_LIST_OFFICES_HARD', FALSE)) {
-            unset($data['offices']);
-        }
-
-        return $data;
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @return AnonymousResourceCollection
-     */
-    protected function getTransactions(Voucher $voucher): AnonymousResourceCollection
-    {
-        if (env('REMOVE_VOUCHERS_LIST_TRANSACTIONS_SOFT', FALSE)) {
-            return VoucherTransactionResource::collection([]);
-        }
-
-        return parent::getTransactions($voucher);
-    }
-
-    /**
-     * @param Voucher $voucher
-     * @return AnonymousResourceCollection
-     */
-    protected function getOffices(Voucher $voucher): AnonymousResourceCollection
-    {
-        if (env('REMOVE_VOUCHERS_LIST_OFFICES_SOFT', FALSE)) {
-            return OfficeResource::collection([]);
-        }
-
-        return parent::getOffices($voucher);
+        return [];
     }
 }

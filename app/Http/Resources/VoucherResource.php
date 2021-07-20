@@ -62,7 +62,15 @@ class VoucherResource extends Resource
      */
     public static function load(): array
     {
-        return self::$load;
+        return static::$load;
+    }
+
+    /**
+     * @return array|string[]
+     */
+    public static function load_count(): array
+    {
+        return static::$loadCount;
     }
 
     /**
@@ -75,11 +83,11 @@ class VoucherResource extends Resource
     public function toArray($request): array
     {
         $voucher = $this->resource;
-        $physical_cards = $voucher->physical_cards->first();
+        $physical_cards = $voucher->physical_cards[0] ?? null;
 
         return array_merge($voucher->only([
             'identity_address', 'fund_id', 'returnable', 'transactions_count',
-        ]), $this->getBaseFields($voucher), [
+        ]), $this->getBaseFields($voucher), $this->getOptionalFields($voucher), [
             'created_at' => $voucher->created_at_string,
             'created_at_locale' => $voucher->created_at_string_locale,
             'expire_at' => [
@@ -103,9 +111,8 @@ class VoucherResource extends Resource
             'parent' => $voucher->parent ? array_merge($voucher->parent->only('identity_address', 'fund_id'), [
                 'created_at' => $voucher->parent->created_at_string
             ]) : null,
-            'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
+            'physical_card' => $physical_cards ? $physical_cards->only('id', 'code') : false,
             'product_vouchers' => $this->getProductVouchers($voucher->product_vouchers),
-            'transactions' => $this->getTransactions($voucher),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
         ]);
     }
@@ -142,8 +149,19 @@ class VoucherResource extends Resource
         return [
             'used' => $used,
             'amount' => currency_format($amount),
-            'offices' => $this->getOffices($voucher),
             'product' => $productResource,
+        ];
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return array
+     */
+    protected function getOptionalFields(Voucher $voucher): array
+    {
+        return [
+            'transactions' => $this->getTransactions($voucher),
+            'offices' => $this->getOffices($voucher),
         ];
     }
 
@@ -261,7 +279,7 @@ class VoucherResource extends Resource
      */
     protected function getOffices(Voucher $voucher): AnonymousResourceCollection
     {
-        if ($voucher->type === 'regular') {
+        if ($voucher->isBudgetType()) {
             return OfficeResource::collection(
                 $voucher->fund->provider_organizations_approved->pluck('offices')->flatten()
             );

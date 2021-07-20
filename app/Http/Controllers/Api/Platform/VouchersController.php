@@ -42,9 +42,12 @@ class VouchersController extends Controller
         }
 
         // todo: remove fallback pagination 1000, when apps are ready
-        return VoucherCollectionResource::collection($query->with(
-            VoucherCollectionResource::load()
-        )->paginate($request->input('per_page', 1000)));
+        $vouchers = $query
+            ->with(VoucherCollectionResource::load())
+            ->withCount(VoucherCollectionResource::load_count())
+            ->paginate($request->input('per_page', 1000));
+
+        return VoucherCollectionResource::collection($vouchers);
     }
 
     /**

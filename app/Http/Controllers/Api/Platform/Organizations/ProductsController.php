@@ -71,7 +71,7 @@ class ProductsController extends Controller
      * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Organization $organization, Product $product ): ProviderProductResource
+    public function show(Organization $organization, Product $product): ProviderProductResource
     {
         $this->authorize('show', $organization);
         $this->authorize('show', [$product, $organization]);
