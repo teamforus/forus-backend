@@ -160,11 +160,23 @@ class DigIdSession extends Model
     }
 
     /**
+     * @param string $uri
+     * @return string
+     */
+    protected function getApiUrl(string $uri): string
+    {
+        $implementationApiUrl = $this->implementation->digid_forus_api_url;
+        $apiHost = $implementationApiUrl ?: url('/');
+
+        return sprintf('%s/%s', rtrim($apiHost, '/'), ltrim('/', $uri));
+    }
+
+    /**
      * @return $this
      */
     public function startAuthSession(): self
     {
-        $goBackUrl = url(sprintf('/api/v1/platform/digid/%s/resolve', $this->session_uid));
+        $goBackUrl = $this->getApiUrl(sprintf('/api/v1/platform/digid/%s/resolve', $this->session_uid));
 
         try {
             $digId = $this->implementation->getDigid();
@@ -264,7 +276,7 @@ class DigIdSession extends Model
      */
     public function getRedirectUrl(): string
     {
-        return url(sprintf('/api/v1/platform/digid/%s/redirect', $this->session_uid));
+        return $this->getApiUrl(sprintf('/api/v1/platform/digid/%s/redirect', $this->session_uid));
     }
 
     /**
