@@ -211,4 +211,20 @@ class OrganizationsController extends Controller
 
         return response()->json([]);
     }
+
+    /**
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function destroy(
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', [$organization]);
+        $this->authorize('destroy', [$organization]);
+
+        $organization->delete();
+
+        return response()->json([]);
+    }
 }

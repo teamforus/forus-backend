@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\Organization
@@ -141,7 +142,7 @@ use Illuminate\Database\Query\Builder;
  */
 class Organization extends Model
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, SoftDeletes;
 
     public const GENERIC_KVK = "00000000";
 

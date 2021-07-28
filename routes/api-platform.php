@@ -242,7 +242,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource('organizations', "Api\Platform\OrganizationsController", [
         'only' => [
-            'show', 'store', 'update'
+            'show', 'store', 'update', 'destroy'
         ]
     ]);
 
