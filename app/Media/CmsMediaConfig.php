@@ -31,7 +31,7 @@ class CmsMediaConfig extends MediaImageConfig
         $this->save_dominant_color = config('media.calc_dominant_color');
 
         $this->addPreset(new MediaImagePreset('thumbnail', 100, 100, false, 90));
-        $this->addPreset(new MediaImagePreset('public', 1000, 1000, true));
+        $this->addPreset((new MediaImagePreset('public', 1000, 1000, true))->setUpscale(false));
         $this->addPreset(MediaImagePreset::createOriginal('original'));
     }
 }

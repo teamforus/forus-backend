@@ -9,6 +9,7 @@ use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
 use App\Media\RecordCategoryIconMediaConfig;
+use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\Implementation;
@@ -46,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         Relation::morphMap([
-            // 'fund'                  => Fund::class,
+            'fund'                  => Fund::class,
             'office'                => Office::class,
             'voucher'               => Voucher::class,
             'product'               => Product::class,
