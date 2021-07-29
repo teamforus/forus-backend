@@ -3,6 +3,7 @@
 namespace App\Models\Data;
 
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 
 /**
  * Class VoucherExportData
@@ -50,6 +51,8 @@ class VoucherExportData
     public function toArray(): array
     {
         $assigned_to_identity = $this->voucher->identity_address && $this->voucher->is_granted;
+        /** @var VoucherTransaction $first_transaction */
+        $first_transaction = $this->voucher->transactions->first();
         $identity = $this->voucher->identity;
 
         return array_merge($this->data_only ? [] : [
@@ -57,6 +60,7 @@ class VoucherExportData
         ], [
             'granted' => $assigned_to_identity ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
+            'in_use_date' => $first_transaction ? format_date_locale($first_transaction->created_at) : null
         ], $this->voucher->product ? [
             'product_name' => $this->voucher->product->name,
         ] : [], $assigned_to_identity ? [
