@@ -3,7 +3,7 @@
 namespace App\Models\Data;
 
 use App\Models\Voucher;
-use App\Models\VoucherTransaction;
+use Illuminate\Support\Carbon;
 
 /**
  * Class VoucherExportData
@@ -51,8 +51,6 @@ class VoucherExportData
     public function toArray(): array
     {
         $assigned_to_identity = $this->voucher->identity_address && $this->voucher->is_granted;
-        /** @var VoucherTransaction $first_transaction */
-        $first_transaction = $this->voucher->transactions->first();
         $identity = $this->voucher->identity;
 
         return array_merge($this->data_only ? [] : [
@@ -60,7 +58,7 @@ class VoucherExportData
         ], [
             'granted' => $assigned_to_identity ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
-            'in_use_date' => $first_transaction ? format_date_locale($first_transaction->created_at) : null
+            'in_use_date' => format_date_locale($this->getFirstUsageDate()),
         ], $this->voucher->product ? [
             'product_name' => $this->voucher->product->name,
         ] : [], $assigned_to_identity ? [
@@ -82,5 +80,24 @@ class VoucherExportData
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),
         ]);
+    }
+
+    /**
+     * @return Carbon|null
+     */
+    public function getFirstUsageDate(): ?Carbon
+    {
+        $voucher = $this->voucher;
+        $productVouchers = $voucher->product_vouchers->whereNull('product_reservation_id');
+        $reservationVouchers = $voucher->product_vouchers->whereNotNull('product_reservation_id');
+        $reservationTransactions = $reservationVouchers->pluck('transactions')->flatten();
+
+        $models = $voucher->transactions->merge($reservationTransactions)->merge($productVouchers);
+
+        if ($models->count() > 0) {
+            return $models->sortBy('created_at')[0]->created_at;
+        }
+
+        return null;
     }
 }
