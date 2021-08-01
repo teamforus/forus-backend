@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
-use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
+use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Vouchers\StoreProductReservationRequest;
-use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
 use App\Models\Voucher;
@@ -64,18 +63,16 @@ class VouchersController extends Controller
     /**
      * Send target voucher to user email.
      *
-     * @param BaseFormRequest $request
      * @param VoucherToken $voucherToken
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function sendEmail(BaseFormRequest $request, VoucherToken $voucherToken): JsonResponse
+    public function sendEmail(VoucherToken $voucherToken): JsonResponse
     {
         $this->authorize('sendEmail', $voucherToken->voucher);
 
-        $voucherToken->voucher->sendToEmail($request->records_repo()->primaryEmailByAddress(
-            $voucherToken->voucher->identity_address
-        ));
+        $voucher = $voucherToken->voucher;
+        $voucher->sendToEmail($voucher->identity->primary_email->email);
 
         return response()->json([]);
     }
@@ -84,13 +81,13 @@ class VouchersController extends Controller
      * Share product voucher to email.
      *
      * @param VoucherToken $voucherToken
-     * @param ShareProductVoucherRequest $request
+     * @param DeactivateVoucherRequest $request
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function shareVoucher(
         VoucherToken $voucherToken,
-        ShareProductVoucherRequest $request
+        DeactivateVoucherRequest $request
     ): JsonResponse {
         $this->authorize('shareVoucher', $voucherToken->voucher);
 
@@ -100,6 +97,25 @@ class VouchersController extends Controller
         $voucherToken->voucher->shareVoucherEmail($reason, $sendCopy);
 
         return response()->json([]);
+    }
+
+    /**
+     * Deactivate voucher
+     *
+     * @param DeactivateVoucherRequest $request
+     * @param VoucherToken $voucherToken
+     * @return VoucherResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function deactivate(
+        DeactivateVoucherRequest $request,
+        VoucherToken $voucherToken
+    ): VoucherResource {
+        $this->authorize('deactivateRequester', $voucherToken->voucher);
+
+        $voucherToken->voucher->deactivate($request->input('note') ?: '');
+
+        return new VoucherResource($voucherToken->voucher->load(VoucherResource::load()));
     }
 
     /**

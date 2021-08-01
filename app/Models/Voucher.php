@@ -6,9 +6,11 @@ use App\Events\ProductReservations\ProductReservationCreated;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Events\Vouchers\VoucherDeactivated;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Identity\Models\Identity;
 use Carbon\Carbon;
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -26,6 +29,7 @@ use RuntimeException;
  * @property int $id
  * @property int $fund_id
  * @property string|null $identity_address
+ * @property string $state
  * @property string $amount
  * @property int $limit_multiplier
  * @property bool $returnable
@@ -35,7 +39,6 @@ use RuntimeException;
  * @property string|null $activation_code
  * @property string|null $activation_code_uid
  * @property int|null $fund_backoffice_log_id
- * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $product_id
@@ -43,23 +46,27 @@ use RuntimeException;
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\FundBackofficeLog|null $fund_backoffice_log
+ * @property-read bool $activated
  * @property-read float $amount_available
  * @property-read float $amount_available_cached
  * @property-read string|null $created_at_string
  * @property-read string|null $created_at_string_locale
+ * @property-read bool $deactivated
  * @property-read bool $expired
  * @property-read bool $has_product_vouchers
  * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
+ * @property-read string $state_locale
  * @property-read string $type
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
  * @property-read Identity|null $identity
+ * @property-read EventLog|null $last_deactivation_log
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
- * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Voucher|null $parent
  * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
@@ -114,6 +121,8 @@ class Voucher extends Model
     public const EVENT_EXPIRING_SOON_BUDGET = 'expiring_soon_budget';
     public const EVENT_EXPIRING_SOON_PRODUCT = 'expiring_soon_product';
     public const EVENT_ASSIGNED = 'assigned';
+    public const EVENT_ACTIVATED = 'activated';
+    public const EVENT_DEACTIVATED = 'deactivated';
 
     public const EVENT_TRANSACTION = 'transaction';
     public const EVENT_TRANSACTION_PRODUCT = 'transaction_product';
@@ -124,6 +133,7 @@ class Voucher extends Model
 
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
+    public const STATE_DEACTIVATED = 'deactivated';
 
     public const TYPES = [
         self::TYPE_BUDGET,
@@ -133,6 +143,7 @@ class Voucher extends Model
     public const STATES = [
         self::STATE_ACTIVE,
         self::STATE_PENDING,
+        self::STATE_DEACTIVATED,
     ];
 
     protected $withCount = [
@@ -171,6 +182,17 @@ class Voucher extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return MorphOne
+     * @noinspection PhpUnused
+     */
+    public function last_deactivation_log(): MorphOne
+    {
+        return $this->morphOne(EventLog::class, 'loggable')->where([
+            'event' => self::EVENT_DEACTIVATED,
+        ]);
     }
 
     /**
@@ -360,6 +382,36 @@ class Voucher extends Model
     }
 
     /**
+     * The voucher is deactivated
+     *
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getDeactivatedAttribute(): bool
+    {
+        return $this->isDeactivated();
+    }
+
+    /**
+     * The voucher is activated
+     *
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getActivatedAttribute(): bool
+    {
+        return $this->isActivated();
+    }
+
+    /**
+     * @return string
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return trans('states/vouchers.' . $this->state);
+    }
+
+    /**
      * The voucher is expired
      *
      * @return bool
@@ -383,9 +435,8 @@ class Voucher extends Model
     /**
      * @param string|null $email
      */
-    public function sendToEmail(
-        string $email = null
-    ): void {
+    public function sendToEmail(string $email = null): void
+    {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -730,6 +781,30 @@ class Voucher extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function isActivated(): bool
+    {
+        return $this->state === self::STATE_ACTIVE;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state === self::STATE_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeactivated(): bool
+    {
+        return $this->state === self::STATE_DEACTIVATED;
+    }
+
+    /**
      * @param Product $product
      * @param Employee|null $employee
      * @param string|null $note
@@ -1038,5 +1113,82 @@ class Voucher extends Model
         }
 
         return false;
+    }
+
+    /**
+     * @param Employee $employee
+     * @return Voucher
+     */
+    public function activateAsSponsor(Employee $employee): Voucher
+    {
+        $this->update([
+            'state' => self::STATE_ACTIVE,
+        ]);
+
+        $this->log(self::EVENT_ACTIVATED, [
+            'voucher' => $this,
+            'employee' => $employee,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * @param string $note
+     * @param bool $notifyByEmail
+     * @param Employee|null $employee
+     * @return $this
+     */
+    public function deactivate(
+        string $note = '',
+        bool $notifyByEmail = false,
+        ?Employee $employee = null
+    ): Voucher {
+        $this->update([
+            'state' => self::STATE_DEACTIVATED,
+        ]);
+
+        VoucherDeactivated::dispatch($this, $note, $employee, $notifyByEmail);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function sponsorHistoryLogs(): Collection
+    {
+        return $this->logs->whereIn('event', [
+            self::EVENT_CREATED_BUDGET,
+            self::EVENT_CREATED_PRODUCT,
+            self::EVENT_EXPIRED_BUDGET,
+            self::EVENT_EXPIRED_PRODUCT,
+            self::EVENT_DEACTIVATED,
+            self::EVENT_ACTIVATED,
+            self::EVENT_ASSIGNED,
+        ]);
+    }
+
+    /**
+     * @return Collection
+     */
+    public function requesterHistoryLogs(): Collection
+    {
+        return $this->logs->whereIn('event', [
+            self::EVENT_CREATED_BUDGET,
+            self::EVENT_CREATED_PRODUCT,
+            self::EVENT_EXPIRED_BUDGET,
+            self::EVENT_EXPIRED_PRODUCT,
+            self::EVENT_DEACTIVATED,
+            self::EVENT_ACTIVATED,
+        ]);
+    }
+
+    /**
+     * @return Carbon|null
+     */
+    public function deactivationDate(): ?Carbon
+    {
+        return $this->last_deactivation_log ? $this->last_deactivation_log->created_at : null;
     }
 }

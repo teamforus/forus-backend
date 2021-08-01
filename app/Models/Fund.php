@@ -1778,4 +1778,17 @@ class Fund extends Model
         return $this->organization->backoffice_available &&
             $this->fund_config->backoffice_enabled;
     }
+
+    /**
+     * @param string $default
+     * @return string|null
+     */
+    public function communicationType($default = 'formal'): string
+    {
+        if ($this->fund_config && $this->fund_config->implementation) {
+            return $this->fund_config->implementation->communicationType();
+        }
+
+        return $default;
+    }
 }

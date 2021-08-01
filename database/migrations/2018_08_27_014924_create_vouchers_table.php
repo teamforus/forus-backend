@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * Class CreateVouchersTable
+ */
 class CreateVouchersTable extends Migration
 {
     /**
@@ -21,8 +24,8 @@ class CreateVouchersTable extends Migration
             $table->string('address', 200);
             $table->timestamps();
 
-            $table->foreign('fund_id'
-            )->references('id')->on('funds')->onDelete('cascade');
+            $table->foreign('fund_id')->references('id')
+                ->on('funds')->onDelete('cascade');
         });
     }
 

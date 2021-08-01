@@ -91,4 +91,12 @@ class EventLog extends Model
 
         return $query;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getEventLocaleAttribute(): ?string
+    {
+        return trans('events/' . $this->loggable_type . '.' . $this->event) ?? null;
+    }
 }

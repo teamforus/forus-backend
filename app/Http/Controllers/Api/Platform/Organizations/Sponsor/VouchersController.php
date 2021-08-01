@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Exports\VoucherExport;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\DeactivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
@@ -247,11 +248,32 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('activateSponsor', [$voucher, $organization]);
 
-        if ($request->authorize()) {
-            $voucher->update([
-                'state' => $voucher::STATE_ACTIVE,
-            ]);
-        }
+        $voucher->activateAsSponsor($organization->findEmployee($request->auth_address()));
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param DeactivateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException|Exception
+     * @noinspection PhpUnused
+     */
+    public function deactivate(
+        DeactivateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('deactivateSponsor', [$voucher, $organization]);
+
+        $voucher->deactivate(
+            $request->input('note') ?: '',
+            $request->input('notify_by_email', false),
+            $organization->findEmployee($request->auth_address())
+        );
 
         return new SponsorVoucherResource($voucher);
     }

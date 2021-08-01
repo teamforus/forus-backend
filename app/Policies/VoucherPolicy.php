@@ -92,6 +92,7 @@ class VoucherPolicy
     ): bool {
         return $organization->identityCan($identity_address, 'manage_vouchers') &&
             ($voucher->fund->organization_id === $organization->id) &&
+            !$voucher->deactivated &&
             !$voucher->is_granted;
     }
 
@@ -106,8 +107,40 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return $this->assignSponsor($identity_address, $voucher, $organization) &&
-            !$voucher->is_granted &&
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            ($voucher->fund->organization_id === $organization->id) &&
+            !$voucher->activated &&
+            !$voucher->expired;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function deactivateSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            ($voucher->fund->organization_id === $organization->id) &&
+            !$voucher->deactivated &&
+            !$voucher->expired;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @return bool
+     */
+    public function deactivateRequester(
+        string $identity_address,
+        Voucher $voucher
+    ): bool {
+        return (strcmp($identity_address, $voucher->identity_address) === 0) &&
+            !$voucher->deactivated &&
             !$voucher->expired;
     }
 
@@ -123,7 +156,9 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization) &&
-            !$voucher->activation_code && !$voucher->expired;
+            !$voucher->activation_code &&
+            !$voucher->deactivated &&
+            !$voucher->expired;
     }
 
     /**
@@ -134,8 +169,10 @@ class VoucherPolicy
      */
     public function redeem(string $identity_address, Voucher $voucher): bool
     {
-        return ($identity_address && $voucher) &&
-            $voucher->activation_code && !$voucher->identity_address;
+        return ($identity_address && $voucher->exists) &&
+            $voucher->activation_code &&
+            !$voucher->identity_address &&
+            !$voucher->deactivated;
     }
 
     /**
@@ -170,7 +207,9 @@ class VoucherPolicy
      */
     public function sendEmail(string $identity_address, Voucher $voucher): bool
     {
-        return $this->show($identity_address, $voucher) && !$voucher->expired;
+        return $this->show($identity_address, $voucher) &&
+            !$voucher->deactivated &&
+            !$voucher->expired;
     }
 
     /**
@@ -190,7 +229,10 @@ class VoucherPolicy
      */
     public function requestPhysicalCard(string $identity_address, Voucher $voucher): bool
     {
-        return $identity_address && Gate::allows('create', [PhysicalCard::class, $voucher]);
+        return $this->show($identity_address, $voucher) &&
+            Gate::allows('create', [PhysicalCard::class, $voucher]) &&
+            !$voucher->deactivated &&
+            !$voucher->expired;
     }
 
     /**
@@ -209,8 +251,12 @@ class VoucherPolicy
         }
 
         // fund should not be expired
-        if ($voucher->state !== $voucher::STATE_ACTIVE) {
-            $this->deny('pending');
+        if (!$voucher->isActivated()) {
+            $this->deny($voucher->isPending() ? 'pending' : [
+                'message' => trans('validation.voucher.deactivated', [
+                    'deactivation_date' => format_date_locale($voucher->deactivationDate())
+                ])
+            ]);
         }
 
         // fund needs to be active
