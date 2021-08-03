@@ -5,6 +5,10 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 
+/**
+ * Class ClientTypeMiddleware
+ * @package App\Http\Middleware
+ */
 class ClientTypeMiddleware
 {
     /**
