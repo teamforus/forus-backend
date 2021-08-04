@@ -24,4 +24,16 @@ class ActivateVoucherRequest extends BaseFormRequest
     {
         return Gate::allows('activateSponsor', [$this->voucher, $this->organization]);
     }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            'note' => 'nullable|string|min:2|max:140',
+        ];
+    }
 }

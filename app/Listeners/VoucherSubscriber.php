@@ -82,6 +82,7 @@ class VoucherSubscriber
                 'product' => $product,
                 'provider' => $product->organization,
                 'sponsor' => $voucher->fund->organization,
+                'employee' => $voucher->employee,
             ]);
 
             if ($voucherCreated->shouldNotifyRequesterAdded()) {
@@ -91,21 +92,24 @@ class VoucherSubscriber
             if ($voucherCreated->shouldNotifyRequesterReserved()) {
                 IdentityProductVoucherReservedNotification::send($event);
             }
-        } else if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
-            $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
-                $voucher->identity_address
-            ));
-
+        } else {
             $event = $voucher->log(Voucher::EVENT_CREATED_BUDGET, [
                 'fund' => $voucher->fund,
                 'voucher' => $voucher,
                 'sponsor' => $voucher->fund->organization,
+                'employee' => $voucher->employee,
             ]);
 
-            if ($voucher->fund->isTypeSubsidy()) {
-                IdentityVoucherAddedSubsidyNotification::send($event);
-            } else {
-                IdentityVoucherAddedBudgetNotification::send($event);
+            if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
+                $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
+                    $voucher->identity_address
+                ));
+
+                if ($voucher->fund->isTypeSubsidy()) {
+                    IdentityVoucherAddedSubsidyNotification::send($event);
+                } else {
+                    IdentityVoucherAddedBudgetNotification::send($event);
+                }
             }
         }
     }

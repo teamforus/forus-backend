@@ -75,11 +75,12 @@ class VouchersController extends Controller
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $multiplier = $request->input('limit_multiplier');
+        $employee_id   = $organization->findEmployee($request->auth_address())->id;
 
         if ($product_id) {
-            $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
+            $voucher = $fund->makeProductVoucher($identity, $employee_id, $product_id, $expire_at, $note);
         } else {
-            $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note, $multiplier);
+            $voucher = $fund->makeVoucher($identity, $employee_id, $amount, $expire_at, $note, $multiplier);
         }
 
         if ($bsn = $request->input('bsn', false)) {
@@ -98,9 +99,7 @@ class VouchersController extends Controller
             }
         }
 
-        return new SponsorVoucherResource($voucher->updateModel([
-            'employee_id' => $organization->findEmployee($request->auth_address())->id
-        ]));
+        return new SponsorVoucherResource($voucher);
     }
 
     /**
@@ -144,11 +143,12 @@ class VouchersController extends Controller
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
+            $employee_id = $organization->findEmployee($request->auth_address())->id;
 
             if (!$product_id) {
-                $voucherModel = $fund->makeVoucher($identity, $amount, $expire_at, $note, $multiplier);
+                $voucherModel = $fund->makeVoucher($identity, $employee_id, $amount, $expire_at, $note, $multiplier);
             } else {
-                $voucherModel = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
+                $voucherModel = $fund->makeProductVoucher($identity, $employee_id, $product_id, $expire_at, $note);
             }
 
             if ($bsn = ($voucher['bsn'] ?? false)) {
@@ -167,9 +167,7 @@ class VouchersController extends Controller
                 }
             }
 
-            return $voucherModel->updateModel([
-                'employee_id' => $organization->findEmployee($request->auth_address())->id
-            ]);
+            return $voucherModel;
         }));
     }
 
@@ -248,7 +246,10 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('activateSponsor', [$voucher, $organization]);
 
-        $voucher->activateAsSponsor($organization->findEmployee($request->auth_address()));
+        $voucher->activateAsSponsor(
+            $request->input('note') ?: '',
+            $organization->findEmployee($request->auth_address())
+        );
 
         return new SponsorVoucherResource($voucher);
     }

@@ -140,6 +140,7 @@ class VoucherPolicy
         Voucher $voucher
     ): bool {
         return (strcmp($identity_address, $voucher->identity_address) === 0) &&
+            $voucher->fund->fund_config->allow_blocking_vouchers &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }

@@ -239,6 +239,7 @@ class VoucherResource extends Resource
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
+            'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
         ]);
     }
 

@@ -44,6 +44,7 @@ use RuntimeException;
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
+ * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
  * @property-read \App\Models\FundBackofficeLog|null $fund_backoffice_log
  * @property-read bool $activated
@@ -182,6 +183,15 @@ class Voucher extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     /**
@@ -462,9 +472,8 @@ class Voucher extends Model
     /**
      * @param string|null $email
      */
-    public function assignedVoucherEmail(
-        string $email = null
-    ): void {
+    public function assignedVoucherEmail(string $email = null): void
+    {
         $mailFrom = $this->fund->fund_config->implementation->getEmailFrom();
         $expireDate = format_date_locale($this->expire_at, 'long_date_locale');
 
@@ -496,10 +505,8 @@ class Voucher extends Model
      * @param string $message
      * @param bool $sendCopyToUser
      */
-    public function shareVoucherEmail(
-        string $message,
-        bool $sendCopyToUser = false
-    ): void {
+    public function shareVoucherEmail(string $message, bool $sendCopyToUser = false): void
+    {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -1116,11 +1123,14 @@ class Voucher extends Model
     }
 
     /**
+     * @param string $note
      * @param Employee $employee
      * @return Voucher
      */
-    public function activateAsSponsor(Employee $employee): Voucher
-    {
+    public function activateAsSponsor(
+        string $note,
+        Employee $employee
+    ): Voucher {
         $this->update([
             'state' => self::STATE_ACTIVE,
         ]);
@@ -1128,7 +1138,7 @@ class Voucher extends Model
         $this->log(self::EVENT_ACTIVATED, [
             'voucher' => $this,
             'employee' => $employee,
-        ]);
+        ], compact('note'));
 
         return $this;
     }
