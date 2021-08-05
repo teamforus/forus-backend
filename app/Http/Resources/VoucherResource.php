@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductSubQuery;
+use App\Services\EventLogService\Models\EventLog;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\Resource;
@@ -22,6 +24,7 @@ class VoucherResource extends Resource
      * @var array
      */
     public static $load = [
+        'logs',
         'parent',
         'tokens',
         'token_with_confirmation',
@@ -47,7 +50,8 @@ class VoucherResource extends Resource
         'fund.provider_organizations_approved.offices.organization.logo.presets',
         'fund.logo.presets',
         'fund.organization.logo.presets',
-        'physical_cards'
+        'physical_cards',
+        'last_deactivation_log',
     ];
 
     /**
@@ -76,10 +80,15 @@ class VoucherResource extends Resource
     {
         $voucher = $this->resource;
         $physical_cards = $voucher->physical_cards->first();
+        $deactivationDate = $voucher->deactivated ? $this->getDeactivationDate($voucher): null;
 
         return array_merge($voucher->only([
             'identity_address', 'fund_id', 'returnable', 'transactions_count',
+            'expired', 'deactivated', 'type', 'state', 'state_locale',
         ]), $this->getBaseFields($voucher), [
+            'deactivated_at' => $deactivationDate ? $deactivationDate->format('Y-m-d') : null,
+            'deactivated_at_locale' => format_date_locale($deactivationDate),
+            'history' => $this->getStateHistory($voucher),
             'created_at' => $voucher->created_at_string,
             'created_at_locale' => $voucher->created_at_string_locale,
             'expire_at' => [
@@ -94,11 +103,9 @@ class VoucherResource extends Resource
             'last_transaction_at_locale' => $voucher->last_transaction ? format_date_locale(
                 $voucher->last_transaction->created_at
             ) : null,
-            'expired' => $voucher->expired,
             'address' => $voucher->token_with_confirmation->address,
             'address_printable' => $voucher->token_without_confirmation->address,
             'timestamp' => $voucher->created_at->timestamp,
-            'type' => $voucher->type,
             'fund' => $this->getFundResource($voucher->fund),
             'parent' => $voucher->parent ? array_merge($voucher->parent->only('identity_address', 'fund_id'), [
                 'created_at' => $voucher->parent->created_at_string
@@ -108,6 +115,31 @@ class VoucherResource extends Resource
             'transactions' => $this->getTransactions($voucher),
             'query_product' => $this->queryProduct($voucher, $request->get('product_id')),
         ]);
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return Carbon|null
+     */
+    protected function getDeactivationDate(Voucher $voucher): ?Carbon
+    {
+        return $voucher->last_deactivation_log ? $voucher->last_deactivation_log->created_at : null;
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return Collection|\Illuminate\Support\Collection
+     */
+    protected function getStateHistory(Voucher $voucher)
+    {
+        $logs = $voucher->requesterHistoryLogs()->sortByDesc('created_at');
+
+        return $logs->map(function(EventLog $eventLog) use ($voucher) {
+            return array_merge($eventLog->only('id', 'event', 'event_locale'), [
+                'created_at' => $eventLog->created_at->format('Y-m-d'),
+                'created_at_locale' => format_date_locale($eventLog->created_at),
+            ]);
+        })->values();
     }
 
     /**
@@ -207,6 +239,7 @@ class VoucherResource extends Resource
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationBasicWithPrivateResource($fund->organization),
             'allow_physical_cards' => $fund->fund_config->allow_physical_cards,
+            'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers,
         ]);
     }
 

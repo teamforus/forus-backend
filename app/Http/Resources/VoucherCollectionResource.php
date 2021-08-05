@@ -16,6 +16,7 @@ class VoucherCollectionResource extends VoucherResource
      * @var array
      */
     public static $load = [
+        'logs',
         'parent',
         'token_with_confirmation',
         'token_without_confirmation',
@@ -31,6 +32,7 @@ class VoucherCollectionResource extends VoucherResource
         'fund.logo.presets',
         'fund.organization.logo.presets',
         'physical_cards',
+        'last_deactivation_log',
     ];
 
     /**
@@ -60,6 +62,15 @@ class VoucherCollectionResource extends VoucherResource
         }
 
         return $load;
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return null
+     */
+    protected function getStateHistory(Voucher $voucher)
+    {
+        return null;
     }
 
     /**

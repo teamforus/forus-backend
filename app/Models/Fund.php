@@ -1145,13 +1145,16 @@ class Fund extends Model
 
     /**
      * @param string|null $identity_address
+     * @param int|null $employee_id
      * @param float|null $voucherAmount
      * @param Carbon|null $expire_at
      * @param string|null $note
+     * @param int|null $limit_multiplier
      * @return Voucher|null
      */
     public function makeVoucher(
         string $identity_address = null,
+        ?int $employee_id = null,
         float $voucherAmount = null,
         Carbon $expire_at = null,
         string $note = null,
@@ -1167,7 +1170,7 @@ class Fund extends Model
         if ($this->fund_formulas->count() > 0) {
             $voucher = Voucher::create(compact(
                 'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
-                'returnable', 'limit_multiplier'
+                'returnable', 'limit_multiplier', 'employee_id'
             ));
 
             VoucherCreated::dispatch($voucher);
@@ -1181,6 +1184,7 @@ class Fund extends Model
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,
+                    $employee_id,
                     $fund_formula_product->product->id,
                     $voucherExpireAt,
                     '',
@@ -1195,6 +1199,7 @@ class Fund extends Model
     }
 
     /**
+     * @param int|null $employee_id
      * @param string|null $identity_address
      * @param int|null $product_id
      * @param Carbon|null $expire_at
@@ -1204,6 +1209,7 @@ class Fund extends Model
      */
     public function makeProductVoucher(
         string $identity_address = null,
+        ?int $employee_id = null,
         int $product_id = null,
         Carbon $expire_at = null,
         string $note = null,
@@ -1216,7 +1222,7 @@ class Fund extends Model
 
         $voucher = Voucher::create(compact(
             'identity_address', 'amount', 'expire_at', 'note',
-            'product_id','fund_id', 'returnable'
+            'product_id','fund_id', 'returnable', 'employee_id'
         ));
 
         VoucherCreated::dispatch($voucher, false);
@@ -1777,5 +1783,18 @@ class Fund extends Model
     {
         return $this->organization->backoffice_available &&
             $this->fund_config->backoffice_enabled;
+    }
+
+    /**
+     * @param string $default
+     * @return string|null
+     */
+    public function communicationType($default = 'formal'): string
+    {
+        if ($this->fund_config && $this->fund_config->implementation) {
+            return $this->fund_config->implementation->communicationType();
+        }
+
+        return $default;
     }
 }

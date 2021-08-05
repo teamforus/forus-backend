@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
-use Illuminate\Support\Facades\Gate;
 use App\Models\Organization;
 use App\Models\Voucher;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class AssignVoucherRequest
@@ -13,7 +13,7 @@ use App\Models\Voucher;
  * @property-read Voucher $voucher
  * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
-class ActivateVoucherRequest extends BaseFormRequest
+class DeactivateVoucherRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,18 +22,17 @@ class ActivateVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('activateSponsor', [$this->voucher, $this->organization]);
+        return Gate::allows('deactivateSponsor', [$this->voucher, $this->organization]);
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
+     * @return string[]
      */
     public function rules(): array
     {
         return [
-            'note' => 'nullable|string|min:2|max:140',
+            'notify_by_email'   => 'nullable|bool',
+            'note'              => 'nullable|string|max:140',
         ];
     }
 }

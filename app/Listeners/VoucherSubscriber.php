@@ -6,6 +6,7 @@ use App\Events\Products\ProductReserved;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Events\Vouchers\VoucherDeactivated;
 use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpiring;
 use App\Models\Implementation;
@@ -19,6 +20,7 @@ use App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAddedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedSubsidyNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherDeactivatedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
@@ -80,6 +82,7 @@ class VoucherSubscriber
                 'product' => $product,
                 'provider' => $product->organization,
                 'sponsor' => $voucher->fund->organization,
+                'employee' => $voucher->employee,
             ]);
 
             if ($voucherCreated->shouldNotifyRequesterAdded()) {
@@ -89,21 +92,24 @@ class VoucherSubscriber
             if ($voucherCreated->shouldNotifyRequesterReserved()) {
                 IdentityProductVoucherReservedNotification::send($event);
             }
-        } else if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
-            $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
-                $voucher->identity_address
-            ));
-
+        } else {
             $event = $voucher->log(Voucher::EVENT_CREATED_BUDGET, [
                 'fund' => $voucher->fund,
                 'voucher' => $voucher,
                 'sponsor' => $voucher->fund->organization,
+                'employee' => $voucher->employee,
             ]);
 
-            if ($voucher->fund->isTypeSubsidy()) {
-                IdentityVoucherAddedSubsidyNotification::send($event);
-            } else {
-                IdentityVoucherAddedBudgetNotification::send($event);
+            if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
+                $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
+                    $voucher->identity_address
+                ));
+
+                if ($voucher->fund->isTypeSubsidy()) {
+                    IdentityVoucherAddedSubsidyNotification::send($event);
+                } else {
+                    IdentityVoucherAddedBudgetNotification::send($event);
+                }
             }
         }
     }
@@ -112,9 +118,8 @@ class VoucherSubscriber
      * @param VoucherAssigned $voucherAssigned
      * @noinspection PhpUnused
      */
-    public function onVoucherAssigned(
-        VoucherAssigned $voucherAssigned
-    ) :void {
+    public function onVoucherAssigned(VoucherAssigned $voucherAssigned): void
+    {
         $voucher = $voucherAssigned->getVoucher();
         $product = $voucher->product;
 
@@ -160,9 +165,8 @@ class VoucherSubscriber
      * @param ProductVoucherShared $voucherShared
      * @noinspection PhpUnused
      */
-    public function onProductVoucherShared(
-        ProductVoucherShared $voucherShared
-    ): void {
+    public function onProductVoucherShared(ProductVoucherShared $voucherShared): void
+    {
         $voucher = $voucherShared->getVoucher();
 
         $eventLog = $voucher->log(Voucher::EVENT_SHARED, [
@@ -181,9 +185,8 @@ class VoucherSubscriber
      * @param VoucherExpiring $voucherExpired
      * @noinspection PhpUnused
      */
-    public function onVoucherExpiring(
-        VoucherExpiring $voucherExpired
-    ): void {
+    public function onVoucherExpiring(VoucherExpiring $voucherExpired): void
+    {
         $voucher = $voucherExpired->getVoucher();
 
         if ($voucher->product) {
@@ -210,9 +213,8 @@ class VoucherSubscriber
      * @param VoucherExpired $voucherExpired
      * @noinspection PhpUnused
      */
-    public function onVoucherExpired(
-        VoucherExpired $voucherExpired
-    ): void {
+    public function onVoucherExpired(VoucherExpired $voucherExpired): void
+    {
         $voucher = $voucherExpired->getVoucher();
 
         if ($voucher->product) {
@@ -231,6 +233,26 @@ class VoucherSubscriber
 
             IdentityVoucherExpiredNotification::send($logEvent);
         }
+    }
+
+    /**
+     * @param VoucherDeactivated $voucherExpired
+     * @noinspection PhpUnused
+     */
+    public function onVoucherDeactivated(VoucherDeactivated $voucherExpired): void
+    {
+        $employee = $voucherExpired->getEmployee();
+        $voucher = $voucherExpired->getVoucher();
+        $sponsor = $voucher->fund->organization;
+        $fund = $voucher->fund;
+
+        $logData = compact('fund', 'voucher', 'employee', 'sponsor');
+        $logModel = $voucher->log($voucher::EVENT_DEACTIVATED, $logData, [
+            'note' => $voucherExpired->getNote(),
+            'notify_by_email' => $voucherExpired->shouldNotifyByEmail(),
+        ]);
+
+        IdentityVoucherDeactivatedNotification::send($logModel);
     }
 
     /**
@@ -263,6 +285,11 @@ class VoucherSubscriber
         $events->listen(
             VoucherExpired::class,
             '\App\Listeners\VoucherSubscriber@onVoucherExpired'
+        );
+
+        $events->listen(
+            VoucherDeactivated::class,
+            '\App\Listeners\VoucherSubscriber@onVoucherDeactivated'
         );
     }
 }
