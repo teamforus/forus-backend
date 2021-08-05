@@ -168,7 +168,7 @@ class DigIdSession extends Model
         $implementationApiUrl = $this->implementation->digid_forus_api_url;
         $apiHost = $implementationApiUrl ?: url('/');
 
-        return sprintf('%s/%s', rtrim($apiHost, '/'), ltrim('/', $uri));
+        return sprintf('%s/%s', rtrim($apiHost, '/'), ltrim($uri, '/'));
     }
 
     /**
