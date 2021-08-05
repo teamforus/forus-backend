@@ -72,6 +72,28 @@ class FundPolicy
      * @param Fund $fund
      * @param Organization $organization
      * @return bool
+     */
+    public function archive($identity_address, Fund $fund, Organization $organization): bool
+    {
+        return $fund->state == Fund::STATE_CLOSED && $this->update($identity_address, $fund, $organization);
+    }
+
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     */
+    public function unarchive($identity_address, Fund $fund, Organization $organization): bool
+    {
+        return $fund->trashed() && $this->update($identity_address, $fund, $organization);
+    }
+
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
      * @noinspection PhpUnused
      */
     public function updateBackoffice($identity_address, Fund $fund, Organization $organization): bool

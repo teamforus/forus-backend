@@ -157,6 +157,10 @@ class RouteServiceProvider extends ServiceProvider
             return Product::withTrashed()->findOrFail($product_id);
         });
 
+        $router->bind('fund_with_trashed', static function ($fund_id) {
+            return Fund::withTrashed()->findOrFail($fund_id);
+        });
+
         $router->bind('fund_request', static function ($id) {
             return FundRequest::findOrFail($id);
         });

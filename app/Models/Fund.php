@@ -37,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\Fund
@@ -56,6 +57,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property \Illuminate\Support\Carbon $end_date
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property int|null $default_validator_employee_id
  * @property bool $auto_requests_validation
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
@@ -156,11 +158,13 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @method static Builder|Fund whereState($value)
  * @method static Builder|Fund whereType($value)
  * @method static Builder|Fund whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|Fund withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Fund withoutTrashed()
  * @mixin \Eloquent
  */
 class Fund extends Model
 {
-    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
+    use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription, SoftDeletes;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_PROVIDER_APPLIED = 'provider_applied';
@@ -823,6 +827,10 @@ class Fund extends Model
     public static function search(array $options, Builder $query = null): Builder
     {
         $query = $query ?: self::query();
+
+        if (array_get($options, 'with_archived')) {
+            $query = $query->withTrashed();
+        }
 
         if ($tag = array_get($options, 'tag')) {
             $query->whereHas('tags', static function(Builder $query) use ($tag) {

@@ -184,6 +184,14 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/funds/{fund}/archive',
+        "Api\Platform\Organizations\FundsController@archive");
+
+    $router->post(
+        'organizations/{organization}/funds/{fund_with_trashed}/unarchive',
+        "Api\Platform\Organizations\FundsController@unarchive");
+
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [

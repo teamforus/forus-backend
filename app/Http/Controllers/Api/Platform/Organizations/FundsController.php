@@ -47,7 +47,8 @@ class FundsController extends Controller
         $this->authorize('viewAny', [Fund::class, $organization]);
 
         $query = Fund::search($request->only([
-            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+            'with_archived', 'tag', 'organization_id', 'fund_id', 'q',
+            'implementation_id', 'order_by', 'order_by_dir'
         ]), $organization->funds()->getQuery());
 
         if (!$request->isAuthenticated()) {
@@ -408,6 +409,40 @@ class FundsController extends Controller
 
         $fund->fund_formula_products()->delete();
         $fund->delete();
+
+        return response()->json([]);
+    }
+
+    /**
+     *
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function archive(Organization $organization, Fund $fund): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('archive', [$fund, $organization]);
+
+        $fund->delete();
+
+        return response()->json([]);
+    }
+
+    /**
+     *
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function unarchive(Organization $organization, Fund $fund): JsonResponse
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('unarchive', [$fund, $organization]);
+
+        $fund->restore();
 
         return response()->json([]);
     }
