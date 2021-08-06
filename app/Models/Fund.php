@@ -489,10 +489,6 @@ class Fund extends Model
      */
     public function getTransactionCosts(): float
     {
-        if (!$this->fund_config || $this->fund_config->subtract_transaction_costs) {
-            return 0.0;
-        }
-
         return $this->voucher_transactions()
                 ->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
     }
