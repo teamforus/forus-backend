@@ -19,13 +19,12 @@
 
         <div style="height: 50%">
             <img width="400" style="border: 1px solid silver;" alt="qr-code" src="data:image/png;base64, {!! base64_encode($qr_code) !!} "/>
-
-            @if ($voucherData->getVoucher()->fund->isTypeBudget())
                 <div style="position: absolute; bottom: 0; left: 0;">
-                    <span>{{ $voucherData->getName() }} - </span>
-                    <span>{{ $voucherData->getVoucher()->amount }}€</span>
+                    <span>{{ $voucherData->getName() }}</span>
+                @if ($voucherData->getVoucher()->fund->isTypeBudget())
+                    <span> - {{ $voucherData->getVoucher()->amount }}€</span>
+                @endif
                 </div>
-            @endif
         </div>
     @endforeach
 
