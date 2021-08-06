@@ -486,6 +486,7 @@ class Implementation extends Model
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
+                'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
                 'communication_type' => $implementation->communicationType(),
                 'settings' => array_merge($implementation->only([
                     'title', 'description', 'description_alignment', 'description_html',

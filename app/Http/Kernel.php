@@ -4,6 +4,8 @@ namespace App\Http;
 
 use App\Http\Middleware\ApiAuthMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
+use App\Http\Middleware\DomainDigIdMiddleware;
+use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\EncryptCookies;
 use App\Services\Forus\Session\Middleware\ForusSessionMiddleware;
 use App\Http\Middleware\ImplementationKeyMiddleware;
@@ -17,6 +19,10 @@ use App\Http\Middleware\VerifyCsrfToken;
 use Fruitcake\Cors\HandleCors;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
+/**
+ * Class Kernel
+ * @package App\Http
+ */
 class Kernel extends HttpKernel
 {
     /**
@@ -51,12 +57,14 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'domain',
         ],
 
         'api' => [
             // 'throttle:120D,1',
             'bindings',
-            LocaleMiddleware::class,
+            'locale',
+            'domain',
         ],
     ];
 
@@ -78,5 +86,8 @@ class Kernel extends HttpKernel
         'forus_session' => ForusSessionMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,
+        'locale' => LocaleMiddleware::class,
+        'domain' => DomainMiddleware::class,
+        'domain.digid' => DomainDigIdMiddleware::class,
     ];
 }
