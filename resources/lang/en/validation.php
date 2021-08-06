@@ -174,6 +174,7 @@ return [
     'voucher' => [
         'expired' => 'This voucher is expired.',
         'pending' => 'This voucher is pending.',
+        'deactivated' => 'The QR code is no longer valid since :deactivation_date.',
         'product_voucher_used' => 'This product voucher is already used.',
         'provider_not_applied' => 'You can not scan this voucher! You are not applied for this fund.',
         'provider_pending' => 'You can not scan this voucher! Your application for this fund is still pending.',

@@ -3,11 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Rules\MediaUidRule;
 
 /**
  * Class StoreProductRequest
+ * @property Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Products
  */
 class StoreProductRequest extends BaseFormRequest

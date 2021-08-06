@@ -49,6 +49,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
+ * @property string|null $digid_forus_api_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Media|null $banner
@@ -77,6 +78,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDigidAppId($value)
  * @method static Builder|Implementation whereDigidEnabled($value)
  * @method static Builder|Implementation whereDigidEnv($value)
+ * @method static Builder|Implementation whereDigidForusApiUrl($value)
  * @method static Builder|Implementation whereDigidRequired($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
@@ -449,6 +451,14 @@ class Implementation extends Model
     }
 
     /**
+     * @return string
+     */
+    public function communicationType(): string
+    {
+        return $this->informal_communication ? 'informal' : 'formal';
+    }
+
+    /**
      * @param $value
      * @return array|\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed|void
      */
@@ -476,7 +486,7 @@ class Implementation extends Model
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
-                'communication_type' => ($implementation->informal_communication ?? false ? 'informal' : 'formal'),
+                'communication_type' => $implementation->communicationType(),
                 'settings' => array_merge($implementation->only([
                     'title', 'description', 'description_alignment', 'description_html',
                     'overlay_enabled', 'overlay_type',
@@ -699,9 +709,9 @@ class Implementation extends Model
     }
 
     /**
-     * @return string
+     * @return ?string
      */
-    private function getBannerTextColor(): string
+    private function getBannerTextColor(): ?string
     {
         if ($this->header_text_color == 'auto') {
             return $this->banner ? ($this->banner->is_dark ? 'bright' : 'dark') : 'dark';

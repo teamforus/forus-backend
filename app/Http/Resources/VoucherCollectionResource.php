@@ -15,6 +15,7 @@ class VoucherCollectionResource extends VoucherResource
      * @var array
      */
     public static $load = [
+        'logs',
         'parent',
         'token_with_confirmation',
         'token_without_confirmation',
@@ -33,6 +34,7 @@ class VoucherCollectionResource extends VoucherResource
         'fund.organization.logo.presets',
         'fund.organization.business_type.translations',
         'physical_cards',
+        'last_deactivation_log',
     ];
 
     /**
