@@ -123,6 +123,10 @@ class VoucherQuery
             $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($query) {
                 return $builder->where('bsn', 'LIKE', "%$query%");
             });
+
+            $builder->orWhereHas('physical_cards', function (Builder $builder) use ($query) {
+                return $builder->where('code', 'LIKE', "%$query%");
+            });
         });
     }
 

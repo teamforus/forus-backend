@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
+ * @property bool $allow_blocking_vouchers
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property bool $backoffice_enabled
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowBlockingVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
@@ -102,6 +104,7 @@ class FundConfig extends Model
         'allow_physical_cards' => 'boolean',
         'allow_direct_requests' => 'boolean',
         'limit_generator_amount' => 'boolean',
+        'allow_blocking_vouchers' => 'boolean',
     ];
 
     /**
