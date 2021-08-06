@@ -27,9 +27,12 @@ class VoucherTransactionResource extends Resource
         ]), [
             'created_at' => $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : null,
             'updated_at' => $transaction->updated_at ? $transaction->updated_at->format('Y-m-d H:i:s') : null,
+            'transfer' => $transaction->transfer_at ? $transaction->transfer_at->format('Y-m-d H:i:s') : null,
             'created_at_locale' => format_datetime_locale($transaction->created_at),
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
-
+            'transfer_at_locale' => format_datetime_locale($transaction->transfer_at),
+            'cancelable' => $transaction->isCancelable(),
+            'transaction_in' => $transaction->daysBeforeTransaction(),
             'amount' => currency_format($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
             "organization" => array_merge($transaction->provider->only([

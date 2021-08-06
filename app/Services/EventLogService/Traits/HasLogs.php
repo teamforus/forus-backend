@@ -15,21 +15,18 @@ trait HasLogs
 {
     /**
      * @param string $event
-     * @param $models
+     * @param array $models
      * @param array $raw_meta
-     * @return EventLog
+     * @return EventLog|mixed
      */
-    public function log(
-        string $event,
-        array $models = [],
-        array $raw_meta = []
-    ): EventLog {
+    public function log(string $event, array $models = [], array $raw_meta = []): EventLog
+    {
+        $logService = resolve(IEventLogService::class);
+
         $meta = array_reduce(array_keys(array_filter($models, static function($model) {
             return $model !== null;
-        })), static function($carry, $key) use ($models) {
-            return array_merge($carry, resolve(IEventLogService::class)->modelToMeta(
-                $key, $models[$key]
-            ));
+        })), static function($carry, $key) use ($logService, $models) {
+            return array_merge($carry, $logService->modelToMeta($key, $models[$key]));
         }, []);
 
         $data = array_merge([
@@ -37,14 +34,11 @@ trait HasLogs
             'implementation_key' =>  implementation_key(),
         ], $meta, $raw_meta);
 
-        /** @var EventLog $eventLog */
-        $eventLog = $this->logs()->create([
+        return $this->logs()->create([
             'event' => $event,
             'data' => $data,
             'identity_address' => auth_address()
         ]);
-
-        return $eventLog;
     }
 
     /**

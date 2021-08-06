@@ -3,9 +3,10 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
-use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\ProductSubQuery;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\Resource;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -41,11 +42,17 @@ class ProductResource extends Resource
     public function toArray($request): array
     {
         $product = $this->resource;
+        $simplified = $request->has('simplified') && $request->input('simplified');
 
         return array_merge($product->only([
             'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
-            'organization_id',
-        ]), [
+            'organization_id', 'reservation_enabled', 'reservation_policy',
+        ]), $simplified ? [
+            'photo' => new MediaResource($product->photo),
+            'organization' => new OrganizationBasicResource($product->organization),
+            'price' => is_null($product->price) ? null : currency_format($product->price),
+            'price_locale' => $product->price_locale,
+        ] : [
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
 
@@ -65,7 +72,7 @@ class ProductResource extends Resource
             'expired' => $product->expired,
             'deleted_at' => $product->deleted_at ? $product->deleted_at->format('Y-m-d') : null,
             'deleted_at_locale' => format_date_locale($product->deleted_at ?? null),
-            'deleted' => !is_null($product->deleted_at),
+            'deleted' => $product->trashed(),
             'funds' => $product->trashed() ? [] : $this->getProductFunds($product),
             'price_min' => currency_format($this->getProductSubsidyPrice($product, 'max')),
             'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
@@ -88,12 +95,11 @@ class ProductResource extends Resource
      * @return Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
      */
     private function getProductFunds(Product $product) {
-        return FundQuery::whereProductsAreApprovedAndActiveFilter($this->fundsQuery(), $product)->with([
-            'organization',
-        ])->get()->map(function(Fund $fund) use ($product) {
-            $fundProviderProduct = $fund->isTypeSubsidy() ? $product->getSubsidyDetailsForFund($fund) : null;
+        $fundsQuery = FundQuery::whereProductsAreApprovedAndActiveFilter($this->fundsQuery(), $product);
+        $fundsQuery->with('organization');
 
-            return array_merge([
+        return $fundsQuery->get()->map(function(Fund $fund) use ($product) {
+            $data = [
                 'id' => $fund->id,
                 'name' => $fund->name,
                 'logo' => new MediaResource($fund->logo),
@@ -101,30 +107,27 @@ class ProductResource extends Resource
                 'organization' => $fund->organization->only('id', 'name'),
                 'end_at' => $fund->end_date ? $fund->end_date->format('Y-m-d') : null,
                 'end_at_locale' => format_date_locale($fund->end_date ?? null),
-            ], $fund->isTypeSubsidy() && $fundProviderProduct ? [
-                'limit_total' => $fundProviderProduct->limit_total,
-                'limit_total_unlimited' => $fundProviderProduct->limit_total_unlimited,
+                'reservations_enabled' => $product->reservationsEnabled($fund),
+            ];
+
+            if (!$fund->isTypeSubsidy()) {
+                return $data;
+            }
+
+            $fundProviderProduct = $product->getSubsidyDetailsForFund($fund);
+            $productData = ProductSubQuery::appendReservationStats([
+                'identity_address' => auth_address(),
+                'fund_id' => $fund->id
+            ], Product::whereId($product->id))->first()->only([
+                'limit_total', 'limit_per_identity', 'limit_available'
+            ]);
+
+            return array_merge($data, $productData, [
+                'price' => $fundProviderProduct->user_price,
+                'price_locale' => $fundProviderProduct->user_price_locale,
                 'limit_per_identity' => $fundProviderProduct->limit_per_identity,
-                'limit_available' => $this->getLimitAvailable($fundProviderProduct),
-                'price' => currency_format($product->price - $fundProviderProduct->amount),
-            ] : []);
+            ]);
         })->values();
-    }
-
-    /**
-     * @param FundProviderProduct $providerProduct
-     * @return int|null
-     */
-    private function getLimitAvailable(FundProviderProduct $providerProduct): ?int
-    {
-        if ($authAddress = auth_address()) {
-            return $providerProduct->stockAvailableForIdentity($authAddress);
-        }
-
-        return !$providerProduct->limit_total_unlimited ? min(
-            $providerProduct->limit_total,
-            $providerProduct->limit_per_identity
-        ) : $providerProduct->limit_per_identity;
     }
 
     /**
@@ -132,12 +135,13 @@ class ProductResource extends Resource
      * @param string $type
      * @return float
      */
-    private function getProductSubsidyPrice(Product $product, string $type): float {
+    private function getProductSubsidyPrice(Product $product, string $type): float
+    {
         return max($product->price - $product->fund_provider_products()->where([
             'product_id' => $product->id,
         ])->whereHas('fund_provider.fund', function(Builder $builder) {
             $builder->where('funds.type', Fund::TYPE_SUBSIDIES);
-            $builder->whereIn('funds.id', $this->fundsQuery()->pluck('id'));
+            $builder->whereIn('funds.id', $this->fundsQuery()->select('funds.id'));
         })->$type('amount'), 0);
     }
 }

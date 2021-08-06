@@ -26,7 +26,8 @@ class OrganizationResource extends Resource
      * @param null $request
      * @return array
      */
-    public static function load($request = null): array {
+    public static function load($request = null): array
+    {
         $load = [];
 
         self::isRequested('logo', $request) && array_push($load, 'logo');
@@ -36,7 +37,8 @@ class OrganizationResource extends Resource
         return $load;
     }
 
-    public static function isRequested(string $key, $request = null) {
+    public static function isRequested(string $key, $request = null): bool
+    {
         return api_dependency_requested($key, $request);
     }
 
@@ -75,7 +77,9 @@ class OrganizationResource extends Resource
             'email_public', 'phone_public', 'website_public',
             'is_sponsor', 'is_provider', 'is_validator',
             'validator_auto_accept_funds', 'description', 'description_html',
-            'manage_provider_products',
+            'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
+            'reservations_budget_enabled', 'reservations_subsidy_enabled',
+            'allow_batch_reservations',
         ]), $privateData,
             $ownerData, [
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -13,12 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $voucher_id
  * @property string $address
  * @property string $house
- * @property string $house_addition
+ * @property string|null $house_addition
  * @property string $postcode
  * @property string $city
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Voucher $voucher
+ * @property-read \App\Models\Voucher $voucher
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest query()

@@ -11,6 +11,7 @@ use App\Scopes\Builders\TrashedQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -28,12 +29,15 @@ use Illuminate\Http\Request;
  * @property int $product_category_id
  * @property string $name
  * @property string $description
+ * @property string|null $description_text
  * @property string $price
  * @property int $total_amount
  * @property bool $unlimited_stock
  * @property string $price_type
  * @property string|null $price_discount
  * @property int $show_on_webshop
+ * @property bool $reservation_enabled
+ * @property string $reservation_policy
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -62,6 +66,8 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\ProductCategory $product_category
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundProviderProductExclusion[] $product_exclusions
  * @property-read int|null $product_exclusions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ProductReservation[] $product_reservations
+ * @property-read int|null $product_reservations_count
  * @property-read \App\Models\Organization|null $sponsor_organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
@@ -76,6 +82,7 @@ use Illuminate\Http\Request;
  * @method static Builder|Product whereCreatedAt($value)
  * @method static Builder|Product whereDeletedAt($value)
  * @method static Builder|Product whereDescription($value)
+ * @method static Builder|Product whereDescriptionText($value)
  * @method static Builder|Product whereExpireAt($value)
  * @method static Builder|Product whereId($value)
  * @method static Builder|Product whereName($value)
@@ -84,6 +91,8 @@ use Illuminate\Http\Request;
  * @method static Builder|Product wherePriceDiscount($value)
  * @method static Builder|Product wherePriceType($value)
  * @method static Builder|Product whereProductCategoryId($value)
+ * @method static Builder|Product whereReservationEnabled($value)
+ * @method static Builder|Product whereReservationPolicy($value)
  * @method static Builder|Product whereShowOnWebshop($value)
  * @method static Builder|Product whereSoldOut($value)
  * @method static Builder|Product whereSponsorOrganizationId($value)
@@ -96,7 +105,7 @@ use Illuminate\Http\Request;
  */
 class Product extends Model
 {
-    use HasMedia, SoftDeletes, HasLogs;
+    use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_SOLD_OUT = 'sold_out';
@@ -111,13 +120,21 @@ class Product extends Model
     public const PRICE_TYPE_DISCOUNT_FIXED = 'discount_fixed';
     public const PRICE_TYPE_DISCOUNT_PERCENTAGE = 'discount_percentage';
 
-    /** @noinspection PhpUnused */
+    public const RESERVATION_POLICY_ACCEPT = 'accept';
+    public const RESERVATION_POLICY_REVIEW = 'review';
+    public const RESERVATION_POLICY_GLOBAL = 'global';
+
+    public const RESERVATION_POLICIES = [
+        self::RESERVATION_POLICY_ACCEPT,
+        self::RESERVATION_POLICY_REVIEW,
+        self::RESERVATION_POLICY_GLOBAL,
+    ];
+
     public const PRICE_DISCOUNT_TYPES = [
         self::PRICE_TYPE_DISCOUNT_FIXED,
         self::PRICE_TYPE_DISCOUNT_PERCENTAGE,
     ];
 
-    /** @noinspection PhpUnused */
     public const PRICE_TYPES = [
         self::PRICE_TYPE_FREE,
         self::PRICE_TYPE_REGULAR,
@@ -131,9 +148,10 @@ class Product extends Model
      * @var array
      */
     protected $fillable = [
-        'name', 'description', 'organization_id', 'product_category_id',
+        'name', 'description', 'description_text', 'organization_id', 'product_category_id',
         'price', 'total_amount', 'expire_at', 'sold_out',
         'unlimited_stock', 'price_type', 'price_discount', 'sponsor_organization_id',
+        'reservation_enabled', 'reservation_policy',
     ];
 
     /**
@@ -147,59 +165,79 @@ class Product extends Model
 
     protected $casts = [
         'unlimited_stock' => 'boolean',
+        'reservation_enabled' => 'boolean',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization(): BelongsTo {
+    public function organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function sponsor_organization(): BelongsTo {
+    public function sponsor_organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class, 'sponsor_organization_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function vouchers(): HasMany {
+    public function vouchers(): HasMany
+    {
         return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function product_reservations(): HasMany
+    {
+        return $this->hasMany(ProductReservation::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function vouchers_reserved(): HasMany {
-        return $this->hasMany(Voucher::class)->whereDoesntHave('transactions');
+    public function vouchers_reserved(): HasMany
+    {
+        return $this->hasMany(Voucher::class)
+            ->whereHas('product_reservations', function(Builder $builder) {
+                $builder->whereNotIn('state', [
+                    ProductReservation::STATE_REJECTED,
+                    ProductReservation::STATE_CANCELED
+                ]);
+            })
+            ->whereDoesntHave('transactions');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function voucher_transactions(): HasMany {
+    public function voucher_transactions(): HasMany
+    {
         return $this->hasMany(VoucherTransaction::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function product_category(): BelongsTo {
+    public function product_category(): BelongsTo
+    {
         return $this->belongsTo(ProductCategory::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function funds(): HasManyThrough {
-        return $this->hasManyThrough(
-            Fund::class,
-            FundProduct::class
-        );
+    public function funds(): HasManyThrough
+    {
+        return $this->hasManyThrough(Fund::class, FundProduct::class);
     }
 
     /**
@@ -259,7 +297,7 @@ class Product extends Model
      * @return bool
      */
     public function getExpiredAttribute(): bool {
-        return $this->expire_at ? $this->expire_at->isPast() : false;
+        return $this->expire_at && $this->expire_at->isPast();
     }
 
     /**
@@ -268,7 +306,7 @@ class Product extends Model
      * @return int
      */
     public function countReserved(): int {
-        return $this->vouchers()->doesntHave('transactions')->count();
+        return $this->vouchers_reserved()->count();
     }
 
     /**
@@ -296,6 +334,7 @@ class Product extends Model
     public function updateSoldOutState(): void {
         if (!$this->unlimited_stock) {
             $totalProducts = $this->countReserved() + $this->countSold();
+
             $sold_out = $totalProducts >= $this->total_amount;
             $this->update(compact('sold_out'));
 
@@ -316,9 +355,7 @@ class Product extends Model
         $query = ProductQuery::inStockAndActiveFilter($query);
 
         // only approved by at least one sponsor
-        $query = ProductQuery::approvedForFundsFilter($query, $activeFunds);
-
-        return $query;
+        return ProductQuery::approvedForFundsFilter($query, $activeFunds);
     }
 
     /**
@@ -336,48 +373,47 @@ class Product extends Model
     }
 
     /**
-     * @param Request $request
-     * @return Builder
+     * @param array $options
+     * @param Builder|null $builder
+     * @return Builder|SoftDeletes
      */
-    public static function search(Request $request): Builder
+    public static function search(array $options, Builder $builder = null): Builder
     {
-        $query = self::searchQuery();
-        $fund_type = $request->input('fund_type');
+        $query = $builder ?: self::searchQuery();
 
-        if ($fund_type) {
+        if ($fund_type = array_get($options, 'fund_type')) {
             $query = self::filterFundType($query, $fund_type);
         }
 
-        if ($category_id = $request->input('product_category_id')) {
-            $query = ProductQuery::productCategoriesFilter($query, $category_id);
+        if ($product_category_id = array_get($options, 'product_category_id')) {
+            $query = ProductQuery::productCategoriesFilter($query, $product_category_id);
         }
 
-        if ($request->has('fund_id') && $fund_id = $request->input('fund_id')) {
+        if ($fund_id = array_get($options, 'fund_id')) {
             $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
         }
 
-        if ($request->has('price_type')) {
-            $query = $query->where('price_type', $request->input('price_type'));
+        if ($price_type = array_get($options, 'price_type')) {
+            $query = $query->where('price_type', $price_type);
         }
 
-        if ($request->has('unlimited_stock') &&
-            $unlimited_stock = filter_bool($request->input('unlimited_stock'))) {
-            return ProductQuery::unlimitedStockFilter($query, $unlimited_stock);
+        if (filter_bool(array_get($options, 'unlimited_stock'))) {
+            return ProductQuery::unlimitedStockFilter($query, array_get($options, 'unlimited_stock'));
         }
 
-        if ($request->has('organization_id')) {
-            $query = $query->where('organization_id', $request->input('organization_id'));
+        if ($organization_id = array_get($options, 'organization_id')) {
+            $query = $query->where('organization_id', $organization_id);
         }
 
         $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
-        if ($request->has('q') && !empty($q = $request->input('q'))) {
-            return ProductQuery::queryDeepFilter($query, $q);
+        if ($q = array_get($options, 'q')) {
+            ProductQuery::queryDeepFilter($query, $q);
         }
 
         return $query->orderBy(
-            $request->input('order_by', 'created_at'),
-            $request->input('order_by_dir', 'desc')
+            array_get($options, 'order_by', 'created_at'),
+            array_get($options, 'order_by_dir', 'desc')
         )->orderBy('price_type')->orderBy('price_discount')->orderBy('created_at', 'desc');
     }
 
@@ -447,14 +483,6 @@ class Product extends Model
      * @return string
      * @noinspection PhpUnused
      */
-    public function getDescriptionHtmlAttribute(): string {
-        return resolve('markdown')->convertToHtml(e($this->description));
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
     public function getPriceLocaleAttribute(): string
     {
         switch ($this->price_type) {
@@ -492,22 +520,14 @@ class Product extends Model
 
     /**
      * @param Fund $fund
-     * @return FundProviderProduct|null
+     * @return FundProviderProduct|null|mixed
      */
-    public function getSubsidyDetailsForFund(
-        Fund $fund
-    ): ?FundProviderProduct {
-        /** @var FundProviderProduct $fundProviderProduct */
-        $fundProviderProduct = $this->fund_provider_products()->whereHas(
-            'fund_provider.fund',
-            static function(Builder $builder) use ($fund) {
-            $builder->where([
-                'fund_id' => $fund->id,
-                'type' => $fund::TYPE_SUBSIDIES,
-            ]);
+    public function getSubsidyDetailsForFund(Fund $fund): ?FundProviderProduct
+    {
+        return $this->fund_provider_products()->whereHas('fund_provider.fund', function(Builder $builder) use ($fund) {
+            $builder->where('funds.id', $fund->id);
+            $builder->where('funds.type', $fund::TYPE_SUBSIDIES);
         })->first();
-
-        return $fundProviderProduct;
     }
 
     /**
@@ -630,6 +650,7 @@ class Product extends Model
         /** @var Product $product */
         $product = $organization->products()->create(array_merge($request->only([
             'name', 'description', 'price', 'product_category_id', 'expire_at',
+            'reservation_enabled', 'reservation_policy',
         ]), [
             'total_amount' => $unlimited_stock ? 0 : $total_amount,
             'unlimited_stock' => $unlimited_stock
@@ -661,8 +682,37 @@ class Product extends Model
 
         return $this->updateModel(array_merge($request->only([
             'name', 'description', 'sold_amount', 'product_category_id', 'expire_at',
+            'reservation_enabled', 'reservation_policy',
         ]), [
             'total_amount' => $this->unlimited_stock ? 0 : $total_amount,
         ], compact('price', 'price_type', 'price_discount')));
+    }
+
+    /**
+     * @param Fund $fund
+     * @return bool
+     */
+    public function reservationsEnabled(Fund $fund): bool
+    {
+        return $this->reservation_enabled && (
+            ($fund->isTypeSubsidy() && $this->organization->reservations_subsidy_enabled) ||
+            ($fund->isTypeBudget() && $this->organization->reservations_budget_enabled));
+    }
+
+    /**
+     * @param Fund $fund
+     * @return bool
+     */
+    public function autoAcceptsReservations(Fund $fund): bool
+    {
+        $reservationsEnabled = $this->reservationsEnabled($fund);
+
+        if ($reservationsEnabled && $this->reservation_policy === self::RESERVATION_POLICY_ACCEPT) {
+            return true;
+        }
+
+        return $reservationsEnabled &&
+            ($this->reservation_policy === self::RESERVATION_POLICY_GLOBAL) &&
+            $this->organization->reservations_auto_accept;
     }
 }

@@ -31,10 +31,9 @@ class FundsController extends Controller
         $this->authorize('showFunds', [$product, $organization]);
 
         /** @var Fund[] $data */
-        $query = FundQuery::whereHasProviderFilter(
-            Fund::search($request, Fund::query()),
-            $organization->id
-        );
+        $query = FundQuery::whereHasProviderFilter(Fund::search($request->only([
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+        ]), Fund::query()), $organization->id);
 
         if ($product->sponsor_organization) {
             $query->where([

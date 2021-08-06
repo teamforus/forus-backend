@@ -138,28 +138,16 @@ class NotificationService
             return false;
         }
 
-        /** @var NotificationToken[] $notificationTokens */
-        $notificationTokens = NotificationToken::where([
-            'identity_address' => $identity_address
-        ])->get();
+        $notificationTokens = NotificationToken::whereIdentityAddress($identity_address)->get();
 
         foreach ($notificationTokens as $notificationToken) {
-            if (!config(sprintf(
-                'broadcasting.connections.%s',
-                $notificationToken->type
-            ))) {
+            if (!config(sprintf('broadcasting.connections.%s', $notificationToken->type))) {
                 continue;
             }
 
-            $notification = $notificationToken->makeBasicNotification(
-                $title, $body
-            );
-
-            if ($notification) {
-                Notification::route(
-                    $notificationToken->type,
-                    $notificationToken->token
-                )->notify($notification);
+            if ($notification = $notificationToken->makeBasicNotification($title, $body)) {
+                Notification::route($notificationToken->type, $notificationToken->token)
+                    ->notify($notification);
             }
         }
 
@@ -171,10 +159,8 @@ class NotificationService
      * @param Mailable $param
      * @return bool
      */
-    public function sendMailNotification(
-        string $email,
-        Mailable $param
-    ): bool {
+    public function sendMailNotification(string $email, Mailable $param): bool
+    {
         return $this->sendMail($email, $param);
     }
 

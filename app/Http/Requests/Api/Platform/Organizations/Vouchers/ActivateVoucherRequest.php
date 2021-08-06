@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Support\Facades\Gate;
 use App\Models\Organization;
 use App\Models\Voucher;
 
@@ -21,8 +22,18 @@ class ActivateVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->auth_address(), 'manage_vouchers') &&
-            $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->is_granted && !$this->voucher->expired;
+        return Gate::allows('activateSponsor', [$this->voucher, $this->organization]);
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            'note' => 'nullable|string|min:2|max:140',
+        ];
     }
 }

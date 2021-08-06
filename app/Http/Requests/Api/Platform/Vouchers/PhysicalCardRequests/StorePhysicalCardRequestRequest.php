@@ -2,9 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class StorePhysicalCardRequestRequest extends FormRequest
+/**
+ * Class StorePhysicalCardRequestRequest
+ * @package App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests
+ */
+class StorePhysicalCardRequestRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +28,8 @@ class StorePhysicalCardRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'address' => 'required|string|between:5,100',
-            'house' => 'required|string|between:1,20',
+            'address' => 'required|string|between:3,100',
+            'house' => 'required|numeric|between:1,20000',
             'house_addition' => 'nullable|string|between:0,20',
             'postcode' => 'required|string|between:0,20',
             'city' => 'required|string|between:1,20',

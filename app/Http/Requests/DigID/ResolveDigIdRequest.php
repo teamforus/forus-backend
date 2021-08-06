@@ -2,9 +2,13 @@
 
 namespace App\Http\Requests\DigID;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class ResolveDigIdRequest extends FormRequest
+/**
+ * Class ResolveDigIdRequest
+ * @package App\Http\Requests\DigID
+ */
+class ResolveDigIdRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,8 +27,6 @@ class ResolveDigIdRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-
-        ];
+        return [];
     }
 }

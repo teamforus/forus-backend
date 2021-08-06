@@ -4,8 +4,8 @@ namespace App\Http\Resources\Sponsor;
 
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
-use App\Http\Resources\PhysicalCardResource;
 use App\Models\Voucher;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**
@@ -34,9 +34,11 @@ class SponsorVoucherResource extends Resource
         }
 
         return array_merge($voucher->only([
-            'id', 'amount', 'note', 'identity_address', 'state', 'is_granted',
+            'id', 'amount', 'note', 'identity_address', 'state', 'state_locale', 'is_granted',
             'expired', 'activation_code', 'activation_code_uid', 'has_transactions',
+            'in_use', 'limit_multiplier',
         ]), [
+            'history' => $this->getHistory($voucher),
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
@@ -67,5 +69,26 @@ class SponsorVoucherResource extends Resource
             'photo' => new MediaResource($voucher->product->photo),
             'organization' => new OrganizationBasicResource($voucher->product->organization),
         ]);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getHistory(Voucher $voucher): array
+    {
+        return $voucher->sponsorHistoryLogs()->map(function (EventLog $log) {
+            $employee_id = $log->data['employee_id'] ?? null;
+            $employee_email = $employee_id ? $log->data['employee_email'] ?: null : null;
+
+            return array_merge($log->only('id', 'event', 'event_locale'), [
+                'employee_id' => $employee_id,
+                'employee_email' => $employee_email,
+                'note' => $log->data['note'] ?? '',
+                'created_at' => $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : null,
+                'created_at_locale' => format_datetime_locale($log->created_at),
+                'updated_at' => $log->updated_at ? $log->updated_at->format('Y-m-d H:i:s') : null,
+                'updated_at_locale' => format_date_locale($log->updated_at),
+            ]);
+        })->values()->toArray();
     }
 }

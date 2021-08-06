@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Provider;
 
 use App\Http\Resources\MediaResource;
+use App\Http\Resources\ProductReservationResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
@@ -33,30 +34,33 @@ class ProviderVoucherTransactionResource extends Resource
      */
     public function toArray($request): array
     {
-        $voucherTransaction = $this->resource;
+        $transaction = $this->resource;
 
-        return collect($voucherTransaction)->only([
+        return collect($transaction)->only([
             "id", "organization_id", "product_id", "created_at",
             "updated_at", "address", "state", "payment_id",
         ])->merge([
-            'created_at_locale' => format_datetime_locale($voucherTransaction->created_at),
-            'updated_at_locale' => format_datetime_locale($voucherTransaction->updated_at),
-            'amount' => currency_format($voucherTransaction->amount),
-            'timestamp' => $voucherTransaction->created_at->timestamp,
-            "organization" => collect($voucherTransaction->provider)->only([
+            'created_at_locale' => format_datetime_locale($transaction->created_at),
+            'updated_at_locale' => format_datetime_locale($transaction->updated_at),
+            'amount' => currency_format($transaction->amount),
+            'timestamp' => $transaction->created_at->timestamp,
+            'cancelable' => $transaction->isCancelable(),
+            'transaction_in' => $transaction->daysBeforeTransaction(),
+            "organization" => collect($transaction->provider)->only(
                 "id", "name"
-            ])->merge([
-                'logo' => new MediaResource($voucherTransaction->provider->logo),
+            )->merge([
+                'logo' => new MediaResource($transaction->provider->logo),
             ]),
-            "product" => new ProductResource($voucherTransaction->product),
-            "fund" => collect($voucherTransaction->voucher->fund)->only([
+            "product" => new ProductResource($transaction->product),
+            "fund" => collect($transaction->voucher->fund)->only([
                 "id", "name", "organization_id"
             ])->merge([
-                'logo' => new MediaResource($voucherTransaction->voucher->fund->logo),
+                'logo' => new MediaResource($transaction->voucher->fund->logo),
             ]),
             'notes' => VoucherTransactionNoteResource::collection(
-                $voucherTransaction->notes->where('group', 'provider')->values()
-            )
+                $transaction->notes->where('group', 'provider')->values()
+            ),
+            'reservation' => new ProductReservationResource($transaction->product_reservation),
         ])->toArray();
     }
 }

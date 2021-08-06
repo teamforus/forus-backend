@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\FundProvider;
+use App\Models\Product;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -25,17 +26,17 @@ class FundProviderProductQuery
     /**
      * @param Builder $query
      * @param Voucher $voucher
-     * @param array|int|null $organization_id
+     * @param null $organization_id
+     * @param bool $validateLimits
      * @return Builder
      */
-    public static function whereAvailableForVoucherFilter(
+    public static function whereAvailableForSubsidyVoucherFilter(
         Builder $query,
         Voucher $voucher,
-        $organization_id = null
+        $organization_id = null,
+        $validateLimits = true
     ): Builder {
-        $query->whereHas('product', static function(
-            Builder $query
-        ) use ($voucher, $organization_id) {
+        $query->whereHas('product', static function(Builder $query) use ($voucher, $organization_id) {
             $query->where(static function(Builder $builder) use ($voucher, $organization_id) {
                 $providersQuery = FundProviderQuery::whereApprovedForFundsFilter(
                     FundProvider::query(), $voucher->fund_id,'subsidy', $voucher->product_id
@@ -55,7 +56,7 @@ class FundProviderProductQuery
             $builder->where('fund_id', '=', $voucher->fund_id);
         });
 
-        return self::whereInLimitsFilter($query, $voucher);
+        return $validateLimits ? self::whereInSubsidyLimitsFilter($query, $voucher) : $query;
     }
 
     /**
@@ -63,35 +64,14 @@ class FundProviderProductQuery
      * @param Voucher $voucher
      * @return Builder
      */
-    public static function whereInLimitsFilter(
-        Builder $builder,
-        Voucher $voucher
-    ): Builder {
-        $limit_per_identity = \DB::raw(sprintf(
-            "(`fund_provider_products`.`limit_per_identity` * %s)",
-            $voucher->limit_multiplier
-        ));
+    public static function whereInSubsidyLimitsFilter(Builder $builder, Voucher $voucher): Builder
+    {
+        return $builder->whereHas('product', function(Builder $builder) use ($voucher) {
+            $query = ProductSubQuery::appendReservationStats([
+                'voucher_id' => $voucher->id,
+            ], Product::query())->where('limit_available', '>', 0);
 
-        $builder->where(static function (Builder $builder) use ($voucher) {
-            $limit_total = \DB::raw('`fund_provider_products`.`limit_total`');
-
-            $builder->whereHas('product.voucher_transactions', static function(Builder $builder) use ($voucher) {
-                // nesting is required, do not replace with 'product.voucher_transactions.voucher'
-                $builder->whereHas('voucher', static function(Builder $builder) use ($voucher) {
-                    $builder->where('vouchers.fund_id', '=', $voucher->fund_id);
-                });
-            },'<', $limit_total);
-
-            $builder->orWhere('limit_total_unlimited', '=', true);
+            $builder->whereIn('id', $query->select('id'));
         });
-
-        $builder->whereHas('product.voucher_transactions', static function(Builder $builder) use ($voucher) {
-            // nesting is required, do not replace with 'product.voucher_transactions.voucher'
-            return $builder->whereHas('voucher', static function(Builder $builder) use ($voucher) {
-                $builder->where('vouchers.id', '=', $voucher->id);
-            });
-        }, '<', $limit_per_identity);
-
-        return $builder;
     }
 }

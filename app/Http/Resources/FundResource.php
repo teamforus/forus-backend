@@ -39,6 +39,8 @@ class FundResource extends Resource
             'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
             'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
             'allow_direct_requests' => $fund->fund_config->allow_direct_requests ?? false,
+            'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers ?? false,
+            'backoffice_fallback' => $fund->fund_config->backoffice_fallback ?? false,
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
@@ -67,6 +69,8 @@ class FundResource extends Resource
             ]), [
                 'criteria_editable' => $fund->criteriaIsEditable(),
             ]);
+
+            $data['backoffice'] = $this->getBackofficeData($fund);
         }
 
         if ($organization->identityCan(auth()->id(), 'validate_records')) {
@@ -128,23 +132,36 @@ class FundResource extends Resource
      * @return array
      */
     public function getBudgetData(Fund $fund): array {
-        $details = $fund->getFundDetails();
+        $details = Fund::getFundDetails($fund->budget_vouchers()->getQuery());
+        $reservedQuery = $fund->budget_vouchers()->getQuery();
+        $reservedAmount = VoucherQuery::whereNotExpiredAndActive($reservedQuery)->sum('amount');
 
         return [
-            'total'     => currency_format($fund->budget_total),
-            'validated' => currency_format($fund->budget_validated),
-            'used'      => currency_format($fund->budget_used),
-            'left'      => currency_format($fund->budget_left),
-            'transaction_costs' => currency_format($fund->getTransactionCosts()),
-            'reserved'  => round(VoucherQuery::whereNotExpiredAndActive(
-                $fund->budget_vouchers()->getQuery()
-            )->sum('amount'), 2),
-            'vouchers_amount'               => $details['vouchers_amount'],
-            'vouchers_count'                => $details['vouchers_count'],
-            'active_vouchers_amount'        => $details['active_amount'],
-            'active_vouchers_count'         => $details['active_count'],
-            'inactive_vouchers_amount'      => $details['inactive_amount'],
-            'inactive_vouchers_count'       => $details['inactive_count'],
+            'total'                     => currency_format($fund->budget_total),
+            'validated'                 => currency_format($fund->budget_validated),
+            'used'                      => currency_format($fund->budget_used),
+            'used_active_vouchers'      => currency_format($fund->budget_used_active_vouchers),
+            'left'                      => currency_format($fund->budget_left),
+            'transaction_costs'         => currency_format($fund->getTransactionCosts()),
+            'reserved'                  => round($reservedAmount, 2),
+            'vouchers_amount'           => currency_format($details['vouchers_amount']),
+            'vouchers_count'            => $details['vouchers_count'],
+            'active_vouchers_amount'    => currency_format($details['active_amount']),
+            'active_vouchers_count'     => $details['active_count'],
+            'inactive_vouchers_amount'  => currency_format($details['inactive_amount']),
+            'inactive_vouchers_count'   => $details['inactive_count'],
         ];
+    }
+
+    /**
+     * @param Fund $fund
+     * @return array|null
+     */
+    private function getBackofficeData(Fund $fund): ?array
+    {
+        return $fund->fund_config ? $fund->fund_config->only([
+            'backoffice_enabled', 'backoffice_url',
+            'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
+        ]): null;
     }
 }

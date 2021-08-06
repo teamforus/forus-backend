@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Events\ProductReservations\ProductReservationCreated;
 use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
+use App\Events\Vouchers\VoucherDeactivated;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Identity\Models\Identity;
 use Carbon\Carbon;
@@ -16,6 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -25,35 +29,45 @@ use RuntimeException;
  * @property int $id
  * @property int $fund_id
  * @property string|null $identity_address
+ * @property string $state
  * @property string $amount
  * @property int $limit_multiplier
  * @property bool $returnable
+ * @property int|null $product_reservation_id
  * @property string|null $note
  * @property int|null $employee_id
  * @property string|null $activation_code
  * @property string|null $activation_code_uid
- * @property string $state
+ * @property int|null $fund_backoffice_log_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
+ * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
+ * @property-read \App\Models\FundBackofficeLog|null $fund_backoffice_log
+ * @property-read bool $activated
  * @property-read float $amount_available
  * @property-read float $amount_available_cached
  * @property-read string|null $created_at_string
  * @property-read string|null $created_at_string_locale
+ * @property-read bool $deactivated
  * @property-read bool $expired
+ * @property-read bool $has_product_vouchers
  * @property-read bool $has_transactions
+ * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
+ * @property-read string $state_locale
  * @property-read string $type
  * @property-read string|null $updated_at_string
  * @property-read string|null $updated_at_string_locale
  * @property-read bool $used
  * @property-read Identity|null $identity
+ * @property-read EventLog|null $last_deactivation_log
  * @property-read \App\Models\VoucherTransaction|null $last_transaction
- * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Voucher|null $parent
  * @property-read Collection|\App\Models\PhysicalCardRequest[] $physical_card_requests
@@ -61,6 +75,9 @@ use RuntimeException;
  * @property-read Collection|\App\Models\PhysicalCard[] $physical_cards
  * @property-read int|null $physical_cards_count
  * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\ProductReservation|null $product_reservation
+ * @property-read Collection|\App\Models\ProductReservation[] $product_reservations
+ * @property-read int|null $product_reservations_count
  * @property-read Collection|Voucher[] $product_vouchers
  * @property-read int|null $product_vouchers_count
  * @property-read \App\Models\VoucherToken|null $token_with_confirmation
@@ -79,6 +96,7 @@ use RuntimeException;
  * @method static Builder|Voucher whereCreatedAt($value)
  * @method static Builder|Voucher whereEmployeeId($value)
  * @method static Builder|Voucher whereExpireAt($value)
+ * @method static Builder|Voucher whereFundBackofficeLogId($value)
  * @method static Builder|Voucher whereFundId($value)
  * @method static Builder|Voucher whereId($value)
  * @method static Builder|Voucher whereIdentityAddress($value)
@@ -86,6 +104,7 @@ use RuntimeException;
  * @method static Builder|Voucher whereNote($value)
  * @method static Builder|Voucher whereParentId($value)
  * @method static Builder|Voucher whereProductId($value)
+ * @method static Builder|Voucher whereProductReservationId($value)
  * @method static Builder|Voucher whereReturnable($value)
  * @method static Builder|Voucher whereState($value)
  * @method static Builder|Voucher whereUpdatedAt($value)
@@ -93,8 +112,7 @@ use RuntimeException;
  */
 class Voucher extends Model
 {
-    use HasLogs;
-    use HasFormattedTimestamps;
+    use HasLogs, HasFormattedTimestamps;
 
     public const EVENT_CREATED_BUDGET = 'created_budget';
     public const EVENT_CREATED_PRODUCT = 'created_product';
@@ -104,6 +122,8 @@ class Voucher extends Model
     public const EVENT_EXPIRING_SOON_BUDGET = 'expiring_soon_budget';
     public const EVENT_EXPIRING_SOON_PRODUCT = 'expiring_soon_product';
     public const EVENT_ASSIGNED = 'assigned';
+    public const EVENT_ACTIVATED = 'activated';
+    public const EVENT_DEACTIVATED = 'deactivated';
 
     public const EVENT_TRANSACTION = 'transaction';
     public const EVENT_TRANSACTION_PRODUCT = 'transaction_product';
@@ -114,6 +134,7 @@ class Voucher extends Model
 
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
+    public const STATE_DEACTIVATED = 'deactivated';
 
     public const TYPES = [
         self::TYPE_BUDGET,
@@ -123,6 +144,7 @@ class Voucher extends Model
     public const STATES = [
         self::STATE_ACTIVE,
         self::STATE_PENDING,
+        self::STATE_DEACTIVATED,
     ];
 
     protected $withCount = [
@@ -137,7 +159,8 @@ class Voucher extends Model
     protected $fillable = [
         'fund_id', 'identity_address', 'limit_multiplier', 'amount', 'product_id',
         'parent_id', 'expire_at', 'note', 'employee_id', 'returnable', 'state',
-        'activation_code', 'activation_code_uid',
+        'activation_code', 'activation_code_uid', 'fund_backoffice_log_id',
+        'product_reservation_id',
     ];
 
     /**
@@ -164,6 +187,43 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    /**
+     * @return MorphOne
+     * @noinspection PhpUnused
+     */
+    public function last_deactivation_log(): MorphOne
+    {
+        return $this->morphOne(EventLog::class, 'loggable')->where([
+            'event' => self::EVENT_DEACTIVATED,
+        ]);
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function product_reservation(): BelongsTo
+    {
+        return $this->belongsTo(ProductReservation::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function fund_backoffice_log(): BelongsTo
+    {
+        return $this->belongsTo(FundBackofficeLog::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function identity(): BelongsTo
     {
@@ -186,6 +246,14 @@ class Voucher extends Model
     public function physical_cards(): HasMany
     {
         return $this->hasMany(PhysicalCard::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function product_reservations(): HasMany
+    {
+        return $this->hasMany(ProductReservation::class);
     }
 
     /**
@@ -236,11 +304,18 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
      */
     public function product_vouchers(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
+            $builder->whereDoesntHave('product_reservation');
+            $builder->orWhereHas('product_reservation', function (Builder $builder) {
+                $builder->whereIn('state', [
+                    ProductReservation::STATE_PENDING,
+                    ProductReservation::STATE_ACCEPTED
+                ]);
+            });
+        });
     }
 
     /**
@@ -317,6 +392,36 @@ class Voucher extends Model
     }
 
     /**
+     * The voucher is deactivated
+     *
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getDeactivatedAttribute(): bool
+    {
+        return $this->isDeactivated();
+    }
+
+    /**
+     * The voucher is activated
+     *
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getActivatedAttribute(): bool
+    {
+        return $this->isActivated();
+    }
+
+    /**
+     * @return string
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return trans('states/vouchers.' . $this->state);
+    }
+
+    /**
      * The voucher is expired
      *
      * @return bool
@@ -325,7 +430,7 @@ class Voucher extends Model
     public function getUsedAttribute(): bool
     {
         return $this->type === 'product' ? $this->transactions->count() > 0 :
-            $this->amount_available_cached === 0;
+            $this->amount_available_cached === 0.0;
     }
 
     /**
@@ -340,9 +445,8 @@ class Voucher extends Model
     /**
      * @param string|null $email
      */
-    public function sendToEmail(
-        string $email = null
-    ): void {
+    public function sendToEmail(string $email = null): void
+    {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -368,9 +472,8 @@ class Voucher extends Model
     /**
      * @param string|null $email
      */
-    public function assignedVoucherEmail(
-        string $email = null
-    ): void {
+    public function assignedVoucherEmail(string $email = null): void
+    {
         $mailFrom = $this->fund->fund_config->implementation->getEmailFrom();
         $expireDate = format_date_locale($this->expire_at, 'long_date_locale');
 
@@ -402,10 +505,8 @@ class Voucher extends Model
      * @param string $message
      * @param bool $sendCopyToUser
      */
-    public function shareVoucherEmail(
-        string $message,
-        bool $sendCopyToUser = false
-    ): void {
+    public function shareVoucherEmail(string $message, bool $sendCopyToUser = false): void
+    {
         /** @var VoucherToken $voucherToken */
         $voucherToken = $this->tokens()->where([
             'need_confirmation' => false
@@ -620,9 +721,27 @@ class Voucher extends Model
     }
 
     /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasProductVouchersAttribute(): bool
+    {
+        return $this->product_vouchers->count() > 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getInUseAttribute(): bool
+    {
+        return $this->has_transactions || $this->has_product_vouchers;
+    }
+
+    /**
      * Assign voucher to identity
      *
-     * @param $identity_address
+     * @param string $identity_address
      * @return $this
      */
     public function assignToIdentity(string $identity_address): self
@@ -639,34 +758,106 @@ class Voucher extends Model
 
     /**
      * @param Product $product
-     * @param float|null $price
-     * @param bool $returnable
+     * @param ProductReservation|null $productReservation
      * @return Voucher|\Illuminate\Database\Eloquent\Model
      */
     public function buyProductVoucher(
         Product $product,
-        float $price = null,
-        $returnable = true
-    ) {
-        $price = (float) (!$price && ($price !== 0) ? $product->price : $price);
-
-        $voucherExpireAt = $product->expire_at && $this->fund->end_date->gt(
-            $product->expire_at
-        ) ? $product->expire_at : $this->fund->end_date;
+        ProductReservation $productReservation = null
+    ): Voucher {
+        $voucherExpireAt = array_first(array_sort(array_filter([
+            $product->expire_at,
+            $this->expire_at,
+            $this->fund->end_date
+        ])));
 
         $voucher = self::create([
-            'identity_address' => auth_address(),
-            'parent_id'        => $this->id,
-            'fund_id'          => $this->fund_id,
-            'product_id'       => $product->id,
-            'amount'           => $price,
-            'returnable'       => $returnable,
-            'expire_at'        => $voucherExpireAt
+            'product_reservation_id'    => $productReservation ? $productReservation->id : null,
+            'identity_address'          => $this->identity_address,
+            'parent_id'                 => $this->id,
+            'fund_id'                   => $this->fund_id,
+            'product_id'                => $product->id,
+            'amount'                    => $product->price,
+            'returnable'                => false,
+            'expire_at'                 => $voucherExpireAt
         ]);
 
-        VoucherCreated::dispatch($voucher);
+        VoucherCreated::dispatch($voucher, !$productReservation, !$productReservation);
 
         return $voucher;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isActivated(): bool
+    {
+        return $this->state === self::STATE_ACTIVE;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state === self::STATE_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeactivated(): bool
+    {
+        return $this->state === self::STATE_DEACTIVATED;
+    }
+
+    /**
+     * @param Product $product
+     * @param Employee|null $employee
+     * @param string|null $note
+     * @return ProductReservation
+     * @throws \Exception
+     */
+    public function reserveProduct(
+        Product $product,
+        ?Employee $employee = null,
+        string $note = null
+    ): ProductReservation {
+        $isSubsidy = $this->fund->isTypeSubsidy();
+        $fundProviderProduct = $isSubsidy ? $product->getSubsidyDetailsForFund($this->fund) : null;
+        $amount = $isSubsidy && $fundProviderProduct ? $fundProviderProduct->amount : $product->price;
+
+        /** @var ProductReservation $reservation */
+        $reservation = $this->product_reservations()->create(array_merge([
+            'code'                      => ProductReservation::makeCode(),
+            'note'                      => $note,
+            'amount'                    => $amount,
+            'state'                     => ProductReservation::STATE_PENDING,
+            'product_id'                => $product->id,
+            'employee_id'               => $employee ? $employee->id : null,
+            'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
+            'expire_at'                 => $this->calcExpireDateForProduct($product)
+        ], $product->only('price', 'price_type', 'price_discount')));
+
+        $reservation->makeVoucher();
+
+        ProductReservationCreated::dispatch($reservation);
+
+        return $reservation;
+    }
+
+    /**
+     * Calculate expiration date for product when bought using this voucher.
+     * @param Product $product
+     * @return Carbon|null
+     */
+    public function calcExpireDateForProduct(Product $product): ?Carbon
+    {
+        return array_first(array_sort(array_filter([
+            $product->expire_at,
+            $this->expire_at,
+            $this->fund->end_date
+        ])));
     }
 
     /**
@@ -799,48 +990,58 @@ class Voucher extends Model
     /**
      * @param string $address
      * @param string|null $identity_address
-     * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model
+     * @return Voucher|null
      */
     public static function findByAddress(
         string $address,
         ?string $identity_address = null
-    ) {
+    ): ?Voucher {
         return self::whereHas('tokens', static function(Builder $builder) use ($address) {
             $builder->where('address', '=', $address);
         })->where(static function(Builder $builder) use ($identity_address) {
-            if ($identity_address) {
-                $builder->where('identity_address', '=', $identity_address);
-            }
+            $identity_address && $builder->where('identity_address', '=', $identity_address);
         })->firstOrFail();
     }
 
     /**
-     * @param $code_or_address
-     * @return Voucher|Builder|\Illuminate\Database\Eloquent\Model|object|null
+     * @param string $number
+     * @param string|null $identity_address
+     * @return Voucher|null
      */
-    public static function findByAddressOrPhysicalCard($code_or_address)
-    {
+    public static function findByPhysicalCard(
+        string $number,
+        ?string $identity_address = null
+    ): ?Voucher {
         return self::whereHas('fund.fund_config', static function (Builder $builder) {
             $builder->where('allow_physical_cards', '=', true);
-        })->whereHas('physical_cards', static function (Builder $builder) use ($code_or_address) {
-            $builder->where('code', '=', $code_or_address);
-        })->first() ?: self::findByAddress($code_or_address);
+        })->whereHas('physical_cards', static function (Builder $builder) use ($number) {
+            $builder->where('code', '=', $number);
+        })->where(static function(Builder $builder) use ($identity_address) {
+            $identity_address && $builder->where('identity_address', '=', $identity_address);
+        })->first();
+    }
+
+    /**
+     * @param $value
+     * @return Voucher|null
+     */
+    public static function findByAddressOrPhysicalCard($value): ?Voucher
+    {
+        return self::findByPhysicalCard($value) ?: self::findByAddress($value);
     }
 
     /**
      * Set voucher relation to bsn number.
      *
      * @param string $bsn
-     * @return VoucherRelation
+     * @return VoucherRelation|\Illuminate\Database\Eloquent\Model
      */
     public function setBsnRelation(string $bsn): VoucherRelation
     {
         $this->voucher_relation()->delete();
 
         /** @var VoucherRelation $voucher_relation */
-        $voucher_relation = $this->voucher_relation()->create(compact('bsn'));
-
-        return $voucher_relation;
+        return $this->voucher_relation()->create(compact('bsn'));
     }
 
     /**
@@ -887,7 +1088,7 @@ class Voucher extends Model
             }, 4, 2);
         }
 
-        if ($oldVoucher = $queryUsed->first()) {
+        if (!is_null($activation_code_uid) && $oldVoucher = $queryUsed->first()) {
             $this->assignToIdentity($oldVoucher->identity_address);
         }
 
@@ -895,5 +1096,109 @@ class Voucher extends Model
             'activation_code' => $activation_code,
             'activation_code_uid' => $activation_code_uid,
         ]);
+    }
+
+    /**
+     * @param string $code
+     * @return PhysicalCard|Model|mixed
+     */
+    public function addPhysicalCard(string $code): PhysicalCard
+    {
+        return $this->physical_cards()->create(compact('code'));
+    }
+
+    /**
+    // TODO: cleanup
+     * @return bool
+     */
+    public function needsTransactionReview(): bool
+    {
+        if ($threshold = env('VOUCHER_TRANSACTION_REVIEW_THRESHOLD', 5)) {
+            return $this->transactions()->where(
+                'created_at', '>=', now()->subSeconds($threshold)
+            )->exists();
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $note
+     * @param Employee $employee
+     * @return Voucher
+     */
+    public function activateAsSponsor(
+        string $note,
+        Employee $employee
+    ): Voucher {
+        $this->update([
+            'state' => self::STATE_ACTIVE,
+        ]);
+
+        $this->log(self::EVENT_ACTIVATED, [
+            'voucher' => $this,
+            'employee' => $employee,
+        ], compact('note'));
+
+        return $this;
+    }
+
+    /**
+     * @param string $note
+     * @param bool $notifyByEmail
+     * @param Employee|null $employee
+     * @return $this
+     */
+    public function deactivate(
+        string $note = '',
+        bool $notifyByEmail = false,
+        ?Employee $employee = null
+    ): Voucher {
+        $this->update([
+            'state' => self::STATE_DEACTIVATED,
+        ]);
+
+        VoucherDeactivated::dispatch($this, $note, $employee, $notifyByEmail);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function sponsorHistoryLogs(): Collection
+    {
+        return $this->logs->whereIn('event', [
+            self::EVENT_CREATED_BUDGET,
+            self::EVENT_CREATED_PRODUCT,
+            self::EVENT_EXPIRED_BUDGET,
+            self::EVENT_EXPIRED_PRODUCT,
+            self::EVENT_DEACTIVATED,
+            self::EVENT_ACTIVATED,
+            self::EVENT_ASSIGNED,
+        ]);
+    }
+
+    /**
+     * @return Collection
+     */
+    public function requesterHistoryLogs(): Collection
+    {
+        return $this->logs->whereIn('event', [
+            self::EVENT_CREATED_BUDGET,
+            self::EVENT_CREATED_PRODUCT,
+            self::EVENT_EXPIRED_BUDGET,
+            self::EVENT_EXPIRED_PRODUCT,
+            self::EVENT_DEACTIVATED,
+            self::EVENT_ACTIVATED,
+        ]);
+    }
+
+    /**
+     * @return Carbon|null
+     */
+    public function deactivationDate(): ?Carbon
+    {
+        return $this->last_deactivation_log ? $this->last_deactivation_log->created_at : null;
     }
 }

@@ -1,18 +1,19 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Vouchers;
+namespace App\Http\Requests\Api\Platform\ProductReservations;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Fund;
+use App\Models\ProductReservation;
 use App\Models\Voucher;
-use App\Rules\ProductIdToVoucherRule;
+use App\Rules\ProductReservations\ProductIdToReservationRule;
 use App\Rules\Vouchers\IdentityVoucherAddressRule;
+use Illuminate\Support\Facades\Gate;
 
 /**
- * Class StoreProductVoucherRequest
+ * Class StoreProductReservationRequest
  * @package App\Http\Requests\Api\Platform\Vouchers
  */
-class StoreProductVoucherRequest extends BaseFormRequest
+class StoreProductReservationRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,7 +22,7 @@ class StoreProductVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return !empty($this->auth_address());
+        return $this->isAuthenticated() && Gate::allows('create', ProductReservation::class);
     }
 
     /**
@@ -31,22 +32,15 @@ class StoreProductVoucherRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $identity_address = auth_address();
-
         return [
             'voucher_address' => [
                 'required',
-                'exists:voucher_tokens,address',
-                new IdentityVoucherAddressRule(
-                    $identity_address,
-                    Voucher::TYPE_BUDGET,
-                    Fund::TYPE_BUDGET
-                )
+                new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),
             ],
             'product_id' => [
                 'required',
                 'exists:products,id',
-                new ProductIdToVoucherRule($this->input('voucher_address'))
+                new ProductIdToReservationRule($this->input('voucher_address'))
             ],
         ];
     }

@@ -6,7 +6,6 @@ use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Models\FundRequest;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
-use App\Notifications\Organizations\FundRequests\FundRequestResolvedRequesterNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use Illuminate\Events\Dispatcher;
@@ -21,9 +20,8 @@ class FundRequestSubscriber
      * @param FundRequestCreated $fundRequestCreated
      * @throws \Exception
      */
-    public function onFundRequestCreated(
-        FundRequestCreated $fundRequestCreated
-    ): void {
+    public function onFundRequestCreated(FundRequestCreated $fundRequestCreated): void
+    {
         $fund = $fundRequestCreated->getFund();
         $fundRequest = $fundRequestCreated->getFundRequest();
         $recordRepo = resolve('forus.services.record');
@@ -52,7 +50,8 @@ class FundRequestSubscriber
     /**
      * @param FundRequestResolved $fundCreated
      */
-    public function onFundRequestResolved(FundRequestResolved $fundCreated): void {
+    public function onFundRequestResolved(FundRequestResolved $fundCreated): void
+    {
         $fundRequest = $fundCreated->getFundRequest();
 
         $stateEvent = [

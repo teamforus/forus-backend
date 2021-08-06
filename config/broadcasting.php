@@ -62,7 +62,7 @@ return [
                 env('APN_CERTIFICATE_PATH', false) ?: "app/apn-cert.pem"
             ),
             // optional pass phrase
-            'pass_phrase' => env('APN_PASS_PHRASE', null),
+            'pass_phrase' => env('APN_PASS_PHRASE'),
         ] : null,
 
         'fcm' => env('FCM_ENABLED', false) ? [

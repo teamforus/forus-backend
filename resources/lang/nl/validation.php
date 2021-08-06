@@ -161,6 +161,7 @@ return [
     'voucher' => [
         'expired' => 'Dit tegoed is niet meer geldig.',
         'pending' => 'Dit tegoed is niet actief',
+        'deactivated' => 'De QR-code is sinds :deactivation_date niet meer geldig.',
         'product_voucher_used' => 'Het tegoed voor dit aanbod is al gebruikt!',
         'provider_not_applied' => 'U mag dit tegoed niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van dit tegoed.',
         'provider_pending' => 'U mag dit tegoed niet scannen! Status voor aanmelding van het fonds van dit tegoed is wachtend.',
@@ -168,11 +169,25 @@ return [
         'fund_not_active' => 'U mag dit tegoed nog niet scannen! Het fonds is niet actief.',
         'not_enough_funds' => 'Onvoldoende tegoed.',
         'product_sold_out' => 'Uw aanbod is uitverkocht, verhoog in uw beheeromgeving het aantal dat nog te koop is.',
+        'reservation_used' => 'De reservering is al gebruikt.',
+        'reservation_product_removed' => 'Het aanbod is verwijderd van deze reservering.',
     ],
     'product_voucher' => [
-        'product_not_found' => 'Product niet gevonden.',
-        'product_sold_out' => 'Product uitverkocht.',
-        'not_enough_stock' => 'Niet genoeg voorraad voor :product_name. Het aanbod kan verhoogd worden in de beheeromgeving.',
+        'product_not_found' => 'Aanbod niet gevonden.',
+        'product_sold_out' => 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.',
+        'reservation_used' => 'De reservering is al gebruikt',
+        'reservation_product_removed' => 'Het aanbod is verwijderd van deze reservering.',
+    ],
+    'product_reservation' => [
+        'product_not_found' => 'Aanbod niet gevonden.',
+        'product_sold_out' => 'Niet genoeg voorraad voor het aanbod. Het aanbod kan verhoogd worden in de beheeromgeving.',
+        'reservation_not_enabled' => 'Reserveren staat niet aan voor dit aanbod.',
+        'no_identity_stock' => 'Het aanbod heeft het limiet bereikt!',
+        'no_total_stock' => 'Het aanbod heeft het limiet bereikt!',
+        'reservation_not_pending' => join(" ", [
+            'De reservering (#:code) kan niet gescant worden, de status van deze reservering is ":state".',
+            'Ga naar de beheeromgeving om de reservering te beoordelen.'
+        ]),
     ],
     'employees' => [
         'employee_already_exists' => 'Er bestaat al een werknemer met hetzelfde e-mailadres.',

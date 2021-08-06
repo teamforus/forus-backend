@@ -44,6 +44,7 @@ class IndexOrganizationRequest extends BaseFormRequest
             'is_validator'      => 'nullable|boolean',
             'implementation'    => 'nullable|boolean',
             'has_products'      => 'nullable|boolean',
+            'has_reservations'  => 'nullable|boolean',
             'fund_type'         => 'nullable|in:' . implode(',', Fund::TYPES),
         ];
     }

@@ -3,6 +3,7 @@
 namespace App\Events\VoucherTransactions;
 
 use App\Models\VoucherTransaction;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -24,9 +25,8 @@ class VoucherTransactionCreated
      * @param  VoucherTransaction $voucherTransaction
      * @return void
      */
-    public function __construct(
-        VoucherTransaction $voucherTransaction
-    ) {
+    public function __construct(VoucherTransaction $voucherTransaction)
+    {
         $this->voucherTransaction = $voucherTransaction;
     }
 
@@ -43,9 +43,9 @@ class VoucherTransactionCreated
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel|array
+     * @return \Illuminate\Broadcasting\Channel
      */
-    public function broadcastOn()
+    public function broadcastOn(): Channel
     {
         return new PrivateChannel('channel-name');
     }

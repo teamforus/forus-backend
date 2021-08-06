@@ -4,8 +4,11 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
-use Illuminate\Validation\Rule;
 
+/**
+ * Class IndexFundRequestsRequest
+ * @package App\Http\Requests\Api\Platform\Funds\Requests
+ */
 class IndexFundRequestsRequest extends BaseFormRequest
 {
     /**

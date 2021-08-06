@@ -9,15 +9,12 @@ use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Events\Dispatcher;
 
+/**
+ * Class OrganizationSubscriber
+ * @package App\Listeners
+ */
 class OrganizationSubscriber
 {
-    private $mailService;
-
-    public function __construct()
-    {
-        $this->mailService = resolve('forus.services.notification');
-    }
-
     public function onOrganizationCreated(OrganizationCreated $organizationCreated) {
         $organization = $organizationCreated->getOrganization();
 
@@ -27,6 +24,10 @@ class OrganizationSubscriber
         ]);
 
         $employee->roles()->sync(Role::pluck('id'));
+
+        $organization->update([
+            'description_text' => $organization->descriptionToText(),
+        ]);
 
         try {
             $kvkService = resolve('kvk_api');
@@ -45,7 +46,16 @@ class OrganizationSubscriber
         } catch (\Exception $e) { }
     }
 
-    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated) {}
+    /**
+     * @param OrganizationUpdated $organizationUpdated
+     */
+    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated) {
+        $organization = $organizationUpdated->getOrganization();
+
+        $organization->update([
+            'description_text' => $organization->descriptionToText(),
+        ]);
+    }
 
     /**
      * The events dispatcher

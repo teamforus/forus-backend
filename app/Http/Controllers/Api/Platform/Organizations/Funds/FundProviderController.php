@@ -65,12 +65,8 @@ class FundProviderController extends Controller
             $query->where(static function(Builder $builder) use ($fund) {
                 FundProviderQuery::whereApprovedForFundsFilter($builder, $fund->id);
 
-                $builder->orWhereHas('organization', function(Builder $builder) use ($fund) {
-                    $builder->whereHas('voucher_transactions.voucher', function(
-                        Builder $builder
-                    ) use ($fund) {
-                        return $builder->where('fund_id', $fund->id);
-                    });
+                $builder->orWhere(function(Builder $builder) use ($fund) {
+                    FundProviderQuery::whereHasTransactions($builder, $fund->id);
                 });
             });
         }

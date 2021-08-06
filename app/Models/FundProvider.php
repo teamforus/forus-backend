@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderChatQuery;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Collection;
@@ -575,6 +576,25 @@ class FundProvider extends Model
         });
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isApproved(): bool
+    {
+        return FundProviderQuery::whereApprovedForFundsFilter(
+            self::query()->where('id', $this->id), $this->fund_id
+        )->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTransactions(): bool {
+        return FundProviderQuery::whereHasTransactions(
+            self::query()->where('id', $this->id), $this->fund_id
+        )->exists();
     }
 
     /**

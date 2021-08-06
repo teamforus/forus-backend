@@ -21,12 +21,14 @@ class ProductsController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        SearchProductsRequest $request
-    ): AnonymousResourceCollection {
+    public function index(SearchProductsRequest $request): AnonymousResourceCollection
+    {
         $this->authorize('viewAnyPublic', Product::class);
 
-        return ProductResource::collection(Product::search($request)->with(
+        return ProductResource::collection(Product::search($request->only([
+            'fund_type', 'product_category_id', 'fund_id', 'price_type',
+            'unlimited_stock', 'organization_id', 'q', 'order_by', 'order_by_dir'
+        ]))->with(
             ProductResource::load()
         )->where($request->input('show_all', false) ? [] : [
             'show_on_webshop' => true,
@@ -38,9 +40,8 @@ class ProductsController extends Controller
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function sample(
-        SearchProductsRequest $request
-    ): AnonymousResourceCollection {
+    public function sample(SearchProductsRequest $request): AnonymousResourceCollection
+    {
         $this->authorize('viewAnyPublic', Product::class);
 
         $per_page = $request->input('per_page', 6);
@@ -68,7 +69,8 @@ class ProductsController extends Controller
      * @return ProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Product $product): ProductResource {
+    public function show(Product $product): ProductResource
+    {
         $this->authorize('showPublic', $product);
 
         return new ProductResource($product->load(ProductResource::load()));

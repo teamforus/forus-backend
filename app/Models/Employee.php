@@ -74,12 +74,4 @@ class Employee extends Model
     {
         return $this->roles()->where('key', '=', $role)->count() > 0;
     }
-
-    /**
-     * @param $identity_address
-     * @return bool|self|\Illuminate\Database\Eloquent\Builder|Model|object|null
-     */
-    public static function getEmployee($identity_address) {
-        return self::where(compact('identity_address'))->first() ?? false;
-    }
 }

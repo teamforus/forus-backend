@@ -12,7 +12,7 @@ use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class StoreVoucherTransactionRequest
@@ -28,7 +28,7 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('useAsProvider', $this->voucher_address_or_physical_code->voucher);
     }
 
     /**
@@ -39,25 +39,14 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     public function rules(): array
     {
         $voucher = $this->voucher_address_or_physical_code->voucher;
-        $rules = $this->commonRules();
 
         if ($voucher->fund->isTypeSubsidy()) {
-            $availableProducts = $this->getAvailableProductIds($voucher);
-
-            $rules = array_merge($rules, [
-                'product_id' => [
-                    'required',
-                    'exists:products,id',
-                    Rule::in($voucher->product_id ? array_intersect($availableProducts, [
-                        $voucher->product_id
-                    ]): $availableProducts),
-                ],
-            ]);
+            $rules = $this->subsidyVoucherRules($voucher);
         } else if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType()) {
-            $rules = array_merge($rules, $this->budgetVoucherRules($voucher));
+            $rules = $this->budgetVoucherRules($voucher);
         }
 
-        return $rules;
+        return array_merge($rules ?? [], $this->commonRules());
     }
 
     /**
@@ -93,13 +82,29 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
 
     /**
      * @param Voucher $voucher
+     * @return \string[][]
+     */
+    private function subsidyVoucherRules(Voucher $voucher): array
+    {
+        $availableProducts = $this->getAvailableSubsidyProductIds($voucher);
+        $products = $voucher->product_id ? array_intersect($availableProducts, [
+            $voucher->product_id
+        ]): $availableProducts;
+
+        return [
+            'product_id' => 'required|exists:products,id|in:' . join(',', $products),
+        ];
+    }
+
+    /**
+     * @param Voucher $voucher
      * @return Collection
      */
     private function getValidOrganizations(Voucher $voucher): Collection
     {
         return OrganizationQuery::whereHasPermissionToScanVoucher(
             Organization::query(),
-            auth_address(),
+            $this->auth_address(),
             $voucher
         )->pluck('organizations.id');
     }
@@ -108,15 +113,15 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
      * @param $voucher
      * @return array
      */
-    private function getAvailableProductIds($voucher): array
+    private function getAvailableSubsidyProductIds($voucher): array
     {
         $query = Product::whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
-            FundProviderProductQuery::whereAvailableForVoucherFilter(
+            $organizations = $this->getValidOrganizations($voucher);
+
+            FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(
                 $builder,
                 $voucher,
-                Organization::queryByIdentityPermissions($this->auth_address(), [
-                    'scan_vouchers'
-                ])->pluck('id')->toArray()
+                $organizations->toArray()
             );
         });
 

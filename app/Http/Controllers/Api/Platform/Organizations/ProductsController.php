@@ -21,16 +21,6 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class ProductsController extends Controller
 {
-    private $mediaService;
-
-    /**
-     * ProductsController constructor.
-     */
-    public function __construct()
-    {
-        $this->mediaService = resolve('media');
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -81,10 +71,8 @@ class ProductsController extends Controller
      * @return ProviderProductResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        Organization $organization,
-        Product $product
-    ): ProviderProductResource {
+    public function show(Organization $organization, Product $product ): ProviderProductResource
+    {
         $this->authorize('show', $organization);
         $this->authorize('show', [$product, $organization]);
 
@@ -146,10 +134,8 @@ class ProductsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
      */
-    public function destroy(
-        Organization $organization,
-        Product $product
-    ): JsonResponse {
+    public function destroy(Organization $organization, Product $product): JsonResponse
+    {
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$product, $organization]);
 

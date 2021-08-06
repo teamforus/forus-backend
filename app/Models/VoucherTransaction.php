@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 
 /**
@@ -23,6 +24,8 @@ use Illuminate\Http\Request;
  * @property string|null $iban_to
  * @property string|null $payment_time
  * @property string $address
+ * @property \Illuminate\Support\Carbon|null $transfer_at
+ * @property string|null $canceled_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $payment_id
@@ -38,6 +41,7 @@ use Illuminate\Http\Request;
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes_sponsor
  * @property-read int|null $notes_sponsor_count
  * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read \App\Models\Organization $provider
  * @property-read \App\Models\Voucher $voucher
  * @method static Builder|VoucherTransaction newModelQuery()
@@ -46,6 +50,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereAddress($value)
  * @method static Builder|VoucherTransaction whereAmount($value)
  * @method static Builder|VoucherTransaction whereAttempts($value)
+ * @method static Builder|VoucherTransaction whereCanceledAt($value)
  * @method static Builder|VoucherTransaction whereCreatedAt($value)
  * @method static Builder|VoucherTransaction whereEmployeeId($value)
  * @method static Builder|VoucherTransaction whereFundProviderProductId($value)
@@ -58,6 +63,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction wherePaymentTime($value)
  * @method static Builder|VoucherTransaction whereProductId($value)
  * @method static Builder|VoucherTransaction whereState($value)
+ * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
  * @mixin \Eloquent
@@ -68,10 +74,12 @@ class VoucherTransaction extends Model
 
     public const STATE_PENDING = 'pending';
     public const STATE_SUCCESS = 'success';
+    public const STATE_CANCELED = 'canceled';
 
     public const STATES = [
         self::STATE_PENDING,
         self::STATE_SUCCESS,
+        self::STATE_CANCELED,
     ];
 
     /**
@@ -82,11 +90,15 @@ class VoucherTransaction extends Model
     protected $fillable = [
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
-        'iban_from', 'iban_to', 'payment_time', 'employee_id',
+        'iban_from', 'iban_to', 'payment_time', 'employee_id', 'transfer_at',
     ];
 
     protected $hidden = [
-        'voucher_id', 'last_attempt_at', 'attempts', 'notes'
+        'voucher_id', 'last_attempt_at', 'attempts', 'notes',
+    ];
+
+    protected $dates = [
+        'transfer_at',
     ];
 
     /**
@@ -108,6 +120,13 @@ class VoucherTransaction extends Model
      */
     public function voucher(): BelongsTo {
         return $this->belongsTo(Voucher::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function product_reservation(): HasOne {
+        return $this->hasOne(ProductReservation::class);
     }
 
     /**
@@ -148,10 +167,12 @@ class VoucherTransaction extends Model
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function sendPushNotificationTransaction(): void {
         $mailService = resolve('forus.services.notification');
 
+        // Product voucher
         if (!$this->voucher->product) {
             $transData = [
                 "amount" => currency_format_locale($this->amount),
@@ -165,9 +186,7 @@ class VoucherTransaction extends Model
                 if ($fundProviderProduct && $this->voucher->identity_address) {
                     $transData = array_merge($transData, [
                         "product_name" => $this->product->name,
-                        "new_limit"    => $fundProviderProduct->stockAvailableForIdentity(
-                            $this->voucher->identity_address
-                        )
+                        "new_limit"    => $fundProviderProduct->stockAvailableForVoucher($this->voucher),
                     ]);
                 }
             }
@@ -395,6 +414,65 @@ class VoucherTransaction extends Model
         return $this->notes()->create([
             'message' => $note,
             'group' => $group
+        ]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaid(): bool
+    {
+        return $this->state === self::STATE_SUCCESS;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state === self::STATE_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCancelable(): bool
+    {
+        return ($this->state === $this::STATE_PENDING) &&
+            ($this->transfer_at && $this->transfer_at->isFuture());
+    }
+
+    /**
+     * @return VoucherTransaction
+     */
+    public function cancelPending(): VoucherTransaction
+    {
+        return $this->updateModel([
+            'state' => self::STATE_CANCELED,
+            'canceled_at' => now(),
+        ]);
+    }
+
+    /**
+     * @return int|null
+     */
+    public function daysBeforeTransaction(): ?int
+    {
+        if (!$this->isPending() || !$this->transfer_at) {
+            return null;
+        }
+
+        return max($this->transfer_at->diffInDays(now()), 0);
+    }
+
+    /**
+     * @return $this
+     */
+    public function setForReview(): self
+    {
+        return $this->updateModel([
+            'attempts' => 50,
+            'last_attempt_at' => now()
         ]);
     }
 }

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property array $data
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $event_locale
  * @property-read Model|\Eloquent $loggable
  * @method static Builder|EventLog newModelQuery()
  * @method static Builder|EventLog newQuery()
@@ -41,9 +42,9 @@ class EventLog extends Model
         'data' => 'array',
     ];
 
-    /*protected $hidden = [
-        'event', 'data', 'identity_address'
-    ];*/
+    protected $hidden = [
+        /*'event',*/ 'data', 'identity_address'
+    ];
 
     /**
      * @return MorphTo
@@ -54,6 +55,7 @@ class EventLog extends Model
     }
 
     /**
+     * todo: migrate all eventsOfTypeQuery to eventsOfTypeQuery2
      * @param string $loggable_class
      * @param int|array $loggable_key
      * @return Builder
@@ -70,5 +72,32 @@ class EventLog extends Model
         });
 
         return $query;
+    }
+
+    /**
+     * @param string $loggableType
+     * @param Builder $loggableQuery
+     * @return Builder
+     */
+    public static function eventsOfTypeQuery2(
+        string $loggableType,
+        Builder $loggableQuery
+    ): Builder {
+        $query = self::query();
+
+        $query->whereHasMorph('loggable', $loggableType);
+        $query->where(static function(Builder $builder) use ($loggableQuery) {
+            $builder->whereIn('loggable_id', $loggableQuery->select('id'));
+        });
+
+        return $query;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getEventLocaleAttribute(): ?string
+    {
+        return trans('events/' . $this->loggable_type . '.' . $this->event) ?? null;
     }
 }

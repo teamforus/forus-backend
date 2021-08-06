@@ -35,8 +35,10 @@ class FundQuery
      * @param Builder $query
      * @param Product $product
      * @return Builder
+     * @noinspection PhpUnused
      */
-    public static function whereProductsAreApprovedFilter(Builder $query, Product $product): Builder {
+    public static function whereProductsAreApprovedFilter(Builder $query, Product $product): Builder
+    {
         if ($product->sponsor_organization_id) {
             $query->where('organization_id', $product->sponsor_organization_id);
         }
@@ -140,7 +142,10 @@ class FundQuery
      * @return Builder
      */
     public static function whereQueryFilter(Builder $query, string $q): Builder {
-        return $query->where('name', 'LIKE', "%{$q}%");
+        return $query->where(function(Builder $builder) use ($q) {
+            $builder->where('name', 'LIKE', "%$q%");
+            $builder->orWhere('description_text', 'LIKE', "%$q%");
+        });
     }
 
     /**

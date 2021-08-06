@@ -9,15 +9,16 @@ use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
 use App\Media\RecordCategoryIconMediaConfig;
+use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use App\Models\ProductReservation;
 use App\Observers\FundProviderObserver;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
 use App\Models\Employee;
-use App\Models\Fund;
 use App\Models\Office;
 use App\Models\Organization;
 use App\Models\Product;
@@ -28,6 +29,10 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Class AppServiceProvider
+ * @package App\Providers
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -53,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
             'product_category'      => ProductCategory::class,
             'implementation'        => Implementation::class,
             'implementation_page'   => ImplementationPage::class,
+            'product_reservation'   => ProductReservation::class,
         ]);
 
         MediaService::setMediaConfigs([
@@ -87,8 +93,5 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
-    {
-        //
-    }
+    public function register() { }
 }

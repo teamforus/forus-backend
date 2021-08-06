@@ -17,6 +17,7 @@ class VoucherTransactionsSubscriber
 {
     /**
      * @param VoucherTransactionCreated $voucherTransactionEvent
+     * @throws \Exception
      */
     public function onVoucherTransactionCreated(
         VoucherTransactionCreated $voucherTransactionEvent
@@ -24,10 +25,17 @@ class VoucherTransactionsSubscriber
         $transaction = $voucherTransactionEvent->getVoucherTransaction();
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
-        $product = $voucher->product;
 
-        if ($product) {
-            $voucher->product->updateSoldOutState();
+        if ($voucher->identity_address) {
+            $bsn = record_repo()->bsnByAddress($voucher->identity_address);
+
+            if ($bsn && $voucher->transactions()->count() == 1 && $fund->isBackofficeApiAvailable()) {
+                $fund->reportFirstUseByApi($bsn);
+            }
+        }
+
+        if ($transaction->product) {
+            $transaction->product->updateSoldOutState();
         }
 
         $eventMeta = [
@@ -50,9 +58,7 @@ class VoucherTransactionsSubscriber
 
             if ($fundProviderProduct && $transaction->voucher->identity_address) {
                 $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, [
-                    'subsidy_new_limit' => $fundProviderProduct->stockAvailableForIdentity(
-                        $transaction->voucher->identity_address
-                    )
+                    'subsidy_new_limit' => $fundProviderProduct->stockAvailableForVoucher($transaction->voucher),
                 ]);
 
                 IdentityVoucherSubsidyTransactionNotification::send($eventLog);

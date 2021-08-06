@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Events\Funds\FundCreated;
+use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\IndexFundRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\TopUpResource;
 use App\Models\Fund;
@@ -42,12 +45,13 @@ class FundsController extends Controller
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', [Fund::class, $organization]);
-        $query = Fund::search($request, $organization->funds()->getQuery());
 
-        if (!auth()->id()) {
-            $query->where([
-                'public' => true
-            ]);
+        $query = Fund::search($request->only([
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+        ]), $organization->funds()->getQuery());
+
+        if (!$request->isAuthenticated()) {
+            $query->where('public', true);
         }
 
         return FundResource::collection(FundQuery::sortByState($query, [
@@ -111,6 +115,21 @@ class FundsController extends Controller
     }
 
     /**
+     * @param StoreFundCriteriaRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function storeCriteriaValidate(
+        StoreFundCriteriaRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+
+        return response()->json([], $request ? 200 : 403);
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param Organization $organization
@@ -118,10 +137,8 @@ class FundsController extends Controller
      * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        Organization $organization,
-        Fund $fund
-    ): FundResource {
+    public function show(Organization $organization, Fund $fund): FundResource
+    {
         $this->authorize('show', [$fund, $organization]);
 
         return new FundResource($fund);
@@ -173,7 +190,7 @@ class FundsController extends Controller
             ]);
         }
 
-        $fund->update($params);
+        FundUpdatedEvent::dispatch($fund->updateModel($params));
 
         if ($media instanceof Media && $media->type === 'fund_logo') {
             $fund->attachMedia($media);
@@ -216,21 +233,6 @@ class FundsController extends Controller
     }
 
     /**
-     * @param StoreFundCriteriaRequest $request
-     * @param Organization $organization
-     * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function storeCriteriaValidate(
-        StoreFundCriteriaRequest $request,
-        Organization $organization
-    ): JsonResponse {
-        $this->authorize('show', $organization);
-
-        return response()->json([], $request ? 200 : 403);
-    }
-
-    /**
      * @param UpdateFundCriteriaRequest $request
      * @param Organization $organization
      * @param Fund $fund
@@ -241,10 +243,59 @@ class FundsController extends Controller
         UpdateFundCriteriaRequest $request,
         Organization $organization,
         Fund $fund
-    ): JsonResponse {
+    ): JsonResponse{
         $this->authorize('show', $organization);
 
         return response()->json([], $request && $fund ? 200 : 403);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateFundBackofficeRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return FundResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function updateBackoffice(
+        UpdateFundBackofficeRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): FundResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateBackoffice', [$fund, $organization]);
+
+        $fund->fund_config->update($request->only([
+            'backoffice_enabled', 'backoffice_url', 'backoffice_key',
+            'backoffice_certificate', 'backoffice_fallback',
+        ]));
+
+        return new FundResource($fund);
+    }
+
+    /**
+     * Test fund backoffice connection
+     *
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param Fund $fund
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function testBackofficeConnection(
+        BaseFormRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('updateBackoffice', [$fund, $organization]);
+
+        $log = $fund->getBackofficeApi()->checkStatus();
+
+        return response()->json($log->only('state', 'response_code'), $request ? 200 : 403);
     }
 
     /**
@@ -261,31 +312,14 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $totals = Fund::getFundTotals($organization->funds()->get());
-
-        $totalsBudget = Fund::getFundTotals($organization->funds()->where([
+        $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
+        $activeFundsQuery = $organization->funds()->where([
             'type' => Fund::TYPE_BUDGET,
-        ])->where('state', '!=', Fund::STATE_WAITING)->getQuery()->get());
+        ])->where('state', '=', Fund::STATE_ACTIVE);
 
         return $request ? response()->json([
-            'total_amount'      => currency_format($totals['total_budget']),
-            'left'              => currency_format($totals['total_budget_left']),
-            'used'              => currency_format($totals['total_budget_used']),
-            'reserved'          => currency_format($totals['total_reserved']),
-            'transaction_costs' => currency_format($totals['total_transaction_costs']),
-            'vouchers_amount'   => currency_format($totals['total_vouchers_amount']),
-            'vouchers_active'   => currency_format($totals['total_active_vouchers']),
-            'vouchers_inactive' => currency_format($totals['total_inactive_vouchers']),
-            'budget' => [
-                'total_amount'      => currency_format($totalsBudget['total_budget']),
-                'left'              => currency_format($totalsBudget['total_budget_left']),
-                'used'              => currency_format($totalsBudget['total_budget_used']),
-                'reserved'          => currency_format($totalsBudget['total_reserved']),
-                'transaction_costs' => currency_format($totalsBudget['total_transaction_costs']),
-                'vouchers_amount'   => currency_format($totalsBudget['total_vouchers_amount']),
-                'vouchers_active'   => currency_format($totalsBudget['total_active_vouchers']),
-                'vouchers_inactive' => currency_format($totalsBudget['total_inactive_vouchers']),
-            ]
+            'funds' => Fund::getFundTotals($fundsQuery->get()),
+            'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
         ]) : response()->json([], 403);
     }
 
@@ -311,11 +345,12 @@ class FundsController extends Controller
         $exportType = $request->input('export_type', 'xls');
         $fileName = date('Y-m-d H:i:s') . '.'. $exportType;
 
-        $fundsQuery = ($detailed ? $organization->funds()->where([
-            'type' => Fund::TYPE_BUDGET
-        ]) : $organization->funds())->where('state', '!=', Fund::STATE_WAITING)->getQuery();
+        $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
+        $activeFundsQuery = $organization->funds()->where([
+            'type' => Fund::TYPE_BUDGET,
+        ])->where('state', '=', Fund::STATE_ACTIVE);
 
-        $exportData = new FundsExport(Fund::search($request, $fundsQuery)->get(), $detailed);
+        $exportData = new FundsExport(($detailed ? $activeFundsQuery : $fundsQuery)->get(), $detailed);
 
         return resolve('excel')->download($exportData, $fileName);
     }

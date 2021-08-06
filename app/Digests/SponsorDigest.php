@@ -14,7 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Collection;
 
 /**
- * Class RequesterDigest
+ * Class SponsorDigest
  * @package App\Digests
  */
 class SponsorDigest extends BaseOrganizationDigest

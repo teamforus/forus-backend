@@ -3,11 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Products;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
 use App\Models\Product;
 use App\Rules\MediaUidRule;
 
 /**
  * Class StoreProductRequest
+ * @property Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Products
  */
 class StoreProductRequest extends BaseFormRequest
@@ -48,8 +50,11 @@ class StoreProductRequest extends BaseFormRequest
                 'numeric',
                 'min:1'
             ],
+
             'expire_at'             => 'nullable|date_format:Y-m-d|after:today',
             'product_category_id'   => 'required|exists:product_categories,id',
+            'reservation_enabled'   => 'nullable|boolean',
+            'reservation_policy'    => 'nullable|in:' . join(',', Product::RESERVATION_POLICIES),
         ];
     }
 

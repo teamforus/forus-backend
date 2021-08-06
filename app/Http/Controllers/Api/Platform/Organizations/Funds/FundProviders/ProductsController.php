@@ -12,6 +12,10 @@ use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Class ProductsController
+ * @package App\Http\Controllers\Api\Platform\Organizations\Funds\FundProviders
+ */
 class ProductsController extends Controller
 {
     /**
@@ -32,11 +36,11 @@ class ProductsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
-        $query = $fundProvider->organization->products()->getQuery();
-        $query = ProductQuery::whereNotExpired($query);
-        $query = ProductQuery::whereFundNotExcludedOrHasHistory($query, $fund->id);
+        $query = $fundProvider->organization->providerProductsQuery($fund->id);
 
-        $query->whereNull('sponsor_organization_id');
+        if ($request->input('q')) {
+            $query = ProductQuery::queryFilter($query, $request->input('q'));
+        }
 
         return SponsorProviderProductResource::collection($query->with(
             SponsorProviderProductResource::$load

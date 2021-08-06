@@ -4,11 +4,16 @@ namespace App\Events\Products;
 
 use App\Models\Product;
 use App\Models\Voucher;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
+/**
+ * Class ProductReserved
+ * @package App\Events\Products
+ */
 class ProductReserved
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -34,7 +39,7 @@ class ProductReserved
      *
      * @return Product
      */
-    public function getProduct()
+    public function getProduct(): Product
     {
         return $this->product;
     }
@@ -44,7 +49,7 @@ class ProductReserved
      *
      * @return Voucher
      */
-    public function getVoucher()
+    public function getVoucher(): Voucher
     {
         return $this->voucher;
     }
@@ -52,9 +57,9 @@ class ProductReserved
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return \Illuminate\Broadcasting\Channel|array
+     * @return \Illuminate\Broadcasting\Channel
      */
-    public function broadcastOn()
+    public function broadcastOn(): Channel
     {
         return new PrivateChannel('channel-name');
     }

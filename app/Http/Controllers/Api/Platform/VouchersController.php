@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Requests\Api\Platform\Vouchers\IndexVouchersRequest;
-use App\Http\Requests\Api\Platform\Vouchers\ShareProductVoucherRequest;
-use App\Http\Requests\Api\Platform\Vouchers\StoreProductVoucherRequest;
+use App\Http\Requests\Api\Platform\Vouchers\DeactivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Vouchers\StoreProductReservationRequest;
 use App\Http\Resources\VoucherCollectionResource;
 use App\Http\Resources\VoucherResource;
-use App\Models\Product;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
-use App\Services\Forus\Record\Repositories\RecordRepo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -21,58 +19,31 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class VouchersController extends Controller
 {
-    private $recordRepo;
-
-    /**
-     * VouchersController constructor.
-     * @param RecordRepo $recordRepo
-     */
-    public function __construct(RecordRepo $recordRepo)
-    {
-        $this->recordRepo = $recordRepo;
-    }
-
     /**
      * @param IndexVouchersRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        IndexVouchersRequest $request
-    ): AnonymousResourceCollection {
+    public function index(IndexVouchersRequest $request): AnonymousResourceCollection
+    {
         $this->authorize('viewAny', Voucher::class);
 
+        $query = Voucher::whereIdentityAddress($request->auth_address())
+            ->whereDoesntHave('product_reservation')
+            ->orderByDesc('created_at');
+
+        if ($request->input('type') === Voucher::TYPE_BUDGET) {
+            $query->whereNull('product_id');
+        }
+
+        if ($request->input('type') === Voucher::TYPE_PRODUCT) {
+            $query->whereNotNull('product_id');
+        }
+
         // todo: remove fallback pagination 1000, when apps are ready
-        return VoucherCollectionResource::collection(Voucher::whereIdentityAddress([
-            'identity_address' => $request->auth_address()
-        ])->with(VoucherCollectionResource::load())->latest()->paginate(
-            $request->input('per_page', 1000)
-        ));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param StoreProductVoucherRequest $request
-     * @return VoucherResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function store(
-        StoreProductVoucherRequest $request
-    ): VoucherResource {
-        $this->authorize('store', Voucher::class);
-
-        $product = Product::find($request->input('product_id'));
-        $voucher = Voucher::findByAddress(
-            $request->input('voucher_address'),
-            $request->auth_address()
-        );
-
-        $this->authorize('reserve', [$product, $voucher]);
-
-        return new VoucherResource($voucher->buyProductVoucher($product)->load(
-            VoucherResource::load()
-        ));
+        return VoucherCollectionResource::collection($query->with(
+            VoucherCollectionResource::load()
+        )->paginate($request->input('per_page', 1000)));
     }
 
     /**
@@ -82,9 +53,8 @@ class VouchersController extends Controller
      * @return VoucherResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        VoucherToken $voucherToken
-    ): VoucherResource {
+    public function show(VoucherToken $voucherToken): VoucherResource
+    {
         $this->authorize('show', $voucherToken->voucher);
 
         return new VoucherResource($voucherToken->voucher->load(VoucherResource::load()));
@@ -94,35 +64,58 @@ class VouchersController extends Controller
      * Send target voucher to user email.
      *
      * @param VoucherToken $voucherToken
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function sendEmail(
-        VoucherToken $voucherToken
-    ): void {
+    public function sendEmail(VoucherToken $voucherToken): JsonResponse
+    {
         $this->authorize('sendEmail', $voucherToken->voucher);
 
-        $voucherToken->voucher->sendToEmail($this->recordRepo->primaryEmailByAddress(
-            $voucherToken->voucher->identity_address
-        ));
+        $voucher = $voucherToken->voucher;
+        $voucher->sendToEmail($voucher->identity->primary_email->email);
+
+        return response()->json([]);
     }
 
     /**
      * Share product voucher to email.
      *
      * @param VoucherToken $voucherToken
-     * @param ShareProductVoucherRequest $request
+     * @param DeactivateVoucherRequest $request
+     * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function shareVoucher(
         VoucherToken $voucherToken,
-        ShareProductVoucherRequest $request
-    ): void {
+        DeactivateVoucherRequest $request
+    ): JsonResponse {
         $this->authorize('shareVoucher', $voucherToken->voucher);
 
-        $voucherToken->voucher->shareVoucherEmail(
-            $request->input('reason'),
-            (bool) $request->get('send_copy', false)
-        );
+        $reason = $request->input('reason');
+        $sendCopy = (bool) $request->get('send_copy', false);
+
+        $voucherToken->voucher->shareVoucherEmail($reason, $sendCopy);
+
+        return response()->json([]);
+    }
+
+    /**
+     * Deactivate voucher
+     *
+     * @param DeactivateVoucherRequest $request
+     * @param VoucherToken $voucherToken
+     * @return VoucherResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function deactivate(
+        DeactivateVoucherRequest $request,
+        VoucherToken $voucherToken
+    ): VoucherResource {
+        $this->authorize('deactivateRequester', $voucherToken->voucher);
+
+        $voucherToken->voucher->deactivate($request->input('note') ?: '');
+
+        return new VoucherResource($voucherToken->voucher->load(VoucherResource::load()));
     }
 
     /**
@@ -131,9 +124,8 @@ class VouchersController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
      */
-    public function destroy(
-        VoucherToken $voucherToken
-    ): JsonResponse {
+    public function destroy(VoucherToken $voucherToken): JsonResponse
+    {
         $this->authorize('destroy', $voucherToken->voucher);
 
         return response()->json([
