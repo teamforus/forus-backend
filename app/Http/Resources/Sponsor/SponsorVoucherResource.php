@@ -44,7 +44,9 @@ class SponsorVoucherResource extends Resource
             'identity_email' => $identity_email ?? null,
             'relation_bsn' => $voucher->voucher_relation->bsn ?? null,
             'address' => $address ?? null,
-            'fund' => $voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'),
+            'fund' => array_merge($voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'), [
+                'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,
+            ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
