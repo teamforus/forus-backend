@@ -56,12 +56,14 @@ class VoucherTransactionsSubscriber
         } else if ($voucher->fund->isTypeSubsidy()) {
             $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
 
-            if ($fundProviderProduct && $transaction->voucher->identity_address) {
+            if ($fundProviderProduct) {
                 $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, [
                     'subsidy_new_limit' => $fundProviderProduct->stockAvailableForVoucher($transaction->voucher),
                 ]);
 
-                IdentityVoucherSubsidyTransactionNotification::send($eventLog);
+                if ($transaction->voucher->identity_address) {
+                    IdentityVoucherSubsidyTransactionNotification::send($eventLog);
+                }
             }
         }
 
