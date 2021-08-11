@@ -47,8 +47,8 @@ class FundsController extends Controller
         $this->authorize('viewAny', [Fund::class, $organization]);
 
         $query = Fund::search($request->only([
-            'with_archived', 'tag', 'organization_id', 'fund_id', 'q',
-            'implementation_id', 'order_by', 'order_by_dir'
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by',
+            'order_by_dir', 'with_archived',
         ]), $organization->funds()->getQuery());
 
         if (!$request->isAuthenticated()) {
@@ -127,7 +127,7 @@ class FundsController extends Controller
     ): JsonResponse {
         $this->authorize('show', $organization);
 
-        return response()->json([], $request ? 200 : 403);
+        return response()->json([], $request->isAuthenticated() ? 200 : 403);
     }
 
     /**
@@ -247,7 +247,7 @@ class FundsController extends Controller
     ): JsonResponse{
         $this->authorize('show', $organization);
 
-        return response()->json([], $request && $fund ? 200 : 403);
+        return response()->json([], $request->isAuthenticated() && $fund->exists ? 200 : 403);
     }
 
     /**
@@ -296,15 +296,17 @@ class FundsController extends Controller
 
         $log = $fund->getBackofficeApi()->checkStatus();
 
-        return response()->json($log->only('state', 'response_code'), $request ? 200 : 403);
+        return response()->json($log->only([
+            'state', 'response_code'
+        ]), $request->isAuthenticated() ? 200 : 403);
     }
 
     /**
      * @param FinanceOverviewRequest $request
      * @param Organization $organization
      * @return JsonResponse
-     * @noinspection PhpUnused
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function financesOverview(
         FinanceOverviewRequest $request,
@@ -318,7 +320,7 @@ class FundsController extends Controller
             'type' => Fund::TYPE_BUDGET,
         ])->where('state', '=', Fund::STATE_ACTIVE);
 
-        return $request ? response()->json([
+        return $request->isAuthenticated() ? response()->json([
             'funds' => Fund::getFundTotals($fundsQuery->get()),
             'budget_funds' => Fund::getFundTotals($activeFundsQuery->get()),
         ]) : response()->json([], 403);
@@ -414,36 +416,42 @@ class FundsController extends Controller
     }
 
     /**
-     *
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @return FundResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function archive(Organization $organization, Fund $fund): JsonResponse
-    {
+    public function archive(
+        BaseFormRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): FundResource {
         $this->authorize('show', $organization);
         $this->authorize('archive', [$fund, $organization]);
 
-        $fund->delete();
+        $fund->archive($organization->findEmployee($request->auth_address()));
 
-        return response()->json([]);
+        return new FundResource($fund);
     }
 
     /**
-     *
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @return FundResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function unarchive(Organization $organization, Fund $fund): JsonResponse
-    {
+    public function unarchive(
+        BaseFormRequest $request,
+        Organization $organization,
+        Fund $fund
+    ): FundResource {
         $this->authorize('show', $organization);
         $this->authorize('unarchive', [$fund, $organization]);
 
-        $fund->restore();
+        $fund->unArchive($organization->findEmployee($request->auth_address()));
 
-        return response()->json([]);
+        return new FundResource($fund);
     }
 }

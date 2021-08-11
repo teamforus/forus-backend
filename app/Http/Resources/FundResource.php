@@ -33,7 +33,7 @@ class FundResource extends Resource
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
-            'tags', 'type',
+            'tags', 'type', 'archived',
         ]), [
             'key' => $fund->fund_config->key ?? '',
             'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
@@ -47,6 +47,8 @@ class FundResource extends Resource
             'start_date_locale' => format_date_locale($fund->start_date),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($organization),
+            'criteria' => FundCriterionResource::collection($fund->criteria),
+            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
@@ -54,10 +56,7 @@ class FundResource extends Resource
                 'identity_address' => auth_address(),
                 'state' => FundRequest::STATE_PENDING,
             ])->exists(),
-        ], !$fund->trashed() ? [
-            'criteria' => FundCriterionResource::collection($fund->criteria),
-            'formulas' => FundFormulaResource::collection($fund->fund_formulas),
-        ] :[], $checkCriteria ? [
+        ], $checkCriteria ? [
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&
                 $fund->isTakenByPartner(auth_address()),
@@ -68,7 +67,6 @@ class FundResource extends Resource
                 'default_validator_employee_id', 'auto_requests_validation',
             ]), [
                 'criteria_editable' => $fund->criteriaIsEditable(),
-                'is_archived'       => $fund->trashed()
             ]);
 
             $data['backoffice'] = $this->getBackofficeData($fund);

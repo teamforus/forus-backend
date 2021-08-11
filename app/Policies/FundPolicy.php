@@ -75,7 +75,9 @@ class FundPolicy
      */
     public function archive($identity_address, Fund $fund, Organization $organization): bool
     {
-        return $fund->state == Fund::STATE_CLOSED && $this->update($identity_address, $fund, $organization);
+        return !$fund->archived &&
+            $fund->state == Fund::STATE_CLOSED &&
+            $this->update($identity_address, $fund, $organization);
     }
 
     /**
@@ -86,7 +88,7 @@ class FundPolicy
      */
     public function unarchive($identity_address, Fund $fund, Organization $organization): bool
     {
-        return $fund->trashed() && $this->update($identity_address, $fund, $organization);
+        return $fund->archived && $this->update($identity_address, $fund, $organization);
     }
 
     /**
