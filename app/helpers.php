@@ -736,7 +736,7 @@ if (!function_exists('query_to_sql')) {
      * @param Builder|\Illuminate\Database\Query\Builder $builder
      * @return string
      */
-    function query_to_sql(Builder $builder): string
+    function query_to_sql($builder): string
     {
         $bindings = array_map(function($binding) {
             return '"' . htmlspecialchars($binding) . '"';

@@ -21,10 +21,6 @@ class DigIdController extends Controller
      */
     public function start(StartDigIdRequest $request): array
     {
-        if ($request->input('request') !== 'auth') {
-            $this->middleware('api.auth');
-        }
-
         $digidSession = DigIdSession::createSession($request)->startAuthSession();
 
         if ($digidSession->state !== DigIdSession::STATE_PENDING_AUTH) {

@@ -19,11 +19,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property array $bunq_allowed_ip
  * @property int $bunq_sandbox
  * @property string|null $csv_primary_key
- * @property int $subtract_transaction_costs
  * @property bool $allow_physical_cards
  * @property bool $allow_fund_requests
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
+ * @property bool $allow_blocking_vouchers
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property bool $backoffice_enabled
@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig query()
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowBlockingVouchers($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowDirectRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowFundRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereAllowPhysicalCards($value)
@@ -64,7 +65,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereLimitGeneratorAmount($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereRecordValidityDays($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereSubtractTransactionCosts($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -102,6 +102,7 @@ class FundConfig extends Model
         'allow_physical_cards' => 'boolean',
         'allow_direct_requests' => 'boolean',
         'limit_generator_amount' => 'boolean',
+        'allow_blocking_vouchers' => 'boolean',
     ];
 
     /**

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property array $data
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $event_locale
  * @property-read Model|\Eloquent $loggable
  * @method static Builder|EventLog newModelQuery()
  * @method static Builder|EventLog newQuery()
@@ -90,5 +91,13 @@ class EventLog extends Model
         });
 
         return $query;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getEventLocaleAttribute(): ?string
+    {
+        return trans('events/' . $this->loggable_type . '.' . $this->event) ?? null;
     }
 }

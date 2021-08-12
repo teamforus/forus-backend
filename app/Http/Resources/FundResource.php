@@ -39,6 +39,7 @@ class FundResource extends Resource
             'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
             'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
             'allow_direct_requests' => $fund->fund_config->allow_direct_requests ?? false,
+            'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers ?? false,
             'backoffice_fallback' => $fund->fund_config->backoffice_fallback ?? false,
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),

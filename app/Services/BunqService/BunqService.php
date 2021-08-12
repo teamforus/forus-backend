@@ -391,10 +391,7 @@ class BunqService
                     'transaction_id' => $transaction->id
                 ]);
 
-                $amount = $transaction->amount;
-                $voucher = $transaction->voucher;
-
-                if ($amount <= 0) {
+                if ($transaction->amount <= 0) {
                     $transaction->forceFill([
                         'state' => 'success',
                     ])->save();
@@ -402,12 +399,8 @@ class BunqService
                     continue;
                 }
 
-                if ($voucher->fund->fund_config->subtract_transaction_costs) {
-                    $amount = number_format($amount - .1, 2, '.', '');
-                }
-
                 $payment_id = $bunq->makePayment(
-                    $amount,
+                    $transaction->amount,
                     $transaction->provider->iban,
                     $transaction->provider->name,
                     $paymentDescription

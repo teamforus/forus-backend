@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Exports\VoucherExport;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\DeactivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
@@ -74,11 +75,12 @@ class VouchersController extends Controller
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $multiplier = $request->input('limit_multiplier');
+        $employee_id   = $organization->findEmployee($request->auth_address())->id;
 
         if ($product_id) {
-            $voucher = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
+            $voucher = $fund->makeProductVoucher($identity, $employee_id, $product_id, $expire_at, $note);
         } else {
-            $voucher = $fund->makeVoucher($identity, $amount, $expire_at, $note, $multiplier);
+            $voucher = $fund->makeVoucher($identity, $employee_id, $amount, $expire_at, $note, $multiplier);
         }
 
         if ($bsn = $request->input('bsn', false)) {
@@ -97,9 +99,7 @@ class VouchersController extends Controller
             }
         }
 
-        return new SponsorVoucherResource($voucher->updateModel([
-            'employee_id' => $organization->findEmployee($request->auth_address())->id
-        ]));
+        return new SponsorVoucherResource($voucher);
     }
 
     /**
@@ -143,11 +143,12 @@ class VouchersController extends Controller
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
+            $employee_id = $organization->findEmployee($request->auth_address())->id;
 
             if (!$product_id) {
-                $voucherModel = $fund->makeVoucher($identity, $amount, $expire_at, $note, $multiplier);
+                $voucherModel = $fund->makeVoucher($identity, $employee_id, $amount, $expire_at, $note, $multiplier);
             } else {
-                $voucherModel = $fund->makeProductVoucher($identity, $product_id, $expire_at, $note);
+                $voucherModel = $fund->makeProductVoucher($identity, $employee_id, $product_id, $expire_at, $note);
             }
 
             if ($bsn = ($voucher['bsn'] ?? false)) {
@@ -166,9 +167,7 @@ class VouchersController extends Controller
                 }
             }
 
-            return $voucherModel->updateModel([
-                'employee_id' => $organization->findEmployee($request->auth_address())->id
-            ]);
+            return $voucherModel;
         }));
     }
 
@@ -247,11 +246,35 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('activateSponsor', [$voucher, $organization]);
 
-        if ($request->authorize()) {
-            $voucher->update([
-                'state' => $voucher::STATE_ACTIVE,
-            ]);
-        }
+        $voucher->activateAsSponsor(
+            $request->input('note') ?: '',
+            $organization->findEmployee($request->auth_address())
+        );
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param DeactivateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException|Exception
+     * @noinspection PhpUnused
+     */
+    public function deactivate(
+        DeactivateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('deactivateSponsor', [$voucher, $organization]);
+
+        $voucher->deactivate(
+            $request->input('note') ?: '',
+            $request->input('notify_by_email', false),
+            $organization->findEmployee($request->auth_address())
+        );
 
         return new SponsorVoucherResource($voucher);
     }
