@@ -570,12 +570,14 @@ class NotificationService
         string $sponsor_name,
         string $fund_name,
         string $notification_amount,
+        string $transaction_costs,
         string $budget_left
     ): bool {
         return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
             $sponsor_name,
             $notification_amount,
+            $transaction_costs,
             $budget_left,
             $link,
             $emailFrom
