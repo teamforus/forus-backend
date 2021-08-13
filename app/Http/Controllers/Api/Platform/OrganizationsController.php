@@ -198,8 +198,7 @@ class OrganizationsController extends Controller
         TransferOrganizationOwnershipRequest $request,
         Organization $organization
     ): JsonResponse {
-        $this->authorize('show', [$organization]);
-        $this->authorize('transferOwnership', [$organization]);
+        $this->authorize('transferOwnership', $organization);
 
         /** @var Employee $employee */
         $employee_id = $request->input('employee_id');
@@ -216,12 +215,11 @@ class OrganizationsController extends Controller
      * @param Organization $organization
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
-    public function destroy(
-        Organization $organization
-    ): JsonResponse {
-        $this->authorize('show', [$organization]);
-        $this->authorize('destroy', [$organization]);
+    public function destroy(Organization $organization): JsonResponse
+    {
+        $this->authorize('destroy', $organization);
 
         $organization->delete();
 

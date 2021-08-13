@@ -3,11 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Fund;
-use App\Models\Implementation;
 use App\Models\Organization;
-use App\Models\OrganizationValidator;
+use App\Models\Voucher;
 use App\Scopes\Builders\FundQuery;
-use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -142,7 +140,9 @@ class OrganizationPolicy
      */
     public function transferOwnership(string $identity_address, Organization $organization): bool
     {
-        return $identity_address && ($organization->identity_address === $identity_address);
+        return $identity_address &&
+            $this->show($identity_address, $organization) &&
+            ($organization->identity_address === $identity_address);
     }
 
     /**
@@ -153,19 +153,17 @@ class OrganizationPolicy
      */
     public function destroy(string $identity_address, Organization $organization): bool
     {
-        $active_paused_funds = Implementation::queryFundsByState([
-            Fund::STATE_ACTIVE, Fund::STATE_PAUSED
-        ])->whereIn('id', $organization->funds->pluck('id')->toArray());
+        $vouchersQuery = Voucher::whereHas('product', function(Builder $builder) use ($organization) {
+            $builder->where('organization_id', $organization->id);
+        });
 
-        $active_vouchers = VoucherQuery::whereNotExpiredAndActive(
-            $organization->vouchers()->getQuery()
-        );
+        $hasVouchers = $vouchersQuery->exists();
+        $hasActivePausedFunds = $organization->funds()->exists();
+        $isExternalValidator = $organization->validated_organizations()->exists();
 
-        $is_external_validator = OrganizationValidator::where(
-            'validator_organization_id', $organization->id
-        )->exists();
-
-        return $identity_address && ($organization->identity_address === $identity_address) &&
-            !$active_paused_funds->exists() && !$active_vouchers->count() && !$is_external_validator;
+        return $identity_address &&
+            $this->show($identity_address, $organization) &&
+            ($organization->identity_address === $identity_address) &&
+            (!$hasVouchers && !$hasActivePausedFunds && !$isExternalValidator);
     }
 }
