@@ -1,4 +1,5 @@
 <?php
+use Illuminate\Routing\Router;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,7 +12,7 @@
 |
 */
 
-/** @var \Illuminate\Routing\Router $router */
+/** @var Router $router */
 $router = resolve('router');
 
 /**
@@ -202,9 +203,11 @@ $router->group([], static function() use ($router) {
         "Api\Platform\FundsController@idealMakeRequest"
     );
 
-    $router->post('/digid', 'DigIdController@start');
-    $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
-    $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
+    $router->middleware('domain.digid')->group(function(Router $router) {
+        $router->post('/digid', 'DigIdController@start')->name('digidStart');
+        $router->get('/digid/{digid_session_uid}/redirect', 'DigIdController@redirect')->name('digidRedirect');
+        $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
+    });
 
     $router->resource(
         'provider-invitations',
@@ -372,6 +375,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->post('vouchers/{voucher_token_address}/send-email', "Api\Platform\VouchersController@sendEmail");
     $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
+    $router->post('vouchers/{voucher_token_address}/deactivate', "Api\Platform\VouchersController@deactivate");
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
@@ -808,6 +812,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->patch(
         'organizations/{organization}/sponsor/vouchers/{voucher}/activate',
         "Api\Platform\Organizations\Sponsor\VouchersController@activate"
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher}/deactivate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@deactivate"
     );
 
     $router->patch(

@@ -23,6 +23,9 @@ class StartDigIdRequest extends BaseFormRequest
         $implementation = $this->implementation_model();
         $clientType = $this->client_type();
 
+        $isAuthenticated = $this->isAuthenticated();
+        $isAuthRequest = $this->input('request') === 'auth';
+
         if (!$clientType || !in_array($clientType, Implementation::FRONTEND_KEYS, true)) {
             $this->deny("Invalid client type.");
         }
@@ -33,6 +36,10 @@ class StartDigIdRequest extends BaseFormRequest
 
         if (!$implementation->digidEnabled()) {
             $this->deny("DigId not enabled for this implementation.");
+        }
+
+        if (!$isAuthRequest && !$isAuthenticated) {
+            $this->deny("Please sign-in first.");
         }
 
         return true;

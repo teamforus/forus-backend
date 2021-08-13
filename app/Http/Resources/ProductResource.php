@@ -6,6 +6,7 @@ use App\Models\Fund;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductSubQuery;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\Resource;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -41,11 +42,17 @@ class ProductResource extends Resource
     public function toArray($request): array
     {
         $product = $this->resource;
+        $simplified = $request->has('simplified') && $request->input('simplified');
 
         return array_merge($product->only([
             'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
             'organization_id', 'reservation_enabled', 'reservation_policy',
-        ]), [
+        ]), $simplified ? [
+            'photo' => new MediaResource($product->photo),
+            'organization' => new OrganizationBasicResource($product->organization),
+            'price' => is_null($product->price) ? null : currency_format($product->price),
+            'price_locale' => $product->price_locale,
+        ] : [
             'organization' => new OrganizationBasicResource($product->organization),
             'total_amount' => $product->total_amount,
 
