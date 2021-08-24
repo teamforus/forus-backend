@@ -20,10 +20,7 @@ class AddVoucherNoteToCreationLogs extends Migration
         /** @var EventLog[] $eventLogs */
         $eventLogs = EventLog::whereHasMorph('loggable', Voucher::class, function(Builder $builder) {
             $builder->whereNotNull('note');
-        })->whereIn('event', [
-            Voucher::EVENT_CREATED_BUDGET,
-            Voucher::EVENT_CREATED_PRODUCT,
-        ])->get();
+        })->whereIn('event', Voucher::EVENTS_CREATED)->get();
 
         foreach ($eventLogs as $eventLog) {
             if ($eventLog->loggable instanceof Voucher) {

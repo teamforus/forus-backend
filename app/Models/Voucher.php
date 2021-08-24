@@ -136,6 +136,17 @@ class Voucher extends Model
     public const STATE_PENDING = 'pending';
     public const STATE_DEACTIVATED = 'deactivated';
 
+    public const EVENTS_TRANSACTION = [
+        self::EVENT_TRANSACTION,
+        self::EVENT_TRANSACTION_PRODUCT,
+        self::EVENT_TRANSACTION_SUBSIDY,
+    ];
+
+    public const EVENTS_CREATED = [
+        self::EVENT_CREATED_BUDGET,
+        self::EVENT_CREATED_PRODUCT,
+    ];
+
     public const TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_PRODUCT,
@@ -1168,18 +1179,13 @@ class Voucher extends Model
      */
     public function sponsorHistoryLogs(): Collection
     {
-        return $this->logs->whereIn('event', [
-            self::EVENT_CREATED_BUDGET,
-            self::EVENT_CREATED_PRODUCT,
+        return $this->logs->whereIn('event', array_merge([
             self::EVENT_EXPIRED_BUDGET,
             self::EVENT_EXPIRED_PRODUCT,
-            self::EVENT_TRANSACTION,
-            self::EVENT_TRANSACTION_PRODUCT,
-            self::EVENT_TRANSACTION_SUBSIDY,
             self::EVENT_DEACTIVATED,
             self::EVENT_ACTIVATED,
             self::EVENT_ASSIGNED,
-        ]);
+        ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION));
     }
 
     /**
@@ -1187,14 +1193,12 @@ class Voucher extends Model
      */
     public function requesterHistoryLogs(): Collection
     {
-        return $this->logs->whereIn('event', [
-            self::EVENT_CREATED_BUDGET,
-            self::EVENT_CREATED_PRODUCT,
+        return $this->logs->whereIn('event', array_merge([
             self::EVENT_EXPIRED_BUDGET,
             self::EVENT_EXPIRED_PRODUCT,
             self::EVENT_DEACTIVATED,
             self::EVENT_ACTIVATED,
-        ]);
+        ], self::EVENTS_CREATED));
     }
 
     /**
