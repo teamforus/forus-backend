@@ -5,12 +5,23 @@
   "baseBranches": [
     "develop"
   ],
-  "lockFileMaintenance": { "enabled": true },
-  "packageRules": [
+  "lockFileMaintenance": {
+      "enabled": true,
+      "extends": [
+        "schedule:weekly"
+      ]
+    },
+   "packageRules": [
     {
-      "packageNames": ["aws-sdk"],
-      "schedule": ["after 9pm on sunday"]
-    }
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "devDependencies-non-major"
+    },
+    {
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "dependencies-non-major",
+    },
   ],
   "rangeStrategy": "update-lockfile",
   "composer": {
