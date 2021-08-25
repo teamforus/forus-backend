@@ -451,6 +451,14 @@ class Implementation extends Model
     }
 
     /**
+     * @return string
+     */
+    public function communicationType(): string
+    {
+        return $this->informal_communication ? 'informal' : 'formal';
+    }
+
+    /**
      * @param $value
      * @return array|\Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed|void
      */
@@ -479,7 +487,7 @@ class Implementation extends Model
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
-                'communication_type' => ($implementation->informal_communication ?? false ? 'informal' : 'formal'),
+                'communication_type' => $implementation->communicationType(),
                 'settings' => array_merge($implementation->only([
                     'title', 'description', 'description_alignment', 'description_html',
                     'overlay_enabled', 'overlay_type',

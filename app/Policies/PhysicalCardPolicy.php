@@ -22,10 +22,8 @@ class PhysicalCardPolicy
      * @param Voucher $voucher
      * @return mixed
      */
-    public function create(
-        string $identity_address,
-        Voucher $voucher
-    ): bool {
+    public function create(string $identity_address, Voucher $voucher): bool
+    {
         if (!$voucher->fund->fund_config->allow_physical_cards) {
             $this->deny("physical_cards_not_allowed");
         }
@@ -36,6 +34,10 @@ class PhysicalCardPolicy
 
         if (!$voucher->isBudgetType()) {
             $this->deny("only_budget_vouchers");
+        }
+
+        if (!$voucher->isPending() && !$voucher->activated) {
+            $this->deny($voucher->state);
         }
 
         return strcmp($identity_address, $voucher->identity_address) === 0;
@@ -65,6 +67,10 @@ class PhysicalCardPolicy
 
         if (!$voucher->isBudgetType()) {
             $this->deny("only_budget_vouchers");
+        }
+
+        if (!$voucher->isPending() && !$voucher->activated) {
+            $this->deny($voucher->state);
         }
 
         return $voucher->fund->organization_id == $organization->id &&
