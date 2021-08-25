@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Api\Platform\Vouchers;
+namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor\Vouchers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
-use App\Models\PhysicalCardRequest;
+use App\Models\Organization;
 use App\Models\VoucherToken;
-use App\Traits\ThrottleWithMeta;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Identity\Repositories\IdentityRepo;
+use App\Services\Forus\Notification\NotificationService;
+use App\Traits\ThrottleWithMeta;
 
 /**
  * Class PhysicalCardRequestsController
@@ -42,39 +41,23 @@ class PhysicalCardRequestsController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @param VoucherToken $voucherToken
-     * @return AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function index(
-        VoucherToken $voucherToken
-    ): AnonymousResourceCollection {
-        $voucher = $voucherToken->voucher;
-
-        $this->authorize('show', $voucher);
-        $this->authorize('showAny', [PhysicalCardRequest::class, $voucher]);
-
-        return PhysicalCardRequestResource::collection(
-            $voucher->physical_card_requests()->orderByDesc('created_at')->paginate()
-        );
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param StorePhysicalCardRequestRequest $request
+     * @param Organization $organization
      * @param VoucherToken $voucherToken
      * @return PhysicalCardRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \App\Exceptions\AuthorizationJsonException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(
         StorePhysicalCardRequestRequest $request,
+        Organization $organization,
         VoucherToken $voucherToken
     ): PhysicalCardRequestResource {
         $this->authorize('requestPhysicalCard', $voucherToken->voucher);
+        $this->authorize('requestPhysicalCardBySponsor', [$voucherToken->voucher, $organization]);
+
         $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
         $cardRequest = $voucherToken->voucher->storePhysicalCardRequest($request);
@@ -86,29 +69,13 @@ class PhysicalCardRequestsController extends Controller
      * Validate store a physical card
      *
      * @param StorePhysicalCardRequestRequest $request
+     * @param Organization $organization
      * @param VoucherToken $voucherToken
      * @noinspection PhpUnused
      */
     public function storeValidate(
         StorePhysicalCardRequestRequest $request,
+        Organization $organization,
         VoucherToken $voucherToken
     ): void {}
-
-    /**
-     * Display the specified resource.
-     *
-     * @param VoucherToken $voucherToken
-     * @param PhysicalCardRequest $physicalCardRequest
-     * @return PhysicalCardRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function show(
-        VoucherToken $voucherToken,
-        PhysicalCardRequest  $physicalCardRequest
-    ): PhysicalCardRequestResource {
-        $this->authorize('show', $voucherToken->voucher);
-        $this->authorize('show', $physicalCardRequest);
-
-        return new PhysicalCardRequestResource($physicalCardRequest);
-    }
 }

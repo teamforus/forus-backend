@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 use RuntimeException;
 
 /**
@@ -1105,6 +1106,32 @@ class Voucher extends Model
     public function addPhysicalCard(string $code): PhysicalCard
     {
         return $this->physical_cards()->create(compact('code'));
+    }
+
+    /**
+     * @param Request $request
+     * @return Model
+     */
+    public function storePhysicalCardRequest(Request $request): Model
+    {
+        $fund = $this->fund;
+
+        resolve('forus.services.notification')->requestPhysicalCard(
+            resolve('forus.services.identity')->getPrimaryEmail(auth_address()),
+            $fund->getEmailFrom(), [
+            'postcode'       => $request->input('postcode'),
+            'house_number'   => $request->input('house'),
+            'house_addition' => $request->input('house_addition'),
+            'city'           => $request->input('city'),
+            'street_name'    => $request->input('address'),
+            'fund_name'      => $fund->name,
+            'sponsor_phone'  => $fund->organization->phone,
+            'sponsor_email'  => $fund->organization->email
+        ]);
+
+        return $this->physical_card_requests()->create($request->only(
+            'address', 'house', 'house_addition', 'postcode', 'city'
+        ));
     }
 
     /**

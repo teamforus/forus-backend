@@ -237,6 +237,19 @@ class VoucherPolicy
     }
 
     /**
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function requestPhysicalCardAsSponsor(
+        Voucher $voucher,
+        Organization $organization
+    ): bool
+    {
+        return $voucher->fund->organization->id == $organization->id;
+    }
+
+    /**
      * @param string $identity_address
      * @param Voucher $voucher
      * @return bool
