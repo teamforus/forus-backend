@@ -19,6 +19,8 @@ class BackofficeApiServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->loadMigrationsFrom(__DIR__ . '/migrations');
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
 
