@@ -52,25 +52,26 @@ class FixVoucherEmployeeId extends Migration
         $employees = $voucher->fund->organization->employees;
         $organization = $voucher->fund->organization;
 
-        if (!$employee) {
-            echo "Could not find the employee for voucher: $voucher->id\n";
-        } elseif ($employee->organization_id != $organization->id) {
-            $employees = $employees->where('identity_address', $employee->identity_address);
+        if ($employee) {
+            if ($employee->organization_id != $organization->id) {
+                $employees = $employees->where('identity_address', $employee->identity_address);
 
-            if ($employees->count() > 0) {
-                $employee = $employees->first();
-                $voucher->employee()->associate($employees->first())->save();
-
-
-                $employeeMeta = collect($this->logService->modelToMeta('employee', $employee));
-                $employeeMeta = $employeeMeta->mapWithKeys(function($value, $key) {
-                    return ['data->' . $key => $value];
-                })->toArray();
-
-                $voucher->logs()->whereIn('event', Voucher::EVENTS_CREATED)->update($employeeMeta);
-            } else {
-                echo "Could not migrate voucher: $voucher->id\n";
+                if ($employees->count() > 0) {
+                    $employee = $employees->first();
+                    $voucher->employee()->associate($employees->first())->save();
+                } else {
+                    echo "Could not migrate voucher: $voucher->id\n";
+                }
             }
+
+            $employeeMeta = collect($this->logService->modelToMeta('employee', $employee));
+            $employeeMeta = $employeeMeta->mapWithKeys(function($value, $key) {
+                return ['data->' . $key => $value];
+            })->toArray();
+
+            $voucher->logs()->whereIn('event', Voucher::EVENTS_CREATED)->update($employeeMeta);
+        } else {
+            echo "Could not find the employee for voucher: $voucher->id\n";
         }
     }
 
