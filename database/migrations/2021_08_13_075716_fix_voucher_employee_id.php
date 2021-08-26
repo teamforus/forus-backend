@@ -34,15 +34,24 @@ class FixVoucherEmployeeId extends Migration
         }
     }
 
+    /**
+     * @param Voucher $voucher
+     */
     protected function migrateVoucher(Voucher $voucher): void
     {
         $employee = $voucher->employee;
         $employees = $voucher->fund->organization->employees;
         $organization = $voucher->fund->organization;
 
-        if ($employee->organization_id !=  $organization->id) {
+        if ($employee->organization_id != $organization->id) {
             $employees = $employees->where('identity_address', $employee->identity_address);
-            $voucher->employee()->associate($employees)->save();
+
+            if ($employees->count() > 0) {
+                $employee = $employees->first();
+                $voucher->employee()->associate($employees->first())->save();
+            } else {
+                echo "Could not migrate voucher: $voucher->id\n";
+            }
         }
 
         $employeeMeta = collect($this->logService->modelToMeta('employee', $employee));
