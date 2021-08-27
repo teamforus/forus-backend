@@ -40,7 +40,9 @@ class MakeCreationLogForOlderVouchers extends Migration
     protected function migrateVouchers(Collection $vouchers)
     {
         foreach ($vouchers as $voucher) {
-            $voucher->log(Voucher::EVENT_CREATED_BUDGET, $this->getVoucherLogModels($voucher), [
+            $event = $voucher->isBudgetType() ? Voucher::EVENT_CREATED_BUDGET : Voucher::EVENT_CREATED_PRODUCT;
+
+            $voucher->log($event, $this->getVoucherLogModels($voucher), [
                 'note' => $voucher->note,
                 'voucher_amount' => currency_format($voucher->amount),
                 'voucher_amount_locale' => currency_format_locale($voucher->amount),
