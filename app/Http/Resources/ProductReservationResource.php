@@ -36,17 +36,27 @@ class ProductReservationResource extends JsonResource
         $voucher = $this->resource->voucher;
         $transaction = $this->resource->voucher_transaction;
 
-        $productSnapshot = new Product($reservation->only('price', 'price_type', 'price_discount'));
-        $physicalCard = $voucher->physical_cards[0] ?? null;
+        $productSnapshot = new Product(array_merge($reservation->only([
+            'price_type', 'price_discount'
+        ]), $voucher->fund->isTypeSubsidy() ? [
+            'price' => is_null($reservation->price) ? null : max($reservation->price - $reservation->amount, 0),
+        ] : [
+            'price' => $reservation->price,
+        ]));
 
+        $physicalCard = $voucher->physical_cards[0] ?? null;
         $identityData = $reservation->product->organization->identityCan('scan_vouchers') ? [
             'identity_email' => $voucher->identity->primary_email->email ?? null,
             'identity_physical_card' => $physicalCard ? $physicalCard->code : null,
         ] : [];
 
         $price = is_null($productSnapshot->price) ? null : currency_format($productSnapshot->price);
-        $price_locale = $productSnapshot->price_locale;
-        $price_locale = $voucher->fund->isTypeSubsidy() && $price === currency_format(0) ? 'Gratis' : $price_locale;
+
+        if (($price === currency_format(0)) && $reservation->price_type == 'regular') {
+            $price_locale = 'Gratis';
+        } else {
+            $price_locale = $productSnapshot->price_locale;
+        }
 
         return array_merge($reservation->only('id', 'state', 'amount', 'code'), [
             'created_at' => $reservation->created_at ? $reservation->created_at->format('Y-m-d H:i:s') : null,
