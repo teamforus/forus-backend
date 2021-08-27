@@ -35,8 +35,8 @@ class FixVoucherEmployeeId extends Migration
             'fund.organization.employees' => function($builder) {
                 /** @var Builder|SoftDeletes $builder */
                 $builder->withTrashed();
-            }]
-        );
+            },
+        ]);
 
         foreach ($vouchers as $voucher) {
             $this->migrateVoucher($voucher);
