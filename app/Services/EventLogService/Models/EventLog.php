@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $loggable_id
  * @property string $event
  * @property string|null $identity_address
+ * @property int $original
  * @property array $data
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -29,13 +30,14 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static Builder|EventLog whereIdentityAddress($value)
  * @method static Builder|EventLog whereLoggableId($value)
  * @method static Builder|EventLog whereLoggableType($value)
+ * @method static Builder|EventLog whereOriginal($value)
  * @method static Builder|EventLog whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class EventLog extends Model
 {
     protected $fillable = [
-        'event', 'data', 'identity_address'
+        'event', 'data', 'identity_address', 'original',
     ];
 
     protected $casts = [
@@ -43,7 +45,7 @@ class EventLog extends Model
     ];
 
     protected $hidden = [
-        /*'event',*/ 'data', 'identity_address'
+        'data', 'identity_address',
     ];
 
     /**
