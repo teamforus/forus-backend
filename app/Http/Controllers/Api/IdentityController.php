@@ -146,15 +146,15 @@ class IdentityController extends Controller
         }
 
         $isWebFrontend = in_array($clientType, array_merge(
-            config('forus.clients.webshop'),
-            config('forus.clients.dashboards')
+            (array) config('forus.clients.webshop', []),
+            (array) config('forus.clients.dashboards', [])
         ), true);
 
         if ($isWebFrontend) {
             $webShopUrl = Implementation::byKey($implementationKey);
             $webShopUrl = $webShopUrl['url_' . $clientType];
 
-            return redirect($redirectUrl = sprintf(
+            return redirect(sprintf(
                 $webShopUrl . "confirmation/email/%s?%s",
                 $exchangeToken,
                 http_build_query(compact('target'))

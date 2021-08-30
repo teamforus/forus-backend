@@ -161,6 +161,7 @@ return [
     'voucher' => [
         'expired' => 'Dit tegoed is niet meer geldig.',
         'pending' => 'Dit tegoed is niet actief',
+        'deactivated' => 'De QR-code is sinds :deactivation_date niet meer geldig.',
         'product_voucher_used' => 'Het tegoed voor dit aanbod is al gebruikt!',
         'provider_not_applied' => 'U mag dit tegoed niet scannen! Uw organisatie is nog niet aangemeld bij het fonds van dit tegoed.',
         'provider_pending' => 'U mag dit tegoed niet scannen! Status voor aanmelding van het fonds van dit tegoed is wachtend.',

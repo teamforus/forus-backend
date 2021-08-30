@@ -375,6 +375,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->post('vouchers/{voucher_token_address}/send-email', "Api\Platform\VouchersController@sendEmail");
     $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
+    $router->post('vouchers/{voucher_token_address}/deactivate', "Api\Platform\VouchersController@deactivate");
 
     // todo: deprecated, moved store endpoint to separate route provider/vouchers.transactions
     if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
@@ -811,6 +812,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->patch(
         'organizations/{organization}/sponsor/vouchers/{voucher}/activate',
         "Api\Platform\Organizations\Sponsor\VouchersController@activate"
+    );
+
+    $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher}/deactivate',
+        "Api\Platform\Organizations\Sponsor\VouchersController@deactivate"
     );
 
     $router->patch(
