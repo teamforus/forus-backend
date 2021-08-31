@@ -192,5 +192,10 @@ return [
     'product_reservation_canceled' => [
         'title' => 'Reservering is geannuleerd.',
         'description' => 'De reserving van :product_name is geannuleerd. Neem eventueel contact met de aanbieder voor meer informatie.',
+    ],
+
+    'physical_card_request_created' => [
+        'title' => 'Er is een pas onderweg!',
+        'description' => 'De pas wordt verzonden naar :address',
     ]
 ];

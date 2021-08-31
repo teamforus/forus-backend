@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
+use App\Events\PhysicalCardRequests\PhysicalCardRequestsCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
@@ -95,6 +96,8 @@ class PhysicalCardRequestsController extends Controller
         $cardRequest = $voucherToken->voucher->physical_card_requests()->create($request->only(
             'address', 'house', 'house_addition', 'postcode', 'city'
         ));
+
+        PhysicalCardRequestsCreated::dispatch($cardRequest);
 
         return new PhysicalCardRequestResource($cardRequest);
     }
