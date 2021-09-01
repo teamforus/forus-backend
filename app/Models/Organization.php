@@ -222,7 +222,7 @@ class Organization extends Model
 
         if ($request->input('implementation', false)) {
             $query->whereHas('funds', static function(EloquentBuilder $builder) {
-                $builder->addWhereExistsQuery(Implementation::activeFundsQuery()->getQuery());
+                $builder->whereIn('funds.id', Implementation::activeFundsQuery()->select('id'));
             });
         }
 
