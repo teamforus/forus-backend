@@ -237,16 +237,21 @@ class VoucherPolicy
     }
 
     /**
+     * @param string $identity_address
      * @param Voucher $voucher
      * @param Organization $organization
      * @return bool
      */
     public function requestPhysicalCardAsSponsor(
+        string $identity_address,
         Voucher $voucher,
         Organization $organization
-    ): bool
-    {
-        return $voucher->fund->organization->id == $organization->id;
+    ): bool {
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            $voucher->fund->fund_config->allow_physical_cards &&
+            $voucher->fund->organization_id == $organization->id &&
+            !$voucher->deactivated &&
+            !$voucher->expired;
     }
 
     /**

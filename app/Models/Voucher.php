@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use RuntimeException;
 
 /**
@@ -1109,29 +1109,30 @@ class Voucher extends Model
     }
 
     /**
-     * @param Request $request
-     * @return Model
+     * @param array $options
+     * @param string|null $mailToAddress
+     * @return PhysicalCardRequest|\Illuminate\Database\Eloquent\Model
      */
-    public function storePhysicalCardRequest(Request $request): Model
-    {
-        $fund = $this->fund;
+    public function makePhysicalCardRequest(
+        array $options,
+        ?string $mailToAddress = null
+    ): PhysicalCardRequest {
+        if ($mailToAddress) {
+            resolve('forus.services.notification')->requestPhysicalCard($mailToAddress, [
+                'postcode'       => $options['postcode'] ?? '',
+                'house_number'   => $options['house'] ?? '',
+                'house_addition' => $options['house_addition'] ?? '',
+                'city'           => $options['city'] ?? '',
+                'street_name'    => $options['address'] ?? '',
+                'fund_name'      => $this->fund->name,
+                'sponsor_phone'  => $this->fund->organization->phone,
+                'sponsor_email'  => $this->fund->organization->email
+            ], $this->fund->getEmailFrom());
+        }
 
-        resolve('forus.services.notification')->requestPhysicalCard(
-            resolve('forus.services.identity')->getPrimaryEmail(auth_address()),
-            $fund->getEmailFrom(), [
-            'postcode'       => $request->input('postcode'),
-            'house_number'   => $request->input('house'),
-            'house_addition' => $request->input('house_addition'),
-            'city'           => $request->input('city'),
-            'street_name'    => $request->input('address'),
-            'fund_name'      => $fund->name,
-            'sponsor_phone'  => $fund->organization->phone,
-            'sponsor_email'  => $fund->organization->email
-        ]);
-
-        return $this->physical_card_requests()->create($request->only(
-            'address', 'house', 'house_addition', 'postcode', 'city'
-        ));
+        return $this->physical_card_requests()->create(Arr::only($options, [
+            'address', 'house', 'house_addition', 'postcode', 'city',
+        ]));
     }
 
     /**
