@@ -40,7 +40,10 @@ class PhysicalCardRequestsSubscriber
         ], [
             'note'    => $address,
             'address' => $address,
-            'employee_id' => $employee ? $employee->id : null,
+            'employee_id'    => $employee ? $employee->id : null,
+            'employee_email' => $employee ? record_repo()->primaryEmailByAddress(
+                $employee->identity_address
+            ) : null,
         ]);
 
         PhysicalCardRequestCreatedNotification::send($eventLog);
