@@ -19,8 +19,18 @@ class PhysicalCardRequestsSubscriber
      */
     public function onPhysicalCardRequestsCreated(PhysicalCardRequestsCreated $physicalCardRequestCreated): void
     {
-        $voucher = $physicalCardRequestCreated->getVoucher();
         $physicalCardRequest = $physicalCardRequestCreated->getPhysicalCardRequest();
+        $voucher = $physicalCardRequestCreated->getVoucher();
+        $employee = $voucher->fund->organization->findEmployee(auth_address());
+
+        $address = sprintf(
+            "%s %s, %s, %s, %s",
+            $physicalCardRequest->address,
+            $physicalCardRequest->house,
+            $physicalCardRequest->house_addition,
+            $physicalCardRequest->postcode,
+            $physicalCardRequest->city
+        );
 
         $eventLog = $physicalCardRequest->log(PhysicalCardRequest::EVENT_CREATED, [
             'physical_card_request'  => $physicalCardRequest,
@@ -28,15 +38,9 @@ class PhysicalCardRequestsSubscriber
             'sponsor'                => $voucher->fund->organization,
             'fund'                   => $voucher->fund
         ], [
-            'address' => sprintf(
-                "%s %s, %s, %s, %s",
-                $physicalCardRequest->address,
-                $physicalCardRequest->house,
-                $physicalCardRequest->house_addition,
-                $physicalCardRequest->postcode,
-                $physicalCardRequest->city
-            ),
-            'added_by_employee' => false
+            'note'    => $address,
+            'address' => $address,
+            'employee_id' => $employee ? $employee->id : null,
         ]);
 
         PhysicalCardRequestCreatedNotification::send($eventLog);

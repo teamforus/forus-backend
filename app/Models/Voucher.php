@@ -1188,7 +1188,10 @@ class Voucher extends Model
         ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION))->merge(
             EventLog::query()->where([
                 'loggable_type' => 'physical_card_request'
-            ])->whereIn('loggable_id', $this->physical_card_requests->pluck('id')->toArray())
+            ])->whereIn(
+                'loggable_id',
+                $this->physical_card_requests()->pluck('id')->toArray()
+            )->get()
         );
     }
 
