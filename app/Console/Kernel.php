@@ -19,6 +19,7 @@ use App\Console\Commands\Digests\SendProviderProductsDigestCommand;
 use App\Console\Commands\Digests\SendRequesterDigestCommand;
 use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
+use App\Console\Commands\UpdateFundProviderAllowSomeProductsCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateVoucherTransactionDetailsCommand;
 use Illuminate\Console\Scheduling\Schedule;
@@ -53,6 +54,9 @@ class Kernel extends ConsoleKernel
 
         // provider invitations
         UpdateFundProviderInvitationExpireStateCommand::class,
+
+        // fund provider update 'allow_some_products' value
+        UpdateFundProviderAllowSomeProductsCommand::class,
 
         // product expiration
         CheckProductExpirationCommand::class,
