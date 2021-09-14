@@ -8,10 +8,12 @@ use App\Services\Forus\Identity\Models\Identity;
 
 class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotification
 {
-    // todo: show this notification somewhere?
-    protected $scope = null;
-    protected $key = 'notifications_identities.voucher_deactivated';
-    protected $sendMail = true;
+    protected static $scope = null;
+    protected static $sendMail = true;
+    protected static $key = 'notifications_identities.voucher_deactivated';
+
+    protected static $visible = true;
+    protected static $editable = true;
 
     public function toMail(Identity $identity): void
     {
@@ -19,9 +21,9 @@ class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotifica
         $voucher = $this->eventLog->loggable;
 
         if ($this->eventLog->data['notify_by_email'] ?? false) {
-            $this->getNotificationService()->sendMailNotification(
+            $this->sendMailNotification(
                 $voucher->identity->primary_email->email,
-                new DeactivationVoucherMail($this->eventLog)
+                new DeactivationVoucherMail($this->eventLog->data, $voucher->fund->getEmailFrom())
             );
         }
     }

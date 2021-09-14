@@ -4,5 +4,6 @@ namespace App\Notifications\Identities\Voucher;
 
 class IdentityVoucherAddedSubsidyNotification extends BaseIdentityVoucherNotification
 {
-    protected $key = 'notifications_identities.voucher_added_subsidy';
+    protected static $key = 'notifications_identities.voucher_added_subsidy';
+    protected static $visible = true;
 }

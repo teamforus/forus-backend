@@ -59,6 +59,7 @@ class FundRequest extends Model
     public const EVENT_RESOLVED = 'resolved';
     public const EVENT_APPROVED = 'approved';
     public const EVENT_DECLINED = 'declined';
+    public const EVENT_RECORD_DECLINED = 'record_declined';
     public const EVENT_APPROVED_PARTLY = 'approved_partly';
     public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
 

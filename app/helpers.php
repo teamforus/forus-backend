@@ -1,13 +1,14 @@
 <?php
 
-use App\Models\Implementation;
-use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use App\Services\Forus\Session\Services\Browser;
 use Illuminate\Support\Facades\Config;
+use App\Models\Implementation;
+use App\Services\Forus\Session\Services\Data\AgentData;
+use Carbon\Carbon;
 
 if (!function_exists('auth_user')) {
     /**
@@ -58,10 +59,8 @@ if (!function_exists('auth_model')) {
      * @param int $errorCode
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
-    function auth_model(
-        $abortOnFail = false,
-        $errorCode = 403
-    ) {
+    function auth_model($abortOnFail = false, $errorCode = 403): ?\Illuminate\Contracts\Auth\Authenticatable
+    {
         $authUser = auth()->user();
 
         if ($abortOnFail && (!$authUser || !method_exists($authUser, 'getProxyId'))) {
@@ -88,7 +87,8 @@ if (!function_exists('format_date')) {
      * @param string $format
      * @return string|null
      */
-    function format_date($date, string $format = 'short_date_time') {
+    function format_date($date, string $format = 'short_date_time'): ?string
+    {
         try {
             if (is_string($date)) {
                 $date = new Carbon($date);
@@ -109,7 +109,8 @@ if (!function_exists('format_datetime_locale')) {
      * @param string $format
      * @return string|null
      */
-    function format_datetime_locale($date, string $format = 'short_date_time_locale') {
+    function format_datetime_locale($date, string $format = 'short_date_time_locale'): ?string
+    {
         try {
             if (is_string($date)) {
                 $date = new Carbon($date);
@@ -158,7 +159,8 @@ if (!function_exists('currency_format')) {
      * @param string $thousands_sep
      * @return string
      */
-    function currency_format($number, $decimals = 2, $dec_point = '.', $thousands_sep = '') {
+    function currency_format($number, $decimals = 2, $dec_point = '.', $thousands_sep = ''): string
+    {
         return number_format($number, $decimals, $dec_point, $thousands_sep);
     }
 }
@@ -169,8 +171,9 @@ if (!function_exists('currency_format_locale')) {
      * @param string $sign
      * @return string
      */
-    function currency_format_locale($number, $sign = '€ '): string {
-        $isWhole = (double) ($number - round($number)) === (double) 0;
+    function currency_format_locale($number, $sign = '€ '): string
+    {
+        $isWhole = ($number - round($number)) === (double) 0;
 
         return $sign . currency_format($number, $isWhole ? 0 : 2, ',', '.') . ($isWhole ? ',-' : '');
     }
@@ -190,7 +193,7 @@ if (!function_exists('rule_number_format')) {
         $decimals = 2,
         $dec_point = '.',
         $thousands_sep = ''
-    ) {
+    ): string {
         return number_format(
             (float) (is_numeric($number) ? $number : 0),
             $decimals,
@@ -208,7 +211,8 @@ if (!function_exists('authorize')) {
      * @return \Illuminate\Auth\Access\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    function authorize($ability, $arguments = []) {
+    function authorize($ability, $arguments = []): \Illuminate\Auth\Access\Response
+    {
         $normalizeGuessedAbilityName = static function ($ability) {
             $map = [
                 'show' => 'view',
@@ -353,7 +357,7 @@ if (!function_exists('str_terminal_color')) {
 
         $color = $colors[$color] ?? $colors['white'];
 
-        return "\033[{$color}m{$text}\033[0m";
+        return "\033[{$color}m$text\033[0m";
     }
 }
 
@@ -402,41 +406,19 @@ if (!function_exists('record_types_cached')) {
 
 if (!function_exists('pretty_file_size')) {
     /**
-     * Human readable file size
+     * Human-readable file size
      * @param $bytes
      * @param int $precision
      * @return string
      */
-    function pretty_file_size(
-        $bytes,
-        $precision = 2
-    ) {
+    function pretty_file_size($bytes, $precision = 2): string
+    {
         for ($i = 0; ($bytes / 1024) > 0.9; $i++) {
             $bytes /= 1024;
         }
 
         return round($bytes, $precision) .
             ['','k','M','G','T','P','E','Z','Y'][$i] . 'B';
-    }
-}
-
-if (!function_exists('service_identity')) {
-    /**
-     * Get identity service instance
-     * @return \App\Services\Forus\Record\Repositories\RecordRepo|mixed
-     */
-    function service_identity() {
-        return resolve('forus.services.identity');
-    }
-}
-
-if (!function_exists('service_record')) {
-    /**
-     * Get record service instance
-     * @return \App\Services\Forus\Record\Repositories\RecordRepo|mixed
-     */
-    function service_record() {
-        return resolve('forus.services.record');
     }
 }
 
@@ -493,10 +475,8 @@ if (!function_exists('validate_data')) {
      * @param array $rules
      * @return \Illuminate\Validation\Validator
      */
-    function validate_data(
-        $data = [],
-        $rules = []
-    ) {
+    function validate_data($data = [], $rules = []): \Illuminate\Validation\Validator
+    {
         return \Illuminate\Support\Facades\Validator::make($data, $rules);
     }
 }
@@ -506,7 +486,8 @@ if (!function_exists('filter_bool')) {
      * @param $value
      * @return bool
      */
-    function filter_bool($value) {
+    function filter_bool($value): bool
+    {
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 }
@@ -517,9 +498,9 @@ if (!function_exists('url_extend_get_params')) {
      * @param array $params
      * @return string
      */
-    function url_extend_get_params(string $url, array $params = []) {
+    function url_extend_get_params(string $url, array $params = []): string
+    {
         $urlData = explode('?', rtrim($url, '/'));
-
         $urlParams = [];
         parse_str($urlData[1] ?? "", $urlParams);
 
@@ -587,10 +568,12 @@ if (!function_exists('make_qr_code')) {
     /**
      * @param string $type
      * @param string $value
+     * @param int $size
      * @return string|void
      */
-    function make_qr_code(string $type, string $value) {
-        return QrCode::format('png')->size(400)->margin(2)->generate(
+    function make_qr_code(string $type, string $value, int $size = 400): string
+    {
+        return QrCode::format('png')->size($size)->margin(2)->generate(
             json_encode(compact('type', 'value'))
         );
     }
@@ -656,7 +639,7 @@ if (!function_exists('trans_fb')) {
      * @param string $fallback
      * @param array $parameters
      * @param string $locale
-     * @return \Symfony\Component\Translation\TranslatorInterface|string
+     * @return array|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Translation\Translator|string|null
      */
     function trans_fb($id, $fallback, $parameters = [], $locale = null)
     {
@@ -667,6 +650,10 @@ if (!function_exists('trans_fb')) {
 if (!function_exists('str_var_replace')) {
     function str_var_replace($string, $replace)
     {
+        $replace = array_sort($replace, function ($value, $key) {
+            return mb_strlen($key) * -1;
+        });
+
         foreach ($replace as $key => $value) {
             $string = str_replace(
                 [':'.$key, ':' . Str::upper($key), ':' . Str::ucfirst($key)],
@@ -683,7 +670,7 @@ if (!function_exists('record_repo')) {
     /**
      * @return \App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo
      */
-    function record_repo()
+    function record_repo(): \App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo
     {
         return resolve('forus.services.record');
     }
@@ -693,39 +680,18 @@ if (!function_exists('identity_repo')) {
     /**
      * @return \App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo
      */
-    function identity_repo()
+    function identity_repo(): \App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo
     {
         return resolve('forus.services.identity');
-    }
-}
-
-if (!function_exists('notification_service')) {
-    /**
-     * @return \App\Services\Forus\Notification\NotificationService|\Illuminate\Contracts\Foundation\Application|mixed
-     */
-    function notification_service()
-    {
-        return resolve('forus.services.notification');
-    }
-}
-
-if (!function_exists('query_with_trashed')) {
-    /**
-     * @param Builder|\Illuminate\Database\Eloquent\SoftDeletes|\Illuminate\Database\Eloquent\Relations\Relation $builder
-     * @return mixed
-     */
-    function query_with_trashed($builder)
-    {
-        return $builder->withTrashed();
     }
 }
 
 if (!function_exists('user_agent_data')) {
     /**
      * @param null $user_agent
-     * @return \App\Services\Forus\Session\Services\Data\AgentData|null
+     * @return AgentData|null
      */
-    function user_agent_data($user_agent = null)
+    function user_agent_data($user_agent = null): AgentData
     {
         return Browser::getAgentData($user_agent ?: request()->userAgent());
     }

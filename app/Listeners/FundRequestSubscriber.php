@@ -2,12 +2,16 @@
 
 namespace App\Listeners;
 
+use App\Events\FundRequests\FundRequestRecordDeclined;
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Models\FundRequest;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -74,7 +78,29 @@ class FundRequestSubscriber
             'fund_request' => $fundRequest,
         ]);
 
-        IdentityFundRequestResolvedNotification::send($eventLog);
+        if ($fundRequest->state === FundRequest::STATE_APPROVED) {
+            IdentityFundRequestApprovedNotification::send($eventLog);
+        } else {
+            IdentityFundRequestDeniedNotification::send($eventLog);
+        }
+    }
+
+    /**
+     * @param FundRequestRecordDeclined $requestRecordEvent
+     */
+    public function onFundRequestRecordDeclined(FundRequestRecordDeclined $requestRecordEvent): void
+    {
+        $fundRequest = $requestRecordEvent->getFundRequest();
+        $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
+
+        $event = $fundRequest->log($fundRequest::EVENT_RECORD_DECLINED, [
+            'fund' => $fundRequest->fund,
+            'sponsor' => $fundRequest->fund->organization,
+        ], [
+            'rejection_note' => $fundRequestRecord->note,
+        ]);
+
+        IdentityFundRequestRecordDeclinedNotification::send($event);
     }
 
     /**
@@ -92,6 +118,11 @@ class FundRequestSubscriber
         $events->listen(
             FundRequestResolved::class,
             '\App\Listeners\FundRequestSubscriber@onFundRequestResolved'
+        );
+
+        $events->listen(
+            FundRequestRecordDeclined::class,
+            '\App\Listeners\FundRequestSubscriber@onFundRequestRecordDeclined'
         );
     }
 }

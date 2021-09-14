@@ -2,7 +2,7 @@
 
 namespace App\Services\EventLogService\Traits;
 
-use App\Services\EventLogService\Interfaces\IEventLogService;
+use App\Services\EventLogService\EventLogService;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -21,7 +21,7 @@ trait HasLogs
      */
     public function log(string $event, array $models = [], array $raw_meta = []): EventLog
     {
-        $logService = resolve(IEventLogService::class);
+        $logService = resolve(EventLogService::class);
 
         $meta = array_reduce(array_keys(array_filter($models, static function($model) {
             return $model !== null;

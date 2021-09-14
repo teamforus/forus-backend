@@ -2,9 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Models\Implementation;
+use App\Models\NotificationTemplate;
 use App\Services\EventLogService\Models\EventLog;
+use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notification;
@@ -22,24 +26,97 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public const SCOPE_PROVIDER = 'provider';
     public const SCOPE_VALIDATOR = 'validator';
 
-    protected $key;
+    protected static $key;
+    protected static $scope;
+    protected static $pushKey;
+    protected static $sendMail =false;
+    protected static $sendPush = false;
+    protected static $group;
+
+    protected static $visible = false;
+    protected static $editable = false;
+
     protected $eventLog;
-    protected $scope;
     protected $meta = [];
-    protected $sendMail = false;
 
     /**
      * Create a new notification instance.
      *
      * BaseNotification constructor.
-     * @param EventLog $eventLog
+     * @param EventLog|null $eventLog
      * @param array $meta
      */
-    public function __construct(EventLog $eventLog, array $meta = [])
+    public function __construct(?EventLog $eventLog, array $meta = [])
     {
-        $this->queue = config('forus.notifications.notifications_queue_name');
-        $this->meta = array_merge($this->meta, $meta);
         $this->eventLog = $eventLog;
+        $this->meta = array_merge($this->meta, $meta);
+        $this->queue = config('forus.notifications.notifications_queue_name');
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isVisible(): bool
+    {
+        return static::$visible;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isEditable(): bool
+    {
+        return static::$editable;
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getKey(): ?string
+    {
+        return static::$key;
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getScope(): ?string
+    {
+        return static::$scope;
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getPushKey(): ?string
+    {
+        return static::$pushKey;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getGroup()
+    {
+        return static::$group;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getChannels(): array
+    {
+        $channels = ['database'];
+
+        if (static::$sendMail) {
+            $channels[] = 'mail';
+        }
+
+        if (static::$sendPush) {
+            $channels[] = 'push';
+        }
+
+        return $channels;
     }
 
     /**
@@ -47,37 +124,93 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      */
     public function getNotificationService()
     {
-        return notification_service();
+        return resolve('forus.services.notification');
+    }
+
+    /**
+     * @param string $email
+     * @param Mailable $mailable
+     * @return bool
+     */
+    public function sendMailNotification(string $email, Mailable $mailable): bool
+    {
+        return $this->getNotificationService()->sendMailNotification($email, $mailable);
     }
 
     /**
      * Get the notification's delivery channels.
      *
      * @return array
+     * @noinspection PhpUnused
      */
     public function via(): array
     {
+        $channelKeys = static::getChannels();
         $channels = ['database'];
 
-        if ($this->sendMail) {
+        if (in_array('mail', $channelKeys)) {
             $channels[] = MailChannel::class;
         }
 
-        return $channels;
+        if (in_array('push', $channelKeys)) {
+            $channels[] = PushChannel::class;
+        }
+
+        return $this->eventLog ? $channels : [];
     }
 
     /**
      * Serialize and save the notification in the database
      *
      * @return string[]
+     * @noinspection PhpUnused
      */
     public function toDatabase(): array
     {
         return array_merge([
-            'key' => $this->key,
-            'scope' => $this->scope,
+            'key' => static::$key,
+            'scope' => static::$scope,
             'event_id' => $this->eventLog->id,
         ], $this->meta);
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     *
+     * @param Identity $identity
+     * @return void
+     */
+    public function toMail(Identity $identity): void {}
+
+    /**
+     * Get the mail representation of the notification.
+     *
+     * @param Identity $identity
+     * @return void
+     */
+    public function toPush(Identity $identity): void
+    {
+        $templateFilter = [
+            'type' => 'push',
+            'key' => static::getKey(),
+        ];
+
+        $template = NotificationTemplate::where(array_merge($templateFilter, [
+            'implementation_id' => Implementation::general()->id,
+        ]))->first();
+
+        $implementationTemplate = NotificationTemplate::where(array_merge($templateFilter, [
+            'implementation_id' => Implementation::byKey($this->eventLog->data['implementation_key'])->id ?? null,
+        ]))->first() ?: $template;
+
+        if ($implementationTemplate) {
+            $this->getNotificationService()->sendPushNotification(
+                $identity->address,
+                str_var_replace($implementationTemplate->title, $this->eventLog->data),
+                str_var_replace($implementationTemplate->content, $this->eventLog->data),
+                static::getPushKey()
+            );
+        }
     }
 
     /**

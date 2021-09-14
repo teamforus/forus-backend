@@ -30,10 +30,8 @@ class OrganizationSubscriber
         ]);
 
         try {
-            $kvkService = resolve('kvk_api');
-
             if ($organization->kvk != Organization::GENERIC_KVK) {
-                $offices = $kvkService->getOffices($organization->kvk);
+                $offices = resolve('kvk_api')->getOffices($organization->kvk);
 
                 foreach (collect($offices ?: []) as $office) {
                     $organization->offices()->create(

@@ -1,11 +1,8 @@
 <?php
 
-
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
-use Illuminate\Mail\Mailable;
 
 /**
  * Class VoucherMail
@@ -13,55 +10,6 @@ use Illuminate\Mail\Mailable;
  */
 class SendVoucherMail extends ImplementationMail
 {
-    private $fundName;
-    private $fund_product_name;
-    private $qrToken;
-    private $voucher_amount;
-    private $voucher_last_active_day;
-    public $communicationType;
-
-    /**
-     * SendVoucherMail constructor.
-     * @param string $fund_name
-     * @param string $fund_product_name
-     * @param string $qrToken
-     * @param int $voucher_amount
-     * @param string $voucher_expire_minus_day
-     * @param EmailFrom|null $emailFrom
-     */
-    public function __construct(
-        string $fund_name,
-        string $fund_product_name,
-        string $qrToken,
-        int $voucher_amount,
-        string $voucher_last_active_day,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-        $this->fundName = $fund_name;
-        $this->fund_product_name = $fund_product_name;
-        $this->qrToken = $qrToken;
-        $this->voucher_amount = $voucher_amount;
-        $this->voucher_last_active_day = $voucher_last_active_day;
-    }
-
-    /**
-     * @return Mailable
-     */
-    public function build(): Mailable
-    {
-        $this->communicationType = $this->emailFrom->isInformalCommunication() ? 'informal' : 'formal';
-
-        return $this->buildBase()
-            ->subject(mail_trans('voucher_sent.title_' . $this->communicationType, [
-                'fund_name' => $this->fundName
-            ]))
-            ->view('emails.vouchers.voucher_sent', [
-                'fund_name' => $this->fundName,
-                'fund_product_name' => $this->fund_product_name,
-                'qr_token' => $this->qrToken,
-                'voucher_amount' => $this->voucher_amount,
-                'voucher_last_active_day' => $this->voucher_last_active_day,
-            ]);
-    }
+    protected $subjectKey = 'mails/voucher_sent.title';
+    protected $viewKey = 'emails.vouchers.voucher_sent';
 }

@@ -9,6 +9,7 @@ use App\Models\Fund;
 use App\Models\FundProviderInvitation;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderInvitationsController extends Controller
 {
@@ -25,7 +26,7 @@ class FundProviderInvitationsController extends Controller
         IndexFundProviderInvitationsRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('viewAnySponsor', [
             FundProviderInvitation::class, $fund, $organization
         ]);
@@ -56,7 +57,7 @@ class FundProviderInvitationsController extends Controller
         Organization $organization,
         Fund $fund,
         FundProviderInvitation $invitation
-    ) {
+    ): FundProviderInvitationResource {
         $this->authorize('showSponsor', [
             $invitation, $fund, $organization
         ]);
@@ -78,7 +79,7 @@ class FundProviderInvitationsController extends Controller
         StoreFundProviderInvitationsRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
+    ): AnonymousResourceCollection {
         $fromFund = Fund::find($request->input('fund_id'));
 
         $this->authorize('storeSponsor', [

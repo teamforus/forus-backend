@@ -1,22 +1,20 @@
-@extends('emails.base')
-
-@section('button_text', mail_trans('provider_invitation.button_text'))
-@section('link', $invitation_link)
-@section('title', mail_trans('provider_invitation.title', [
-    'sponsor_name' => $sponsor_name,
-    'fund_name' => $fund_name
-]))
-
 <?php
-    $allVars = compact('provider_name', 'sponsor_name', 'sponsor_email', 'sponsor_phone', 'fund_name', 'fund_start_date', 'fund_end_date', 'from_fund_name');
+/** @var string $communicationType */
+/** @var string $subject */
+/** @var array $data */
 ?>
 
+@extends('emails.base')
+@section('title', trans('mails/provider_invitation.title', $subject))
+@section('button_text', trans('mails/provider_invitation.button_text', $data))
+@section('link', $invitation_link)
+
 @section('html')
-    {{ mail_trans('dear_provider', ['provider_name' => $provider_name]) }},
+    {!! trans('mails/_misc.dear_provider', $data) !!},
     <br/>
     <br/>
-    {!! nl2br(e(mail_trans('provider_invitation.invitation_text', $allVars))) !!},
+    {!! trans('mails/provider_invitation.invitation_text', $data) !!},
     <br/>
     <br/>
-    {!! mail_trans('provider_invitation.accept_invitation', ['link' => $invitation_link]) !!}
+    {!! trans('mails/provider_invitation.accept_invitation', $data) !!}
 @endsection

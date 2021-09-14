@@ -5,7 +5,6 @@ namespace App\Providers;
 use App\Listeners\EmployeeSubscriber;
 use App\Listeners\FundProviderSubscriber;
 use App\Listeners\FundRequestClarificationSubscriber;
-use App\Listeners\FundRequestRecordSubscriber;
 use App\Listeners\FundRequestSubscriber;
 use App\Listeners\FundSubscriber;
 use App\Listeners\OrganizationSubscriber;
@@ -35,7 +34,6 @@ class EventServiceProvider extends ServiceProvider
         OrganizationSubscriber::class,
         ProductReservationSubscriber::class,
         FundProviderSubscriber::class,
-        FundRequestRecordSubscriber::class,
         VoucherTransactionsSubscriber::class,
         FundRequestClarificationSubscriber::class,
     ];

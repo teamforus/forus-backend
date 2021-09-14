@@ -16,7 +16,7 @@ use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
 use App\Models\VoucherTransaction;
-use App\Events\Funds\FundCreated;
+use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundBalanceLowEvent;
@@ -271,7 +271,7 @@ class LoremDbSeeder extends Seeder
                     'allow_products'    => $fund->isTypeBudget() && random_int(0, 2),
                 ]);
 
-                FundProviderApplied::dispatch($provider);
+                FundProviderApplied::dispatch($fund, $provider);
             }
         }
 
@@ -292,7 +292,7 @@ class LoremDbSeeder extends Seeder
                     'organization_id'   => $providers->random(),
                 ]);
 
-                FundProviderApplied::dispatch($provider->updateModel([
+                FundProviderApplied::dispatch($fund, $provider->updateModel([
                     'allow_products'    => $fund->isTypeBudget(),
                     'allow_budget'      => $fund->isTypeBudget(),
                 ]));
@@ -608,9 +608,9 @@ class LoremDbSeeder extends Seeder
             'amount' => 100000,
         ]);
 
-        FundCreated::dispatch($fund);
+        FundCreatedEvent::dispatch($fund);
         FundBalanceLowEvent::dispatch($fund);
-        FundBalanceSuppliedEvent::dispatch($transaction);
+        FundBalanceSuppliedEvent::dispatch($fund, $transaction);
 
         if ($active) {
             FundStartedEvent::dispatch($fund);

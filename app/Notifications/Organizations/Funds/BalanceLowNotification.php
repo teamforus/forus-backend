@@ -2,14 +2,29 @@
 
 namespace App\Notifications\Organizations\Funds;
 
+use App\Mail\Funds\FundBalanceWarningMail;
+use App\Models\Fund;
+use App\Services\Forus\Identity\Models\Identity;
+
 /**
  * Class BalanceLowNotification
  * @package App\Notifications\Organizations\Funds
  */
-class BalanceLowNotification extends BaseFundsNotification {
-    protected $key = 'notifications_funds.balance_low';
+class BalanceLowNotification extends BaseFundsNotification
+{
+    protected static $key = 'notifications_funds.balance_low';
+    protected static $permissions = 'view_finances';
+    protected static $sendMail = true;
 
-    protected static $permissions = [
-        'view_finances'
-    ];
+    /**
+     * @param Identity $identity
+     */
+    public function toMail(Identity $identity): void
+    {
+        /** @var Fund $fund */
+        $fund = $this->eventLog->loggable;
+        $mailable = new FundBalanceWarningMail($this->eventLog->data, $fund->getEmailFrom());
+
+        $this->sendMailNotification($identity->email, $mailable);
+    }
 }

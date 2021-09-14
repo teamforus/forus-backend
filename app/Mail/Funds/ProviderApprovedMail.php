@@ -3,7 +3,6 @@
 namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -12,36 +11,17 @@ use Illuminate\Mail\Mailable;
  */
 class ProviderApprovedMail extends ImplementationMail
 {
-    private $fundName;
-    private $providerName;
-    private $sponsorName;
-    private $link;
+    protected $notificationTemplateKey = 'notifications_fund_providers.approved_budget';
 
-    public function __construct(
-        string $fundName,
-        string $providerName,
-        string $sponsorName,
-        string $link,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-
-        $this->fundName = $fundName;
-        $this->providerName = $providerName;
-        $this->sponsorName = $sponsorName;
-        $this->link = $link;
-    }
-
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
-        return $this->buildBase()
-            ->subject(mail_trans('provider_approved.title'))
-            ->view('emails.funds.provider_approved', [
-                'fund_name'                 => $this->fundName,
-                'provider_name'             => $this->providerName,
-                'sponsor_name'              => $this->sponsorName,
-                'provider_dashboard_link'    => $this->link
-            ]);
-    }
+        $provider_dashboard_link = $this->mailData['provider_dashboard_link'];
 
+        return $this->buildTemplatedNotification([
+            'provider_dashboard_link' => $this->makeLink($provider_dashboard_link, 'hier'),
+        ]);
+    }
 }

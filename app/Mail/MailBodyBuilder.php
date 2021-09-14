@@ -84,6 +84,44 @@ class MailBodyBuilder
     }
 
     /**
+     * @param string $html
+     * @param array $globalStyles
+     * @return MailBodyBuilder
+     */
+    public function markdownHtml(string $html, $globalStyles = 'text_left'): MailBodyBuilder
+    {
+        $html = $this->addStylesToMarkdownHtml($html, $globalStyles);
+
+        return $this->block('markdown', $html);
+    }
+
+    /**
+     * @param string $html
+     * @param string $globalStyles
+     * @return array|string|string[]
+     */
+    public function addStylesToMarkdownHtml(string $html, $globalStyles = 'text_left')
+    {
+        $styles = config('forus.mail_styles');
+
+        $globalStyles = array_reduce(array_filter((array) $globalStyles), function($list, $key) use ($styles) {
+            return $list . ' ' . ($styles[$key] ?? '');
+        }, '');
+
+        $replaces = [
+            "<h1>"  => "<h1 style='" . $styles['h1'] . ' ' . $globalStyles . "'>",
+            "<h2>"  => "<h2 style='" . $styles['h2'] . ' ' . $globalStyles . "'>",
+            "<h3>"  => "<h3 style='" . $styles['h3'] . ' ' . $globalStyles . "'>",
+            "<h4>"  => "<h4 style='" . $styles['h4'] . ' ' . $globalStyles . "'>",
+            "<h5>"  => "<h5 style='" . $styles['h5'] . ' ' . $globalStyles . "'>",
+            "<p>"  => "<p style='" . $styles['text'] . ' ' . $globalStyles . "'>",
+            "<a href"  => "<a style='" . $styles['link'] . ' ' . $globalStyles . "' href",
+        ];
+
+        return str_replace(array_keys($replaces), array_values($replaces), $html);
+    }
+
+    /**
      * @return MailBodyBuilder
      */
     public function space(): MailBodyBuilder

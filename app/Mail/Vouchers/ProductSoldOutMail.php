@@ -1,10 +1,8 @@
 <?php
 
-
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -13,29 +11,15 @@ use Illuminate\Mail\Mailable;
  */
 class ProductSoldOutMail extends ImplementationMail
 {
-    private $productName;
-    private $link;
-
-    public function __construct(
-        string $productName,
-        string $link,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-
-        $this->productName = $productName;
-        $this->link = $link;
-    }
+    protected $notificationTemplateKey = 'notifications_products.sold_out';
 
     public function build(): Mailable
     {
-        return $this->buildBase()
-            ->subject(mail_trans('product_sold_out.title', [
-                'product_name' => $this->productName
-            ]))
-            ->view('emails.funds.product_sold_out', [
-                'product_name' => $this->productName,
-                'link' => $this->link
-            ]);
+        $link = $this->mailData['provider_dashboard_link'];
+
+        return $this->buildTemplatedNotification([
+            'provider_dashboard_link' => $this->makeLink($link, 'hier'),
+            'provider_dashboard_button' => $this->makeButton($link, 'Inloggen'),
+        ]);
     }
 }

@@ -7,21 +7,24 @@ use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
+use App\Events\Vouchers\VoucherSendToEmailEvent;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Identity\Models\Identity;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use RuntimeException;
+use Carbon\Carbon;
 
 /**
  * App\Models\Voucher
@@ -135,6 +138,9 @@ class Voucher extends Model
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
     public const STATE_DEACTIVATED = 'deactivated';
+
+    public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
+    public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
 
     public const TYPES = [
         self::TYPE_BUDGET,
@@ -280,9 +286,10 @@ class Voucher extends Model
      */
     public function product(): BelongsTo
     {
-        return query_with_trashed($this->belongsTo(
-            Product::class, 'product_id', 'id'
-        ));
+        return $this->belongsTo(Product::class)->where(function(Builder $builder) {
+            /** @var Builder|SoftDeletes $builder */
+            return $builder->withTrashed();
+        });
     }
 
     /**
@@ -447,58 +454,7 @@ class Voucher extends Model
      */
     public function sendToEmail(string $email = null): void
     {
-        /** @var VoucherToken $voucherToken */
-        $voucherToken = $this->tokens()->where([
-            'need_confirmation' => false
-        ])->first();
-
-        if ($voucherToken->voucher->type === 'product') {
-            $fund_product_name = $voucherToken->voucher->product->name;
-        } else {
-            $fund_product_name = $voucherToken->voucher->fund->name;
-        }
-
-        resolve('forus.services.notification')->sendVoucher(
-            $email,
-            $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
-            $fund_product_name,
-            $this->amount,
-            format_date_locale($this->expire_at, 'long_date_locale'),
-            $fund_product_name,
-            $voucherToken->address
-        );
-    }
-
-    /**
-     * @param string|null $email
-     */
-    public function assignedVoucherEmail(string $email = null): void
-    {
-        $mailFrom = $this->fund->fund_config->implementation->getEmailFrom();
-        $expireDate = format_date_locale($this->expire_at, 'long_date_locale');
-
-        if ($this->isBudgetType()) {
-            $type = $this->fund->isTypeBudget() ? 'budget' : 'subsidies';
-        } else {
-            $type = 'product';
-        }
-
-        resolve('forus.services.notification')->assignVoucher($email, $mailFrom, $type, [
-            'fund_name' => $this->fund->name,
-            'link_webshop' => $this->fund->urlWebshop(),
-            'qr_token' => $this->token_without_confirmation->address,
-            'product_name' => $this->product->name ?? null,
-            'provider_name' => $this->product->organization->name ?? null,
-            'provider_email' => $this->product->organization->email ?? null,
-            'provider_phone' => $this->product->organization->phone ?? null,
-            'provider_website' => $this->product->organization->website ?? null,
-            'sponsor_name' => $this->fund->organization->name ?? null,
-            'sponsor_email' => $this->fund->organization->email ?? null,
-            'sponsor_phone' => $this->fund->organization->phone ?? null,
-            'sponsor_description' => $this->fund->organization->description ?? null,
-            'voucher_amount' => $this->amount,
-            'voucher_last_active_day' => $expireDate,
-        ]);
+        VoucherSendToEmailEvent::dispatch($this, $email);
     }
 
     /**
@@ -520,64 +476,11 @@ class Voucher extends Model
     }
 
     /**
-     * @param int $days
-     */
-    public static function checkVoucherExpireQueue(int $days = 4 * 7): void
-    {
-        $date = now()->addDays($days)->startOfDay()->format('Y-m-d');
-
-        $vouchers = self::query()
-            ->whereNull('product_id')
-            ->whereNotNull('identity_address')
-            ->with(['fund', 'fund.organization'])
-            ->whereDate('expire_at', '=', $date)
-            ->get();
-
-        /** @var self $voucher */
-        foreach ($vouchers as $voucher) {
-            if ($voucher->amount_available_cached > 0) {
-                $voucher->sendVoucherExpireMail();
-            }
-        }
-    }
-
-    /**
-     * Send voucher expiration warning email to requester identity
-     */
-    public function sendVoucherExpireMail(): void {
-        $voucher = $this;
-        $notificationService = resolve('forus.services.notification');
-        $recordRepo = resolve('forus.services.record');
-        $primaryEmail = $recordRepo->primaryEmailByAddress($voucher->identity_address);
-
-        $fund_name = $voucher->fund->name;
-        $sponsor_name = $voucher->fund->organization->name;
-        $start_date = $voucher->fund->start_date;
-        $end_date = $voucher->fund->end_date;
-        $phone = $voucher->fund->organization->phone;
-        $email = $voucher->fund->organization->email;
-        $webshopLink = $voucher->fund->urlWebshop();
-
-        $notificationService->voucherExpireSoon(
-            $primaryEmail,
-            $voucher->fund->fund_config->implementation->getEmailFrom(),
-            $fund_name,
-            $sponsor_name,
-            $start_date,
-            $end_date,
-            $phone,
-            $email,
-            $webshopLink
-        );
-    }
-
-    /**
      * @param Request $request
      * @return Builder
      */
-    public static function search(
-        Request $request
-    ): Builder {
+    public static function search(Request $request): Builder
+    {
         /** @var Builder $query */
         $query = self::query();
         $granted = $request->input('granted');
@@ -612,13 +515,13 @@ class Voucher extends Model
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder
      */
     public static function searchSponsorQuery(
-        Request $request,
+        BaseFormRequest $request,
         Organization $organization,
         Fund $fund = null
     ): Builder {
@@ -658,12 +561,12 @@ class Voucher extends Model
         }
 
         if ($request->has('email') && $email = $request->input('email')) {
-            $query->where('identity_address', identity_repo()->getAddress($email) ?: '_');
+            $query->where('identity_address', $request->identity_repo()->getAddress($email) ?: '_');
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
-            $query->where(static function(Builder $builder) use ($bsn) {
-                $builder->where('identity_address', record_repo()->identityAddressByBsn($bsn) ?: '-');
+            $query->where(static function(Builder $builder) use ($bsn, $request) {
+                $builder->where('identity_address', $request->records_repo()->identityAddressByBsn($bsn) ?: '-');
                 $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
                     $builder->where(compact('bsn'));
                 });
@@ -689,13 +592,13 @@ class Voucher extends Model
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder[]|Collection
      */
     public static function searchSponsor(
-        Request $request,
+        BaseFormRequest $request,
         Organization $organization,
         Fund $fund = null
     ) {

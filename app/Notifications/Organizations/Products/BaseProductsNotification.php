@@ -11,10 +11,12 @@ use App\Notifications\Organizations\BaseOrganizationNotification;
  */
 abstract class BaseProductsNotification extends BaseOrganizationNotification
 {
+    protected static $visible = true;
+
     /**
      * @var string
      */
-    protected $scope = self::SCOPE_PROVIDER;
+    protected static $scope = self::SCOPE_PROVIDER;
 
     /**
      * @param \App\Models\Product $loggable

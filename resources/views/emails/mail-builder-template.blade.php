@@ -2,7 +2,7 @@
 
 $styles = config('forus.mail_styles');
 
-if (isset($emailBody) && is_object($emailBody) && $emailBody instanceof \App\Mail\MailBodyBuilder) {
+if (isset($emailBody) && $emailBody instanceof \App\Mail\MailBodyBuilder) {
     $emailBody = $emailBody->toArray();
 } else {
     return;
@@ -44,6 +44,8 @@ foreach (array_keys($emailBody) as $key) {
                         </div>
                     @elseif(array_intersect((array) $emailItem[0], ['separator']))
                         <div style="{{ $emailItem['style'] ?? '' }}"></div>
+                    @elseif(array_intersect((array) $emailItem[0], ['markdown']))
+                            <div style="{{ $emailItem['style'] ?? '' }}">{!! $emailItem[1] !!}</div>
                     @endif
                 @endforeach
             @endif
@@ -51,7 +53,7 @@ foreach (array_keys($emailBody) as $key) {
         @if (!($hideFooter ?? false))
             <div class="email-footer" style="{{ $styles['email_footer'] }}">
                 @isset($email)
-                    {!! mail_trans('not_for_you', ['email' => $email, 'unsubscribeLink' => $unsubscribeLink, 'email_preferences_link' => $notificationPreferencesLink]) !!}
+                    {!! trans('mails/_misc.not_for_you', ['email' => $email, 'unsubscribeLink' => $unsubscribeLink, 'email_preferences_link' => $notificationPreferencesLink]) !!}
                 @endisset
             </div>
         @endif

@@ -1,12 +1,19 @@
+<?php
+/** @var string $communicationType */
+/** @var string $subject */
+/** @var array $data */
+?>
+
 @extends('emails.base')
-@section('title', mail_trans('fund_created.title', ['fund_name' => $fund_name]))
+@section('title', $subject)
+
 @section('html')
-    {{ mail_trans('dear_forus') }},
+    {!! trans('mails/_misc.dear_forus', $data) !!},
     <br/>
     <br/>
-    {{ mail_trans('fund_created.new_fund_created', ['fund_name' => $fund_name]) }}
+    {!! trans('mails/fund_created.new_fund_created', $data) !!}
     <br/>
-    {{ mail_trans('fund_created.by', ['organization_name' => $organization_name]) }}
+    {!! trans('mails/fund_created.by', $data) !!}
     <br/>
     <br/>
 @endsection

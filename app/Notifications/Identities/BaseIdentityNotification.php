@@ -3,7 +3,6 @@
 namespace App\Notifications\Identities;
 
 use App\Notifications\BaseNotification;
-use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -12,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 abstract class BaseIdentityNotification extends BaseNotification
 {
-    protected $scope = self::SCOPE_WEBSHOP;
+    protected static $scope = self::SCOPE_WEBSHOP;
 
     /**
      * @param Model $loggable
@@ -22,15 +21,7 @@ abstract class BaseIdentityNotification extends BaseNotification
     public static function getMeta($loggable): array
     {
         return [
-            'organization_id' => null
+            'organization_id' => null,
         ];
     }
-
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @param Identity $identity
-     * @return void
-     */
-    public function toMail(Identity $identity): void {}
 }

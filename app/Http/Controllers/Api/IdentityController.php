@@ -44,9 +44,8 @@ class IdentityController extends Controller
      * @throws \Exception
      * @noinspection PhpUnused
      */
-    public function store(
-        IdentityStoreRequest $request
-    ): JsonResponse {
+    public function store(IdentityStoreRequest $request): JsonResponse
+    {
         // client type, key and primary email
         $clientKey = implementation_key();
         $clientType = client_type();
@@ -97,9 +96,8 @@ class IdentityController extends Controller
      * @return JsonResponse
      * @noinspection PhpUnused
      */
-    public function storeValidateEmail(
-        IdentityStoreValidateEmailRequest $request
-    ): JsonResponse {
+    public function storeValidateEmail(IdentityStoreValidateEmailRequest $request): JsonResponse
+    {
         $email = (string) $request->input('email', '');
         $used = !$request->identity_repo()->isEmailAvailable($email);
 
@@ -294,10 +292,8 @@ class IdentityController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
-    public function emailTokenExchange(
-        BaseFormRequest $request,
-        string $emailToken
-    ): JsonResponse {
+    public function emailTokenExchange(BaseFormRequest $request, string $emailToken): JsonResponse
+    {
         return response()->json([
             'access_token' => $request->identity_repo()->activateAuthorizationEmailProxy($emailToken)
         ]);
@@ -310,9 +306,8 @@ class IdentityController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
-    public function proxyAuthorizationCode(
-        BaseFormRequest $request
-    ): JsonResponse {
+    public function proxyAuthorizationCode(BaseFormRequest $request): JsonResponse
+    {
         $proxy = $request->identity_repo()->makeAuthorizationCodeProxy();
 
         return response()->json([
@@ -328,9 +323,8 @@ class IdentityController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
-    public function proxyAuthorizeCode(
-        IdentityAuthorizeCodeRequest $request
-    ): JsonResponse {
+    public function proxyAuthorizeCode(IdentityAuthorizeCodeRequest $request): JsonResponse
+    {
         $request->identity_repo()->activateAuthorizationCodeProxy(
             $request->auth_address(),
             $request->post('auth_code', '')
@@ -346,9 +340,8 @@ class IdentityController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
-    public function proxyAuthorizationToken(
-        BaseFormRequest $request
-    ): JsonResponse {
+    public function proxyAuthorizationToken(BaseFormRequest $request): JsonResponse
+    {
         $proxy = $request->identity_repo()->makeAuthorizationTokenProxy();
 
         return response()->json([
@@ -364,9 +357,8 @@ class IdentityController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @noinspection PhpUnused
      */
-    public function proxyAuthorizeToken(
-        IdentityAuthorizeTokenRequest $request
-    ): JsonResponse {
+    public function proxyAuthorizeToken(IdentityAuthorizeTokenRequest $request): JsonResponse
+    {
         $request->identity_repo()->activateAuthorizationTokenProxy(
             $request->auth_address(),
             $request->post('auth_token', '')
@@ -383,9 +375,8 @@ class IdentityController extends Controller
      * @throws \Exception
      * @noinspection PhpUnused
      */
-    public function proxyAuthorizationShortToken(
-        BaseFormRequest $request
-    ): JsonResponse {
+    public function proxyAuthorizationShortToken(BaseFormRequest $request): JsonResponse
+    {
         $proxy = $request->identity_repo()->makeAuthorizationShortTokenProxy();
         $exchange_token = $proxy['exchange_token'];
 
@@ -447,9 +438,8 @@ class IdentityController extends Controller
      * @return JsonResponse
      * @noinspection PhpUnused
      */
-    public function proxyDestroy(
-        BaseFormRequest $request
-    ): JsonResponse {
+    public function proxyDestroy(BaseFormRequest $request): JsonResponse
+    {
         $proxyDestroy = $request->get('proxyIdentity');
 
         $request->identity_repo()->destroyProxyIdentity($proxyDestroy);

@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
+use App\Models\VoucherTransaction;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -57,6 +58,7 @@ class EventLogService implements IEventLogService
             case 'organization': $modelMeta = $this->organizationMeta($model); break;
             case 'employee': $modelMeta = $this->employeeMeta($model); break;
             case 'product_reservation': $modelMeta = $this->productReservationMeta($model); break;
+            case 'voucher_transaction': $modelMeta = $this->voucherTransactionMeta($model); break;
         }
 
         return $modelMeta;
@@ -163,9 +165,7 @@ class EventLogService implements IEventLogService
         return [
             'employee_id' => $employee->id,
             'employee_roles' => $employee->roles->pluck('name')->join(', '),
-            'employee_email' => record_repo()->primaryEmailByAddress(
-                $employee->identity_address
-            ),
+            'employee_email' => record_repo()->primaryEmailByAddress($employee->identity_address),
         ];
     }
 
@@ -193,6 +193,21 @@ class EventLogService implements IEventLogService
             'voucher_amount_locale' => currency_format_locale($voucher->amount_available),
             'voucher_expire_date' => $voucher->last_active_day->format('Y-m-d'),
             'voucher_expire_date_locale' => format_date_locale($voucher->last_active_day),
+        ];
+    }
+
+    /**
+     * @param VoucherTransaction $voucherTransaction
+     * @return array
+     */
+    protected function voucherTransactionMeta(VoucherTransaction $voucherTransaction): array {
+        return [
+            'voucher_transaction_id' => $voucherTransaction->id,
+            'voucher_transaction_amount' => $voucherTransaction->amount,
+            'voucher_transaction_iban_to' => $voucherTransaction->iban_to,
+            'voucher_transaction_iban_from' => $voucherTransaction->iban_from,
+            'voucher_transaction_payment_time' => $voucherTransaction->payment_time,
+            'voucher_transaction_payment_time_locale' => format_date_locale($voucherTransaction->payment_time),
         ];
     }
 

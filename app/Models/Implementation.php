@@ -58,6 +58,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
+ * @property-read int|null $mail_templates_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
  * @property-read int|null $medias_count
  * @property-read \App\Models\Organization|null $organization
@@ -172,6 +174,15 @@ class Implementation extends Model
         return $this->hasOne(ImplementationPage::class)->where([
             'page_type' => ImplementationPage::TYPE_EXPLANATION,
         ]);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function mail_templates(): HasMany
+    {
+        return $this->hasMany(NotificationTemplate::class);
     }
 
     /**

@@ -8,8 +8,6 @@ namespace App\Notifications\Organizations\Funds;
  */
 class BalanceSuppliedNotification extends BaseFundsNotification
 {
-    protected $key = 'notifications_funds.balance_supplied';
-    protected static $permissions = [
-        'view_finances'
-    ];
+    protected static $key = 'notifications_funds.balance_supplied';
+    protected static $permissions = 'view_finances';
 }

@@ -12,8 +12,11 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNotification
 {
-    protected $key = 'notifications_identities.fund_request_created';
-    protected $sendMail = true;
+    protected static $key = 'notifications_identities.fund_request_created';
+    protected static $sendMail = true;
+
+    protected static $visible = true;
+    protected static $editable = true;
 
     /**
      * @param Identity $identity
@@ -28,14 +31,11 @@ class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNoti
             return;
         }
 
-        $this->getNotificationService()->sendMailNotification(
+        $this->sendMailNotification(
             $identity->primary_email->email,
-            new FundRequestCreatedMail(
-                $this->eventLog->data['fund_name'],
-                $this->eventLog->data['sponsor_name'],
-                $fund->urlWebshop(),
-                $fund->getEmailFrom()
-            )
+            new FundRequestCreatedMail(array_merge($this->eventLog->data, [
+                'webshop_link' => $fund->urlWebshop(),
+            ]), $fund->getEmailFrom())
         );
     }
 }

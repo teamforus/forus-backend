@@ -2,11 +2,14 @@
 
 namespace App\Listeners;
 
+use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
+use App\Models\FundProvider;
 use App\Models\Voucher;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
-use App\Notifications\Identities\Voucher\IdentityVoucherTransactionNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
+use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -16,15 +19,16 @@ use Illuminate\Events\Dispatcher;
 class VoucherTransactionsSubscriber
 {
     /**
-     * @param VoucherTransactionCreated $voucherTransactionEvent
+     * @param VoucherTransactionCreated $event
      * @throws \Exception
+     * @noinspection PhpUnused
      */
-    public function onVoucherTransactionCreated(
-        VoucherTransactionCreated $voucherTransactionEvent
-    ): void {
-        $transaction = $voucherTransactionEvent->getVoucherTransaction();
+    public function onVoucherTransactionCreated(VoucherTransactionCreated $event): void
+    {
+        $transaction = $event->getVoucherTransaction();
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
+        $type = $voucher->isProductType() ? 'product' : ($fund->isTypeBudget() ? 'budget' : 'subsidy');
 
         if ($voucher->identity_address) {
             $bsn = record_repo()->bsnByAddress($voucher->identity_address);
@@ -47,13 +51,13 @@ class VoucherTransactionsSubscriber
             'product'     => $transaction->product,
         ];
 
-        if ($voucher->isProductType()) {
-            IdentityProductVoucherTransactionNotification::send(
-                $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, $eventMeta));
-        } else if ($voucher->fund->isTypeBudget()) {
-            IdentityVoucherTransactionNotification::send(
-                $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta));
-        } else if ($voucher->fund->isTypeSubsidy()) {
+        if ($type == 'product') {
+            $event = $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, $eventMeta);
+            IdentityProductVoucherTransactionNotification::send($event);
+        } elseif ($type == 'budget') {
+            $event = $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta);
+            IdentityVoucherBudgetTransactionNotification::send($event);
+        } elseif ($type == 'subsidy') {
             $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
 
             if ($fundProviderProduct && $transaction->voucher->identity_address) {
@@ -64,8 +68,31 @@ class VoucherTransactionsSubscriber
                 IdentityVoucherSubsidyTransactionNotification::send($eventLog);
             }
         }
+    }
 
-        $transaction->sendPushNotificationTransaction();
+    /**
+     * @param VoucherTransactionBunqSuccess $event
+     * @noinspection PhpUnused
+     */
+    public function onVoucherTransactionBunqSuccess(VoucherTransactionBunqSuccess $event): void
+    {
+        $transaction = $event->getVoucherTransaction();
+
+        $fundProvider = $transaction->voucher->fund->providers()->where([
+            'organization_id' => $transaction->organization_id,
+        ])->first();
+
+        if ($fundProvider) {
+            $event = $fundProvider->log(FundProvider::EVENT_BUNQ_TRANSACTION_SUCCESS, [
+                'fund' => $transaction->voucher->fund,
+                'sponsor' => $transaction->voucher->fund->organization,
+                'provider' => $transaction->provider,
+                'employee' => $transaction->employee,
+                'voucher_transaction' => $transaction,
+            ]);
+
+            FundProviderTransactionBunqSuccessNotification::send($event);
+        }
     }
 
     /**
@@ -78,6 +105,11 @@ class VoucherTransactionsSubscriber
         $events->listen(
             VoucherTransactionCreated::class,
             '\App\Listeners\VoucherTransactionsSubscriber@onVoucherTransactionCreated'
+        );
+
+        $events->listen(
+            VoucherTransactionBunqSuccess::class,
+            '\App\Listeners\VoucherTransactionsSubscriber@onVoucherTransactionBunqSuccess'
         );
     }
 }

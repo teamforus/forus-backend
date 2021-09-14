@@ -14,6 +14,7 @@ use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use App\Models\NotificationTemplate;
 use App\Models\ProductReservation;
 use App\Observers\FundProviderObserver;
 use Carbon\Carbon;
@@ -55,8 +56,9 @@ class AppServiceProvider extends ServiceProvider
             'fund_request'          => FundRequest::class,
             'fund_provider'         => FundProvider::class,
             'organization'          => Organization::class,
-            'product_category'      => ProductCategory::class,
+            'mail_template'         => NotificationTemplate::class,
             'implementation'        => Implementation::class,
+            'product_category'      => ProductCategory::class,
             'implementation_page'   => ImplementationPage::class,
             'product_reservation'   => ProductReservation::class,
         ]);

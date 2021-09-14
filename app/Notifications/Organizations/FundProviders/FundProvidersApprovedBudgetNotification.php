@@ -12,28 +12,33 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotification
 {
-    protected $key = 'notifications_fund_providers.approved_budget';
-    protected $sendMail = true;
+    protected static $key = 'notifications_fund_providers.approved_budget';
+    protected static $pushKey = 'funds.provider_approved';
+    protected static $sendMail = true;
+    protected static $sendPush = true;
 
-    protected static $permissions = [
-        'manage_provider_funds'
-    ];
+    protected static $editable = true;
+    protected static $visible = true;
 
+    /**
+     * @var string[]
+     */
+    protected static $permissions = 'manage_provider_funds';
+
+    /**
+     * @param Identity $identity
+     */
     public function toMail(Identity $identity): void
     {
         /** @var FundProvider $fundProvider */
         $fundProvider = $this->eventLog->loggable;
         $fund = $fundProvider->fund;
 
-        resolve('forus.services.notification')->sendMailNotification(
+        $this->sendMailNotification(
             $identity->primary_email->email,
-            new ProviderApprovedMail(
-                $this->eventLog->data['fund_name'],
-                $this->eventLog->data['provider_name'],
-                $this->eventLog->data['sponsor_name'],
-                $fund->urlProviderDashboard(),
-                $fund->fund_config->implementation->getEmailFrom()
-            )
+            new ProviderApprovedMail(array_merge($this->eventLog->data, [
+                'provider_dashboard_link' => $fund->urlProviderDashboard(),
+            ]), $fund->fund_config->implementation->getEmailFrom())
         );
     }
 }

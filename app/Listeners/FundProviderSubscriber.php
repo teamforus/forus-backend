@@ -26,32 +26,11 @@ use Illuminate\Events\Dispatcher;
  */
 class FundProviderSubscriber
 {
-    private $notificationService;
-
-    /**
-     * FundSubscriber constructor.
-     */
-    public function __construct()
-    {
-        $this->notificationService = resolve('forus.services.notification');
-    }
-
     /**
      * @param FundProviderApprovedBudget $event
      */
     public function onApprovedBudget(FundProviderApprovedBudget $event): void {
         $fundProvider = $event->getFundProvider();
-        $transData =  [
-            "fund_name" => $fundProvider->fund->name,
-            "sponsor_phone" => $fundProvider->organization->phone
-        ];
-
-        $this->notificationService->sendPushNotification(
-            $fundProvider->organization->identity_address,
-            trans('push.providers.accepted.title', $transData),
-            trans('push.providers.accepted.body', $transData),
-            'funds.provider_approved'
-        );
 
         $providerEventLog = $fundProvider->log(FundProvider::EVENT_APPROVED_BUDGET, [
             'provider' => $fundProvider->organization,
@@ -74,6 +53,7 @@ class FundProviderSubscriber
      */
     public function onApprovedProducts(FundProviderApprovedProducts $event): void {
         $fundProvider = $event->getFundProvider();
+
         $providerEventLog = $fundProvider->log(FundProvider::EVENT_APPROVED_PRODUCTS, [
             'provider' => $fundProvider->organization,
             'sponsor' => $fundProvider->fund->organization,
@@ -97,11 +77,13 @@ class FundProviderSubscriber
         $fundProvider = $event->getFundProvider();
         $eventLog = $fundProvider->log(FundProvider::EVENT_REVOKED_BUDGET, [
             'provider' => $fundProvider->organization,
+            'sponsor' => $fundProvider->fund->organization,
             'fund' => $fundProvider->fund,
         ]);
 
         $fundProvider->fund->log(Fund::EVENT_PROVIDER_REVOKED_BUDGET, [
             'provider' => $fundProvider->organization,
+            'sponsor' => $fundProvider->fund->organization,
             'fund' => $fundProvider->fund,
         ]);
 
@@ -115,11 +97,13 @@ class FundProviderSubscriber
         $fundProvider = $event->getFundProvider();
         $eventLog = $fundProvider->log(FundProvider::EVENT_REVOKED_PRODUCTS, [
             'provider' => $fundProvider->organization,
+            'sponsor' => $fundProvider->fund->organization,
             'fund' => $fundProvider->fund,
         ]);
 
         $fundProvider->fund->log(Fund::EVENT_PROVIDER_REVOKED_PRODUCTS, [
             'provider' => $fundProvider->organization,
+            'sponsor' => $fundProvider->fund->organization,
             'fund' => $fundProvider->fund,
         ]);
 
@@ -133,9 +117,9 @@ class FundProviderSubscriber
         $chat = $event->getChat();
         $fundProvider = $chat->fund_provider;
         $eventLog = $fundProvider->log(FundProvider::EVENT_SPONSOR_MESSAGE, [
-            'product' => $chat->product,
             'provider' => $fundProvider->organization,
             'sponsor' => $fundProvider->fund->organization,
+            'product' => $chat->product,
             'fund' => $fundProvider->fund,
         ]);
 

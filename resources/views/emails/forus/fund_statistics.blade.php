@@ -1,24 +1,27 @@
-@extends('emails.base')
+<?php
+/** @var string $communicationType */
+/** @var string $subject */
+/** @var array $data */
+?>
 
-@section('title', mail_trans('fund_statistics.title', [
-    'sponsor_name' => $sponsor_name,
-    'fund_name' => $fund_name
-]))
+@extends('emails.base')
+@section('title', $subject)
+
 @section('html')
-    {{ mail_trans('fund_statistics.sponsor', ['sponsor_name' => $sponsor_name]) }}
+    {!! trans('mails/fund_statistics.sponsor', $data) !!}
     <br />
     <br />
-    {{ mail_trans('fund_statistics.fund', ['fund_name' => $fund_name]) }}
+    {!! trans('mails/fund_statistics.fund', $data) !!}
     <br />
     <br />
-    {{ mail_trans('fund_statistics.sponsor_count', ['sponsor_count' => $sponsor_amount]) }}
+    {!! trans('mails/fund_statistics.sponsor_count', $data) !!}
     <br />
-    {{ mail_trans('fund_statistics.provider_count', ['provider_count' => $provider_amount]) }}
+    {!! trans('mails/fund_statistics.provider_count', $data) !!}
     <br />
-    {{ mail_trans('fund_statistics.request_count', ['request_count' => $request_amount]) }}
+    {!! trans('mails/fund_statistics.request_count', $data) !!}
     <br />
     <hr>
-    {{ mail_trans('fund_statistics.total_amount', ['total_count' => $total_amount]) }}
+    {!! trans('mails/fund_statistics.total_amount', $data) !!}
     <br />
 @endsection
 

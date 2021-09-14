@@ -8,8 +8,10 @@ use App\Services\Forus\Identity\Models\Identity;
 
 class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 {
-    protected $key = 'notifications_identities.added_employee';
-    protected $sendMail = true;
+    protected static $key = 'notifications_identities.added_employee';
+    protected static $pushKey = 'employee.created';
+    protected static $sendMail = true;
+    protected static $sendPush = true;
 
     /**
      * @param Identity $identity
@@ -26,11 +28,11 @@ class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
             identity_repo()->makeIdentityPoxy($identity->address)['exchange_token']
         );
 
-        notification_service()->sendMailNotification(
+        $this->sendMailNotification(
             $identity->primary_email->email,
             new EmployeeAddedMail(array_merge($this->eventLog->data, [
-                'confirmationLink' => $confirmationLink,
-                'link'             => 'https://www.forus.io/DL',
+                'dashboard_auth_link'   => $confirmationLink,
+                'download_me_app_link'  => 'https://www.forus.io/DL',
             ]), Implementation::emailFrom())
         );
     }

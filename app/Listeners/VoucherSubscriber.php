@@ -8,10 +8,13 @@ use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
 use App\Events\Vouchers\VoucherExpired;
-use App\Events\Vouchers\VoucherExpiring;
-use App\Models\Implementation;
+use App\Events\Vouchers\VoucherExpireSoon;
+use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
+use App\Events\Vouchers\VoucherSendToEmailEvent;
+use App\Mail\Vouchers\SendVoucherMail;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
+use App\Notifications\Identities\Voucher\IdentityVoucherPhysicalCardRequestedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherAddedNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotification;
@@ -19,39 +22,21 @@ use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedNotificatio
 use App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAddedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAssignedProductNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherAssignedSubsidyNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherDeactivatedNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
-use App\Services\Forus\Notification\NotificationService;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
-use App\Services\TokenGeneratorService\TokenGenerator;
+use App\Notifications\Identities\Voucher\IdentityVoucherSharedByEmailNotification;
 use Illuminate\Events\Dispatcher;
 
 /**
  * Class VoucherSubscriber
- * @property IRecordRepo $recordService
- * @property NotificationService $mailService
- * @property TokenGenerator $tokenGenerator
  * @package App\Listeners
  */
 class VoucherSubscriber
 {
-    protected $mailService;
-    protected $recordService;
-    protected $tokenGenerator;
-
-    /**
-     * VoucherSubscriber constructor.
-     */
-    public function __construct()
-    {
-        $this->mailService = resolve('forus.services.notification');
-        $this->recordService = resolve('forus.services.record');
-        $this->tokenGenerator = resolve('token_generator');
-    }
-
     /**
      * @param VoucherCreated $voucherCreated
      * @noinspection PhpUnused
@@ -62,13 +47,13 @@ class VoucherSubscriber
         $product = $voucher->product;
 
         $voucher->tokens()->create([
-            'address'           => $this->tokenGenerator->address(),
+            'address'           => resolve('token_generator')->address(),
             'need_confirmation' => true,
         ]);
 
         /** @var VoucherToken $voucherToken */
         $voucher->tokens()->create([
-            'address'           => $this->tokenGenerator->address(),
+            'address'           => resolve('token_generator')->address(),
             'need_confirmation' => false,
         ]);
 
@@ -100,10 +85,8 @@ class VoucherSubscriber
                 'employee' => $voucher->employee,
             ]);
 
-            if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
-                $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
-                    $voucher->identity_address
-                ));
+            if ($voucher->identity && $voucher->fund->fund_formulas->count() > 0) {
+                VoucherAssigned::dispatch($voucher);
 
                 if ($voucher->fund->isTypeSubsidy()) {
                     IdentityVoucherAddedSubsidyNotification::send($event);
@@ -121,44 +104,23 @@ class VoucherSubscriber
     public function onVoucherAssigned(VoucherAssigned $voucherAssigned): void
     {
         $voucher = $voucherAssigned->getVoucher();
-        $product = $voucher->product;
+        $type = $voucher->isBudgetType() ? ($voucher->fund->isTypeBudget() ? 'budget' : 'subsidy') : 'product';
 
         $event = $voucher->log(Voucher::EVENT_ASSIGNED, [
             'fund' => $voucher->fund,
             'voucher' => $voucher,
+            'product' => $voucher->product,
+            'provider' => $voucher->product->organization ?? null,
             'sponsor' => $voucher->fund->organization,
+        ], [
+            'implementation_name' => $voucher->fund->fund_config->implementation->name,
         ]);
 
-        if ($voucher->fund->isTypeSubsidy()) {
-            IdentityVoucherAssignedSubsidyNotification::send($event);
-        } else {
-            IdentityVoucherAssignedBudgetNotification::send($event);
+        switch ($type) {
+            case 'budget': IdentityVoucherAssignedBudgetNotification::send($event); break;
+            case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
+            case 'product': IdentityVoucherAssignedProductNotification::send($event); break;
         }
-
-        $transData = [
-            "implementation_name" => Implementation::active()->name,
-            "fund_name" => $voucher->fund->name
-        ];
-
-        if ($product) {
-            $this->mailService->sendPushNotification(
-                $voucher->identity_address,
-                trans('push.voucher.bought.title', $transData),
-                trans('push.voucher.bought.body', $transData),
-                'voucher.assigned'
-            );
-        } else {
-            $this->mailService->sendPushNotification(
-                $voucher->identity_address,
-                trans('push.voucher.activated.title', $transData),
-                trans('push.voucher.activated.body', $transData),
-                'voucher.assigned'
-            );
-        }
-
-        $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
-            $voucher->identity_address
-        ));
     }
 
     /**
@@ -175,27 +137,32 @@ class VoucherSubscriber
             'provider' => $voucher->product->organization,
         ], [
             'voucher_share_message' => $voucherShared->getMessage(),
-            'voucher_share_send_copy' => $voucherShared->isSendCopyToUser(),
+            'voucher_share_send_copy' => $voucherShared->shouldSendCopyToUser(),
         ]);
 
         IdentityProductVoucherSharedNotification::send($eventLog);
     }
 
     /**
-     * @param VoucherExpiring $voucherExpired
+     * @param VoucherExpireSoon $voucherExpired
      * @noinspection PhpUnused
      */
-    public function onVoucherExpiring(VoucherExpiring $voucherExpired): void
+    public function onVoucherExpireSoon(VoucherExpireSoon $voucherExpired): void
     {
         $voucher = $voucherExpired->getVoucher();
+
+        $eventRawData = [
+            'link_webshop' => $voucher->fund->urlWebshop(),
+            'fund_start_year' => $voucher->fund->start_date->format('Y'),
+        ];
 
         if ($voucher->product) {
             $eventLog = $voucher->log(Voucher::EVENT_EXPIRING_SOON_PRODUCT, [
                 'fund' => $voucher->fund,
                 'voucher' => $voucher,
-                'sponsor' => $voucher->fund->organization,
                 'product' => $voucher->product,
-            ]);
+                'sponsor' => $voucher->fund->organization,
+            ], $eventRawData);
 
             IdentityVoucherExpireSoonProductNotification::send($eventLog);
         } else {
@@ -203,7 +170,7 @@ class VoucherSubscriber
                 'fund' => $voucher->fund,
                 'voucher' => $voucher,
                 'sponsor' => $voucher->fund->organization,
-            ]);
+            ], $eventRawData);
 
             IdentityVoucherExpireSoonBudgetNotification::send($eventLog);
         }
@@ -236,23 +203,67 @@ class VoucherSubscriber
     }
 
     /**
-     * @param VoucherDeactivated $voucherExpired
+     * @param VoucherDeactivated $voucherDeactivated
      * @noinspection PhpUnused
      */
-    public function onVoucherDeactivated(VoucherDeactivated $voucherExpired): void
+    public function onVoucherDeactivated(VoucherDeactivated $voucherDeactivated): void
     {
-        $employee = $voucherExpired->getEmployee();
-        $voucher = $voucherExpired->getVoucher();
+        $employee = $voucherDeactivated->getEmployee();
+        $voucher = $voucherDeactivated->getVoucher();
         $sponsor = $voucher->fund->organization;
         $fund = $voucher->fund;
 
         $logData = compact('fund', 'voucher', 'employee', 'sponsor');
         $logModel = $voucher->log($voucher::EVENT_DEACTIVATED, $logData, [
-            'note' => $voucherExpired->getNote(),
-            'notify_by_email' => $voucherExpired->shouldNotifyByEmail(),
+            'deactivation_date' => now()->format('Y-m-d'),
+            'deactivation_date_locale' => format_date_locale(now()),
+            'note' => $voucherDeactivated->getNote(),
+            'notify_by_email' => $voucherDeactivated->shouldNotifyByEmail(),
         ]);
 
         IdentityVoucherDeactivatedNotification::send($logModel);
+    }
+
+    /**
+     * @param VoucherSendToEmailEvent $event
+     * @noinspection PhpUnused
+     */
+    public function onVoucherSendToEmail(VoucherSendToEmailEvent $event): void
+    {
+        $email = $event->getEmail();
+        $voucher = $event->getVoucher();
+
+        $eventLog = $voucher->log($voucher::EVENT_SHARED_BY_EMAIL, [
+            'fund' => $voucher->fund,
+            'sponsor' => $voucher->fund->organization,
+        ], [
+            'qr_token' => $voucher->token_without_confirmation->address,
+            'voucher_product_or_fund_name' => $voucher->product->name ?? $voucher->fund->name,
+        ]);
+
+        IdentityVoucherSharedByEmailNotification::send($eventLog);
+
+        resolve('forus.services.notification')->sendSystemMail($email, new SendVoucherMail(
+            $eventLog->data,
+            $voucher->fund->getEmailFrom()
+        ));
+    }
+
+    /**
+     * @param VoucherPhysicalCardRequestedEvent $event
+     * @noinspection PhpUnused
+     */
+    public function onVoucherPhysicalCardRequested(VoucherPhysicalCardRequestedEvent $event): void {
+        $voucher = $event->getVoucher();
+        $cardRequest = $event->getCardRequest();
+
+        $event = $voucher->log($voucher::EVENT_PHYSICAL_CARD_REQUESTED, [
+            'fund'      => $voucher->fund,
+            'voucher'   => $voucher,
+            'sponsor'   => $voucher->fund->organization,
+        ], $cardRequest->only('postcode', 'house', 'house_addition', 'city', 'address'));
+
+        IdentityVoucherPhysicalCardRequestedNotification::send($event);
     }
 
     /**
@@ -278,8 +289,8 @@ class VoucherSubscriber
         );
 
         $events->listen(
-            VoucherExpiring::class,
-            '\App\Listeners\VoucherSubscriber@onVoucherExpiring'
+            VoucherExpireSoon::class,
+            '\App\Listeners\VoucherSubscriber@onVoucherExpireSoon'
         );
 
         $events->listen(
@@ -290,6 +301,16 @@ class VoucherSubscriber
         $events->listen(
             VoucherDeactivated::class,
             '\App\Listeners\VoucherSubscriber@onVoucherDeactivated'
+        );
+
+        $events->listen(
+            VoucherSendToEmailEvent::class,
+            '\App\Listeners\VoucherSubscriber@onVoucherSendToEmail'
+        );
+
+        $events->listen(
+            VoucherPhysicalCardRequestedEvent::class,
+            '\App\Listeners\VoucherSubscriber@onVoucherPhysicalCardRequested'
         );
     }
 }

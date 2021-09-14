@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
+use App\Models\NotificationTemplate;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Services\Forus\Identity\Models\DatabaseNotification;
@@ -25,18 +26,42 @@ class NotificationResource extends JsonResource
         $key = $this->resource->data['key'];
         $event = EventLog::find($this->resource->data['event_id']);
         $suffix = Implementation::active()->informal_communication ? '_informal' : '';
-        $prefixTitle = "notifications/{$key}.title";
-        $prefixDescription = "notifications/{$key}.description";
+        $prefixTitle = "notifications/$key.title";
+        $prefixDescription = "notifications/$key.description";
 
-        return [
+        $template = $this->getTemplate();
+
+        return array_merge([
             'id' => $this->resource->id,
             'type' => $key,
-            'title' => $this->getTranslation($prefixTitle, $suffix, $event->data),
-            'description' => $this->getTranslation($prefixDescription, $suffix, $event->data),
             'seen' => $this->resource->read_at != null,
             'created_at' => $this->resource->created_at->format('Y-m-d H:i:s'),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
-        ];
+        ], $template ? [
+            'title' => str_var_replace($template->title, $event->data),
+            'description' => str_var_replace($template->content, $event->data),
+        ] : [
+            'title' => $this->getTranslation($prefixTitle, $suffix, $event->data),
+            'description' => $this->getTranslation($prefixDescription, $suffix, $event->data),
+        ]);
+    }
+
+    /**
+     * @return NotificationTemplate|null
+     */
+    public function getTemplate(): ?NotificationTemplate
+    {
+        $template = NotificationTemplate::where([
+            'key' => $this->resource->data['key'],
+            'type' => 'database',
+            'implementation_id' => Implementation::general()->id,
+        ])->first();
+
+        return NotificationTemplate::where([
+            'key' => $this->resource->data['key'],
+            'type' => 'database',
+            'implementation_id' => Implementation::active()->id,
+        ])->first() ?: $template;
     }
 
     /**

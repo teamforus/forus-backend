@@ -6,6 +6,8 @@ use App\Http\Requests\Api\Platform\DeleteDevicePushRequest;
 use App\Http\Requests\Api\Platform\RegisterDevicePushRequest;
 use App\Http\Controllers\Controller;
 use App\Services\Forus\Notification\NotificationService;
+use Illuminate\Http\JsonResponse;
+use Exception;
 
 /**
  * Class DevicesController
@@ -16,49 +18,44 @@ class DevicesController extends Controller
 {
     private $mailNotification;
 
-    public function __construct()
+    /**
+     * @param NotificationService $notificationService
+     */
+    public function __construct(NotificationService $notificationService)
     {
-        $this->mailNotification = resolve(
-            'forus.services.notification'
-        );
+        $this->mailNotification = $notificationService;
     }
 
     /**
      * Register identity push notification token
      *
      * @param RegisterDevicePushRequest $request
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     * @return JsonResponse
+     * @throws Exception
      */
-    public function registerPush(
-        RegisterDevicePushRequest $request
-    ) {
+    public function registerPush(RegisterDevicePushRequest $request): JsonResponse
+    {
         $ios = strpos($request->server('HTTP_USER_AGENT'), 'iOS') !== FALSE;
+        $type = $ios ? NotificationService::TYPE_PUSH_IOS : NotificationService::TYPE_PUSH_ANDROID;
+        $token = $request->input('id');
 
-        $this->mailNotification->storeNotificationToken(
-            auth_address(),
-            $ios ? $this->mailNotification::TYPE_PUSH_IOS:
-                $this->mailNotification::TYPE_PUSH_ANDROID,
-            $request->input('id')
-        );
+        $this->mailNotification->storeNotificationToken($request->auth_address(), $token, $type);
 
-        return response(null, 201);
+        return response()->json([], 201);
     }
 
     /**
      * Delete identity push notification token
      *
      * @param DeleteDevicePushRequest $request
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     * @return JsonResponse
+     * @throws Exception
      */
-    public function deletePush(
-        DeleteDevicePushRequest $request
-    ) {
-        $this->mailNotification->removeNotificationToken(
-            $request->input('id'),
-            null,
-            auth_address()
-        );
+    public function deletePush(DeleteDevicePushRequest $request): JsonResponse {
+        $token = $request->input('id');
 
-        return response(null);
+        $this->mailNotification->removeNotificationToken($token, null, $request->auth_address());
+
+        return response()->json([], 201);
     }
 }

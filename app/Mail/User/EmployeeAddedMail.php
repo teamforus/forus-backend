@@ -3,27 +3,11 @@
 namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 class EmployeeAddedMail extends ImplementationMail
 {
-    private $transData;
-
-    /**
-     * Create a new message instance.
-     *
-     * EmployeeAddedMail constructor.
-     * @param array $data
-     * @param EmailFrom|null $emailFrom
-     */
-    public function __construct(
-        array $data = [],
-        ?EmailFrom $emailFrom = null
-    ) {
-        $this->setMailFrom($emailFrom);
-        $this->transData['data'] = $data;
-    }
+    protected $notificationTemplateKey = 'notifications_identities.added_employee';
 
     /**
      * Build the message.
@@ -32,8 +16,10 @@ class EmployeeAddedMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return $this->buildBase()
-            ->subject(mail_trans('email_employee.title', $this->transData['data']))
-            ->view('emails.user.employee_added', $this->transData['data']);
+        return $this->buildTemplatedNotification([
+            'header_icon' => $this->headerIcon('email_activation.header_image'),
+            'dashboard_auth_button' => $this->makeButton($this->mailData['dashboard_auth_link'], 'Ga naar het dashboard'),
+            'download_me_app_link' => $this->makeLink($this->mailData['download_me_app_link'], 'https://forus.io/DL'),
+        ]);
     }
 }

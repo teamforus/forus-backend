@@ -3,7 +3,6 @@
 namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -12,18 +11,8 @@ use Illuminate\Mail\Mailable;
  */
 class EmailActivationMail extends ImplementationMail
 {
-    private $clientType;
-    private $link;
-
-    public function __construct(
-        string $clientType,
-        string $link,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-        $this->clientType = $clientType;
-        $this->link = $link;
-    }
+    protected $subjectKey = "mails/email_activation.title";
+    protected $viewKey = "emails.user.email_activation";
 
     public function build(): Mailable
     {
@@ -35,11 +24,6 @@ class EmailActivationMail extends ImplementationMail
             });
         }
 
-        return $this->buildBase()
-            ->subject(mail_trans('email_activation.title'))
-            ->view('emails.user.email_activation', [
-                'link'          => $this->link,
-                'clientType'    => $this->clientType,
-            ]);
+        return parent::build();
     }
 }

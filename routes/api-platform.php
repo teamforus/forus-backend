@@ -381,27 +381,19 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     if (!env('DISABLE_FALLBACK_TRANSACTIONS', false)) {
         $router->resource(
             'vouchers.transactions',
-            "Api\Platform\Vouchers\TransactionsController", [
-            'only' => [
-                'index', 'show', 'store'
-            ],
-            'parameters' => [
-                'vouchers' => 'voucher_address_or_physical_code',
-                'transactions' => 'transaction_address',
-            ]
-        ]);
+            "Api\Platform\Vouchers\TransactionsController"
+        )->parameters([
+            'transactions' => 'transaction_address',
+            'vouchers' => 'voucher_address_or_physical_code',
+        ])->only('index', 'show', 'store');
     }
 
     $router->resource(
         'demo/transactions',
         "Api\Platform\Vouchers\DemoTransactionController", [
-        'only' => [
-            'store', 'show', 'update',
-        ],
-        'parameters' => [
-            'transactions' => 'demo_token',
-        ]
-    ]);
+    ])->parameters([
+        'transactions' => 'demo_token',
+    ])->only('store', 'show', 'update');
 
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/cms',
@@ -417,22 +409,20 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations/{organization}/implementations',
-        "Api\Platform\Organizations\ImplementationsController", [
-        'only' => [
-            'index', 'show',
-        ],
-    ]);
+        "Api\Platform\Organizations\ImplementationsController"
+    )->only('index', 'show');
+
+    $router->resource(
+        'organizations/{organization}/implementations/{implementation}/system-notifications',
+        "Api\Platform\Organizations\Implementations\SystemNotificationsController"
+    )->only('index');
 
     $router->resource(
         'organizations/{organization}/provider-invitations',
-        'Api\Platform\Organizations\FundProviderInvitationsController', [
-        'only' => [
-            'index', 'show', 'update',
-        ],
-        'parameters' => [
-            'provider-invitations' => 'fund_provider_invitations'
-        ]
-    ]);
+        'Api\Platform\Organizations\FundProviderInvitationsController'
+    )->parameters([
+        'provider-invitations' => 'fund_provider_invitations',
+    ])->only('index', 'show', 'update');
 
     $router->post(
         'organizations/{organization}/funds/criteria/validate',
@@ -464,11 +454,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations.funds',
-        "Api\Platform\Organizations\FundsController", [
-        'only' => [
-            'store', 'update', 'destroy'
-        ]
-    ]);
+        "Api\Platform\Organizations\FundsController"
+    )->only('store', 'update', 'destroy');
 
     $router->resource(
         'organizations.funds.provider-invitations',
@@ -558,12 +545,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations.providers',
-        "Api\Platform\Organizations\FundProviderController", [
-        'only' => ['index'],
-        'parameters' => [
-            'providers' => 'organization_fund'
-        ]
-    ]);
+        "Api\Platform\Organizations\FundProviderController"
+    )->parameters([
+        'providers' => 'organization_fund'
+    ])->only('index');
 
     $router->get(
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/finances',
@@ -583,42 +568,34 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations.funds.providers',
-        "Api\Platform\Organizations\Funds\FundProviderController", [
-        'only' => ['update'],
-        'parameters' => [
-            'providers' => 'fund_provider'
-        ]
-    ]);
+        "Api\Platform\Organizations\Funds\FundProviderController"
+    )->parameters([
+        'providers' => 'fund_provider'
+    ])->only('update');
 
     $router->resource(
         'organizations.funds.providers.chats',
-        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChatsController", [
-        'only' => ['index', 'show', 'store'],
-        'parameters' => [
-            'providers' => 'fund_provider',
-            'chats' => 'fund_provider_chats',
-        ]
-    ]);
+        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChatsController"
+    )->parameters([
+        'providers' => 'fund_provider',
+        'chats' => 'fund_provider_chats',
+    ])->only('index', 'show', 'store');
 
     $router->resource(
         'organizations.funds.providers.products',
-        "Api\Platform\Organizations\Funds\FundProviders\ProductsController", [
-        'only' => ['index', 'show'],
-        'parameters' => [
-            'providers' => 'fund_provider',
-        ]
-    ]);
+        "Api\Platform\Organizations\Funds\FundProviders\ProductsController"
+    )->parameters([
+        'providers' => 'fund_provider',
+    ])->only('index', 'show');
 
     $router->resource(
         'organizations.funds.providers.chats.messages',
-        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChats\FundProviderChatMessagesController", [
-        'only' => ['index', 'show', 'store'],
-        'parameters' => [
-            'providers' => 'fund_provider',
-            'chats' => 'fund_provider_chats',
-            'messages' => 'fund_provider_chat_messages'
-        ]
-    ]);
+        "Api\Platform\Organizations\Funds\FundProviders\FundProviderChats\FundProviderChatMessagesController"
+    )->parameters([
+        'providers' => 'fund_provider',
+        'chats' => 'fund_provider_chats',
+        'messages' => 'fund_provider_chat_messages'
+    ])->only('index', 'show', 'store');
 
     $router->patch(
         'organizations/{organization}/products/{product}/exclusions',
@@ -627,9 +604,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations.products',
-        "Api\Platform\Organizations\ProductsController", [
-        'only' => ['index', 'show', 'store', 'update', 'destroy']
-    ]);
+        "Api\Platform\Organizations\ProductsController"
+    )->only('index', 'show', 'store', 'update', 'destroy');
 
     $router->post(
         'organizations/{organization}/product-reservations/batch',
@@ -648,46 +624,33 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations.product-reservations',
-        "Api\Platform\Organizations\ProductReservationsController", [
-        'only' => ['index', 'store', 'show']
-    ]);
+        "Api\Platform\Organizations\ProductReservationsController"
+    )->only('index', 'store', 'show');
 
     $router->resource(
         'organizations.products.funds',
-        "Api\Platform\Organizations\Products\FundsController", [
-        'only' => ['index', 'show', 'store', 'update', 'destroy']
-    ]);
+        "Api\Platform\Organizations\Products\FundsController"
+    )->only('index', 'show', 'store', 'update', 'destroy');
 
     $router->resource(
         'organizations.products.chats',
-        "Api\Platform\Organizations\Products\FundProviderChatsController", [
-        'only' => [
-            'index', 'show'
-        ],
-        'parameters' => [
-            'chats' => 'fund_provider_chats',
-        ]
-    ]);
+        "Api\Platform\Organizations\Products\FundProviderChatsController"
+    )->parameters([
+        'chats' => 'fund_provider_chats',
+    ])->only('index', 'show');
 
     $router->resource(
         'organizations.products.chats.messages',
-        "Api\Platform\Organizations\Products\FundProviderChats\FundProviderChatMessagesController", [
-        'only' => [
-            'index', 'show', 'store'
-        ],
-        'parameters' => [
-            'chats' => 'fund_provider_chats',
-            'messages' => 'fund_provider_chat_messages'
-        ]
-    ]);
+        "Api\Platform\Organizations\Products\FundProviderChats\FundProviderChatMessagesController"
+    )->parameters([
+        'chats' => 'fund_provider_chats',
+        'messages' => 'fund_provider_chat_messages',
+    ])->only('index', 'show', 'store');
 
     $router->resource(
         'organizations.offices',
-        "Api\Platform\Organizations\OfficesController", [
-        'only' => [
-            'index', 'show', 'store', 'update', 'destroy'
-        ]
-    ]);
+        "Api\Platform\Organizations\OfficesController"
+    )->only('index', 'show', 'store', 'update', 'destroy');
 
     $router->resource(
         'organizations.validators',

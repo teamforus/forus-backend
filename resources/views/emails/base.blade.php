@@ -54,7 +54,7 @@
                             <tr>
                                 <td align="center" style="{{ $footerStyle }}">
                                     @isset($email)
-                                        {!! mail_trans('not_for_you', ['email' => $email, 'unsubscribeLink' => $unsubscribeLink, 'email_preferences_link' => $notificationPreferencesLink]) !!}
+                                        {!! trans('mails/_misc.not_for_you', ['email' => $email, 'unsubscribeLink' => $unsubscribeLink, 'email_preferences_link' => $notificationPreferencesLink]) !!}
                                     @endisset
                                 </td>
                             </tr>

@@ -17,5 +17,6 @@ class DatabaseSeeder extends Seeder
         $this->call(BusinessTypesTableSeeder::class);
         $this->call(BunqIdealIssuersTableSeeder::class);
         $this->call(ImplementationsTableSeeder::class);
+        $this->call(NotificationTemplatesTableSeeder::class);
     }
 }

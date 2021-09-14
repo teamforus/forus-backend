@@ -25,8 +25,8 @@ class CreateMediaSizesTable extends Migration
             $table->string('path',1024);
             $table->timestamps();
 
-            $table->foreign('media_id'
-            )->references('id')->on('media')->onDelete('cascade');
+            $table->foreign('media_id')->references('id')->on('media')
+                ->onDelete('cascade');
         });
     }
 

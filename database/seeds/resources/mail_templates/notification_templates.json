@@ -1,0 +1,630 @@
+{
+    "notifications_identities.added_employee": {
+        "mail": {
+            "title": "Uitnodiging van :organization_name als medewerker",
+            "template": "notifications_identities/employee_added.md"
+        },
+        "push": {
+            "title": ":organization_name",
+            "content": "U bent toegevoegd aan :organization_name as :employee_roles."
+        },
+        "database": {
+            "title": "U bent toegevoegd aan :organization_name als :employee_roles",
+            "content": "U bent toegekend aan :organization_name als :employee_roles."
+        }
+    },
+    "notifications_identities.changed_employee_roles": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Uw rechten als medewerker zijn aangepast voor :organization_name",
+            "content": "Aan uw profiel zijn de volgende rollen toegekend: :employee_roles voor organisatie :organization_name."
+        }
+    },
+    "notifications_identities.removed_employee": {
+        "mail": {},
+        "push": {
+            "title": ":organization_name",
+            "content": "U bent verwijderd als een medewerker van :organization_name."
+        },
+        "database": {
+            "title": "U bent verwijderd als een medewerker van :organization_name",
+            "content": "U bent verwijderd als een medewerker van :organization_name."
+        }
+    },
+
+
+
+    "notifications_fund_providers.approved_budget": {
+        "mail": {
+            "title": "Aanmelding als aanbieder is goedgekeurd",
+            "template": "notifications_fund_providers/approved_budget.md"
+        },
+        "push": {
+            "title": ":fund_name",
+            "content": "U bent goedgekeurd voor :fund_name."
+        },
+        "database": {
+            "title": "Aanmelding voor :fund_name is goedgekeurd.",
+            "content": "Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbod kan leveren aan klanten die recht hebben op :fund_name. Uw producten of diensten worden vanaf nu zichtbaar in de webshop."
+        }
+    },
+    "notifications_fund_providers.approved_products": {
+        "mail": {},
+        "push": {
+            "title": ":fund_name",
+            "content": "U bent goedgekeurd voor :fund_name."
+        },
+        "database": {
+            "title": "Aanmelding voor :fund_name is goedgekeurd.",
+            "content": "Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbod kan leveren aan klanten die recht hebben op :fund_name. Al uw aanbod staan nu in de webshop."
+        }
+    },
+    "notifications_fund_providers.revoked_budget": {
+        "mail": {
+            "title": "Afgewezen als aanbieder",
+            "template": "notifications_fund_providers/revoked_budget.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.",
+            "content": "Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen."
+        }
+    },
+    "notifications_fund_providers.revoked_products": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om reserveringen te scannen.",
+            "content": "Aanmelding voor :fund_name is gewijzigd. Uw producten of diensten zijn niet meer zichtbaar in de webshop."
+        }
+    },
+    "notifications_fund_providers.sponsor_message": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Nieuw chat bericht.",
+            "content": "U heeft een nieuwe chat bericht van \":sponsor_name\" over \":product_name\"."
+        }
+    },
+
+
+    "notifications_identities.requester_provider_approved_budget": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":provider_name doet mee aan :fund_name",
+            "content": ":provider_name is geaccepteerd als aanbieder voor :fund_name door :sponsor_name"
+        }
+    },
+    "notifications_identities.requester_provider_approved_products": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":provider_name doet mee aan :fund_name",
+            "content": ":provider_name is geaccepteerd als aanbieder voor :fund_name door :sponsor_name"
+        }
+    },
+
+
+
+    "notifications_identities.requester_fund_ended": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "",
+            "content": ""
+        }
+    },
+    "notifications_identities.requester_product_added": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":product_name van :provider_name is beschikbaar voor :fund_name",
+            "content": ":product_name van :provider_name is toegevoegd aan de webshop"
+        }
+    },
+    "notifications_identities.requester_product_approved": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":product_name van :provider_name is beschikbaar voor :fund_name",
+            "content": ":product_name van :provider_name is toegevoegd aan de webshop"
+        }
+    },
+    "notifications_identities.requester_product_revoked": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "",
+            "content": ""
+        }
+    },
+
+
+    "notifications_fund_requests.created_validator_employee": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Er is een nieuwe aanvraag voor :fund_name.",
+            "content": "Er is een nieuwe aanvraag voor :fund_name."
+        }
+    },
+
+
+    "notifications_identities.fund_request_created": {
+        "mail": {
+            "title": "Uw :fund_name aanvraag is ontvangen.",
+            "title_informal": "Je :fund_name aanvraag is ontvangen.",
+            "template": "notifications_identities/fund_request_created.md",
+            "template_informal": "notifications_identities/fund_request_created_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag voor :fund_name is ontvangen.",
+            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag."
+        }
+    },
+    "notifications_identities.fund_request_approved": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name is goedgekeurd.",
+            "title_informal": "Je aanvraag voor :fund_name is goedgekeurd.",
+            "template": "notifications_identities/fund_request_approved.md",
+            "template_informal": "notifications_identities/fund_request_approved_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag is behandeld",
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld."
+        }
+    },
+    "notifications_identities.fund_request_denied": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name is afgehandeld.",
+            "title_informal": "Uw aanvraag voor :fund_name is afgehandeld.",
+            "template": "notifications_identities/fund_request_denied.md",
+            "template_informal": "notifications_identities/fund_request_denied_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag is behandeld",
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld."
+        }
+    },
+    "notifications_identities.fund_request_record_declined": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name is afgewezen",
+            "template": "notifications_identities/fund_request_record_declined.md"
+        },
+        "push": {},
+        "database": {}
+    },
+    "notifications_identities.fund_request_feedback_requested": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name aanvullen",
+            "title_informal": "Je aanvraag voor :fund_name aanvullen",
+            "template": "notifications_identities/fund_request_feedback_requested.md",
+            "template_informal": "notifications_identities/fund_request_feedback_requested_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag :fund_name aanvullen.",
+            "content": "Uw aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om uw aanvraag af te handelen. Het bericht is: :fund_request_clarification_question",
+            "content_informal": "Je aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om je aanvraag af te handelen. Het bericht is: :fund_request_clarification_question"
+        }
+    },
+
+
+    "notifications_funds.created": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name is aangemaakt!",
+            "content": ":fund_name is aangemaakt."
+        }
+    },
+    "notifications_funds.started": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name is van start gegaan!",
+            "content": ":fund_name is gestart! Vanaf vandaag kunnen aanbieders klanten verwachten met een tegoed van :fund_name."
+        }
+    },
+    "notifications_funds.ended": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name is geëindigd.",
+            "content": ":fund_name liep van :fund_start_date_locale: en met :fund_end_date_locale: en is vanaf vandaag niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name."
+        }
+    },
+    "notifications_funds.expiring": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name verloopt bijna!",
+            "content": ":fund_name zal sluiten op :fund_end_date_locale."
+        }
+    },
+
+    "notifications_funds.product_added": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":provider_name heeft een nieuw aanbod toegevoegd aan :fund_name.",
+            "content": ":provider_name heeft een nieuw aanbod toegevoegd aan :fund_name."
+        }
+    },
+    "notifications_funds.provider_applied": {
+        "mail": {
+            "title": ":provider_name wilt zich aanmelden voor :fund_name",
+            "template": "notifications_funds/provider_applied.md"
+        },
+        "push": {},
+        "database": {
+            "title": ":provider_name heeft zich aangemeld voor :fund_name.",
+            "content": ":provider_name heeft zich aangemeld voor :fund_name"
+        }
+    },
+    "notifications_funds.provider_message": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name: een nieuw bericht op aanmelding van :provider_name met :product_name.",
+            "content": "Er is een bericht op uw reactie op :product_name van :provider_name voor :fund_name."
+        }
+    },
+
+    "notifications_funds.balance_low": {
+        "mail": {
+            "title": "Het budget ':fund_name' fonds heeft de ingestelde aanvul-herinneringsgrens overschreden.",
+            "template": "notifications_funds/balance_low.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Het budget \":fund_name\" heeft de ingestelde aanvul-herinneringsgrens overschreden.",
+            "content": "Het budget \":fund_name\" is lager dan :fund_notification_amount_locale. Het budget \":fund_name\" is momenteel :fund_budget_left_locale."
+        }
+    },
+    "notifications_funds.balance_supplied": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Het budget voor \":fund_name\" is opgehoogd.",
+            "content": "Het budget voor \":fund_name\" is opgehoogd met :fund_top_up_amount_locale."
+        }
+    },
+    "notifications_funds.product_subsidy_removed": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":provider_name heeft de prijs veranderd voor \":product_name\"",
+            "content": ":provider_name heeft de prijs veranderd voor :product_name\" en de actie is verwijderd uit de webshop. Als u dit aanbod weer wilt toevoegen aan de webshop, start opnieuw een actie op uw dashboard."
+        }
+    },
+
+
+    "notifications_fund_providers.fund_started": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name is van start gegaan!",
+            "content": ":fund_name is gestart! Vanaf vandaag kunt u klanten verwachten met een tegoed van :fund_name."
+        }
+    },
+    "notifications_fund_providers.fund_ended": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name is verlopen.",
+            "content": ":fund_name liep van :start_date: tot :end_date_minus1: en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
+        }
+    },
+    "notifications_fund_providers.fund_expiring": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name verloopt bijna.",
+            "content": ":fund_name loopt van :fund_start_date_locale tot :fund_end_date_minus1_locale en verloopt bijna."
+        }
+    },
+
+
+    "notifications_identities.product_reservation_accepted": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Reserverving is geaccepteerd.",
+            "content": "De reservering van :product_name is geaccepteerd door :provider_name"
+        }
+    },
+    "notifications_identities.product_reservation_canceled": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Reservering is geannuleerd.",
+            "content": "De reserving van :product_name is geannuleerd. Neem eventueel contact met de aanbieder voor meer informatie."
+        }
+    },
+    "notifications_identities.product_reservation_created": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Reserverving is aangemaakt.",
+            "content": "De reservering van :product_name is aangemaakt."
+        }
+    },
+    "notifications_identities.product_reservation_rejected": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Reservering is geweigerd.",
+            "content": "De reserving van :product_name is geweigerd door :provider_name. Neem contact met de aanbieder voor meer informatie."
+        }
+    },
+
+
+    "notifications_products.approved": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Aanmelding met :product_name is goedgekeurd voor :fund_name.",
+            "content": "Aanmelding voor :fund_name is goedgekeurd. Uw aanbod :product_name staat nu op de webshop van :sponsor_name."
+        }
+    },
+    "notifications_products.expired": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Aanbod :product_name is verlopen.",
+            "content": "Aanbod :product_name is verlopen."
+        }
+    },
+    "notifications_products.reserved": {
+        "mail": {
+            "title": "Uw aanbod :product_name is gereserveerd",
+            "template": "notifications_products/reserved.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanbod :product_name is gereserveerd.",
+            "content": "Aanbod :product_name is gereserveerd."
+        }
+    },
+    "notifications_products.revoked": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":product_name is verwijderd :fund_name.",
+            "content": ":product_name is verwijderd uit :fund_name door :sponsor_name"
+        }
+    },
+    "notifications_products.sold_out": {
+        "mail": {
+            "title": "Uitverkocht: aanbod :product_name",
+            "template": "notifications_products/sold_out.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanbod :product_name is uitverkocht.",
+            "content": "Aanbod :product_name is uitverkocht."
+        }
+    },
+
+
+
+    "notifications_identities.product_voucher_shared": {
+        "mail": {
+            "title": "Aanbod QR-code gedeeld door :requester_email",
+            "template": "notifications_identities/product_voucher_shared.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanbod QR-code gedeeld met :provider_name.",
+            "content": "U heeft de aanbod gedeeld met :provider_name met het volgende bericht: :voucher_share_message"
+        }
+    },
+    "notifications_identities.identity_voucher_assigned_budget": {
+        "mail": {
+            "title": "Hierbij ontvangt u uw :fund_name",
+            "title_informal": "Hierbij ontvang je jouw :fund_name",
+            "template": "notifications_identities/identity_voucher_assigned_budget.md",
+            "template_informal": "notifications_identities/identity_voucher_assigned_budget_informal.md"
+        },
+        "push": {
+            "title": ":fund_name",
+            "content": "Gefeliciteerd! De activatie van :fund_name is gelukt!."
+        },
+        "database": {
+            "title": ":fund_name is aan u toegekend.",
+            "title_informal": "Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
+            "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
+        }
+    },
+    "notifications_identities.identity_voucher_assigned_subsidy": {
+        "mail": {
+            "title": "Hierbij ontvangt u uw :fund_name",
+            "title_informal": "Hierbij ontvang je jouw :fund_name",
+            "template": "notifications_identities/identity_voucher_assigned_subsidy.md",
+            "template_informal": "notifications_identities/identity_voucher_assigned_subsidy_informal.md"
+        },
+        "push": {
+            "title": ":fund_name",
+            "content": "Gefeliciteerd! De activatie van :fund_name is gelukt!."
+        },
+        "database": {
+            "title": ":fund_name is aan u toegekend.",
+            "title_informal": "Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
+            "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
+        }
+    },
+    "notifications_identities.identity_voucher_assigned_product": {
+        "mail": {
+            "title": "Hierbij ontvangt u uw :product_name",
+            "title_informal": "Hierbij ontvang je jouw :product_name",
+            "template": "notifications_identities/identity_voucher_assigned_product.md",
+            "template_informal": "notifications_identities/identity_voucher_assigned_product_informal.md"
+        },
+        "push": {
+            "title": ":implementation_name",
+            "content": "U hebt een aanbieding gekocht in ':implementation_name' webshop."
+        },
+        "database": {}
+    },
+
+    "notifications_identities.product_voucher_added": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Aanbod :product_name bij :provider_name gereserveerd!",
+            "content": "Aanbod :product_name bij :provider_name gereserveerd! De reservering heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale"
+        }
+    },
+    "notifications_identities.product_voucher_reserved": {
+        "mail": {
+            "title": "Aanbieding bij :provider_name gereserveerd!",
+            "template": "notifications_identities/product_voucher_reserved.md"
+        },
+        "push": {},
+        "database": {
+            "title": "U heeft :product_name gereserveerd.",
+            "title_informal": "Je hebt een :product_name gereserveerd.",
+            "content": "U heeft :product_name gereserveerd bij :provider_name.",
+            "content_informal": "Je hebt :product_name gereserveerd bij :provider_name."
+        }
+    },
+    "notifications_identities.voucher_added_subsidy": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Er is een :fund_name aan u toegekend.",
+            "title_informal": "Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
+            "content": "De QR-code is geldig tot en met :voucher_expire_date_locale."
+        }
+    },
+    "notifications_identities.voucher_added_budget": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Gefeliciteerd! :fund_name is geactiveerd!",
+            "content": "Uw :fund_name is geactiveerd. Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale."
+        }
+    },
+
+
+    "notifications_identities.voucher_deactivated": {
+        "mail": {
+            "title": ":fund_name is niet meer geldig",
+            "title_informal": ":fund_name niet meer geldig",
+            "template": "notifications_identities/voucher_deactivated.md",
+            "template_informal": "notifications_identities/voucher_deactivated_informal.md"
+        },
+        "push": {},
+        "database": {}
+    },
+    "notifications_identities.budget_voucher_expired": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name is verlopen.",
+            "content": "Het tegoed op :fund_nam is verlopen."
+        }
+    },
+    "notifications_identities.product_voucher_expired": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name is verlopen.",
+            "content": "Het tegoed op :fund_name is verlopen."
+        }
+    },
+
+
+    "notifications_identities.voucher_expire_soon_budget": {
+        "mail": {
+            "title": ":fund_name verloopt binnenkort",
+            "template": "notifications_identities/voucher_expire_soon_budget.md",
+            "template_informal": "notifications_identities/voucher_expire_soon_budget_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": ":fund_name verloopt binnenkort.",
+            "content": ":fund_name verloopt binnenkort."
+        }
+    },
+    "notifications_identities.voucher_expire_soon_product": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":fund_name verloopt binnenkort.",
+            "content": ":fund_name verloopt binnenkort."
+        }
+    },
+
+
+    "notifications_identities.voucher_physical_card_requested": {
+        "mail": {
+            "title": "Je pas is onderweg",
+            "template": "notifications_identities/voucher_physical_card_requested.md"
+        },
+        "push": {},
+        "database": {}
+    },
+    "notifications_identities.voucher_shared_by_email": {
+        "mail": {},
+        "push": {},
+        "database": {}
+    },
+
+    "notifications_identities.voucher_budget_transaction": {
+        "mail": {
+            "title": "Er is een bedrag van uw :fund_name afgeschreven",
+            "title_informal": "Er is een bedrag van je :fund_name afgeschreven",
+            "template": "notifications_identities/voucher_budget_transaction.md",
+            "template_informal": "notifications_identities/voucher_budget_transaction_informal.md"
+        },
+        "push": {
+            "title": ":fund_name",
+            "content": "Er is :amount afgeschreven van :fund_name."
+        },
+        "database": {
+            "title": "Er is een bedrag van uw :fund_name afgeschreven.",
+            "title_informal": "Er is een bedrag van je :fund_name afgeschreven.",
+            "content": "Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van uw :fund_name is :voucher_amount_locale."
+        }
+    },
+    "notifications_identities.voucher_subsidy_transaction": {
+        "mail": {
+            "title": "Aanbieding van :fund_name gebruikt!",
+            "template": "notifications_identities/voucher_subsidy_transaction.md"
+        },
+        "push": {
+            "title": ":fund_name",
+            "content": "Het resterende tegoed voor :product_name is :subsidy_new_limit"
+        },
+        "database": {
+            "title": "Aanbieding van :fund_name gebruikt!",
+            "content": "Er is gebruikgemaakt van een :fund_name aanbieding.\n Het resterende tegoed voor :product_name is :subsidy_new_limit"
+        }
+    },
+    "notifications_identities.product_voucher_transaction": {
+        "mail": {},
+        "push": {
+            "title": ":product_name",
+            "content": "Een reservering is zojuist gebruikt om :product_name af te nemen."
+        },
+        "database": {
+            "title": "Een reservering is zojuist gebruikt om :product_name af te nemen.",
+            "content": "Een reservering is zojuist gebruikt om :product_name af te nemen."
+        }
+    },
+    "notifications_fund_providers.bunq_transaction_success": {
+        "mail": {},
+        "push": {
+            "title": "Uitbetaling",
+            "content": "Uw transactie van :voucher_transaction_amount_locale is uitbetaald."
+        },
+        "database": {}
+    }
+}

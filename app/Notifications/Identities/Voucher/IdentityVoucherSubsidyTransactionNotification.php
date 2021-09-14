@@ -2,7 +2,7 @@
 
 namespace App\Notifications\Identities\Voucher;
 
-use App\Mail\Vouchers\PaymentSuccessMail;
+use App\Mail\Vouchers\PaymentSuccessSubsidyMail;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
@@ -12,8 +12,12 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityVoucherSubsidyTransactionNotification extends BaseIdentityVoucherNotification
 {
-    protected $key = 'notifications_identities.voucher_subsidy_transaction';
-    protected $sendMail = true;
+    protected static $key = 'notifications_identities.voucher_subsidy_transaction';
+    protected static $pushKey = "voucher.transaction";
+    protected static $sendMail = true;
+    protected static $sendPush = true;
+
+    protected static $visible = true;
 
     /**
      * @param Identity $identity
@@ -24,9 +28,9 @@ class IdentityVoucherSubsidyTransactionNotification extends BaseIdentityVoucherN
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
 
-        $this->getNotificationService()->sendMailNotification(
+        $this->sendMailNotification(
             $identity->primary_email->email,
-            new PaymentSuccessMail(array_merge($this->eventLog->data, [
+            new PaymentSuccessSubsidyMail(array_merge($this->eventLog->data, [
                 'webshop_link' => $voucher->fund->urlWebshop(),
             ]), $voucher->fund->fund_config->implementation->getEmailFrom())
         );

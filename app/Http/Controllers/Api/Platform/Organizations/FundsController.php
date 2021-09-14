@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Events\Funds\FundCreated;
+use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
@@ -109,7 +109,7 @@ class FundsController extends Controller
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
-        FundCreated::dispatch($fund);
+        FundCreatedEvent::dispatch($fund);
 
         return new FundResource($fund);
     }

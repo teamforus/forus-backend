@@ -12,10 +12,12 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotification
 {
-    protected $key = 'notifications_fund_providers.revoked_budget';
-    protected static $permissions = [
-        'manage_provider_funds'
-    ];
+    protected static $key = 'notifications_fund_providers.revoked_budget';
+    protected static $permissions = 'manage_provider_funds';
+    protected static $sendMail = true;
+
+    protected static $visible = true;
+    protected static $editable = true;
 
     public function toMail(Identity $identity): void
     {
@@ -23,13 +25,10 @@ class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotificati
         $fundProvider = $this->eventLog->loggable;
         $fund = $fundProvider->fund;
 
-        resolve('forus.services.notification')->sendMailNotification(
+        $this->sendMailNotification(
             $identity->primary_email->email,
             new ProviderRejectedMail(
-                $this->eventLog->data['fund_name'],
-                $this->eventLog->data['provider_name'],
-                $this->eventLog->data['sponsor_name'],
-                $this->eventLog->data['sponsor_phone'],
+                $this->eventLog->data,
                 $fund->fund_config->implementation->getEmailFrom()
             )
         );

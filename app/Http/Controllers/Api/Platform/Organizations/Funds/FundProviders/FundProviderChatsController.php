@@ -81,7 +81,7 @@ class FundProviderChatsController extends Controller
             auth_address()
         );
 
-        FundProviderSponsorChatMessage::dispatch($chatMessage);
+        FundProviderSponsorChatMessage::dispatch($fundProvider, $chatMessage);
 
         return new FundProviderChatResource($chatMessage->fund_provider_chat);
     }
