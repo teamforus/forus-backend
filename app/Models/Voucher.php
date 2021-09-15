@@ -132,6 +132,9 @@ class Voucher extends Model
     public const EVENT_TRANSACTION_PRODUCT = 'transaction_product';
     public const EVENT_TRANSACTION_SUBSIDY = 'transaction_subsidy';
 
+    public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
+    public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
+
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
 
@@ -139,8 +142,16 @@ class Voucher extends Model
     public const STATE_PENDING = 'pending';
     public const STATE_DEACTIVATED = 'deactivated';
 
-    public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
-    public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
+    public const EVENTS_TRANSACTION = [
+        self::EVENT_TRANSACTION,
+        self::EVENT_TRANSACTION_PRODUCT,
+        self::EVENT_TRANSACTION_SUBSIDY,
+    ];
+
+    public const EVENTS_CREATED = [
+        self::EVENT_CREATED_BUDGET,
+        self::EVENT_CREATED_PRODUCT,
+    ];
 
     public const TYPES = [
         self::TYPE_BUDGET,
@@ -1071,15 +1082,13 @@ class Voucher extends Model
      */
     public function sponsorHistoryLogs(): Collection
     {
-        return $this->logs->whereIn('event', [
-            self::EVENT_CREATED_BUDGET,
-            self::EVENT_CREATED_PRODUCT,
+        return $this->logs->whereIn('event', array_merge([
             self::EVENT_EXPIRED_BUDGET,
             self::EVENT_EXPIRED_PRODUCT,
             self::EVENT_DEACTIVATED,
             self::EVENT_ACTIVATED,
             self::EVENT_ASSIGNED,
-        ]);
+        ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION));
     }
 
     /**
@@ -1087,14 +1096,12 @@ class Voucher extends Model
      */
     public function requesterHistoryLogs(): Collection
     {
-        return $this->logs->whereIn('event', [
-            self::EVENT_CREATED_BUDGET,
-            self::EVENT_CREATED_PRODUCT,
+        return $this->logs->whereIn('event', array_merge([
             self::EVENT_EXPIRED_BUDGET,
             self::EVENT_EXPIRED_PRODUCT,
             self::EVENT_DEACTIVATED,
             self::EVENT_ACTIVATED,
-        ]);
+        ], self::EVENTS_CREATED));
     }
 
     /**
