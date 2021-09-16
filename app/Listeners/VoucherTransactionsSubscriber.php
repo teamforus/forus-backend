@@ -30,12 +30,8 @@ class VoucherTransactionsSubscriber
         $fund = $transaction->voucher->fund;
         $type = $voucher->isProductType() ? 'product' : ($fund->isTypeBudget() ? 'budget' : 'subsidy');
 
-        if ($voucher->identity_address) {
-            $bsn = record_repo()->bsnByAddress($voucher->identity_address);
-
-            if ($bsn && $voucher->transactions()->count() == 1 && $fund->isBackofficeApiAvailable()) {
-                $fund->reportFirstUseByApi($bsn);
-            }
+        if (!$voucher->parent_id && $voucher->usedCount() == 1) {
+            $voucher->reportBackofficeFirstUse();
         }
 
         if ($transaction->product) {

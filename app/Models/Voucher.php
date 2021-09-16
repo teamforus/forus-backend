@@ -12,6 +12,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
+use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Identity\Models\Identity;
@@ -47,9 +48,13 @@ use Carbon\Carbon;
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
+ * @property-read \App\Models\FundBackofficeLog $backoffice_log_eligible
+ * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_first_use
+ * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_received
+ * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
+ * @property-read int|null $backoffice_logs_count
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Fund $fund
- * @property-read \App\Models\FundBackofficeLog|null $fund_backoffice_log
  * @property-read bool $activated
  * @property-read float $amount_available
  * @property-read float $amount_available_cached
@@ -57,8 +62,6 @@ use Carbon\Carbon;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
- * @property-read bool $has_product_vouchers
- * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
@@ -234,9 +237,9 @@ class Voucher extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
      */
-    public function fund_backoffice_log(): BelongsTo
+    public function backoffice_log_eligible(): BelongsTo
     {
-        return $this->belongsTo(FundBackofficeLog::class);
+        return $this->belongsTo(FundBackofficeLog::class, 'fund_backoffice_log_id');
     }
 
     /**
@@ -245,6 +248,36 @@ class Voucher extends Model
     public function identity(): BelongsTo
     {
         return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function backoffice_logs(): HasMany
+    {
+        return $this->hasMany(FundBackofficeLog::class);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function backoffice_log_received(): HasOne
+    {
+        return $this->hasOne(FundBackofficeLog::class)->where([
+            'action' => BackofficeApi::ACTION_REPORT_RECEIVED,
+        ]);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function backoffice_log_first_use(): HasOne
+    {
+        return $this->hasOne(FundBackofficeLog::class)->where([
+            'action' => BackofficeApi::ACTION_REPORT_FIRST_USE,
+        ]);
     }
 
     /**
@@ -629,27 +662,9 @@ class Voucher extends Model
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getHasTransactionsAttribute(): bool
-    {
-        return count($this->transactions) > 0;
-    }
-
-    /**
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function getHasProductVouchersAttribute(): bool
-    {
-        return $this->product_vouchers->count() > 0;
-    }
-
-    /**
-     * @return bool
-     * @noinspection PhpUnused
-     */
     public function getInUseAttribute(): bool
     {
-        return $this->has_transactions || $this->has_product_vouchers;
+        return $this->usedCount(false) > 0;
     }
 
     /**
@@ -1110,5 +1125,59 @@ class Voucher extends Model
     public function deactivationDate(): ?Carbon
     {
         return $this->last_deactivation_log ? $this->last_deactivation_log->created_at : null;
+    }
+
+    /**
+     * @return FundBackofficeLog|null
+     */
+    public function reportBackofficeReceived(): ?FundBackofficeLog
+    {
+        if (!$this->parent_id && $this->identity_address && !$this->backoffice_log_received) {
+            $eligibilityLog = $this->backoffice_log_eligible;
+            $backOffice = $this->fund->getBackofficeApi();
+            $bsn = record_repo()->bsnByAddress($this->identity_address);
+
+            if ($backOffice && $bsn) {
+                $requestId = $eligibilityLog->response_id ?? null;
+
+                return $backOffice->reportReceived($bsn, $requestId)->updateModel([
+                    'voucher_id' => $this->id,
+                ]);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param bool $fresh
+     * @return int
+     */
+    public function usedCount(bool $fresh = true): int
+    {
+        if ($fresh) {
+            return $this->transactions()->count() + $this->product_vouchers()->count();
+        }
+
+        return $this->transactions->count() + $this->product_vouchers->count();
+    }
+
+    /**
+     * @return null
+     */
+    public function reportBackofficeFirstUse()
+    {
+        if (!$this->parent_id && $this->identity_address && !$this->backoffice_log_first_use) {
+            $backOffice = $this->fund->getBackofficeApi();
+            $bsn = record_repo()->bsnByAddress($this->identity_address);
+
+            if ($backOffice && $bsn) {
+                return $backOffice->reportFirstUse($bsn)->updateModel([
+                    'voucher_id' => $this->id,
+                ]);
+            }
+        }
+
+        return null;
     }
 }

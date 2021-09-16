@@ -95,6 +95,8 @@ class VoucherSubscriber
                 }
             }
         }
+
+        $voucher->reportBackofficeReceived();
     }
 
     /**
@@ -121,6 +123,8 @@ class VoucherSubscriber
             case 'subsidy': IdentityVoucherAssignedSubsidyNotification::send($event); break;
             case 'product': IdentityVoucherAssignedProductNotification::send($event); break;
         }
+
+        $voucher->reportBackofficeReceived();
     }
 
     /**

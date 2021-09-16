@@ -24,6 +24,11 @@ class ProductReservationSubscriber
     public function onProductReservationCreated(ProductReservationCreated $event): void
     {
         $productReservation = $event->getProductReservation();
+        $voucher = $productReservation->voucher;
+
+        if (!$voucher->parent_id && $voucher->usedCount() == 1) {
+            $voucher->reportBackofficeFirstUse();
+        }
 
         $logEvent = $productReservation->log($productReservation::EVENT_CREATED, [
             'fund' => $productReservation->voucher->fund,

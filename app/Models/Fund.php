@@ -996,19 +996,17 @@ class Fund extends Model
 
     /**
      * @param string|null $identity_address
-     * @param int|null $employee_id
+     * @param array $extraFields
      * @param float|null $voucherAmount
      * @param Carbon|null $expire_at
-     * @param string|null $note
      * @param int|null $limit_multiplier
      * @return Voucher|null
      */
     public function makeVoucher(
         string $identity_address = null,
-        ?int $employee_id = null,
+        array $extraFields = [],
         float $voucherAmount = null,
         Carbon $expire_at = null,
-        string $note = null,
         ?int $limit_multiplier = null
     ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
@@ -1019,10 +1017,10 @@ class Fund extends Model
         $voucher = null;
 
         if ($this->fund_formulas->count() > 0) {
-            $voucher = Voucher::create(compact(
-                'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
-                'returnable', 'limit_multiplier', 'employee_id'
-            ));
+            $voucher = Voucher::create(array_merge(compact(
+                'identity_address', 'amount', 'expire_at', 'fund_id',
+                'returnable', 'limit_multiplier'
+            ), $extraFields));
 
             VoucherCreated::dispatch($voucher);
         }
@@ -1035,10 +1033,9 @@ class Fund extends Model
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,
-                    $employee_id,
+                    $extraFields,
                     $fund_formula_product->product->id,
                     $voucherExpireAt,
-                    '',
                     $fund_formula_product->price
                 );
 
@@ -1050,20 +1047,18 @@ class Fund extends Model
     }
 
     /**
-     * @param int|null $employee_id
      * @param string|null $identity_address
+     * @param array $extraFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
-     * @param string|null $note
      * @param float|null $price
      * @return Voucher
      */
     public function makeProductVoucher(
         string $identity_address = null,
-        ?int $employee_id = null,
+        array $extraFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
-        string $note = null,
         float $price = null
     ): Voucher {
         $amount = $price ?: Product::findOrFail($product_id)->price;
@@ -1071,10 +1066,10 @@ class Fund extends Model
         $fund_id = $this->id;
         $returnable = false;
 
-        $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note',
-            'product_id','fund_id', 'returnable', 'employee_id'
-        ));
+        $voucher = Voucher::create(array_merge(compact(
+            'identity_address', 'amount', 'expire_at',
+            'product_id','fund_id', 'returnable'
+        ), $extraFields));
 
         VoucherCreated::dispatch($voucher, false);
 
@@ -1596,11 +1591,13 @@ class Fund extends Model
 
             // check again for active vouchers
             if ($response->isEligible() && !$this->identityHasActiveVoucher($identity_address)) {
-                $this->makeVoucher($identity_address)->updateModel([
+                $voucher = $this->makeVoucher($identity_address, [
                     'fund_backoffice_log_id' => $response->getLog()->id,
                 ]);
 
-                $backofficeApi->reportReceived($bsn);
+                $response->getLog()->update([
+                    'voucher_id' => $voucher->id,
+                ]);
             }
 
             return $response;
@@ -1615,16 +1612,6 @@ class Fund extends Model
     public function getBackofficeApi(): ?BackofficeApi
     {
         return $this->isBackofficeApiAvailable() ? new BackofficeApi(record_repo(), $this) : null;
-    }
-
-    /**
-     * @param $bsn
-     */
-    public function reportFirstUseByApi($bsn): void
-    {
-        if ($backofficeApi = $this->getBackofficeApi()) {
-            $backofficeApi->reportFirstUse($bsn);
-        }
     }
 
     /**
