@@ -125,9 +125,8 @@ class FundsController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
      */
-    public function apply(
-        Fund $fund
-    ): VoucherResource {
+    public function apply(Fund $fund): VoucherResource
+    {
         $this->authorize('apply', $fund);
 
         $identity_address = auth_address();
