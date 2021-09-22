@@ -20,8 +20,10 @@ class PhysicalCardRequestResource extends JsonResource
      */
     public function toArray($request): array
     {
-        return $this->resource->only([
+        return array_merge($this->resource->only([
             'id', 'address', 'house', 'house_addition', 'postcode', 'city',
+        ]), [
+            'identity_email' => record_repo()->primaryEmailByAddress(auth_address()),
         ]);
     }
 }
