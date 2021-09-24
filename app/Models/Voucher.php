@@ -670,6 +670,8 @@ class Voucher extends Model
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');
         $expired = $request->input('expired');
+        $amount_per_identity_min = $request->input('amount_per_identity_min');
+        $amount_per_identity_max = $request->input('amount_per_identity_max');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -724,6 +726,25 @@ class Voucher extends Model
 
         if ($request->has('in_use')) {
             $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
+        }
+
+        $duplicates_lower_limit = clone $query;
+        if ($amount_per_identity_min) {
+            $duplicates_lower_limit = $duplicates_lower_limit->groupBy('identity_address')->havingRaw('COUNT(*) >= ?', [
+                'amount_per_identity_min' => $amount_per_identity_min
+            ])->pluck('identity_address')->toArray();
+        }
+
+        $duplicates_upper_limit = clone $query;
+        if ($amount_per_identity_max) {
+            $duplicates_upper_limit = $duplicates_upper_limit->groupBy('identity_address')->havingRaw('COUNT(*) <= ?', [
+                'amount_per_identity_max' => $amount_per_identity_max
+            ])->pluck('identity_address')->toArray();
+        }
+
+        if ($amount_per_identity_min || $amount_per_identity_max) {
+            $duplicate_identities = array_intersect($duplicates_lower_limit, $duplicates_upper_limit);
+            $query->whereIn('identity_address', $duplicate_identities);
         }
 
         return $query->orderBy(
