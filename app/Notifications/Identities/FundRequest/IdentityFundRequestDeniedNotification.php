@@ -13,7 +13,6 @@ use App\Services\Forus\Identity\Models\Identity;
 class IdentityFundRequestDeniedNotification extends BaseIdentityFundRequestNotification
 {
     protected static $key = 'notifications_identities.fund_request_denied';
-    protected static $sendMail = true;
 
     protected static $visible = true;
     protected static $editable = true;

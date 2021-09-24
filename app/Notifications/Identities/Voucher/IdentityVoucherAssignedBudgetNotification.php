@@ -7,15 +7,12 @@ use App\Services\Forus\Identity\Models\Identity;
 use App\Models\Voucher;
 
 /**
- * Class IdentityVoucherAssignedBudgetNotification
- * @package App\Notifications\Identities\Voucher
+ * Budget voucher was assigned to identity
  */
 class IdentityVoucherAssignedBudgetNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.identity_voucher_assigned_budget';
     protected static $pushKey = 'voucher.assigned';
-    protected static $sendMail = true;
-    protected static $sendPush = true;
 
     protected static $visible = true;
     protected static $editable = true;

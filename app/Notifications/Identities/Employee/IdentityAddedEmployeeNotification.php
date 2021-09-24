@@ -6,12 +6,13 @@ use App\Mail\User\EmployeeAddedMail;
 use App\Models\Implementation;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * Notify identity about them becoming an employee for the organization
+ */
 class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 {
     protected static $key = 'notifications_identities.added_employee';
     protected static $pushKey = 'employee.created';
-    protected static $sendMail = true;
-    protected static $sendPush = true;
 
     /**
      * @param Identity $identity

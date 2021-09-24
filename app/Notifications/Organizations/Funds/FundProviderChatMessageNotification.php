@@ -3,10 +3,10 @@
 namespace App\Notifications\Organizations\Funds;
 
 /**
- * Class FundProviderChatMessageNotification
- * @package App\Notifications\Organizations\Funds
+ * Notify sponsor that they have a new product chat message from a provider
  */
-class FundProviderChatMessageNotification extends BaseFundsNotification {
+class FundProviderChatMessageNotification extends BaseFundsNotification
+{
     protected static $key = 'notifications_funds.provider_message';
     protected static $permissions = 'manage_providers';
 }

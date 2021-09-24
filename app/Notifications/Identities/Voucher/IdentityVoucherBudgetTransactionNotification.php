@@ -7,15 +7,12 @@ use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class IdentityVoucherTransactionNotification
- * @package App\Notifications\Identities\Voucher
+ * New budget voucher transaction created
  */
 class IdentityVoucherBudgetTransactionNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.voucher_budget_transaction';
     protected static $pushKey = "voucher.transaction";
-    protected static $sendMail = true;
-    protected static $sendPush = true;
 
     protected static $visible = true;
 

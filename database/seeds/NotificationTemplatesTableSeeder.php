@@ -25,11 +25,11 @@ class NotificationTemplatesTableSeeder extends Seeder
             return;
         }
 
-        foreach ($notificationsRepo->getNotificationsTypes() as $notificationsType) {
-            $notificationData = $data[$notificationsType->getKey()] ?? null;
+        foreach ($notificationsRepo->getSystemNotifications() as $systemNotification) {
+            $notificationData = $data[$systemNotification->key] ?? null;
 
             if (is_null($notificationData)) {
-                echo "Notification config data for: " . $notificationsType->getKey() . " not found!\n";
+                echo "Notification config data for: $systemNotification->key not found!\n";
                 continue;
             }
 
@@ -46,10 +46,10 @@ class NotificationTemplatesTableSeeder extends Seeder
                         $content = $template["content$keySuffix"] ?? $template["content"] ?? '';
                     }
 
-                    $generalImplementation->mail_templates()->updateOrCreate([
-                        'key' => $notificationsType->getKey(),
+                    $systemNotification->templates()->updateOrCreate([
                         'type' => $type,
                         'formal' => $communicationType == 'formal',
+                        'implementation_id' => $generalImplementation->id,
                     ], compact('title', 'content'));
                 }
             }

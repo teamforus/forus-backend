@@ -7,14 +7,12 @@ use App\Models\Implementation;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class ProductSoldOutNotification
- * @package App\Notifications\Organizations\Products
+ * The product was sold out
  */
 class ProductSoldOutNotification extends BaseProductsNotification
 {
     protected static $key = 'notifications_products.sold_out';
     protected static $permissions = 'manage_products';
-    protected static $sendMail = true;
 
     /**
      * @param Identity $identity

@@ -4,29 +4,32 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateNotificationTemplatesTable extends Migration
+class CreateSystemNotificationConfigsTable extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
-     * @throws Exception
      */
     public function up()
     {
-        Schema::create('notification_templates', function (Blueprint $table) {
+        Schema::create('system_notification_configs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('type', 20)->default('mail');
-            $table->boolean('formal')->default(false);
             $table->unsignedBigInteger('system_notification_id');
             $table->unsignedInteger('implementation_id');
-            $table->string('title', 400)->default('');
-            $table->string('content', 16384)->default('');
+            $table->boolean('enable_all')->default(1);
+            $table->boolean('enable_mail')->default(1);
+            $table->boolean('enable_push')->default(1);
+            $table->boolean('enable_database')->default(1);
             $table->timestamps();
 
             $table->unique([
-                'type', 'formal', 'system_notification_id', 'implementation_id',
-            ], 'notification_templates_fields_unique');
+                'implementation_id', 'system_notification_id',
+            ], 'system_notification_configs_unique_keys');
+
+            $table->index([
+                'implementation_id', 'system_notification_id',
+            ], 'system_notification_configs_index_keys');
 
             $table->foreign('system_notification_id')
                 ->references('id')->on('system_notifications')
@@ -36,8 +39,6 @@ class CreateNotificationTemplatesTable extends Migration
                 ->references('id')->on('implementations')
                 ->onDelete('cascade');
         });
-
-        (new NotificationTemplatesTableSeeder())->run();
     }
 
     /**
@@ -47,6 +48,6 @@ class CreateNotificationTemplatesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('notification_templates');
+        Schema::dropIfExists('system_notification_configs');
     }
 }

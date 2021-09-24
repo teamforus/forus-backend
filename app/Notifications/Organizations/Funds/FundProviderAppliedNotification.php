@@ -7,13 +7,11 @@ use App\Models\Fund;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class FundProviderAppliedNotification
- * @package App\Notifications\Organizations\Funds
+ * Notify sponsor that a new provider applied to the fund
  */
 class FundProviderAppliedNotification extends BaseFundsNotification
 {
     protected static $key = 'notifications_funds.provider_applied';
-    protected static $sendMail = true;
     protected static $permissions = 'manage_providers';
 
     /**

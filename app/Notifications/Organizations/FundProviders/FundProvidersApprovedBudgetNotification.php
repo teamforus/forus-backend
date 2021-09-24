@@ -7,15 +7,12 @@ use App\Models\FundProvider;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class FundProvidersApprovedBudgetNotification
- * @package App\Notifications\Organizations\FundProviders
+ * Notify fund provider that they can scan budget vouchers now
  */
 class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotification
 {
     protected static $key = 'notifications_fund_providers.approved_budget';
     protected static $pushKey = 'funds.provider_approved';
-    protected static $sendMail = true;
-    protected static $sendPush = true;
 
     protected static $editable = true;
     protected static $visible = true;

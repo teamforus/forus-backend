@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
+namespace App\Http\Requests\Api\Platform\Organizations\Implementations\SystemNotifications;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class IndexImplementationRequest extends FormRequest
+class IndexSystemNotificationsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,6 @@ class IndexImplementationRequest extends FormRequest
     {
         return [
             'per_page' => 'numeric|numeric|min:1|max:100',
-            'q'        => 'nullable|string|max:100',
         ];
     }
 }

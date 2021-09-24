@@ -3,7 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Implementation;
-use App\Models\NotificationTemplate;
+use App\Models\SystemNotification;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -132,18 +132,11 @@ class ImplementationMail extends Mailable
      */
     public function buildTemplatedNotification(array $extraData = []): Mailable
     {
-        $implementationKey = $this->mailData['implementation_key'] ?? $this->implementationKey;
-        $templateFilter = [
-            'type' => 'mail',
-            'formal' => $this->communicationType == 'formal',
-            'key' => $this->notificationTemplateKey,
-        ];
-
-        $implementationTemplate = NotificationTemplate::where(array_merge([
-            'implementation_id' => Implementation::byKey($implementationKey)->id,
-        ], $templateFilter))->first();
-
-        $template = $implementationTemplate ?: NotificationTemplate::where($templateFilter)->first();
+        $template = SystemNotification::findTemplate(
+            $this->notificationTemplateKey,
+            'mail',
+            $this->implementationKey ?: $this->mailData['implementation_key']
+        );
 
         if ($template) {
             $data = array_merge($this->getTransData(), $extraData);
@@ -158,8 +151,6 @@ class ImplementationMail extends Mailable
 
             return $this->view('emails.mail-builder-template')->subject($subject);
         }
-
-        throw new RuntimeException("Email template not found for: " . json_encode($templateFilter));
     }
 
     /**

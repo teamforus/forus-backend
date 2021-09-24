@@ -6,10 +6,12 @@ use App\Mail\Vouchers\ShareProductVoucherMail;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * Share product voucher to the provider by email
+ */
 class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.product_voucher_shared';
-    protected static $sendMail = true;
     protected static $visible = true;
 
     /**

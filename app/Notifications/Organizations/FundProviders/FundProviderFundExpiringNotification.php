@@ -3,8 +3,7 @@
 namespace App\Notifications\Organizations\FundProviders;
 
 /**
- * Class FundProviderFundExpiringNotification
- * @package App\Notifications\Organizations\FundProviders
+ * Notify provider that a fund they supply will end soon
  */
 class FundProviderFundExpiringNotification extends BaseFundProvidersNotification
 {

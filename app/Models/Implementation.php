@@ -124,6 +124,7 @@ class Implementation extends Model
     ];
 
     protected $perPage = 20;
+    protected static $generalModel;
 
     /**
      * @var string[]
@@ -656,7 +657,7 @@ class Implementation extends Model
      */
     public static function general(): Implementation
     {
-        return self::byKey(self::KEY_GENERAL);
+        return static::$generalModel ?: static::$generalModel = self::byKey(self::KEY_GENERAL);
     }
 
     /**

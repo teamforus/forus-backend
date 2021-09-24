@@ -19,6 +19,7 @@ use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
+use App\Models\SystemNotification;
 use App\Notifications\BaseNotification;
 use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
 use App\Notifications\Identities\Employee\IdentityChangedEmployeeRolesNotification;
@@ -79,6 +80,8 @@ use App\Services\Forus\Notification\Models\NotificationUnsubscription;
 use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Repositories\Data\NotificationType;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class NotificationServiceRepo
@@ -258,18 +261,24 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
-     * @return array|NotificationType[]
+     * @param bool $visibleOnly
+     * @return Builder
      */
-    public function getNotificationsTypes(bool $visibleOnly = false): array
+    public function getSystemNotificationsQuery(bool $visibleOnly = false): Builder
     {
-        return array_filter(array_map(function(string $notification) use ($visibleOnly) {
-            /** @var BaseNotification $notification */
-            return !$visibleOnly || $notification::isVisible() ? new NotificationType(
-                $notification::getKey(),
-                $notification::getScope(),
-                $notification::getChannels()
-            ) : null;
-        }, self::$notifications));
+        return SystemNotification::where(function(Builder $builder) use ($visibleOnly) {
+            if ($visibleOnly) {
+                $builder->where('visible', true);
+            }
+        })->orderBy('group')->orderBy('order');
+    }
+
+    /**
+     * @return Collection|SystemNotification[]
+     */
+    public function getSystemNotifications(bool $visibleOnly = false): Collection
+    {
+        return $this->getSystemNotificationsQuery($visibleOnly)->get();
     }
 
     /**

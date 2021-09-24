@@ -3,8 +3,7 @@
 namespace App\Notifications\Organizations\FundProviders;
 
 /**
- * Class FundProvidersRevokedProductsNotification
- * @package App\Notifications\Organizations\FundProviders
+ * Notify the fund provider that their permission to sell any product on webshop was removed
  */
 class FundProvidersRevokedProductsNotification extends BaseFundProvidersNotification
 {

@@ -6,10 +6,12 @@ use App\Mail\Funds\FundExpireSoonMail;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * The voucher will expire soon (budget/subsidy)
+ */
 class IdentityVoucherExpireSoonBudgetNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.voucher_expire_soon_budget';
-    protected static $sendMail = true;
 
     protected static $visible = true;
     protected static $editable = true;
