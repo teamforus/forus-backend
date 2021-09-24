@@ -3,8 +3,7 @@
 namespace App\Notifications\Organizations\Products;
 
 /**
- * Class ProductExpiredNotification
- * @package App\Notifications\Organizations\Products
+ * The product expired
  */
 class ProductExpiredNotification extends BaseProductsNotification
 {

@@ -528,7 +528,7 @@
         "push": {},
         "database": {
             "title": ":fund_name is verlopen.",
-            "content": "Het tegoed op :fund_nam is verlopen."
+            "content": "Het tegoed op :fund_name is verlopen."
         }
     },
     "notifications_identities.product_voucher_expired": {

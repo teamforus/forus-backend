@@ -225,6 +225,9 @@ return [
         'price_discount' => "Korting",
         'limit_total' => "Totaal aanbod",
         'limit_total_per_identity' => "Limiet per aanvrager",
+
+        'templates.*.title' => 'titel',
+        'templates.*.content' => 'omschrijving',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

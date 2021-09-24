@@ -415,7 +415,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/system-notifications',
         "Api\Platform\Organizations\Implementations\SystemNotificationsController"
-    )->only('index');
+    )->only('index', 'show', 'update');
 
     $router->resource(
         'organizations/{organization}/provider-invitations',

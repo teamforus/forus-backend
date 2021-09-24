@@ -3,8 +3,7 @@
 namespace App\Notifications\Organizations\FundProviders;
 
 /**
- * Class FundProviderSponsorChatMessageNotification
- * @package App\Notifications\Organizations\FundProviders
+ * Notify the provider that a new chat message from the sponsor was received
  */
 class FundProviderSponsorChatMessageNotification extends BaseFundProvidersNotification
 {

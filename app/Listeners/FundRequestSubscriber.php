@@ -13,6 +13,7 @@ use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNoti
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use Illuminate\Events\Dispatcher;
+use Dompdf\Dompdf;
 
 /**
  * Class FundRequestSubscriber

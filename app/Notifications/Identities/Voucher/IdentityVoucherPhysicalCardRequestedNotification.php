@@ -6,11 +6,13 @@ use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
 
+/**
+ * A new physical card request was submitted
+ */
 class IdentityVoucherPhysicalCardRequestedNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.voucher_physical_card_requested';
     protected static $scope = null;
-    protected static $sendMail = true;
 
     protected static $visible = true;
     protected static $editable = true;

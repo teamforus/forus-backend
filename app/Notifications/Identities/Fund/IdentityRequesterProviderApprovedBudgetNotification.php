@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Fund;
 
 /**
- * Notify that the provider was approved to scan any budget vouchers
+ * Notify requester that a new fund provider was approved to scan any budget vouchers
  */
 class IdentityRequesterProviderApprovedBudgetNotification extends BaseIdentityFundNotification
 {

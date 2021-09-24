@@ -7,14 +7,12 @@ use App\Models\FundProvider;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class FundProvidersRevokedBudgetNotification
- * @package App\Notifications\Organizations\FundProviders
+ * Notify the fund provider that they can no longer scan budget vouchers
  */
 class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotification
 {
     protected static $key = 'notifications_fund_providers.revoked_budget';
     protected static $permissions = 'manage_provider_funds';
-    protected static $sendMail = true;
 
     protected static $visible = true;
     protected static $editable = true;

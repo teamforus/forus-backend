@@ -7,14 +7,12 @@ use App\Models\Fund;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class BalanceLowNotification
- * @package App\Notifications\Organizations\Funds
+ * Notify sponsor that the fund balance is low (reached the threshold)
  */
 class BalanceLowNotification extends BaseFundsNotification
 {
     protected static $key = 'notifications_funds.balance_low';
     protected static $permissions = 'view_finances';
-    protected static $sendMail = true;
 
     /**
      * @param Identity $identity

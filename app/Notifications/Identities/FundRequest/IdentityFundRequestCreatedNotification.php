@@ -7,13 +7,11 @@ use App\Models\FundRequest;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class IdentityFundRequestCreatedNotification
- * @package App\Notifications\Identities\FundRequest
+ * Notify requester about their fund request being submitted
  */
 class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNotification
 {
     protected static $key = 'notifications_identities.fund_request_created';
-    protected static $sendMail = true;
 
     protected static $visible = true;
     protected static $editable = true;

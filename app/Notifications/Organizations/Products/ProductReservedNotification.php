@@ -7,14 +7,12 @@ use App\Models\Implementation;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class ProductReservedNotification
- * @package App\Notifications\Organizations\Products
+ * The product was reserved
  */
 class ProductReservedNotification extends BaseProductsNotification
 {
     protected static $key = 'notifications_products.reserved';
     protected static $permissions = 'manage_products';
-    protected static $sendMail = true;
 
     public function toMail(Identity $identity): void
     {

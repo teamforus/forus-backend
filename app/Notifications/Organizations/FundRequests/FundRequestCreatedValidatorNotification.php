@@ -3,8 +3,7 @@
 namespace App\Notifications\Organizations\FundRequests;
 
 /**
- * Class FundRequestCreatedValidatorNotification
- * @package App\Notifications\FundRequests
+ * Notify sponsor/validator about new fund request
  */
 class FundRequestCreatedValidatorNotification extends BaseFundsRequestsNotification
 {

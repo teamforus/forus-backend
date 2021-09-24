@@ -8,13 +8,11 @@ use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class IdentityProductVoucherReservedNotification
- * @package App\Notifications\Identities\Voucher
+ * Product reservation (legacy reservation) was reserved
  */
 class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.product_voucher_reserved';
-    protected static $sendMail = true;
     protected static $visible = true;
 
     /**

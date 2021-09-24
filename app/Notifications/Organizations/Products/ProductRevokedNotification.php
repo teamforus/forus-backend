@@ -3,8 +3,7 @@
 namespace App\Notifications\Organizations\Products;
 
 /**
- * Class ProductRevokedNotification
- * @package App\Notifications\Organizations\Products
+ * The product was revoked from a fund by the sponsor
  */
 class ProductRevokedNotification extends BaseProductsNotification
 {

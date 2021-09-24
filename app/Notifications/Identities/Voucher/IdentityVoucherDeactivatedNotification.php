@@ -6,10 +6,12 @@ use App\Mail\Vouchers\DeactivationVoucherMail;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
+/**
+ * The voucher was deactivated
+ */
 class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotification
 {
     protected static $scope = null;
-    protected static $sendMail = true;
     protected static $key = 'notifications_identities.voucher_deactivated';
 
     protected static $visible = true;

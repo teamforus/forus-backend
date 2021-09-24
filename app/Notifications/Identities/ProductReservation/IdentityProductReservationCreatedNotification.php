@@ -3,8 +3,7 @@
 namespace App\Notifications\Identities\ProductReservation;
 
 /**
- * Class IdentityProductReservationCreatedNotification
- * @package App\Notifications\Identities\ProductReservation
+ * A new product reservation was created
  */
 class IdentityProductReservationCreatedNotification extends BaseProductReservationNotification
 {
