@@ -116,6 +116,28 @@ class OrganizationQuery
 
     /**
      * @param Builder $query
+     * @param array $organization_ids
+     * @param string $sort_by
+     * @return Builder
+     */
+    public static function sortByParameter(
+        Builder $query,
+        array $organization_ids,
+        string $sort_by
+    ): Builder {
+        $query = $query->whereIn('id', $organization_ids);
+
+        if ($sort_by == 'created_at') {
+            return $query->orderByRaw("FIELD(id, ?)", [
+                'organization_ids_ordered' => implode(',', $organization_ids)
+            ]);
+        }
+
+        return $query->orderBy('name');
+    }
+
+    /**
+     * @param Builder $query
      * @param Organization $sponsorOrganization
      * @return Builder
      */

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\IndexProvidersRequest;
 use App\Http\Resources\ProviderFinancialResource;
 use App\Http\Resources\Sponsor\SponsorProviderResource;
+use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
@@ -15,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use function foo\func;
 
 /**
  * Class ProvidersController
@@ -38,10 +40,11 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $query = Organization::query();
-        $query->whereHas('fund_providers', function(Builder $builder) use ($request, $organization) {
-            FundProvider::search($request, $organization, $builder);
-        })->orderBy('name');
+        $query = OrganizationQuery::sortByParameter(
+            Organization::query(),
+            FundProvider::search($request, $organization)->pluck('organization_id')->toArray(),
+            $request->input('sort_by', 'created_at')
+        );
 
         return SponsorProviderResource::collection(OrganizationQuery::whereIsProviderOrganization(
             $query, $organization

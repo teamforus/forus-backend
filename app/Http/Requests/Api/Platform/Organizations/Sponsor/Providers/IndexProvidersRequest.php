@@ -32,6 +32,7 @@ class IndexProvidersRequest extends IndexFundProviderRequest
             'provider_ids.*'    => 'nullable|exists:organizations,id',
             'product_category_ids'   => 'nullable|array',
             'product_category_ids.*' => 'nullable|exists:product_categories,id',
+            'sort_by'                => 'nullable|in:name,created_at',
         ]);
     }
 }
