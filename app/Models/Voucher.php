@@ -319,13 +319,7 @@ class Voucher extends Model
     public function product_vouchers(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
-            $builder->whereDoesntHave('product_reservation');
-            $builder->orWhereHas('product_reservation', function (Builder $builder) {
-                $builder->whereIn('state', [
-                    ProductReservation::STATE_PENDING,
-                    ProductReservation::STATE_ACCEPTED
-                ]);
-            });
+            VoucherQuery::whereIsProductVoucher($builder);
         });
     }
 
@@ -690,7 +684,13 @@ class Voucher extends Model
         }
 
         if ($request->has('in_use')) {
-            $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
+            $query->where(function(Builder $builder) use ($in_use) {
+                if ($in_use) {
+                    VoucherQuery::whereInUseQuery($builder);
+                } else {
+                    VoucherQuery::whereNotInUseQuery($builder);
+                }
+            });
         }
 
         return $query->orderBy(
@@ -728,7 +728,7 @@ class Voucher extends Model
      */
     public function getHasTransactionsAttribute(): bool
     {
-        return count($this->transactions) > 0;
+        return $this->transactions->count() > 0;
     }
 
     /**
