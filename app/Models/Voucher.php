@@ -690,7 +690,15 @@ class Voucher extends Model
         }
 
         if ($request->has('in_use')) {
-            $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
+            $query->where(function(Builder $builder) use ($in_use) {
+                if ($in_use) {
+                    $builder->whereHas('transactions');
+                    $builder->orWhereHas('product_vouchers');
+                } else {
+                    $builder->whereDoesntHave('transactions');
+                    $builder->whereDoesntHave('product_vouchers');
+                }
+            });
         }
 
         return $query->orderBy(
