@@ -22,17 +22,18 @@ class IndexProvidersRequest extends IndexFundProviderRequest
         $funds = $this->organization->funds->pluck('id');
 
         return array_merge(parent::rules(), [
-            'from'              => 'nullable|date_format:Y-m-d',
-            'to'                => 'nullable|date_format:Y-m-d',
-            'fund_ids'          => 'nullable|array',
-            'fund_ids.*'        => 'required|exists:funds,id|in:' . $funds->join(','),
-            'postcodes'         => 'nullable|array',
-            'postcodes.*'      => 'nullable|string|max:100',
-            'provider_ids'      => 'nullable|array',
-            'provider_ids.*'    => 'nullable|exists:organizations,id',
-            'product_category_ids'   => 'nullable|array',
-            'product_category_ids.*' => 'nullable|exists:product_categories,id',
-            'sort_by'                => 'nullable|in:name,created_at',
+            'from'                      => 'nullable|date_format:Y-m-d',
+            'to'                        => 'nullable|date_format:Y-m-d',
+            'fund_ids'                  => 'nullable|array',
+            'fund_ids.*'                => 'required|exists:funds,id|in:' . $funds->join(','),
+            'postcodes'                 => 'nullable|array',
+            'postcodes.*'               => 'nullable|string|max:100',
+            'provider_ids'              => 'nullable|array',
+            'provider_ids.*'            => 'nullable|exists:organizations,id',
+            'product_category_ids'      => 'nullable|array',
+            'product_category_ids.*'    => 'nullable|exists:product_categories,id',
+            'order_by'                  => 'nullable|in:name,application_date',
+            'order_dir'                 => 'nullable|in:asc,desc',
         ]);
     }
 }

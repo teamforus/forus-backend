@@ -8,15 +8,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Providers\IndexProvidersRequest;
 use App\Http\Resources\ProviderFinancialResource;
 use App\Http\Resources\Sponsor\SponsorProviderResource;
-use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\Organization;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use function foo\func;
 
 /**
  * Class ProvidersController
@@ -40,17 +41,18 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $query = OrganizationQuery::sortByParameter(
-            Organization::query(),
-            FundProvider::search($request, $organization)->pluck('organization_id')->toArray(),
-            $request->input('sort_by', 'created_at')
-        );
+        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $organization);
+        $query = $query->whereHas('fund_providers', function(Builder $builder) use ($request, $organization) {
+            FundProvider::search($request, $organization, $builder);
+        });
 
-        return SponsorProviderResource::collection(OrganizationQuery::whereIsProviderOrganization(
-            $query, $organization
-        )->with(SponsorProviderResource::WITH)->withCount('products')->paginate(
-            $request->input('per_page')
-        ));
+        $query = OrganizationQuery::orderProvidersBy($query, $organization, $request->only([
+            'order_by', 'order_dir',
+        ]));
+
+        return SponsorProviderResource::collection($query->with(
+            SponsorProviderResource::WITH
+        )->withCount('products')->paginate($request->input('per_page')));
     }
 
     /**
