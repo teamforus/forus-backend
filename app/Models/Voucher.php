@@ -670,8 +670,8 @@ class Voucher extends Model
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');
         $expired = $request->input('expired');
-        $amount_per_identity_min = $request->input('amount_per_identity_min');
-        $amount_per_identity_max = $request->input('amount_per_identity_max');
+        $count_per_identity_min = $request->input('count_per_identity_min');
+        $count_per_identity_max = $request->input('count_per_identity_max');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -728,23 +728,16 @@ class Voucher extends Model
             $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
         }
 
-        $duplicates_lower_limit = clone $query;
-        if ($amount_per_identity_min) {
-            $duplicates_lower_limit = $duplicates_lower_limit->groupBy('identity_address')->havingRaw('COUNT(*) >= ?', [
-                'amount_per_identity_min' => $amount_per_identity_min
-            ])->pluck('identity_address')->toArray();
+        if ($count_per_identity_min) {
+            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
+            }, '>=', $count_per_identity_min);
         }
 
-        $duplicates_upper_limit = clone $query;
-        if ($amount_per_identity_max) {
-            $duplicates_upper_limit = $duplicates_upper_limit->groupBy('identity_address')->havingRaw('COUNT(*) <= ?', [
-                'amount_per_identity_max' => $amount_per_identity_max
-            ])->pluck('identity_address')->toArray();
-        }
-
-        if ($amount_per_identity_min || $amount_per_identity_max) {
-            $duplicate_identities = array_intersect($duplicates_lower_limit, $duplicates_upper_limit);
-            $query->whereIn('identity_address', $duplicate_identities);
+        if ($count_per_identity_max) {
+            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
+            }, '<=', $count_per_identity_max);
         }
 
         return $query->orderBy(
