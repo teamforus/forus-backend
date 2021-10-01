@@ -10,10 +10,13 @@ use App\Http\Resources\ProviderFinancialResource;
 use App\Http\Resources\Sponsor\SponsorProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
+use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -38,16 +41,18 @@ class ProvidersController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
         $this->authorize('listSponsorProviders', $organization);
 
-        $query = Organization::query();
-        $query->whereHas('fund_providers', function(Builder $builder) use ($request, $organization) {
+        $query = OrganizationQuery::whereIsProviderOrganization(Organization::query(), $organization);
+        $query = $query->whereHas('fund_providers', function(Builder $builder) use ($request, $organization) {
             FundProvider::search($request, $organization, $builder);
-        })->orderBy('name');
+        });
 
-        return SponsorProviderResource::collection(OrganizationQuery::whereIsProviderOrganization(
-            $query, $organization
-        )->with(SponsorProviderResource::WITH)->withCount('products')->paginate(
-            $request->input('per_page')
-        ));
+        $query = OrganizationQuery::orderProvidersBy($query, $organization, $request->only([
+            'order_by', 'order_dir',
+        ]));
+
+        return SponsorProviderResource::collection($query->with(
+            SponsorProviderResource::WITH
+        )->withCount('products')->paginate($request->input('per_page')));
     }
 
     /**
