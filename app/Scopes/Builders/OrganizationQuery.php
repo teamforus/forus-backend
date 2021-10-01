@@ -151,7 +151,7 @@ class OrganizationQuery
     ): Builder {
         switch (Arr::get($options, 'order_by', 'name')) {
             case 'application_date': {
-                $fundsQuery = $sponsor->funds()->select('id')->getQuery();
+                $fundsQuery = $sponsor->funds()->where('archived', false)->select('id')->getQuery();
                 $providersQuery = FundProvider::whereIn('fund_id', $fundsQuery);
                 $providersQuery->selectRaw('`organization_id`, MAX(`created_at`) as `last_created_at`');
                 $providersQuery->groupBy('organization_id');

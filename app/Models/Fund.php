@@ -1262,6 +1262,14 @@ class Fund extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function isArchived(): bool
+    {
+        return $this->archived;
+    }
+
+    /**
      * @param FundCriterion|null $fundCriterion
      * @return array
      */

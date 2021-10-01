@@ -315,8 +315,9 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showFinances', $organization);
 
-        $fundsQuery = $organization->funds()->where('state', '!=', Fund::STATE_WAITING);
-        $activeFundsQuery = $organization->funds()->where([
+        $query = $organization->funds()->where('archived', false);
+        $fundsQuery = (clone $query)->where('state', '!=', Fund::STATE_WAITING);
+        $activeFundsQuery = (clone $query)->where([
             'type' => Fund::TYPE_BUDGET,
         ])->where('state', '=', Fund::STATE_ACTIVE);
 
