@@ -26,12 +26,8 @@ class VoucherTransactionsSubscriber
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
 
-        if ($voucher->identity_address) {
-            $bsn = record_repo()->bsnByAddress($voucher->identity_address);
-
-            if ($bsn && $voucher->transactions()->count() == 1 && $fund->isBackofficeApiAvailable()) {
-                $fund->reportFirstUseByApi($bsn);
-            }
+        if (!$voucher->parent_id && $voucher->usedCount() == 1) {
+            $voucher->reportBackofficeFirstUse();
         }
 
         if ($transaction->product) {
@@ -56,12 +52,14 @@ class VoucherTransactionsSubscriber
         } else if ($voucher->fund->isTypeSubsidy()) {
             $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
 
-            if ($fundProviderProduct && $transaction->voucher->identity_address) {
+            if ($fundProviderProduct) {
                 $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, [
                     'subsidy_new_limit' => $fundProviderProduct->stockAvailableForVoucher($transaction->voucher),
                 ]);
 
-                IdentityVoucherSubsidyTransactionNotification::send($eventLog);
+                if ($transaction->voucher->identity_address) {
+                    IdentityVoucherSubsidyTransactionNotification::send($eventLog);
+                }
             }
         }
 

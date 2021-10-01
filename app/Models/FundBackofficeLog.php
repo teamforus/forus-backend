@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Services\BackofficeApiService\BackofficeApi;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * App\Models\FundBackofficeLog
@@ -13,8 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int|null $fund_id
  * @property string|null $identity_address
  * @property string|null $bsn
+ * @property int|null $voucher_id
  * @property string $action
  * @property string $state
+ * @property string $request_id
  * @property string|null $response_id
  * @property string|null $response_code
  * @property array|null $response_body
@@ -36,20 +37,22 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereLastAttemptAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereRequestId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseBody($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseError($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereVoucherId($value)
  * @mixin \Eloquent
  */
 class FundBackofficeLog extends Model
 {
     protected $fillable = [
-        'fund_id', 'identity_address', 'bsn', 'action', 'state',
-        'response_id', 'response_code', 'response_body', 'response_error',
-        'attempts', 'last_attempt_at',
+        'fund_id', 'identity_address', 'bsn', 'action', 'state', 'request_id', 'response_id',
+        'response_code', 'response_body', 'response_error', 'attempts', 'last_attempt_at',
+        'voucher_id',
     ];
 
     protected $casts = [
@@ -65,11 +68,11 @@ class FundBackofficeLog extends Model
     }
 
     /**
-     * @return HasOne
+     * @return BelongsTo
      */
-    public function voucher(): HasOne
+    public function voucher(): BelongsTo
     {
-        return $this->hasOne(Voucher::class);
+        return $this->belongsTo(Voucher::class);
     }
 
     /**

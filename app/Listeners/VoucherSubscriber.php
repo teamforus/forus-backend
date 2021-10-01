@@ -83,7 +83,7 @@ class VoucherSubscriber
                 'provider' => $product->organization,
                 'sponsor' => $voucher->fund->organization,
                 'employee' => $voucher->employee,
-            ]);
+            ], $voucher->only('note'));
 
             if ($voucherCreated->shouldNotifyRequesterAdded()) {
                 IdentityProductVoucherAddedNotification::send($event);
@@ -98,7 +98,7 @@ class VoucherSubscriber
                 'voucher' => $voucher,
                 'sponsor' => $voucher->fund->organization,
                 'employee' => $voucher->employee,
-            ]);
+            ], $voucher->only('note'));
 
             if ($voucher->identity_address && $voucher->fund->fund_formulas->count() > 0) {
                 $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
@@ -112,6 +112,8 @@ class VoucherSubscriber
                 }
             }
         }
+
+        $voucher->reportBackofficeReceived();
     }
 
     /**
@@ -159,6 +161,8 @@ class VoucherSubscriber
         $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
             $voucher->identity_address
         ));
+
+        $voucher->reportBackofficeReceived();
     }
 
     /**
