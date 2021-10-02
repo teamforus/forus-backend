@@ -402,7 +402,7 @@ class FundProvider extends Model
         $allow_budget = $request->input('allow_budget');
 
         $query = $query ?: self::query();
-        $query = $query->whereIn('fund_id', $organization->funds()->pluck('id'));
+        $query = $query->whereIn('fund_id', $organization->funds()->select('id')->getQuery());
 
         if ($q = $request->input('q')) {
             $query->where(static function(Builder $builder) use ($q) {
