@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\EventLogService\Models\EventLog;
+use App\Services\EventLogService\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Voucher $voucher
+ * @property-read Collection|EventLog[] $logs
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest query()
@@ -34,6 +38,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PhysicalCardRequest extends Model
 {
+    use HasLogs;
+
+    public const EVENT_CREATED = 'created';
+
     /**
      * @var string[]
      */
