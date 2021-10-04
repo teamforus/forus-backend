@@ -46,7 +46,7 @@ use RuntimeException;
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
- * @property-read \App\Models\FundBackofficeLog $backoffice_log_eligible
+ * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_eligible
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_first_use
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_received
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
@@ -1157,7 +1157,7 @@ class Voucher extends Model
         }
 
         return $this->physical_card_requests()->create(Arr::only($options, [
-            'address', 'house', 'house_addition', 'postcode', 'city',
+            'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
         ]));
     }
 

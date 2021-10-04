@@ -196,6 +196,6 @@ return [
 
     'physical_card_request_created' => [
         'title' => 'Er is een pas onderweg!',
-        'description' => 'De pas wordt verzonden naar :address',
+        'description' => 'De pas wordt verzonden naar: :address',
     ]
 ];

@@ -16,34 +16,29 @@ class PhysicalCardRequestsSubscriber
 {
     /**
      * @param PhysicalCardRequestsCreated $physicalCardRequestCreated
+     * @noinspection PhpUnused
      */
-    public function onPhysicalCardRequestsCreated(PhysicalCardRequestsCreated $physicalCardRequestCreated): void
-    {
+    public function onPhysicalCardRequestsCreated(
+        PhysicalCardRequestsCreated $physicalCardRequestCreated
+    ): void {
         $physicalCardRequest = $physicalCardRequestCreated->getPhysicalCardRequest();
-        $voucher = $physicalCardRequestCreated->getVoucher();
-        $employee = $voucher->fund->organization->findEmployee(auth_address());
 
-        $address = sprintf(
-            "%s %s, %s, %s, %s",
-            $physicalCardRequest->address,
+        $address = $physicalCardRequest->address . ' ' . implode(', ', array_filter([
             $physicalCardRequest->house,
             $physicalCardRequest->house_addition,
             $physicalCardRequest->postcode,
             $physicalCardRequest->city
-        );
+        ]));
 
         $eventLog = $physicalCardRequest->log(PhysicalCardRequest::EVENT_CREATED, [
-            'physical_card_request'  => $physicalCardRequest,
-            'voucher'                => $voucher,
-            'sponsor'                => $voucher->fund->organization,
-            'fund'                   => $voucher->fund
+            'physical_card_request'     => $physicalCardRequest,
+            'employee'                  => $physicalCardRequest->employee,
+            'voucher'                   => $physicalCardRequest->voucher,
+            'sponsor'                   => $physicalCardRequest->voucher->fund->organization,
+            'fund'                      => $physicalCardRequest->voucher->fund,
         ], [
-            'note'    => $address,
+            'note'    => "Adresgegevens: $address",
             'address' => $address,
-            'employee_id'    => $employee ? $employee->id : null,
-            'employee_email' => $employee ? record_repo()->primaryEmailByAddress(
-                $employee->identity_address
-            ) : null,
         ]);
 
         PhysicalCardRequestCreatedNotification::send($eventLog);

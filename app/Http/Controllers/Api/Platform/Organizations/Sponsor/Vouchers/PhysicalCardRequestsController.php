@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor\Vouchers;
 
+use App\Events\PhysicalCardRequests\PhysicalCardRequestsCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
@@ -32,9 +33,13 @@ class PhysicalCardRequestsController extends Controller
         $this->authorize('showSponsor', [$voucherToken->voucher, $organization]);
         $this->authorize('requestPhysicalCardAsSponsor', [$voucherToken->voucher, $organization]);
 
-        $cardRequest = $voucherToken->voucher->makePhysicalCardRequest($request->only([
-            'address', 'house', 'house_addition', 'postcode', 'city'
+        $cardRequest = $voucherToken->voucher->makePhysicalCardRequest(array_merge($request->only([
+            'address', 'house', 'house_addition', 'postcode', 'city',
+        ]), [
+            'employee_id' => $organization->findEmployee($request->auth_address())->id,
         ]));
+
+        PhysicalCardRequestsCreated::dispatch($cardRequest->fresh());
 
         return new PhysicalCardRequestResource($cardRequest);
     }
