@@ -12,4 +12,5 @@ return [
     'transaction' => 'Transactie',
     'transaction_subsidy' => 'Transactie',
     'transaction_budget' => 'Transactie',
+    'transaction_product' => 'Transactie',
 ];

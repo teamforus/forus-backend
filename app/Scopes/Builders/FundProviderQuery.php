@@ -113,11 +113,8 @@ class FundProviderQuery
      * @param array|string|int $fund_id
      * @return Builder|\Illuminate\Database\Query\Builder
      */
-    public static function sortByRevenue(
-        Builder $query,
-        $fund_id
-    ) {
-        return $query->select('*')->selectSub(VoucherTransaction::selectRaw(
+    public static function sortByRevenue(Builder $query, $fund_id) {
+        return $query->select('fund_providers.*')->selectSub(VoucherTransaction::selectRaw(
             'sum(`voucher_transactions`.`amount`)'
         )->whereColumn(
             'voucher_transactions.organization_id',

@@ -142,7 +142,7 @@ class Identity extends Model
      * @param bool $verified
      * @param bool $primary
      * @param bool $initial
-     * @return IdentityEmail
+     * @return IdentityEmail|Model
      */
     public function addEmail(
         string $email,
@@ -150,14 +150,11 @@ class Identity extends Model
         bool $primary = false,
         bool $initial = false
     ): IdentityEmail {
-        /** @var IdentityEmail $identityEmail */
-        $identityEmail = $this->emails()->create(array_merge(compact(
+        return $this->emails()->create(array_merge(compact(
             'email', 'verified', 'primary', 'initial'
         ), [
             'verification_token' => token_generator()->generate(200),
         ]));
-
-        return $identityEmail;
     }
 
     /**
