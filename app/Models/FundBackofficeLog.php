@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Services\BackofficeApiService\BackofficeApi;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * App\Models\FundBackofficeLog
@@ -51,9 +50,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class FundBackofficeLog extends Model
 {
     protected $fillable = [
-        'fund_id', 'identity_address', 'bsn', 'action', 'state',
-        'response_id', 'response_code', 'response_body', 'response_error',
-        'attempts', 'last_attempt_at',
+        'fund_id', 'identity_address', 'bsn', 'action', 'state', 'request_id', 'response_id',
+        'response_code', 'response_body', 'response_error', 'attempts', 'last_attempt_at',
+        'voucher_id',
     ];
 
     protected $casts = [
@@ -69,11 +68,11 @@ class FundBackofficeLog extends Model
     }
 
     /**
-     * @return HasOne
+     * @return BelongsTo
      */
-    public function voucher(): HasOne
+    public function voucher(): BelongsTo
     {
-        return $this->hasOne(Voucher::class);
+        return $this->belongsTo(Voucher::class);
     }
 
     /**

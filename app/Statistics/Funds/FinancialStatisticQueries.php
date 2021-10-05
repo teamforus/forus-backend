@@ -106,16 +106,18 @@ class FinancialStatisticQueries
      */
     public function getFilterFunds(Organization $sponsor, array $options = []): array
     {
-        $query = FundQuery::whereActiveOrClosedFilter($sponsor->funds()->getQuery())->select('id', 'name');
+        $query = FundQuery::whereActiveOrClosedFilter($sponsor->funds()->getQuery(), false);
         $transactionsQuery = $this->getFilterTransactionsQuery($sponsor, $options);
 
-        $query->addSelect([
+        $query->select('id', 'name')->addSelect([
             'transactions' => $transactionsQuery->whereHas('voucher', function(Builder $builder) {
                 $builder->whereColumn('vouchers.fund_id', 'funds.id');
             })->selectRaw('count(*)'),
         ])->orderByDesc('transactions');
 
-        return $this->collectionOnly($query->get(), ['id', 'name', 'transactions']);
+        return $this->collectionOnly($query->get(), [
+            'id', 'name', 'transactions',
+        ]);
     }
 
     /**
@@ -152,7 +154,7 @@ class FinancialStatisticQueries
         $query = $query->whereHas('voucher.fund', function(Builder $builder) use ($sponsor) {
             FundQuery::whereActiveOrClosedFilter($builder->where([
                 'organization_id' => $sponsor->id
-            ]));
+            ]), false);
         });
 
         // Filter by selected funds

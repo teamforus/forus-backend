@@ -11,6 +11,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Class OfficesController
@@ -38,7 +39,7 @@ class OfficesController extends Controller
     public function index(
         IndexOfficeRequest $request,
         Organization $organization
-    ): \Illuminate\Http\Resources\Json\AnonymousResourceCollection {
+    ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
         return OfficeResource::collection($organization->offices()->paginate(
@@ -54,10 +55,8 @@ class OfficesController extends Controller
      * @return OfficeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(
-        StoreOfficeRequest $request,
-        Organization $organization
-    ): OfficeResource {
+    public function store(StoreOfficeRequest $request, Organization $organization): OfficeResource
+    {
         $this->authorize('show', $organization);
         $this->authorize('store', [Office::class, $organization]);
 
@@ -89,10 +88,8 @@ class OfficesController extends Controller
      * @return OfficeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        Organization $organization,
-        Office $office
-    ): OfficeResource {
+    public function show(Organization $organization, Office $office): OfficeResource
+    {
         $this->authorize('show', $organization);
         $this->authorize('show', [$office, $organization]);
 
@@ -143,10 +140,8 @@ class OfficesController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
      */
-    public function destroy(
-        Organization $organization,
-        Office $office
-    ): JsonResponse {
+    public function destroy(Organization $organization, Office $office): JsonResponse
+    {
         $this->authorize('show', $organization);
         $this->authorize('destroy', [$office, $organization]);
 

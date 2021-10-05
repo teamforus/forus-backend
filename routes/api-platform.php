@@ -185,6 +185,14 @@ $router->group([], static function() use ($router) {
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/funds/{fund}/archive',
+        "Api\Platform\Organizations\FundsController@archive");
+
+    $router->post(
+        'organizations/{organization}/funds/{fund}/unarchive',
+        "Api\Platform\Organizations\FundsController@unarchive");
+
     $router->resource(
         'organizations.funds',
         "Api\Platform\Organizations\FundsController", [
@@ -372,6 +380,18 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             'physical-cards' => 'physical_card',
         ]
     ]);
+
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/{voucher_token_address}/physical-card-requests/validate',
+        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardRequestsController@storeValidate"
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/vouchers/{voucher_token_address}/physical-card-requests',
+        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardRequestsController"
+    )->parameters([
+        'physical-cards' => 'physical_card',
+    ])->only('index', 'store');
 
     $router->post('vouchers/{voucher_token_address}/send-email', "Api\Platform\VouchersController@sendEmail");
     $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
