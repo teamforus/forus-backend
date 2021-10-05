@@ -144,7 +144,7 @@ class FundProviderController extends Controller
         }
 
         $fundProvider->update([
-            'allow_some_products' => $fundProvider->products()->count() > 0
+            'allow_some_products' => $fundProvider->fund_provider_products()->count() > 0
         ]);
 
         return new FundProviderResource($fundProvider);
