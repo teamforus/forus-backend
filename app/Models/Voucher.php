@@ -670,6 +670,8 @@ class Voucher extends Model
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');
         $expired = $request->input('expired');
+        $count_per_identity_min = $request->input('count_per_identity_min');
+        $count_per_identity_max = $request->input('count_per_identity_max');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -724,6 +726,18 @@ class Voucher extends Model
 
         if ($request->has('in_use')) {
             $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
+        }
+
+        if ($count_per_identity_min) {
+            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
+            }, '>=', $count_per_identity_min);
+        }
+
+        if ($count_per_identity_max) {
+            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
+            }, '<=', $count_per_identity_max);
         }
 
         return $query->orderBy(
