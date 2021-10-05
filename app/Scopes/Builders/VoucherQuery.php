@@ -3,6 +3,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\ProductReservation;
 use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -151,5 +152,58 @@ class VoucherQuery
                 $builder->where('returnable', false);
             });
         });
+    }
+
+    /**
+     * @param Builder $builder
+     * @param bool $inUse
+     * @return Builder
+     */
+    public static function whereInUseQuery(Builder $builder, bool $inUse = true): Builder
+    {
+        return $builder->where(static function(Builder $builder) use ($inUse) {
+            if ($inUse) {
+                $builder->whereHas('transactions');
+                $builder->orWhereHas('product_vouchers', function(Builder $builder) {
+                    static::whereIsProductVoucher($builder);
+                });
+            } else {
+                $builder->whereDoesntHave('transactions');
+                $builder->whereDoesntHave('product_vouchers', function(Builder $builder) {
+                    static::whereIsProductVoucher($builder);
+                });
+            }
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @param bool $inUse
+     * @return Builder
+     */
+    public static function whereIsProductVoucher(Builder $builder, bool $inUse = true): Builder
+    {
+        return $builder->where(static function(Builder $builder) use ($inUse) {
+            $builder->whereNotNull('parent_id');
+
+            $builder->where(static function(Builder $builder) use ($inUse) {
+                $builder->whereDoesntHave('product_reservation');
+                $builder->orWhereHas('product_reservation', function (Builder $builder) {
+                    $builder->whereIn('state', [
+                        ProductReservation::STATE_PENDING,
+                        ProductReservation::STATE_ACCEPTED
+                    ]);
+                });
+            });
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereNotInUseQuery(Builder $builder): Builder
+    {
+        return static::whereInUseQuery($builder, false);
     }
 }

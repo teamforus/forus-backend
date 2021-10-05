@@ -353,13 +353,7 @@ class Voucher extends Model
     public function product_vouchers(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
-            $builder->whereDoesntHave('product_reservation');
-            $builder->orWhereHas('product_reservation', function (Builder $builder) {
-                $builder->whereIn('state', [
-                    ProductReservation::STATE_PENDING,
-                    ProductReservation::STATE_ACCEPTED
-                ]);
-            });
+            VoucherQuery::whereIsProductVoucher($builder);
         });
     }
 
@@ -726,7 +720,13 @@ class Voucher extends Model
         }
 
         if ($request->has('in_use')) {
-            $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
+            $query->where(function(Builder $builder) use ($in_use) {
+                if ($in_use) {
+                    VoucherQuery::whereInUseQuery($builder);
+                } else {
+                    VoucherQuery::whereNotInUseQuery($builder);
+                }
+            });
         }
 
         if ($count_per_identity_min) {
@@ -768,6 +768,24 @@ class Voucher extends Model
     public function getIsGrantedAttribute(): bool
     {
         return !empty($this->identity_address);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasTransactionsAttribute(): bool
+    {
+        return $this->transactions->count() > 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasProductVouchersAttribute(): bool
+    {
+        return $this->product_vouchers->count() > 0;
     }
 
     /**

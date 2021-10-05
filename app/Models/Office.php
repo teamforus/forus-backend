@@ -153,6 +153,7 @@ class Office extends Model
         $location = $geocodeService->getLocation($this->address);
 
         if (is_array($location)) {
+            $location['lon'] = $location['lng'] ?? null;
             $this->update($location);
         }
     }
