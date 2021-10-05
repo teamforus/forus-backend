@@ -14,6 +14,7 @@ use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
 use App\Observers\FundProviderObserver;
 use Carbon\Carbon;
@@ -59,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
             'implementation'        => Implementation::class,
             'implementation_page'   => ImplementationPage::class,
             'product_reservation'   => ProductReservation::class,
+            'physical_card_request' => PhysicalCardRequest::class,
         ]);
 
         MediaService::setMediaConfigs([

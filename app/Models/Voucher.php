@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use RuntimeException;
 
 /**
@@ -45,7 +46,7 @@ use RuntimeException;
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
- * @property-read \App\Models\FundBackofficeLog $backoffice_log_eligible
+ * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_eligible
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_first_use
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_received
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
@@ -1148,6 +1149,33 @@ class Voucher extends Model
     }
 
     /**
+     * @param array $options
+     * @param string|null $mailToAddress
+     * @return PhysicalCardRequest|\Illuminate\Database\Eloquent\Model
+     */
+    public function makePhysicalCardRequest(
+        array $options,
+        ?string $mailToAddress = null
+    ): PhysicalCardRequest {
+        if ($mailToAddress) {
+            resolve('forus.services.notification')->requestPhysicalCard($mailToAddress, [
+                'postcode'       => $options['postcode'] ?? '',
+                'house_number'   => $options['house'] ?? '',
+                'house_addition' => $options['house_addition'] ?? '',
+                'city'           => $options['city'] ?? '',
+                'street_name'    => $options['address'] ?? '',
+                'fund_name'      => $this->fund->name,
+                'sponsor_phone'  => $this->fund->organization->phone,
+                'sponsor_email'  => $this->fund->organization->email
+            ], $this->fund->getEmailFrom());
+        }
+
+        return $this->physical_card_requests()->create(Arr::only($options, [
+            'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
+        ]));
+    }
+
+    /**
     // TODO: cleanup
      * @return bool
      */
@@ -1214,7 +1242,14 @@ class Voucher extends Model
             self::EVENT_DEACTIVATED,
             self::EVENT_ACTIVATED,
             self::EVENT_ASSIGNED,
-        ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION));
+        ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION))->merge(
+            EventLog::query()->where([
+                'loggable_type' => 'physical_card_request'
+            ])->whereIn(
+                'loggable_id',
+                $this->physical_card_requests()->pluck('id')->toArray()
+            )->get()
+        );
     }
 
     /**

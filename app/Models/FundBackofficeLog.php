@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $voucher_id
  * @property string $action
  * @property string $state
- * @property string $request_id
+ * @property string|null $request_id
  * @property string|null $response_id
  * @property string|null $response_code
  * @property array|null $response_body

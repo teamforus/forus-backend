@@ -9,6 +9,7 @@ use App\Listeners\FundRequestRecordSubscriber;
 use App\Listeners\FundRequestSubscriber;
 use App\Listeners\FundSubscriber;
 use App\Listeners\OrganizationSubscriber;
+use App\Listeners\PhysicalCardRequestsSubscriber;
 use App\Listeners\ProductReservationSubscriber;
 use App\Listeners\ProductSubscriber;
 use App\Listeners\VoucherSubscriber;
@@ -38,7 +39,9 @@ class EventServiceProvider extends ServiceProvider
         FundRequestRecordSubscriber::class,
         VoucherTransactionsSubscriber::class,
         FundRequestClarificationSubscriber::class,
+        PhysicalCardRequestsSubscriber::class,
     ];
+
     /**
      * The event listener mappings for the application.
      *

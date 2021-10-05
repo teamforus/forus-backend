@@ -429,19 +429,16 @@ class NotificationService
      * Request a physical card
      *
      * @param string $email
+     * @param array $data
      * @param EmailFrom|null $emailFrom
-     * @param $data
      * @return bool
      */
     public function requestPhysicalCard(
         string $email,
-        ?EmailFrom $emailFrom,
-        $data
+        array $data = [],
+        ?EmailFrom $emailFrom = null
     ): bool {
-        return $this->sendMail($email, new RequestPhysicalCardMail(
-            $emailFrom,
-            $data
-        ));
+        return $this->sendMail($email, new RequestPhysicalCardMail($emailFrom, $data));
     }
 
     /**

@@ -381,6 +381,18 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->post(
+        'organizations/{organization}/sponsor/vouchers/{voucher_token_address}/physical-card-requests/validate',
+        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardRequestsController@storeValidate"
+    );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/vouchers/{voucher_token_address}/physical-card-requests',
+        "Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardRequestsController"
+    )->parameters([
+        'physical-cards' => 'physical_card',
+    ])->only('index', 'store');
+
     $router->post('vouchers/{voucher_token_address}/send-email', "Api\Platform\VouchersController@sendEmail");
     $router->post('vouchers/{voucher_token_address}/share', "Api\Platform\VouchersController@shareVoucher");
     $router->post('vouchers/{voucher_token_address}/deactivate', "Api\Platform\VouchersController@deactivate");
