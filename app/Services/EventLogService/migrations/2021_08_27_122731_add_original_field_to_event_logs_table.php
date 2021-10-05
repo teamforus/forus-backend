@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
  * @noinspection PhpIllegalPsrClassPathInspection
  * @noinspection PhpUnused
  */
-class CreateEventLogsTable extends Migration
+class AddOriginalFieldToEventLogsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -17,13 +17,8 @@ class CreateEventLogsTable extends Migration
      */
     public function up()
     {
-        Schema::create('event_logs', static function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->morphs('loggable');
-            $table->string('event', 40);
-            $table->string('identity_address', 200)->nullable();
-            $table->json('data');
-            $table->timestamps();
+        Schema::table('event_logs', function (Blueprint $table) {
+            $table->boolean('original')->default(true)->after('identity_address');
         });
     }
 
@@ -34,6 +29,8 @@ class CreateEventLogsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('event_logs');
+        Schema::table('event_logs', function (Blueprint $table) {
+            $table->dropColumn('original');
+        });
     }
 }
