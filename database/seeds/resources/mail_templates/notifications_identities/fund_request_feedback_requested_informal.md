@@ -4,4 +4,4 @@
 &nbsp;  
 &nbsp;
 
-:webshop_clarification_link
+:webshop_clarification_button

@@ -18,6 +18,6 @@ class FundRequestDeniedMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return $this->buildTemplatedNotification();
+        return $this->buildNotificationTemplatedMail();
     }
 }

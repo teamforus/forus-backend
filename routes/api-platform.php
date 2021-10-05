@@ -460,13 +460,9 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource(
         'organizations.funds.provider-invitations',
         "Api\Platform\Organizations\Funds\FundProviderInvitationsController", [
-        'only' => [
-            'index', 'show', 'store'
-        ],
-        'parameters' => [
-            'provider-invitations' => 'fund_provider_invitations'
-        ]
-    ]);
+    ])->parameters([
+        'provider-invitations' => 'fund_provider_invitations'
+    ])->only('index', 'show', 'store');
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {
         $router->patch(

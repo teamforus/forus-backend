@@ -18,8 +18,18 @@ class FundRequestCreatedMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return $this->buildTemplatedNotification([
-            'webshop_button' => $this->makeButton($this->mailData['webshop_link'] ?? '', "Ga naar de webshop"),
-        ]);
+        return $this->buildNotificationTemplatedMail();
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return [
+            'webshop_link' => $this->makeLink($data['webshop_link'], 'hier'),
+            'webshop_button' => $this->makeButton($data['webshop_link'], 'Ga naar de webshop'),
+        ];
     }
 }

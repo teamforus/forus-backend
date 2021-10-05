@@ -11,18 +11,13 @@ use Illuminate\Mail\Mailable;
  */
 class ProviderRejectedMail extends ImplementationMail
 {
-    // protected $subjectKey = 'mails/provider_rejected.title';
-    // protected $viewKey = 'emails.funds.provider_rejected';
-
     protected $notificationTemplateKey = 'notifications_fund_providers.revoked_budget';
 
     /**
-     * Build the message.
-     *
-     * @return $this
+     * @return Mailable
      */
     public function build(): Mailable
     {
-        return $this->buildTemplatedNotification();
+        return $this->buildNotificationTemplatedMail();
     }
 }

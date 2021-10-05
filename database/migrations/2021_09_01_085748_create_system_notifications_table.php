@@ -11,7 +11,7 @@ class CreateSystemNotificationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('system_notifications', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -26,8 +26,6 @@ class CreateSystemNotificationsTable extends Migration
             $table->string('group', 40)->nullable()->default(null);
             $table->timestamps();
         });
-
-        (new SystemNotificationsTableSeeder())->run();
     }
 
     /**
@@ -35,7 +33,7 @@ class CreateSystemNotificationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('system_notifications');
     }

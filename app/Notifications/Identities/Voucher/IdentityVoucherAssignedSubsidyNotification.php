@@ -26,7 +26,7 @@ class IdentityVoucherAssignedSubsidyNotification extends BaseIdentityVoucherNoti
 
         $mailable = new VoucherAssignedSubsidyMail(array_merge($this->eventLog->data, [
             'qr_token' => $voucher->token_without_confirmation->address,
-            'link_webshop' => $voucher->fund->urlWebshop(),
+            'webshop_link' => $voucher->fund->urlWebshop(),
         ]), $voucher->fund->getEmailFrom());
 
         $this->sendMailNotification($identity->email, $mailable);

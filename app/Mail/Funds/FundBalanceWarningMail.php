@@ -18,6 +18,6 @@ class FundBalanceWarningMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return parent::buildTemplatedNotification();
+        return $this->buildNotificationTemplatedMail();
     }
 }

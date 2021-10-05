@@ -96,6 +96,23 @@ class MailBodyBuilder
     }
 
     /**
+     * @param string $markdown
+     * @param array $data
+     * @param string $globalStyles
+     * @return MailBodyBuilder
+     */
+    public function markdown(
+        string $markdown,
+        array $data = [],
+        $globalStyles = 'text_left'
+    ): MailBodyBuilder {
+        $templateHtml = resolve('markdown')->convertToHtml($markdown);
+        $templateHtml = str_var_replace($templateHtml, $data);
+
+        return $this->markdownHtml($templateHtml, $globalStyles);
+    }
+
+    /**
      * @param string $html
      * @param string $globalStyles
      * @return array|string|string[]

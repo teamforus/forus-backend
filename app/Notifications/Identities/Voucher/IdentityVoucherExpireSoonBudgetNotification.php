@@ -26,7 +26,7 @@ class IdentityVoucherExpireSoonBudgetNotification extends BaseIdentityVoucherNot
 
         if ($voucher->amount_available > 0) {
             $mailable = new FundExpireSoonMail(array_merge($this->eventLog->data, [
-                'link_webshop' => $voucher->fund->urlWebshop(),
+                'webshop_link' => $voucher->fund->urlWebshop(),
             ]), $voucher->fund->getEmailFrom());
 
             $this->sendMailNotification($voucher->identity->email, $mailable);

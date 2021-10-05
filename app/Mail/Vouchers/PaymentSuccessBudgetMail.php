@@ -13,13 +13,23 @@ class PaymentSuccessBudgetMail extends ImplementationMail
 {
     protected $notificationTemplateKey = 'notifications_identities.voucher_budget_transaction';
 
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
-        $link = $this->mailData['webshop_link'];
+        return $this->buildNotificationTemplatedMail();
+    }
 
-        return $this->buildTemplatedNotification([
-            'webshop_link' => $this->makeLink($link, $link),
-            'webshop_button' => $this->makeButton($link, 'Ga naar webshop'),
-        ]);
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return [
+            'webshop_link' => $this->makeLink($data['webshop_link'], $data['webshop_link']),
+            'webshop_button' => $this->makeButton($data['webshop_link'], 'Ga naar webshop'),
+        ];
     }
 }

@@ -12,14 +12,28 @@ class FundRequestClarificationRequestedMail extends ImplementationMail
 {
     protected $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
 
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
-        $linkTitle = $this->informalCommunication ? 'Ga naar je aanvraag' : 'Ga naar uw aanvraag';
-        $question = $this->mailData['fund_request_clarification_question'];
+        return $this->buildNotificationTemplatedMail();
+    }
 
-        return $this->buildTemplatedNotification([
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        $linkTitle = $this->informalCommunication ? 'Ga naar je aanvraag' : 'Ga naar uw aanvraag';
+        $question = $data['fund_request_clarification_question'] ?? '';
+        $link = $data['webshop_clarification_link'];
+
+        return [
             'fund_request_clarification_question' => nl2br(e($question)),
-            'webshop_clarification_link' => $this->makeButton($this->mailData['webshop_clarification_link'], $linkTitle),
-        ]);
+            'webshop_clarification_link' => $this->makeLink($link, $linkTitle),
+            'webshop_clarification_button' => $this->makeButton($link, $linkTitle),
+        ];
     }
 }

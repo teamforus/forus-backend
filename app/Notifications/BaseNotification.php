@@ -40,8 +40,8 @@ abstract class BaseNotification extends Notification implements ShouldQueue
 
     public const VARIABLES = [
         "notifications_identities.added_employee" => [
-            "dashboard_auth_button", "download_me_app_link", "employee_roles",
-            "header_icon", "organization_name",
+            "dashboard_auth_button", "employee_roles", "header_icon", "organization_name",
+            "download_me_app_link", "download_me_app_button",
         ],
         "notifications_identities.changed_employee_roles" => [
             "employee_roles", "organization_name",
@@ -50,7 +50,8 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             "organization_name",
         ],
         "notifications_fund_providers.approved_budget" => [
-            "fund_name", "provider_dashboard_link", "provider_name", "sponsor_name",
+            "fund_name", "provider_dashboard_link", 'provider_dashboard_button',
+            "provider_name", "sponsor_name",
         ],
         "notifications_fund_providers.approved_products" => [
             "fund_name"
@@ -84,11 +85,11 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             "app_link", "fund_name", "sponsor_name", "webshop_button", "webshop_link"
         ],
         "notifications_identities.fund_request_record_declined" => [
-            "fund_name", "rejection_note", "webshop_link",
+            "fund_name", "rejection_note", "webshop_link", "webshop_button",
         ],
         "notifications_identities.fund_request_feedback_requested" => [
             "fund_name", "fund_request_clarification_question", "sponsor_name",
-            "webshop_clarification_link",
+            "webshop_clarification_link", "webshop_clarification_button",
         ],
         "notifications_funds.created" => [
             "fund_name",
@@ -155,10 +156,11 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         ],
         "notifications_identities.identity_voucher_assigned_budget" => [
             "fund_name", "qr_token", "voucher_amount_locale", "voucher_expire_date_locale",
+            "webshop_link", "webshop_button",
         ],
         "notifications_identities.identity_voucher_assigned_subsidy" => [
-            "fund_name", "link_webshop", "qr_token", "sponsor_email", "sponsor_phone",
-            "voucher_expire_date_locale",
+            "fund_name", "webshop_link", "webshop_button", "sponsor_email", "sponsor_phone",
+            "voucher_expire_date_locale", "qr_token",
         ],
         "notifications_identities.identity_voucher_assigned_product" => [
             "implementation_name", "product_name", "provider_email", "provider_name",
@@ -190,7 +192,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         ],
         "notifications_identities.voucher_expire_soon_budget" => [
             "fund_end_date_locale", "fund_end_date_minus1_locale", "fund_name", "fund_start_year",
-            "link_webshop", "sponsor_email", "sponsor_name", "sponsor_phone",
+            "webshop_link", "webshop_button", "sponsor_email", "sponsor_name", "sponsor_phone",
         ],
         "notifications_identities.voucher_expire_soon_product" => [
             "fund_name"
@@ -204,7 +206,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             "amount", "fund_name", "voucher_amount_locale",
         ],
         "notifications_identities.voucher_subsidy_transaction" => [
-            "fund_name", "product_name", "subsidy_new_limit", "webshop_button",
+            "fund_name", "product_name", "subsidy_new_limit", "webshop_link", "webshop_button",
         ],
         "notifications_identities.product_voucher_transaction" => [
             "product_name"

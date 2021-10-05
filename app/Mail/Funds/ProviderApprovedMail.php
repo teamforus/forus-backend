@@ -18,10 +18,20 @@ class ProviderApprovedMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        $provider_dashboard_link = $this->mailData['provider_dashboard_link'];
+        return $this->buildNotificationTemplatedMail();
+    }
 
-        return $this->buildTemplatedNotification([
-            'provider_dashboard_link' => $this->makeLink($provider_dashboard_link, 'hier'),
-        ]);
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        $link = $data['provider_dashboard_link'];
+
+        return [
+            'provider_dashboard_button' => $this->makeButton($link, 'DASHBOARD'),
+            'provider_dashboard_link' => $this->makeLink($link, 'hier'),
+        ];
     }
 }

@@ -19,6 +19,7 @@ use App\Mail\Forus\ForusFundCreatedMail;
 use App\Mail\Funds\ProviderInvitationMail;
 use App\Models\Fund;
 use App\Models\FundProvider;
+use App\Models\Implementation;
 use App\Notifications\Identities\Fund\IdentityRequesterFundEndedNotification;
 use App\Notifications\Identities\Fund\IdentityRequesterProductRevokedNotification;
 use App\Notifications\Organizations\FundProviders\FundProviderFundEndedNotification;
@@ -231,8 +232,8 @@ class FundSubscriber
                 'fund_start_date'   => format_date_locale($providerInvitation->fund->start_date),
                 'fund_end_date'     => format_date_locale($providerInvitation->fund->end_date),
                 'from_fund_name'    => $fundFrom->name,
-                'invitation_link'   => $fundFrom->urlProviderDashboard('/provider-invitations/' . $providerInvitation->token),
-            ], Implementation::emailFrom());
+                'invitation_link'   => $fundFrom->urlProviderDashboard("/provider-invitations/$providerInvitation->token"),
+            ], $providerInvitation->fund->getEmailFrom());
 
             $this->notificationService->sendSystemMail($providerEmail, $mailable);
         }

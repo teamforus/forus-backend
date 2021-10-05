@@ -58,9 +58,7 @@ class FundProviderInvitationsController extends Controller
         Fund $fund,
         FundProviderInvitation $invitation
     ): FundProviderInvitationResource {
-        $this->authorize('showSponsor', [
-            $invitation, $fund, $organization
-        ]);
+        $this->authorize('showSponsor', [$invitation, $fund, $organization]);
 
         return new FundProviderInvitationResource($invitation);
     }

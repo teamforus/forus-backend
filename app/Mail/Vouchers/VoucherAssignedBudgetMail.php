@@ -13,11 +13,24 @@ class VoucherAssignedBudgetMail extends ImplementationMail
 {
     protected $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_budget';
 
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
-        return $this->buildTemplatedNotification([
-            'link_webshop' => $this->makeLink($this->mailData['link_webshop'], 'website'),
-            'qr_token' => $this->makeQrCode($this->mailData['qr_token']),
-        ]);
+        return $this->buildNotificationTemplatedMail();
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return [
+            'qr_token' => $this->makeQrCode($data['qr_token']),
+            'webshop_link' => $this->makeLink($data['webshop_link'], 'website'),
+            'webshop_button' => $this->makeLink($data['webshop_button'], 'website'),
+        ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Mail\Forus;
 
 use App\Mail\ImplementationMail;
+use Illuminate\Mail\Mailable;
 
 /**
  * Class FundCreatedMail
@@ -10,6 +11,13 @@ use App\Mail\ImplementationMail;
  */
 class ForusFundCreatedMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/forus/forus_fund_created.title';
-    protected $viewKey = 'emails.forus.forus_fund_created';
+    protected $subjectKey = 'mails/system_mails.forus_fund_created.title';
+
+    /**
+     * @return Mailable
+     */
+    public function build(): Mailable
+    {
+        return $this->buildSystemMail('forus_fund_created');
+    }
 }

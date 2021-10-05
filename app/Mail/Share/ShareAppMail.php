@@ -3,7 +3,6 @@
 namespace App\Mail\Share;
 
 use App\Mail\ImplementationMail;
-use App\Mail\MailBodyBuilder;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -21,18 +20,20 @@ class ShareAppMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        $data = $this->getTransData();
-        $subject = $this->getSubject(trans($this->subjectKey, $data));
+        return $this->buildSystemMail('me_app_download_link');
+    }
 
-        $emailBody = new MailBodyBuilder();
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        $link = env('ME_APP_SMS_DOWNLOAD_LINK', 'https://www.forus.io/DL');
 
-        $emailBody->h1(trans('share/email.me_app_download_link.title'));
-        $emailBody->text(trans('share/email.me_app_download_link.line_1'));
-        $emailBody->link(trans('share/email.me_app_download_link.link'));
-        $emailBody->text(trans('share/email.me_app_download_link.line_2'));
-
-        $this->viewData['emailBody'] = $emailBody;
-
-        return $this->view('emails.mail-builder-template')->subject($subject);
+        return [
+            'download_link' => $this->makeLink($link, $link),
+            'download_button' => $this->makeButton($link, $link),
+        ];
     }
 }

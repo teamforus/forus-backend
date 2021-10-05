@@ -14,10 +14,19 @@ class FundRequestApprovedMail extends ImplementationMail
      */
     public function build(): Mailable
     {
-        return $this->buildTemplatedNotification([
-            'app_link' => $this->makeLink($this->mailData['app_link'], 'download de Me-app'),
-            'webshop_link' => $this->makeLink($this->mailData['webshop_link'], 'hier'),
-            'webshop_button' => $this->makeButton($this->mailData['webshop_link'], 'Activeer tegoed'),
-        ]);
+        return $this->buildNotificationTemplatedMail();
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return [
+            'app_link' => $this->makeLink($data['app_link'], 'download de Me-app'),
+            'webshop_link' => $this->makeLink($data['webshop_link'], 'hier'),
+            'webshop_button' => $this->makeButton($data['webshop_link'], 'Activeer tegoed'),
+        ];
     }
 }

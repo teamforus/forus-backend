@@ -3,13 +3,13 @@
 namespace App\Mail;
 
 use App\Models\Implementation;
+use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
 use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
-use RuntimeException;
 
 /**
  * Class ImplementationMail
@@ -126,21 +126,28 @@ class ImplementationMail extends Mailable
     }
 
     /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return $data;
+    }
+
+    /**
      * Build the message.
      *
      * @return $this
      */
-    public function buildTemplatedNotification(array $extraData = []): Mailable
+    public function buildNotificationTemplatedMail(): ?Mailable
     {
-        $template = SystemNotification::findTemplate(
-            $this->notificationTemplateKey,
-            'mail',
-            $this->implementationKey ?: $this->mailData['implementation_key']
-        );
+        $template = $this->implementationNotificationTemplate($this->notificationTemplateKey);
 
         if ($template) {
-            $data = array_merge($this->getTransData(), $extraData);
+            $data = $this->getTransData();
+            $data = array_merge($data, $this->getMailExtraData($data));
             $subject = $this->getSubject(str_var_replace($template->title, $data));
+
             $templateHtml = resolve('markdown')->convertToHtml($template->content);
             $templateHtml = str_var_replace($templateHtml, $data);
 
@@ -149,22 +156,65 @@ class ImplementationMail extends Mailable
 
             $this->viewData['emailBody'] = $emailBody;
 
-            return $this->view('emails.mail-builder-template')->subject($subject);
+            return $this
+                ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+                ->view('emails.mail-builder-template')
+                ->subject($subject);
         }
+
+        return null;
+    }
+
+    /**
+     * @param string $template
+     * @return Mailable
+     */
+    protected function buildSystemMail(string $template): Mailable
+    {
+        $data = $this->getTransData();
+        $data = array_merge($data, $this->getMailExtraData($data));
+        $builder = new MailBodyBuilder();
+
+        $template = $this->implementationSystemTemplate($template);
+        $this->viewData['emailBody'] = $builder->markdown($template, $data, 'text_center');
+
+        return $this
+            ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
+            ->view('emails.mail-builder-template')
+            ->subject($this->getSubject(trans($this->subjectKey, $data)));
     }
 
     /**
      * @param string $url
      * @param string $text
+     * @param string|null $color
      * @return string
      */
-    protected function makeButton(string $url, string $text): string
+    protected function makeButton(string $url, string $text, ?string $color = null): string
     {
         $buttonStyle = config('forus.mail_styles.button_primary');
         $textCenterStyle = config('forus.mail_styles.text_center');
+
+        $color = $color ?: $this->implementationColor();
+        $buttonStyle = $color ? "$buttonStyle background-color: $color;" : $buttonStyle;
         $link = '<a href="' . $url . '" target="_blank" style="' . $buttonStyle . '">' . $text . '</a>';
 
         return '<div style="' . $textCenterStyle . '">' . $link .'</div>';
+    }
+
+    /**
+     * @param string $url
+     * @param string $text
+     * @param string|null $color
+     * @return string
+     */
+    protected function makeLink(string $url, string $text, ?string $color = null): string
+    {
+        $linkStyle = config('forus.mail_styles.link');
+        $color = $color ?: $this->implementationColor();
+        $linkStyle = $color ? "$linkStyle color: $color;" : $linkStyle;
+
+        return '<a href="' . $url . '" target="_blank" style="' . $linkStyle . '">' . $text . '</a>';
     }
 
     /**
@@ -182,18 +232,6 @@ class ImplementationMail extends Mailable
     }
 
     /**
-     * @param string $url
-     * @param string $text
-     * @return string
-     */
-    protected function makeLink(string $url, string $text): string
-    {
-        $linkStyle = config('forus.mail_styles.link');
-
-        return '<a href="' . $url . '" target="_blank" style="' . $linkStyle . '">' . $text . '</a>';
-    }
-
-    /**
      * @param string $key
      * @return string
      */
@@ -202,5 +240,66 @@ class ImplementationMail extends Mailable
         $imageHeader = mail_config($key, null, $this->implementationKey);
 
         return '<img src="' . $imageHeader . '" style="width: 297px; display: block; margin: 0 auto;">';
+    }
+
+    /**
+     * @param string $base64
+     * @return string
+     */
+    protected function headerIconBase64(string $base64): string
+    {
+        return '<img src="' . $base64 . '" style="width: 300px; display: block; margin: 0 auto;">';
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function implementationKey(): ?string
+    {
+        return $this->implementationKey ?: $this->mailData['implementation_key'];
+    }
+
+    /**
+     * @param bool $asBase64
+     * @return string
+     */
+    protected function implementationLogo(bool $asBase64 = true): string
+    {
+        $imagePath = mail_config('header_image', null, $this->implementationKey());
+
+        if ($asBase64) {
+            return 'data:image/jpg;base64,' . base64_encode(file_get_contents($imagePath));
+        }
+
+        return $imagePath;
+    }
+
+    /**
+     * @return string
+     */
+    protected function implementationColor(): string
+    {
+        return mail_config('button_color', null, $this->implementationKey());
+    }
+
+    /**
+     * @param string $templateFile
+     * @return string
+     */
+    protected function implementationSystemTemplate(string $templateFile): string
+    {
+        $path = resource_path("mail_templates/$templateFile.md");
+        $pathCommunication = resource_path("mail_templates/$templateFile.$this->communicationType.md");
+
+        return file_get_contents(file_exists($pathCommunication) ? $pathCommunication : $path);
+    }
+
+    /**
+     * @param string $key
+     * @return NotificationTemplate
+     */
+    protected function implementationNotificationTemplate(string $key): NotificationTemplate
+    {
+        return SystemNotification::findTemplate($key, 'mail', $this->implementationKey());
     }
 }

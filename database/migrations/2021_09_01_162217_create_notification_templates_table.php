@@ -12,7 +12,7 @@ class CreateNotificationTemplatesTable extends Migration
      * @return void
      * @throws Exception
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('notification_templates', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -45,7 +45,7 @@ class CreateNotificationTemplatesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('notification_templates');
     }

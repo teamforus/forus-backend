@@ -13,8 +13,11 @@ class RequestPhysicalCardMail extends ImplementationMail
 {
     protected $notificationTemplateKey = 'notifications_identities.voucher_physical_card_requested';
 
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
-        return $this->buildTemplatedNotification();
+        return $this->buildNotificationTemplatedMail();
     }
 }

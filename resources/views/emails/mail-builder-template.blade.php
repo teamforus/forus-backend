@@ -53,7 +53,9 @@ foreach (array_keys($emailBody) as $key) {
         @if (!($hideFooter ?? false))
             <div class="email-footer" style="{{ $styles['email_footer'] }}">
                 @isset($email)
-                    {!! trans('mails/_misc.not_for_you', ['email' => $email, 'unsubscribeLink' => $unsubscribeLink, 'email_preferences_link' => $notificationPreferencesLink]) !!}
+                    Deze e-mail is verstuurd naar {{ $email }}. Is deze mail niet aan u gericht? Klik dan <a href="{{ $unsubscribeLink }}">hier</a>.
+                    Is deze mail wel aan u gericht maar wilt u zich afmelden voor dit soort berichten?
+                    U kunt dit aangeven in uw <a href="{{ $notificationPreferencesLink }}">e-mailvoorkeuren</a>.
                 @endisset
             </div>
         @endif

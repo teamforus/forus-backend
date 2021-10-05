@@ -8,7 +8,7 @@ In :fund_start_year heb je van :sponsor_name een :fund_name-tegoed ontvangen.
 Je :fund_name-tegoed is geldig tot en met :fund_end_date_minus1_locale. Vanaf :fund_end_date_locale is het budget niet meer geldig.
 &nbsp;  
 
-Je kunt je huidige saldo en transacties inzien via: :link_webshop.
+Je kunt je huidige saldo en transacties inzien via: :webshop_link.
 &nbsp;  
 
 Log vervolgens in met je e-mailadres.

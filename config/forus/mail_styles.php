@@ -22,7 +22,7 @@
     $textMutedStyle = $textStyle . "font-size: 14px; line-height: 22px; color: #646f79; cursor: default;";
 
     $linkBlockStyle = "margin: 0 0 15px;";
-    $linkStyle = "font: 400 16px/28px $baseFont color: #383D45; cursor: pointer; color: #315EFD;";
+    $linkStyle = "font: 400 16px/28px $baseFont color: #383D45; cursor: pointer; color: #315EFD; text-decoration: underline;";
 
     $btnStyle = "display: inline-block; padding: 5px 75px; font: 600 14px/40px $baseFont color: #fff; border-radius: 3px; text-decoration: none;";
     $btnDangerStyle = $btnStyle . "background-color: #bc2527;";
