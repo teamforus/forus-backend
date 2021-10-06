@@ -6,7 +6,8 @@ Beste :sponsor_name
 
 U ontvangt deze mail omdat het budget van het ':fund_name' fonds lager is dan :fund_notification_amount_locale.
 
-Het budget op het ':fund_name' fonds is momenteel :fund_budget_left_locale.
+Het budget op het ':fund_name' fonds is momenteel :fund_budget_left_locale.  
+Houd er rekening mee dat de :fund_transaction_costs_locale aan transactiekosten buiten beschouwing worden gelaten.
 
 Als het budget niet toereikend is zullen er geen automatische betalingen meer kunnen worden verricht.
 

@@ -29,6 +29,7 @@ use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
 use App\Notifications\Identities\Voucher\IdentityVoucherSharedByEmailNotification;
+use App\Notifications\Organizations\PhysicalCardRequest\PhysicalCardRequestCreatedSponsorNotification;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -257,17 +258,30 @@ class VoucherSubscriber
      * @param VoucherPhysicalCardRequestedEvent $event
      * @noinspection PhpUnused
      */
-    public function onVoucherPhysicalCardRequested(VoucherPhysicalCardRequestedEvent $event): void {
-        $voucher = $event->getVoucher();
-        $cardRequest = $event->getCardRequest();
+    public function onVoucherPhysicalCardRequested(VoucherPhysicalCardRequestedEvent $event): void
+    {
+        $physicalCardRequest = $event->getCardRequest();
 
-        $event = $voucher->log($voucher::EVENT_PHYSICAL_CARD_REQUESTED, [
-            'fund'      => $voucher->fund,
-            'voucher'   => $voucher,
-            'sponsor'   => $voucher->fund->organization,
-        ], $cardRequest->only('postcode', 'house', 'house_addition', 'city', 'address'));
+        $address = $physicalCardRequest->address . ' ' . implode(', ', array_filter([
+            $physicalCardRequest->house,
+            $physicalCardRequest->house_addition,
+            $physicalCardRequest->postcode,
+            $physicalCardRequest->city
+        ]));
 
-        IdentityVoucherPhysicalCardRequestedNotification::send($event);
+        $eventLog = $physicalCardRequest->voucher->log(Voucher::EVENT_PHYSICAL_CARD_REQUESTED, [
+            'fund'                      => $physicalCardRequest->voucher->fund,
+            'sponsor'                   => $physicalCardRequest->voucher->fund->organization,
+            'voucher'                   => $physicalCardRequest->voucher,
+            'employee'                  => $physicalCardRequest->employee,
+            'physical_card_request'     => $physicalCardRequest,
+        ], [
+            'note'    => "Adresgegevens: $address",
+            'address' => $address,
+        ]);
+
+        PhysicalCardRequestCreatedSponsorNotification::send($eventLog);
+        IdentityVoucherPhysicalCardRequestedNotification::send($eventLog);
     }
 
     /**

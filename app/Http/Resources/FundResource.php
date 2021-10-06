@@ -33,7 +33,7 @@ class FundResource extends Resource
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
-            'tags', 'type',
+            'tags', 'type', 'archived',
         ]), [
             'key' => $fund->fund_config->key ?? '',
             'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,

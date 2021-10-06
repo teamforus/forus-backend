@@ -4,10 +4,8 @@ namespace App\Services\Forus\Notification;
 
 use App\Mail\Auth\UserLoginMail;
 use App\Mail\Digest\BaseDigestMail;
-use App\Mail\Digest\DigestProviderMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\IdentityEmailVerificationMail;
-use App\Mail\Vouchers\VoucherAssignedMail;
 use App\Models\Implementation;
 use App\Services\ApiRequestService\ApiRequest;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;

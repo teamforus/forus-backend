@@ -17,10 +17,16 @@ trait HasLogs
      * @param string $event
      * @param array $models
      * @param array $raw_meta
+     * @param string|null $identity_address
      * @return EventLog|mixed
      */
-    public function log(string $event, array $models = [], array $raw_meta = []): EventLog
-    {
+    public function log(
+        string $event,
+        array $models = [],
+        array $raw_meta = [],
+        ?string $identity_address = null
+    ): EventLog {
+        $identity_address = $identity_address ?: auth_address();
         $logService = resolve(EventLogService::class);
 
         $meta = array_reduce(array_keys(array_filter($models, static function($model) {
@@ -34,11 +40,7 @@ trait HasLogs
             'implementation_key' =>  implementation_key(),
         ], $meta, $raw_meta);
 
-        return $this->logs()->create([
-            'event' => $event,
-            'data' => $data,
-            'identity_address' => auth_address()
-        ]);
+        return $this->logs()->create(compact('data', 'event', 'identity_address'));
     }
 
     /**

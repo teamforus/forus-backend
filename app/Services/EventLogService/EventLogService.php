@@ -8,6 +8,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundTopUpTransaction;
 use App\Models\Organization;
+use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
@@ -59,6 +60,7 @@ class EventLogService implements IEventLogService
             case 'employee': $modelMeta = $this->employeeMeta($model); break;
             case 'product_reservation': $modelMeta = $this->productReservationMeta($model); break;
             case 'voucher_transaction': $modelMeta = $this->voucherTransactionMeta($model); break;
+            case 'physical_card_request': $modelMeta = $this->physicalCardRequestMeta($model); break;
         }
 
         return $modelMeta;
@@ -98,9 +100,7 @@ class EventLogService implements IEventLogService
      * @param FundRequestClarification $fundRequest
      * @return array
      */
-    protected function fundRequestClarificationMeta(
-        FundRequestClarification $fundRequest
-    ): array {
+    protected function fundRequestClarificationMeta(FundRequestClarification $fundRequest): array {
         return [
             'fund_request_clarification_id' => $fundRequest->id,
             'fund_request_clarification_question' => $fundRequest->question,
@@ -219,6 +219,21 @@ class EventLogService implements IEventLogService
         return [
             'fund_top_up_amount' => $transaction->amount,
             'fund_top_up_amount_locale' => currency_format($transaction->amount),
+        ];
+    }
+
+    /**
+     * @param PhysicalCardRequest $physicalCardRequest
+     * @return array
+     */
+    protected function physicalCardRequestMeta(PhysicalCardRequest $physicalCardRequest): array {
+        return [
+            'physical_card_request_id'              => $physicalCardRequest->id,
+            'physical_card_request_address'         => $physicalCardRequest->address,
+            'physical_card_request_house'           => $physicalCardRequest->house,
+            'physical_card_request_postcode'        => $physicalCardRequest->postcode,
+            'physical_card_request_city'            => $physicalCardRequest->city,
+            'physical_card_request_house_addition'  => $physicalCardRequest->house_addition,
         ];
     }
 }

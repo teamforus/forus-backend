@@ -55,6 +55,8 @@ class IndexVouchersRequest extends BaseFormRequest
             'bsn'               => 'nullable|string|max:100',
             'in_use'            => 'nullable|boolean',
             'expired'           => 'nullable|boolean',
+            'count_per_identity_min'    => 'nullable|numeric',
+            'count_per_identity_max'    => 'nullable|numeric',
         ];
     }
 }

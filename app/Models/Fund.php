@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
+use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
@@ -26,7 +28,6 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Traits\HasMarkdownDescription;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Carbon\Carbon;
 
 /**
  * App\Models\Fund
@@ -46,6 +48,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property string|null $description_text
  * @property string $type
  * @property string $state
+ * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
  * @property string|null $notification_amount
@@ -136,7 +139,9 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property-read int|null $vouchers_count
  * @method static Builder|Fund newModelQuery()
  * @method static Builder|Fund newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Fund onlyTrashed()
  * @method static Builder|Fund query()
+ * @method static Builder|Fund whereArchived($value)
  * @method static Builder|Fund whereAutoRequestsValidation($value)
  * @method static Builder|Fund whereCreatedAt($value)
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
@@ -176,6 +181,8 @@ class Fund extends Model
     public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
     public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const EVENT_ARCHIVED = 'archived';
+    public const EVENT_UNARCHIVED = 'unarchived';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';
@@ -206,7 +213,7 @@ class Fund extends Model
         'organization_id', 'state', 'name', 'description', 'description_text', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
-        'criteria_editable_after_start', 'type',
+        'criteria_editable_after_start', 'type', 'archived',
     ];
 
     protected $hidden = [
@@ -215,6 +222,7 @@ class Fund extends Model
 
     protected $casts = [
         'public' => 'boolean',
+        'archived' => 'boolean',
         'auto_requests_validation' => 'boolean',
         'criteria_editable_after_start' => 'boolean',
     ];
@@ -337,6 +345,30 @@ class Fund extends Model
     }
 
     /**
+     * @return $this
+     */
+    public function archive(Employee $employee): self
+    {
+        FundArchivedEvent::dispatch($this->updateModel([
+            'archived' => true,
+        ]), $employee);
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function unArchive(Employee $employee): self
+    {
+        FundUnArchivedEvent::dispatch($this->updateModel([
+            'archived' => false,
+        ]), $employee);
+
+        return $this;
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnusedPrivateMethodInspection
      */
@@ -454,8 +486,9 @@ class Fund extends Model
      */
     public function getTransactionCosts(): float
     {
-        return $this->voucher_transactions()
-                ->where('voucher_transactions.amount', '>', '0')->count() * 0.10;
+        return $this->voucher_transactions()->where(function(Builder $builder) {
+            $builder->where('voucher_transactions.amount', '>', 0);
+        })->count() * 0.10;
     }
 
     /**
@@ -785,6 +818,10 @@ class Fund extends Model
     {
         $query = $query ?: self::query();
 
+        if (!array_get($options, 'with_archived', false)) {
+            $query->where('archived', false);
+        }
+
         if ($tag = array_get($options, 'tag')) {
             $query->whereHas('tags', static function(Builder $query) use ($tag) {
                 return $query->where('key', $tag);
@@ -1074,6 +1111,14 @@ class Fund extends Model
         VoucherCreated::dispatch($voucher, false);
 
         return $voucher;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isArchived(): bool
+    {
+        return $this->archived;
     }
 
     /**

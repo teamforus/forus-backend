@@ -37,6 +37,7 @@ class EventServiceProvider extends ServiceProvider
         VoucherTransactionsSubscriber::class,
         FundRequestClarificationSubscriber::class,
     ];
+
     /**
      * The event listener mappings for the application.
      *

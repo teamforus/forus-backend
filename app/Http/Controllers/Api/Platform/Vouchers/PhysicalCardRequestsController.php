@@ -29,9 +29,8 @@ class PhysicalCardRequestsController extends Controller
      * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        VoucherToken $voucherToken
-    ): AnonymousResourceCollection {
+    public function index(VoucherToken $voucherToken): AnonymousResourceCollection
+    {
         $voucher = $voucherToken->voucher;
 
         $this->authorize('show', $voucher);
@@ -58,9 +57,9 @@ class PhysicalCardRequestsController extends Controller
         $this->authorize('requestPhysicalCard', $voucherToken->voucher);
         $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
-        $cardRequest = $voucherToken->voucher->physical_card_requests()->create($request->only([
-            'address', 'house', 'house_addition', 'postcode', 'city',
-        ]));
+        $cardRequest = $voucherToken->voucher->makePhysicalCardRequest($request->only([
+            'address', 'house', 'house_addition', 'postcode', 'city'
+        ]), $request->records_repo()->primaryEmailByAddress($request->auth_address()));
 
         VoucherPhysicalCardRequestedEvent::dispatch($voucherToken->voucher, $cardRequest);
 

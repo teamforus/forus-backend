@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use RuntimeException;
 use Carbon\Carbon;
 
@@ -48,7 +49,7 @@ use Carbon\Carbon;
  * @property int|null $product_id
  * @property int|null $parent_id
  * @property \Illuminate\Support\Carbon|null $expire_at
- * @property-read \App\Models\FundBackofficeLog $backoffice_log_eligible
+ * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_eligible
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_first_use
  * @property-read \App\Models\FundBackofficeLog|null $backoffice_log_received
  * @property-read Collection|\App\Models\FundBackofficeLog[] $backoffice_logs
@@ -359,13 +360,7 @@ class Voucher extends Model
     public function product_vouchers(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->where(function(Builder $builder) {
-            $builder->whereDoesntHave('product_reservation');
-            $builder->orWhereHas('product_reservation', function (Builder $builder) {
-                $builder->whereIn('state', [
-                    ProductReservation::STATE_PENDING,
-                    ProductReservation::STATE_ACCEPTED
-                ]);
-            });
+            VoucherQuery::whereIsProductVoucher($builder);
         });
     }
 
@@ -573,6 +568,8 @@ class Voucher extends Model
         $unassignedOnly = $request->input('unassigned');
         $in_use = $request->input('in_use');
         $expired = $request->input('expired');
+        $count_per_identity_min = $request->input('count_per_identity_min');
+        $count_per_identity_max = $request->input('count_per_identity_max');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -626,7 +623,25 @@ class Voucher extends Model
         }
 
         if ($request->has('in_use')) {
-            $in_use ? $query->whereHas('transactions') : $query->whereDoesntHave('transactions');
+            $query->where(function(Builder $builder) use ($in_use) {
+                if ($in_use) {
+                    VoucherQuery::whereInUseQuery($builder);
+                } else {
+                    VoucherQuery::whereNotInUseQuery($builder);
+                }
+            });
+        }
+
+        if ($count_per_identity_min) {
+            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
+            }, '>=', $count_per_identity_min);
+        }
+
+        if ($count_per_identity_max) {
+            $query->whereHas('identity.vouchers', function(Builder $builder) use ($query) {
+                $builder->whereIn('vouchers.id', (clone $query)->select('vouchers.id'));
+            }, '<=', $count_per_identity_max);
         }
 
         return $query->orderBy(
@@ -656,6 +671,24 @@ class Voucher extends Model
     public function getIsGrantedAttribute(): bool
     {
         return !empty($this->identity_address);
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasTransactionsAttribute(): bool
+    {
+        return $this->transactions->count() > 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getHasProductVouchersAttribute(): bool
+    {
+        return $this->product_vouchers->count() > 0;
     }
 
     /**
@@ -865,10 +898,10 @@ class Voucher extends Model
     ): array {
         $vouchersData = [];
         $vouchersDataNames = [];
-        $vouchers->load(
+        $vouchers->load([
             'transactions', 'voucher_relation', 'product', 'fund',
             'token_without_confirmation', 'identity.primary_email'
-        );
+        ]);
 
         $fp = fopen('php://temp/maxmemory:1048576', 'wb');
 
@@ -1037,6 +1070,33 @@ class Voucher extends Model
     }
 
     /**
+     * @param array $options
+     * @param string|null $mailToAddress
+     * @return PhysicalCardRequest|\Illuminate\Database\Eloquent\Model
+     */
+    public function makePhysicalCardRequest(
+        array $options,
+        ?string $mailToAddress = null
+    ): PhysicalCardRequest {
+        if ($mailToAddress) {
+            resolve('forus.services.notification')->requestPhysicalCard($mailToAddress, [
+                'postcode'       => $options['postcode'] ?? '',
+                'house_number'   => $options['house'] ?? '',
+                'house_addition' => $options['house_addition'] ?? '',
+                'city'           => $options['city'] ?? '',
+                'street_name'    => $options['address'] ?? '',
+                'fund_name'      => $this->fund->name,
+                'sponsor_phone'  => $this->fund->organization->phone,
+                'sponsor_email'  => $this->fund->organization->email
+            ], $this->fund->getEmailFrom());
+        }
+
+        return $this->physical_card_requests()->create(Arr::only($options, [
+            'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
+        ]));
+    }
+
+    /**
     // TODO: cleanup
      * @return bool
      */
@@ -1098,6 +1158,7 @@ class Voucher extends Model
     public function sponsorHistoryLogs(): Collection
     {
         return $this->logs->whereIn('event', array_merge([
+            self::EVENT_PHYSICAL_CARD_REQUESTED,
             self::EVENT_EXPIRED_BUDGET,
             self::EVENT_EXPIRED_PRODUCT,
             self::EVENT_DEACTIVATED,

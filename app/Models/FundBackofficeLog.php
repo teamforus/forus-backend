@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $bsn
  * @property string $action
  * @property string $state
+ * @property string|null $request_id
  * @property string|null $response_id
  * @property string|null $response_code
  * @property array|null $response_body

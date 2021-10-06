@@ -401,8 +401,9 @@ class FundProvider extends Model
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
 
+        $fundsQuery = $organization->funds()->where('archived', false);
         $query = $query ?: self::query();
-        $query = $query->whereIn('fund_id', $organization->funds()->select('id')->getQuery());
+        $query = $query->whereIn('fund_id', $fundsQuery->select('id')->getQuery());
 
         if ($q = $request->input('q')) {
             $query->where(static function(Builder $builder) use ($q) {
