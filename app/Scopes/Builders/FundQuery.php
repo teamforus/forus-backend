@@ -22,13 +22,20 @@ class FundQuery
 
     /**
      * @param Builder $query
+     * @param bool $includeArchived
      * @return Builder
      */
-    public static function whereActiveOrClosedFilter(Builder $query): Builder
-    {
+    public static function whereActiveOrClosedFilter(
+        Builder $query,
+        bool $includeArchived = true
+    ): Builder {
         return $query->whereIn('state', [
             Fund::STATE_ACTIVE, Fund::STATE_CLOSED
-        ]);
+        ])->where(function(Builder $builder) use ($includeArchived) {
+            if (!$includeArchived) {
+                $builder->where('archived', false);
+            }
+        });
     }
 
     /**

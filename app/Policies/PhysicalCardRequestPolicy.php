@@ -17,7 +17,7 @@ class PhysicalCardRequestPolicy
     /**
      * Determine whether the user can view any physical card requests.
      *
-     * @param $identity_address
+     * @param string $identity_address
      * @param Voucher $voucher
      * @return mixed
      */
@@ -29,7 +29,7 @@ class PhysicalCardRequestPolicy
     /**
      * Determine whether the user can view the physical card request.
      *
-     * @param $identity_address
+     * @param string $identity_address
      * @param Voucher $voucher
      * @param \App\Models\PhysicalCardRequest $physicalCardRequest
      * @return mixed

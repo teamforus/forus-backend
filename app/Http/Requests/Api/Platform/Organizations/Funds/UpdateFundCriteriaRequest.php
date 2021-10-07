@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
@@ -13,7 +13,7 @@ use Illuminate\Validation\Rule;
  * @property null|Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class UpdateFundCriteriaRequest extends FormRequest
+class UpdateFundCriteriaRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

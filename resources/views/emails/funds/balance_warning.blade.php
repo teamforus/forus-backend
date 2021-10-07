@@ -9,6 +9,8 @@
     <br />
     {{ mail_trans('balance_warning.budget_left_fund', ['fund_name' => $fund_name, 'budget_left' => $budget_left]) }} <br />
     <br />
+    {{ mail_trans('balance_warning.transaction_costs', ['transaction_costs' => $transaction_costs]) }} <br />
+    <br />
     {{ mail_trans('balance_warning.no_transactions') }} <br />
     <br/>
     {{ mail_trans('balance_warning.you_can_login') }}

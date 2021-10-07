@@ -121,26 +121,27 @@ class FundProviderPolicy
 
     /**
      * @param $identity_address
-     * @param FundProvider $organizationFund
+     * @param FundProvider $fundProvider
      * @param Organization|null $organization
      * @param Fund|null $fund
      * @return bool
      */
     public function updateSponsor(
         $identity_address,
-        FundProvider $organizationFund,
+        FundProvider $fundProvider,
         Organization $organization,
         Fund $fund
     ): bool {
-        if ($organization->id != $organizationFund->fund->organization_id) {
+        if ($organization->id != $fundProvider->fund->organization_id) {
             return false;
         }
 
-        if ($fund->id != $organizationFund->fund_id) {
+        if ($fund->id != $fundProvider->fund_id) {
             return false;
         }
 
-        return $organizationFund->fund->organization->identityCan($identity_address, 'manage_funds');
+        return !$fund->isArchived() &&
+            $fund->organization->identityCan($identity_address, 'manage_funds');
     }
 
     /**

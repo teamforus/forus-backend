@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundBalanceLowEvent;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundExpiringEvent;
 use App\Events\Funds\FundStartedEvent;
+use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Scopes\Builders\VoucherQuery;
@@ -28,7 +30,6 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Traits\HasMarkdownDescription;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Carbon\Carbon;
 
 /**
  * App\Models\Fund
@@ -48,6 +50,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property string|null $description_text
  * @property string $type
  * @property string $state
+ * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
  * @property string|null $notification_amount
@@ -138,7 +141,9 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property-read int|null $vouchers_count
  * @method static Builder|Fund newModelQuery()
  * @method static Builder|Fund newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Fund onlyTrashed()
  * @method static Builder|Fund query()
+ * @method static Builder|Fund whereArchived($value)
  * @method static Builder|Fund whereAutoRequestsValidation($value)
  * @method static Builder|Fund whereCreatedAt($value)
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
@@ -178,6 +183,8 @@ class Fund extends Model
     public const EVENT_PRODUCT_REVOKED = 'fund_product_revoked';
     public const EVENT_PRODUCT_SUBSIDY_REMOVED = 'fund_product_subsidy_removed';
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
+    public const EVENT_ARCHIVED = 'archived';
+    public const EVENT_UNARCHIVED = 'unarchived';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';
@@ -208,7 +215,7 @@ class Fund extends Model
         'organization_id', 'state', 'name', 'description', 'description_text', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
-        'criteria_editable_after_start', 'type',
+        'criteria_editable_after_start', 'type', 'archived',
     ];
 
     protected $hidden = [
@@ -217,6 +224,7 @@ class Fund extends Model
 
     protected $casts = [
         'public' => 'boolean',
+        'archived' => 'boolean',
         'auto_requests_validation' => 'boolean',
         'criteria_editable_after_start' => 'boolean',
     ];
@@ -369,6 +377,34 @@ class Fund extends Model
             $organization->name,
             $this->fund_config->implementation->url_provider ?? env('PANEL_PROVIDER_URL')
         );
+    }
+
+    /**
+     * @return $this
+     */
+    public function archive(Employee $employee): self
+    {
+        $this->update([
+            'archived' => true,
+        ]);
+
+        FundArchivedEvent::dispatch($this, $employee);
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function unArchive(Employee $employee): self
+    {
+        $this->update([
+            'archived' => false,
+        ]);
+
+        FundUnArchivedEvent::dispatch($this, $employee);
+
+        return $this;
     }
 
     /**
@@ -820,6 +856,10 @@ class Fund extends Model
     {
         $query = $query ?: self::query();
 
+        if (!array_get($options, 'with_archived', false)) {
+            $query->where('archived', false);
+        }
+
         if ($tag = array_get($options, 'tag')) {
             $query->whereHas('tags', static function(Builder $query) use ($tag) {
                 return $query->where('key', $tag);
@@ -1096,7 +1136,8 @@ class Fund extends Model
                         config('forus.front_ends.panel-sponsor'),
                         $fund->organization->name,
                         $fund->name,
-                        currency_format($fund->notification_amount - $transactionCosts),
+                        currency_format($fund->notification_amount),
+                        currency_format($transactionCosts),
                         currency_format($fund->budget_left)
                     );
                 }
@@ -1141,19 +1182,17 @@ class Fund extends Model
 
     /**
      * @param string|null $identity_address
-     * @param int|null $employee_id
+     * @param array $extraFields
      * @param float|null $voucherAmount
      * @param Carbon|null $expire_at
-     * @param string|null $note
      * @param int|null $limit_multiplier
      * @return Voucher|null
      */
     public function makeVoucher(
         string $identity_address = null,
-        ?int $employee_id = null,
+        array $extraFields = [],
         float $voucherAmount = null,
         Carbon $expire_at = null,
-        string $note = null,
         ?int $limit_multiplier = null
     ): ?Voucher {
         $amount = $voucherAmount ?: $this->amountForIdentity($identity_address);
@@ -1164,10 +1203,10 @@ class Fund extends Model
         $voucher = null;
 
         if ($this->fund_formulas->count() > 0) {
-            $voucher = Voucher::create(compact(
-                'identity_address', 'amount', 'expire_at', 'note', 'fund_id',
-                'returnable', 'limit_multiplier', 'employee_id'
-            ));
+            $voucher = Voucher::create(array_merge(compact(
+                'identity_address', 'amount', 'expire_at', 'fund_id',
+                'returnable', 'limit_multiplier'
+            ), $extraFields));
 
             VoucherCreated::dispatch($voucher);
         }
@@ -1180,10 +1219,9 @@ class Fund extends Model
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,
-                    $employee_id,
+                    $extraFields,
                     $fund_formula_product->product->id,
                     $voucherExpireAt,
-                    '',
                     $fund_formula_product->price
                 );
 
@@ -1195,20 +1233,18 @@ class Fund extends Model
     }
 
     /**
-     * @param int|null $employee_id
      * @param string|null $identity_address
+     * @param array $extraFields
      * @param int|null $product_id
      * @param Carbon|null $expire_at
-     * @param string|null $note
      * @param float|null $price
      * @return Voucher
      */
     public function makeProductVoucher(
         string $identity_address = null,
-        ?int $employee_id = null,
+        array $extraFields = [],
         int $product_id = null,
         Carbon $expire_at = null,
-        string $note = null,
         float $price = null
     ): Voucher {
         $amount = $price ?: Product::findOrFail($product_id)->price;
@@ -1216,14 +1252,22 @@ class Fund extends Model
         $fund_id = $this->id;
         $returnable = false;
 
-        $voucher = Voucher::create(compact(
-            'identity_address', 'amount', 'expire_at', 'note',
-            'product_id','fund_id', 'returnable', 'employee_id'
-        ));
+        $voucher = Voucher::create(array_merge(compact(
+            'identity_address', 'amount', 'expire_at',
+            'product_id','fund_id', 'returnable'
+        ), $extraFields));
 
         VoucherCreated::dispatch($voucher, false);
 
         return $voucher;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isArchived(): bool
+    {
+        return $this->archived;
     }
 
     /**
@@ -1737,20 +1781,23 @@ class Fund extends Model
 
         if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
             $backofficeApi = $this->getBackofficeApi();
+            $residencyResponse = $backofficeApi->residencyCheck($bsn);
 
-            if (!$backofficeApi->residencyCheck($bsn)->isResident()) {
+            if (!$residencyResponse->isResident()) {
                 return null;
             }
 
             // check again for active vouchers
-            $response = $backofficeApi->eligibilityCheck($bsn);
+            $response = $backofficeApi->eligibilityCheck($bsn, $residencyResponse->getLog()->response_id);
 
             if ($response->isEligible() && !$this->identityHasActiveVoucher($identity_address)) {
-                $this->makeVoucher($identity_address)->updateModel([
+                $voucher = $this->makeVoucher($identity_address, [
                     'fund_backoffice_log_id' => $response->getLog()->id,
                 ]);
 
-                $backofficeApi->reportReceived($bsn);
+                $response->getLog()->update([
+                    'voucher_id' => $voucher->id,
+                ]);
             }
 
             return $response;
@@ -1765,16 +1812,6 @@ class Fund extends Model
     public function getBackofficeApi(): ?BackofficeApi
     {
         return $this->isBackofficeApiAvailable() ? new BackofficeApi(record_repo(), $this) : null;
-    }
-
-    /**
-     * @param $bsn
-     */
-    public function reportFirstUseByApi($bsn): void
-    {
-        if ($backofficeApi = $this->getBackofficeApi()) {
-            $backofficeApi->reportFirstUse($bsn);
-        }
     }
 
     /**

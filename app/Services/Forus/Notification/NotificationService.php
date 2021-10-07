@@ -429,19 +429,16 @@ class NotificationService
      * Request a physical card
      *
      * @param string $email
+     * @param array $data
      * @param EmailFrom|null $emailFrom
-     * @param $data
      * @return bool
      */
     public function requestPhysicalCard(
         string $email,
-        ?EmailFrom $emailFrom,
-        $data
+        array $data = [],
+        ?EmailFrom $emailFrom = null
     ): bool {
-        return $this->sendMail($email, new RequestPhysicalCardMail(
-            $emailFrom,
-            $data
-        ));
+        return $this->sendMail($email, new RequestPhysicalCardMail($emailFrom, $data));
     }
 
     /**
@@ -570,12 +567,14 @@ class NotificationService
         string $sponsor_name,
         string $fund_name,
         string $notification_amount,
+        string $transaction_costs,
         string $budget_left
     ): bool {
         return $this->sendMail($email, new FundBalanceWarningMail(
             $fund_name,
             $sponsor_name,
             $notification_amount,
+            $transaction_costs,
             $budget_left,
             $link,
             $emailFrom

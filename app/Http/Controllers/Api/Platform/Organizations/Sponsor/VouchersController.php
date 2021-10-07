@@ -75,12 +75,13 @@ class VouchersController extends Controller
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
         $multiplier = $request->input('limit_multiplier');
-        $employee_id   = $organization->findEmployee($request->auth_address())->id;
+        $employee_id = $organization->findEmployee($request->auth_address())->id;
+        $extraFields = compact('note', 'employee_id');
 
         if ($product_id) {
-            $voucher = $fund->makeProductVoucher($identity, $employee_id, $product_id, $expire_at, $note);
+            $voucher = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
         } else {
-            $voucher = $fund->makeVoucher($identity, $employee_id, $amount, $expire_at, $note, $multiplier);
+            $voucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
         }
 
         if ($bsn = $request->input('bsn', false)) {
@@ -144,11 +145,12 @@ class VouchersController extends Controller
             $product_id = $voucher['product_id'] ?? false;
             $multiplier = $voucher['limit_multiplier'] ?? null;
             $employee_id = $organization->findEmployee($request->auth_address())->id;
+            $extraFields = compact('note', 'employee_id');
 
-            if (!$product_id) {
-                $voucherModel = $fund->makeVoucher($identity, $employee_id, $amount, $expire_at, $note, $multiplier);
+            if ($product_id) {
+                $voucherModel = $fund->makeProductVoucher($identity, $extraFields, $product_id, $expire_at);
             } else {
-                $voucherModel = $fund->makeProductVoucher($identity, $employee_id, $product_id, $expire_at, $note);
+                $voucherModel = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
             }
 
             if ($bsn = ($voucher['bsn'] ?? false)) {
