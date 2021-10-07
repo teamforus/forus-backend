@@ -29,7 +29,7 @@ class VoucherTransactionsSubscriber
         if ($voucher->identity_address) {
             $bsn = record_repo()->bsnByAddress($voucher->identity_address);
 
-            if ($bsn && $voucher->transactions()->count() == 1 && $fund->isBackofficeApiAvailable()) {
+            if ($bsn && !$voucher->in_use && $fund->isBackofficeApiAvailable()) {
                 $fund->reportFirstUseByApi($bsn);
             }
         }

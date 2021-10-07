@@ -6,6 +6,7 @@ namespace App\Services\BackofficeApiService;
 use App\Models\Fund;
 use App\Models\FundBackofficeLog;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,6 +26,8 @@ class BackofficeApi
     ];
 
     public const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
+    public const ACTION_RESIDENCY_CHECK = 'residency_check';
+
     public const ACTION_REPORT_FIRST_USE = 'first_use';
     public const ACTION_REPORT_RECEIVED = 'received';
     public const ACTION_STATUS = 'status';
@@ -60,6 +63,7 @@ class BackofficeApi
             self::ACTION_ELIGIBILITY_CHECK => '/api/v1/funds',
             self::ACTION_REPORT_FIRST_USE => '/api/v1/funds',
             self::ACTION_REPORT_RECEIVED => '/api/v1/funds',
+            self::ACTION_RESIDENCY_CHECK => '/api/v1/funds',
             self::ACTION_STATUS => '/api/v1/status',
         ][$action] ?? abort(403);
 
@@ -85,6 +89,15 @@ class BackofficeApi
     public function eligibilityCheck(string $bsn): EligibilityResponse
     {
         return new EligibilityResponse($this->checkEligibility($bsn));
+    }
+
+    /**
+     * @param string $bsn
+     * @return ResidencyResponse
+     */
+    public function residencyCheck(string $bsn): ResidencyResponse
+    {
+        return new ResidencyResponse($this->checkResidency($bsn));
     }
 
     /**
@@ -120,6 +133,33 @@ class BackofficeApi
         $log = $this->makeLog(self::ACTION_ELIGIBILITY_CHECK, $bsn);
         $endpoint = $this->getEndpoint(self::ACTION_ELIGIBILITY_CHECK);
         $body = $this->getRequestBody(self::ACTION_ELIGIBILITY_CHECK);
+        $result = $this->request('POST', $endpoint, array_merge($body, compact('bsn')));
+
+        if (!($result['success'] ?? false)) {
+            return $log->updateModel(array_merge(array_only($result, [
+                'response_code', 'response_error',
+            ]), [
+                'state' => self::STATE_ERROR,
+            ]));
+        }
+
+        return $log->updateModel(array_merge(array_only($result, [
+            'response_code', 'response_body',
+        ]), [
+            'response_id' => $result['response_body']['id'] ?? null,
+            'state' => self::STATE_SUCCESS,
+        ]));
+    }
+
+    /**
+     * @param string $bsn
+     * @return FundBackofficeLog
+     */
+    protected function checkResidency(string $bsn): FundBackofficeLog
+    {
+        $log = $this->makeLog(self::ACTION_RESIDENCY_CHECK, $bsn);
+        $endpoint = $this->getEndpoint(self::ACTION_RESIDENCY_CHECK);
+        $body = $this->getRequestBody(self::ACTION_RESIDENCY_CHECK);
         $result = $this->request('POST', $endpoint, array_merge($body, compact('bsn')));
 
         if (!($result['success'] ?? false)) {

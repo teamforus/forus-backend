@@ -1693,7 +1693,7 @@ class Fund extends Model
      */
     public function limitGeneratorAmount(): bool
     {
-        return $this->fund_config && $this->fund_config->limit_generator_amount ?? true;
+        return $this->fund_config->limit_generator_amount ?? true;
     }
 
     /**
@@ -1735,11 +1735,16 @@ class Fund extends Model
         $bsn = record_repo()->bsnByAddress($identity_address);
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
 
-        if ($bsn && !$alreadyHasActiveVoucher &&  $this->isBackofficeApiAvailable()) {
+        if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
             $backofficeApi = $this->getBackofficeApi();
-            $response = $backofficeApi->eligibilityCheck($bsn);
+
+            if (!$backofficeApi->residencyCheck($bsn)->isResident()) {
+                return null;
+            }
 
             // check again for active vouchers
+            $response = $backofficeApi->eligibilityCheck($bsn);
+
             if ($response->isEligible() && !$this->identityHasActiveVoucher($identity_address)) {
                 $this->makeVoucher($identity_address)->updateModel([
                     'fund_backoffice_log_id' => $response->getLog()->id,
