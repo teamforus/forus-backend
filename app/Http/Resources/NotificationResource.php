@@ -26,7 +26,7 @@ class NotificationResource extends JsonResource
     {
         $key = $this->resource->data['key'];
         $event = EventLog::find($this->resource->data['event_id']);
-        $template = $this->getTemplate();
+        $template = $this->getTemplate($event);
 
         return array_merge([
             'id' => $this->resource->id,
@@ -41,23 +41,16 @@ class NotificationResource extends JsonResource
     }
 
     /**
-     * TODO: optimize
+     * @param EventLog $event
      * @return NotificationTemplate|null
      */
-    public function getTemplate(): ?NotificationTemplate
-    {
-        $activeImplementationId = Implementation::active()->id;
-        $generalImplementationId = Implementation::general()->id;
-        $notification = SystemNotification::where('key', $this->resource->data['key'])->first();
-        $templates = $notification ? $notification->templates->where('type', 'database') : null;
-
-        if (!$notification || !$templates) {
-            return null;
-        }
-
-        $template = $templates->where('implementation_id', $generalImplementationId)->first();
-
-        return $templates->where('implementation_id', $activeImplementationId)->first() ?: $template;
+    public function getTemplate(EventLog $event): ?NotificationTemplate
+    {;
+        return SystemNotification::findTemplate(
+            $this->resource->data['key'],
+            'database',
+            $event->data['implementation_key'] ?? Implementation::KEY_GENERAL
+        );
     }
 
     /**

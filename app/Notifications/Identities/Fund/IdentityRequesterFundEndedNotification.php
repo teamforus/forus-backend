@@ -11,6 +11,4 @@ class IdentityRequesterFundEndedNotification extends BaseIdentityFundNotificatio
 {
     protected static $key = 'notifications_identities.requester_fund_ended';
     protected static $scope = null;
-    protected static $visible = true;
-    protected static $editable = true;
 }

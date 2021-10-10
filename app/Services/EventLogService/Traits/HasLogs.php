@@ -36,8 +36,8 @@ trait HasLogs
         }, []);
 
         $data = array_merge([
-            'client_type' =>  client_type(),
-            'implementation_key' =>  implementation_key(),
+            'client_type' => client_type(),
+            'implementation_key' => implementation_key(),
         ], $meta, $raw_meta);
 
         return $this->logs()->create(compact('data', 'event', 'identity_address'));

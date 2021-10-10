@@ -12,7 +12,6 @@ use App\Services\Forus\Identity\Models\Identity;
 class IdentityProductVoucherSharedNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.product_voucher_shared';
-    protected static $visible = true;
 
     /**
      * @param Identity $identity

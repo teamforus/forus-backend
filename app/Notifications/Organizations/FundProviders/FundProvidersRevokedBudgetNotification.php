@@ -14,9 +14,6 @@ class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotificati
     protected static $key = 'notifications_fund_providers.revoked_budget';
     protected static $permissions = 'manage_provider_funds';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     public function toMail(Identity $identity): void
     {
         /** @var FundProvider $fundProvider */

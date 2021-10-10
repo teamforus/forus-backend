@@ -11,6 +11,4 @@ class FundProviderTransactionBunqSuccessNotification extends BaseFundProvidersNo
     protected static $pushKey = 'bunq.transaction_success';
     protected static $scope = null;
     protected static $permissions = 'view_finances';
-
-    protected static $visible = true;
 }

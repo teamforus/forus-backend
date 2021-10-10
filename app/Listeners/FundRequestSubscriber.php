@@ -13,7 +13,6 @@ use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNoti
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
 use Illuminate\Events\Dispatcher;
-use Dompdf\Dompdf;
 
 /**
  * Class FundRequestSubscriber
@@ -21,6 +20,20 @@ use Dompdf\Dompdf;
  */
 class FundRequestSubscriber
 {
+    /**
+     * @param FundRequest $fundRequest
+     * @return array
+     */
+    private function getFundRequestLogModels(FundRequest $fundRequest): array
+    {
+        return [
+            'fund' => $fundRequest->fund,
+            'sponsor' => $fundRequest->fund->organization,
+            'fund_request' => $fundRequest,
+            'implementation' => $fundRequest->fund->getImplementation(),
+        ];
+    }
+
     /**
      * @param FundRequestCreated $fundRequestCreated
      * @throws \Exception
@@ -42,11 +55,10 @@ class FundRequestSubscriber
             $fundRequest->approve($fund->default_validator_employee);
         }
 
-        $event = $fundRequest->log(FundRequest::EVENT_CREATED, [
-            'fund' => $fundRequest->fund,
-            'sponsor' => $fundRequest->fund->organization,
-            'fund_request' => $fundRequest,
-        ]);
+        $event = $fundRequest->log(
+            $fundRequest::EVENT_CREATED,
+            $this->getFundRequestLogModels($fundRequest)
+        );
 
         FundRequestCreatedValidatorNotification::send($event);
         IdentityFundRequestCreatedNotification::send($event);
@@ -59,25 +71,17 @@ class FundRequestSubscriber
     {
         $fundRequest = $fundCreated->getFundRequest();
 
-        $stateEvent = [
-            FundRequest::EVENT_APPROVED => FundRequest::STATE_APPROVED,
-            FundRequest::EVENT_DECLINED => FundRequest::STATE_DECLINED,
-            FundRequest::EVENT_APPROVED_PARTLY => FundRequest::STATE_APPROVED_PARTLY,
-        ][$fundRequest->state] ?? null;
+        $stateEvent = array_combine($fundRequest::STATES, $fundRequest::STATES);
+        $stateEvent = $stateEvent[$fundRequest->state] ?? null;
 
         if ($stateEvent) {
-            $fundRequest->log($stateEvent, [
-                'fund' => $fundRequest->fund,
-                'sponsor' => $fundRequest->fund->organization,
-                'fund_request' => $fundRequest,
-            ]);
+            $fundRequest->log($stateEvent, $this->getFundRequestLogModels($fundRequest));
         }
 
-        $eventLog = $fundRequest->log(FundRequest::EVENT_RESOLVED, [
-            'fund' => $fundRequest->fund,
-            'sponsor' => $fundRequest->fund->organization,
-            'fund_request' => $fundRequest,
-        ]);
+        $eventLog = $fundRequest->log(
+            $fundRequest::EVENT_RESOLVED,
+            $this->getFundRequestLogModels($fundRequest)
+        );
 
         if ($fundRequest->state === FundRequest::STATE_APPROVED) {
             IdentityFundRequestApprovedNotification::send($eventLog);
@@ -93,11 +97,9 @@ class FundRequestSubscriber
     {
         $fundRequest = $requestRecordEvent->getFundRequest();
         $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
+        $eventModels = $this->getFundRequestLogModels($fundRequest);
 
-        $event = $fundRequest->log($fundRequest::EVENT_RECORD_DECLINED, [
-            'fund' => $fundRequest->fund,
-            'sponsor' => $fundRequest->fund->organization,
-        ], [
+        $event = $fundRequest->log($fundRequest::EVENT_RECORD_DECLINED, $eventModels, [
             'rejection_note' => $fundRequestRecord->note,
         ]);
 

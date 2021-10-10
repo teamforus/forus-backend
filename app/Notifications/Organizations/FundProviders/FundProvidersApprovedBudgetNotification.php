@@ -14,9 +14,6 @@ class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotificat
     protected static $key = 'notifications_fund_providers.approved_budget';
     protected static $pushKey = 'funds.provider_approved';
 
-    protected static $editable = true;
-    protected static $visible = true;
-
     /**
      * @var string[]
      */

@@ -9,6 +9,4 @@ class FundProviderSponsorChatMessageNotification extends BaseFundProvidersNotifi
 {
     protected static $key = 'notifications_fund_providers.sponsor_message';
     protected static $permissions = 'manage_provider_funds';
-
-    protected static $visible = true;
 }

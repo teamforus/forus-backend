@@ -14,9 +14,6 @@ class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotifica
     protected static $scope = null;
     protected static $key = 'notifications_identities.voucher_deactivated';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     public function toMail(Identity $identity): void
     {
         /** @var Voucher $voucher */

@@ -14,9 +14,6 @@ class IdentityFundRequestDeniedNotification extends BaseIdentityFundRequestNotif
 {
     protected static $key = 'notifications_identities.fund_request_denied';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

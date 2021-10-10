@@ -13,7 +13,6 @@ use App\Services\Forus\Identity\Models\Identity;
 class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNotification
 {
     protected static $key = 'notifications_identities.product_voucher_reserved';
-    protected static $visible = true;
 
     /**
      * @param Identity $identity

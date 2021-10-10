@@ -14,8 +14,6 @@ class IdentityVoucherBudgetTransactionNotification extends BaseIdentityVoucherNo
     protected static $key = 'notifications_identities.voucher_budget_transaction';
     protected static $pushKey = "voucher.transaction";
 
-    protected static $visible = true;
-
     /**
      * @param Identity $identity
      * @return bool|void

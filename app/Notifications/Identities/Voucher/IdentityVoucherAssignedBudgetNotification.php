@@ -14,9 +14,6 @@ class IdentityVoucherAssignedBudgetNotification extends BaseIdentityVoucherNotif
     protected static $key = 'notifications_identities.identity_voucher_assigned_budget';
     protected static $pushKey = 'voucher.assigned';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

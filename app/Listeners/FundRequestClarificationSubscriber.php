@@ -27,6 +27,7 @@ class FundRequestClarificationSubscriber
             'fund' => $fundRequest->fund,
             'sponsor' => $fundRequest->fund->organization,
             'fund_request' => $fundRequest,
+            'implementation' => $fundRequest->fund->getImplementation(),
             'fund_request_clarification' => $clarification,
         ]);
 

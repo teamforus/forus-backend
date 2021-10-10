@@ -69,6 +69,7 @@ class VoucherSubscriber
                 'provider' => $product->organization,
                 'sponsor' => $voucher->fund->organization,
                 'employee' => $voucher->employee,
+                'implementation' => $voucher->fund->getImplementation(),
             ], $voucher->only('note'));
 
             if ($voucherCreated->shouldNotifyRequesterAdded()) {
@@ -84,6 +85,7 @@ class VoucherSubscriber
                 'voucher' => $voucher,
                 'sponsor' => $voucher->fund->organization,
                 'employee' => $voucher->employee,
+                'implementation' => $voucher->fund->getImplementation(),
             ], $voucher->only('note'));
 
             if ($voucher->identity && $voucher->fund->fund_formulas->count() > 0) {
@@ -115,6 +117,7 @@ class VoucherSubscriber
             'product' => $voucher->product,
             'provider' => $voucher->product->organization ?? null,
             'sponsor' => $voucher->fund->organization,
+            'implementation' => $voucher->fund->getImplementation(),
         ], [
             'implementation_name' => $voucher->fund->fund_config->implementation->name,
         ]);
@@ -140,6 +143,7 @@ class VoucherSubscriber
             'voucher' => $voucher,
             'product' => $voucher->product,
             'provider' => $voucher->product->organization,
+            'implementation' => $voucher->fund->getImplementation(),
         ], [
             'voucher_share_message' => $voucherShared->getMessage(),
             'voucher_share_send_copy' => $voucherShared->shouldSendCopyToUser(),
@@ -167,6 +171,7 @@ class VoucherSubscriber
                 'voucher' => $voucher,
                 'product' => $voucher->product,
                 'sponsor' => $voucher->fund->organization,
+                'implementation' => $voucher->fund->getImplementation(),
             ], $eventRawData);
 
             IdentityVoucherExpireSoonProductNotification::send($eventLog);
@@ -175,6 +180,7 @@ class VoucherSubscriber
                 'fund' => $voucher->fund,
                 'voucher' => $voucher,
                 'sponsor' => $voucher->fund->organization,
+                'implementation' => $voucher->fund->getImplementation(),
             ], $eventRawData);
 
             IdentityVoucherExpireSoonBudgetNotification::send($eventLog);
@@ -194,6 +200,7 @@ class VoucherSubscriber
                 'fund' => $voucher->fund,
                 'sponsor' => $voucher->fund->organization,
                 'product' => $voucher->product,
+                'implementation' => $voucher->fund->getImplementation(),
             ]);
 
             IdentityProductVoucherExpiredNotification::send($logEvent);
@@ -201,6 +208,7 @@ class VoucherSubscriber
             $logEvent = $voucher->log(Voucher::EVENT_EXPIRED_BUDGET, [
                 'fund' => $voucher->fund,
                 'sponsor' => $voucher->fund->organization,
+                'implementation' => $voucher->fund->getImplementation(),
             ]);
 
             IdentityVoucherExpiredNotification::send($logEvent);
@@ -213,12 +221,14 @@ class VoucherSubscriber
      */
     public function onVoucherDeactivated(VoucherDeactivated $voucherDeactivated): void
     {
+        $implementation = $voucherDeactivated->getVoucher()->fund->getImplementation();
         $employee = $voucherDeactivated->getEmployee();
         $voucher = $voucherDeactivated->getVoucher();
         $sponsor = $voucher->fund->organization;
         $fund = $voucher->fund;
 
-        $logData = compact('fund', 'voucher', 'employee', 'sponsor');
+        $logData = compact('fund', 'voucher', 'employee', 'sponsor', 'implementation');
+
         $logModel = $voucher->log($voucher::EVENT_DEACTIVATED, $logData, [
             'deactivation_date' => now()->format('Y-m-d'),
             'deactivation_date_locale' => format_date_locale(now()),
@@ -241,6 +251,7 @@ class VoucherSubscriber
         $eventLog = $voucher->log($voucher::EVENT_SHARED_BY_EMAIL, [
             'fund' => $voucher->fund,
             'sponsor' => $voucher->fund->organization,
+            'implementation' => $voucher->fund->getImplementation(),
         ], [
             'qr_token' => $voucher->token_without_confirmation->address,
             'voucher_product_or_fund_name' => $voucher->product->name ?? $voucher->fund->name,
@@ -274,6 +285,7 @@ class VoucherSubscriber
             'sponsor'                   => $physicalCardRequest->voucher->fund->organization,
             'voucher'                   => $physicalCardRequest->voucher,
             'employee'                  => $physicalCardRequest->employee,
+            'implementation'            => $physicalCardRequest->voucher->fund->getImplementation(),
             'physical_card_request'     => $physicalCardRequest,
         ], [
             'note'    => "Adresgegevens: $address",

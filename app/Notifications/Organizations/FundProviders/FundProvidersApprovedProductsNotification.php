@@ -9,6 +9,4 @@ class FundProvidersApprovedProductsNotification extends BaseFundProvidersNotific
 {
     protected static $key = 'notifications_fund_providers.approved_products';
     protected static $permissions = 'manage_provider_funds';
-
-    protected static $visible = true;
 }

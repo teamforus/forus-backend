@@ -14,9 +14,6 @@ class IdentityVoucherPhysicalCardRequestedNotification extends BaseIdentityVouch
     protected static $key = 'notifications_identities.voucher_physical_card_requested';
     protected static $scope = null;
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

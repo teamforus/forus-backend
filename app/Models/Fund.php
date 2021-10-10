@@ -1357,6 +1357,14 @@ class Fund extends Model
     }
 
     /**
+     * @return Implementation
+     */
+    public function getImplementation(): Implementation
+    {
+        return $this->fund_config->implementation ?? Implementation::general();
+    }
+
+    /**
      * @return \App\Models\FundTopUp
      * @noinspection PhpUnused
      */

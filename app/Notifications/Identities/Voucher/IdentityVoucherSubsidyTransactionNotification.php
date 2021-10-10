@@ -14,8 +14,6 @@ class IdentityVoucherSubsidyTransactionNotification extends BaseIdentityVoucherN
     protected static $key = 'notifications_identities.voucher_subsidy_transaction';
     protected static $pushKey = "voucher.transaction";
 
-    protected static $visible = true;
-
     /**
      * @param Identity $identity
      * @return bool|void

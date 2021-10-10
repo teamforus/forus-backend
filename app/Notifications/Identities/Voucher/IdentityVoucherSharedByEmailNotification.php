@@ -9,5 +9,4 @@ class IdentityVoucherSharedByEmailNotification extends BaseIdentityVoucherNotifi
 {
     protected static $key = 'notifications_identities.voucher_shared_by_email';
     protected static $scope = null;
-    protected static $visible = true;
 }

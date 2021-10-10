@@ -14,9 +14,6 @@ class IdentityFundRequestApprovedNotification extends BaseIdentityFundRequestNot
 {
     protected static $key = 'notifications_identities.fund_request_approved';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

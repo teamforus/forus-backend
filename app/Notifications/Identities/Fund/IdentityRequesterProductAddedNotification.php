@@ -8,5 +8,4 @@ namespace App\Notifications\Identities\Fund;
 class IdentityRequesterProductAddedNotification extends BaseIdentityFundNotification
 {
     protected static $key = 'notifications_identities.requester_product_added';
-    protected static $visible = true;
 }

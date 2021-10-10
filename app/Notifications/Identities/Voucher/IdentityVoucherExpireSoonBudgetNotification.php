@@ -13,9 +13,6 @@ class IdentityVoucherExpireSoonBudgetNotification extends BaseIdentityVoucherNot
 {
     protected static $key = 'notifications_identities.voucher_expire_soon_budget';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

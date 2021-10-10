@@ -13,9 +13,6 @@ class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNoti
 {
     protected static $key = 'notifications_identities.fund_request_created';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

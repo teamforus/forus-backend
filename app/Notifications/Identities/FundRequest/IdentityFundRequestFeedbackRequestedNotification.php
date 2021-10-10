@@ -14,9 +14,6 @@ class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundR
 {
     protected static $key = 'notifications_identities.fund_request_feedback_requested';
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

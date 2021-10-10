@@ -14,7 +14,6 @@ class IdentityFundRequestRecordDeclinedNotification extends BaseIdentityFundRequ
 {
     protected static $key = 'notifications_identities.fund_request_record_declined';
     protected static $scope = null;
-    protected static $visible = true;
 
     /**
      * @param Identity $identity

@@ -15,13 +15,11 @@ use Illuminate\Events\Dispatcher;
  */
 class OrganizationSubscriber
 {
-    public function onOrganizationCreated(OrganizationCreated $organizationCreated) {
-        $organization = $organizationCreated->getOrganization();
-
+    public function onOrganizationCreated(OrganizationCreated $organizationCreated): void
+    {
         /** @var Employee $employee */
-        $employee = $organization->employees()->firstOrCreate([
-            'identity_address' => $organization->identity_address
-        ]);
+        $organization = $organizationCreated->getOrganization();
+        $employee = $organization->employees()->firstOrCreate($organization->only('identity_address'));
 
         $employee->roles()->sync(Role::pluck('id'));
 
@@ -31,14 +29,8 @@ class OrganizationSubscriber
 
         try {
             if ($organization->kvk != Organization::GENERIC_KVK) {
-                $offices = resolve('kvk_api')->getOffices($organization->kvk);
-
-                foreach (collect($offices ?: []) as $office) {
-                    $organization->offices()->create(
-                        collect($office)->only([
-                            'address', 'lon', 'lat'
-                        ])->toArray()
-                    );
+                foreach (resolve('kvk_api')->getOffices($organization->kvk) as $office) {
+                    $organization->offices()->create($office->only('address', 'lon', 'lat'));
                 }
             }
         } catch (\Exception $e) { }
@@ -47,7 +39,8 @@ class OrganizationSubscriber
     /**
      * @param OrganizationUpdated $organizationUpdated
      */
-    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated) {
+    public function onOrganizationUpdated(OrganizationUpdated $organizationUpdated): void
+    {
         $organization = $organizationUpdated->getOrganization();
 
         $organization->update([

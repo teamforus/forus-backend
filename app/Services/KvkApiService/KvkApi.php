@@ -2,6 +2,7 @@
 
 namespace App\Services\KvkApiService;
 
+use App\Models\Model;
 use Illuminate\Support\Collection;
 
 /**
@@ -102,11 +103,9 @@ class KvkApi
 
     /**
      * @param string $kvk_number
-     * @return \Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection|Model[]
      */
-    public function getOffices(
-        string $kvk_number
-    ): Collection {
+    public function getOffices(string $kvk_number): Collection {
         $kvkData = $this->kvkNumberData($kvk_number);
         $addresses = $kvkData->data->items[0]->addresses;
 

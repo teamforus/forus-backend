@@ -13,8 +13,6 @@ class IdentityVoucherAssignedSubsidyNotification extends BaseIdentityVoucherNoti
 {
     protected static $key = 'notifications_identities.identity_voucher_assigned_subsidy';
     protected static $pushKey = 'voucher.assigned';
-    protected static $visible = true;
-    protected static $editable = true;
 
     /**
      * @param Identity $identity

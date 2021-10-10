@@ -15,9 +15,6 @@ class IdentityVoucherAssignedProductNotification extends BaseIdentityVoucherNoti
     protected static $pushKey = 'voucher.assigned';
     protected static $scope = null;
 
-    protected static $visible = true;
-    protected static $editable = true;
-
     /**
      * @param Identity $identity
      */

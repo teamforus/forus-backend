@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\Implementation;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Identity\Models\Identity;
@@ -37,6 +38,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
 
     protected $eventLog;
     protected $meta = [];
+    protected $implementation;
 
     public const VARIABLES = [
         "notifications_identities.added_employee" => [
@@ -222,12 +224,17 @@ abstract class BaseNotification extends Notification implements ShouldQueue
      * BaseNotification constructor.
      * @param EventLog|null $eventLog
      * @param array $meta
+     * @param Implementation|null $implementation
      */
-    public function __construct(?EventLog $eventLog, array $meta = [])
-    {
+    public function __construct(
+        ?EventLog $eventLog,
+        array $meta = [],
+        ?Implementation $implementation = null
+    ) {
         $this->eventLog = $eventLog;
         $this->meta = array_merge($this->meta, $meta);
         $this->queue = config('forus.notifications.notifications_queue_name');
+        $this->implementation = $implementation;
     }
 
     /**
@@ -363,7 +370,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         $template = SystemNotification::findTemplate(
             static::getKey(),
             'push',
-            $this->eventLog->data['implementation_key'] ?? null
+            $this->implementation->key ?? Implementation::KEY_GENERAL
         );
 
         $this->getNotificationService()->sendPushNotification(
@@ -383,10 +390,11 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public static function send(EventLog $event): bool
     {
         try {
+            $implementation = Implementation::byKey($event->data['implementation_key']);
             $identities = static::eligibleIdentities($event->loggable);
-            $meta = new static($event, static::getMeta($event->loggable));
+            $notification = new static($event, static::getMeta($event->loggable), $implementation);
 
-            \Illuminate\Support\Facades\Notification::send($identities, $meta);
+            \Illuminate\Support\Facades\Notification::send($identities, $notification);
         } catch (\Exception $exception) {
             if ($logger = logger()) {
                 $logger->error(sprintf(

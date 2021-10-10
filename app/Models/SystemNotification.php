@@ -68,8 +68,11 @@ class SystemNotification extends Model
      * @param string|null $implementation_key
      * @return NotificationTemplate|null
      */
-    public static function findTemplate(string $key, string $type, ?string $implementation_key = null): ?NotificationTemplate
-    {
+    public static function findTemplate(
+        string $key,
+        string $type,
+        ?string $implementation_key = null
+    ): ?NotificationTemplate {
         $systemNotification = SystemNotification::where(compact('key'))->first();
         $generalImplementation = Implementation::general();
         $currentImplementation = Implementation::byKey($implementation_key);
