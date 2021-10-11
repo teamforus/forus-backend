@@ -424,6 +424,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\ImplementationsController@updateEmail");
 
     $router->patch(
+        'organizations/{organization}/implementations/{implementation}/email-branding',
+        "Api\Platform\Organizations\ImplementationsController@updateEmailBranding");
+
+    $router->patch(
         'organizations/{organization}/implementations/{implementation}/digid',
         "Api\Platform\Organizations\ImplementationsController@updateDigiD");
 

@@ -42,7 +42,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
 
     public const VARIABLES = [
         "notifications_identities.added_employee" => [
-            "dashboard_auth_button", "employee_roles", "header_icon", "organization_name",
+            "dashboard_auth_button", "employee_roles", "organization_name",
             "download_me_app_link", "download_me_app_button",
         ],
         "notifications_identities.changed_employee_roles" => [
@@ -239,11 +239,13 @@ abstract class BaseNotification extends Notification implements ShouldQueue
 
     /**
      * @param string|null $key
-     * @return array|mixed
+     * @return array
      */
-    public static function getVariables(?string $key = null)
+    public static function getVariables(?string $key = null): array
     {
-        return static::VARIABLES[$key ?: static::$key] ?? [];
+        return array_merge(static::VARIABLES[$key ?: static::$key] ?? [], [
+            'email_logo', 'email_signature',
+        ]);
     }
 
     /**

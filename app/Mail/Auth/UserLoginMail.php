@@ -30,7 +30,6 @@ class UserLoginMail extends ImplementationMail
         return [
             'time'          => strftime('%e %B %H:%M', strtotime("+1 hours")),
             'auth_button'   => $this->makeButton($data['link'], 'INLOGGEN'),
-            'header_image'  => $this->headerIconBase64($this->implementationLogo()),
         ];
     }
 }

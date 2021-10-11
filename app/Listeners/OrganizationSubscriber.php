@@ -30,7 +30,7 @@ class OrganizationSubscriber
         try {
             if ($organization->kvk != Organization::GENERIC_KVK) {
                 foreach (resolve('kvk_api')->getOffices($organization->kvk) as $office) {
-                    $organization->offices()->create($office->only('address', 'lon', 'lat'));
+                    $organization->offices()->create(array_only($office, ['address', 'lon', 'lat']));
                 }
             }
         } catch (\Exception $e) { }

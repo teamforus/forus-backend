@@ -1,6 +1,6 @@
 # Log in op :platform
 
-:header_image
+:email_logo
 
 Beste gebruiker
 

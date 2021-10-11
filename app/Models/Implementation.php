@@ -43,6 +43,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property bool $informal_communication
  * @property string|null $email_from_address
  * @property string|null $email_from_name
+ * @property string|null $email_color
+ * @property string|null $email_signature
  * @property bool $digid_enabled
  * @property bool $digid_required
  * @property string $digid_env
@@ -58,6 +60,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
+ * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
  * @property-read int|null $mail_templates_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
@@ -83,8 +86,10 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDigidForusApiUrl($value)
  * @method static Builder|Implementation whereDigidRequired($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
+ * @method static Builder|Implementation whereEmailColor($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
  * @method static Builder|Implementation whereEmailFromName($value)
+ * @method static Builder|Implementation whereEmailSignature($value)
  * @method static Builder|Implementation whereHeaderTextColor($value)
  * @method static Builder|Implementation whereId($value)
  * @method static Builder|Implementation whereInformalCommunication($value)
@@ -135,6 +140,7 @@ class Implementation extends Model
         'title', 'description', 'description_alignment', 'informal_communication',
         'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
         'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
+        'email_color', 'email_signature',
     ];
 
     /**
@@ -142,7 +148,7 @@ class Implementation extends Model
      */
     protected $hidden = [
         'digid_enabled', 'digid_env', 'digid_app_id', 'digid_shared_secret',
-        'digid_a_select_server'
+        'digid_a_select_server',
     ];
 
     /**
@@ -205,6 +211,17 @@ class Implementation extends Model
     {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'implementation_banner'
+        ]);
+    }
+
+    /**
+     * Get fund banner
+     * @return MorphOne
+     */
+    public function email_logo(): MorphOne
+    {
+        return $this->morphOne(Media::class, 'mediable')->where([
+            'type' => 'email_logo',
         ]);
     }
 
@@ -731,5 +748,13 @@ class Implementation extends Model
         }
 
         return $this->header_text_color;
+    }
+
+    /**
+     * @return string
+     */
+    public static function defaultEmailColor(): string
+    {
+        return config('forus.mail_styles.color_primary');
     }
 }

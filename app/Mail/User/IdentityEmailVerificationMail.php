@@ -30,7 +30,6 @@ class IdentityEmailVerificationMail extends ImplementationMail
         return [
             'link' => $this->makeLink($data['link'], 'link'),
             'button' => $this->makeButton($data['link'], 'BEVESTIGEN'),
-            'header_image' => $this->headerIconBase64($this->implementationLogo()),
         ];
     }
 }

@@ -1,6 +1,7 @@
 <?php
     // styles
     $baseFont = "Verdana, Arial, sans-serif;";
+    $colorPrimary = '#315EFD';
 
     $textLeft = "text-align: left;";
     $textCenter = "text-align: center;";
@@ -10,7 +11,7 @@
     $emailInnerStyle = "position: relative; z-index: 1; width: 650px; margin: auto; max-width: 100%;";
     $emailBodyStyle  = "padding: 35px 35px 35px; border-bottom: 3px solid #dfe4ec; position: relative; border: 1px solid #efefef; background-color: #fff; border-radius: 8px;";
     $emailFooterStyle = "color: #9397A3; font: 400 12px/20px $baseFont $textCenter padding: 10px 5px 10px; cursor: default;";
-    $emailFooterLinkStyle = "color: #315EFD; text-decoration: underline; font: inherit;";
+    $emailFooterLinkStyle = "color: $colorPrimary; text-decoration: underline; font: inherit;";
 
     $h1Style = "font: 700 32px/38px $baseFont color: #1e1e1e; margin: 0 0 25px; $textLeft; cursor: default;";
     $h2Style = "font: 700 25px/32px $baseFont color: #1e1e1e; margin: 0 0 20px; $textLeft; cursor: default;";
@@ -22,12 +23,12 @@
     $textMutedStyle = $textStyle . "font-size: 14px; line-height: 22px; color: #646f79; cursor: default;";
 
     $linkBlockStyle = "margin: 0 0 15px;";
-    $linkStyle = "font: 400 16px/28px $baseFont color: #383D45; cursor: pointer; color: #315EFD; text-decoration: underline;";
+    $linkStyle = "font: 400 16px/28px $baseFont color: #383D45; cursor: pointer; color: $colorPrimary; text-decoration: underline;";
 
     $btnStyle = "display: inline-block; padding: 5px 75px; font: 600 14px/40px $baseFont color: #fff; border-radius: 3px; text-decoration: none;";
     $btnDangerStyle = $btnStyle . "background-color: #bc2527;";
     $btnSuccessStyle = $btnStyle . "background-color: #74c86b;";
-    $btnPrimaryStyle = $btnStyle . "background-color: #315EFD;";
+    $btnPrimaryStyle = $btnStyle . "background-color: $colorPrimary;";
 
     $sectionStyle = "margin: 0 0 10px;";
     $ellipsisStyle = "display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
@@ -54,6 +55,8 @@
         'button_primary' => $btnPrimaryStyle,
         'button_success' => $btnSuccessStyle,
         'button_danger' => $btnDangerStyle,
+
+        'color_primary' => $colorPrimary,
 
         'markdown' => $markdownStyles,
 

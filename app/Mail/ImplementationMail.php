@@ -67,7 +67,13 @@ class ImplementationMail extends Mailable
             return Arr::only($this->mailData, $this->dataKeys);
         }
 
+        try {
+            $logo = $this->headerIconBase64($this->implementationLogo());
+        } catch (\Exception $exception) {}
+
         return array_merge($this->dataKeys === false ? [] : $this->mailData, [
+            'email_logo' => $logo ?? '',
+            'email_signature' => $this->implementationSignature(),
             'communicationType' => $this->communicationType,
             'implementationKey' => $this->implementationKey,
         ]);
@@ -146,13 +152,13 @@ class ImplementationMail extends Mailable
         if ($template) {
             $data = $this->getTransData();
             $data = array_merge($data, $this->getMailExtraData($data));
-            $subject = $this->getSubject(str_var_replace($template->title, $data));
+            $subject = $this->getSubject(str_var_replace(e($template->title), $data));
 
-            $templateHtml = resolve('markdown')->convertToHtml($template->content);
+            $templateHtml = resolve('markdown')->convertToHtml(e($template->content));
             $templateHtml = str_var_replace($templateHtml, $data);
 
             $emailBody = new MailBodyBuilder();
-            $emailBody->markdownHtml($templateHtml, $this->globalBuilderStyles);
+            $emailBody->markdownHtml($templateHtml, $this->globalBuilderStyles, $this->implementationColor());
 
             $this->viewData['emailBody'] = $emailBody;
 
@@ -175,8 +181,11 @@ class ImplementationMail extends Mailable
         $data = array_merge($data, $this->getMailExtraData($data));
         $builder = new MailBodyBuilder();
 
+        $color = $this->implementationColor();
         $template = $this->implementationSystemTemplate($template);
-        $this->viewData['emailBody'] = $builder->markdown($template, $data, 'text_center');
+        $emailBody = $builder->markdown($template, $data, 'text_center', $color);
+
+        $this->viewData['emailBody'] = $emailBody;
 
         return $this
             ->from($this->emailFrom->getEmail(), $this->emailFrom->getName())
@@ -232,17 +241,6 @@ class ImplementationMail extends Mailable
     }
 
     /**
-     * @param string $key
-     * @return string
-     */
-    protected function headerIcon(string $key): string
-    {
-        $imageHeader = mail_config($key, null, $this->implementationKey);
-
-        return '<img src="' . $imageHeader . '" style="width: 297px; display: block; margin: 0 auto;">';
-    }
-
-    /**
      * @param string $base64
      * @return string
      */
@@ -262,16 +260,30 @@ class ImplementationMail extends Mailable
     /**
      * @param bool $asBase64
      * @return string
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     protected function implementationLogo(bool $asBase64 = true): string
     {
-        $imagePath = mail_config('header_image', null, $this->implementationKey());
+        $generalLogo = Implementation::general()->email_logo;
+        $implementationLogo = Implementation::byKey($this->implementationKey())->email_logo;
+        $emailLogo = $implementationLogo ?: $generalLogo;
 
         if ($asBase64) {
-            return 'data:image/jpg;base64,' . base64_encode(file_get_contents($imagePath));
+            return 'data:image/jpg;base64,' . base64_encode($emailLogo->getContent('large'));
         }
 
-        return $imagePath;
+        return $emailLogo->urlPublic('large');
+    }
+
+    /**
+     * @return string
+     */
+    protected function implementationSignature(): string
+    {
+        $generalSignature = Implementation::general()->email_signature;
+        $implementationSignature = Implementation::byKey($this->implementationKey())->email_signature;
+
+        return ($implementationSignature ?: $generalSignature) ?: '';
     }
 
     /**
@@ -279,7 +291,10 @@ class ImplementationMail extends Mailable
      */
     protected function implementationColor(): string
     {
-        return mail_config('button_color', null, $this->implementationKey());
+        $generalColor = Implementation::general()->email_color;
+        $implementationColor = Implementation::byKey($this->implementationKey())->email_color;
+
+        return $implementationColor ?: $generalColor;
     }
 
     /**

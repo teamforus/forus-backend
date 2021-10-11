@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $fund_id
  * @property string|null $identity_address
  * @property string|null $bsn
+ * @property int|null $voucher_id
  * @property string $action
  * @property string $state
  * @property string|null $request_id
@@ -36,12 +37,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereLastAttemptAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereRequestId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseBody($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseError($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereResponseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundBackofficeLog whereVoucherId($value)
  * @mixin \Eloquent
  */
 class FundBackofficeLog extends Model

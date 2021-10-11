@@ -85,12 +85,16 @@ class MailBodyBuilder
 
     /**
      * @param string $html
-     * @param array $globalStyles
+     * @param string $globalStyles
+     * @param string|null $textColor
      * @return MailBodyBuilder
      */
-    public function markdownHtml(string $html, $globalStyles = 'text_left'): MailBodyBuilder
-    {
-        $html = $this->addStylesToMarkdownHtml($html, $globalStyles);
+    public function markdownHtml(
+        string $html,
+        $globalStyles = 'text_left',
+        ?string $textColor = null
+    ): MailBodyBuilder {
+        $html = $this->addStylesToMarkdownHtml($html, $globalStyles, $textColor);
 
         return $this->block('markdown', $html);
     }
@@ -99,28 +103,35 @@ class MailBodyBuilder
      * @param string $markdown
      * @param array $data
      * @param string $globalStyles
+     * @param string|null $textColor
      * @return MailBodyBuilder
      */
     public function markdown(
         string $markdown,
         array $data = [],
-        $globalStyles = 'text_left'
+        $globalStyles = 'text_left',
+        ?string $textColor = null
     ): MailBodyBuilder {
         $templateHtml = resolve('markdown')->convertToHtml($markdown);
         $templateHtml = str_var_replace($templateHtml, $data);
 
-        return $this->markdownHtml($templateHtml, $globalStyles);
+        return $this->markdownHtml($templateHtml, $globalStyles, $textColor);
     }
 
     /**
      * @param string $html
      * @param string $globalStyles
+     * @param string|null $textColor
      * @return array|string|string[]
      */
-    public function addStylesToMarkdownHtml(string $html, $globalStyles = 'text_left')
-    {
+    public function addStylesToMarkdownHtml(
+        string $html,
+        $globalStyles = 'text_left',
+        ?string $textColor = null
+    ) {
         $styles = config('forus.mail_styles');
 
+        $textColor = $textColor ? "; color: $textColor;" : '';
         $globalStyles = array_reduce(array_filter((array) $globalStyles), function($list, $key) use ($styles) {
             return $list . ' ' . ($styles[$key] ?? '');
         }, '');
@@ -132,7 +143,7 @@ class MailBodyBuilder
             "<h4>"  => "<h4 style='" . $styles['h4'] . ' ' . $globalStyles . "'>",
             "<h5>"  => "<h5 style='" . $styles['h5'] . ' ' . $globalStyles . "'>",
             "<p>"  => "<p style='" . $styles['text'] . ' ' . $globalStyles . "'>",
-            "<a href"  => "<a style='" . $styles['link'] . ' ' . $globalStyles . "' href",
+            "<a href"  => "<a style='" . $styles['link'] . ' ' . $globalStyles . $textColor. "' href",
         ];
 
         return str_replace(array_keys($replaces), array_values($replaces), $html);
@@ -187,6 +198,7 @@ class MailBodyBuilder
      * @param string $url
      * @param array $styles
      * @return $this
+     * @noinspection PhpUnused
      */
     public function button_success(
         string $url = '',
@@ -201,6 +213,7 @@ class MailBodyBuilder
      * @param string $url
      * @param array $styles
      * @return $this
+     * @noinspection PhpUnused
      */
     public function button_danger(
         string $url = '',

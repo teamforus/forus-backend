@@ -27,7 +27,6 @@ class EmployeeAddedMail extends ImplementationMail
         $authLink = $data['dashboard_auth_link'];
 
         return [
-            'header_icon' => $this->headerIcon('header_image'),
             'download_me_app_link' => $this->makeLink($appLink, 'https://forus.io/DL'),
             'dashboard_auth_link' => $this->makeLink($authLink, 'Ga naar het dashboard'),
             'dashboard_auth_button' => $this->makeButton($authLink, 'Ga naar het dashboard'),

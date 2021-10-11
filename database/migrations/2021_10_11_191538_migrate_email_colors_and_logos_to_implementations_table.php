@@ -2,7 +2,10 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-class CreateGeneralImplementation extends Migration
+/**
+ * @noinspection PhpUnused
+ */
+class MigrateEmailColorsAndLogosToImplementationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -12,14 +15,13 @@ class CreateGeneralImplementation extends Migration
      */
     public function up(): void
     {
-        (new ImplementationsTableSeeder())->run();
+        (new ImplementationsNotificationBrandingSeeder())->run();
     }
 
     /**
      * Reverse the migrations.
      *
      * @return void
-     * @throws Exception
      */
     public function down(): void {}
 }

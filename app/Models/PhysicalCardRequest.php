@@ -22,8 +22,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
- * @property-read Collection|EventLog[] $logs
- * @property-read int|null $logs_count
  * @property-read \App\Models\Voucher $voucher
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newQuery()

@@ -49,7 +49,6 @@ class EmailActivationMail extends ImplementationMail
             'link' => $this->makeLink($data['link'], 'link'),
             'button' => $this->makeButton($data['link'], 'BEVESTIGEN'),
             'platform' => $platform[$data['clientType'] ?? ''] ?? '',
-            'header_image' => $this->headerIconBase64($this->implementationLogo()),
         ];
     }
 }

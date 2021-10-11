@@ -1,6 +1,6 @@
 # E-mailadres bevestigen  
 
-:header_image
+:email_logo
 
 Je krijgt deze e-mail omdat je op :platform je e-mailadres hebt ingevuld. 
 Met deze e-mail willen we controleren of je toegang hebt tot dit e-mailadres.  

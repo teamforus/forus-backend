@@ -1,11 +1,9 @@
 <?php
 
 use Illuminate\Contracts\Auth\Access\Gate;
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use App\Services\Forus\Session\Services\Browser;
-use Illuminate\Support\Facades\Config;
 use App\Models\Implementation;
 use App\Services\Forus\Session\Services\Data\AgentData;
 use Carbon\Carbon;
@@ -203,7 +201,6 @@ if (!function_exists('rule_number_format')) {
     }
 }
 
-
 if (!function_exists('authorize')) {
     /**
      * @param $ability
@@ -268,63 +265,6 @@ if (!function_exists('client_version')) {
      */
     function client_version($default = null) {
         return request()->header('Client-Version', $default);
-    }
-}
-
-if (!function_exists('mail_trans')) {
-    /**
-     * Returns translations based on the current implementation
-     *
-     * @param string $key
-     * @param array $replace
-     * @param string|null $locale
-     * @param string|null $implementation
-     * @return string|array|null
-     */
-    function mail_trans(
-        string $key, array
-        $replace = [],
-        string $locale = null,
-        string $implementation = null
-    ) {
-        $implementation = $implementation ?: Implementation::activeKey();
-
-        switch ($implementation) {
-            case (Lang::has('mails/implementations/' . $implementation . '/' . $key)):
-                return Lang::get('mails/implementations/' . $implementation . '/' . $key, $replace, $locale);
-            case (Lang::has('mails/implementations/general/' . $key)):
-                return Lang::get('mails/implementations/general/' . $key, $replace, $locale);
-            case (Lang::has('mails/implementations/general.' . $key)):
-                return Lang::get('mails/implementations/general.' . $key, $replace, $locale);
-        }
-
-        return trans($key, $replace, $locale);
-    }
-}
-
-if (!function_exists('mail_config')) {
-    /**
-     * Returns mail configs based on the current implementation
-     *
-     * @param string $key
-     * @param string|null $default
-     * @param string|null $implementation
-     * @return string|array|null
-     */
-    function mail_config(string $key, string $default = null, string $implementation = null)
-    {
-        $implementationKey = $implementation ?: Implementation::activeKey();
-        $configKey = "forus.mails.implementations.%s.$key";
-
-        if (Config::has(sprintf($configKey, $implementationKey))) {
-            return Config::get(sprintf($configKey, $implementationKey));
-        }
-
-        if (Config::has(sprintf($configKey, 'general'))) {
-            return Config::get(sprintf($configKey, 'general'));
-        }
-
-        return $default ?: $key;
     }
 }
 

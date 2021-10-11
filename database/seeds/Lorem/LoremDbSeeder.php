@@ -150,7 +150,7 @@ class LoremDbSeeder extends Seeder
         $this->success("✓ Validators created!");
         $this->separator();
 
-        $this->info("⇾ Applying to providers to funds!");
+        $this->info("⇾ Applying providers to funds!");
         $this->applyFunds($baseIdentity);
         $this->success("✓ Providers applied to funds!");
         $this->separator();
@@ -689,7 +689,7 @@ class LoremDbSeeder extends Seeder
         $backofficeConfig = in_array($fund->organization->name, $this->sponsorsWithBackoffice) ?
             $this->getBackofficeConfigs() : [];
 
-        $fund->fund_config()->create(collect([
+        $fund->fund_config()->create(array_merge([
             'implementation_id'     => $implementation->id,
             'key'                   => $key,
             'bunq_sandbox'          => true,
@@ -699,12 +699,11 @@ class LoremDbSeeder extends Seeder
             'hash_bsn'              => $hashBsn,
             'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
             'bunq_key'              => config('forus.seeders.lorem_db_seeder.bunq_key'),
-        ])->merge(collect($fields)->only([
-            'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
-            'csv_primary_key', 'is_configured'
-        ]))->merge($backofficeConfig)->toArray());
+        ], array_only($fields, [
+            'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
+        ]), $backofficeConfig));
 
-        $eligibility_key = sprintf("%s_eligible", $fund->fund_config->key);
+        $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config);
         $criteria = [];
 
         if (!$fund->isAutoValidatingRequests()) {
@@ -948,11 +947,14 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param $implementations
+     * @throws Exception
      */
     public function makeOtherImplementations($implementations): void {
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);
         }
+
+        (new ImplementationsNotificationBrandingSeeder)->run();
     }
 
     /**
