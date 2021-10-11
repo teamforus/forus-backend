@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
+use App\Events\PhysicalCardRequests\PhysicalCardRequestsCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
@@ -9,13 +10,9 @@ use App\Models\PhysicalCardRequest;
 use App\Models\VoucherToken;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Services\Forus\Notification\NotificationService;
-use App\Services\Forus\Identity\Repositories\IdentityRepo;
 
 /**
  * Class PhysicalCardRequestsController
- * @property IdentityRepo $identityRepo
- * @property NotificationService $mailService
  * @package App\Http\Controllers\Api\Platform\Vouchers
  */
 class PhysicalCardRequestsController extends Controller
@@ -25,22 +22,6 @@ class PhysicalCardRequestsController extends Controller
     private $maxAttempts = 3;
     private $decayMinutes = 60 * 24;
 
-    private $mailService;
-    private $recordService;
-
-    /**
-     * PhysicalCardRequestsController constructor.
-     * @param IdentityRepo $identityRepo
-     * @param NotificationService $mailService
-     */
-    public function __construct(
-        IdentityRepo $identityRepo,
-        NotificationService $mailService
-    ) {
-        $this->mailService   = $mailService;
-        $this->identityRepo  = $identityRepo;
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -48,9 +29,8 @@ class PhysicalCardRequestsController extends Controller
      * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(
-        VoucherToken $voucherToken
-    ): AnonymousResourceCollection {
+    public function index(VoucherToken $voucherToken): AnonymousResourceCollection
+    {
         $voucher = $voucherToken->voucher;
 
         $this->authorize('show', $voucher);
@@ -77,24 +57,11 @@ class PhysicalCardRequestsController extends Controller
         $this->authorize('requestPhysicalCard', $voucherToken->voucher);
         $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
-        $fund = $voucherToken->voucher->fund;
-
-        $this->mailService->requestPhysicalCard(
-            $this->identityRepo->getPrimaryEmail($request->auth_address()),
-            $fund->getEmailFrom(), [
-                'postcode'       => $request->input('postcode'),
-                'house_number'   => $request->input('house'),
-                'house_addition' => $request->input('house_addition'),
-                'city'           => $request->input('city'),
-                'street_name'    => $request->input('address'),
-                'fund_name'      => $fund->name,
-                'sponsor_phone'  => $fund->organization->phone,
-                'sponsor_email'  => $fund->organization->email
-            ]);
-
-        $cardRequest = $voucherToken->voucher->physical_card_requests()->create($request->only(
+        $cardRequest = $voucherToken->voucher->makePhysicalCardRequest($request->only([
             'address', 'house', 'house_addition', 'postcode', 'city'
-        ));
+        ]), $request->records_repo()->primaryEmailByAddress($request->auth_address()));
+
+        PhysicalCardRequestsCreated::dispatch($cardRequest);
 
         return new PhysicalCardRequestResource($cardRequest);
     }

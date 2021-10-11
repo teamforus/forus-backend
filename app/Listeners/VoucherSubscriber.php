@@ -112,6 +112,8 @@ class VoucherSubscriber
                 }
             }
         }
+
+        $voucher->reportBackofficeReceived();
     }
 
     /**
@@ -159,6 +161,8 @@ class VoucherSubscriber
         $voucher->assignedVoucherEmail(record_repo()->primaryEmailByAddress(
             $voucher->identity_address
         ));
+
+        $voucher->reportBackofficeReceived();
     }
 
     /**

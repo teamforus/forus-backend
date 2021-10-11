@@ -8,6 +8,11 @@ use Illuminate\Support\ServiceProvider;
 
 class MediaServiceProvider extends ServiceProvider
 {
+    /**
+     * Bootstrap services.
+     *
+     * @return void
+     */
     public function boot()
     {
         $this->loadMigrationsFrom(__DIR__ . '/migrations');

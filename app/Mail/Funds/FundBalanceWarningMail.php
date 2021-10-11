@@ -15,6 +15,7 @@ class FundBalanceWarningMail extends ImplementationMail
     private $fundName;
     private $sponsorName;
     private $notificationAmount;
+    private $transactionCosts;
     private $budgetLeft;
     private $link;
 
@@ -22,6 +23,7 @@ class FundBalanceWarningMail extends ImplementationMail
         string $fund_name,
         string $sponsor_name,
         string $notification_amount,
+        string $transaction_costs,
         string $budget_left,
         string $link,
         ?EmailFrom $emailFrom
@@ -31,6 +33,7 @@ class FundBalanceWarningMail extends ImplementationMail
         $this->fundName = $fund_name;
         $this->sponsorName = $sponsor_name;
         $this->notificationAmount = $notification_amount;
+        $this->transactionCosts = $transaction_costs;
         $this->budgetLeft = $budget_left;
         $this->link = $link;
     }
@@ -43,6 +46,7 @@ class FundBalanceWarningMail extends ImplementationMail
                 'fund_name' => $this->fundName,
                 'sponsor_name' => $this->sponsorName,
                 'notification_amount' => $this->notificationAmount,
+                'transaction_costs'   => $this->transactionCosts,
                 'budget_left' => $this->budgetLeft,
                 'link' => $this->link
             ]);

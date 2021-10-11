@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\Funds\FundArchivedEvent;
 use App\Events\Funds\FundBalanceLowEvent;
 use App\Events\Funds\FundBalanceSuppliedEvent;
 use App\Events\Funds\FundEndedEvent;
@@ -14,6 +15,7 @@ use App\Events\Funds\FundProviderApplied;
 use App\Events\Funds\FundProviderChatMessage;
 use App\Events\Funds\FundProviderChatMessageEvent;
 use App\Events\Funds\FundStartedEvent;
+use App\Events\Funds\FundUnArchivedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Models\Fund;
 use App\Models\FundProvider;
@@ -23,6 +25,7 @@ use App\Notifications\Organizations\FundProviders\FundProviderFundExpiringNotifi
 use App\Notifications\Organizations\FundProviders\FundProviderFundStartedNotification;
 use App\Notifications\Organizations\Funds\BalanceLowNotification;
 use App\Notifications\Organizations\Funds\BalanceSuppliedNotification;
+use App\Notifications\Organizations\Funds\FundArchivedNotification;
 use App\Notifications\Organizations\Funds\FundCreatedNotification;
 use App\Notifications\Organizations\Funds\FundEndedNotification;
 use App\Notifications\Organizations\Funds\FundExpiringNotification;
@@ -32,6 +35,7 @@ use App\Notifications\Organizations\Funds\FundProviderChatMessageNotification;
 use App\Notifications\Organizations\Funds\FundStartedNotification;
 use App\Notifications\Identities\Fund\IdentityRequesterProductAddedNotification;
 use App\Notifications\Identities\Fund\IdentityRequesterProductApprovedNotification;
+use App\Notifications\Organizations\Funds\FundUnArchivedNotification;
 use App\Scopes\Builders\FundProviderQuery;
 use Illuminate\Events\Dispatcher;
 
@@ -283,6 +287,34 @@ class FundSubscriber
     }
 
     /**
+     * @param FundArchivedEvent $event
+     * @noinspection PhpUnused
+     */
+    public function onFundArchived(FundArchivedEvent $event): void
+    {
+        $fund = $event->getFund();
+
+        FundArchivedNotification::send($fund->log(Fund::EVENT_ARCHIVED, [
+            'fund' => $fund,
+            'employee' => $event->getEmployee(),
+        ]));
+    }
+
+    /**
+     * @param FundUnArchivedEvent  $event
+     * @noinspection PhpUnused
+     */
+    public function onFundUnArchived(FundUnArchivedEvent $event): void
+    {
+        $fund = $event->getFund();
+
+        FundUnArchivedNotification::send($fund->log(Fund::EVENT_UNARCHIVED, [
+            'fund' => $fund,
+            'employee' => $event->getEmployee(),
+        ]));
+    }
+
+    /**
      * The events dispatcher
      *
      * @param Dispatcher $events
@@ -303,5 +335,8 @@ class FundSubscriber
         $events->listen(FundProductAddedEvent::class, '\App\Listeners\FundSubscriber@onFundProductAdded');
         $events->listen(FundProductApprovedEvent::class, '\App\Listeners\FundSubscriber@onFundProductApproved');
         $events->listen(FundProductRevokedEvent::class, '\App\Listeners\FundSubscriber@onFundProductRevoked');
+
+        $events->listen(FundArchivedEvent::class, '\App\Listeners\FundSubscriber@onFundArchived');
+        $events->listen(FundUnArchivedEvent::class, '\App\Listeners\FundSubscriber@onFundUnArchived');
     }
 }
