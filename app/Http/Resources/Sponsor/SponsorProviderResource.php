@@ -77,7 +77,7 @@ class SponsorProviderResource extends JsonResource
         $funds = FundQuery::whereHasProviderFilter(
             $sponsorOrganization->funds()->getQuery(),
             $providerOrganization->id
-        )->get();
+        )->where('archived', false)->get();
 
         return $funds->map(function(Fund $fund) use ($providerOrganization) {
             $fundProvider = $providerOrganization->fund_providers->where('fund_id', $fund->id);
