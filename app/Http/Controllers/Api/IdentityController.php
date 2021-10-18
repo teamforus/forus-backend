@@ -47,43 +47,31 @@ class IdentityController extends Controller
     public function store(IdentityStoreRequest $request): JsonResponse
     {
         // client type, key and primary email
-        $clientKey = implementation_key();
-        $clientType = client_type();
         $primaryEmail = $request->input('email', $request->input('records.primary_email'));
 
         // build records list and remove bsn and primary_email
-        $records = collect($request->input('records', []));
-        $records = $records->filter(function($value, $key) {
+        $records = array_filter($request->input('records', []), function($value, $key) {
             return !empty($value) && !in_array($key, ['bsn', 'primary_email']);
-        })->toArray();
+        });
 
         // make identity and exchange_token
         $identityAddress = $request->identity_repo()->makeByEmail($primaryEmail, $records);
         $identityProxy = $request->identity_repo()->makeIdentityPoxy($identityAddress);
         $exchangeToken = $identityProxy['exchange_token'];
-        $isMobile = in_array($clientType, config('forus.clients.mobile'), true);
+        $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
 
-        $queryParams = sprintf("?%s", http_build_query(array_merge(
-            $request->only('target'), [
-                'client_type' => $clientType,
-                'implementation_key' => $clientKey,
-                'is_mobile' => $isMobile ? 1 : 0,
-            ]
-        )));
-
-        // build confirmation link
-        $confirmationLink = url(sprintf(
-            '/api/v1/identity/proxy/confirmation/redirect/%s%s',
-            $exchangeToken,
-            $queryParams
-        ));
+        $queryParams = sprintf("?%s", http_build_query(array_merge($request->only('target'), [
+            'client_type' => $request->client_type(),
+            'implementation_key' => $request->implementation_key(),
+            'is_mobile' => $isMobile ? 1 : 0,
+        ])));
 
         // send confirmation email
         $request->notification_repo()->sendEmailConfirmationLink(
             $primaryEmail,
-            $clientType,
+            $request->client_type(),
             Implementation::emailFrom(),
-            $confirmationLink
+            url("/api/v1/identity/proxy/confirmation/redirect/$exchangeToken$queryParams")
         );
 
         return response()->json(null, 201);
@@ -201,10 +189,9 @@ class IdentityController extends Controller
     public function proxyAuthorizationEmailToken(
         IdentityAuthorizationEmailTokenRequest $request
     ): JsonResponse {
-        // TODO: remove `primary_email` when iOS is ready
-        $email = $request->input($request->has('email') ? 'email' : 'primary_email');
-        $source = sprintf('%s_%s', implementation_key(), client_type());
-        $isMobile = in_array(client_type(), config('forus.clients.mobile'), true);
+        $email = $request->input('email');
+        $source = sprintf('%s_%s', $request->implementation_key(), $request->client_type());
+        $isMobile = in_array($request->client_type(), config('forus.clients.mobile'), true);
 
         $identityId = $request->records_repo()->identityAddressByEmail($email);
         $proxy = $request->identity_repo()->makeAuthorizationEmailProxy($identityId);
@@ -216,8 +203,8 @@ class IdentityController extends Controller
                 'target' => $request->input('target', ''),
                 'is_mobile' => $isMobile ? 1 : 0
             ], $isMobile ? [] : [
-                'client_type' => client_type(),
-                'implementation_key' => implementation_key(),
+                'client_type' => $request->client_type(),
+                'implementation_key' => $request->implementation_key(),
             ]))
         ));
 

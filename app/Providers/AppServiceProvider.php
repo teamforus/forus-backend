@@ -29,6 +29,7 @@ use App\Models\ProductCategory;
 use App\Models\Voucher;
 use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -78,6 +79,10 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         FundProvider::observe(FundProviderObserver::class);
+
+        /*Blade::directive('mail_builder_html', function ($expression) {
+            return $expression;
+        });*/
     }
 
     /**

@@ -45,7 +45,7 @@ foreach (array_keys($emailBody) as $key) {
                     @elseif(array_intersect((array) $emailItem[0], ['separator']))
                         <div style="{{ $emailItem['style'] ?? '' }}"></div>
                     @elseif(array_intersect((array) $emailItem[0], ['markdown']))
-                            <div style="{{ $emailItem['style'] ?? '' }}">{!! $emailItem[1] !!}</div>
+                        <div style="{{ $emailItem['style'] ?? '' }}">{!! $emailItem[1] !!}</div>
                     @endif
                 @endforeach
             @endif

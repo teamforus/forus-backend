@@ -158,14 +158,14 @@ class NotificationService
      *
      * @param string $email
      * @param EmailFrom|null $emailFrom
-     * @param string $link
+     * @param string $auth_link
      * @param string $source
      * @return bool
      */
     public function loginViaEmail(
         string $email,
         ?EmailFrom $emailFrom,
-        string $link,
+        string $auth_link,
         string $source
     ): bool {
         $platform = '';
@@ -185,7 +185,7 @@ class NotificationService
             $platform = 'Me';
         }
 
-        $mailable = new UserLoginMail(compact('link', 'platform', 'time'), $emailFrom);
+        $mailable = new UserLoginMail(compact('auth_link', 'platform', 'time'), $emailFrom);
 
         return $this->sendMail($email, $mailable);
     }

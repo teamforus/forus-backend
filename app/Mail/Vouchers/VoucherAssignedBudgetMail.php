@@ -30,7 +30,7 @@ class VoucherAssignedBudgetMail extends ImplementationMail
         return [
             'qr_token' => $this->makeQrCode($data['qr_token']),
             'webshop_link' => $this->makeLink($data['webshop_link'], 'website'),
-            'webshop_button' => $this->makeLink($data['webshop_button'], 'website'),
+            'webshop_button' => $this->makeLink($data['webshop_link'], 'website'),
         ];
     }
 }

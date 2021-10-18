@@ -9,7 +9,7 @@
 
     $wrapperStyle = "padding: 30px 0; background-color: #F6F5F5; position: relative; background-repeat: no-repeat; background-position: 100% 0;";
     $emailInnerStyle = "position: relative; z-index: 1; width: 650px; margin: auto; max-width: 100%;";
-    $emailBodyStyle  = "padding: 35px 35px 35px; border-bottom: 3px solid #dfe4ec; position: relative; border: 1px solid #efefef; background-color: #fff; border-radius: 8px;";
+    $emailBodyStyle  = "padding: 35px 35px 35px; border-bottom: 3px solid #dfe4ec; position: relative; border: 1px solid #efefef; background-color: #FFFFFF; border-radius: 8px;";
     $emailFooterStyle = "color: #9397A3; font: 400 12px/20px $baseFont $textCenter padding: 10px 5px 10px; cursor: default;";
     $emailFooterLinkStyle = "color: $colorPrimary; text-decoration: underline; font: inherit;";
 
@@ -25,10 +25,10 @@
     $linkBlockStyle = "margin: 0 0 15px;";
     $linkStyle = "font: 400 16px/28px $baseFont color: #383D45; cursor: pointer; color: $colorPrimary; text-decoration: underline;";
 
-    $btnStyle = "display: inline-block; padding: 5px 75px; font: 600 14px/40px $baseFont color: #fff; border-radius: 3px; text-decoration: none;";
-    $btnDangerStyle = $btnStyle . "background-color: #bc2527;";
-    $btnSuccessStyle = $btnStyle . "background-color: #74c86b;";
-    $btnPrimaryStyle = $btnStyle . "background-color: $colorPrimary;";
+    $btnStyle = "display: inline-block; padding: 5px 75px; font: 600 14px/40px $baseFont color: #FFFFFF; border-radius: 3px; text-decoration: none;";
+    $btnDangerStyle = $btnStyle . " background-color: #bc2527;";
+    $btnSuccessStyle = $btnStyle . " background-color: #74c86b;";
+    $btnPrimaryStyle = $btnStyle . " background-color: $colorPrimary;";
 
     $sectionStyle = "margin: 0 0 10px;";
     $ellipsisStyle = "display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";

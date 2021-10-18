@@ -68,7 +68,7 @@ class ImplementationMail extends Mailable
         }
 
         try {
-            $logo = $this->headerIconBase64($this->implementationLogo());
+            $logo = $this->headerIconImage($this->implementationLogoUrl());
         } catch (\Exception $exception) {}
 
         return array_merge($this->dataKeys === false ? [] : $this->mailData, [
@@ -233,20 +233,19 @@ class ImplementationMail extends Mailable
      */
     protected function makeQrCode(string $content, int $size = 300): string
     {
-        $data = make_qr_code('voucher', $content ?? '', $size);
-        $base64 = 'data:image/png;base64,' . base64_encode($data);
+        $embed = 'embed:App\Mail\Models\EmbedQrCode:voucher-' . $content;
         $style = "display: block; margin: 0 auto; width: {$size}px;";
 
-        return "<img style=\"$style\" src=\"$base64\" alt=\"\">";
+        return '<img style="' . $style . '" src="' . $embed . '" alt="" data-auto-embed>';
     }
 
     /**
-     * @param string $base64
+     * @param string $url
      * @return string
      */
-    protected function headerIconBase64(string $base64): string
+    protected function headerIconImage(string $url): string
     {
-        return '<img src="' . $base64 . '" style="width: 300px; display: block; margin: 0 auto;">';
+        return '<img src="' . $url . '" style="width: 300px; display: block; margin: 0 auto;" data-auto-embed>';
     }
 
     /**
@@ -258,19 +257,13 @@ class ImplementationMail extends Mailable
     }
 
     /**
-     * @param bool $asBase64
      * @return string
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    protected function implementationLogo(bool $asBase64 = true): string
+    protected function implementationLogoUrl(): string
     {
         $generalLogo = Implementation::general()->email_logo;
         $implementationLogo = Implementation::byKey($this->implementationKey())->email_logo;
         $emailLogo = $implementationLogo ?: $generalLogo;
-
-        if ($asBase64) {
-            return 'data:image/jpg;base64,' . base64_encode($emailLogo->getContent('large'));
-        }
 
         return $emailLogo->urlPublic('large');
     }

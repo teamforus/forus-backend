@@ -11,17 +11,6 @@ use App\Models\FundProvider;
 class FundProviderObserver
 {
     /**
-     * Handle the fund provider "created" event.
-     *
-     * @param  \App\Models\FundProvider  $fundProvider
-     * @return void
-     */
-    public function created(FundProvider $fundProvider)
-    {
-        //
-    }
-
-    /**
      * Handle the fund provider "updated" event.
      *
      * @param  \App\Models\FundProvider  $fundProvider

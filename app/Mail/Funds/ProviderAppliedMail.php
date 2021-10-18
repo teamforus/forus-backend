@@ -14,6 +14,14 @@ class ProviderAppliedMail extends ImplementationMail
     protected $notificationTemplateKey = "notifications_funds.provider_applied";
 
     /**
+     * @return Mailable
+     */
+    public function build(): Mailable
+    {
+        return $this->buildNotificationTemplatedMail();
+    }
+
+    /**
      * @param array $data
      * @return array
      */
@@ -25,13 +33,5 @@ class ProviderAppliedMail extends ImplementationMail
             'sponsor_dashboard_link' => $this->makeLink($link, $link),
             'sponsor_dashboard_button' => $this->makeButton($link, 'Ga naar de beheeromgeving'),
         ];
-    }
-
-    /**
-     * @return Mailable
-     */
-    public function build(): Mailable
-    {
-        return $this->buildNotificationTemplatedMail();
     }
 }

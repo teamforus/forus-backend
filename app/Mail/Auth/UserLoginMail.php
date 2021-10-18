@@ -29,7 +29,7 @@ class UserLoginMail extends ImplementationMail
     {
         return [
             'time'          => strftime('%e %B %H:%M', strtotime("+1 hours")),
-            'auth_button'   => $this->makeButton($data['link'], 'INLOGGEN'),
+            'auth_button'   => $this->makeButton($data['auth_link'], 'INLOGGEN'),
         ];
     }
 }
