@@ -1,6 +1,6 @@
-# Uw aanvraag voor :fund_name is goedgekeurd.
+# Uw aanvraag voor :fund_name is goedgekeurd
 
-Beste inwoner
+Beste inwoner,
 
 Uw aanvraag voor :fund_name is goedgekeurd. 
 Activeer uw digitale tegoed door :webshop_link te klikken of de knop hieronder.

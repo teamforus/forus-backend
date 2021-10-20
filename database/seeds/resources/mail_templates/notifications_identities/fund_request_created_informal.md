@@ -1,6 +1,6 @@
-# Je :fund_name aanvraag is ontvangen.
+# Je :fund_name aanvraag is ontvangen
 
-Beste inwoner
+Beste inwoner,
 &nbsp;
 
 :sponsor_name heeft je :fund_name aanvraag ontvangen. 

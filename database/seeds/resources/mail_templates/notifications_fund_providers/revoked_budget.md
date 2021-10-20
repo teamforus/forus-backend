@@ -1,6 +1,6 @@
 # Afgewezen als aanbieder
 
-Beste :provider_name
+Beste :provider_name,
 &nbsp;  
 
 Onlangs heeft u zich aangemeld voor :fund_name.

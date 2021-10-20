@@ -1,6 +1,6 @@
 # Hierbij ontvang je jouw :product_name
 
-Beste gebruiker
+Beste gebruiker,
 
 Alstublieft, :sponsor_name heeft een :product_name van :provider_name aan u toegekend.
 &nbsp;

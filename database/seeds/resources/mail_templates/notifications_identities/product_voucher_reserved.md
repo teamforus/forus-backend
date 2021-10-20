@@ -1,6 +1,6 @@
 # Aanbieding bij :provider_name gereserveerd!
 
-Beste gebruiker
+Beste gebruiker,
 &nbsp;  
 
 Deze mail ontvangt u na aanleiding van dat er een aanbieding bij :provider_name is gereserveerd.

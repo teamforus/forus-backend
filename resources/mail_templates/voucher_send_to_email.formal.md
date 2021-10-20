@@ -1,6 +1,6 @@
 # Hierbij ontvangt u uw :fund_name
 
-Beste gebruiker  
+Beste gebruiker,  
 
 Hierbij ontvangt u uw :voucher_product_or_fund_name QR-code per e-mail.  
 Onderstaande QR-code laat u bij de aanbieder zien.  

@@ -1,6 +1,6 @@
 # Hierbij ontvangt u uw :fund_name
 
-Beste gebruiker
+Beste gebruiker,
 
 Alstublieft, hier is uw :fund_name! Uw aanvraag is goedgekeurd.
 &nbsp;  

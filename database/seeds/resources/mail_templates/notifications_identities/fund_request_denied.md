@@ -1,4 +1,4 @@
-# Uw aanvraag voor :fund_name is afgehandeld.
+# Uw aanvraag voor :fund_name is afgehandeld
 
 Beste inwoner,
 &nbsp;  

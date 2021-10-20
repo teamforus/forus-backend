@@ -3,7 +3,7 @@
 Uw aanmelding is geaccepteerd!
 &nbsp;  
 
-Beste :provider_name
+Beste :provider_name,
 &nbsp;
 
 Kort geleden heeft u zich aangemeld voor ':fund_name'.

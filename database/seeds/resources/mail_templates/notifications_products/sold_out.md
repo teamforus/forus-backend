@@ -1,6 +1,6 @@
 # Uitverkocht: aanbod :product_name
 
-Beste gebruiker
+Beste gebruiker,
 
 Uw totale aanbod in de webshop voor ':product_name' is uitverkocht.
 U kunt nu het aanbod aanvullen of verwijderen. Als u het aanbod verwijderd kunt u daarna een nieuw aanbod plaatsen.

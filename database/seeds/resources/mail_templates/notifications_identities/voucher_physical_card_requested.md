@@ -1,6 +1,6 @@
 # Je pas is onderweg
 
-Beste inwoner
+Beste inwoner,
 
 Een bericht over je :fund_name bestelling. Je hebt zojuist een pas besteld.  
 De pas ontvang je binnen 10 werkdagen op dit adres:

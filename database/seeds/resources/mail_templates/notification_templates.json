@@ -154,8 +154,8 @@
 
     "notifications_identities.fund_request_created": {
         "mail": {
-            "title": "Uw :fund_name aanvraag is ontvangen.",
-            "title_informal": "Je :fund_name aanvraag is ontvangen.",
+            "title": "Uw :fund_name aanvraag is ontvangen",
+            "title_informal": "Je :fund_name aanvraag is ontvangen",
             "template": "notifications_identities/fund_request_created.md",
             "template_informal": "notifications_identities/fund_request_created_informal.md"
         },

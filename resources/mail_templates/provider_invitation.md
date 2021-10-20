@@ -1,6 +1,6 @@
 # U wordt uitgenodigd voor :fund_name
 
-Beste :provider_name  
+Beste :provider_name,  
 
 U krijgt deze e-mail omdat uw organisatie aangemeld is voor ":from_fund_name". Vanaf :fund_start_date gaat :sponsor_name de nieuwe regeling ":fund_name" uitgeven.  
 

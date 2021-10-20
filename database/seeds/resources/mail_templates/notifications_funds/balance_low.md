@@ -1,6 +1,6 @@
 # Het budget ':fund_name' fonds heeft de ingestelde aanvul-herinneringsgrens overschreden.
 
-Beste :sponsor_name
+Beste :sponsor_name,
 &nbsp;  
 &nbsp;  
 
