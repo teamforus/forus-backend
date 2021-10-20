@@ -874,13 +874,15 @@ class Voucher extends Model
      * @param Product $product
      * @param Employee|null $employee
      * @param string|null $note
+     * @param array $user_data
      * @return ProductReservation
      * @throws \Exception
      */
     public function reserveProduct(
         Product $product,
         ?Employee $employee = null,
-        string $note = null
+        string $note = null,
+        array $user_data
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $isSubsidy ? $product->getSubsidyDetailsForFund($this->fund) : null;
@@ -895,7 +897,10 @@ class Voucher extends Model
             'product_id'                => $product->id,
             'employee_id'               => $employee ? $employee->id : null,
             'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
-            'expire_at'                 => $this->calcExpireDateForProduct($product)
+            'expire_at'                 => $this->calcExpireDateForProduct($product),
+            'first_name'                => $user_data['first_name'],
+            'last_name'                 => $user_data['last_name'],
+            'user_note'                 => $user_data['user_note'],
         ], $product->only('price', 'price_type', 'price_discount')));
 
         $reservation->makeVoucher();

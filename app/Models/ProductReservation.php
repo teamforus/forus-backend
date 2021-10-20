@@ -28,6 +28,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $price_type
  * @property string $state
  * @property string|null $note
+ * @property string|null $first_name
+ * @property string|null $last_name
+ * @property string|null $user_note
  * @property \Illuminate\Support\Carbon|null $accepted_at
  * @property \Illuminate\Support\Carbon|null $canceled_at
  * @property \Illuminate\Support\Carbon|null $rejected_at
@@ -117,6 +120,7 @@ class ProductReservation extends Model
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
+        'first_name', 'last_name', 'user_note',
     ];
 
     /**
