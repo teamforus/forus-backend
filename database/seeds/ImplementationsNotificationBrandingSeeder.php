@@ -27,7 +27,7 @@ class ImplementationsNotificationBrandingSeeder extends Seeder
 
         $this->migrateImplementation(
             'groningen',
-            '#F6F5F5',
+            '#E60103',
             database_path('/seeds/resources/mail_assets/groningen-logo.jpg')
         );
     }
