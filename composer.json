@@ -9,6 +9,7 @@
         "ext-bcmath": "*",
         "ext-curl": "*",
         "ext-fileinfo": "*",
+        "ext-gd": "*",
         "ext-json": "*",
         "ext-openssl": "*",
         "ext-zip": "*",
@@ -32,6 +33,7 @@
         "laravel/framework": "6.20.*",
         "laravel/helpers": "^1.2",
         "laravel/tinker": "^1.0",
+        "league/commonmark": "^1.6",
         "league/flysystem-aws-s3-v3": "^1.0",
         "maatwebsite/excel": "^3.1",
         "philkra/elastic-apm-laravel": "^6.0",
@@ -39,6 +41,7 @@
         "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "^2.0",
         "twilio/sdk": "^6.8.0",
+        "webuni/commonmark-table-extension": "^2.1",
         "whichbrowser/parser": "^2.0.42",
         "zoon/commonmark-ext-youtube-iframe": "^1.1"
     },
