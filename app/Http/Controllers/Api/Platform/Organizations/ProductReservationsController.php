@@ -14,7 +14,9 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Scopes\Builders\ProductReservationQuery;
+use App\Scopes\Builders\VoucherQuery;
 use App\Searches\ProductReservationsSearch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -38,12 +40,19 @@ class ProductReservationsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [ProductReservation::class, $organization]);
 
+        $query = ProductReservation::where(function(Builder $builder) {
+            $builder->where('state', '!=', ProductReservation::STATE_PENDING);
+            $builder->orWhere(function(Builder $builder) {
+                $builder->where('state', ProductReservation::STATE_PENDING);
+                $builder->whereHas('voucher', function(Builder $builder) {
+                    VoucherQuery::whereNotExpiredAndActive($builder);
+                });
+            });
+        });
+
         $search = new ProductReservationsSearch($request->only([
             'q', 'state', 'from', 'to', 'organization_id', 'product_id', 'fund_id',
-        ]), ProductReservationQuery::whereProviderFilter(
-            ProductReservation::query(),
-            $organization->id
-        ));
+        ]), ProductReservationQuery::whereProviderFilter($query, $organization->id));
 
         return ProductReservationResource::collection($search->query()->with(
             ProductReservationResource::load()

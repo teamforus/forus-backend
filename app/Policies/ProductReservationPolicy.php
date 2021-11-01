@@ -135,7 +135,7 @@ class ProductReservationPolicy
      * @param \App\Models\ProductReservation $productReservation
      * @param Organization $organization
      * @noinspection PhpUnused
-     * @return mixed
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function acceptProvider(
         string $identity_address,
@@ -144,6 +144,14 @@ class ProductReservationPolicy
     ) {
         if (!$this->updateProvider($identity_address, $productReservation, $organization)) {
             return false;
+        }
+
+        if (!$productReservation->voucher->activated) {
+            return $this->deny('The voucher used to make the reservation, is not active.');
+        }
+
+        if ($productReservation->voucher->expired) {
+            return $this->deny('The voucher used to make the reservation, has expired.');
         }
 
         if (!$productReservation->isPending()) {
@@ -171,13 +179,21 @@ class ProductReservationPolicy
      * @param \App\Models\ProductReservation $productReservation
      * @param Organization $organization
      * @noinspection PhpUnused
-     * @return bool
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function rejectProvider(
         string $identity_address,
         ProductReservation $productReservation,
         Organization $organization
-    ): bool {
+    ) {
+        if (!$productReservation->voucher->activated && !$productReservation->isAccepted()) {
+            return $this->deny('The voucher used to make the reservation, is not active.');
+        }
+
+        if ($productReservation->voucher->expired && !$productReservation->isAccepted()) {
+            return $this->deny('The voucher used to make the reservation, has expired.');
+        }
+
         return $this->updateProvider($identity_address, $productReservation, $organization) &&
             $productReservation->isCancelableByProvider();
     }
