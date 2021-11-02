@@ -60,6 +60,7 @@ class UpdateFundRequest extends FormRequest
         return array_merge([
             'name'                      => 'required|between:2,200',
             'description'               => 'nullable|string|max:140',
+            'description_long'          => 'nullable|string|max:4000',
             'notification_amount'       => 'nullable|numeric',
         ], [
             'auto_requests_validation'  => 'nullable|boolean',

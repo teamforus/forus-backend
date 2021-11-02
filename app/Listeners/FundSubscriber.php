@@ -64,6 +64,7 @@ class FundSubscriber
 
         $fund->update([
             'description_text' => $fund->descriptionToText(),
+            'description_long_text' => $fund->descriptionLongToText(),
         ]);
 
         FundCreatedNotification::send($fund->log(Fund::EVENT_CREATED, [
@@ -90,6 +91,7 @@ class FundSubscriber
 
         $fund->update([
             'description_text' => $fund->descriptionToText(),
+            'description_long_text' => $fund->descriptionLongToText(),
         ]);
     }
 

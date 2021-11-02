@@ -56,6 +56,7 @@ class StoreFundRequest extends FormRequest
             'name'                          => 'required|between:2,200',
             'type'                          => ['required', Rule::in(Fund::TYPES)],
             'description'                   => 'nullable|string|max:140',
+            'description_long'              => 'nullable|string|max:4000',
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
