@@ -6,6 +6,7 @@ use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Intervention\Image\Constraint;
+use Intervention\Image\Facades\Image;
 
 class MediaImagePreset extends \App\Services\MediaService\MediaPreset
 {
@@ -161,7 +162,7 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
         } else {
             $format = $this->format ?: $media->ext;
             $outPath = $this->makeUniquePath($storage, $storagePath, $format);
-            $image = \Image::make(file_get_contents($sourcePath))->backup();
+            $image = Image::make(file_get_contents($sourcePath))->backup();
 
             $width = $this->upscale ? $this->width : min($this->width, $image->width());
             $height = $this->upscale ? $this->height : min($this->height, $image->height());
@@ -175,16 +176,14 @@ class MediaImagePreset extends \App\Services\MediaService\MediaPreset
             }
 
             if ($format !== 'png' || !$this->allow_transparency) {
-                $image = \Image::canvas(
+                $image = Image::canvas(
                     $image->width(),
                     $image->height(),
                     $this->transparent_bg_color
                 )->insert($image)->backup();
             }
 
-            $storage->put($outPath, $image->encode(
-                $format, $this->quality
-            )->encoded, 'public');
+            $storage->put($outPath, $image->encode($format, $this->quality)->encoded, 'public');
 
             $image->reset();
         }

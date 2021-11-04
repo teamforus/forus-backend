@@ -306,10 +306,10 @@ class FundSubscriber
         $fund = $event->getFund();
         $product = $event->getProduct();
 
-        $eventLog = $fund->log($fund::EVENT_PRODUCT_APPROVED, $this->getFundLogModels($fund), [
+        $eventLog = $fund->log($fund::EVENT_PRODUCT_APPROVED, $this->getFundLogModels($fund, [
             'product' => $product,
             'provider' => $product->organization,
-        ]);
+        ]));
 
         IdentityRequesterProductApprovedNotification::send($eventLog);
     }

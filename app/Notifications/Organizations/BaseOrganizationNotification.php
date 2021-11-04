@@ -47,9 +47,9 @@ abstract class BaseOrganizationNotification extends BaseNotification
      */
     public static function eligibleIdentities($loggable): Collection
     {
-        $employeeAddresses = static::getOrganization($loggable)->employeesWithPermissions(
+        $employeeAddresses = static::getOrganization($loggable)->employeesWithPermissionsQuery(
             self::getPermissions()
-        )->pluck('identity_address')->toArray();
+        )->select('employees.identity_address')->distinct()->getQuery();
 
         return Identity::whereIn('address', $employeeAddresses)->get();
     }

@@ -38,6 +38,11 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_funds.balance_low" => ["database", "mail"],
         "notifications_funds.balance_supplied" => ["database"],
 
+        'notifications_identities.requester_fund_ended' => ['database'],
+        'notifications_identities.requester_product_added' => ['database'],
+        'notifications_identities.requester_product_approved' => ['database'],
+        'notifications_identities.requester_product_revoked' => ['database'],
+
         "notifications_identities.product_reservation_created" => ["database"],
         "notifications_identities.product_reservation_accepted" => ["database"],
         "notifications_identities.product_reservation_canceled" => ["database"],
@@ -249,7 +254,7 @@ class SystemNotificationsTableSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         foreach ($this->systemNotifications as $key => $notificationChannels) {
             $group = array_reduce(array_keys($this->notificationGroups), function($value, $groupKey) use ($key) {
