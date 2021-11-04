@@ -44,7 +44,7 @@ return [
     'extensions' => [
         \App\Libs\Markdown\Extensions\Youtube\YouTubeIframeExtension::class,
         \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension::class,
-        \League\CommonMark\Ext\Table\TableExtension::class
+        \League\CommonMark\Extension\Table\TableExtension::class,
     ],
 
     /*
