@@ -48,7 +48,7 @@ use Carbon\Carbon;
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
- * @property string|null $description_long
+ * @property string|null $description_short
  * @property string $type
  * @property string $state
  * @property bool $archived
@@ -101,8 +101,6 @@ use Carbon\Carbon;
  * @property-read float $budget_used
  * @property-read float $budget_validated
  * @property-read string $description_html
- * @property-read string $description_long_html
- * @property-read string $description_long_text
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -144,7 +142,6 @@ use Carbon\Carbon;
  * @property-read int|null $vouchers_count
  * @method static Builder|Fund newModelQuery()
  * @method static Builder|Fund newQuery()
- * @method static \Illuminate\Database\Query\Builder|Fund onlyTrashed()
  * @method static Builder|Fund query()
  * @method static Builder|Fund whereArchived($value)
  * @method static Builder|Fund whereAutoRequestsValidation($value)
@@ -152,6 +149,7 @@ use Carbon\Carbon;
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
  * @method static Builder|Fund whereDescription($value)
+ * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
  * @method static Builder|Fund whereId($value)
@@ -218,7 +216,7 @@ class Fund extends Model
         'organization_id', 'state', 'name', 'description', 'description_text', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
-        'criteria_editable_after_start', 'type', 'archived', 'description_long', 'description_long_text'
+        'criteria_editable_after_start', 'type', 'archived', 'description_short',
     ];
 
     protected $hidden = [
@@ -339,33 +337,6 @@ class Fund extends Model
         return $this->hasMany(FundProvider::class)->where([
             'allow_products' => true
         ]);
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function getDescriptionLongHtmlAttribute(): string
-    {
-        return $this->descriptionLongToHtml();
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function descriptionLongToHtml(): string
-    {
-        return resolve('markdown')->convertToHtml(e($this->description_long));
-    }
-
-    /**
-     * @return string
-     * @noinspection PhpUnused
-     */
-    public function descriptionLongToText(): string
-    {
-        return trim(preg_replace('/\s+/', ' ', e(strip_tags($this->descriptionLongToHtml()))));
     }
 
     /**

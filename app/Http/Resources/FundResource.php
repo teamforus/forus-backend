@@ -32,8 +32,8 @@ class FundResource extends Resource
         $generatorData  = $this->getVoucherGeneratorData($fund);
 
         $data = array_merge($fund->only([
-            'id', 'name', 'description', 'description_long_html', 'organization_id', 'state', 'notification_amount',
-            'tags', 'type', 'archived',
+            'id', 'name', 'description', 'description_html', 'description_short',
+            'organization_id', 'state', 'notification_amount', 'tags', 'type', 'archived',
         ]), [
             'key' => $fund->fund_config->key ?? '',
             'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
