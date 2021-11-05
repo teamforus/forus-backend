@@ -46,8 +46,8 @@ return [
         ],
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
-        'resolved_at' => 'Opgelost datum',
-        'lead_time'   => 'Doorlooptijd (dagen)',
+        'resolved_at' => 'Oplosdatum',
+        'lead_time'   => 'Doorlooptijd (dagen) ',
     ],    
 
     'voucher_transactions'    => [
