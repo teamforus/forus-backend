@@ -22,6 +22,9 @@ use Illuminate\Http\Request;
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $resolved_at
+ * @property int|null $resolve_time_days
+ * @property int|null $resolve_time_sec
  * @property-read Collection|\App\Models\FundRequestClarification[] $clarifications
  * @property-read int|null $clarifications_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $clarifications_answered
@@ -75,8 +78,34 @@ class FundRequest extends Model
     ];
 
     protected $fillable = [
-        'fund_id', 'identity_address', 'employee_id', 'note', 'state',
+        'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at'
     ];
+
+    protected $dates = [
+        'resolved_at'
+    ];
+
+    /**
+     * @return int|null
+     */
+    public function getResolveTimeDaysAttribute() {
+        if (!$this->resolved_at) {
+            return null;
+        }
+
+        return $this->resolved_at->diffInDays($this->created_at);
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getResolveTimeSecAttribute() {
+        if (!$this->resolved_at) {
+            return null;
+        }
+
+        return $this->resolved_at->diffInSeconds($this->created_at);
+    }
 
     /**
      * @param \Illuminate\Http\Request $request
@@ -305,7 +334,12 @@ class FundRequest extends Model
             $state = $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;
         }
 
-        $this->update(compact('state'));
+        $resolved_at = null;
+        if ($state = self::STATE_APPROVED || $state == self::STATE_DECLINED) {
+            $resolved_at = now();
+        }
+
+        $this->update(compact('state', 'resolved_at'));
 
         if (($oldState !== $this->state) && ($this->state !== 'pending')) {
             FundRequestResolved::dispatch($this);
@@ -397,6 +431,8 @@ class FundRequest extends Model
                         return $recordRepo->primaryEmailByAddress($employee->identity_address);
                     })->unique()->join(', ') : null,
                 trans("$transKey.created_at") => $fundRequest->created_at,
+                trans("$transKey.resolved_at") => $fundRequest->resolved_at,
+                trans("$transKey.lead_time") => $fundRequest->resolve_time_days
             ];
         })->values();
     }

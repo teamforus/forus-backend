@@ -53,6 +53,9 @@ class ValidatorFundRequestResource extends Resource
             'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
+            'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
+            'resolve_interval_days' => $this->resource->resolve_time_days,
+            'resolve_interval_sec'  => $this->resource->resolve_time_sec,
             'records' => $this->getRecordsData($request, $fundRequest),
         ]);
     }
