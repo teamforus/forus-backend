@@ -39,6 +39,11 @@ return [
         'bsn' => 'Burgerservicenummer',
         'fund_name' => 'Fondsnaam',
         'status' => 'Status',
+        'state-values' => [
+            'pending' => 'Wachtend',
+            'declined' => 'Geweigerd',
+            'approved' => 'Geaccepteerd',
+        ],
         'validator' => 'Validator',
         'created_at' => 'Indien datum',
         'resolved_at' => 'Opgelost datum',

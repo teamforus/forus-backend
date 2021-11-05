@@ -423,7 +423,7 @@ class FundRequest extends Model
                     $fundRequest->identity_address
                 ),
                 trans("$transKey.fund_name") => $fundRequest->fund->name,
-                trans("$transKey.status") => $fundRequest->state,
+                trans("$transKey.status") => trans("$transKey.state-values.$fundRequest->state"),
                 trans("$transKey.validator") => $fundRequest->records->filter()->pluck('employee')->count() > 0 ?
                     $fundRequest->records->pluck('employee')->filter()->map(static function(
                         Employee $employee
