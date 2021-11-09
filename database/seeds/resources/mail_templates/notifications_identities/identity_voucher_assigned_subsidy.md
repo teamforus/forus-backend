@@ -1,6 +1,6 @@
 # Hierbij ontvangt u uw :fund_name
 
-Beste gebruiker,
+Beste deelnemer,
 
 Alstublieft, hier is uw :fund_name! Uw aanvraag is goedgekeurd.
 &nbsp;  
@@ -20,7 +20,7 @@ Het tegoed wordt automatisch afgeschreven.
 &nbsp;  
 
 De afschrijvingen en resterende tegoeden kunt u altijd inzien door in te loggen op de :link_webshop.
-&nbsp;  
+&nbsp;
 
 Heeft u vragen? Stuur dan een e-mail naar :sponsor_email of bel naar :sponsor_phone.
 &nbsp;
