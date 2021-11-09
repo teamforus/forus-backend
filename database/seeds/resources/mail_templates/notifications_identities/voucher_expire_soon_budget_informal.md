@@ -18,7 +18,6 @@ Lukt het niet om in te loggen? Neem dan contact op met:
 :sponsor_phone  
 :sponsor_email
 
-We hopen u hiermee voldoende te hebben geïnformeerd.
 &nbsp;  
 
 Met vriendelijke groet  
