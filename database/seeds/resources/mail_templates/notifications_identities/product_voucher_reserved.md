@@ -3,7 +3,7 @@
 Beste gebruiker,
 &nbsp;  
 
-Deze mail ontvangt u na aanleiding van dat er een aanbieding bij :provider_name is gereserveerd.
+Deze mail ontvangt omdat er een aanbieding bij :provider_name is gereserveerd.
 &nbsp;  
 
 #### :product_name
@@ -11,7 +11,6 @@ Deze mail ontvangt u na aanleiding van dat er een aanbieding bij :provider_name 
 
 :qr_token
 &nbsp;  
-
 
 De reservering heeft een waarde van :product_price_locale en is geldig tot en met :voucher_expire_date_locale.
 Wanneer de reservering is verlopen kunt u deze annuleren in de webshop.
