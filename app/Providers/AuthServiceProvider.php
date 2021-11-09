@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\BunqMeTab;
 use App\Models\Employee;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
@@ -20,7 +19,6 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Policies\BunqMeTabPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
 use App\Policies\FundProviderChatMessagePolicy;
@@ -69,7 +67,6 @@ class AuthServiceProvider extends ServiceProvider
         Product::class                  => ProductPolicy::class,
         Voucher::class                  => VoucherPolicy::class,
         Employee::class                 => EmployeePolicy::class,
-        BunqMeTab::class                => BunqMeTabPolicy::class,
         FundRequest::class              => FundRequestPolicy::class,
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,

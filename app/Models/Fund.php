@@ -65,10 +65,6 @@ use Carbon\Carbon;
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
- * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
- * @property-read int|null $bunq_me_tabs_count
- * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
- * @property-read int|null $bunq_me_tabs_paid_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -476,10 +472,7 @@ class Fund extends Model
      */
     public function getBudgetTotalAttribute(): float
     {
-        return round(array_sum([
-            $this->top_up_transactions->sum('amount'),
-            $this->bunq_me_tabs_paid->sum('amount')
-        ]), 2);
+        return round($this->top_up_transactions->sum('amount'), 2);
     }
 
     /**
@@ -696,26 +689,6 @@ class Fund extends Model
             'fund_id',
             'id'
         );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
-    public function bunq_me_tabs(): HasMany
-    {
-        return $this->hasMany(BunqMeTab::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
-    public function bunq_me_tabs_paid(): HasMany
-    {
-        return $this->hasMany(BunqMeTab::class)->where([
-            'status' => 'PAID'
-        ]);
     }
 
     /**
@@ -1143,41 +1116,6 @@ class Fund extends Model
                 }
             }
         }
-    }
-
-    /**
-     * @param float $amount
-     * @param string $description
-     * @param string|null $issuer
-     * @return \Illuminate\Database\Eloquent\Model|BunqMeTab
-     * @throws \Exception
-     */
-    public function makeBunqMeTab(
-        float $amount,
-        string $description = '',
-        string $issuer = null
-    ): BunqMeTab {
-        $tabRequest = $this->getBunq()->makeBunqMeTabRequest($amount, $description);
-        $bunqMeTab = $tabRequest->getBunqMeTab();
-        $amountInquired = $bunqMeTab->getBunqmeTabEntry()->getAmountInquired();
-        $description = $bunqMeTab->getBunqmeTabEntry()->getDescription();
-        $issuer_auth_url = null;
-
-        if ($issuer && env('BUNQ_IDEAL_USE_ISSUERS', true)) {
-            $request = $tabRequest->makeIdealIssuerRequest($issuer);
-            $issuer_auth_url = $request ? $request->getUrl() : null;
-        }
-
-        return $this->bunq_me_tabs()->create([
-            'bunq_me_tab_id'            => $bunqMeTab->getId(),
-            'status'                    => $bunqMeTab->getStatus(),
-            'monetary_account_id'       => $bunqMeTab->getMonetaryAccountId(),
-            'amount'                    => $amountInquired->getValue(),
-            'description'               => $description,
-            'uuid'                      => $tabRequest->getUuid(),
-            'share_url'                 => $tabRequest->getShareUrl(),
-            'issuer_authentication_url' => $issuer_auth_url,
-        ]);
     }
 
     /**

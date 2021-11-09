@@ -142,17 +142,6 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->resource(
-        'organizations.funds.bunq-transactions',
-        "Api\Platform\Organizations\Funds\BunqMeTabsController", [
-        'only' => [
-            'index', 'show'
-        ],
-        'parameters' => [
-            'bunq-transactions' => 'bunq_me_tab_paid'
-        ]
-    ]);
-
-    $router->resource(
         'organizations.funds.transactions',
         "Api\Platform\Organizations\Funds\TransactionsController", [
         'only' => [

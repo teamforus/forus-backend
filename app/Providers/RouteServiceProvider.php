@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\BunqMeTab;
 use App\Models\Fund;
 use App\Models\Employee;
 use App\Models\FundProvider;
@@ -48,13 +47,6 @@ class RouteServiceProvider extends ServiceProvider
         parent::boot();
 
         $router = app()->make('router');
-
-        $router->bind('bunq_me_tab_paid', static function ($value) {
-            return BunqMeTab::query()->where([
-                    'status' => 'PAID',
-                    'id' => $value,
-                ])->first() ?? abort(404);
-        });
 
         $router->bind('prevalidation_uid', static function ($value) {
             return Prevalidation::query()->where([

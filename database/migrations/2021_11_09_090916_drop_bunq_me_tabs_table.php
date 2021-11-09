@@ -1,10 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-class CreateBunqMeTabsTable extends Migration
+/**
+ * @noinspection PhpUnused
+ */
+class DropBunqMeTabsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -12,6 +15,16 @@ class CreateBunqMeTabsTable extends Migration
      * @return void
      */
     public function up(): void
+    {
+        Schema::dropIfExists('bunq_me_tabs');
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
     {
         Schema::create('bunq_me_tabs', function (Blueprint $table) {
             $table->increments('id');
@@ -31,15 +44,5 @@ class CreateBunqMeTabsTable extends Migration
                 ->references('id')->on('funds')
                 ->onDelete('cascade');
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('bunq_me_tabs');
     }
 }
