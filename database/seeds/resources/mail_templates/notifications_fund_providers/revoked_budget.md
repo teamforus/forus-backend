@@ -3,7 +3,7 @@
 Beste :provider_name,
 &nbsp;  
 
-Onlangs heeft u zich aangemeld voor :fund_name.
+Onlangs heeft u zich aangemeld als aanbieder voor :fund_name.
 
 :sponsor_name heeft uw aanmelding beoordeeld en heeft besloten dat u niet in aanmerking komt voor :fund_name.
 &nbsp; 
