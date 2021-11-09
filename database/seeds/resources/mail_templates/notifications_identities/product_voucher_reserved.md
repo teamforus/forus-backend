@@ -1,9 +1,9 @@
 # Aanbieding bij :provider_name gereserveerd!
 
-Beste gebruiker,
+Beste deelnemer,
 &nbsp;  
 
-Deze mail ontvangt omdat er een aanbieding bij :provider_name is gereserveerd.
+U ontvangt deze mail omdat er een aanbieding bij :provider_name is gereserveerd.
 &nbsp;  
 
 #### :product_name
