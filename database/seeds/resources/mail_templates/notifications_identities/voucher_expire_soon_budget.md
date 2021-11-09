@@ -1,6 +1,6 @@
 # :fund_name verloopt binnenkort
 
-Beste gebruiker, van :fund_name
+Beste deelnemer,
 
 In :fund_start_year heeft u van :sponsor_name een :fund_name-tegoed ontvangen.
 &nbsp;  
