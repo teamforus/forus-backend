@@ -1,6 +1,6 @@
 # Uw aanvraag voor :fund_name is afgehandeld
 
-Beste inwoner,
+Beste aanvrager,
 &nbsp;  
 
 :fund_request_note
