@@ -1,6 +1,6 @@
 # Hierbij ontvangt u uw :fund_name
 
-Beste gebruiker,
+Beste deelnemer,
 
 Er is een tegoed aan u toegekend. Hierbij ontvangt u uw :fund_name.
 &nbsp;  
