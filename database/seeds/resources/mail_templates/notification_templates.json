@@ -533,8 +533,10 @@
     },
     "notifications_identities.voucher_physical_card_requested": {
         "mail": {
-            "title": "Je pas is onderweg",
-            "template": "notifications_identities/voucher_physical_card_requested.md"
+            "title": "Uw pas is onderweg",
+            "title_informal": "Je pas is onderweg",
+            "template": "notifications_identities/voucher_physical_card_requested.md",
+            "template_informal": "notifications_identities/voucher_physical_card_requested_informal.md"
         },
         "push": {},
         "database": {}
