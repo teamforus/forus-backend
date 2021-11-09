@@ -7,7 +7,7 @@ Er is een tegoed aan je toegekend. Hierbij ontvang je jouw :fund_name.
 
 Dit tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.  
 
-Onderstaande QR-code laat je bij de aanbieder naar jouw keuze zien.
+Onderstaande QR-code laat je bij de aanbieder naar keuze zien.
 &nbsp;
 
 :qr_token
