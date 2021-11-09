@@ -3,7 +3,7 @@
 Beste deelnemer,
 &nbsp;  
 
-Uw :fund_name is vanaf nu niet meer geldig.
+Je :fund_name is vanaf nu niet meer geldig.
 
 Neem voor meer informatie contact op met :sponsor_name.
 &nbsp;  
