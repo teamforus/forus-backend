@@ -2,7 +2,7 @@
 
 Beste aanvrager,
 
-Je aanvraag voor :fund_name is afgewezen. De gemeente heeft op basis van de aangeleverde informatie beoordeelt dat je geen recht heeft op ":fund_name".
+Je aanvraag voor :fund_name is afgewezen. De beoordelaar heeft op basis van de aangeleverde informatie bepaald dat je geen recht hebt op ":fund_name".
 
 Reden:
 &nbsp;  
