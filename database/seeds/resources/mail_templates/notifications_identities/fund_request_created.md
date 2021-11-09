@@ -4,7 +4,7 @@ Beste aanvrager,
 &nbsp;
 
 :sponsor_name heeft uw :fund_name aanvraag ontvangen. Uw aanvraag is in behandeling. 
-U ontvangt binnen zo snel mogelijk een reactie.
+U ontvangt zo snel mogelijk een reactie.
 &nbsp;  
 &nbsp;
 
