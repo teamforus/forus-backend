@@ -1,8 +1,8 @@
 # Je pas is onderweg
 
-Beste deelnemer,
+Beste :fund_name deelnemer,
 
-Een bericht over je :fund_name bestelling. Je hebt zojuist een pas besteld.  
+Je hebt zojuist een pas besteld.  
 De pas ontvang je binnen 10 werkdagen op dit adres:
 &nbsp;  
 
@@ -10,5 +10,5 @@ De pas ontvang je binnen 10 werkdagen op dit adres:
 **:postcode :city**
 
 Als je vragen hebt over je pas stuur dan een e-mail naar :sponsor_email of bel naar :sponsor_phone.  
-Veel plezier met je pas!
 
+Veel plezier met je pas!
