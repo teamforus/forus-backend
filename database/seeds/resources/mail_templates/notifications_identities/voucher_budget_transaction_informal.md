@@ -1,6 +1,6 @@
 # Er is een bedrag van je :fund_name afgeschreven
 
-Beste gebruiker,
+Beste deelnemer,
 
 Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven.
 &nbsp;  
