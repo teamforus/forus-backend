@@ -16,7 +16,7 @@ De QR-code is geldig tot en met :voucher_expire_date_locale.
 
 Neem bovenstaande QR-code mee naar de aanbieder als u van een actie gebruik wilt maken.
 Laat de QR-code scannen door een medewerker.
-Het tegoed wordt automatisch van uw tegoeden afgeschreven.
+Het tegoed wordt automatisch afgeschreven.
 &nbsp;  
 
 De afschrijvingen en resterende tegoeden kunt u altijd inzien door in te loggen op de :link_webshop.
