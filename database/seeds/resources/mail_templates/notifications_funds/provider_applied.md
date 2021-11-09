@@ -2,7 +2,7 @@
 
 Beste :sponsor_name,,
 
-Er is een aanmelding binnengekomen om deel te nemen aan :fund_name. Controleer of :provider_name voldoet aan uw voorwaarden om deel te nemen.
+Er is een aanmelding binnengekomen van een aanbieder om deel te nemen aan :fund_name. Controleer of :provider_name voldoet aan uw voorwaarden om deel te nemen.
 &nbsp;  
 &nbsp;
 
