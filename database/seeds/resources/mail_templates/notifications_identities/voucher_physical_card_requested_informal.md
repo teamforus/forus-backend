@@ -1,6 +1,6 @@
 # Je pas is onderweg
 
-Beste :fund_name deelnemer,
+Beste deelnemer,
 
 Je hebt zojuist een pas besteld.  
 De pas ontvang je binnen 10 werkdagen op dit adres:
