@@ -1,9 +1,8 @@
 # Uw aanvraag voor :fund_name is afgewezen
 
-Beste inwoner,
+Beste deelnemer,
 
-Uw aanvraag voor :fund_name is afgewezen. De gemeente heeft met de aangeleverde informatie beoordeelt dat u geen recht heeft op ":fund_name".
-
+Uw aanvraag voor :fund_name is afgewezen. De gemeente heeft op basis van de aangeleverde informatie beoordeelt dat u geen recht heeft op ":fund_name".
 
 Reden:
 &nbsp;  
