@@ -13,7 +13,9 @@ Activeer uw digitale tegoed door :webshop_link te klikken of op de knop hieronde
 &nbsp;
 
 Vriendelijke groet,
+
 &nbsp;  
 Team :fund_name
+
 &nbsp;  
 :sponsor_name
