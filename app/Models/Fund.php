@@ -70,6 +70,7 @@ use Carbon\Carbon;
  * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
  * @property-read int|null $bunq_me_tabs_paid_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
+ * @property-read Collection|\App\Models\FundFaq[] $faq
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
@@ -262,6 +263,14 @@ class Fund extends Model
     public function criteria(): HasMany
     {
         return $this->hasMany(FundCriterion::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function faq(): HasMany
+    {
+        return $this->hasMany(FundFaq::class);
     }
 
     /**
@@ -1344,6 +1353,42 @@ class Fund extends Model
         }
 
         return $this;
+    }
+
+    /**
+     * Update faq for existing fund
+     * @param array $faq
+     * @return $this
+     */
+    public function syncFaq(array $faq): self {
+        // remove faq not listed in the array
+        $this->faq()->whereNotIn('id', array_filter(
+            array_pluck($faq, 'id'), static function($id) {
+            return !empty($id);
+        }))->delete();
+
+        foreach ($faq as $question) {
+            $this->syncQuestion($question);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update faq question or create new fund question
+     * @param array $question
+     */
+    protected function syncQuestion(array $question): void {
+        /** @var FundFaq $fundFaq */
+        $fundQuestion = $this->faq()->find($question['id'] ?? null);
+
+        $data_question = array_only($fundQuestion, ['title', 'description']);
+
+        if ($fundQuestion) {
+            $fundQuestion->update($data_question);
+        } else {
+            $this->faq()->create($data_question);
+        }
     }
 
     /**

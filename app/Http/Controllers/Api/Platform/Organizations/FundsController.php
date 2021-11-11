@@ -105,6 +105,8 @@ class FundsController extends Controller
             $fund->syncCriteria($request->input('criteria'));
         }
 
+        $fund->syncFaq($request->input('faq'));
+
         if (config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
@@ -200,6 +202,8 @@ class FundsController extends Controller
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));
         }
+
+        $fund->syncFaq($request->input('faq'));
 
         if (config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
