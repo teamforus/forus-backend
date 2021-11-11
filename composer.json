@@ -10,6 +10,7 @@
         "ext-curl": "*",
         "ext-dom": "*",
         "ext-fileinfo": "*",
+        "ext-gd": "*",
         "ext-json": "*",
         "ext-libxml": "*",
         "ext-openssl": "*",
