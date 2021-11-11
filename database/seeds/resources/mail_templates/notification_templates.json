@@ -54,7 +54,7 @@
         },
         "database": {
             "title": "Aanmelding voor :fund_name is goedgekeurd.",
-            "content": "Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbod kan leveren aan klanten die recht hebben op :fund_name. Al uw aanbod staan nu in de webshop."
+            "content": "Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbod kan leveren aan klanten die recht hebben op :fund_name. Al uw aanbod staat nu in de webshop."
         }
     },
     "notifications_fund_providers.revoked_budget": {
