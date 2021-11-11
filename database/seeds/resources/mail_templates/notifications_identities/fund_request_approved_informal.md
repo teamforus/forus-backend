@@ -1,9 +1,9 @@
 # Je aanvraag voor :fund_name is goedgekeurd
 
-Beste inwoner,
+Beste deelnemer,
 
 Je aanvraag voor :fund_name is goedgekeurd.
-Activeer je digitale tegoed door :webshop_link te klikken of de knop hieronder.
+Activeer je digitale tegoed door :webshop_link te klikken of de op knop hieronder.
 &nbsp;  
 &nbsp;
 

@@ -1,13 +1,13 @@
 # Hierbij ontvangt u uw :fund_name
 
-Beste gebruiker,
+Beste deelnemer,
 
 Er is een tegoed aan u toegekend. Hierbij ontvangt u uw :fund_name.
 &nbsp;  
 
 Dit tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.  
 
-Onderstaande QR-code laat u bij de organisatie van uw keuze zien.
+De onderstaande QR-code laat u bij de organisatie naar uw keuze zien.
 &nbsp;  
 
 :qr_token

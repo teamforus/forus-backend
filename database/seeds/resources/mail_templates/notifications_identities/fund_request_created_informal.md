@@ -1,10 +1,10 @@
 # Je :fund_name aanvraag is ontvangen
 
-Beste inwoner,
+Beste aanvrager,
 &nbsp;
 
 :sponsor_name heeft je :fund_name aanvraag ontvangen. 
-Je aanvraag is in behandeling. Je ontvangt binnen twee weken een reactie.
+Je aanvraag is in behandeling. Je ontvangt zo snel mogelijk een reactie.
 &nbsp;  
 &nbsp;
 

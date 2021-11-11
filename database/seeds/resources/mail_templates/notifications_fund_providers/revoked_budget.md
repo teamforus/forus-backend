@@ -3,9 +3,9 @@
 Beste :provider_name,
 &nbsp;  
 
-Onlangs heeft u zich aangemeld voor :fund_name.
+Onlangs heeft u zich aangemeld als aanbieder voor :fund_name.
 
-:sponsor_name heeft uw aanmelding beoordeeld en heeft besloten dat u niet in aanmerking komt voor :fund_name.
+:sponsor_name heeft uw aanmelding beoordeeld en heeft besloten dat u niet in deel mag nemen aan :fund_name.
 &nbsp; 
 
 Mocht u hierover meer willen weten, dan kunt u contact opnemen met :sponsor_name.

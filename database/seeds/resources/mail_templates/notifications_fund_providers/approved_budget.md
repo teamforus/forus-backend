@@ -6,7 +6,7 @@ Uw aanmelding is geaccepteerd!
 Beste :provider_name,
 &nbsp;
 
-Kort geleden heeft u zich aangemeld voor ':fund_name'.
+Kort geleden heeft u zich aangemeld als aanbieder voor ':fund_name'.
 :sponsor_name heeft uw aanmelding geaccepteerd.
 &nbsp;
 

@@ -1,6 +1,6 @@
 # :fund_name verloopt binnenkort
 
-Beste gebruiker, van :fund_name
+Beste deelnemer,
 
 In :fund_start_year heb je van :sponsor_name een :fund_name-tegoed ontvangen.
 &nbsp;  
@@ -18,7 +18,6 @@ Lukt het niet om in te loggen? Neem dan contact op met:
 :sponsor_phone  
 :sponsor_email
 
-We hopen u hiermee voldoende te hebben geïnformeerd.
 &nbsp;  
 
 Met vriendelijke groet  

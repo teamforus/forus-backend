@@ -1,11 +1,11 @@
 # Uw aanbod :product_name is gereserveerd
 
-Beste gebruiker,
+Beste aanbieder,
 
-Zojuist heeft iemand uw aanbieding ':product_name' in de webshop gereserveerd. 
-De klant kan daarom elk moment deze aanbieding komen ophalen of afnemen.
+Zojuist is uw aanbieding ':product_name' via de webshop gereserveerd. 
+Deze klant kan vanaf dit moment de aanbieding bij u komen ophalen of afnemen.
 
-De uiterlijke datum dat de klant langs kan komen is :expiration_date
+De reservering duurt tot uiterlijke :expiration_date.
 &nbsp;
 
 We hopen u hiermee voldoende te hebben geïnformeerd.

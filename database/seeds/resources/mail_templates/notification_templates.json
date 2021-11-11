@@ -32,9 +32,6 @@
             "content": "U bent verwijderd als een medewerker van :organization_name."
         }
     },
-
-
-
     "notifications_fund_providers.approved_budget": {
         "mail": {
             "title": "Aanmelding als aanbieder is goedgekeurd",
@@ -87,8 +84,6 @@
             "content": "U heeft een nieuwe chat bericht van \":sponsor_name\" over \":product_name\"."
         }
     },
-
-
     "notifications_identities.requester_provider_approved_budget": {
         "mail": {},
         "push": {},
@@ -105,9 +100,6 @@
             "content": ":provider_name is geaccepteerd als aanbieder voor :fund_name door :sponsor_name"
         }
     },
-
-
-
     "notifications_identities.requester_fund_ended": {
         "mail": {},
         "push": {},
@@ -140,8 +132,6 @@
             "content": ""
         }
     },
-
-
     "notifications_fund_requests.created_validator_employee": {
         "mail": {},
         "push": {},
@@ -150,8 +140,6 @@
             "content": "Er is een nieuwe aanvraag voor :fund_name."
         }
     },
-
-
     "notifications_identities.fund_request_created": {
         "mail": {
             "title": "Uw :fund_name aanvraag is ontvangen",
@@ -213,8 +201,6 @@
             "content_informal": "Je aanvraag voor :fund_name is onvolledig. :sponsor_name heeft meer informatie nodig om je aanvraag af te handelen. Het bericht is: :fund_request_clarification_question"
         }
     },
-
-
     "notifications_funds.created": {
         "mail": {},
         "push": {},
@@ -247,7 +233,6 @@
             "content": ":fund_name zal sluiten op :fund_end_date_locale."
         }
     },
-
     "notifications_funds.product_added": {
         "mail": {},
         "push": {},
@@ -275,7 +260,6 @@
             "content": "Er is een bericht op uw reactie op :product_name van :provider_name voor :fund_name."
         }
     },
-
     "notifications_funds.balance_low": {
         "mail": {
             "title": "Het budget ':fund_name' fonds heeft de ingestelde aanvul-herinneringsgrens overschreden.",
@@ -303,8 +287,6 @@
             "content": ":provider_name heeft de prijs veranderd voor :product_name\" en de actie is verwijderd uit de webshop. Als u dit aanbod weer wilt toevoegen aan de webshop, start opnieuw een actie op uw dashboard."
         }
     },
-
-
     "notifications_fund_providers.fund_started": {
         "mail": {},
         "push": {},
@@ -329,8 +311,6 @@
             "content": ":fund_name loopt van :fund_start_date_locale tot :fund_end_date_minus1_locale en verloopt bijna."
         }
     },
-
-
     "notifications_identities.product_reservation_accepted": {
         "mail": {},
         "push": {},
@@ -363,8 +343,6 @@
             "content": "De reserving van :product_name is geweigerd door :provider_name. Neem contact met de aanbieder voor meer informatie."
         }
     },
-
-
     "notifications_products.approved": {
         "mail": {},
         "push": {},
@@ -411,9 +389,6 @@
             "content": "Aanbod :product_name is uitverkocht."
         }
     },
-
-
-
     "notifications_identities.product_voucher_shared": {
         "mail": {
             "title": "Aanbod QR-code gedeeld door :requester_email",
@@ -472,7 +447,6 @@
         },
         "database": {}
     },
-
     "notifications_identities.product_voucher_added": {
         "mail": {},
         "push": {},
@@ -511,8 +485,6 @@
             "content": "Uw :fund_name is geactiveerd. Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale."
         }
     },
-
-
     "notifications_identities.voucher_deactivated": {
         "mail": {
             "title": ":fund_name is niet meer geldig",
@@ -539,8 +511,6 @@
             "content": "Het tegoed op :fund_name is verlopen."
         }
     },
-
-
     "notifications_identities.voucher_expire_soon_budget": {
         "mail": {
             "title": ":fund_name verloopt binnenkort",
@@ -561,12 +531,12 @@
             "content": ":fund_name verloopt binnenkort."
         }
     },
-
-
     "notifications_identities.voucher_physical_card_requested": {
         "mail": {
-            "title": "Je pas is onderweg",
-            "template": "notifications_identities/voucher_physical_card_requested.md"
+            "title": "Uw pas is onderweg",
+            "title_informal": "Je pas is onderweg",
+            "template": "notifications_identities/voucher_physical_card_requested.md",
+            "template_informal": "notifications_identities/voucher_physical_card_requested_informal.md"
         },
         "push": {},
         "database": {}
@@ -576,7 +546,6 @@
         "push": {},
         "database": {}
     },
-
     "notifications_identities.voucher_budget_transaction": {
         "mail": {
             "title": "Er is een bedrag van uw :fund_name afgeschreven",

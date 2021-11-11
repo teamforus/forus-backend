@@ -1,6 +1,6 @@
 # :fund_name is niet meer geldig
 
-Beste inwoner,
+Beste deelnemer,
 &nbsp;  
 
 Je :fund_name is vanaf :deactivation_date_locale niet meer geldig.  
