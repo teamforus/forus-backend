@@ -3,7 +3,6 @@
 namespace App\Mail\Auth;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -12,52 +11,25 @@ use Illuminate\Mail\Mailable;
  */
 class UserLoginMail extends ImplementationMail
 {
-    /**
-     * @var string $link
-     */
-    private $link;
+    protected $subjectKey = 'mails/system_mails.user_login.title';
 
     /**
-     * @var string $platform
+     * @return Mailable
      */
-    private $platform;
-
-    public function __construct(
-        string $link,
-        string $source,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-
-        $platform = '';
-
-        if (strpos($source, '_webshop') !== false) {
-            $platform = 'de webshop';
-        } else if (strpos($source, '_sponsor') !== false) {
-            $platform = 'het dashboard';
-        } else if (strpos($source, '_provider') !== false) {
-            $platform = 'het dashboard';
-        } else if (strpos($source, '_validator') !== false) {
-            $platform = 'het dashboard';
-        } else if (strpos($source, '_website') !== false) {
-            $platform = 'de website';
-        } else if (strpos($source, 'me_app') !== false) {
-            $platform = 'Me';
-        }
-
-        $this->link = $link;
-        $this->platform = $platform;
-    }
-
     public function build(): Mailable
     {
-        return $this->buildBase()->subject(mail_trans('login_via_email.subject_title', [
-            'platform' => $this->platform,
-            'time' => date('H:i', strtotime('1 hour'))
-        ]))->view('emails.login.login_via_email', [
-            'emailFrom' => $this->emailFrom,
-            'platform' => $this->platform,
-            'link' => $this->link,
-        ]);
+        return $this->buildSystemMail('user_login');
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return [
+            'time'          => strftime('%e %B %H:%M', strtotime("+1 hours")),
+            'auth_button'   => $this->makeButton($data['auth_link'], 'INLOGGEN'),
+        ];
     }
 }

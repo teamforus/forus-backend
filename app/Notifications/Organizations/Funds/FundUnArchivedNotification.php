@@ -6,9 +6,8 @@ namespace App\Notifications\Organizations\Funds;
  * Class FundCreatedNotification
  * @package App\Notifications\Organizations\Funds
  */
-class FundUnArchivedNotification extends BaseFundsNotification {
-    protected $key = 'notifications_funds.created';
-    protected static $permissions = [
-        'view_funds'
-    ];
+class FundUnArchivedNotification extends BaseFundsNotification
+{
+    protected static $key = 'notifications_funds.created';
+    protected static $permissions = 'view_funds';
 }

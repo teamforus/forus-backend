@@ -14,39 +14,18 @@ use Illuminate\Events\Dispatcher;
 
 class EmployeeSubscriber
 {
-    private $mailService;
-
-    /**
-     * EmployeeSubscriber constructor.
-     */
-    public function __construct()
-    {
-        $this->mailService = resolve('forus.services.notification');
-    }
-
     /**
      * @param EmployeeCreated $employeeCreated
      * @throws \Exception
      */
-    public function onEmployeeCreated(EmployeeCreated $employeeCreated): void {
+    public function onEmployeeCreated(EmployeeCreated $employeeCreated): void
+    {
         $employee = $employeeCreated->getEmployee();
 
         IdentityAddedEmployeeNotification::send($employee->log(Employee::EVENT_CREATED, [
             'employee' => $employee,
             'organization' => $employee->organization,
         ]));
-
-        $transData = [
-            "org_name" => $employee->organization->name,
-            "role_name_list" => $employee->roles->implode('name', ', '),
-        ];
-
-        $this->mailService->sendPushNotification(
-            $employee->identity_address,
-            trans('push.access_levels.added.title', $transData),
-            trans('push.access_levels.added.body', $transData),
-            'employee.created'
-        );
     }
 
     /**
@@ -91,23 +70,10 @@ class EmployeeSubscriber
     {
         $employee = $employeeDeleted->getEmployee();
 
-        $event = $employee->log(Employee::EVENT_DELETED, [
+        IdentityRemovedEmployeeNotification::send($employee->log(Employee::EVENT_DELETED, [
             'employee' => $employee,
             'organization' => $employee->organization,
-        ]);
-
-        IdentityRemovedEmployeeNotification::send($event);
-
-        $transData = [
-            "org_name" => $employee->organization->name
-        ];
-
-        $title = trans('push.access_levels.removed.title', $transData);
-        $body = trans('push.access_levels.removed.body', $transData);
-
-        $this->mailService->sendPushNotification(
-            $employee->identity_address, $title, $body, 'employee.deleted'
-        );
+        ]));
     }
 
     /**
@@ -117,19 +83,8 @@ class EmployeeSubscriber
      */
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(
-            EmployeeCreated::class,
-            '\App\Listeners\EmployeeSubscriber@onEmployeeCreated'
-        );
-
-        $events->listen(
-            EmployeeUpdated::class,
-            '\App\Listeners\EmployeeSubscriber@onEmployeeUpdated'
-        );
-
-        $events->listen(
-            EmployeeDeleted::class,
-            '\App\Listeners\EmployeeSubscriber@onEmployeeDeleted'
-        );
+        $events->listen(EmployeeCreated::class, '\App\Listeners\EmployeeSubscriber@onEmployeeCreated');
+        $events->listen(EmployeeUpdated::class, '\App\Listeners\EmployeeSubscriber@onEmployeeUpdated');
+        $events->listen(EmployeeDeleted::class, '\App\Listeners\EmployeeSubscriber@onEmployeeDeleted');
     }
 }

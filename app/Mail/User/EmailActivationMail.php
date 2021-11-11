@@ -3,7 +3,6 @@
 namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -12,19 +11,11 @@ use Illuminate\Mail\Mailable;
  */
 class EmailActivationMail extends ImplementationMail
 {
-    private $clientType;
-    private $link;
+    protected $subjectKey = 'mails/system_mails.email_activation.title';
 
-    public function __construct(
-        string $clientType,
-        string $link,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-        $this->clientType = $clientType;
-        $this->link = $link;
-    }
-
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
         $xSesConfigurationSet = env('MAIL_X_SES_CONFIGURATION_SET', false);
@@ -35,11 +26,29 @@ class EmailActivationMail extends ImplementationMail
             });
         }
 
-        return $this->buildBase()
-            ->subject(mail_trans('email_activation.title'))
-            ->view('emails.user.email_activation', [
-                'link'          => $this->link,
-                'clientType'    => $this->clientType,
-            ]);
+        return parent::buildSystemMail('email_activation');
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        $platform = [
+            'webshop' => 'de webshop',
+            'sponsor' => 'het aanmeldformulier voor sponsoren',
+            'provider' => 'het aanmeldformulier voor aanbieders',
+            'validator' => 'het aanmeldformulier voor validators',
+            'website' => 'de website',
+            'me_app-android' => 'de Me-app',
+            'me_app-ios' => 'de Me-app',
+        ];
+
+        return [
+            'link' => $this->makeLink($data['link'], 'link'),
+            'button' => $this->makeButton($data['link'], 'BEVESTIGEN'),
+            'platform' => $platform[$data['clientType'] ?? ''] ?? '',
+        ];
     }
 }

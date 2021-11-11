@@ -48,18 +48,11 @@ class NotificationToken extends Model
     public function makeBasicNotification(string $title, string $body)
     {
         switch ($this->type) {
-            case self::TYPE_PUSH_IOS: {
-                return (new ApnBasicNotification($title, $body))->onQueue(
-                    env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications')
-                );
-            }
-            case self::TYPE_PUSH_ANDROID: {
-                return (new FcmBasicNotification($title, $body))->onQueue(
-                    env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications')
-                );
-            }
+            case self::TYPE_PUSH_IOS: $notification = new ApnBasicNotification($title, $body); break;
+            case self::TYPE_PUSH_ANDROID: $notification = new FcmBasicNotification($title, $body); break;
+            default: return false;
         }
 
-        return false;
+        return $notification->onQueue(env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications'));
     }
 }

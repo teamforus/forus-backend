@@ -41,13 +41,13 @@ class MediaCleanupCommand extends Command
     {
         $minutes = null;
 
-        if ($this->hasArgument('minutes_to_expire')) {
-            if (!is_numeric($this->argument('minutes_to_expire'))) {
+        if ($this->hasOption('minutes_to_expire')) {
+            if (!is_numeric($this->option('minutes_to_expire'))) {
                 $this->error("Invalid argument `minutes_to_expire`.\n");
                 exit();
             }
 
-            $minutes = intval($this->argument('minutes_to_expire'));
+            $minutes = intval($this->option('minutes_to_expire'));
         }
 
         $this->mediaWithoutMediable();

@@ -72,10 +72,10 @@ class FundProviderChatMessagesController extends Controller
 
         $chatMessage = $fundProviderChat->addProviderMessage(
             $request->input('message'),
-            auth_address()
+            $request->auth_address()
         );
 
-        FundProviderChatMessageEvent::dispatch($chatMessage);
+        FundProviderChatMessageEvent::dispatch($fundProviderChat->fund_provider->fund, $chatMessage);
 
         return new FundProviderChatMessageResource($chatMessage);
     }

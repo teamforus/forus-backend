@@ -6,4 +6,4 @@ namespace App\Events\Funds;
  * Class FundCreated
  * @package App\Events\Funds
  */
-class FundUpdatedEvent extends FundBaseEvent { }
+class FundUpdatedEvent extends BaseFundEvent {}

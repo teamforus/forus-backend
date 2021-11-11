@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Media\CmsMediaConfig;
 use App\Media\FundLogoMediaConfig;
 use App\Media\ImplementationBannerMediaConfig;
+use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
@@ -14,6 +15,7 @@ use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use App\Models\NotificationTemplate;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
 use App\Observers\FundProviderObserver;
@@ -27,6 +29,7 @@ use App\Models\ProductCategory;
 use App\Models\Voucher;
 use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -56,8 +59,9 @@ class AppServiceProvider extends ServiceProvider
             'fund_request'          => FundRequest::class,
             'fund_provider'         => FundProvider::class,
             'organization'          => Organization::class,
-            'product_category'      => ProductCategory::class,
+            'mail_template'         => NotificationTemplate::class,
             'implementation'        => Implementation::class,
+            'product_category'      => ProductCategory::class,
             'implementation_page'   => ImplementationPage::class,
             'product_reservation'   => ProductReservation::class,
             'physical_card_request' => PhysicalCardRequest::class,
@@ -71,9 +75,14 @@ class AppServiceProvider extends ServiceProvider
             new OrganizationLogoMediaConfig(),
             new RecordCategoryIconMediaConfig(),
             new ImplementationBannerMediaConfig(),
+            new ImplementationMailLogoMediaConfig(),
         ]);
 
         FundProvider::observe(FundProviderObserver::class);
+
+        /*Blade::directive('mail_builder_html', function ($expression) {
+            return $expression;
+        });*/
     }
 
     /**

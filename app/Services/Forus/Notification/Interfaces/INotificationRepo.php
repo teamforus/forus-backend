@@ -4,8 +4,6 @@
 namespace App\Services\Forus\Notification\Interfaces;
 
 
-use Illuminate\Support\Collection;
-
 interface INotificationRepo
 {
     /**
@@ -14,27 +12,21 @@ interface INotificationRepo
      * @param string $email
      * @return bool
      */
-    public function isEmailUnsubscribed(
-        string $email
-    ): bool;
+    public function isEmailUnsubscribed(string $email): bool;
 
     /**
      * Check if Mail class can be unsubscribed
      * @param string $emailClass
      * @return bool
      */
-    public function isMailUnsubscribable(
-        string $emailClass
-    ): bool;
+    public function isMailUnsubscribable(string $emailClass): bool;
 
     /**
      * Check if Push notification can be unsubscribed
      * @param string $pushKey
      * @return bool
      */
-    public function isPushNotificationUnsubscribable(
-        string $pushKey
-    ): bool;
+    public function isPushNotificationUnsubscribable(string $pushKey): bool;
 
     /**
      * Check if Push notification can be unsubscribed
@@ -43,10 +35,7 @@ interface INotificationRepo
      * @param string $pushKey
      * @return bool
      */
-    public function isPushNotificationUnsubscribed(
-        string $identity_address,
-        string $pushKey
-    ): bool;
+    public function isPushNotificationUnsubscribed(string $identity_address, string $pushKey): bool;
 
     /**
      * Is email unsubscribed for specific email
@@ -56,10 +45,7 @@ interface INotificationRepo
      * @return bool
      * @throws \Exception
      */
-    public function isEmailTypeUnsubscribed(
-        $identity_address,
-        $emailClass
-    ): bool;
+    public function isEmailTypeUnsubscribed($identity_address, $emailClass): bool;
 
     /**
      * Create new unsubscription from all emails link
@@ -67,10 +53,7 @@ interface INotificationRepo
      * @param string|null $token
      * @return string
      */
-    public function makeUnsubLink(
-        string $email,
-        string $token = null
-    ): string;
+    public function makeUnsubLink(string $email, string $token = null): string;
 
     /**
      * Create new unsubscription from all emails link
@@ -78,54 +61,39 @@ interface INotificationRepo
      * @param string|null $token
      * @return string
      */
-    public function makeReSubLink(
-        string $email,
-        string $token = null
-    ): string;
+    public function makeReSubLink(string $email, string $token = null): string;
 
     /**
      * Unsubscribe email from all notifications
      * @param string $email
      */
-    public function unsubscribeEmail(
-        string $email
-    ): void;
+    public function unsubscribeEmail(string $email): void;
 
     /**
      * Remove email unsubscription from all notifications
      * @param string $email
      */
-    public function reSubscribeEmail(
-        string $email
-    ): void;
+    public function reSubscribeEmail(string $email): void;
 
     /**
      * @param string $token
      * @param bool $active
      * @return string|null
      */
-    public function emailByUnsubscribeToken(
-        string $token,
-        bool $active = true
-    ): ?string;
+    public function emailByUnsubscribeToken(string $token, bool $active = true): ?string;
 
     /**
      * @param string $identityAddress
-     * @return Collection
+     * @return array
      */
-    public function getNotificationPreferences(
-        string $identityAddress
-    ): Collection;
+    public function getNotificationPreferences(string $identityAddress): array;
 
     /**
      * @param string $identityAddress
      * @param array $data
-     * @return Collection
+     * @return array
      */
-    public function updateIdentityPreferences(
-        string $identityAddress,
-        array $data
-    ): Collection;
+    public function updateIdentityPreferences(string $identityAddress, array $data): array;
 
     /**
      * @return array

@@ -113,7 +113,7 @@ class FundProviderController extends Controller
             $request->only('fund_id')
         );
 
-        FundProviderApplied::dispatch($fundProvider);
+        FundProviderApplied::dispatch($fundProvider->fund, $fundProvider);
 
         return new FundProviderResource($fundProvider);
     }

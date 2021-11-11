@@ -3,7 +3,6 @@
 namespace App\Mail\Funds;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -12,34 +11,13 @@ use Illuminate\Mail\Mailable;
  */
 class ProviderRejectedMail extends ImplementationMail
 {
-    private $fundName;
-    private $providerName;
-    private $sponsorName;
-    private $phoneNumber;
+    protected $notificationTemplateKey = 'notifications_fund_providers.revoked_budget';
 
-    public function __construct(
-        string $fund_name,
-        string $provider_name,
-        string $sponsor_name,
-        string $phone_number,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-
-        $this->fundName                = $fund_name;
-        $this->providerName            = $provider_name;
-        $this->sponsorName             = $sponsor_name;
-        $this->phoneNumber             = $phone_number;
-    }
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
-        return $this->buildBase()
-            ->subject(mail_trans('provider_rejected.title'))
-            ->view('emails.funds.provider_rejected', [
-                'fund_name'                 => $this->fundName,
-                'provider_name'             => $this->providerName,
-                'sponsor_name'              => $this->sponsorName,
-                'phone_number'              => $this->phoneNumber
-            ]);
+        return $this->buildNotificationTemplatedMail();
     }
 }

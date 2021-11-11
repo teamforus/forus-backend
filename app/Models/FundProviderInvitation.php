@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Events\Funds\FundProviderInvitedEvent;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $from_fund
  * @property-read \App\Models\Fund $fund
- * @property-read \Carbon\Carbon $expire_at
+ * @property-read Carbon $expire_at
  * @property-read bool $expired
  * @property-read \App\Models\Organization $organization
  * @method static Builder|FundProviderInvitation newModelQuery()
@@ -67,76 +69,55 @@ class FundProviderInvitation extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund(): BelongsTo {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function from_fund(): BelongsTo {
+    public function from_fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class, 'from_fund_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function organization(): BelongsTo {
+    public function organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class);
     }
 
     /**
-     * @param Fund $fromFund
-     * @param Fund $fund
+     * @param Fund $fundFrom
+     * @param Fund $fundTo
      * @return Builder|Collection
      */
-    public static function inviteFromFundToFund(
-        Fund $fromFund,
-        Fund $fund
-    ): Collection {
-        $recordRepo = resolve('forus.services.record');
-        $token_generator = resolve('token_generator');
-        $notificationService = resolve('forus.services.notification');
-
-        $alreadyProviders = $fund->provider_organizations_approved->pluck('id');
-        $alreadyInvited = $fromFund->provider_invitations()->where([
+    public static function inviteFromFundToFund(Fund $fundFrom, Fund $fundTo): Collection
+    {
+        $alreadyProviders = $fundTo->provider_organizations_approved->pluck('id');
+        $alreadyInvited = $fundFrom->provider_invitations()->where([
             'state' => self::STATE_PENDING
         ])->pluck('organization_id');
 
         $skipProviders = $alreadyProviders->merge($alreadyInvited)->toArray();
+        $providers = $fundFrom->providers_approved()->whereNotIn('organization_id', $skipProviders)->get();
 
-        return $fromFund->providers_approved()->whereNotIn(
-            'organization_id', $skipProviders
-        )->get()->map(function (FundProvider $provider) use (
-            $fromFund, $fund, $token_generator, $recordRepo, $notificationService
-        ) {
+        return $providers->map(function (FundProvider $provider) use ($fundFrom, $fundTo) {
             /** @var FundProviderInvitation $providerInvitation */
-            $providerInvitation = $fromFund->provider_invitations()->create([
-                'token'             => $token_generator->generate(200),
-                'fund_id'           => $fund->id,
+            $providerInvitation = $fundFrom->provider_invitations()->create([
+                'token'             => token_generator()->generate(200),
+                'fund_id'           => $fundTo->id,
                 'organization_id'   => $provider->organization_id,
                 'state'             => self::STATE_PENDING,
                 'allow_budget'      => $provider->allow_budget,
                 'allow_products'    => $provider->allow_products || $provider->allow_some_products
             ]);
 
-            $notificationService->providerInvited(
-                $recordRepo->primaryEmailByAddress(
-                    $providerInvitation->organization->identity_address
-                ),
-                Implementation::emailFrom(),
-                $providerInvitation->organization->name,
-                $providerInvitation->fund->organization->name,
-                $providerInvitation->fund->organization->phone,
-                $providerInvitation->fund->organization->email,
-                $providerInvitation->fund->name,
-                format_date_locale($providerInvitation->fund->start_date),
-                format_date_locale($providerInvitation->fund->end_date),
-                $providerInvitation->from_fund->name,
-                $fromFund->fund_config->implementation->urlProviderDashboard(sprintf(
-                    '/provider-invitations/%s', $providerInvitation->token
-                ))
-            );
+            FundProviderInvitedEvent::dispatch($fundTo, $providerInvitation);
 
             return $providerInvitation;
         });
@@ -147,7 +128,8 @@ class FundProviderInvitation extends Model
      *
      * @return bool
      */
-    public function getExpiredAttribute(): bool {
+    public function getExpiredAttribute(): bool
+    {
         return $this->created_at->lte(
             now()->subMinutes(self::VALIDITY_IN_MINUTES)
         ) || $this->state === self::STATE_EXPIRED;
@@ -158,14 +140,16 @@ class FundProviderInvitation extends Model
      *
      * @return \Carbon\Carbon
      */
-    public function getExpireAtAttribute(): \Carbon\Carbon {
+    public function getExpireAtAttribute(): Carbon
+    {
         return $this->created_at->addMinutes(self::VALIDITY_IN_MINUTES);
     }
 
     /**
      * @return FundProviderInvitation
      */
-    public function accept(): FundProviderInvitation {
+    public function accept(): FundProviderInvitation
+    {
         $this->fund->providers()->firstOrCreate([
             'organization_id' => $this->organization_id,
         ])->update($this->only([

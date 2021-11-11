@@ -2,39 +2,38 @@
 
 namespace App\Mail\Share;
 
-use App\Mail\MailBodyBuilder;
-use Illuminate\Bus\Queueable;
+use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
 
 /**
  * Class ShareAppMail
  * @package App\Mail\Share
  */
-class ShareAppMail extends Mailable
+class ShareAppMail extends ImplementationMail
 {
-    use Queueable, SerializesModels;
-
-    public $viewData = [];
+    protected $subjectKey = 'share/email.me_app_download_link.title';
 
     /**
      * Build the message.
      *
      * @return $this
      */
-    public function build(): self
+    public function build(): Mailable
     {
-        $emailBody = new MailBodyBuilder();
+        return $this->buildSystemMail('me_app_download_link');
+    }
 
-        $emailBody->h1(trans('share/email.me_app_download_link.title'));
-        $emailBody->text(trans('share/email.me_app_download_link.line_1'));
-        $emailBody->link(trans('share/email.me_app_download_link.link'));
-        $emailBody->text(trans('share/email.me_app_download_link.line_2'));
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        $link = env('ME_APP_SMS_DOWNLOAD_LINK', 'https://www.forus.io/DL');
 
-        $this->viewData['emailBody'] = $emailBody;
-
-        return $this
-            ->view('emails.mail-builder-template')
-            ->subject(trans('share/email.me_app_download_link.title'));
+        return [
+            'download_link' => $this->makeLink($link, $link),
+            'download_button' => $this->makeButton($link, $link),
+        ];
     }
 }

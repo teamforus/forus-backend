@@ -117,6 +117,20 @@ class Media extends Model
     }
 
     /**
+     * @param string $key
+     * @return string|null
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function getContent(string $key): ?string
+    {
+        if ($size = $this->findPreset($key)) {
+            return $size->getContent();
+        }
+
+        return null;
+    }
+
+    /**
      * @return bool|null
      * @noinspection PhpUnused
      */

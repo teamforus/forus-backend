@@ -67,15 +67,11 @@ class ShareController extends Controller
      * @return JsonResponse
      * @throws \App\Exceptions\AuthorizationJsonException
      */
-    public function sendEmail(
-        ShareEmailRequest $request
-    ): JsonResponse {
+    public function sendEmail(ShareEmailRequest $request): JsonResponse
+    {
         $this->throttleWithKey('to_many_attempts', $request, 'share_app_email');
 
-        $this->notificationService->sendMailNotification(
-            $request->input('email'),
-            new ShareAppMail()
-        );
+        $this->notificationService->sendSystemMail($request->input('email'), new ShareAppMail());
 
         return response()->json();
     }

@@ -24,7 +24,7 @@ class IndexImplementationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page' => 'numeric|between:1,100',
+            'per_page' => 'numeric|numeric|min:1|max:100',
             'q'        => 'nullable|string|max:100',
         ];
     }

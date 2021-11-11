@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class DeleteDevicePushRequest extends FormRequest
+class DeleteDevicePushRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,7 @@ class DeleteDevicePushRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => 'required|string|min:8'
+            'id' => 'required|string|min:8',
         ];
     }
 }

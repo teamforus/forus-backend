@@ -2,7 +2,10 @@
 
 namespace App\Notifications\Identities\Voucher;
 
+/**
+ * The voucher expired (budget/subsidy)
+ */
 class IdentityVoucherExpiredNotification extends BaseIdentityVoucherNotification
 {
-    protected $key = 'notifications_identities.budget_voucher_expired';
+    protected static $key = 'notifications_identities.budget_voucher_expired';
 }
