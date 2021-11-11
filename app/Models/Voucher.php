@@ -1195,15 +1195,41 @@ class Voucher extends Model
      */
     public function reportBackofficeReceived(): ?FundBackofficeLog
     {
-        if (!$this->parent_id && $this->identity_address && !$this->backoffice_log_received) {
-            $eligibilityLog = $this->backoffice_log_eligible;
+        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_received;
+
+        if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
+            $eligibilityLog = $this->backoffice_log_eligible;
             $bsn = record_repo()->bsnByAddress($this->identity_address);
 
             if ($backOffice && $bsn) {
                 $requestId = $eligibilityLog->response_id ?? null;
 
                 return $backOffice->reportReceived($bsn, $requestId)->updateModel([
+                    'voucher_id' => $this->id,
+                ]);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return null
+     */
+    public function reportBackofficeFirstUse()
+    {
+        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_first_use;
+
+        if ($voucherShouldReport) {
+            $backOffice = $this->fund->getBackofficeApi();
+            $firstUseLog = $this->backoffice_log_first_use;
+            $bsn = record_repo()->bsnByAddress($this->identity_address);
+
+            if ($backOffice && $bsn) {
+                $requestId = $firstUseLog->response_id ?? null;
+
+                return $backOffice->reportFirstUse($bsn, $requestId)->updateModel([
                     'voucher_id' => $this->id,
                 ]);
             }
@@ -1223,24 +1249,5 @@ class Voucher extends Model
         }
 
         return $this->transactions->count() + $this->product_vouchers->count();
-    }
-
-    /**
-     * @return null
-     */
-    public function reportBackofficeFirstUse()
-    {
-        if (!$this->parent_id && $this->identity_address && !$this->backoffice_log_first_use) {
-            $backOffice = $this->fund->getBackofficeApi();
-            $bsn = record_repo()->bsnByAddress($this->identity_address);
-
-            if ($backOffice && $bsn) {
-                return $backOffice->reportFirstUse($bsn)->updateModel([
-                    'voucher_id' => $this->id,
-                ]);
-            }
-        }
-
-        return null;
     }
 }

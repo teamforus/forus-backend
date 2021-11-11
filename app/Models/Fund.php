@@ -1639,11 +1639,17 @@ class Fund extends Model
         $bsn = record_repo()->bsnByAddress($identity_address);
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
 
-        if ($bsn && !$alreadyHasActiveVoucher &&  $this->isBackofficeApiAvailable()) {
+        if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
             $backofficeApi = $this->getBackofficeApi();
-            $response = $backofficeApi->eligibilityCheck($bsn);
+            $residencyResponse = $backofficeApi->residencyCheck($bsn);
+
+            if (!$residencyResponse->isResident()) {
+                return null;
+            }
 
             // check again for active vouchers
+            $response = $backofficeApi->eligibilityCheck($bsn, $residencyResponse->getLog()->response_id);
+
             if ($response->isEligible() && !$this->identityHasActiveVoucher($identity_address)) {
                 $voucher = $this->makeVoucher($identity_address, [
                     'fund_backoffice_log_id' => $response->getLog()->id,
