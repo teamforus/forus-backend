@@ -46,6 +46,7 @@ use Carbon\Carbon;
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
+ * @property string|null $description_short
  * @property string $type
  * @property string $state
  * @property bool $archived
@@ -146,6 +147,7 @@ use Carbon\Carbon;
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
  * @method static Builder|Fund whereDescription($value)
+ * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
  * @method static Builder|Fund whereId($value)
@@ -212,7 +214,7 @@ class Fund extends Model
         'organization_id', 'state', 'name', 'description', 'description_text', 'start_date',
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
-        'criteria_editable_after_start', 'type', 'archived',
+        'criteria_editable_after_start', 'type', 'archived', 'description_short',
     ];
 
     protected $hidden = [
