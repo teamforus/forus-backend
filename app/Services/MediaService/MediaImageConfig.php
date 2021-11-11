@@ -4,6 +4,7 @@ namespace App\Services\MediaService;
 
 use App\Services\MediaService\Models\Media;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Intervention\Image\Facades\Image;
 
 /**
  * Class MediaSize
@@ -59,7 +60,7 @@ abstract class MediaImageConfig extends MediaConfig
      */
     public function getDominantColor(string $sourcePath)
     {
-        $image = \Image::make(file_get_contents($sourcePath))->backup();
+        $image = Image::make(file_get_contents($sourcePath))->backup();
 
         // Reduce to single color and then sample
         $color = $image->limitColors(1)->pickColor(0, 0, 'hex');

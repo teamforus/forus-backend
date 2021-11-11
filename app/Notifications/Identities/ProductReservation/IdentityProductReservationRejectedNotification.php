@@ -3,10 +3,9 @@
 namespace App\Notifications\Identities\ProductReservation;
 
 /**
- * Class IdentityProductReservationAcceptedNotification
- * @package App\Notifications\Identities\ProductReservation
+ * The product reservation was rejected
  */
 class IdentityProductReservationRejectedNotification extends BaseProductReservationNotification
 {
-    protected $key = 'notifications_identities.product_reservation_rejected';
+    protected static $key = 'notifications_identities.product_reservation_rejected';
 }

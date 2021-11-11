@@ -13,7 +13,6 @@ use App\Events\Products\ProductRevoked;
 use App\Events\Products\ProductSoldOut;
 use App\Events\Products\ProductUpdated;
 use App\Models\FundProviderChat;
-use App\Models\Product;
 use App\Notifications\Organizations\Products\ProductApprovedNotification;
 use App\Notifications\Organizations\Products\ProductExpiredNotification;
 use App\Notifications\Organizations\Products\ProductReservedNotification;
@@ -38,7 +37,7 @@ class ProductSubscriber
             'description_text' => $product->descriptionToText(),
         ]);
 
-        $product->log(Product::EVENT_CREATED, [
+        $product->log($product::EVENT_CREATED, [
             'product' => $product,
             'provider' => $product->organization,
         ]);
@@ -74,9 +73,8 @@ class ProductSubscriber
     public function onProductSoldOut(ProductSoldOut $productSoldOut): void
     {
         $product = $productSoldOut->getProduct();
-        $product->sendSoldOutEmail();
 
-        ProductSoldOutNotification::send($product->log(Product::EVENT_SOLD_OUT, [
+        ProductSoldOutNotification::send($product->log($product::EVENT_SOLD_OUT, [
             'product' => $product,
             'provider' => $product->organization,
         ]));
@@ -89,7 +87,7 @@ class ProductSubscriber
     {
         $product = $productExpired->getProduct();
 
-        ProductExpiredNotification::send($product->log(Product::EVENT_EXPIRED, [
+        ProductExpiredNotification::send($product->log($product::EVENT_EXPIRED, [
             'product' => $product,
             'provider' => $product->organization,
         ]));
@@ -103,11 +101,14 @@ class ProductSubscriber
         $product = $productReserved->getProduct();
         $voucher = $productReserved->getVoucher();
 
-        ProductReservedNotification::send($product->log(Product::EVENT_RESERVED, [
+        ProductReservedNotification::send($product->log($product::EVENT_RESERVED, [
             'fund' => $voucher->fund,
+            'sponsor' => $voucher->fund->organization,
             'product' => $product,
             'provider' => $product->organization,
-            'voucher'  => $voucher
+            'implementation' => $voucher->fund->getImplementation(),
+        ], [
+            'expiration_date' => format_date_locale($voucher->last_active_day),
         ]));
     }
 
@@ -120,19 +121,17 @@ class ProductSubscriber
         $product = $productApproved->getProduct();
 
         foreach ($product->fund_provider_chats as $chat) {
-            $chat->addSystemMessage(
-                'Aanbieding geaccepteerd.',
-                auth_address()
-            );
+            $chat->addSystemMessage('Aanbieding geaccepteerd.', auth_address());
         }
 
         FundProductApprovedEvent::dispatch($fund, $product);
 
-        ProductApprovedNotification::send($product->log(Product::EVENT_APPROVED, [
-            'product' => $product,
+        ProductApprovedNotification::send($product->log($product::EVENT_APPROVED, [
             'fund' => $fund,
+            'product' => $product,
             'sponsor' => $fund->organization,
             'provider' => $product->organization,
+            'implementation' => $fund->getImplementation(),
         ]));
     }
 
@@ -146,11 +145,12 @@ class ProductSubscriber
 
         FundProductRevokedEvent::dispatch($fund, $product);
 
-        ProductRevokedNotification::send($product->log(Product::EVENT_REVOKED, [
-            'product' => $product,
+        ProductRevokedNotification::send($product->log($product::EVENT_REVOKED, [
             'fund' => $fund,
+            'product' => $product,
             'sponsor' => $fund->organization,
             'provider' => $product->organization,
+            'implementation' => $fund->getImplementation(),
         ]));
     }
 

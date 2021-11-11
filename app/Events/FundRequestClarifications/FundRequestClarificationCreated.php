@@ -2,4 +2,4 @@
 
 namespace App\Events\FundRequestClarifications;
 
-class FundRequestClarificationCreated extends FundRequestClarificationEvent {}
+class FundRequestClarificationCreated extends BaseFundRequestClarificationEvent {}

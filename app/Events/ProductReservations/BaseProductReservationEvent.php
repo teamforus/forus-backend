@@ -30,16 +30,6 @@ class BaseProductReservationEvent
     }
 
     /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel|array
-     */
-    public function broadcastOn(): Channel
-    {
-        return new PrivateChannel('channel-name');
-    }
-
-    /**
      * @return ProductReservation
      */
     public function getProductReservation(): ProductReservation
@@ -53,5 +43,15 @@ class BaseProductReservationEvent
     public function setProductReservation(ProductReservation $productReservation): void
     {
         $this->productReservation = $productReservation;
+    }
+
+    /**
+     * Get the channels the event should broadcast on.
+     *
+     * @return \Illuminate\Broadcasting\Channel|array
+     */
+    public function broadcastOn(): Channel
+    {
+        return new PrivateChannel('channel-name');
     }
 }

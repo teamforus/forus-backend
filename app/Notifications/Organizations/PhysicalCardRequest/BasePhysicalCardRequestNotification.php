@@ -13,7 +13,7 @@ abstract class BasePhysicalCardRequestNotification extends BaseOrganizationNotif
     /**
      * @var string
      */
-    protected $scope = self::SCOPE_SPONSOR;
+    protected static $scope = self::SCOPE_SPONSOR;
 
     /**
      * @param \App\Models\PhysicalCardRequest $loggable

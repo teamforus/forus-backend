@@ -2,19 +2,17 @@
 
 namespace App\Notifications\Identities\Voucher;
 
-use App\Mail\Vouchers\ProductReservedUserMail;
+use App\Mail\Vouchers\ProductReservedRequesterMail;
 use App\Models\Implementation;
 use App\Models\Voucher;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
- * Class IdentityProductVoucherReservedNotification
- * @package App\Notifications\Identities\Voucher
+ * Product reservation (legacy reservation) was reserved
  */
 class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNotification
 {
-    protected $key = 'notifications_identities.product_voucher_reserved';
-    protected $sendMail = true;
+    protected static $key = 'notifications_identities.product_voucher_reserved';
 
     /**
      * @param Identity $identity
@@ -25,12 +23,10 @@ class IdentityProductVoucherReservedNotification extends BaseIdentityVoucherNoti
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
 
-        $this->getNotificationService()->sendMailNotification(
+        $this->sendMailNotification(
             $identity->primary_email->email,
-            new ProductReservedUserMail(array_merge($this->eventLog->data, [
-                'provider_organization_name' => $this->eventLog->data['provider_name'],
+            new ProductReservedRequesterMail(array_merge($this->eventLog->data, [
                 'qr_token'  => $voucher->token_without_confirmation->address,
-                'expire_at_locale' => $this->eventLog->data['voucher_expire_date_locale'],
             ]), Implementation::emailFrom($this->eventLog->data['implementation_key']))
         );
     }

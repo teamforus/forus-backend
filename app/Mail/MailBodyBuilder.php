@@ -84,6 +84,81 @@ class MailBodyBuilder
     }
 
     /**
+     * @param string $html
+     * @param string $globalStyles
+     * @param string|null $textColor
+     * @return MailBodyBuilder
+     */
+    public function markdownHtml(
+        string $html,
+        $globalStyles = 'text_left',
+        ?string $textColor = null
+    ): MailBodyBuilder {
+        $html = $this->addStylesToMarkdownHtml($html, $globalStyles, $textColor);
+
+        return $this->block('markdown', $html);
+    }
+
+    /**
+     * @param string $markdown
+     * @param array $data
+     * @param string $globalStyles
+     * @param string|null $textColor
+     * @return MailBodyBuilder
+     */
+    public function markdown(
+        string $markdown,
+        array $data = [],
+        $globalStyles = 'text_left',
+        ?string $textColor = null
+    ): MailBodyBuilder {
+        $templateHtml = resolve('markdown')->convertToHtml($markdown);
+        $templateHtml = str_var_replace($templateHtml, $data);
+
+        return $this->markdownHtml($templateHtml, $globalStyles, $textColor);
+    }
+
+    /**
+     * @param string $html
+     * @param string $globalStyles
+     * @param string|null $textColor
+     * @return false|string
+     * @noinspection PhpPossiblePolymorphicInvocationInspection
+     */
+    public function addStylesToMarkdownHtml(
+        string $html,
+        $globalStyles = 'text_left',
+        ?string $textColor = null
+    ) {
+        $html = str_replace('&amp;nbsp;', ' ', $html);
+        $styles = config('forus.mail_styles');
+        $textColor = $textColor ? "; color: $textColor;" : '';
+        $globalStyles = array_reduce(array_filter((array) $globalStyles), function($list, $key) use ($styles) {
+            return $list . ' ' . ($styles[$key] ?? '');
+        }, '');
+
+        $documentOptions = LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOERROR;
+        $document = new \DomDocument();
+        $document->loadHTML('<?xml encoding="utf-8" ?>' . $html, $documentOptions);
+
+        $styles['p'] = $styles['text'] ?? '';
+        $styles['a'] = $styles['link'] ?? '';
+
+        foreach (array_only($styles, ['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'a']) as $tagName => $tagStyles) {
+            $elements = $document->getElementsByTagName($tagName);
+
+            for ($i = $elements->length; --$i >= 0; ) {
+                $attrStyles = $elements->item($i)->getAttribute('style');
+                $stylesValue = $tagStyles . ' ' . $globalStyles;
+                $stylesValue = ($tagName == 'a' ? $stylesValue . $textColor : $stylesValue);
+                $elements->item($i)->setAttribute('style', $stylesValue . ' ' . $attrStyles);
+            }
+        }
+
+        return $document->saveHTML();
+    }
+
+    /**
      * @return MailBodyBuilder
      */
     public function space(): MailBodyBuilder
@@ -105,11 +180,8 @@ class MailBodyBuilder
      * @param array $styles
      * @return $this
      */
-    public function link(
-        string $url = '',
-        string $text = '',
-        $styles = []
-    ): MailBodyBuilder {
+    public function link(string $url, string $text = '', $styles = []): MailBodyBuilder
+    {
         return $this->button('link', $url, $text ?: $url, $styles);
     }
 
@@ -119,11 +191,8 @@ class MailBodyBuilder
      * @param array $styles
      * @return $this
      */
-    public function button_primary(
-        string $url = '',
-        string $text = '',
-        $styles = []
-    ): MailBodyBuilder {
+    public function button_primary(string $url, string $text = '', $styles = []): MailBodyBuilder
+    {
         return $this->button('button_primary', $url, $text, $styles);
     }
 
@@ -132,12 +201,10 @@ class MailBodyBuilder
      * @param string $url
      * @param array $styles
      * @return $this
+     * @noinspection PhpUnused
      */
-    public function button_success(
-        string $url = '',
-        string $text = '',
-        $styles = []
-    ): MailBodyBuilder {
+    public function button_success(string $url, string $text = '', $styles = []): MailBodyBuilder
+    {
         return $this->button('button_success', $url, $text, $styles);
     }
 
@@ -146,12 +213,10 @@ class MailBodyBuilder
      * @param string $url
      * @param array $styles
      * @return $this
+     * @noinspection PhpUnused
      */
-    public function button_danger(
-        string $url = '',
-        string $text = '',
-        $styles = []
-    ): MailBodyBuilder {
+    public function button_danger(string $url, string $text = '', $styles = []): MailBodyBuilder
+    {
         return $this->button('button_danger', $url, $text, $styles);
     }
 
@@ -178,11 +243,8 @@ class MailBodyBuilder
      * @param array $styles
      * @return $this
      */
-    public function block(
-        string $type = 'h1',
-        string $text = '',
-        $styles = []
-    ): MailBodyBuilder {
+    public function block(string $type = 'h1', string $text = '', $styles = []): MailBodyBuilder
+    {
         $this->mailBody[] = [array_merge((array) $type, (array) $styles), $text];
         return $this;
     }

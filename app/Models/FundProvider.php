@@ -61,6 +61,7 @@ class FundProvider extends Model
 {
     use HasLogs;
 
+    public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
     public const EVENT_APPROVED_BUDGET = 'approved_budget';
     public const EVENT_REVOKED_BUDGET = 'revoked_budget';
     public const EVENT_APPROVED_PRODUCTS = 'approved_products';

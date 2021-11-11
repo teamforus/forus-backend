@@ -10,13 +10,12 @@ use Illuminate\Support\Collection;
 
 abstract class BaseOrganizationNotification extends BaseNotification
 {
-    protected $scope;
-    protected $organization_id;
+    protected static $scope;
 
     /**
      * Permissions required to get the notification
      *
-     * @var array
+     * @var array|string
      */
     protected static $permissions = [];
 
@@ -36,7 +35,7 @@ abstract class BaseOrganizationNotification extends BaseNotification
             ));
         }
 
-        return static::$permissions;
+        return (array) static::$permissions;
     }
 
     /**
@@ -48,9 +47,9 @@ abstract class BaseOrganizationNotification extends BaseNotification
      */
     public static function eligibleIdentities($loggable): Collection
     {
-        $employeeAddresses = static::getOrganization($loggable)->employeesWithPermissions(
+        $employeeAddresses = static::getOrganization($loggable)->employeesWithPermissionsQuery(
             self::getPermissions()
-        )->pluck('identity_address')->toArray();
+        )->select('employees.identity_address')->distinct()->getQuery();
 
         return Identity::whereIn('address', $employeeAddresses)->get();
     }
@@ -66,14 +65,6 @@ abstract class BaseOrganizationNotification extends BaseNotification
             'organization_id' => static::getOrganization($loggable)->id,
         ];
     }
-
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @param Identity $identity
-     * @return void
-     */
-    public function toMail(Identity $identity): void {}
 
     /**
      * Get the organization owner of the resource,

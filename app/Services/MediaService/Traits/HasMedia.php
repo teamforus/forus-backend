@@ -28,10 +28,32 @@ trait HasMedia
     /**
      * @param string|null $uid
      * @return $this
+     * @noinspection PhpUnused
      */
     public function attachMediaByUid(?string $uid): self
     {
-        if ($uid && $media = media()->findByUid($uid)) {
+        if ($uid && $media = resolve('media')->findByUid($uid)) {
+            return $this->attachMedia($media);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $uid
+     * @param string|null $cloneType
+     * @return $this
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @noinspection PhpUnused
+     */
+    public function attachOrCloneMediaByUid(?string $uid, string $cloneType): self
+    {
+        if ($uid && $media = resolve('media')->findByUid($uid)) {
+            // media already assigned to other entity or the type is wrong
+            if (($media->mediable && !$media->mediable->is($this)) || $media->type != $cloneType) {
+                $media = resolve('media')->cloneMedia($media, $cloneType, true);
+            }
+
             return $this->attachMedia($media);
         }
 
