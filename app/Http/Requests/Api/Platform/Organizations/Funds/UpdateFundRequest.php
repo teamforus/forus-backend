@@ -61,6 +61,9 @@ class UpdateFundRequest extends FormRequest
             'name'                      => 'required|between:2,200',
             'description'               => 'nullable|string|max:140',
             'notification_amount'       => 'nullable|numeric',
+            'faq'                       => 'present|array',
+            'faq.*.title'               => 'required|string|max:100',
+            'faq.*.description'         => 'required|string|max:5000',
         ], [
             'auto_requests_validation'  => 'nullable|boolean',
             'default_validator_employee_id' => [

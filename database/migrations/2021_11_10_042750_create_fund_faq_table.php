@@ -16,7 +16,7 @@ class CreateFundFaqTable extends Migration
         Schema::create('fund_faq', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('fund_id');
-            $table->string('title', 50);
+            $table->string('title', 100);
             $table->string('description', 5000);
             $table->timestamps();
 

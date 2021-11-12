@@ -459,6 +459,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\FundsController@storeCriteriaValidate");
 
     $router->post(
+        'organizations/{organization}/funds/faq/validate',
+        "Api\Platform\Organizations\FundsController@storeFaqValidate");
+
+    $router->post(
         'organizations/{organization}/funds/{fund}/top-up',
         "Api\Platform\Organizations\FundsController@topUp");
 

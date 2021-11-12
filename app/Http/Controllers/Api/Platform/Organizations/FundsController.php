@@ -8,6 +8,7 @@ use App\Exports\FundsExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
+use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundFaqRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundBackofficeRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\UpdateFundCriteriaRequest;
@@ -125,6 +126,21 @@ class FundsController extends Controller
      */
     public function storeCriteriaValidate(
         StoreFundCriteriaRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+
+        return response()->json([], $request->isAuthenticated() ? 200 : 403);
+    }
+
+    /**
+     * @param StoreFundFaqRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function storeFaqValidate(
+        StoreFundFaqRequest $request,
         Organization $organization
     ): JsonResponse {
         $this->authorize('show', $organization);

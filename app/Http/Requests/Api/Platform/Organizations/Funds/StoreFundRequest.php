@@ -59,6 +59,9 @@ class StoreFundRequest extends FormRequest
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
+            'faq'                           => 'present|array',
+            'faq.*.title'                   => 'required|string|max:100',
+            'faq.*.description'             => 'required|string|max:5000',
         ], [
             'auto_requests_validation' => 'nullable|boolean',
             'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),

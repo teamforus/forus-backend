@@ -1382,7 +1382,7 @@ class Fund extends Model
         /** @var FundFaq $fundFaq */
         $fundQuestion = $this->faq()->find($question['id'] ?? null);
 
-        $data_question = array_only($fundQuestion, ['title', 'description']);
+        $data_question = array_only($question, ['title', 'description']);
 
         if ($fundQuestion) {
             $fundQuestion->update($data_question);
