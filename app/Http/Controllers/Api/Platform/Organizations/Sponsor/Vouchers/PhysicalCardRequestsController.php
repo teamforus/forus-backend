@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor\Vouchers;
 
-use App\Events\PhysicalCardRequests\PhysicalCardRequestsCreated;
+use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
@@ -39,7 +39,7 @@ class PhysicalCardRequestsController extends Controller
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
         ]));
 
-        PhysicalCardRequestsCreated::dispatch($cardRequest->fresh());
+        VoucherPhysicalCardRequestedEvent::broadcast($voucherToken->voucher, $cardRequest);
 
         return new PhysicalCardRequestResource($cardRequest);
     }

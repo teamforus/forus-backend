@@ -167,7 +167,7 @@ class FundRequestRecord extends Model
         string $record_type_key,
         string $value
     ): FundRequestRecord {
-        $recordService = service_record();
+        $recordService = resolve('forus.services.record');
 
         $record = $recordService->recordCreate(
             $this->fund_request->identity_address,

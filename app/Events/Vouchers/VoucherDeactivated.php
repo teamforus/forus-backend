@@ -4,23 +4,16 @@ namespace App\Events\Vouchers;
 
 use App\Models\Employee;
 use App\Models\Voucher;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
 
 /**
  * Class VoucherCreated
  * @package App\Events\Vouchers
  */
-class VoucherDeactivated
+class VoucherDeactivated extends BaseVoucherEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    private $note;
-    private $voucher;
-    private $employee;
-    private $notifyByEmail;
+    protected $note;
+    protected $employee;
+    protected $notifyByEmail;
 
     /**
      * Create a new event instance.
@@ -36,8 +29,9 @@ class VoucherDeactivated
         ?Employee $employee = null,
         bool $notifyByEmail = true
     ) {
+        parent::__construct($voucher);
+
         $this->note = $note;
-        $this->voucher = $voucher;
         $this->employee = $employee;
         $this->notifyByEmail = $notifyByEmail;
     }
@@ -48,16 +42,6 @@ class VoucherDeactivated
     public function getNote(): string
     {
         return $this->note;
-    }
-
-    /**
-     * Get the voucher
-     *
-     * @return Voucher
-     */
-    public function getVoucher(): Voucher
-    {
-        return $this->voucher;
     }
 
     /**
@@ -74,15 +58,5 @@ class VoucherDeactivated
     public function shouldNotifyByEmail(): bool
     {
         return $this->notifyByEmail;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel
-     */
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-name');
     }
 }

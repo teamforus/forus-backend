@@ -4,36 +4,22 @@ namespace App\Events\Funds;
 
 use App\Models\Fund;
 use App\Models\FundTopUpTransaction;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
 
-class FundBalanceSuppliedEvent
+class FundBalanceSuppliedEvent extends BaseFundEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    private $transaction;
+    protected $transaction;
 
     /**
      * Create a new event instance.
      *
      * FundBalanceSuppliedEvent constructor.
+     * @param Fund $fund
      * @param FundTopUpTransaction $transaction
      */
-    public function __construct(FundTopUpTransaction $transaction)
+    public function __construct(Fund $fund, FundTopUpTransaction $transaction)
     {
+        parent::__construct($fund);
         $this->transaction = $transaction;
-    }
-
-    /**
-     * Get the voucher
-     *
-     * @return Fund
-     */
-    public function getFund()
-    {
-        return $this->transaction->fund_top_up->fund;
     }
 
     /**
@@ -41,18 +27,8 @@ class FundBalanceSuppliedEvent
      *
      * @return FundTopUpTransaction
      */
-    public function getTransaction()
+    public function getTransaction(): FundTopUpTransaction
     {
         return $this->transaction;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel|array
-     */
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-name');
     }
 }

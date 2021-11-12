@@ -3,10 +3,9 @@
 namespace App\Notifications\Identities\ProductReservation;
 
 /**
- * Class IdentityProductReservationAcceptedNotification
- * @package App\Notifications\Identities\ProductReservation
+ * The product reservation was canceled
  */
 class IdentityProductReservationCanceledNotification extends BaseProductReservationNotification
 {
-    protected $key = 'notifications_identities.product_reservation_canceled';
+    protected static $key = 'notifications_identities.product_reservation_canceled';
 }

@@ -9,7 +9,7 @@ use App\Models\Fund;
  * Class FundCreated
  * @package App\Events\Funds
  */
-class FundArchivedEvent extends FundBaseEvent {
+class FundArchivedEvent extends BaseFundEvent {
     protected $employee;
 
     /**

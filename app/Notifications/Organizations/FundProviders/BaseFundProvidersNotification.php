@@ -15,7 +15,7 @@ abstract class BaseFundProvidersNotification extends BaseOrganizationNotificatio
     /**
      * @var string
      */
-    protected $scope = self::SCOPE_PROVIDER;
+    protected static $scope = self::SCOPE_PROVIDER;
 
     /**
      * @param \Illuminate\Database\Eloquent\Model|FundProvider $loggable

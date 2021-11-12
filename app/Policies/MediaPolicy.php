@@ -48,7 +48,7 @@ class MediaPolicy
      */
     public function destroy($identity_address, Media $media): bool
     {
-        if ($media->mediable && $media->type == 'implementation_banner') {
+        if ($media->mediable && in_array($media->type, ['implementation_banner', 'email_logo'])) {
             /** @var Implementation $implementation */
             $implementation = $media->mediable;
 

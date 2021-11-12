@@ -78,9 +78,8 @@ class ValidatorDigest extends BaseOrganizationDigest
      * @param Organization $organization
      * @return Collection
      */
-    public function getOrganizationFundRequestEvents(
-        Organization $organization
-    ): Collection {
+    public function getOrganizationFundRequestEvents(Organization $organization): Collection
+    {
         $digestDateTime = $this->getOrganizationDigestTime($organization);
 
         return $organization->funds()->where([

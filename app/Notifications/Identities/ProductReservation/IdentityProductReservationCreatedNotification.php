@@ -3,10 +3,9 @@
 namespace App\Notifications\Identities\ProductReservation;
 
 /**
- * Class IdentityProductReservationCreatedNotification
- * @package App\Notifications\Identities\ProductReservation
+ * A new product reservation was created
  */
 class IdentityProductReservationCreatedNotification extends BaseProductReservationNotification
 {
-    protected $key = 'notifications_identities.product_reservation_created';
+    protected static $key = 'notifications_identities.product_reservation_created';
 }

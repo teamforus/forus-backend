@@ -54,6 +54,7 @@ return [
         'state-values' => [
             'success' => 'voltooid', 
             'pending' => 'in afwachting',
+            'canceled' => 'geannuleerd',
         ]
     ],
 

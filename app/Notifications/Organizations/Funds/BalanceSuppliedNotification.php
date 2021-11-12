@@ -3,13 +3,10 @@
 namespace App\Notifications\Organizations\Funds;
 
 /**
- * Class BalanceSuppliedNotification
- * @package App\Notifications\Organizations\Funds
+ * Notify sponsor that the fund balance was successfully supplied
  */
 class BalanceSuppliedNotification extends BaseFundsNotification
 {
-    protected $key = 'notifications_funds.balance_supplied';
-    protected static $permissions = [
-        'view_finances'
-    ];
+    protected static $key = 'notifications_funds.balance_supplied';
+    protected static $permissions = 'view_finances';
 }

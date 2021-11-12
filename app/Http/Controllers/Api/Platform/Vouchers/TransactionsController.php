@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use App\Services\TokenGeneratorService\Facades\TokenGenerator;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TransactionsController extends Controller
@@ -98,7 +99,7 @@ class TransactionsController extends Controller
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
             'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProductId ?? null,
-            'address' => token_generator()->address(),
+            'address' => resolve('token_generator')->address(),
             'organization_id' => $organization->id,
         ], $voucher->needsTransactionReview() ? [
             'attempts' => 50,

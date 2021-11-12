@@ -17,8 +17,6 @@ class TokenGenerator
     }
 
     /**
-     * TODO: temporary placeholder, should be replaced by actual contract address
-     *
      * @return string
      */
     public function address(): string
