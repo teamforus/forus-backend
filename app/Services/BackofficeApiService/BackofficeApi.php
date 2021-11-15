@@ -6,6 +6,7 @@ namespace App\Services\BackofficeApiService;
 use App\Models\Fund;
 use App\Models\FundBackofficeLog;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,6 +23,8 @@ class BackofficeApi
     protected $recordRepo;
 
     public const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
+    public const ACTION_RESIDENCY_CHECK = 'residency_check';
+
     public const ACTION_REPORT_FIRST_USE = 'first_use';
     public const ACTION_REPORT_RECEIVED = 'received';
     public const ACTION_STATUS = 'status';
@@ -46,11 +49,21 @@ class BackofficeApi
      * Check BSN-number for eligibility
      *
      * @param string $bsn
+     * @param string|null $requestId
      * @return EligibilityResponse
      */
-    public function eligibilityCheck(string $bsn): EligibilityResponse
+    public function eligibilityCheck(string $bsn, ?string $requestId = null): EligibilityResponse
     {
-        return new EligibilityResponse($this->checkEligibility($bsn, self::makeRequestId()));
+        return new EligibilityResponse($this->checkEligibility($bsn, $requestId ?: self::makeRequestId()));
+    }
+
+    /**
+     * @param string $bsn
+     * @return ResidencyResponse
+     */
+    public function residencyCheck(string $bsn): ResidencyResponse
+    {
+        return new ResidencyResponse($this->checkResidency($bsn, self::makeRequestId()));
     }
 
     /**
@@ -69,11 +82,12 @@ class BackofficeApi
      * Report to the API that a voucher was used for the first time
      *
      * @param string $bsn
+     * @param string|null $requestId
      * @return FundBackofficeLog
      */
-    public function reportFirstUse(string $bsn): FundBackofficeLog
+    public function reportFirstUse(string $bsn, ?string $requestId = null): FundBackofficeLog
     {
-        return $this->makeLog(self::ACTION_REPORT_FIRST_USE, $bsn);
+        return $this->makeLog(self::ACTION_REPORT_FIRST_USE, $bsn, $requestId);
     }
 
     /**
@@ -110,6 +124,18 @@ class BackofficeApi
     }
 
     /**
+     * Make the request to the API to check BSN-number residency
+     *
+     * @param string $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog
+     */
+    protected function checkResidency(string $bsn, ?string $requestId): FundBackofficeLog
+    {
+        return $this->makeCheckRequest(self::ACTION_RESIDENCY_CHECK, $bsn, $requestId);
+    }
+
+    /**
      * Make the request to the API to check BSN-number eligibility
      *
      * @param string $bsn
@@ -118,9 +144,23 @@ class BackofficeApi
      */
     protected function checkEligibility(string $bsn, ?string $requestId): FundBackofficeLog
     {
-        $log = $this->makeLog(self::ACTION_ELIGIBILITY_CHECK, $bsn, $requestId);
-        $body = $this->makeRequestBody(self::ACTION_ELIGIBILITY_CHECK);
-        $endpoint = $this->getEndpoint(self::ACTION_ELIGIBILITY_CHECK);
+        return $this->makeCheckRequest(self::ACTION_ELIGIBILITY_CHECK, $bsn, $requestId);
+    }
+
+    /**
+     * @param string $action
+     * @param string $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog
+     */
+    protected function makeCheckRequest(
+        string $action,
+        string $bsn,
+        ?string $requestId
+    ): FundBackofficeLog {
+        $log = $this->makeLog($action, $bsn);
+        $endpoint = $this->getEndpoint($action);
+        $body = $this->makeRequestBody($action);
         $response = $this->request('POST', $endpoint, array_merge($body, [
             'id' => $requestId,
             'bsn' => $bsn,
@@ -228,11 +268,12 @@ class BackofficeApi
     public function getEndpoint(string $action): string
     {
         $endpoint = [
-                self::ACTION_ELIGIBILITY_CHECK => '/api/v1/funds',
-                self::ACTION_REPORT_FIRST_USE => '/api/v1/funds',
-                self::ACTION_REPORT_RECEIVED => '/api/v1/funds',
-                self::ACTION_STATUS => '/api/v1/status',
-            ][$action] ?? abort(403);
+            self::ACTION_ELIGIBILITY_CHECK => '/api/v1/funds',
+            self::ACTION_REPORT_FIRST_USE => '/api/v1/funds',
+            self::ACTION_REPORT_RECEIVED => '/api/v1/funds',
+            self::ACTION_RESIDENCY_CHECK => '/api/v1/funds',
+            self::ACTION_STATUS => '/api/v1/status',
+        ][$action] ?? abort(403);
 
         return rtrim($this->fund->fund_config->backoffice_url, '/') . $endpoint;
     }
@@ -364,7 +405,7 @@ class BackofficeApi
                 $log->updateModel([
                     'state' => self::STATE_SUCCESS,
                     'request_id' => $requestId,
-                    'response_id' => $response['response_body']['id'] ?? $log->request_id,
+                    'response_id' => $response['response_body']['id'] ?? $requestId,
                     'response_body' => $response['response_body'],
                     'response_code' => $response['response_code'],
                 ]);

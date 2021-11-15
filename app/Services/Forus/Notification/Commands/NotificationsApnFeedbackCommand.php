@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Notification\Commands;
 
+use App\Services\Forus\Notification\NotificationService;
 use Illuminate\Console\Command;
 use NotificationChannels\Apn\ApnFeedback;
 use NotificationChannels\Apn\FeedbackService;
@@ -23,15 +24,6 @@ class NotificationsApnFeedbackCommand extends Command
     protected $description = 'Request apn feedback to remove old tokens.';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct() {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return void
@@ -43,10 +35,7 @@ class NotificationsApnFeedbackCommand extends Command
 
             /** @var ApnFeedback $feedback */
             foreach ($feedbackService->get() as $feedback) {
-                $notificationService->removeNotificationToken(
-                    $feedback->token,
-                    $notificationService::TYPE_PUSH_IOS
-                );
+                $notificationService->removeNotificationToken($feedback->token, NotificationService::TYPE_PUSH_IOS);
             }
         } catch (\Exception $e) {}
     }

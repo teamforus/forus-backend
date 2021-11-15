@@ -3,13 +3,10 @@
 namespace App\Notifications\Organizations\FundRequests;
 
 /**
- * Class FundRequestCreatedValidatorNotification
- * @package App\Notifications\FundRequests
+ * Notify sponsor/validator about new fund request
  */
 class FundRequestCreatedValidatorNotification extends BaseFundsRequestsNotification
 {
-    protected $key = 'notifications_fund_requests.created_validator_employee';
-    protected static $permissions = [
-        'validate_records'
-    ];
+    protected static $key = 'notifications_fund_requests.created_validator_employee';
+    protected static $permissions = 'validate_records';
 }

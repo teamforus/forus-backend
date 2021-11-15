@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\MediaUidRule;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -12,7 +14,7 @@ use Illuminate\Validation\Rule;
  * @property Organization|null $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class StoreFundRequest extends FormRequest
+class StoreFundRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,7 +23,7 @@ class StoreFundRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('store', [Fund::class, $this->organization]);
     }
 
     /**
@@ -53,9 +55,13 @@ class StoreFundRequest extends FormRequest
         ] : [];
 
         return array_merge([
-            'name'                          => 'required|between:2,200',
             'type'                          => ['required', Rule::in(Fund::TYPES)],
-            'description'                   => 'nullable|string|max:140',
+            'name'                          => 'required|between:2,200',
+            'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
+            'description'                   => 'nullable|string|max:4000',
+            'description_short'             => 'nullable|string|max:140',
+            'description_media_uid'         => 'nullable|array',
+            'description_media_uid.*'       => $this->mediaRule(),
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
@@ -72,6 +78,18 @@ class StoreFundRequest extends FormRequest
                 Rule::exists('products', 'id')->where('unlimited_stock', true)
             ],
         ] : []);
+    }
+
+    /**
+     * @return array
+     */
+    private function mediaRule(): array {
+        return [
+            'required',
+            'string',
+            'exists:media,uid',
+            new MediaUidRule('cms_media')
+        ];
     }
 
     /**

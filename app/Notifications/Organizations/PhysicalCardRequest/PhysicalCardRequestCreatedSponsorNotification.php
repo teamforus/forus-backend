@@ -7,9 +7,6 @@ namespace App\Notifications\Organizations\PhysicalCardRequest;
  */
 class PhysicalCardRequestCreatedSponsorNotification extends BasePhysicalCardRequestNotification
 {
-    protected $key = 'notifications_physical_card_requests.physical_card_request_created';
-
-    protected static $permissions = [
-        'manage_vouchers',
-    ];
+    protected static $key = 'notifications_physical_card_requests.physical_card_request_created';
+    protected static $permissions = 'manage_vouchers';
 }

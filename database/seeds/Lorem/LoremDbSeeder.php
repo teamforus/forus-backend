@@ -16,7 +16,7 @@ use App\Models\FundProvider;
 use App\Models\Prevalidation;
 use App\Models\Implementation;
 use App\Models\VoucherTransaction;
-use App\Events\Funds\FundCreated;
+use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundEndedEvent;
 use App\Events\Funds\FundStartedEvent;
 use App\Events\Funds\FundBalanceLowEvent;
@@ -131,33 +131,39 @@ class LoremDbSeeder extends Seeder
         $this->disableEmails();
 
         $this->productCategories = ProductCategory::all();
-        $this->info("Making base identity!");
+        $this->info("⇾ Making base identity!");
         $baseIdentity = $this->makeIdentity($this->primaryEmail, true);
-        $this->success("Identity created!");
+        $this->success("✓ Identity created!");
 
-        $this->info("Making Sponsors!");
+        $this->info("⇾ Making Sponsors!");
         $this->makeSponsors($baseIdentity);
-        $this->success("Sponsors created!");
+        $this->success("✓ Sponsors created!");
+        $this->separator();
 
-        $this->info("Making Providers!");
+        $this->info("⇾ Making Providers!");
         $this->makeProviders($baseIdentity, $this->countProviders);
-        $this->success("Providers created!");
+        $this->success("✓ Providers created!");
+        $this->separator();
 
-        $this->info("Making Validators!");
+        $this->info("⇾ Making Validators!");
         $this->makeExternalValidators($baseIdentity, $this->countValidators);
-        $this->success("Validators created!");
+        $this->success("✓ Validators created!");
+        $this->separator();
 
-        $this->info("Applying to providers to funds!");
+        $this->info("⇾ Applying providers to funds!");
         $this->applyFunds($baseIdentity);
-        $this->success("Providers applied to funds!");
+        $this->success("✓ Providers applied to funds!");
+        $this->separator();
 
-        $this->info("Making other implementations!");
+        $this->info("⇾ Making other implementations!");
         $this->makeOtherImplementations(array_diff($this->implementations, $this->implementationsWithFunds));
-        $this->success("Other implementations created!");
+        $this->success("✓ Other implementations created!");
+        $this->separator();
 
-        $this->info("Making fund requests!");
+        $this->info("⇾ Making fund requests!");
         $this->makeFundRequests();
-        $this->success("Fund requests created!");
+        $this->success("✓ Fund requests created!");
+        $this->separator();
 
         $this->enableEmails();
     }
@@ -271,7 +277,7 @@ class LoremDbSeeder extends Seeder
                     'allow_products'    => $fund->isTypeBudget() && random_int(0, 2),
                 ]);
 
-                FundProviderApplied::dispatch($provider);
+                FundProviderApplied::dispatch($fund, $provider);
             }
         }
 
@@ -292,7 +298,7 @@ class LoremDbSeeder extends Seeder
                     'organization_id'   => $providers->random(),
                 ]);
 
-                FundProviderApplied::dispatch($provider->updateModel([
+                FundProviderApplied::dispatch($fund, $provider->updateModel([
                     'allow_products'    => $fund->isTypeBudget(),
                     'allow_budget'      => $fund->isTypeBudget(),
                 ]));
@@ -608,9 +614,9 @@ class LoremDbSeeder extends Seeder
             'amount' => 100000,
         ]);
 
-        FundCreated::dispatch($fund);
+        FundCreatedEvent::dispatch($fund);
         FundBalanceLowEvent::dispatch($fund);
-        FundBalanceSuppliedEvent::dispatch($transaction);
+        FundBalanceSuppliedEvent::dispatch($fund, $transaction);
 
         if ($active) {
             FundStartedEvent::dispatch($fund);
@@ -683,7 +689,7 @@ class LoremDbSeeder extends Seeder
         $backofficeConfig = in_array($fund->organization->name, $this->sponsorsWithBackoffice) ?
             $this->getBackofficeConfigs() : [];
 
-        $fund->fund_config()->create(collect([
+        $fund->fund_config()->create(array_merge([
             'implementation_id'     => $implementation->id,
             'key'                   => $key,
             'bunq_sandbox'          => true,
@@ -693,12 +699,11 @@ class LoremDbSeeder extends Seeder
             'hash_bsn'              => $hashBsn,
             'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
             'bunq_key'              => config('forus.seeders.lorem_db_seeder.bunq_key'),
-        ])->merge(collect($fields)->only([
-            'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox',
-            'csv_primary_key', 'is_configured'
-        ]))->merge($backofficeConfig)->toArray());
+        ], array_only($fields, [
+            'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
+        ]), $backofficeConfig));
 
-        $eligibility_key = sprintf("%s_eligible", $fund->fund_config->key);
+        $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config);
         $criteria = [];
 
         if (!$fund->isAutoValidatingRequests()) {
@@ -942,11 +947,14 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param $implementations
+     * @throws Exception
      */
     public function makeOtherImplementations($implementations): void {
         foreach ($implementations as $implementation) {
             $this->makeImplementation(str_slug($implementation), $implementation);
         }
+
+        (new ImplementationsNotificationBrandingSeeder)->run();
     }
 
     /**
@@ -1045,28 +1053,51 @@ class LoremDbSeeder extends Seeder
      * @param null $default
      * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed
      */
-    public function config($key, $default = null) {
+    public function config($key, $default = null)
+    {
         return config(sprintf('forus.seeders.lorem_db_seeder.%s', $key), $default);
     }
 
     /**
-     * @param string $msg
+     * @return void
      */
-    public function info(string $msg): void {
-        echo "\e[0;34m$msg\e[0m\n";
+    public function separator(): void
+    {
+        echo str_repeat('-', 80) . "\n";
     }
 
     /**
      * @param string $msg
+     * @param bool $timestamp
      */
-    public function success(string $msg): void {
-        echo "\e[0;32m$msg\e[0m\n";
+    public function info(string $msg, $timestamp = true): void
+    {
+        echo ($timestamp ? $this->timestamp() : null) . "\e[0;34m$msg\e[0m\n";
     }
 
     /**
      * @param string $msg
+     * @param bool $timestamp
      */
-    public function error(string $msg): void {
-        echo "\e[0;31m$msg\e[0m\n";
+    public function success(string $msg, $timestamp = true): void
+    {
+        echo ($timestamp ? $this->timestamp() : null) . "\e[0;32m$msg\e[0m\n";
+    }
+
+    /**
+     * @param string $msg
+     * @param bool $timestamp
+     */
+    public function error(string $msg, $timestamp = true): void
+    {
+        echo ($timestamp ? $this->timestamp() : null) . "\e[0;31m$msg\e[0m\n";
+    }
+
+    /**
+     * @return string
+     */
+    public function timestamp(): string
+    {
+        return now()->format('[H:i:s] - ');
     }
 }

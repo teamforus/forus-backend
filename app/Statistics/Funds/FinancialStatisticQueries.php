@@ -160,7 +160,7 @@ class FinancialStatisticQueries
         // Filter by selected funds
         if ($fundIds) {
             $query->whereHas('voucher.fund', function(Builder $builder) use ($sponsor, $fundIds) {
-                $builder->addWhereExistsQuery($sponsor->funds()->getBaseQuery());
+                $builder->whereIn('funds.id', $sponsor->funds()->getQuery()->select('funds.id'));
                 $builder->whereIn('id', $fundIds);
             });
         }

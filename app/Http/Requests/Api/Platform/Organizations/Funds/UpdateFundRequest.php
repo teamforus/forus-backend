@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\MediaUidRule;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -13,7 +15,7 @@ use Illuminate\Validation\Rule;
  * @property null|Organization $organization
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class UpdateFundRequest extends FormRequest
+class UpdateFundRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,7 +24,7 @@ class UpdateFundRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('update', [$this->fund, $this->organization]);
     }
 
     /**
@@ -59,8 +61,12 @@ class UpdateFundRequest extends FormRequest
 
         return array_merge([
             'name'                      => 'required|between:2,200',
-            'description'               => 'nullable|string|max:140',
+            'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
+            'description'               => 'nullable|string|max:4000',
+            'description_short'         => 'nullable|string|max:140',
             'notification_amount'       => 'nullable|numeric',
+            'description_media_uid'     => 'nullable|array',
+            'description_media_uid.*'   => $this->mediaRule(),
             'faq'                       => 'present|array',
             'faq.*.title'               => 'required|string|max:100',
             'faq.*.description'         => 'required|string|max:5000',
@@ -87,5 +93,17 @@ class UpdateFundRequest extends FormRequest
                 Rule::exists('products', 'id')->where('unlimited_stock', true)
             ],
         ] : []);
+    }
+
+    /**
+     * @return array
+     */
+    private function mediaRule(): array {
+        return [
+            'required',
+            'string',
+            'exists:media,uid',
+            new MediaUidRule('cms_media')
+        ];
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Events\Funds\FundCreated;
+use App\Events\Funds\FundCreatedEvent;
 use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
@@ -21,7 +21,6 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Scopes\Builders\FundQuery;
-use App\Services\MediaService\Models\Media;
 use App\Statistics\Funds\FinancialStatistic;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -57,7 +56,7 @@ class FundsController extends Controller
         }
 
         return FundResource::collection(FundQuery::sortByState($query, [
-            'active', 'waiting', 'paused', 'closed'
+            'active', 'waiting', 'paused', 'closed',
         ])->paginate($request->input('per_page')));
     }
 
@@ -76,31 +75,21 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('store', [Fund::class, $organization]);
 
-        $media = false;
-
-        if ($media_uid = $request->input('media_uid')) {
-            $mediaService = resolve('media');
-            $media = $mediaService->findByUid($media_uid);
-
-            $this->authorize('destroy', $media);
-        }
-
         $auto_requests_validation =
             !$request->input('default_validator_employee_id') ? null :
                 $request->input('auto_requests_validation');
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'state', 'start_date', 'end_date', 'type',
+            'name', 'description', 'description_short', 'state', 'start_date', 'end_date', 'type',
             'notification_amount', 'default_validator_employee_id',
         ], [
             'state' => Fund::STATE_WAITING,
-            'auto_requests_validation' => $auto_requests_validation
+            'auto_requests_validation' => $auto_requests_validation,
         ])));
 
-        if ($media instanceof Media && $media->type === 'fund_logo') {
-            $fund->attachMedia($media);
-        }
+        $fund->attachMediaByUid($request->input('media_uid'));
+        $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));
@@ -113,7 +102,7 @@ class FundsController extends Controller
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
-        FundCreated::dispatch($fund);
+        FundCreatedEvent::dispatch($fund);
 
         return new FundResource($fund);
     }
@@ -180,29 +169,20 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('update', [$fund, $organization]);
 
-        $media = false;
-
-        if ($media_uid = $request->input('media_uid')) {
-            $mediaService = resolve('media');
-            $media = $mediaService->findByUid($media_uid);
-
-            $this->authorize('destroy', $media);
-        }
-
         $auto_requests_validation =
             !$request->input('default_validator_employee_id') ? null :
                 $request->input('auto_requests_validation');
 
         if ($fund->state === Fund::STATE_WAITING) {
             $params = array_merge($request->only([
-                'name', 'description', 'start_date', 'end_date',
+                'name', 'description', 'description_short', 'start_date', 'end_date',
                 'notification_amount', 'default_validator_employee_id'
             ]), [
                 'auto_requests_validation' => $auto_requests_validation
             ]);
         } else {
             $params = array_merge($request->only([
-                'name', 'description', 'notification_amount',
+                'name', 'description', 'description_short', 'notification_amount',
                 'default_validator_employee_id'
             ]), [
                 'auto_requests_validation' => $auto_requests_validation
@@ -211,9 +191,8 @@ class FundsController extends Controller
 
         FundUpdatedEvent::dispatch($fund->updateModel($params));
 
-        if ($media instanceof Media && $media->type === 'fund_logo') {
-            $fund->attachMedia($media);
-        }
+        $fund->attachMediaByUid($request->input('media_uid'));
+        $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));

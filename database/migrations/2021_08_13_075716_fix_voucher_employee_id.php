@@ -26,21 +26,21 @@ class FixVoucherEmployeeId extends Migration
      */
     public function up(): void
     {
-        /** @var Voucher[]|Collection $vouchers */
+        /** @var Voucher[]|Collection $vouchers 
         $vouchers = Voucher::whereNotNull('employee_id')->get()->load([
             'employee' => function($builder) {
-                /** @var Builder|SoftDeletes $builder */
+                /** @var Builder|SoftDeletes $builder 
                 $builder->withTrashed();
             },
             'fund.organization.employees' => function($builder) {
-                /** @var Builder|SoftDeletes $builder */
+                /** @var Builder|SoftDeletes $builder 
                 $builder->withTrashed();
             },
         ]);
 
         foreach ($vouchers as $voucher) {
             $this->migrateVoucher($voucher);
-        }
+        }*/
     }
 
     /**

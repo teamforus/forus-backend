@@ -7,8 +7,6 @@ namespace App\Notifications\Organizations\Funds;
  * @package App\Notifications\Organizations\Funds
  */
 class FundArchivedNotification extends BaseFundsNotification {
-    protected $key = 'notifications_funds.created';
-    protected static $permissions = [
-        'view_funds'
-    ];
+    protected static $key = 'notifications_funds.created';
+    protected static $permissions = 'view_funds';
 }

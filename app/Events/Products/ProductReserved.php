@@ -4,22 +4,14 @@ namespace App\Events\Products;
 
 use App\Models\Product;
 use App\Models\Voucher;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
 
 /**
  * Class ProductReserved
  * @package App\Events\Products
  */
-class ProductReserved
+class ProductReserved extends BaseProductEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    private $product;
-    private $voucher;
+    protected $voucher;
 
     /**
      * Create a new event instance.
@@ -30,18 +22,8 @@ class ProductReserved
      */
     public function __construct(Product $product, Voucher $voucher)
     {
-        $this->product = $product;
+        parent::__construct($product);
         $this->voucher = $voucher;
-    }
-
-    /**
-     * Get the product
-     *
-     * @return Product
-     */
-    public function getProduct(): Product
-    {
-        return $this->product;
     }
 
     /**
@@ -52,15 +34,5 @@ class ProductReserved
     public function getVoucher(): Voucher
     {
         return $this->voucher;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel
-     */
-    public function broadcastOn(): Channel
-    {
-        return new PrivateChannel('channel-name');
     }
 }

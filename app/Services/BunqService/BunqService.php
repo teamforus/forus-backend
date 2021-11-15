@@ -2,8 +2,10 @@
 namespace App\Services\BunqService;
 
 use App\Events\Funds\FundBalanceSuppliedEvent;
+use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Models\Fund;
 use App\Models\FundTopUp;
+use App\Models\FundTopUpTransaction;
 use App\Models\VoucherTransaction;
 use App\Services\BunqService\Endpoint\BunqMeTabB;
 use App\Services\BunqService\Models\BunqIdealIssuer;
@@ -415,7 +417,7 @@ class BunqService
                         'payment_time'      => $bunq->paymentDetails($payment_id)->getCreated()
                     ])->save();
 
-                    $transaction->sendPushBunqTransactionSuccess();
+                    VoucherTransactionBunqSuccess::dispatch($transaction);
 
                     sleep(1);
                 } else if ($logger = logger()) {
@@ -456,10 +458,7 @@ class BunqService
             /** @var FundTopUp $topUp */
             foreach ($topUps as $topUp) {
                 foreach ($payments as $payment) {
-                    if (strpos(
-                        $payment->getDescription(),
-                        $topUp->code
-                        ) === FALSE) {
+                    if (strpos($payment->getDescription(), $topUp->code) === FALSE) {
                         continue;
                     }
 
@@ -475,7 +474,7 @@ class BunqService
                             'amount' => $payment->getAmount()->getValue()
                         ]);
 
-                        FundBalanceSuppliedEvent::dispatch($transaction);
+                        FundBalanceSuppliedEvent::dispatch($topUp->fund, $transaction);
                     } catch (\Exception $exception) {
                         resolve('log')->error($exception->getMessage());
                     }

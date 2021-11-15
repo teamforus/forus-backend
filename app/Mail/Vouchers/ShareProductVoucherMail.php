@@ -3,7 +3,6 @@
 namespace App\Mail\Vouchers;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -12,32 +11,24 @@ use Illuminate\Mail\Mailable;
  */
 class ShareProductVoucherMail extends ImplementationMail
 {
-    /**
-     * ShareProductVoucherMail constructor.
-     * @param array $data
-     * @param EmailFrom|null $emailFrom
-     */
-    public function __construct(array $data = [], ?EmailFrom $emailFrom = null)
-    {
-        $this->setMailFrom($emailFrom);
-        $this->mailData = $this->escapeData($data);
-    }
-
-    /**
-     * @return string
-     */
-    protected function getSubject(): string
-    {
-        return mail_trans("share_product.title_$this->communicationType", $this->mailData);
-    }
+    protected $notificationTemplateKey = 'notifications_identities.product_voucher_shared';
 
     /**
      * @return Mailable
      */
     public function build(): Mailable
     {
-        return $this->buildBase()
-            ->subject($this->getSubject())
-            ->view('emails.vouchers.share_product', $this->mailData);
+        return $this->buildNotificationTemplatedMail();
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    protected function getMailExtraData(array $data): array
+    {
+        return [
+            'qr_token' => $this->makeQrCode($data['qr_token']),
+        ];
     }
 }

@@ -93,10 +93,7 @@ class EmployeesController extends Controller
         }
 
         /** @var Employee $employee */
-        $employee = $organization->employees()->firstOrCreate([
-            'identity_address' => $identity_address
-        ]);
-
+        $employee = $organization->employees()->firstOrCreate(compact('identity_address'));
         $employee->roles()->sync($request->input('roles'));
 
         EmployeeCreated::dispatch($employee);
@@ -112,10 +109,8 @@ class EmployeesController extends Controller
      * @return EmployeeResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(
-        Organization $organization,
-        Employee $employee
-    ): EmployeeResource {
+    public function show(Organization $organization, Employee $employee): EmployeeResource
+    {
         $this->authorize('show', [$organization]);
         $this->authorize('show', [$employee, $organization]);
 
@@ -155,15 +150,12 @@ class EmployeesController extends Controller
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
-    public function destroy(
-        Organization $organization,
-        Employee $employee
-    ): JsonResponse {
+    public function destroy(Organization $organization, Employee $employee): JsonResponse
+    {
         $this->authorize('show', [$organization]);
         $this->authorize('destroy', [$employee, $organization]);
 
         EmployeeDeleted::broadcast($employee);
-
         $employee->delete();
 
         return response()->json([]);

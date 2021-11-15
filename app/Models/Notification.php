@@ -76,7 +76,8 @@ class Notification extends DatabaseNotification
      * @return LengthAwarePaginator
      */
     public static function paginateFromRequest(
-        Request $request, Identity $identity
+        Request $request,
+        Identity $identity
     ): LengthAwarePaginator {
         $per_page = $request->input('per_page', 15);
         $seen = $request->input('seen');

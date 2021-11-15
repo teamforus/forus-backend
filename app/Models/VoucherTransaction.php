@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,6 +35,8 @@ use Illuminate\Http\Request;
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes_provider
@@ -70,7 +73,15 @@ use Illuminate\Http\Request;
  */
 class VoucherTransaction extends Model
 {
+    use HasLogs;
+
     protected $perPage = 25;
+
+    public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
+
+    public const EVENTS = [
+        self::EVENT_BUNQ_TRANSACTION_SUCCESS,
+    ];
 
     public const STATE_PENDING = 'pending';
     public const STATE_SUCCESS = 'success';
@@ -163,67 +174,6 @@ class VoucherTransaction extends Model
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
-    }
-
-    /**
-     * @return void
-     * @throws \Exception
-     */
-    public function sendPushNotificationTransaction(): void {
-        $mailService = resolve('forus.services.notification');
-
-        // Product voucher
-        if (!$this->voucher->product) {
-            $transData = [
-                "amount" => currency_format_locale($this->amount),
-                "fund_name" => $this->voucher->fund->name,
-            ];
-
-            $fund = $this->voucher->fund;
-            if ($fund->isTypeSubsidy()) {
-                $fundProviderProduct = $this->product->getSubsidyDetailsForFund($fund);
-
-                if ($fundProviderProduct && $this->voucher->identity_address) {
-                    $transData = array_merge($transData, [
-                        "product_name" => $this->product->name,
-                        "new_limit"    => $fundProviderProduct->stockAvailableForVoucher($this->voucher),
-                    ]);
-                }
-            }
-
-            $title = trans('push.transactions.offline_regular_voucher.'.$fund->type.'.title', $transData);
-            $body = trans('push.transactions.offline_regular_voucher.'.$fund->type.'.body', $transData);
-        } else {
-            $transData = [
-                "product_name" => $this->voucher->product->name,
-            ];
-
-            $title = trans('push.transactions.offline_product_voucher.title', $transData);
-            $body = trans('push.transactions.offline_product_voucher.body', $transData);
-        }
-
-        if ($this->voucher->identity_address) {
-            $mailService->sendPushNotification(
-                $this->voucher->identity_address, $title, $body, 'voucher.transaction'
-            );
-        }
-    }
-
-    /**
-     * @return void
-     */
-    public function sendPushBunqTransactionSuccess(): void {
-        $mailService = resolve('forus.services.notification');
-        $transData = [
-            "amount" => currency_format_locale($this->amount)
-        ];
-
-        $title = trans('push.bunq_transactions.complete.title', $transData);
-        $body = trans('push.bunq_transactions.complete.body', $transData);
-
-        $mailService->sendPushNotification(
-            $this->provider->identity_address, $title, $body, 'bunq.transaction_success'
-        );
     }
 
     /**

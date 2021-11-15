@@ -3,7 +3,6 @@
 namespace App\Mail\Forus;
 
 use App\Mail\ImplementationMail;
-use App\Services\Forus\Notification\EmailFrom;
 use Illuminate\Mail\Mailable;
 
 /**
@@ -12,29 +11,13 @@ use Illuminate\Mail\Mailable;
  */
 class ForusFundCreatedMail extends ImplementationMail
 {
-    private $fundName;
-    private $organizationName;
+    protected $subjectKey = 'mails/system_mails.forus_fund_created.title';
 
-    public function __construct(
-        string $fundName,
-        string $organizationName,
-        ?EmailFrom $emailFrom
-    ) {
-        $this->setMailFrom($emailFrom);
-
-        $this->fundName = $fundName;
-        $this->organizationName = $organizationName;
-    }
-
+    /**
+     * @return Mailable
+     */
     public function build(): Mailable
     {
-        return $this->buildBase()
-            ->subject(mail_trans('forus/fund_created.title', [
-                'fund_name' => $this->fundName
-            ]))
-            ->view('emails.forus.new_fund_created', [
-                'fund_name' => $this->fundName,
-                'organization_name' => $this->organizationName
-            ]);
+        return $this->buildSystemMail('forus_fund_created');
     }
 }

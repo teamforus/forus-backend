@@ -3,16 +3,9 @@
 namespace App\Events\Employees;
 
 use App\Models\Employee;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
 
-class EmployeeUpdated
+class EmployeeUpdated extends BaseEmployeeEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    protected $employee;
     protected $previous_roles;
 
     /**
@@ -22,22 +15,10 @@ class EmployeeUpdated
      * @param Employee $employee
      * @param array $previous_roles
      */
-    public function __construct(
-        Employee $employee,
-        array $previous_roles
-    ) {
-        $this->employee = $employee;
-        $this->previous_roles = $previous_roles;
-    }
-
-    /**
-     * Get target user
-     *
-     * @return Employee
-     */
-    public function getEmployee()
+    public function __construct(Employee $employee, array $previous_roles)
     {
-        return $this->employee;
+        parent::__construct($employee);
+        $this->previous_roles = $previous_roles;
     }
 
     /**
@@ -45,18 +26,8 @@ class EmployeeUpdated
      *
      * @return array
      */
-    public function getPreviousRoles()
+    public function getPreviousRoles(): array
     {
         return $this->previous_roles;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel|array
-     */
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-name');
     }
 }
