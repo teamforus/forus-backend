@@ -119,4 +119,13 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function notification_repo(): NotificationService {
         return resolve('forus.services.notification');
     }
+
+    /**
+     * @param int $max
+     * @return string
+     */
+    public function perPageRule($max = 100): string
+    {
+        return "nullable|numeric|min:0|max:$max";
+    }
 }

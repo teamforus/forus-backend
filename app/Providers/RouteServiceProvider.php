@@ -19,6 +19,7 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
+use App\Models\VoucherTransactionBulk;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\Forus\Identity\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -172,6 +173,10 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('platform_config', static function ($value) {
             return Implementation::platformConfig($value);
+        });
+
+        $router->bind('voucher_transaction_bulks', static function ($value) {
+            return VoucherTransactionBulk::findOrFail($value);
         });
     }
 

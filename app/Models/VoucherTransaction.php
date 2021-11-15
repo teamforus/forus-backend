@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
  * @property int|null $employee_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
+ * @property int|null $voucher_transaction_bulk_id
  * @property string $amount
  * @property string|null $iban_from
  * @property string|null $iban_to
@@ -29,11 +30,13 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $payment_id
+ * @property string $payment_description
  * @property int $attempts
  * @property string $state
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read float $transaction_cost
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes_provider
@@ -59,6 +62,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereId($value)
  * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
  * @method static Builder|VoucherTransaction whereOrganizationId($value)
+ * @method static Builder|VoucherTransaction wherePaymentDescription($value)
  * @method static Builder|VoucherTransaction wherePaymentId($value)
  * @method static Builder|VoucherTransaction wherePaymentTime($value)
  * @method static Builder|VoucherTransaction whereProductId($value)
@@ -66,6 +70,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
+ * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
  * @mixin \Eloquent
  */
 class VoucherTransaction extends Model
@@ -91,6 +96,7 @@ class VoucherTransaction extends Model
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'payment_time', 'employee_id', 'transfer_at',
+        'voucher_transaction_bulk_id', 'payment_description',
     ];
 
     protected $hidden = [
@@ -163,6 +169,26 @@ class VoucherTransaction extends Model
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
+    }
+
+    /**
+     * @return float
+     * @noinspection PhpUnused
+     */
+    public function getTransactionCostAttribute(): float
+    {
+        return $this->amount > 0 ? .11 : 0;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return [
+            static::STATE_PENDING => 'In afwachting',
+            static::STATE_SUCCESS => 'Voltooid',
+        ][$this->state] ?? $this->state;
     }
 
     /**
@@ -311,6 +337,10 @@ class VoucherTransaction extends Model
 
         if ($provider) {
             $builder->where('organization_id', $provider->id);
+        }
+
+        if ($voucher_transaction_bulk_id = $request->has('voucher_transaction_bulk_id')) {
+            $builder->where(compact('voucher_transaction_bulk_id'));
         }
 
         if ($fund) {
@@ -473,6 +503,17 @@ class VoucherTransaction extends Model
         return $this->updateModel([
             'attempts' => 50,
             'last_attempt_at' => now()
+        ]);
+    }
+
+    /**
+     * @return string
+     */
+    public function makePaymentDescription(): string
+    {
+        return trans('bunq.transaction.from_fund', [
+            'fund_name' => $this->voucher->fund->name,
+            'transaction_id' => $this->id
         ]);
     }
 }

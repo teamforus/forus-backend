@@ -7,6 +7,7 @@ use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
+use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
@@ -55,6 +57,9 @@ use Illuminate\Database\Query\Builder;
  * @property int $provider_throttling_value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\BankConnection|null $bank_connection_active
+ * @property-read Collection|\App\Models\BankConnection[] $bank_connections
+ * @property-read int|null $bank_connections_count
  * @property-read \App\Models\BusinessType|null $business_type
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
  * @property-read int|null $digests_count
@@ -70,8 +75,6 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $fund_requests_count
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
- * @property-read Collection|\App\Models\VoucherTransaction[] $funds_voucher_transactions
- * @property-read int|null $funds_voucher_transactions_count
  * @property-read string $description_html
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -102,6 +105,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read int|null $tags_count
  * @property-read Collection|\App\Models\OrganizationValidator[] $validated_organizations
  * @property-read int|null $validated_organizations_count
+ * @property-read Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
+ * @property-read int|null $voucher_transaction_bulks_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
  * @property-read Collection|\App\Models\Voucher[] $vouchers
@@ -264,6 +269,26 @@ class Organization extends Model
     }
 
     /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function bank_connections(): HasMany
+    {
+        return $this->hasMany(BankConnection::class);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function bank_connection_active(): HasOne
+    {
+        return $this->hasOne(BankConnection::class)->where([
+            'state' => BankConnection::STATE_ACTIVE,
+        ]);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
@@ -366,12 +391,12 @@ class Organization extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return HasMany
      * @noinspection PhpUnused
      */
-    public function funds_voucher_transactions(): HasManyThrough
+    public function voucher_transaction_bulks(): HasMany
     {
-        return $this->hasManyThrough(VoucherTransaction::class, Voucher::class);
+        return $this->hasMany(VoucherTransactionBulk::class);
     }
 
     /**
@@ -780,5 +805,15 @@ class Organization extends Model
             'total_provider' => $this->products()->whereNull('sponsor_organization_id')->count(),
             'total_sponsor' => $this->products()->whereNotNull('sponsor_organization_id')->count(),
         ];
+    }
+
+    /**
+     * @param Bank $bank
+     * @param Implementation $implementation
+     * @return BankConnection|\Illuminate\Database\Eloquent\Model
+     */
+    public function makeBankConnection(Bank $bank, Implementation $implementation): BankConnection
+    {
+        return BankConnection::addConnection($bank, $this, $implementation);
     }
 }

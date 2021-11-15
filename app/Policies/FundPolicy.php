@@ -57,6 +57,18 @@ class FundPolicy
      * @param Fund $fund
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
+     */
+    public function topUp($identity_address, Fund $fund, Organization $organization): bool
+    {
+        return $this->show($identity_address, $fund, $organization) && $organization->bank_connection_active;
+    }
+
+    /**
+     * @param $identity_address
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
      */
     public function update($identity_address, Fund $fund, Organization $organization): bool
     {

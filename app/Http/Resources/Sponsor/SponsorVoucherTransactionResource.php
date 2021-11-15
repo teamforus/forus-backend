@@ -39,18 +39,23 @@ class SponsorVoucherTransactionResource extends Resource
     public function toArray($request): array
     {
         $voucherTransaction = $this->resource;
+        $createdAt = $voucherTransaction->created_at;
+        $updatedAt = $voucherTransaction->updated_at;
 
-        return collect($voucherTransaction)->only([
-            "id", "organization_id", "product_id", "created_at",
-            "updated_at", "address", "state", "payment_id",
-        ])->merge([
+        return array_merge($voucherTransaction->only([
+            "id", "organization_id", "product_id", "state_locale",
+            "updated_at", "address", "state", "payment_id", 'voucher_transaction_bulk_id',
+            "transaction_cost",
+        ]), [
+            'created_at' => $createdAt ? $createdAt->format('Y-m-d H:i:s') : null,
             'created_at_locale' => format_datetime_locale($voucherTransaction->created_at),
+            'updated_at' => $updatedAt ? $updatedAt->format('Y-m-d H:i:s') : null,
             'updated_at_locale' => format_datetime_locale($voucherTransaction->updated_at),
             'amount' => currency_format($voucherTransaction->amount),
             'timestamp' => $voucherTransaction->created_at->timestamp,
             "organization" => collect($voucherTransaction->provider)->only("id", "name"),
             "fund" => collect($voucherTransaction->voucher->fund)->only("id", "name", "organization_id"),
             'notes' => VoucherTransactionNoteResource::collection($voucherTransaction->notes_sponsor),
-        ])->toArray();
+        ]);
     }
 }

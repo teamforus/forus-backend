@@ -20,7 +20,6 @@ use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
-use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
@@ -137,7 +136,6 @@ use Carbon\Carbon;
  * @property-read int|null $vouchers_count
  * @method static Builder|Fund newModelQuery()
  * @method static Builder|Fund newQuery()
- * @method static \Illuminate\Database\Query\Builder|Fund onlyTrashed()
  * @method static Builder|Fund query()
  * @method static Builder|Fund whereArchived($value)
  * @method static Builder|Fund whereAutoRequestsValidation($value)
@@ -692,22 +690,6 @@ class Fund extends Model
     }
 
     /**
-     * @return array|null
-     */
-    public function getBunqKey(): ?array
-    {
-        if (!$this->fund_config) {
-            return null;
-        }
-
-        return [
-            "key" => $this->fund_config->bunq_key,
-            "sandbox" => $this->fund_config->bunq_sandbox,
-            "allowed_ip" => $this->fund_config->bunq_allowed_ip,
-        ];
-    }
-
-    /**
      * @param string $identity_address
      * @param string $record_type
      * @param FundCriterion|null $criterion
@@ -877,25 +859,6 @@ class Fund extends Model
         }
 
         return $fundFormula->sum('amount');
-    }
-
-    /**
-     * @return BunqService
-     */
-    public function getBunq(): ?BunqService
-    {
-        $fundBunq = $this->getBunqKey();
-
-        if (empty($fundBunq) || empty($fundBunq['key'])) {
-            return null;
-        }
-
-        return BunqService::create(
-            $this->id,
-            $fundBunq['key'],
-            $fundBunq['allowed_ip'],
-            $fundBunq['sandbox']
-        );
     }
 
     /**
