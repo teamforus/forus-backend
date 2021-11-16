@@ -20,7 +20,9 @@ class CreateVoucherTransactionBulksTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('bank_connection_id')->nullable();
             $table->unsignedInteger('payment_id')->nullable();
+            $table->string('monetary_account_id')->default('');
             $table->string('state')->default('pending');
+            $table->boolean('accepted_manually')->default(false);
             $table->integer('state_fetched_times')->default(0);
             $table->timestamp('state_fetched_at')->nullable();
             $table->timestamps();

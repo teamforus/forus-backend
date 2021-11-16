@@ -8,6 +8,7 @@ use bunq\Context\BunqContext;
 use bunq\Model\Core\BunqEnumOauthResponseType;
 use bunq\Model\Core\OauthAuthorizationUri;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
+use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Object\Pointer;
 use Illuminate\Database\Eloquent\Model;
@@ -257,15 +258,17 @@ class BankConnection extends Model
     {
         $this->useContext();
 
-        return array_map(function($monetaryAccount) {
-            $bankAccount = $monetaryAccount->getMonetaryAccountBank();
+        $bankAccountBanks = array_map(function (MonetaryAccount $monetaryAccount) {
+           return $monetaryAccount->getMonetaryAccountBank();
+        }, MonetaryAccount::listing()->getValue());
 
+        return array_map(function(MonetaryAccountBank $bankAccount) {
             return array_merge([
                 'id' => $bankAccount->getId()
             ], array_reduce($bankAccount->getAlias(), function(array $arr, Pointer $pointer) {
                 return array_merge($arr, [strtolower($pointer->getType()) => $pointer->getValue()]);
             }, []));
-        }, MonetaryAccount::listing()->getValue());
+        }, array_filter($bankAccountBanks));
     }
 
     /**

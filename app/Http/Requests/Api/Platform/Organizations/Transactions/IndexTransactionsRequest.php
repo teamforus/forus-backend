@@ -43,6 +43,8 @@ class IndexTransactionsRequest extends FormRequest
             'postcodes.*'       => 'nullable|string|max:100',
             'provider_ids'      => 'nullable|array',
             'provider_ids.*'    => 'nullable|exists:organizations,id',
+            'pending_bulking'   => 'nullable|boolean',
+
             'product_category_ids'          => 'nullable|array',
             'product_category_ids.*'        => 'nullable|exists:product_categories,id',
             'voucher_transaction_bulk_id'   => 'nullable|exists:voucher_transaction_bulks,id',

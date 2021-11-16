@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\VoucherTransactionQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
@@ -341,6 +342,10 @@ class VoucherTransaction extends Model
 
         if ($voucher_transaction_bulk_id = $request->has('voucher_transaction_bulk_id')) {
             $builder->where(compact('voucher_transaction_bulk_id'));
+        }
+
+        if ($request->input('pending_bulking')) {
+            VoucherTransactionQuery::whereAvailableForBulking($builder);
         }
 
         if ($fund) {

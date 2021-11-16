@@ -53,12 +53,6 @@ class BanksTableSeeder extends Seeder
             $registeredUrls = self::getBunqRedirectUrls($oauthClient->getId());
             $callbackUrlExists = in_array($redirectUrl, $registeredUrls);
 
-            if ($callbackUrlExists) {
-                echo "exists!\n";
-            } else {
-                echo "create!\n";
-            }
-
             $bank->forceFill(array_merge([
                 'oauth_redirect_url' => $redirectUrl,
             ], $callbackUrlExists ? [] : [
@@ -103,7 +97,7 @@ class BanksTableSeeder extends Seeder
     {
         $key = 'bunq';
         $name = 'Bunq';
-        $data = json_decode(file_get_contents(storage_path($this->bunqContextFile)));
+        $data = json_decode(file_get_contents(storage_path($this->bunqContextFile)), true);
 
         return Bank::updateOrCreate(compact('key'), array_merge(compact('name'), [
             'data' => array_only($data, ['context', 'oauth_client']),

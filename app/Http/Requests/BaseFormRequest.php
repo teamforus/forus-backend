@@ -8,6 +8,7 @@ use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class BaseFormRequest
@@ -127,5 +128,25 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function perPageRule($max = 100): string
     {
         return "nullable|numeric|min:0|max:$max";
+    }
+
+    /**
+     * @param $abilityOrRules
+     * @param array $arguments
+     * @return bool
+     */
+    public function gateAllows($abilityOrRules, $arguments = []): bool
+    {
+        if (is_array($abilityOrRules)) {
+            foreach ($abilityOrRules as $ability => $arguments) {
+                if (!Gate::allows($ability, $arguments)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return Gate::allows($abilityOrRules, $arguments);
     }
 }

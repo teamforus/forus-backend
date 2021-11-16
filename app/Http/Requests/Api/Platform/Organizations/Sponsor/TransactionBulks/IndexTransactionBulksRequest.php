@@ -3,8 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
+use App\Models\VoucherTransactionBulk;
 
-class IndexTransactionBulksController extends BaseFormRequest
+/**
+ * @property-read Organization $organization
+ */
+class IndexTransactionBulksRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,7 +18,10 @@ class IndexTransactionBulksController extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->gateAllows([
+            'show'      => $this->organization,
+            'viewAny'   => [VoucherTransactionBulk::class, $this->organization],
+        ]);
     }
 
     /**

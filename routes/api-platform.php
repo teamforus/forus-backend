@@ -789,7 +789,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\TransactionBulksController"
     )->parameters([
         'transaction-bulks' => 'voucher-transaction-bulks',
-    ])->only('index', 'show');
+    ])->only('index', 'show', 'store', 'update');
 
     $router->post(
         'organizations/{organization}/sponsor/vouchers/validate',

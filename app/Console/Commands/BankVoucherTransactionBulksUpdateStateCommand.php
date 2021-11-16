@@ -36,6 +36,11 @@ class BankVoucherTransactionBulksUpdateStateCommand extends Command
         foreach ($bulks as $transactionBulk) {
             try {
                 $transactionBulk->bank_connection->useContext();
+                $transactionBulk->update([
+                    'state_fetched_times'   => $transactionBulk->state_fetched_times + 1,
+                    'state_fetched_at'      => now(),
+                ]);
+
                 $payment = $transactionBulk->fetchPayment();
 
                 switch (strtolower($payment->getStatus())) {

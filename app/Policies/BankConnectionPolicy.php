@@ -19,7 +19,7 @@ class BankConnectionPolicy
      */
     public function viewAny($identity_address, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_organization');
+        return $organization->identityCan($identity_address, 'manage_bank_connections');
     }
 
     /**
@@ -31,7 +31,7 @@ class BankConnectionPolicy
      */
     public function store($identity_address, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_organization');
+        return $organization->identityCan($identity_address, 'manage_bank_connections');
     }
 
     /**
@@ -51,7 +51,7 @@ class BankConnectionPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, 'manage_organization');
+        return $organization->identityCan($identity_address, 'manage_bank_connections');
     }
 
     /**

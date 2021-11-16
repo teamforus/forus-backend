@@ -21,7 +21,7 @@ class CreateBankConnectionsTable extends Migration
             $table->unsignedInteger('bank_id')->index();
             $table->unsignedInteger('organization_id')->index();
             $table->unsignedInteger('implementation_id')->index();
-            $table->string('monetary_account_id');
+            $table->string('monetary_account_id')->default('');
             $table->string('monetary_account_iban');
             $table->string('redirect_token', 200);
             $table->string('access_token', 200);
