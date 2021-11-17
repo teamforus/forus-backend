@@ -17,9 +17,7 @@ class VoucherTransactionBulkResource extends JsonResource
     static function load(): array
     {
         return [
-            'voucher_transactions.voucher.fund:id,name,organization_id',
-            'voucher_transactions.provider:id,name',
-            'voucher_transactions.notes_sponsor',
+            'voucher_transactions'
         ];
     }
 
@@ -34,7 +32,6 @@ class VoucherTransactionBulkResource extends JsonResource
         $transactionBulk = $this->resource;
 
         return array_merge($transactionBulk->only('id', 'state', 'state_locale', 'payment_id'), [
-            'transactions' => SponsorVoucherTransactionResource::collection($transactionBulk->voucher_transactions),
             'voucher_transactions_amount' => $transactionBulk->voucher_transactions->sum('amount'),
             'voucher_transactions_count' => $transactionBulk->voucher_transactions->count(),
             'voucher_transactions_cost' => $transactionBulk->voucher_transactions->sum('transaction_cost'),

@@ -340,7 +340,7 @@ class VoucherTransaction extends Model
             $builder->where('organization_id', $provider->id);
         }
 
-        if ($voucher_transaction_bulk_id = $request->has('voucher_transaction_bulk_id')) {
+        if ($voucher_transaction_bulk_id = $request->input('voucher_transaction_bulk_id')) {
             $builder->where(compact('voucher_transaction_bulk_id'));
         }
 
