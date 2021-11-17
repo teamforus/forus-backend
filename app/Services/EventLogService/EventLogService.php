@@ -8,15 +8,18 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundTopUpTransaction;
+use App\Models\Implementation;
 use App\Models\Organization;
 use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransactionBulk;
+use App\Models\VoucherTransaction;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
 use App\Services\EventLogService\Traits\HasLogs;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class EventLogService
@@ -25,13 +28,18 @@ use App\Services\EventLogService\Traits\HasLogs;
 class EventLogService implements IEventLogService
 {
     /**
-     * @param HasLogs $loggable
+     * @param HasLogs|Model $loggable
      * @param string $action
      * @param array $models
      * @param array $raw_meta
      * @return mixed
      */
-    public function log($loggable, string $action, array $models = [], array $raw_meta = []): EventLog {
+    public function log(
+        Model $loggable,
+        string $action,
+        array $models = [],
+        array $raw_meta = []
+    ): EventLog {
         $meta = array_reduce(array_keys($models), function($carry, $key) use ($models) {
             return array_merge($carry, $this->modelToMeta($key, $models[$key]));
         }, []);
@@ -60,9 +68,11 @@ class EventLogService implements IEventLogService
             case 'organization': $modelMeta = $this->organizationMeta($model); break;
             case 'employee': $modelMeta = $this->employeeMeta($model); break;
             case 'product_reservation': $modelMeta = $this->productReservationMeta($model); break;
+            case 'voucher_transaction': $modelMeta = $this->voucherTransactionMeta($model); break;
             case 'physical_card_request': $modelMeta = $this->physicalCardRequestMeta($model); break;
             case 'bank_connection': $modelMeta = $this->bankConnectionMeta($model); break;
             case 'voucher_transaction_bulk': $modelMeta = $this->voucherTransactionBulkMeta($model); break;
+            case 'implementation': $modelMeta = $this->implementationMeta($model); break;
         }
 
         return $modelMeta;
@@ -72,7 +82,8 @@ class EventLogService implements IEventLogService
      * @param Fund $fund
      * @return array
      */
-    protected function fundMeta(Fund $fund): array {
+    protected function fundMeta(Fund $fund): array
+    {
         return [
             'fund_id' => $fund->id,
             'fund_name' => $fund->name,
@@ -90,7 +101,8 @@ class EventLogService implements IEventLogService
      * @param FundRequest $fundRequest
      * @return array
      */
-    protected function fundRequestMeta(FundRequest $fundRequest): array {
+    protected function fundRequestMeta(FundRequest $fundRequest): array
+    {
         return [
             'fund_request_id' => $fundRequest->id,
             'fund_request_note' => $fundRequest->note,
@@ -102,9 +114,8 @@ class EventLogService implements IEventLogService
      * @param FundRequestClarification $fundRequest
      * @return array
      */
-    protected function fundRequestClarificationMeta(
-        FundRequestClarification $fundRequest
-    ): array {
+    protected function fundRequestClarificationMeta(FundRequestClarification $fundRequest): array
+    {
         return [
             'fund_request_clarification_id' => $fundRequest->id,
             'fund_request_clarification_question' => $fundRequest->question,
@@ -115,7 +126,8 @@ class EventLogService implements IEventLogService
      * @param Organization $provider
      * @return array
      */
-    protected function providerMeta(Organization $provider): array {
+    protected function providerMeta(Organization $provider): array
+    {
         return [
             'provider_id' => $provider->id,
             'provider_name' => $provider->name,
@@ -128,7 +140,8 @@ class EventLogService implements IEventLogService
      * @param Organization $provider
      * @return array
      */
-    protected function sponsorMeta(Organization $provider): array {
+    protected function sponsorMeta(Organization $provider): array
+    {
         return [
             'sponsor_id' => $provider->id,
             'sponsor_name' => $provider->name,
@@ -141,7 +154,8 @@ class EventLogService implements IEventLogService
      * @param Organization $organization
      * @return array
      */
-    protected function organizationMeta(Organization $organization): array {
+    protected function organizationMeta(Organization $organization): array
+    {
         return [
             'organization_id' => $organization->id,
             'organization_name' => $organization->name,
@@ -152,7 +166,8 @@ class EventLogService implements IEventLogService
      * @param Product $product
      * @return array
      */
-    protected function productMeta(Product $product): array {
+    protected function productMeta(Product $product): array
+    {
         return [
             'product_id' => $product->id,
             'product_name' => $product->name,
@@ -165,13 +180,12 @@ class EventLogService implements IEventLogService
      * @param Employee $employee
      * @return array
      */
-    protected function employeeMeta(Employee $employee): array {
+    protected function employeeMeta(Employee $employee): array
+    {
         return [
             'employee_id' => $employee->id,
             'employee_roles' => $employee->roles->pluck('name')->join(', '),
-            'employee_email' => record_repo()->primaryEmailByAddress(
-                $employee->identity_address
-            ),
+            'employee_email' => record_repo()->primaryEmailByAddress($employee->identity_address),
         ];
     }
 
@@ -179,7 +193,8 @@ class EventLogService implements IEventLogService
      * @param ProductReservation $reservation
      * @return array
      */
-    protected function productReservationMeta(ProductReservation $reservation): array {
+    protected function productReservationMeta(ProductReservation $reservation): array
+    {
         return [
             'product_reservation_id' => $reservation->id,
             'product_reservation_state' => $reservation->state,
@@ -192,7 +207,8 @@ class EventLogService implements IEventLogService
      * @param Voucher $voucher
      * @return array
      */
-    protected function voucherMeta(Voucher $voucher): array {
+    protected function voucherMeta(Voucher $voucher): array
+    {
         return [
             'voucher_id' => $voucher->id,
             'voucher_amount' => currency_format($voucher->amount_available),
@@ -203,10 +219,27 @@ class EventLogService implements IEventLogService
     }
 
     /**
+     * @param VoucherTransaction $voucherTransaction
+     * @return array
+     */
+    protected function voucherTransactionMeta(VoucherTransaction $voucherTransaction): array
+    {
+        return [
+            'voucher_transaction_id' => $voucherTransaction->id,
+            'voucher_transaction_amount' => $voucherTransaction->amount,
+            'voucher_transaction_iban_to' => $voucherTransaction->iban_to,
+            'voucher_transaction_iban_from' => $voucherTransaction->iban_from,
+            'voucher_transaction_payment_time' => $voucherTransaction->payment_time,
+            'voucher_transaction_payment_time_locale' => format_date_locale($voucherTransaction->payment_time),
+        ];
+    }
+
+    /**
      * @param FundTopUpTransaction $transaction
      * @return array
      */
-    protected function fundTopUpTransactionMeta(FundTopUpTransaction $transaction): array {
+    protected function fundTopUpTransactionMeta(FundTopUpTransaction $transaction): array
+    {
         return [
             'fund_top_up_amount' => $transaction->amount,
             'fund_top_up_amount_locale' => currency_format($transaction->amount),
@@ -217,7 +250,8 @@ class EventLogService implements IEventLogService
      * @param PhysicalCardRequest $physicalCardRequest
      * @return array
      */
-    protected function physicalCardRequestMeta(PhysicalCardRequest $physicalCardRequest): array {
+    protected function physicalCardRequestMeta(PhysicalCardRequest $physicalCardRequest): array
+    {
         return [
             'physical_card_request_id'              => $physicalCardRequest->id,
             'physical_card_request_address'         => $physicalCardRequest->address,
@@ -258,6 +292,19 @@ class EventLogService implements IEventLogService
             'transaction_bulk_state' => $transactionBulk->state,
             'transaction_bulk_payment_id' => $transactionBulk->payment_id,
             'transaction_bulk_monetary_account_id' => $transactionBulk->monetary_account_id,
+        ];
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @return array
+     */
+    protected function implementationMeta(Implementation $implementation): array
+    {
+        return [
+            'implementation_id' => $implementation->id,
+            'implementation_key' => $implementation->key,
+            'implementation_name' => $implementation->name,
         ];
     }
 }

@@ -4,17 +4,10 @@ namespace App\Events\Products;
 
 use App\Models\Fund;
 use App\Models\Product;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
 
-class ProductApproved
+class ProductApproved extends BaseProductEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    private $product;
-    private $fund;
+    protected $fund;
 
     /**
      * Create a new event instance.
@@ -24,18 +17,8 @@ class ProductApproved
      */
     public function __construct(Product $product, Fund $fund)
     {
-        $this->product = $product;
+        parent::__construct($product);
         $this->fund = $fund;
-    }
-
-    /**
-     * Get the product
-     *
-     * @return Product
-     */
-    public function getProduct()
-    {
-        return $this->product;
     }
 
     /**
@@ -43,18 +26,8 @@ class ProductApproved
      *
      * @return Fund
      */
-    public function getFund()
+    public function getFund(): Fund
     {
         return $this->fund;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel|array
-     */
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-name');
     }
 }

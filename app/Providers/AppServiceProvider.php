@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Media\CmsMediaConfig;
 use App\Media\FundLogoMediaConfig;
 use App\Media\ImplementationBannerMediaConfig;
+use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
@@ -15,6 +16,7 @@ use App\Models\FundProvider;
 use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
+use App\Models\NotificationTemplate;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
 use App\Models\VoucherTransaction;
@@ -57,8 +59,9 @@ class AppServiceProvider extends ServiceProvider
             'product'               => Product::class,
             'employees'             => Employee::class,
             'fund_request'          => FundRequest::class,
-            'fund_provider'         => FundProvider::class,
             'organization'          => Organization::class,
+            'mail_template'         => NotificationTemplate::class,
+            'fund_provider'         => FundProvider::class,
             'bank_connection'       => BankConnection::class,
             'implementation'        => Implementation::class,
             'product_category'      => ProductCategory::class,
@@ -77,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
             new OrganizationLogoMediaConfig(),
             new RecordCategoryIconMediaConfig(),
             new ImplementationBannerMediaConfig(),
+            new ImplementationMailLogoMediaConfig(),
         ]);
 
         FundProvider::observe(FundProviderObserver::class);

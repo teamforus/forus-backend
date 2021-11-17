@@ -15,7 +15,7 @@ abstract class BaseFundsRequestsNotification extends BaseOrganizationNotificatio
     /**
      * @var string
      */
-    protected $scope = self::SCOPE_VALIDATOR;
+    protected static $scope = self::SCOPE_VALIDATOR;
 
     /**
      * @param \Illuminate\Database\Eloquent\Model|FundRequest $loggable

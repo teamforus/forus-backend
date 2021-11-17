@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
  */
 class TokenGenerator extends Facade
 {
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
         return 'token_generator';
     }

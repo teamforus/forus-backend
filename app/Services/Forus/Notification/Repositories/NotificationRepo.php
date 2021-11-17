@@ -9,22 +9,79 @@ use App\Mail\Digest\DigestRequesterMail;
 use App\Mail\Digest\DigestSponsorMail;
 use App\Mail\Digest\DigestValidatorMail;
 use App\Mail\Funds\FundBalanceWarningMail;
-use App\Mail\Funds\FundExpiredMail;
-use App\Mail\Funds\FundStartedMail;
+use App\Mail\Funds\FundExpireSoonMail;
 use App\Mail\Funds\ProviderAppliedMail;
 use App\Mail\Funds\ProviderApprovedMail;
 use App\Mail\Funds\ProviderRejectedMail;
 use App\Mail\User\EmailActivationMail;
-use App\Mail\Vouchers\PaymentSuccessMail;
-use App\Mail\Vouchers\ProductReservedMail;
+use App\Mail\Vouchers\PaymentSuccessBudgetMail;
+use App\Mail\Vouchers\ProductBoughtProviderMail;
 use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Mail\Vouchers\SendVoucherMail;
 use App\Mail\Vouchers\ShareProductVoucherMail;
+use App\Models\SystemNotification;
+use App\Notifications\BaseNotification;
+use App\Notifications\Identities\Employee\IdentityAddedEmployeeNotification;
+use App\Notifications\Identities\Employee\IdentityChangedEmployeeRolesNotification;
+use App\Notifications\Identities\Employee\IdentityRemovedEmployeeNotification;
+use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNotification;
+use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
+use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
+use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
+use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
+use App\Notifications\Identities\ProductReservation\IdentityProductReservationRejectedNotification;
+use App\Notifications\Identities\Voucher\IdentityProductVoucherAddedNotification;
+use App\Notifications\Identities\Voucher\IdentityProductVoucherExpiredNotification;
+use App\Notifications\Identities\Voucher\IdentityProductVoucherReservedNotification;
+use App\Notifications\Identities\Voucher\IdentityProductVoucherSharedNotification;
+use App\Notifications\Identities\Voucher\IdentityProductVoucherTransactionNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAddedBudgetNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAddedSubsidyNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAssignedBudgetNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAssignedProductNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherAssignedSubsidyNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherBudgetTransactionNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherDeactivatedNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherExpiredNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonBudgetNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherExpireSoonProductNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherPhysicalCardRequestedNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherSharedByEmailNotification;
+use App\Notifications\Identities\Voucher\IdentityVoucherSubsidyTransactionNotification;
+use App\Notifications\Organizations\FundProviders\FundProvidersApprovedBudgetNotification;
+use App\Notifications\Organizations\FundProviders\FundProvidersApprovedProductsNotification;
+use App\Notifications\Organizations\FundProviders\FundProviderSponsorChatMessageNotification;
+use App\Notifications\Organizations\FundProviders\FundProvidersRevokedBudgetNotification;
+use App\Notifications\Organizations\FundProviders\FundProvidersRevokedProductsNotification;
+use App\Notifications\Organizations\FundProviders\FundProviderTransactionBunqSuccessNotification;
+use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
+use App\Notifications\Organizations\Funds\BalanceLowNotification;
+use App\Notifications\Organizations\Funds\BalanceSuppliedNotification;
+use App\Notifications\Organizations\Funds\FundCreatedNotification;
+use App\Notifications\Organizations\Funds\FundEndedNotification;
+use App\Notifications\Organizations\Funds\FundExpiringNotification;
+use App\Notifications\Organizations\Funds\FundProductAddedNotification;
+use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
+use App\Notifications\Organizations\Funds\FundProviderAppliedNotification;
+use App\Notifications\Organizations\Funds\FundProviderChatMessageNotification;
+use App\Notifications\Organizations\Funds\FundStartedNotification;
+use App\Notifications\Organizations\Products\ProductApprovedNotification;
+use App\Notifications\Organizations\Products\ProductExpiredNotification;
+use App\Notifications\Organizations\Products\ProductReservedNotification;
+use App\Notifications\Organizations\Products\ProductRevokedNotification;
+use App\Notifications\Organizations\Products\ProductSoldOutNotification;
 use App\Services\Forus\Notification\Models\NotificationPreference;
 use App\Services\Forus\Notification\Models\NotificationUnsubscription;
 use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
-use Illuminate\Support\Collection;
+use App\Services\Forus\Notification\Repositories\Data\NotificationType;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class NotificationServiceRepo
@@ -32,6 +89,85 @@ use Illuminate\Support\Collection;
  */
 class NotificationRepo implements INotificationRepo
 {
+    protected static $notifications = [
+        // employee notifications
+        IdentityAddedEmployeeNotification::class,
+        IdentityChangedEmployeeRolesNotification::class,
+        IdentityRemovedEmployeeNotification::class,
+
+        // fund providers
+        FundProvidersApprovedBudgetNotification::class,
+        FundProvidersApprovedProductsNotification::class,
+        FundProvidersRevokedBudgetNotification::class,
+        FundProvidersRevokedProductsNotification::class,
+        FundProviderSponsorChatMessageNotification::class,
+
+        IdentityRequesterProviderApprovedBudgetNotification::class,
+        IdentityRequesterProviderApprovedProductsNotification::class,
+
+        FundRequestCreatedValidatorNotification::class,
+        IdentityFundRequestCreatedNotification::class,
+        IdentityFundRequestDeniedNotification::class,
+        IdentityFundRequestApprovedNotification::class,
+        IdentityFundRequestRecordDeclinedNotification::class,
+        IdentityFundRequestFeedbackRequestedNotification::class,
+
+        // funds
+        FundCreatedNotification::class,
+        FundStartedNotification::class,
+        FundEndedNotification::class,
+        FundExpiringNotification::class,
+
+        FundProductAddedNotification::class,
+        FundProviderAppliedNotification::class,
+        FundProviderChatMessageNotification::class,
+        FundProductSubsidyRemovedNotification::class,
+
+        BalanceLowNotification::class,
+        BalanceSuppliedNotification::class,
+
+        // product reservations
+        IdentityProductReservationCreatedNotification::class,
+        IdentityProductReservationAcceptedNotification::class,
+        IdentityProductReservationCanceledNotification::class,
+        IdentityProductReservationRejectedNotification::class,
+
+        // products
+        ProductApprovedNotification::class,
+        ProductExpiredNotification::class,
+        ProductReservedNotification::class,
+        ProductRevokedNotification::class,
+        ProductSoldOutNotification::class,
+
+        // vouchers
+        IdentityProductVoucherSharedNotification::class,
+        IdentityVoucherAssignedBudgetNotification::class,
+        IdentityVoucherAssignedSubsidyNotification::class,
+        IdentityVoucherAssignedProductNotification::class,
+
+        IdentityProductVoucherAddedNotification::class,
+        IdentityProductVoucherReservedNotification::class,
+        IdentityVoucherAddedSubsidyNotification::class,
+        IdentityVoucherAddedBudgetNotification::class,
+
+        IdentityVoucherDeactivatedNotification::class,
+        IdentityVoucherExpiredNotification::class,
+        IdentityProductVoucherExpiredNotification::class,
+
+        IdentityVoucherExpireSoonBudgetNotification::class,
+        IdentityVoucherExpireSoonProductNotification::class,
+
+        IdentityVoucherPhysicalCardRequestedNotification::class,
+        IdentityVoucherSharedByEmailNotification::class,
+
+        // voucher transactions
+        IdentityVoucherBudgetTransactionNotification::class,
+        IdentityVoucherSubsidyTransactionNotification::class,
+        IdentityProductVoucherTransactionNotification::class,
+        FundProviderTransactionBunqSuccessNotification::class,
+
+    ];
+
     /**
      * Map between type keys and Mail classes
      * @var array
@@ -40,17 +176,16 @@ class NotificationRepo implements INotificationRepo
         // User generated emails
         'vouchers.send_voucher' => SendVoucherMail::class,
         'vouchers.share_voucher' => ShareProductVoucherMail::class,
-        'vouchers.payment_success' => PaymentSuccessMail::class,
+        'vouchers.payment_success' => PaymentSuccessBudgetMail::class,
 
         // Mails for sponsors/providers
-        'funds.new_fund_started' => FundStartedMail::class,
         'funds.provider_applied' => ProviderAppliedMail::class,
         'funds.provider_approved' => ProviderApprovedMail::class,
         'funds.provider_rejected' => ProviderRejectedMail::class,
         'funds.product_sold_out' => ProductSoldOutMail::class,
-        'funds.fund_expires' => FundExpiredMail::class,
+        'funds.fund_expires' => FundExpireSoonMail::class,
         'funds.balance_warning' => FundBalanceWarningMail::class,
-        'funds.product_reserved' => ProductReservedMail::class,
+        'funds.product_reserved' => ProductBoughtProviderMail::class,
 
         // Authorization emails
         'auth.user_login' => UserLoginMail::class,
@@ -65,10 +200,10 @@ class NotificationRepo implements INotificationRepo
     ];
 
     /**
-     * Map between type keys and Mail classes
+     * List all push notification keys
      * @var array
      */
-    protected static $pushNotificationMap = [
+    protected static $pushNotificationKeys = [
         'voucher.assigned',
         'voucher.transaction',
         'employee.created',
@@ -76,6 +211,15 @@ class NotificationRepo implements INotificationRepo
         'bunq.transaction_success',
         'funds.provider_approved',
     ];
+
+    public static function test(): string {
+        /** @var BaseNotification|string $className */
+        $className = IdentityAddedEmployeeNotification::class;
+
+        // return call_user_func($className, 'getScope']);
+
+        return $className::getScope();
+    }
 
     /**
      * Emails that you can't unsubscribe from
@@ -85,6 +229,12 @@ class NotificationRepo implements INotificationRepo
         'auth.user_login', 'auth.email_activation', 'vouchers.share_voucher',
         'vouchers.send_voucher', 'funds.balance_warning',
     ];
+
+    /**
+     * Push notifications that you can't unsubscribe from (currently none)
+     * @var array
+     */
+    protected static $mandatoryPushNotifications = [];
 
     /**
      * @return array
@@ -97,9 +247,9 @@ class NotificationRepo implements INotificationRepo
     /**
      * @return array
      */
-    public static function getPushNotificationMap(): array
+    public static function getPushNotificationKeys(): array
     {
-        return self::$pushNotificationMap;
+        return self::$pushNotificationKeys;
     }
 
     /**
@@ -111,13 +261,34 @@ class NotificationRepo implements INotificationRepo
     }
 
     /**
+     * @param bool $visibleOnly
+     * @return Builder
+     */
+    public function getSystemNotificationsQuery(bool $visibleOnly = false): Builder
+    {
+        return SystemNotification::where(function(Builder $builder) use ($visibleOnly) {
+            if ($visibleOnly) {
+                $builder->where('visible', true);
+            }
+        })->orderBy('group')->orderBy('order');
+    }
+
+    /**
+     * @return Collection|SystemNotification[]
+     */
+    public function getSystemNotifications(bool $visibleOnly = false): Collection
+    {
+        return $this->getSystemNotificationsQuery($visibleOnly)->get();
+    }
+
+    /**
      * Is email unsubscribed from all emails
      * @param string $email
      * @return bool
      */
-    public function isEmailUnsubscribed(string $email): bool {
-        return NotificationUnsubscription::where(
-            compact('email'))->count() > 0;
+    public function isEmailUnsubscribed(string $email): bool
+    {
+        return NotificationUnsubscription::where(compact('email'))->exists();
     }
 
     /**
@@ -125,7 +296,8 @@ class NotificationRepo implements INotificationRepo
      * @param string $emailClass
      * @return bool
      */
-    public function isMailUnsubscribable(string $emailClass): bool {
+    public function isMailUnsubscribable(string $emailClass): bool
+    {
         $keys = array_flip(self::getMailMap());
 
         if (!isset($keys[$emailClass])) {
@@ -140,8 +312,12 @@ class NotificationRepo implements INotificationRepo
      * @param string $pushKey
      * @return bool
      */
-    public function isPushNotificationUnsubscribable(string $pushKey): bool {
-        return in_array($pushKey, self::getPushNotificationMap(), true);
+    public function isPushNotificationUnsubscribable(string $pushKey): bool
+    {
+        $isValidKey = in_array($pushKey, self::getPushNotificationKeys(), true);
+        $isMandatoryKey = in_array($pushKey, self::$mandatoryPushNotifications, true);
+
+        return $isValidKey && !$isMandatoryKey;
     }
 
     /**
@@ -150,17 +326,14 @@ class NotificationRepo implements INotificationRepo
      * @param string $pushKey
      * @return bool
      */
-    public function isPushNotificationUnsubscribed(
-        string $identity_address,
-        string $pushKey
-    ): bool {
-        $subscribed = false;
-        $type = 'push';
-        $key = $pushKey;
-
-        return NotificationPreference::where(compact(
-            'identity_address', 'key', 'subscribed', 'type'
-        ))->count() > 0;
+    public function isPushNotificationUnsubscribed(string $identity_address, string $pushKey): bool
+    {
+        return NotificationPreference::where([
+            'identity_address'  => $identity_address,
+            'subscribed'        => false,
+            'type'              => 'push',
+            'key'               => $pushKey,
+        ])->exists();
     }
 
     /**
@@ -170,10 +343,8 @@ class NotificationRepo implements INotificationRepo
      * @return bool
      * @throws \Exception
      */
-    public function isEmailTypeUnsubscribed(
-        $identity_address,
-        $emailClass
-    ): bool {
+    public function isEmailTypeUnsubscribed($identity_address, $emailClass): bool
+    {
         if (!$this->isMailUnsubscribable($emailClass)) {
             return false;
         }
@@ -181,10 +352,9 @@ class NotificationRepo implements INotificationRepo
         $key = array_flip(self::getMailMap())[$emailClass];
         $type = 'email';
         $subscribed = false;
+        $filters = compact('identity_address', 'key', 'subscribed', 'type');
 
-        return NotificationPreference::where(compact(
-            'identity_address', 'key', 'subscribed', 'type'
-            ))->count() > 0;
+        return NotificationPreference::where($filters)->exists();
     }
 
     /**
@@ -193,11 +363,9 @@ class NotificationRepo implements INotificationRepo
      * @param string|null $token
      * @return string
      */
-    public function makeUnsubLink(string $email, string $token = null): string {
-        return url(sprintf(
-            '/notifications/unsubscribe/%s',
-            $this->makeToken($email, $token)
-        ));
+    public function makeUnsubLink(string $email, string $token = null): string
+    {
+        return url('/notifications/unsubscribe/' . $this->makeToken($email, $token));
     }
 
     /**
@@ -206,11 +374,9 @@ class NotificationRepo implements INotificationRepo
      * @param string|null $token
      * @return string
      */
-    public function makeReSubLink(string $email, string $token = null): string {
-        return url(sprintf(
-            '/notifications/subscribe/%s',
-            $this->makeToken($email, $token)
-        ));
+    public function makeReSubLink(string $email, string $token = null): string
+    {
+        return url('/notifications/subscribe/' . $this->makeToken($email, $token));
     }
 
     /**
@@ -219,7 +385,8 @@ class NotificationRepo implements INotificationRepo
      * @param string|null $token
      * @return string
      */
-    private function makeToken(string $email, string $token = null): string {
+    private function makeToken(string $email, string $token = null): string
+    {
         $model = $token ? NotificationUnsubscriptionToken::findByToken($token) : null;
 
         return ($model ?: NotificationUnsubscriptionToken::makeToken($email))->token;
@@ -229,21 +396,18 @@ class NotificationRepo implements INotificationRepo
      * Unsubscribe email from all notifications
      * @param string $email
      */
-    public function unsubscribeEmail(
-        string $email
-    ): void {
-        NotificationUnsubscription::firstOrCreate(
-            compact('email')
-        );
+    public function unsubscribeEmail(string $email): void
+    {
+        NotificationUnsubscription::firstOrCreate(compact('email'));
     }
 
     /**
      * Remove email unsubscription from all notifications
      * @param string $email
+     * @throws \Exception
      */
-    public function reSubscribeEmail(
-        string $email
-    ): void {
+    public function reSubscribeEmail(string $email): void
+    {
         NotificationUnsubscription::where(compact('email'))->delete();
     }
 
@@ -252,63 +416,56 @@ class NotificationRepo implements INotificationRepo
      * @param bool $active
      * @return string|null
      */
-    public function emailByUnsubscribeToken(
-        string $token,
-        bool $active = true
-    ): ?string {
+    public function emailByUnsubscribeToken(string $token, bool $active = true): ?string
+    {
         return NotificationUnsubscriptionToken::findByToken($token, $active)->email ?? null;
     }
 
     /**
      * @param string $identityAddress
-     * @return Collection
+     * @return array
      */
-    public function getNotificationPreferences(
-        string $identityAddress
-    ): Collection {
+    public function getNotificationPreferences(string $identityAddress): array
+    {
         $subscribed = false;
         $identity_address = $identityAddress;
+        $mailKeys = [];
+        $pushKeys = [];
 
-        $mailKeys = collect();
         foreach ($this->mailTypeKeys() as $mailKey) {
-            $mailKeys->push((object)[
+            $mailKeys[] = (object) [
                 'value' => $mailKey,
                 'type'  => 'email'
-            ]);
+            ];
         }
 
-        $pushKeys = collect();
-        foreach (self::getPushNotificationMap() as $pushKey) {
-            $pushKeys->push((object)[
+        foreach (self::getPushNotificationKeys() as $pushKey) {
+            $pushKeys[] = (object) [
                 'value' => $pushKey,
                 'type'  => 'push'
-            ]);
+            ];
         }
-
-        $keys = $mailKeys->merge($pushKeys);
 
         $unsubscribedKeys = NotificationPreference::where(compact(
             'identity_address', 'subscribed'
         ))->pluck('key')->values();
 
-        return $keys->map(static function($key) use ($unsubscribedKeys) {
+        return array_map(static function($key) use ($unsubscribedKeys) {
             return [
                 'key'  => $key->value,
                 'type' => $key->type,
                 'subscribed' => $unsubscribedKeys->search($key->value) === false
             ];
-        })->values();
+        }, array_merge($mailKeys, $pushKeys));
     }
 
     /**
      * @param string $identityAddress
      * @param array $data
-     * @return Collection
+     * @return array
      */
-    public function updateIdentityPreferences(
-        string $identityAddress,
-        array $data
-    ): Collection {
+    public function updateIdentityPreferences(string $identityAddress, array $data): array
+    {
         $data_keys = array_keys(array_pluck($data, 'subscribed', 'key'));
         $preference_keys = $this->allPreferenceKeys();
 
@@ -332,23 +489,22 @@ class NotificationRepo implements INotificationRepo
      */
     public function mailTypeKeys(): array
     {
-        return array_values(array_diff(
-            array_keys(self::getMailMap()),
-            self::getMandatoryMailKeys()
-        ));
+        return array_values(array_diff(array_keys(self::getMailMap()), self::getMandatoryMailKeys()));
     }
 
     /**
      * @return array
      */
-    public function pushNotificationTypeKeys() : array {
-        return self::getPushNotificationMap();
+    public function pushNotificationTypeKeys() : array
+    {
+        return self::getPushNotificationKeys();
     }
 
     /**
      * @return array
      */
-    public function allPreferenceKeys(): array {
+    public function allPreferenceKeys(): array
+    {
         return array_merge($this->mailTypeKeys(), $this->pushNotificationTypeKeys());
     }
 }

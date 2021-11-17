@@ -6,4 +6,4 @@ namespace App\Events\ProductReservations;
  * Class ProductReservationRejected
  * @package App\Events\ProductReservations
  */
-class ProductReservationRejected extends BaseProductReservationEvent { }
+class ProductReservationRejected extends BaseProductReservationEvent {}

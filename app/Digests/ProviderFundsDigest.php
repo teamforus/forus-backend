@@ -215,11 +215,11 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 
         if ($logsRejectedProducts->count() > 0) {
             $count_funds = $logsRejectedProducts->count();
-            $mailBody->h3(sprintf(trans_choice(
+            $mailBody->h3(trans_choice(
                 'digests/provider_funds.products_revoked.title',
                 $count_funds,
                 compact('count_funds')
-            )));
+            ));
 
             $mailBody->text(trans_choice(
                 'digests/provider_funds.products_revoked.funds_list',

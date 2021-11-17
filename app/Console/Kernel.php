@@ -7,10 +7,8 @@ use App\Console\Commands\BankUpdateContextSessionsCommand;
 use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
-use App\Console\Commands\CheckFundConfigCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
-use App\Console\Commands\CheckVoucherExpirationCommand;
 use App\Console\Commands\ExportPhysicalCardsRequestsCommand;
 use App\Console\Commands\MediaCleanupCommand;
 use App\Console\Commands\MediaRegenerateCommand;
@@ -24,6 +22,7 @@ use App\Console\Commands\Digests\SendRequesterDigestCommand;
 use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
+use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -45,7 +44,6 @@ class Kernel extends ConsoleKernel
 
         // funds
         CheckFundStateCommand::class,
-        CheckFundConfigCommand::class,
 
         // statistics
         CalculateFundUsersCommand::class,
@@ -59,9 +57,6 @@ class Kernel extends ConsoleKernel
 
         // product expiration
         CheckProductExpirationCommand::class,
-
-        // voucher expiration
-        CheckVoucherExpirationCommand::class,
 
         // voucher expiration
         // SendDigestMailCommand::class,
@@ -84,6 +79,7 @@ class Kernel extends ConsoleKernel
         BankUpdateContextSessionsCommand::class,
         BankVoucherTransactionBulksBuildCommand::class,
         BankVoucherTransactionBulksUpdateStateCommand::class,
+        UpdateNotificationTemplatesCommand::class,
     ];
 
     /**
@@ -99,12 +95,6 @@ class Kernel extends ConsoleKernel
          */
         $schedule->command('forus.fund:check')
             ->hourlyAt(1)->withoutOverlapping()->onOneServer();
-
-        /**
-         * CheckFundConfigCommand:
-         */
-        $schedule->command('forus.fund.config:check')
-            ->everyMinute()->withoutOverlapping()->onOneServer();
 
         /**
          * CalculateFundUsersCommand:

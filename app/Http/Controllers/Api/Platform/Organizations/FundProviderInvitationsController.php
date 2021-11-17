@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 
 use App\Http\Resources\FundProviderInvitationResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FundProviderInvitationsController extends Controller
 {
@@ -23,7 +24,7 @@ class FundProviderInvitationsController extends Controller
     public function index(
         IndexFundProviderInvitationRequest $request,
         Organization $organization
-    ) {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProviderInvitation::class, $organization]);
 
@@ -44,16 +45,12 @@ class FundProviderInvitationsController extends Controller
      */
     public function show(
         Organization $organization,
-        FundProviderInvitation $fundProviderInvitation)
-    {
+        FundProviderInvitation $fundProviderInvitation
+    ): FundProviderInvitationResource {
         $this->authorize('show', $organization);
-        $this->authorize('showProvider', [
-            $fundProviderInvitation, $organization
-        ]);
+        $this->authorize('showProvider', [$fundProviderInvitation, $organization]);
 
-        return new FundProviderInvitationResource(
-            $fundProviderInvitation
-        );
+        return new FundProviderInvitationResource($fundProviderInvitation);
     }
 
     /**
@@ -68,12 +65,10 @@ class FundProviderInvitationsController extends Controller
     public function update(
         UpdateFundProviderInvitationRequest $request,
         Organization $organization,
-        FundProviderInvitation $fundProviderInvitation)
-    {
+        FundProviderInvitation $fundProviderInvitation
+    ): FundProviderInvitationResource {
         $this->authorize('show', $organization);
-        $this->authorize('acceptProvider', [
-            $fundProviderInvitation, $organization
-        ]);
+        $this->authorize('acceptProvider', [$fundProviderInvitation, $organization]);
 
         return new FundProviderInvitationResource($fundProviderInvitation->accept());
     }

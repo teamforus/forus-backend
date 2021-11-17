@@ -6,6 +6,7 @@ use App\Events\ProductReservations\ProductReservationAccepted;
 use App\Events\ProductReservations\ProductReservationCanceled;
 use App\Events\ProductReservations\ProductReservationCreated;
 use App\Events\ProductReservations\ProductReservationRejected;
+use App\Models\ProductReservation;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationAcceptedNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCanceledNotification;
 use App\Notifications\Identities\ProductReservation\IdentityProductReservationCreatedNotification;
@@ -19,6 +20,24 @@ use Illuminate\Events\Dispatcher;
 class ProductReservationSubscriber
 {
     /**
+     * @param ProductReservation $productReservation
+     * @return array
+     */
+    private function getReservationLogModels(ProductReservation $productReservation): array
+    {
+        return [
+            'fund' => $productReservation->voucher->fund,
+            'product' => $productReservation->product,
+            'sponsor' =>  $productReservation->voucher->fund->organization,
+            'provider' =>  $productReservation->product->organization,
+            'voucher' => $productReservation->voucher,
+            'employee' => $productReservation->employee,
+            'implementation' => $productReservation->voucher->fund->getImplementation(),
+            'product_reservation' => $productReservation,
+        ];
+    }
+
+    /**
      * @param ProductReservationCreated $event
      */
     public function onProductReservationCreated(ProductReservationCreated $event): void
@@ -30,17 +49,10 @@ class ProductReservationSubscriber
             $voucher->reportBackofficeFirstUse();
         }
 
-        $logEvent = $productReservation->log($productReservation::EVENT_CREATED, [
-            'product_reservation' => $productReservation,
-            'fund' => $productReservation->voucher->fund,
-            'product' => $productReservation->product,
-            'sponsor' =>  $productReservation->voucher->fund->organization,
-            'provider' =>  $productReservation->product->organization,
-            'voucher' => $productReservation->voucher,
-            'employee' => $productReservation->employee,
-        ]);
-
-        IdentityProductReservationCreatedNotification::send($logEvent);
+        IdentityProductReservationCreatedNotification::send($productReservation->log(
+            $productReservation::EVENT_CREATED,
+            $this->getReservationLogModels($productReservation)
+        ));
     }
 
     /**
@@ -50,17 +62,10 @@ class ProductReservationSubscriber
     {
         $productReservation = $event->getProductReservation();
 
-        $logEvent = $productReservation->log($productReservation::EVENT_ACCEPTED, [
-            'product_reservation' => $productReservation,
-            'fund' => $productReservation->voucher->fund,
-            'product' => $productReservation->product,
-            'sponsor' =>  $productReservation->voucher->fund->organization,
-            'provider' =>  $productReservation->product->organization,
-            'voucher' => $productReservation->voucher,
-            'employee' => $productReservation->employee,
-        ]);
-
-        IdentityProductReservationAcceptedNotification::send($logEvent);
+        IdentityProductReservationAcceptedNotification::send($productReservation->log(
+            $productReservation::EVENT_ACCEPTED,
+            $this->getReservationLogModels($productReservation)
+        ));
     }
 
     /**
@@ -70,17 +75,10 @@ class ProductReservationSubscriber
     {
         $productReservation = $event->getProductReservation();
 
-        $logEvent = $productReservation->log($productReservation::EVENT_CANCELED, [
-            'product_reservation' => $productReservation,
-            'fund' => $productReservation->voucher->fund,
-            'product' => $productReservation->product,
-            'sponsor' =>  $productReservation->voucher->fund->organization,
-            'provider' =>  $productReservation->product->organization,
-            'voucher' => $productReservation->voucher,
-            'employee' => $productReservation->employee,
-        ]);
-
-        IdentityProductReservationCanceledNotification::send($logEvent);
+        IdentityProductReservationCanceledNotification::send($productReservation->log(
+            $productReservation::EVENT_CANCELED,
+            $this->getReservationLogModels($productReservation)
+        ));
     }
 
     /**
@@ -90,17 +88,10 @@ class ProductReservationSubscriber
     {
         $productReservation = $event->getProductReservation();
 
-        $logEvent = $productReservation->log($productReservation::EVENT_REJECTED, [
-            'product_reservation' => $productReservation,
-            'fund' => $productReservation->voucher->fund,
-            'product' => $productReservation->product,
-            'sponsor' =>  $productReservation->voucher->fund->organization,
-            'provider' =>  $productReservation->product->organization,
-            'voucher' => $productReservation->voucher,
-            'employee' => $productReservation->employee,
-        ]);
-
-        IdentityProductReservationRejectedNotification::send($logEvent);
+        IdentityProductReservationRejectedNotification::send($productReservation->log(
+            $productReservation::EVENT_REJECTED,
+            $this->getReservationLogModels($productReservation)
+        ));
     }
 
     /**

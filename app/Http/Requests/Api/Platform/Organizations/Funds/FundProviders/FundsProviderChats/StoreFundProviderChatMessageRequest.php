@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders\FundsProviderChats;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreFundProviderChatMessageRequest extends FormRequest
+class StoreFundProviderChatMessageRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,7 @@ class StoreFundProviderChatMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message' => 'required|string|min:1|max:2000'
+            'message' => 'required|string|min:1|max:2000',
         ];
     }
 }

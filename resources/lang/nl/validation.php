@@ -221,6 +221,8 @@ return [
         'end_date' => 'einddatum',
         'value' => "waarde",
         'file' => "bestand",
+        'templates.*.title' => 'titel',
+        'templates.*.content' => 'omschrijving',
         'price_type' => "prijs type",
         'price_discount' => "korting",
         'limit_total' => "totaal aanbod",
