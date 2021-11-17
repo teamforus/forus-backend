@@ -54,8 +54,11 @@ class BankConnectionsController extends Controller
     ): BankConnectionResource {
         $this->authorize('store', [BankConnection::class, $organization]);
 
-        $bank = Bank::find($request->input('bank_id'));
-        $bankConnection = $organization->makeBankConnection($bank, $request->implementation_model());
+        $bankConnection = $organization->makeBankConnection(
+            Bank::find($request->input('bank_id')),
+            $organization->findEmployee($request->auth_address()),
+            $request->implementation_model()
+        );
 
         return (new BankConnectionResource($bankConnection))->additional([
             'oauth_url' => $bankConnection->getOauthUrl(),
@@ -83,20 +86,20 @@ class BankConnectionsController extends Controller
      * Update the specified resource in storage.
      *
      * @param UpdateBankConnectionsRequest $request
-     * @param $organization
+     * @param Organization $organization
      * @param \App\Models\BankConnection $bankConnection
      * @return BankConnectionResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update(
         UpdateBankConnectionsRequest $request,
-        $organization,
+        Organization $organization,
         BankConnection $bankConnection
     ): BankConnectionResource {
         $this->authorize('update', [$bankConnection, $organization]);
 
         if ($request->input('state') == BankConnection::STATE_DISABLED) {
-            $bankConnection->disable();
+            $bankConnection->disable($organization->findEmployee($request->auth_address()));
         }
 
         return new BankConnectionResource($bankConnection);

@@ -56,12 +56,21 @@ class FundPolicy
      * @param $identity_address
      * @param Fund $fund
      * @param Organization $organization
-     * @return bool
+     * @return bool|\Illuminate\Auth\Access\Response
      * @noinspection PhpUnused
      */
-    public function topUp($identity_address, Fund $fund, Organization $organization): bool
-    {
-        return $this->show($identity_address, $fund, $organization) && $organization->bank_connection_active;
+    public function topUp(
+        $identity_address, Fund $fund,
+        Organization $organization
+    ) {
+        $hasPermission = $this->show($identity_address, $fund, $organization);
+        $hasBankConnection = $organization->bank_connection_active;
+
+        if (!$organization->bank_connection_active->useContext()) {
+            return $this->deny("Bank connection invalid or expired.", 403);
+        }
+
+        return $hasPermission && $hasBankConnection;
     }
 
     /**

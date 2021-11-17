@@ -9,6 +9,7 @@ use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
 use App\Media\RecordCategoryIconMediaConfig;
+use App\Models\BankConnection;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
@@ -16,6 +17,8 @@ use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
+use App\Models\VoucherTransaction;
+use App\Models\VoucherTransactionBulk;
 use App\Observers\FundProviderObserver;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
@@ -56,11 +59,14 @@ class AppServiceProvider extends ServiceProvider
             'fund_request'          => FundRequest::class,
             'fund_provider'         => FundProvider::class,
             'organization'          => Organization::class,
-            'product_category'      => ProductCategory::class,
+            'bank_connection'       => BankConnection::class,
             'implementation'        => Implementation::class,
+            'product_category'      => ProductCategory::class,
             'implementation_page'   => ImplementationPage::class,
             'product_reservation'   => ProductReservation::class,
             'physical_card_request' => PhysicalCardRequest::class,
+            'voucher_transaction'   => VoucherTransaction::class,
+            'voucher_transaction_bulk'  => VoucherTransactionBulk::class,
         ]);
 
         MediaService::setMediaConfigs([

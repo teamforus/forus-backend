@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\BankConnections;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\BankConnection;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
 /**
  * @property-read Organization $organization
  */
-class UpdateBankConnectionsRequest extends FormRequest
+class UpdateBankConnectionsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

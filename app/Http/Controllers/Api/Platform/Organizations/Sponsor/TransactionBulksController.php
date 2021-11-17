@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\UpdateTransactionBulksRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
@@ -75,13 +76,16 @@ class TransactionBulksController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function store(Organization $organization): AnonymousResourceCollection
-    {
+    public function store(
+        BaseFormRequest $request,
+        Organization $organization
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('store', [VoucherTransactionBulk::class, $organization]);
 
-        $transactionBulk = VoucherTransactionBulk::buildBulksForOrganization($organization, []);
-        $transactionBulks = VoucherTransactionBulk::query()->whereIn('id', $transactionBulk);
+        $employee = $organization->findEmployee($request->auth_address());
+        $bulks = VoucherTransactionBulk::buildBulksForOrganization($organization, $employee);
+        $transactionBulks = VoucherTransactionBulk::query()->whereIn('id', $bulks);
 
         return VoucherTransactionBulkResource::collection($transactionBulks->get()->load(
             VoucherTransactionBulkResource::load()

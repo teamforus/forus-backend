@@ -3,17 +3,19 @@
 namespace App\Models;
 
 use App\Services\BankService\Models\Bank;
+use App\Services\EventLogService\Traits\HasLogs;
 use bunq\Context\ApiContext;
 use bunq\Context\BunqContext;
+use bunq\Exception\ForbiddenException;
 use bunq\Model\Core\BunqEnumOauthResponseType;
 use bunq\Model\Core\OauthAuthorizationUri;
 use bunq\Model\Generated\Endpoint\MonetaryAccount;
 use bunq\Model\Generated\Endpoint\MonetaryAccountBank;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Object\Pointer;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Throwable;
 
 /**
  * App\Models\BankConnection
@@ -28,12 +30,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $access_token
  * @property string $code
  * @property array $context
- * @property string|null $session_expire_at
+ * @property \Illuminate\Support\Carbon|null $session_expire_at
  * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Bank $bank
  * @property-read \App\Models\Implementation $implementation
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
@@ -58,12 +62,31 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class BankConnection extends Model
 {
+    use HasLogs;
+
+    public const EVENT_CREATED = 'created';
+    public const EVENT_REPLACED = 'replaced';
+    public const EVENT_REJECTED = 'rejected';
+    public const EVENT_DISABLED = 'disabled';
+    public const EVENT_ACTIVATED = 'activated';
+    public const EVENT_DISABLED_INVALID = 'disabled_invalid';
+
+    public const EVENTS = [
+        self::EVENT_CREATED,
+        self::EVENT_REPLACED,
+        self::EVENT_REJECTED,
+        self::EVENT_DISABLED,
+        self::EVENT_ACTIVATED,
+        self::EVENT_DISABLED_INVALID,
+    ];
+
     public const STATE_ACTIVE = 'active';
     public const STATE_EXPIRED = 'expired';
     public const STATE_PENDING = 'pending';
     public const STATE_REPLACED = 'replaced';
     public const STATE_REJECTED = 'rejected';
     public const STATE_DISABLED = 'disabled';
+    public const STATE_INVALID = 'invalid';
 
     public const STATES = [
         self::STATE_ACTIVE,
@@ -72,14 +95,21 @@ class BankConnection extends Model
         self::STATE_REPLACED,
         self::STATE_REJECTED,
         self::STATE_DISABLED,
+        self::STATE_INVALID,
     ];
 
+    /**
+     * @var string[]
+     */
     protected $fillable = [
         'bank_id', 'organization_id', 'implementation_id', 'monetary_account_id',
         'monetary_account_iban', 'redirect_token', 'access_token', 'code', 'state',
         'context', 'session_expire_at',
     ];
 
+    /**
+     * @var string[]
+     */
     protected $hidden = [
         'redirect_token', 'access_token', 'code', 'context',
     ];
@@ -89,6 +119,13 @@ class BankConnection extends Model
      */
     protected $casts = [
         'context' => 'array',
+    ];
+
+    /**
+     * @var string[]
+     */
+    protected $dates = [
+        'session_expire_at',
     ];
 
     /**
@@ -125,22 +162,28 @@ class BankConnection extends Model
 
     /**
      * @param Bank $bank
+     * @param Employee $employee
      * @param Organization $organization
      * @param Implementation $implementation
      * @return BankConnection|Model
      */
     public static function addConnection(
         Bank $bank,
+        Employee $employee,
         Organization $organization,
         Implementation $implementation
     ): BankConnection {
-        return static::create([
+        $bankConnection = static::create([
             'bank_id' => $bank->id,
             'organization_id' => $organization->id,
             'implementation_id' => $implementation->id,
             'redirect_token' => token_generator_db(static::query(), 'redirect_token', 128),
             'state' => BankConnection::STATE_PENDING,
         ]);
+
+        $bankConnection->log($bankConnection::EVENT_CREATED, $bankConnection->getLogModels($employee));
+
+        return $bankConnection;
     }
 
     /**
@@ -222,15 +265,24 @@ class BankConnection extends Model
      */
     public function setActive(): self
     {
-        $this->organization->bank_connections()->where([
+        /** @var BankConnection[] $activeConnections */
+        $activeConnections = $this->organization->bank_connections()->where([
             'state' => static::STATE_ACTIVE,
-        ])->update([
-            'state' => static::STATE_REPLACED,
+        ])->get();
+
+        foreach ($activeConnections as $bankConnection) {
+            $bankConnection->updateModel([
+                'state' => static::STATE_REPLACED,
+            ])->log($bankConnection::EVENT_REPLACED, $bankConnection->getLogModels());
+        }
+
+        $this->update([
+            'state' => static::STATE_ACTIVE,
         ]);
 
-        return tap($this)->update([
-            'state' => static::STATE_ACTIVE,
-        ]);
+        $this->log(static::EVENT_ACTIVATED, $this->getLogModels());
+
+        return $this;
     }
 
     /**
@@ -238,25 +290,40 @@ class BankConnection extends Model
      */
     public function setRejected(): self
     {
-        return tap($this)->update([
+        $this->update([
             'state' => static::STATE_REJECTED,
         ]);
+
+        $this->log(static::EVENT_REJECTED, $this->getLogModels());
+
+        return $this;
     }
 
     /**
      * @return void
      */
-    public function useContext(): void
+    public function useContext(): bool
     {
-        BunqContext::loadApiContext(ApiContext::fromJson(json_encode($this->context)));
+        try {
+            BunqContext::loadApiContext(ApiContext::fromJson(json_encode($this->context)));
+            return true;
+        } catch (Throwable $e) {
+            if ($e instanceof ForbiddenException) {
+                $this->disableAsInvalid($e->getMessage());
+            }
+        }
+
+        return false;
     }
 
     /**
-     * @return array
+     * @return ?array
      */
-    public function getMonetaryAccounts(): array
+    public function getMonetaryAccounts(): ?array
     {
-        $this->useContext();
+        if (!$this->useContext()) {
+            return null;
+        }
 
         $bankAccountBanks = array_map(function (MonetaryAccount $monetaryAccount) {
            return $monetaryAccount->getMonetaryAccountBank();
@@ -282,21 +349,43 @@ class BankConnection extends Model
     /**
      * @return $this
      */
-    public function disable(): self
+    public function disable(Employee $employee): self
     {
-        return tap($this)->update([
+        $this->updateModel([
             'state' => static::STATE_DISABLED,
         ]);
+
+        $this->log(static::EVENT_DISABLED, $this->getLogModels($employee));
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function disableAsInvalid(string $errorMessage): self
+    {
+        $this->updateModel([
+            'state' => static::STATE_INVALID,
+        ]);
+
+        $this->log(static::EVENT_DISABLED_INVALID, $this->getLogModels(), [
+            'bank_connection_error_message' => $errorMessage,
+        ]);
+
+        return $this;
     }
 
     /**
      * @return string|null
      */
-    public function fetchActiveMonetaryAccountIban(): ?string {
+    public function fetchActiveMonetaryAccountIban(): ?string
+    {
+        if (!$monetaryAccounts = $this->getMonetaryAccounts()) {
+            return null;
+        }
 
-        $this->useContext();
-
-        return array_filter($this->getMonetaryAccounts(), function(array $account) {
+        return array_filter($monetaryAccounts, function(array $account) {
             return $account['id'] == $this->monetary_account_id;
         })[0]['iban'] ?? null;
     }
@@ -307,14 +396,24 @@ class BankConnection extends Model
      */
     public function fetchPayments($count = 100): array
     {
-        $this->useContext();
+        if (!$this->useContext()) {
+            return [];
+        }
 
         return Payment::listing(null, compact('count'))->getValue();
     }
 
-    public function updateSession()
+    /**
+     * @param Employee|null $employee
+     * @param array $extraModels
+     * @return array
+     */
+    protected function getLogModels(?Employee $employee = null, array $extraModels = []): array
     {
-        $this->useContext();
-
+        return array_merge([
+            'employee' => $employee,
+            'organization' => $this->organization,
+            'bank_connection' => $this,
+        ], $extraModels);
     }
 }

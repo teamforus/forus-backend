@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Services\EventLogService\Traits\HasLogs;
 use bunq\Model\Generated\Endpoint\DraftPayment;
 use bunq\Model\Generated\Endpoint\Payment;
 use bunq\Model\Generated\Endpoint\PaymentBatch;
@@ -11,10 +12,10 @@ use bunq\Model\Generated\Object\DraftPaymentEntry;
 use bunq\Model\Generated\Object\Pointer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Exception;
 use Throwable;
 
 /**
@@ -23,39 +24,60 @@ use Throwable;
  * @property int $id
  * @property int|null $bank_connection_id
  * @property int|null $payment_id
+ * @property string $monetary_account_id
  * @property string $state
+ * @property int $accepted_manually
  * @property int $state_fetched_times
  * @property string|null $state_fetched_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransaction[] $voucher_transactions
+ * @property-read string $state_locale
+ * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
+ * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk query()
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk whereBankConnectionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk wherePaymentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk whereStateFetchedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk whereStateFetchedTimes($value)
- * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionBulk whereUpdatedAt($value)
+ * @method static Builder|VoucherTransactionBulk newModelQuery()
+ * @method static Builder|VoucherTransactionBulk newQuery()
+ * @method static Builder|VoucherTransactionBulk query()
+ * @method static Builder|VoucherTransactionBulk whereAcceptedManually($value)
+ * @method static Builder|VoucherTransactionBulk whereBankConnectionId($value)
+ * @method static Builder|VoucherTransactionBulk whereCreatedAt($value)
+ * @method static Builder|VoucherTransactionBulk whereId($value)
+ * @method static Builder|VoucherTransactionBulk whereMonetaryAccountId($value)
+ * @method static Builder|VoucherTransactionBulk wherePaymentId($value)
+ * @method static Builder|VoucherTransactionBulk whereState($value)
+ * @method static Builder|VoucherTransactionBulk whereStateFetchedAt($value)
+ * @method static Builder|VoucherTransactionBulk whereStateFetchedTimes($value)
+ * @method static Builder|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class VoucherTransactionBulk extends Model
 {
+    use HasLogs;
+
+    public const EVENT_RESET = 'reset';
+    public const EVENT_CREATED = 'created';
+    public const EVENT_SUBMITTED = 'submitted';
+    public const EVENT_ACCEPTED = 'accepted';
+    public const EVENT_REJECTED = 'rejected';
+
     public const STATE_PENDING = 'pending';
     public const STATE_ACCEPTED = 'accepted';
     public const STATE_REJECTED = 'rejected';
+
+    public const STATES = [
+        self::STATE_PENDING,
+        self::STATE_ACCEPTED,
+        self::STATE_REJECTED,
+    ];
 
     /**
      * @var string[]
      */
     protected $fillable = [
         'bank_connection_id', 'state', 'state_fetched_times', 'state_fetched_at',
-        'payment_id', 'accepted_manually',
+        'payment_id', 'accepted_manually', 'monetary_account_id',
     ];
 
     /**
@@ -157,6 +179,8 @@ class VoucherTransactionBulk extends Model
                 'state' => static::STATE_ACCEPTED,
             ]);
 
+            $this->log(static::STATE_ACCEPTED, $this->getLogModels());
+
             foreach ($this->voucher_transactions as $transaction) {
                 $payment = $draftPayment ? $this->findPaymentFromDraftPayment(
                     $transaction, $draftPayment
@@ -180,13 +204,16 @@ class VoucherTransactionBulk extends Model
     }
 
     /**
+     * @param Employee|null $employee
      * @return $this
      * @throws Throwable
      */
-    public function submitBulk(): self
+    public function submitBulk(?Employee $employee = null): self
     {
-        return DB::transaction(function() {
-            $this->bank_connection->useContext();
+        return DB::transaction(function() use ($employee) {
+            if (!$this->bank_connection->useContext()) {
+                throw new Exception("Bank connection invalid.", 403);
+            }
 
             $transactions = $this->voucher_transactions->map(function(VoucherTransaction $transaction) {
                 $amount = number_format($transaction->amount, 2, '.', '');
@@ -204,9 +231,11 @@ class VoucherTransactionBulk extends Model
             $monetaryAccountId = $this->bank_connection->monetary_account_id;
             $payment = DraftPayment::create($transactions, 1, $monetaryAccountId);
 
-            return tap($this)->update([
+            $this->updateModel([
                 'payment_id' => $payment->getValue(),
-            ]);
+            ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
+
+            return $this;
         });
     }
 
@@ -215,9 +244,11 @@ class VoucherTransactionBulk extends Model
      */
     public function setRejected(): self
     {
-        return tap($this)->update([
+        $this->updateModel([
             'state' => static::STATE_REJECTED,
-        ]);
+        ])->log(static::STATE_REJECTED, $this->getLogModels());
+
+        return $this;
     }
 
     /**
@@ -257,15 +288,16 @@ class VoucherTransactionBulk extends Model
 
     /**
      * @param Organization $sponsor
+     * @param Employee|null $employee
      * @param array $previousBulks
-     * @param int $perBulk
-     * @return int[]
+     * @return array
      */
     public static function buildBulksForOrganization(
         Organization $sponsor,
-        array $previousBulks = [],
-        int $perBulk = 100
+        ?Employee $employee = null,
+        array $previousBulks = []
     ): array {
+        $perBulk = 100;
         $query = static::getNextBulkTransactionsForSponsor($sponsor);
 
         if ((clone($query))->doesntExist()) {
@@ -275,14 +307,17 @@ class VoucherTransactionBulk extends Model
         /** @var VoucherTransactionBulk $transactionsBulk */
         $transactionsBulk = $sponsor->bank_connection_active->voucher_transaction_bulks()->create([
             'state' => VoucherTransactionBulk::STATE_PENDING,
+            'monetary_account_id' => $sponsor->bank_connection_active->monetary_account_id,
         ]);
+
+        $transactionsBulk->log(self::EVENT_CREATED, $transactionsBulk->getLogModels($employee));
 
         $query->take($perBulk)->update([
             'voucher_transaction_bulk_id' => $transactionsBulk->id,
         ]);
 
         try {
-            $transactionsBulk->submitBulk();
+            $transactionsBulk->submitBulk($employee);
             // This endpoint is throttled by bunq: You can do a maximum of 3 calls per 3 second to this endpoint.
             sleep(2);
         } catch (Throwable $e) {
@@ -292,7 +327,7 @@ class VoucherTransactionBulk extends Model
         $bulksList = array_merge($previousBulks, (array) $transactionsBulk->id);
 
         if (static::getNextBulkTransactionsForSponsor($sponsor)->exists()) {
-            return static::buildBulksForOrganization($sponsor, $bulksList, $perBulk);
+            return static::buildBulksForOrganization($sponsor, $employee, $bulksList);
         }
 
         return $bulksList;
@@ -305,8 +340,28 @@ class VoucherTransactionBulk extends Model
      */
     public function resetBulk(?Employee $employee): self
     {
-        return tap($this)->update([
+        $this->updateModel([
             'state' => static::STATE_PENDING,
-        ])->submitBulk();
+        ]);
+
+        $this->log(self::EVENT_RESET, $this->getLogModels($employee));
+        $this->submitBulk($employee);
+
+        return $this;
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @param array $extraModels
+     * @return array
+     */
+    protected function getLogModels(?Employee $employee = null, array $extraModels = []): array
+    {
+        return array_merge([
+            'sponsor' => $this->bank_connection->organization,
+            'employee' => $employee,
+            'bank_connection' => $this->bank_connection,
+            'voucher_transaction_bulk' => $this,
+        ], $extraModels);
     }
 }

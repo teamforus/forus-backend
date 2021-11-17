@@ -33,7 +33,11 @@ class BankUpdateContextSessionsCommand extends Command
         $bankConnections = BankConnection::whereState(BankConnection::STATE_ACTIVE)->get();
 
         foreach ($bankConnections as $bankConnection) {
-            $bankConnection->updateContext($bankConnection->makeNewContext());
+            try {
+                $bankConnection->updateContext($bankConnection->makeNewContext());
+            } catch (BunqException $exception) {
+                logger()->error($exception->getMessage() . "\n" . $exception->getTraceAsString());
+            }
         }
     }
 }

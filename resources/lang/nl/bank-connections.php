@@ -8,5 +8,6 @@ return [
         'replaced'  => 'Replaced',
         'rejected'  => 'Rejected',
         'disabled'  => 'Disabled',
+        'invalid'   => 'Invalid',
     ],
 ];

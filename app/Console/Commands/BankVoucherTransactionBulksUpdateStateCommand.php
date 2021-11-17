@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\BankConnection;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
@@ -31,11 +33,17 @@ class BankVoucherTransactionBulksUpdateStateCommand extends Command
     public function handle(): void
     {
         /** @var VoucherTransactionBulk[]|Collection $bulks */
-        $bulks = VoucherTransactionBulk::whereState(VoucherTransactionBulk::STATE_PENDING)->get();
+        $bulksQuery = VoucherTransactionBulk::whereState(VoucherTransactionBulk::STATE_PENDING);
+        $bulks = $bulksQuery->whereHas('bank_connection', function(Builder $builder) {
+            $builder->where('state', '!=', BankConnection::STATE_INVALID);
+        })->get();
 
         foreach ($bulks as $transactionBulk) {
             try {
-                $transactionBulk->bank_connection->useContext();
+                if (!$transactionBulk->bank_connection->useContext()) {
+                    continue;
+                }
+
                 $transactionBulk->update([
                     'state_fetched_times'   => $transactionBulk->state_fetched_times + 1,
                     'state_fetched_at'      => now(),

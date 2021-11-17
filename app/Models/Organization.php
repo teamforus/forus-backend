@@ -809,11 +809,15 @@ class Organization extends Model
 
     /**
      * @param Bank $bank
+     * @param Employee $employee
      * @param Implementation $implementation
      * @return BankConnection|\Illuminate\Database\Eloquent\Model
      */
-    public function makeBankConnection(Bank $bank, Implementation $implementation): BankConnection
-    {
-        return BankConnection::addConnection($bank, $this, $implementation);
+    public function makeBankConnection(
+        Bank $bank,
+        Employee $employee,
+        Implementation $implementation
+    ): BankConnection {
+        return BankConnection::addConnection($bank, $employee, $this, $implementation);
     }
 }

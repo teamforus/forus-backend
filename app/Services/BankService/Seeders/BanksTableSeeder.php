@@ -113,7 +113,7 @@ class BanksTableSeeder extends Seeder
     {
         $key = 'bunq';
         $bunqKey = env('DB_SEED_BUNQ_KEY');
-        $environment = BunqEnumApiEnvironmentType::SANDBOX();
+        $environment = $this->apiKeyToEnvironmentType($bunqKey);
         $description = 'Forus PSD2 development installation.';
         $errorPrefix = "Could not create BUNQ bank context/installation: ";
 
@@ -143,6 +143,19 @@ class BanksTableSeeder extends Seeder
             $this->printWarning("$errorPrefix$message\n$error");
             return null;
         }
+    }
+
+    /**
+     * @param string|null $apiKey
+     * @return BunqEnumApiEnvironmentType
+     */
+    public function apiKeyToEnvironmentType(?string $apiKey): BunqEnumApiEnvironmentType
+    {
+        if (is_string($apiKey) && !starts_with(strtolower($apiKey), 'sandbox')) {
+            return BunqEnumApiEnvironmentType::PRODUCTION();
+        }
+
+        return BunqEnumApiEnvironmentType::SANDBOX();
     }
 
     /**

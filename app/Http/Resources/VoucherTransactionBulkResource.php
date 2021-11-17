@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Http\Resources\Json\JsonResource;
 

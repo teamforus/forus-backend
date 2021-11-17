@@ -37,6 +37,7 @@ use Illuminate\Http\Request;
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read string $state_locale
  * @property-read float $transaction_cost
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes
  * @property-read int|null $notes_count
