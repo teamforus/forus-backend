@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\BunqMeTab;
 use App\Models\Fund;
 use App\Models\Employee;
 use App\Models\FundProvider;
@@ -20,6 +19,7 @@ use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Models\DemoTransaction;
+use App\Models\VoucherTransactionBulk;
 use App\Services\DigIdService\Models\DigIdSession;
 use App\Services\Forus\Identity\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,13 +48,6 @@ class RouteServiceProvider extends ServiceProvider
         parent::boot();
 
         $router = app()->make('router');
-
-        $router->bind('bunq_me_tab_paid', static function ($value) {
-            return BunqMeTab::query()->where([
-                    'status' => 'PAID',
-                    'id' => $value,
-                ])->first() ?? abort(404);
-        });
 
         $router->bind('prevalidation_uid', static function ($value) {
             return Prevalidation::query()->where([
@@ -180,6 +173,10 @@ class RouteServiceProvider extends ServiceProvider
 
         $router->bind('platform_config', static function ($value) {
             return Implementation::platformConfig($value);
+        });
+
+        $router->bind('voucher_transaction_bulks', static function ($value) {
+            return VoucherTransactionBulk::findOrFail($value);
         });
     }
 

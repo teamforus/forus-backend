@@ -10,6 +10,7 @@ use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
 use App\Media\ProductPhotosMediaConfig;
 use App\Media\RecordCategoryIconMediaConfig;
+use App\Models\BankConnection;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
@@ -18,6 +19,8 @@ use App\Models\ImplementationPage;
 use App\Models\NotificationTemplate;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
+use App\Models\VoucherTransaction;
+use App\Models\VoucherTransactionBulk;
 use App\Observers\FundProviderObserver;
 use Carbon\Carbon;
 use App\Media\OrganizationLogoMediaConfig;
@@ -29,7 +32,6 @@ use App\Models\ProductCategory;
 use App\Models\Voucher;
 use App\Services\MediaService\MediaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -57,14 +59,17 @@ class AppServiceProvider extends ServiceProvider
             'product'               => Product::class,
             'employees'             => Employee::class,
             'fund_request'          => FundRequest::class,
-            'fund_provider'         => FundProvider::class,
             'organization'          => Organization::class,
             'mail_template'         => NotificationTemplate::class,
+            'fund_provider'         => FundProvider::class,
+            'bank_connection'       => BankConnection::class,
             'implementation'        => Implementation::class,
             'product_category'      => ProductCategory::class,
             'implementation_page'   => ImplementationPage::class,
             'product_reservation'   => ProductReservation::class,
             'physical_card_request' => PhysicalCardRequest::class,
+            'voucher_transaction'   => VoucherTransaction::class,
+            'voucher_transaction_bulk'  => VoucherTransactionBulk::class,
         ]);
 
         MediaService::setMediaConfigs([
@@ -79,10 +84,6 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         FundProvider::observe(FundProviderObserver::class);
-
-        /*Blade::directive('mail_builder_html', function ($expression) {
-            return $expression;
-        });*/
     }
 
     /**

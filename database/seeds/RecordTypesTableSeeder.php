@@ -1,6 +1,6 @@
 <?php
 
-use \App\Services\Forus\Record\Models\RecordType;
+use App\Services\Forus\Record\Models\RecordType;
 
 class RecordTypesTableSeeder extends DatabaseSeeder
 {

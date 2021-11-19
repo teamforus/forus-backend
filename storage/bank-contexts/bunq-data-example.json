@@ -1,0 +1,22 @@
+{
+    "info": [
+        "This JSON file should have 2 keys: 'context' and 'oauth_client'",
+        "The only reason for this file is to avoid making API calls to Bunq API during seed process.",
+        "You can use the Bunq key from the .env to generate the 'context' and 'oauth_client' for the first time, and then copy",
+        "'json' content from the 'data' field to reuse it."
+    ],
+    "context": {
+        "comment": [
+            "Important!",
+            "This is only an example file to give an idea about the data used by seeder.",
+            "Please use the real bunq Sandbox context data."
+        ]
+    },
+    "oauth_client": {
+        "comment": [
+            "Important!",
+            "This is only an example file to give an idea about the data used by seeder.",
+            "Please use the real bunq Oauth Client data."
+        ]
+    }
+}

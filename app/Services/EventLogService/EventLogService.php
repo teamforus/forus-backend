@@ -2,6 +2,7 @@
 
 namespace App\Services\EventLogService;
 
+use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
@@ -13,6 +14,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
+use App\Models\VoucherTransactionBulk;
 use App\Models\VoucherTransaction;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Interfaces\IEventLogService;
@@ -68,6 +70,8 @@ class EventLogService implements IEventLogService
             case 'product_reservation': $modelMeta = $this->productReservationMeta($model); break;
             case 'voucher_transaction': $modelMeta = $this->voucherTransactionMeta($model); break;
             case 'physical_card_request': $modelMeta = $this->physicalCardRequestMeta($model); break;
+            case 'bank_connection': $modelMeta = $this->bankConnectionMeta($model); break;
+            case 'voucher_transaction_bulk': $modelMeta = $this->voucherTransactionBulkMeta($model); break;
             case 'implementation': $modelMeta = $this->implementationMeta($model); break;
         }
 
@@ -259,7 +263,41 @@ class EventLogService implements IEventLogService
     }
 
     /**
-     * @return string[]
+     * @param BankConnection $bankConnection
+     * @return array
+     */
+    protected function bankConnectionMeta(BankConnection $bankConnection): array
+    {
+        $expire_at = $bankConnection->session_expire_at;
+
+        return [
+            'bank_connection_id' => $bankConnection->id,
+            'bank_connection_state' => $bankConnection->state,
+            'bank_connection_bank_id' => $bankConnection->bank_id,
+            'bank_connection_session_expire_at' => $expire_at ? $expire_at->format('Y-m-d H:i:s') : null,
+            'bank_connection_implementation_id' => $bankConnection->implementation_id,
+            'bank_connection_monetary_account_id' => $bankConnection->monetary_account_id,
+            'bank_connection_monetary_account_iban' => $bankConnection->monetary_account_iban,
+        ];
+    }
+
+    /**
+     * @param VoucherTransactionBulk $transactionBulk
+     * @return array
+     */
+    protected function voucherTransactionBulkMeta(VoucherTransactionBulk $transactionBulk): array
+    {
+        return [
+            'transaction_bulk_id' => $transactionBulk->id,
+            'transaction_bulk_state' => $transactionBulk->state,
+            'transaction_bulk_payment_id' => $transactionBulk->payment_id,
+            'transaction_bulk_monetary_account_id' => $transactionBulk->monetary_account_id,
+        ];
+    }
+
+    /**
+     * @param Implementation $implementation
+     * @return array
      */
     protected function implementationMeta(Implementation $implementation): array
     {
