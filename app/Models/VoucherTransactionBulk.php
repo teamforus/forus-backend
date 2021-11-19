@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use bunq\Model\Generated\Endpoint\DraftPayment;
@@ -194,7 +195,7 @@ class VoucherTransactionBulk extends Model
                     'payment_time'      => now(),
                 ])->save();
 
-                $transaction->sendPushBunqTransactionSuccess();
+                VoucherTransactionBunqSuccess::dispatch($transaction);
             }
         });
 
