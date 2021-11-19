@@ -2,12 +2,12 @@
 
 return [
     'states' => [
-        'active'    => 'Active',
-        'expired'   => 'Expired',
-        'pending'   => 'Pending',
-        'replaced'  => 'Replaced',
-        'rejected'  => 'Rejected',
-        'disabled'  => 'Disabled',
-        'invalid'   => 'Invalid',
+        'active'    => 'Actief',
+        'expired'   => 'Verlopen',
+        'pending'   => 'Wachtend',
+        'replaced'  => 'Vervangen',
+        'rejected'  => 'Geweigerd',
+        'disabled'  => 'Uitgeschakeld',
+        'invalid'   => 'Ongeldig',
     ],
 ];
