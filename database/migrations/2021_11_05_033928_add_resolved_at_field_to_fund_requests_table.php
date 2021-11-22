@@ -5,6 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\FundRequest;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddResolvedAtFieldToFundRequestsTable extends Migration
 {
     /**
@@ -12,18 +15,26 @@ class AddResolvedAtFieldToFundRequestsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_requests', function (Blueprint $table) {
-            $table->dateTime('resolved_at')->nullable()->after('updated_at');
+            $table->dateTime('resolved_at')->nullable()->after('state');
         });
 
-        foreach (FundRequest::get() as $fundRequest) {
-            if (in_array($fundRequest->state, [FundRequest::STATE_APPROVED, FundRequest::STATE_DECLINED])) {
-                $fundRequest->update([
-                    'resolved_at' => $fundRequest->updated_at
-                ]);
-            }
+        $fundRequests = FundRequest::query()
+            ->whereNull('resolved_at')
+            ->whereIn('state', FundRequest::STATES_RESOLVED)
+            ->with('logs')
+            ->get();
+
+        foreach ($fundRequests as $fundRequest) {
+            $eventLog = $fundRequest->logs->where('event', $fundRequest::EVENT_RESOLVED)[0] ?? null;
+
+            $fundRequest->fill([
+                'resolved_at' => $eventLog->created_at ?? $fundRequest->updated_at,
+            ])->save([
+                'timestamps' => false,
+            ]);
         }
     }
 
@@ -32,7 +43,7 @@ class AddResolvedAtFieldToFundRequestsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_requests', function (Blueprint $table) {
             $table->dropColumn('resolved_at');

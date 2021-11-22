@@ -20,11 +20,9 @@ use Illuminate\Http\Request;
  * @property string $identity_address
  * @property string $note
  * @property string $state
+ * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $resolved_at
- * @property int|null $resolve_time_days
- * @property int|null $resolve_time_sec
  * @property-read Collection|\App\Models\FundRequestClarification[] $clarifications
  * @property-read int|null $clarifications_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $clarifications_answered
@@ -32,6 +30,8 @@ use Illuminate\Http\Request;
  * @property-read Collection|\App\Models\FundRequestRecord[] $clarifications_pending
  * @property-read int|null $clarifications_pending_count
  * @property-read \App\Models\Fund $fund
+ * @property-read int|null $lead_time_days
+ * @property-read string $lead_time_locale
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records
@@ -50,6 +50,7 @@ use Illuminate\Http\Request;
  * @method static Builder|FundRequest whereId($value)
  * @method static Builder|FundRequest whereIdentityAddress($value)
  * @method static Builder|FundRequest whereNote($value)
+ * @method static Builder|FundRequest whereResolvedAt($value)
  * @method static Builder|FundRequest whereState($value)
  * @method static Builder|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent
@@ -77,8 +78,14 @@ class FundRequest extends Model
         self::STATE_APPROVED_PARTLY,
     ];
 
+    public const STATES_RESOLVED = [
+        self::STATE_APPROVED,
+        self::STATE_DECLINED,
+        self::STATE_APPROVED_PARTLY,
+    ];
+
     protected $fillable = [
-        'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at'
+        'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at',
     ];
 
     protected $dates = [
@@ -87,24 +94,20 @@ class FundRequest extends Model
 
     /**
      * @return int|null
+     * @noinspection PhpUnused
      */
-    public function getResolveTimeDaysAttribute() {
-        if (!$this->resolved_at) {
-            return null;
-        }
-
-        return $this->resolved_at->diffInDays($this->created_at);
+    public function getLeadTimeDaysAttribute(): ?int
+    {
+        return ($this->resolved_at ?: now())->diffInDays($this->created_at);
     }
 
     /**
-     * @return int|null
+     * @return string
+     * @noinspection PhpUnused
      */
-    public function getResolveTimeSecAttribute() {
-        if (!$this->resolved_at) {
-            return null;
-        }
-
-        return $this->resolved_at->diffInSeconds($this->created_at);
+    public function getLeadTimeLocaleAttribute(): string
+    {
+        return ($this->resolved_at ?: now())->longAbsoluteDiffForHumans($this->created_at);
     }
 
     /**
@@ -265,9 +268,10 @@ class FundRequest extends Model
      * Set all fund request records assigned to given employee as declined
      * @param Employee $employee
      * @param string|null $note
-     * @return FundRequest|bool
+     * @return FundRequest
      */
-    public function decline(Employee $employee, string $note = null) {
+    public function decline(Employee $employee, string $note = null): self
+    {
         $this->update([
             'note' => $note ?: '',
         ]);
@@ -334,12 +338,13 @@ class FundRequest extends Model
             $state = $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;
         }
 
-        $resolved_at = null;
-        if ($state = self::STATE_APPROVED || $state == self::STATE_DECLINED) {
-            $resolved_at = now();
+        if (in_array($state, static::STATES_RESOLVED)) {
+            $this->update(array_merge(compact('state'), [
+                'resolved_at' => now(),
+            ]));
+        } else {
+            $this->update(compact('state'));
         }
-
-        $this->update(compact('state', 'resolved_at'));
 
         if (($oldState !== $this->state) && ($this->state !== 'pending')) {
             FundRequestResolved::dispatch($this);
@@ -409,19 +414,15 @@ class FundRequest extends Model
      * @param Builder $builder
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder) {
+    private static function exportTransform(Builder $builder)
+    {
         $transKey = "export.fund_requests";
         $recordRepo = resolve('forus.services.record');
+        $fundRequests = $builder->with('records.employee', 'fund')->get();
 
-        return $builder->with([
-            'records.employee', 'fund'
-        ])->get()->map(static function(
-            FundRequest $fundRequest
-        ) use ($transKey, $recordRepo) {
+        return $fundRequests->map(static function(FundRequest $fundRequest) use ($transKey, $recordRepo) {
             return [
-                trans("$transKey.bsn") => $recordRepo->bsnByAddress(
-                    $fundRequest->identity_address
-                ),
+                trans("$transKey.bsn") => $recordRepo->bsnByAddress($fundRequest->identity_address),
                 trans("$transKey.fund_name") => $fundRequest->fund->name,
                 trans("$transKey.status") => trans("$transKey.state-values.$fundRequest->state"),
                 trans("$transKey.validator") => $fundRequest->records->filter()->pluck('employee')->count() > 0 ?
@@ -432,7 +433,8 @@ class FundRequest extends Model
                     })->unique()->join(', ') : null,
                 trans("$transKey.created_at") => $fundRequest->created_at,
                 trans("$transKey.resolved_at") => $fundRequest->resolved_at,
-                trans("$transKey.lead_time") => $fundRequest->resolve_time_days
+                trans("$transKey.lead_time_days") => (string) $fundRequest->lead_time_days,
+                trans("$transKey.lead_time_locale") => $fundRequest->lead_time_locale,
             ];
         })->values();
     }

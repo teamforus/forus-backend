@@ -60,6 +60,8 @@ use RuntimeException;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
+ * @property-read bool $has_product_vouchers
+ * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
