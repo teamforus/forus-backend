@@ -99,6 +99,10 @@ class FundsController extends Controller
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
+        $fund->fund_config()->create($request->only([
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests', 'request_btn_text', 'request_btn_link'
+        ]));
+
         FundCreatedEvent::dispatch($fund);
 
         return new FundResource($fund);
@@ -179,6 +183,18 @@ class FundsController extends Controller
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));
         }
+
+        $fund_config_data = $request->only([
+            'request_btn_text', 'request_btn_link'
+        ]);
+
+        if ($fund->state !== Fund::STATE_ACTIVE) {
+            $fund_config_data = array_merge($fund_config_data, $request->only([
+                'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests'
+            ]));
+        }
+
+        $fund->fund_config()->update($fund_config_data);
 
         if (config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {

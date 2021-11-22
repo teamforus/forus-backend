@@ -67,6 +67,11 @@ class UpdateFundRequest extends BaseFormRequest
             'notification_amount'       => 'nullable|numeric',
             'description_media_uid'     => 'nullable|array',
             'description_media_uid.*'   => $this->mediaRule(),
+            'allow_fund_requests'       => 'nullable|boolean',
+            'allow_prevalidations'      => 'nullable|boolean',
+            'allow_direct_requests'     => 'nullable|boolean',
+            'request_btn_text'          => 'nullable|string|max:50',
+            'request_btn_link'          => 'nullable|string|max:100',
         ], [
             'auto_requests_validation'  => 'nullable|boolean',
             'default_validator_employee_id' => [

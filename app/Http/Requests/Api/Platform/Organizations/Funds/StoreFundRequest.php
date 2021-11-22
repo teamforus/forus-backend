@@ -65,6 +65,11 @@ class StoreFundRequest extends BaseFormRequest
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
+            'allow_fund_requests'           => 'required|boolean',
+            'allow_prevalidations'          => 'required|boolean',
+            'allow_direct_requests'         => 'required|boolean',
+            'request_btn_text'              => 'nullable|string|max:50',
+            'request_btn_link'              => 'nullable|string|max:100',
         ], [
             'auto_requests_validation' => 'nullable|boolean',
             'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),
