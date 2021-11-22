@@ -3,6 +3,7 @@
 namespace App\Services\KvkApiService;
 
 use App\Models\Model;
+use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 
 /**
@@ -46,11 +47,10 @@ class KvkApi
         string $kvk_number
     ): string {
         return sprintf(
-            "%sapi/v2/%s/companies?q=%s&user_key=%s",
+            "%s%sapi/v1/basisprofielen/%s/hoofdvestiging",
             $this->api_url,
-            $this->api_debug ? 'testprofile' : 'profile',
-            $kvk_number,
-            $this->api_key
+            $this->api_debug ? 'test/' : '',
+            $kvk_number
         );
     }
 
@@ -64,7 +64,7 @@ class KvkApi
         try {
             $response = json_decode($this->makeApiCall($kvk_number), false);
 
-            if (is_object($response) && (count($response->data->items) > 0)) {
+            if (is_object($response)) {
                 return $response;
             }
         } catch (\Exception $e) {
@@ -88,16 +88,9 @@ class KvkApi
         $cacheDuration = $this->cache_time * 60;
 
         return cache()->remember($cacheKey, $cacheDuration, function() use ($kvk_number) {
-            $arrContextOptions = [
-                "ssl" => [
-                    "verify_peer" => !$this->disable_ssl_check,
-                    "verify_peer_name" => !$this->disable_ssl_check,
-                ],
-            ];
-
-            return file_get_contents($this->getApiUrl(
-                $kvk_number
-            ), false, stream_context_create($arrContextOptions));
+            return (new Client())->get($this->getApiUrl($kvk_number), [
+                'verify' => false, 'headers' => ['apikey' => $this->api_key]
+            ])->getBody();
         });
     }
 
@@ -107,22 +100,27 @@ class KvkApi
      */
     public function getOffices(string $kvk_number): Collection {
         $kvkData = $this->kvkNumberData($kvk_number);
-        $addresses = $kvkData->data->items[0]->addresses;
+        $addresses = $kvkData->adressen ?? [];
+        $geocodeService = resolve('geocode_api');
 
-        return collect($addresses)->map(function($address) {
-            return [
-                'original' => $address,
-                'address' => sprintf(
-                    "%s %s%s, %s, %s",
-                    $address->street,
-                    $address->houseNumber,
-                    $address->houseNumberAddition,
-                    $address->postalCode,
-                    $address->city
-                ),
-                'lat' => $address->gpsLatitude,
-                'lon' => $address->gpsLongitude,
-            ];
+        return collect($addresses)->map(function($address) use ($geocodeService) {
+            $addressFull = sprintf(
+                "%s %s, %s, %s",
+                $address->straatnaam,
+                $address->huisnummer,
+                $address->postcode,
+                $address->plaats
+            );
+
+            $arr = ['address' => $addressFull];
+
+            $location = $geocodeService->getLocation($addressFull);
+            if (is_array($location)) {
+                $arr['lon'] = $location['lng'] ?? null;
+                $arr['lat'] = $location['lat'] ?? null;
+            }
+
+            return $arr;
         });
     }
 }
