@@ -19,8 +19,8 @@ class ProductReservationResource extends JsonResource
     public static function load(): array
     {
         return [
-            'product.organization',
             'voucher.fund',
+            'product.organization',
         ];
     }
 
@@ -58,7 +58,9 @@ class ProductReservationResource extends JsonResource
             $price_locale = $productSnapshot->price_locale;
         }
 
-        return array_merge($reservation->only('id', 'state', 'amount', 'code', 'first_name', 'last_name', 'user_note'), [
+        return array_merge($reservation->only([
+            'id', 'state', 'amount', 'code', 'first_name', 'last_name', 'user_note',
+        ]), [
             'created_at' => $reservation->created_at ? $reservation->created_at->format('Y-m-d H:i:s') : null,
             'created_at_locale' => format_date_locale($reservation->created_at),
             'accepted_at' => $reservation->accepted_at ? $reservation->accepted_at->format('Y-m-d H:i:s') : null,

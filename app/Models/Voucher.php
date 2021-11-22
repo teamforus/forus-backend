@@ -60,6 +60,8 @@ use RuntimeException;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
+ * @property-read bool $has_product_vouchers
+ * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
@@ -873,16 +875,14 @@ class Voucher extends Model
     /**
      * @param Product $product
      * @param Employee|null $employee
-     * @param string|null $note
-     * @param array $user_data
+     * @param array $extraData
      * @return ProductReservation
      * @throws \Exception
      */
     public function reserveProduct(
         Product $product,
         ?Employee $employee = null,
-        string $note = null,
-        array $user_data
+        array $extraData = []
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $isSubsidy ? $product->getSubsidyDetailsForFund($this->fund) : null;
@@ -891,17 +891,15 @@ class Voucher extends Model
         /** @var ProductReservation $reservation */
         $reservation = $this->product_reservations()->create(array_merge([
             'code'                      => ProductReservation::makeCode(),
-            'note'                      => $note,
             'amount'                    => $amount,
             'state'                     => ProductReservation::STATE_PENDING,
             'product_id'                => $product->id,
             'employee_id'               => $employee ? $employee->id : null,
             'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
             'expire_at'                 => $this->calcExpireDateForProduct($product),
-            'first_name'                => $user_data['first_name'],
-            'last_name'                 => $user_data['last_name'],
-            'user_note'                 => $user_data['user_note'],
-        ], $product->only('price', 'price_type', 'price_discount')));
+        ], array_only($extraData, [
+            'first_name', 'last_name', 'user_note', 'note',
+        ]), $product->only('price', 'price_type', 'price_discount')));
 
         $reservation->makeVoucher();
 

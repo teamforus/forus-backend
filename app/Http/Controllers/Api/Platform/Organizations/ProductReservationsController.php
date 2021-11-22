@@ -71,7 +71,7 @@ class ProductReservationsController extends Controller
         $voucher = Voucher::findByAddressOrPhysicalCard($request->input('number'));
         $employee = $organization->findEmployee($request->auth_address());
 
-        $reservation = $voucher->reserveProduct($product, $employee, $request->input('note'));
+        $reservation = $voucher->reserveProduct($product, $employee, $request->only('note'));
         $reservation->acceptProvider();
 
         return new ProductReservationResource($reservation->load(
@@ -107,10 +107,9 @@ class ProductReservationsController extends Controller
             $validator = $request->validateRows($slice);
 
             if ($validator->passes()) {
-                $note = array_get($item, 'note');
                 $product = Product::find(array_get($item, 'product_id'));
                 $voucher = Voucher::findByAddressOrPhysicalCard(array_get($item, 'number'));
-                $reservation = $voucher->reserveProduct($product, $employee, $note);
+                $reservation = $voucher->reserveProduct($product, $employee, array_only($item, 'note'));
 
                 $createdItems[] = $reservation->acceptProvider($employee)->id;
             } else {
@@ -119,9 +118,7 @@ class ProductReservationsController extends Controller
         }
 
         $reservations = ProductReservation::query()->whereIn('id', $createdItems)->get();
-        $reserved = ProductReservationResource::collection($reservations->load(
-            ProductReservationResource::load()
-        ));
+        $reserved = ProductReservationResource::collection($reservations->load(ProductReservationResource::load()));
 
         return [
             'reserved' => $reserved,

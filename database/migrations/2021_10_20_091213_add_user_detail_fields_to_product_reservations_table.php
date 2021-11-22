@@ -4,6 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddUserDetailFieldsToProductReservationsTable extends Migration
 {
     /**
@@ -11,12 +14,12 @@ class AddUserDetailFieldsToProductReservationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('product_reservations', function (Blueprint $table) {
-            $table->string('first_name', 20)->after('state');
-            $table->string('last_name', 20);
-            $table->string('user_note');
+            $table->string('first_name', 20)->after('state')->nullable();
+            $table->string('last_name', 20)->after('first_name')->nullable();
+            $table->string('user_note', 400)->after('last_name')->nullable();
         });
     }
 
@@ -25,7 +28,7 @@ class AddUserDetailFieldsToProductReservationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('product_reservations', function (Blueprint $table) {
             $table->dropColumn('first_name');
