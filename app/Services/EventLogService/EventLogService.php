@@ -223,6 +223,7 @@ class EventLogService implements IEventLogService
         return [
             'voucher_transaction_id' => $voucherTransaction->id,
             'voucher_transaction_amount' => $voucherTransaction->amount,
+            'voucher_transaction_amount_locale' => currency_format_locale($voucherTransaction->amount),
             'voucher_transaction_iban_to' => $voucherTransaction->iban_to,
             'voucher_transaction_iban_from' => $voucherTransaction->iban_from,
             'voucher_transaction_payment_time' => $voucherTransaction->payment_time,

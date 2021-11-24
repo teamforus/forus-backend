@@ -5,6 +5,9 @@ namespace App\Console\Commands;
 use App\Events\Vouchers\VoucherExpired;
 use App\Events\Vouchers\VoucherExpireSoon;
 use App\Models\Voucher;
+use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\VoucherQuery;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -32,10 +35,18 @@ class NotifyAboutVoucherExpireCommand extends Command
      */
     public function handle(): void
     {
-        $expiredVouchers = $this->getExpiredVouchers();
-        $expiringVouchers = $this->getExpiringVouchers();
+        $interval3Weeks = [now(), now()->addWeeks(3)];
+        $interval6Weeks = [now()->addWeeks(3)->addDay(), now()->addWeeks(6)];
 
-        foreach ($expiringVouchers as $voucher) {
+        $expiredVouchers = $this->getExpiredVouchers();
+        $expiringVouchers3Weeks = $this->getExpiringVouchers($interval3Weeks[0], $interval3Weeks[1]);
+        $expiringVouchers6Weeks = $this->getExpiringVouchers($interval6Weeks[0], $interval6Weeks[1]);
+
+        foreach ($expiringVouchers3Weeks as $voucher) {
+            VoucherExpireSoon::dispatch($voucher);
+        }
+
+        foreach ($expiringVouchers6Weeks as $voucher) {
             VoucherExpireSoon::dispatch($voucher);
         }
 
@@ -45,32 +56,22 @@ class NotifyAboutVoucherExpireCommand extends Command
     }
 
     /**
-     * @param int $days_before_expiration
+     * @param Carbon $startDate
+     * @param Carbon $endDate
      * @return Collection
      */
-    public function getExpiringVouchers(int $days_before_expiration = 4 * 7): Collection
+    public function getExpiringVouchers(Carbon $startDate, Carbon $endDate): Collection
     {
-        $builder = Voucher::where(function(Builder $builder) {
-            // budget vouchers
-            $builder->whereNull('product_id');
-            $builder->whereDoesntHave('logs', function(Builder $builder) {
-                $builder->where('event', Voucher::EVENT_EXPIRING_SOON_BUDGET);
-            });
-        })->orWhere(function(Builder $builder) {
-            // product vouchers
-            $builder->whereNotNull('product_id');
-            $builder->whereDoesntHave('transactions');
-            $builder->whereDoesntHave('logs', function(Builder $builder) {
-                $builder->where('event', Voucher::EVENT_EXPIRING_SOON_PRODUCT);
-            });
-        });
+        $builder = $this->queryVouchers(
+            VoucherQuery::whereNotExpiredAndActive(Voucher::query()),
+            Voucher::EVENT_EXPIRING_SOON_BUDGET,
+            Voucher::EVENT_EXPIRING_SOON_PRODUCT
+        )->whereBetween('expire_at', [
+            $startDate->format('Y-m-d'),
+            $endDate->format('Y-m-d'),
+        ]);
 
-        $builder->with('fund', 'fund.organization');
-        $builder->whereNotNull('identity_address');
-        $builder->where('expire_at', '<', now()->addDays($days_before_expiration)->startOfDay());
-        $builder->where('expire_at', '>', now()->subDay()->startOfDay());
-
-        return $builder->get();
+        return $builder->with('fund', 'fund.organization')->get();
     }
 
     /**
@@ -78,21 +79,65 @@ class NotifyAboutVoucherExpireCommand extends Command
      */
     private function getExpiredVouchers(): Collection
     {
-        return Voucher::where(function(Builder $builder) {
+        $builder = $this->queryVouchers(
+            Voucher::query(),
+            Voucher::EVENT_EXPIRED_BUDGET,
+            Voucher::EVENT_EXPIRED_PRODUCT
+        )->where('expire_at', now()->format('Y-m-d'));
+
+        return $builder->with('fund', 'fund.organization')->get();
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $budgetEvent
+     * @param string $productEvent
+     * @return Builder
+     */
+    protected function queryVouchers(
+        Builder $builder,
+        string  $budgetEvent,
+        string $productEvent
+    ): Builder {
+        $builder->where(function(Builder $builder) use ($budgetEvent, $productEvent) {
             // budget vouchers
-            $builder->whereNull('product_id');
-            $builder->where('expire_at', '<', now());
-            $builder->whereDoesntHave('logs', function(Builder $builder) {
-                $builder->where('event', Voucher::EVENT_EXPIRED_BUDGET);
+            $builder->where(function(Builder $builder) use ($budgetEvent) {
+                $builder->whereNull('product_id');
+                $builder->whereDoesntHave('logs', function(Builder $builder) use ($budgetEvent) {
+                    $builder->where('event', $budgetEvent);
+                });
             });
-        })->orWhere(function(Builder $builder) {
+
             // product vouchers
-            $builder->whereNotNull('product_id');
-            $builder->where('expire_at', '<', now());
-            $builder->whereDoesntHave('transactions');
-            $builder->whereDoesntHave('logs', function(Builder $builder) {
-                $builder->where('event', Voucher::EVENT_EXPIRED_PRODUCT);
+            $builder->orWhere(function(Builder $builder) use ($productEvent) {
+                $builder->whereNotNull('product_id');
+                $builder->whereDoesntHave('transactions');
+
+                $builder->whereDoesntHave('logs', function(Builder $builder) use ($productEvent) {
+                    $builder->where('event', $productEvent);
+                });
             });
-        })->get();
+        });
+
+        $builder->whereNull('parent_id');
+        $builder->whereNull('product_reservation_id');
+        $builder->whereNotNull('identity_address');
+
+        return $builder->whereHas('fund', function(Builder $builder) {
+            $this->validFundsQuery($builder);
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    protected function validFundsQuery(Builder $builder): Builder
+    {
+        $builder->whereHas('fund_config', function(Builder $builder) {
+            $builder->whereHas('implementation');
+        });
+
+        return FundQuery::whereActiveFilter($builder);
     }
 }

@@ -100,14 +100,6 @@
             "content": ":provider_name is geaccepteerd als aanbieder voor :fund_name door :sponsor_name"
         }
     },
-    "notifications_identities.requester_fund_ended": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": "",
-            "content": ""
-        }
-    },
     "notifications_identities.requester_product_added": {
         "mail": {},
         "push": {},
@@ -555,7 +547,7 @@
         },
         "push": {
             "title": ":fund_name",
-            "content": "Er is :amount afgeschreven van :fund_name."
+            "content": "Er is :voucher_transaction_amount_locale afgeschreven van :fund_name."
         },
         "database": {
             "title": "Er is een bedrag van uw :fund_name afgeschreven.",

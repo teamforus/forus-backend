@@ -27,6 +27,10 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_record_declined" => ["database", "mail"],
         "notifications_identities.fund_request_feedback_requested" => ["database", "mail"],
 
+        'notifications_fund_providers.fund_started' => ["database"],
+        'notifications_fund_providers.fund_ended' => ["database"],
+        'notifications_fund_providers.fund_expiring' => ["database"],
+
         "notifications_funds.created" => ["database"],
         "notifications_funds.started" => ["database"],
         "notifications_funds.ended" => ["database"],
@@ -38,7 +42,6 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_funds.balance_low" => ["database", "mail"],
         "notifications_funds.balance_supplied" => ["database"],
 
-        'notifications_identities.requester_fund_ended' => ['database'],
         'notifications_identities.requester_product_added' => ['database'],
         'notifications_identities.requester_product_approved' => ['database'],
         'notifications_identities.requester_product_revoked' => ['database'],
@@ -80,7 +83,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.fund_ended',
-        'notifications_identities.requester_fund_ended',
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
@@ -109,7 +111,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_fund_providers.fund_ended',
         'notifications_fund_providers.fund_expiring',
 
-        'notifications_identities.requester_fund_ended',
         'notifications_identities.requester_product_added',
         'notifications_identities.requester_product_approved',
         'notifications_identities.requester_product_revoked',
@@ -159,8 +160,6 @@ class SystemNotificationsTableSeeder extends Seeder
 
         'notifications_identities.fund_request_feedback_requested',
 
-        'notifications_identities.requester_fund_ended',
-
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
@@ -188,7 +187,6 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.requester_product_revoked",
             "notifications_identities.requester_product_approved",
             "notifications_identities.requester_product_added",
-            "notifications_identities.requester_fund_ended",
             "notifications_identities.voucher_deactivated",
             "notifications_identities.voucher_expire_soon_budget",
             "notifications_identities.budget_voucher_expired",
@@ -246,7 +244,7 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.added_employee",
             "notifications_identities.changed_employee_roles",
             "notifications_identities.removed_employee"
-        ]
+        ],
     ];
 
     /**
