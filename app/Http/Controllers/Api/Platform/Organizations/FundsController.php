@@ -204,6 +204,7 @@ class FundsController extends Controller
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
+        $fund->fund_config()->update($request->only('faq_title'));
 
         return new FundResource($fund);
     }

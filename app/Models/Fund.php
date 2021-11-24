@@ -69,7 +69,6 @@ use Carbon\Carbon;
  * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
  * @property-read int|null $bunq_me_tabs_paid_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
- * @property-read Collection|\App\Models\FundFaq[] $faq
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
  * @property-read Collection|\App\Services\EventLogService\Models\Digest[] $digests
@@ -78,6 +77,8 @@ use Carbon\Carbon;
  * @property-read int|null $employees_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
+ * @property-read Collection|\App\Models\FundFaq[] $faq
+ * @property-read int|null $faq_count
  * @property-read Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
  * @property-read \App\Models\FundConfig|null $fund_config
