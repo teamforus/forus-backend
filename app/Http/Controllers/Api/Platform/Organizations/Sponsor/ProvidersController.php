@@ -10,13 +10,10 @@ use App\Http\Resources\ProviderFinancialResource;
 use App\Http\Resources\Sponsor\SponsorProviderResource;
 use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**

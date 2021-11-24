@@ -2,6 +2,10 @@
 
 namespace App\Console;
 
+use App\Console\Commands\BankProcessFundTopUpsCommand;
+use App\Console\Commands\BankUpdateContextSessionsCommand;
+use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
+use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
@@ -19,7 +23,6 @@ use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
-use App\Console\Commands\UpdateVoucherTransactionDetailsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -69,9 +72,13 @@ class Kernel extends ConsoleKernel
         SendAllDigestsCommand::class,
 
         // voucher transaction details
-        UpdateVoucherTransactionDetailsCommand::class,
         ExportPhysicalCardsRequestsCommand::class,
 
+        // bank commands
+        BankProcessFundTopUpsCommand::class,
+        BankUpdateContextSessionsCommand::class,
+        BankVoucherTransactionBulksBuildCommand::class,
+        BankVoucherTransactionBulksUpdateStateCommand::class,
         UpdateNotificationTemplatesCommand::class,
     ];
 
@@ -125,6 +132,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('forus.action.expiration:check')
             ->daily()->withoutOverlapping()->onOneServer();
 
+        $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
         $this->scheduleQueue($schedule);
     }
@@ -132,7 +140,46 @@ class Kernel extends ConsoleKernel
     /**
      * @param Schedule $schedule
      */
-    public function scheduleDigest(Schedule $schedule): void {
+    public function scheduleBank(Schedule $schedule): void
+    {
+        /**
+         * BankProcessFundTopUpsCommand
+         */
+        $schedule->command('bank:process-top-ups')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankUpdateContextSessionsCommand
+         */
+        $schedule->command('bank:update-context-sessions')
+            ->dailyAt("03:00")
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankVoucherTransactionBulksBuildCommand
+         */
+        $schedule->command('bank:bulks-build')
+            ->dailyAt(env('BANK_DAILY_BULK_BUILD_TIME', '09:00'))
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankVoucherTransactionBulksUpdateStateCommand
+         */
+        $schedule->command('bank:bulks-update')
+            ->hourly()
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     */
+    public function scheduleDigest(Schedule $schedule): void
+    {
         /**
          * DigIdSessionsCleanupCommand
          */

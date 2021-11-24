@@ -6,7 +6,7 @@ use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\VoucherQuery;
-use Gate;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
 /**

@@ -142,17 +142,6 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->resource(
-        'organizations.funds.bunq-transactions',
-        "Api\Platform\Organizations\Funds\BunqMeTabsController", [
-        'only' => [
-            'index', 'show'
-        ],
-        'parameters' => [
-            'bunq-transactions' => 'bunq_me_tab_paid'
-        ]
-    ]);
-
-    $router->resource(
         'organizations.funds.transactions',
         "Api\Platform\Organizations\Funds\TransactionsController", [
         'only' => [
@@ -227,6 +216,8 @@ $router->group([], static function() use ($router) {
             'provider-invitations' => 'fund_provider_invitation_token'
         ]
     ]);
+
+    $router->get('/bank-connections/redirect', "Api\Platform\BankConnectionsController@redirect")->name('bankOauthRedirect');
 });
 
 $router->post('/share/sms', 'Api\Platform\ShareController@sendSms');
@@ -676,6 +667,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\OfficesController"
     )->only('index', 'show', 'store', 'update', 'destroy');
 
+    $router->resource('organizations.bank-connections', "Api\Platform\Organizations\BankConnectionsController")->only([
+        'index', 'show', 'store', 'update', 'destroy'
+    ]);
+
     $router->resource(
         'organizations.validators',
         "Api\Platform\Organizations\ValidatorOrganizationsController", [
@@ -755,6 +750,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             ]
         ]
     );
+
+    $router->resource(
+        'organizations/{organization}/sponsor/transaction-bulks',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController"
+    )->parameters([
+        'transaction-bulks' => 'voucher-transaction-bulks',
+    ])->only('index', 'show', 'store', 'update');
 
     $router->post(
         'organizations/{organization}/sponsor/vouchers/validate',
@@ -907,4 +909,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->get('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@index');
     $router->patch('notifications/settings', 'Api\Platform\Notifications\NotificationsSettingsController@update');
+
+    $router->resource('banks', "Api\Platform\BanksController")->only([
+        'index', 'show',
+    ]);
 });
