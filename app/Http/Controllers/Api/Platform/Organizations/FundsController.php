@@ -96,6 +96,7 @@ class FundsController extends Controller
         }
 
         $fund->syncFaq($request->input('faq'));
+        $fund->fund_config()->create($request->only('faq_title'));
 
         if (config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {

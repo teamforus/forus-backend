@@ -51,6 +51,7 @@ class FundResource extends Resource
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'faq' => $fund->faq,
+            'faq_title' => $fund->fund_config->faq_title,
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
