@@ -12,3 +12,7 @@ De pas ontvang je binnen 10 werkdagen op dit adres:
 Als je vragen hebt over je pas stuur dan een e-mail naar :sponsor_email of bel naar :sponsor_phone.  
 
 Veel plezier met je pas!
+
+Vriendelijke groet,
+
+:sponsor_name

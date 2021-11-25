@@ -437,7 +437,11 @@
             "title": ":implementation_name",
             "content": "U hebt een aanbieding gekocht in ':implementation_name' webshop."
         },
-        "database": {}
+        "database": {
+            "title": ":fund_name is aan u toegekend",
+            "title_informal": "Alstublieft, hier is je :fund_name!",
+            "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
+        }
     },
     "notifications_identities.product_voucher_added": {
         "mail": {},
@@ -531,7 +535,11 @@
             "template_informal": "notifications_identities/voucher_physical_card_requested_informal.md"
         },
         "push": {},
-        "database": {}
+        "database": {
+            "title": "Pas besteld!",
+            "content": "U heeft zojuist een pas besteld. De pas ontvangt u binnen 10 werkdagen op uw adres.",
+            "content_informal": "Je hebt zojuist een pas besteld. De pas ontvang je binnen 10 werkdagen op je adres."
+        }
     },
     "notifications_identities.voucher_shared_by_email": {
         "mail": {},

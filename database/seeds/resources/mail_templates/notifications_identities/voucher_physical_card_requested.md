@@ -15,5 +15,5 @@ Veel plezier met uw pas!
 
 Vriendelijke groet,
 
-Team :fund_name
+:sponsor_name
 
