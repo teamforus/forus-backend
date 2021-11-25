@@ -128,8 +128,8 @@
         "mail": {},
         "push": {},
         "database": {
-            "title": "Er is een nieuwe aanvraag voor :fund_name.",
-            "content": "Er is een nieuwe aanvraag voor :fund_name."
+            "title": "Nieuwe aanvraag voor :fund_name",
+            "content": "Er is een nieuwe aanvraag voor :fund_name"
         }
     },
     "notifications_identities.fund_request_created": {
@@ -198,7 +198,7 @@
         "push": {},
         "database": {
             "title": ":fund_name is aangemaakt!",
-            "content": ":fund_name is aangemaakt."
+            "content": "Er is een nieuwe fonds aangemaakt met de naam :fund_name."
         }
     },
     "notifications_funds.started": {

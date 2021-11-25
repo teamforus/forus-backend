@@ -20,5 +20,6 @@ Lukt het niet om in te loggen? Neem dan contact op met:
 
 &nbsp;  
 
-Met vriendelijke groet,  
+Met vriendelijke groet,
+
 :sponsor_name
