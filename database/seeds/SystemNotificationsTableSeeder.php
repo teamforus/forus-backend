@@ -42,8 +42,8 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_funds.balance_low" => ["database", "mail"],
         "notifications_funds.balance_supplied" => ["database"],
 
-        'notifications_identities.requester_product_added' => ['database'],
-        'notifications_identities.requester_product_approved' => ['database'],
+        'notifications_identities.requester_product_added' => [''],
+        'notifications_identities.requester_product_approved' => [''],
         'notifications_identities.requester_product_revoked' => [''],
 
         "notifications_identities.product_reservation_created" => ["database"],
@@ -110,9 +110,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_fund_providers.fund_started',
         'notifications_fund_providers.fund_ended',
         'notifications_fund_providers.fund_expiring',
-
-        'notifications_identities.requester_product_added',
-        'notifications_identities.requester_product_approved',
 
         'notifications_identities.product_reservation_created',
         'notifications_identities.product_reservation_accepted',
