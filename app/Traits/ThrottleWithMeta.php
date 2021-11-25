@@ -73,14 +73,14 @@ trait ThrottleWithMeta {
 
     /**
      * @param $error
-     * @param $request
+     * @param Request $request
      * @param string $type
      * @param int $code
      * @throws AuthorizationJsonException
      */
     protected function responseWithThrottleMeta(
         $error,
-        $request,
+        Request $request,
         string $type = 'prevalidations',
         $code = 429
     ): void {
@@ -100,6 +100,10 @@ trait ThrottleWithMeta {
 
         $title = trans("throttles/$type.$error.title", $meta);
         $message = trans("throttles/$type.$error.message", $meta);
+
+        if (!$request->expectsJson()) {
+            abort($code, $message);
+        }
 
         throw new AuthorizationJsonException(json_encode([
             'error' => $error,

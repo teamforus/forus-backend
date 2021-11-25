@@ -20,6 +20,7 @@ class OrganizationResource extends Resource
         'funds_count',
         'business_type',
         'permissions',
+        'bank_connection_active',
     ];
 
     /**
@@ -60,7 +61,6 @@ class OrganizationResource extends Resource
             ]);
         }
 
-        // $logoDep = api_dependency_requested('logo', $request);
         $fundsDep = api_dependency_requested('funds', $request, false);
         $fundsCountDep = api_dependency_requested('funds_count', $request, false);
         $businessType = api_dependency_requested('business_type', $request, true);
@@ -82,6 +82,7 @@ class OrganizationResource extends Resource
             'allow_batch_reservations',
         ]), $privateData,
             $ownerData, [
+            'has_bank_connection' => (bool) !empty($organization->bank_connection_active),
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(
                 $organization->business_type

@@ -11,56 +11,54 @@ use App\Models\Role;
 class RolePermissionsTableSeeder extends Seeder
 {
     /**
+     * @var string[][]
+     */
+    protected $rolePermissions = [
+        "admin" => [
+            "manage_funds", "manage_providers", "manage_products", "manage_offices",
+            "view_finances", "validate_records", "scan_vouchers", "manage_provider_funds",
+            "manage_vouchers", "manage_employees", "manage_organization",
+            "manage_implementation", "manage_implementation_cms",
+            "manage_bank_connections", "manage_transaction_bulks",
+        ],
+        "finance" => [
+            "view_finances", "manage_vouchers",
+        ],
+        "validation" => [
+            "validate_records", "view_funds",
+        ],
+        "policy_officer" => [
+            "manage_funds", 'manage_providers', 'manage_products',
+            "manage_offices", "manage_provider_funds",
+        ],
+        "operation_officer" => [
+            "scan_vouchers",
+        ],
+        "implementation_manager" => [
+            "view_funds", "manage_implementation", "manage_implementation_cms",
+        ],
+        "implementation_cms_manager" => [
+            "view_funds", "manage_implementation_cms",
+        ]
+    ];
+
+    /**
      * Run the database seeds.
      *
      * @return void
      */
     public function run(): void
     {
-        $rolePermissions = [
-            "admin" => [
-                "manage_funds", "manage_providers", "manage_products",
-                "manage_offices", "view_finances", "validate_records",
-                "scan_vouchers", "manage_provider_funds", "manage_vouchers",
-                "manage_employees", "manage_organization",
-                "manage_implementation", "manage_implementation_cms"
-            ],
-            "finance" => [
-                "view_finances", "manage_vouchers",
-            ],
-            "validation" => [
-                "validate_records", "view_funds"
-            ],
-            "policy_officer" => [
-                "manage_funds", 'manage_providers', 'manage_products',
-                "manage_offices", "manage_provider_funds",
-            ],
-            "operation_officer" => [
-                "scan_vouchers"
-            ],
-            "implementation_manager" => [
-                "view_funds", "manage_implementation",
-                "manage_implementation_cms"
-            ],
-            "implementation_cms_manager" => [
-                "view_funds", "manage_implementation_cms"
-            ]
-        ];
+        $roles = Role::pluck('id','key');
+        $permissions = Permission::pluck('id','key');
 
-        $permissions = Permission::query()->pluck('id','key');
-        $roles = Role::query()->pluck('id','key');
-
-        collect($rolePermissions)->each(function($permissionKeys, $roleKey) use (
-            $permissions, $roles
-        ) {
-            collect($permissionKeys)->each(function($permissionKey) use (
-                $permissions, $roles, $roleKey
-            ) {
+        foreach ($this->rolePermissions as $roleKey => $permissionKeys) {
+            foreach ($permissionKeys as $permissionKey) {
                 RolePermission::create([
                     'role_id' => $roles[$roleKey],
                     'permission_id' => $permissions[$permissionKey],
                 ]);
-            });
-        });
+            }
+        }
     }
 }

@@ -20,7 +20,6 @@ use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
-use App\Services\BunqService\BunqService;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
@@ -64,10 +63,6 @@ use Carbon\Carbon;
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
- * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs
- * @property-read int|null $bunq_me_tabs_count
- * @property-read Collection|\App\Models\BunqMeTab[] $bunq_me_tabs_paid
- * @property-read int|null $bunq_me_tabs_paid_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -438,10 +433,7 @@ class Fund extends Model
      */
     public function getBudgetTotalAttribute(): float
     {
-        return round(array_sum([
-            $this->top_up_transactions->sum('amount'),
-            $this->bunq_me_tabs_paid->sum('amount')
-        ]), 2);
+        return round($this->top_up_transactions->sum('amount'), 2);
     }
 
     /**
@@ -662,42 +654,6 @@ class Fund extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
-    public function bunq_me_tabs(): HasMany
-    {
-        return $this->hasMany(BunqMeTab::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
-    public function bunq_me_tabs_paid(): HasMany
-    {
-        return $this->hasMany(BunqMeTab::class)->where([
-            'status' => 'PAID'
-        ]);
-    }
-
-    /**
-     * @return array|null
-     */
-    public function getBunqKey(): ?array
-    {
-        if (!$this->fund_config) {
-            return null;
-        }
-
-        return [
-            "key" => $this->fund_config->bunq_key,
-            "sandbox" => $this->fund_config->bunq_sandbox,
-            "allowed_ip" => $this->fund_config->bunq_allowed_ip,
-        ];
-    }
-
-    /**
      * @param string $identity_address
      * @param string $record_type
      * @param FundCriterion|null $criterion
@@ -870,25 +826,6 @@ class Fund extends Model
     }
 
     /**
-     * @return BunqService
-     */
-    public function getBunq(): ?BunqService
-    {
-        $fundBunq = $this->getBunqKey();
-
-        if (empty($fundBunq) || empty($fundBunq['key'])) {
-            return null;
-        }
-
-        return BunqService::create(
-            $this->id,
-            $fundBunq['key'],
-            $fundBunq['allowed_ip'],
-            $fundBunq['sandbox']
-        );
-    }
-
-    /**
      * @return Fund[]|Builder[]|Collection|\Illuminate\Support\Collection
      */
     public static function configuredFunds() {
@@ -995,41 +932,6 @@ class Fund extends Model
                 'total_count' => $sponsorCount + $providerCount + $requesterCount,
             ], $fund->getEmailFrom()));
         }
-    }
-
-    /**
-     * @param float $amount
-     * @param string $description
-     * @param string|null $issuer
-     * @return \Illuminate\Database\Eloquent\Model|BunqMeTab
-     * @throws \Exception
-     */
-    public function makeBunqMeTab(
-        float $amount,
-        string $description = '',
-        string $issuer = null
-    ): BunqMeTab {
-        $tabRequest = $this->getBunq()->makeBunqMeTabRequest($amount, $description);
-        $bunqMeTab = $tabRequest->getBunqMeTab();
-        $amountInquired = $bunqMeTab->getBunqmeTabEntry()->getAmountInquired();
-        $description = $bunqMeTab->getBunqmeTabEntry()->getDescription();
-        $issuer_auth_url = null;
-
-        if ($issuer && env('BUNQ_IDEAL_USE_ISSUERS', true)) {
-            $request = $tabRequest->makeIdealIssuerRequest($issuer);
-            $issuer_auth_url = $request ? $request->getUrl() : null;
-        }
-
-        return $this->bunq_me_tabs()->create([
-            'bunq_me_tab_id'            => $bunqMeTab->getId(),
-            'status'                    => $bunqMeTab->getStatus(),
-            'monetary_account_id'       => $bunqMeTab->getMonetaryAccountId(),
-            'amount'                    => $amountInquired->getValue(),
-            'description'               => $description,
-            'uuid'                      => $tabRequest->getUuid(),
-            'share_url'                 => $tabRequest->getShareUrl(),
-            'issuer_authentication_url' => $issuer_auth_url,
-        ]);
     }
 
     /**
