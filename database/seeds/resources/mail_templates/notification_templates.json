@@ -260,7 +260,7 @@
         "push": {},
         "database": {
             "title": "Het budget \":fund_name\" heeft de ingestelde aanvul-herinneringsgrens overschreden.",
-            "content": "Het budget \":fund_name\" is lager dan :fund_notification_amount_locale. Het budget \":fund_name\" is momenteel :fund_budget_left_locale."
+            "content": "Het budget \":fund_name\" is lager dan €:fund_notification_amount_locale. Het budget \":fund_name\" is momenteel €:fund_budget_left_locale."
         }
     },
     "notifications_funds.balance_supplied": {
@@ -268,7 +268,7 @@
         "push": {},
         "database": {
             "title": "Het budget voor \":fund_name\" is opgehoogd.",
-            "content": "Het budget voor \":fund_name\" is opgehoogd met :fund_top_up_amount_locale."
+            "content": "Het budget voor \":fund_name\" is opgehoogd met €:fund_top_up_amount_locale."
         }
     },
     "notifications_funds.product_subsidy_removed": {

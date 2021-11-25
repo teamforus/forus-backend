@@ -15,7 +15,7 @@ Onderstaande QR-code laat je bij de aanbieder naar keuze zien.
 De aanbieder scant deze code en de betaling gebeurt automatisch.
 &nbsp;
 
-Let op! Als je een aanbod afneemt met een geldbedrag lager dan :voucher_amount_locale, blijft het restantbedrag op het tegoed staan.
+Let op! Als je een aanbod afneemt met een geldbedrag lager dan :voucher_amount_locale blijft het restantbedrag op het tegoed staan.
 Bewaar dit tegoed dus goed.
 &nbsp;
 

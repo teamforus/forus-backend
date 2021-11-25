@@ -15,5 +15,5 @@ Telefoonnummer: :sponsor_phone
 &nbsp;  
 
 We hopen u hiermee voldoende te hebben geïnformeerd.  
-Met vriendelijke groet  
-Team :fund_name
+Met vriendelijke groet,
+:sponsor_name

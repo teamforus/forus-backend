@@ -20,6 +20,5 @@ Lukt het niet om in te loggen? Neem dan contact op met:
 
 &nbsp;  
 
-Met vriendelijke groet  
-Team :fund_name  
+Met vriendelijke groet,  
 :sponsor_name
