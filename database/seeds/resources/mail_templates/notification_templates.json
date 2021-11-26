@@ -295,7 +295,7 @@
         "push": {},
         "database": {
             "title": ":fund_name is verlopen.",
-            "content": ":fund_name liep van :start_date: tot :end_date_minus1: en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
+            "content": ":fund_name liep van :start_date tot :end_date_minus1 en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
         }
     },
     "notifications_fund_providers.fund_expiring": {
