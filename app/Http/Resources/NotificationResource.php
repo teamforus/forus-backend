@@ -8,6 +8,7 @@ use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Services\Forus\Identity\Models\DatabaseNotification;
+use Throwable;
 
 /**
  * Class NotificationResource
@@ -19,8 +20,9 @@ class NotificationResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array
+     * @throws Throwable
      */
     public function toArray($request): array
     {
@@ -42,15 +44,24 @@ class NotificationResource extends JsonResource
 
     /**
      * @param EventLog $event
-     * @return NotificationTemplate|null
+     * @return NotificationTemplate
+     * @throws Throwable
      */
-    public function getTemplate(EventLog $event): ?NotificationTemplate
-    {;
-        return SystemNotification::findTemplate(
-            $this->resource->data['key'],
-            'database',
-            $event->data['implementation_key'] ?? Implementation::KEY_GENERAL
-        );
+    public function getTemplate(EventLog $event): NotificationTemplate
+    {
+        try {
+            return SystemNotification::findTemplate(
+                $this->resource->data['key'],
+                'database',
+                $event->data['implementation_key'] ?? Implementation::KEY_GENERAL
+            );
+        } catch (Throwable $err) {
+            if ($logger = logger()) {
+                $logger->error(sprintf('Could not find template for "%s" notification.', $this->resource->data['key']));
+            }
+
+            throw $err;
+        }
     }
 
     /**
