@@ -295,7 +295,7 @@
         "push": {},
         "database": {
             "title": ":fund_name is verlopen.",
-            "content": ":fund_name liep van :start_date: tot :end_date_minus1: en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
+            "content": ":fund_name liep van :start_date tot :end_date_minus1 en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
         }
     },
     "notifications_fund_providers.fund_expiring": {
@@ -566,8 +566,8 @@
         "database": {
             "title": "Er is een bedrag van uw :fund_name afgeschreven.",
             "title_informal": "Er is een bedrag van je :fund_name afgeschreven.",
-            "content": "Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van uw :fund_name is :voucher_amount_locale.",
-            "content_informal": "Er is met je tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van je :fund_name is :voucher_amount_locale."
+            "content": "Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van uw :fund_name is €:voucher_amount_locale.",
+            "content_informal": "Er is met je tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van je :fund_name is €:voucher_amount_locale."
         }
     },
     "notifications_identities.voucher_subsidy_transaction": {
