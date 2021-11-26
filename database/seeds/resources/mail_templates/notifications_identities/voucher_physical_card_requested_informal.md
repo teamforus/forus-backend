@@ -6,8 +6,8 @@ Je hebt zojuist een pas besteld.
 De pas ontvang je binnen 10 werkdagen op dit adres:
 &nbsp;  
 
-**:address :house :house_addition**  
-**:postcode :city**
+**:physical_card_request_address :physical_card_request_house :physical_card_request_house_addition**  
+**:physical_card_request_postcode :physical_card_request_city**
 
 Als je vragen hebt over je pas stuur dan een e-mail naar :sponsor_email of bel naar :sponsor_phone.  
 

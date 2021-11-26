@@ -293,7 +293,10 @@ class VoucherSubscriber
         ]);
 
         PhysicalCardRequestCreatedSponsorNotification::send($eventLog);
-        IdentityVoucherPhysicalCardRequestedNotification::send($eventLog);
+
+        if ($event->shouldNotifyRequester()) {
+            IdentityVoucherPhysicalCardRequestedNotification::send($eventLog);
+        }
     }
 
     /**

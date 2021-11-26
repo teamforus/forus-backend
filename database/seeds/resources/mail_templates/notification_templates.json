@@ -602,5 +602,15 @@
             "content": "Uw transactie van :voucher_transaction_amount_locale is uitbetaald."
         },
         "database": {}
+    },
+    "notifications_physical_card_requests.physical_card_request_created": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "U heeft een pas besteld",
+            "title_informal": "Je hebt een pas besteld",
+            "content": "U heeft zojuist een pas besteld. De pas ontvangt u binnen 10 werkdagen op uw adres",
+            "content_informal": "Je hebt zojuist een pas besteld. De pas ontvang je binnen 10 werkdagen op jouw adres"
+        }
     }
 }

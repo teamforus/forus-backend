@@ -25,17 +25,19 @@ class RoleTranslationTableSeeder extends Seeder
 
     /**
      * @param string $key
-     * @return mixed
+     * @return string
      */
-    public function getRoleNameByKey(string $key) {
+    public function getRoleNameByKey(string $key): string
+    {
         return [
-            'admin'                         => 'Beheerder',
-            'finance'                       => 'Financien',
-            'validation'                    => 'Validator',
-            'policy_officer'                => 'Manager',
-            'operation_officer'             => 'Kassa',
-            'implementation_manager'        => 'Implementatie manager',
-            'implementation_cms_manager'    => 'Implementatie CMS manager',
-        ][$key];
+            'admin'                                 => 'Beheerder',
+            'finance'                               => 'Financien',
+            'validation'                            => 'Validator',
+            'policy_officer'                        => 'Manager',
+            'operation_officer'                     => 'Kassa',
+            'implementation_manager'                => 'Implementatie manager',
+            'implementation_cms_manager'            => 'Implementatie CMS manager',
+            'implementation_communication_manager'  => 'Implementatie communicatiemanager',
+        ][$key] ?? $key;
     }
 }
