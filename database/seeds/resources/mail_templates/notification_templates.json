@@ -602,5 +602,13 @@
             "content": "Uw transactie van :voucher_transaction_amount_locale is uitbetaald."
         },
         "database": {}
+    },
+    "notifications_physical_card_requests.physical_card_request_created": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Physical card requested.",
+            "content": "A new physical card request created."
+        }
     }
 }

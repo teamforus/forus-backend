@@ -78,6 +78,8 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.product_voucher_transaction" => ["database", "push"],
 
         "notifications_fund_providers.bunq_transaction_success" => ["push"],
+
+        "notifications_physical_card_requests.physical_card_request_created" => ["database"],
     ];
 
     protected $optionalNotifications = [

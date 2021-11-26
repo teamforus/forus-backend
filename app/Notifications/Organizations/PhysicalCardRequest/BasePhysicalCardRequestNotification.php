@@ -16,11 +16,11 @@ abstract class BasePhysicalCardRequestNotification extends BaseOrganizationNotif
     protected static $scope = self::SCOPE_SPONSOR;
 
     /**
-     * @param \App\Models\PhysicalCardRequest $loggable
+     * @param \App\Models\Voucher $loggable
      * @return \App\Models\Organization
      */
     public static function getOrganization($loggable): Organization
     {
-        return $loggable->voucher->fund->organization;
+        return $loggable->fund->organization;
     }
 }
