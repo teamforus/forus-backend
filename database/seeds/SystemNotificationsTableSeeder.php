@@ -79,7 +79,7 @@ class SystemNotificationsTableSeeder extends Seeder
 
         "notifications_fund_providers.bunq_transaction_success" => ["push"],
 
-        "notifications_physical_card_requests.physical_card_request_created" => ["database"],
+        "notifications_physical_card_requests.physical_card_request_created" => [''], // TODO can database notifications be removed
     ];
 
     protected $optionalNotifications = [
