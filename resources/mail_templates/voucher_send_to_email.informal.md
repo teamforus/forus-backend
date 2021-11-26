@@ -1,4 +1,4 @@
-# Hierbij ontvang je jouw :fund_name  
+# Hierbij ontvang je :fund_name  
 
 Beste deelnemer,  
 

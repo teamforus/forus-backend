@@ -1,4 +1,4 @@
-# Hierbij ontvang je jouw :product_name
+# Hierbij ontvang je :product_name
 
 Beste deelnemer,
 

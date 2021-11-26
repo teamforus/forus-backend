@@ -1,8 +1,8 @@
-# Hierbij ontvang je jouw :fund_name
+# Hierbij ontvang je :fund_name
 
 Beste deelnemer,
 
-Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.
+Alsjeblieft, hier is je :fund_name! Je aanvraag is goedgekeurd.
 &nbsp;  
 
 Op de :link_webshop vind je het complete aanbod.
