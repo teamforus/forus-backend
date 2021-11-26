@@ -75,7 +75,7 @@ return [
 
 		// Sent notifications
 		'notifications' => [
-			'enabled' => env('CLOCKWORK_NOTIFICATIONS_ENABLED', true),
+			'enabled' => env('CLOCKWORK_NOTIFICATIONS_ENABLED', false),
 		],
 
 		// Performance metrics

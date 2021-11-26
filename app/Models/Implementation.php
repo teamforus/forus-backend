@@ -55,12 +55,12 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Media|null $banner
+ * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
  * @property-read int|null $mail_templates_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias

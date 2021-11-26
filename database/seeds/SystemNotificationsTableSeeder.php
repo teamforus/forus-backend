@@ -74,6 +74,10 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.product_voucher_transaction" => ["database", "push"],
 
         "notifications_fund_providers.bunq_transaction_success" => ["database", "push"],
+
+        "notifications_bank_connections.activated" => ["database"],
+        "notifications_bank_connections.disabled_invalid" => ["database"],
+        "notifications_bank_connections.monetary_account_changed" => ["database"],
     ];
 
     protected $optionalNotifications = [

@@ -140,6 +140,30 @@
             "content": "Er is een nieuwe aanvraag voor :fund_name."
         }
     },
+    "notifications_bank_connections.activated": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "New :bank_name connection activated.",
+            "content": "New :bank_name connection activated."
+        }
+    },
+    "notifications_bank_connections.disabled_invalid": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Your :bank_name connection deactivated.",
+            "content": "An authorization error occurred while using your :bank_name connection, therefore it was disabled.\nPlease add a new bank connection to continue using the system."
+        }
+    },
+    "notifications_bank_connections.monetary_account_changed": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":organization_name default :bank_name monetary account changed.",
+            "content": "Your :bank_name monetary account for :organization_name has been changed to IBAN :bank_connection_account_monetary_account_iban."
+        }
+    },
     "notifications_identities.fund_request_created": {
         "mail": {
             "title": "Uw :fund_name aanvraag is ontvangen",

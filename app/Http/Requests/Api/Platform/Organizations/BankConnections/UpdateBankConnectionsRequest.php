@@ -6,9 +6,11 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\BankConnection;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 /**
  * @property-read Organization $organization
+ * @property-read BankConnection $bankConnection
  */
 class UpdateBankConnectionsRequest extends BaseFormRequest
 {
@@ -19,7 +21,7 @@ class UpdateBankConnectionsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('store', [BankConnection::class, $this->organization]);
+        return Gate::allows('update', [$this->bankConnection, $this->organization]);
     }
 
     /**
@@ -29,8 +31,17 @@ class UpdateBankConnectionsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $bankConnectionAccounts = $this->bankConnection->bank_connection_accounts()->pluck('id');
+
         return [
-            'state' => 'nullable|in:' . implode(',', [BankConnection::STATE_DISABLED]),
+            'state' => [
+                'nullable',
+                Rule::in(BankConnection::STATE_DISABLED),
+            ],
+            'bank_connection_account_id' => [
+                'nullable',
+                Rule::in($bankConnectionAccounts->values()),
+            ],
         ];
     }
 }
