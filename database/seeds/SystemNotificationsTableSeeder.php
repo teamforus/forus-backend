@@ -58,7 +58,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_products.revoked" => ["database"],
         "notifications_products.sold_out" => ["database", "mail"],
 
-        "notifications_identities.product_voucher_shared" => ["database", "mail"],
+        "notifications_identities.product_voucher_shared" => ["database", "mail"], //
         "notifications_identities.identity_voucher_assigned_budget" => ["database", "mail", "push"],
         "notifications_identities.identity_voucher_assigned_subsidy" => ["database", "mail", "push"],
         "notifications_identities.identity_voucher_assigned_product" => ["database", "mail", "push"],
@@ -66,18 +66,18 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.product_voucher_reserved" => ["database", "mail"],
         "notifications_identities.voucher_added_subsidy" => ["database"],
         "notifications_identities.voucher_added_budget" => ["database"],
-        "notifications_identities.voucher_deactivated" => ["database", "mail"],
-        "notifications_identities.budget_voucher_expired" => ["database"],
+        "notifications_identities.voucher_deactivated" => ["mail"],
+        "notifications_identities.budget_voucher_expired" => [''], // TODO can database notifications be removed
         "notifications_identities.product_voucher_expired" => ["database"],
         "notifications_identities.voucher_expire_soon_budget" => ["database", "mail"],
-        "notifications_identities.voucher_expire_soon_product" => ["database"],
+        "notifications_identities.voucher_expire_soon_product" => [''], // TODO can database notifications be removed
         "notifications_identities.voucher_physical_card_requested" => ["database", "mail"],
         "notifications_identities.voucher_shared_by_email" => ["database"],
         "notifications_identities.voucher_budget_transaction" => ["database", "mail", "push"],
         "notifications_identities.voucher_subsidy_transaction" => ["database", "mail", "push"],
         "notifications_identities.product_voucher_transaction" => ["database", "push"],
 
-        "notifications_fund_providers.bunq_transaction_success" => ["database", "push"],
+        "notifications_fund_providers.bunq_transaction_success" => ["push"],
     ];
 
     protected $optionalNotifications = [
@@ -102,9 +102,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.fund_request_approved',
         'notifications_identities.fund_request_feedback_requested',
 
-        'notifications_fund_providers.fund_started',
-        'notifications_fund_providers.fund_expiring',
-
         'notifications_identities.product_reservation_created',
         'notifications_identities.product_reservation_accepted',
         'notifications_identities.product_reservation_canceled',
@@ -116,7 +113,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_products.revoked',
         'notifications_products.sold_out',
 
-        'notifications_identities.product_voucher_shared',
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
@@ -126,10 +122,8 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.product_voucher_added',
         'notifications_identities.product_voucher_reserved',
         'notifications_identities.voucher_deactivated',
-        'notifications_identities.budget_voucher_expired',
         'notifications_identities.product_voucher_expired',
         'notifications_identities.voucher_expire_soon_budget',
-        'notifications_identities.voucher_expire_soon_product',
         'notifications_identities.voucher_physical_card_requested',
 
         'notifications_identities.product_voucher_transaction',
