@@ -607,8 +607,10 @@
         "mail": {},
         "push": {},
         "database": {
-            "title": "Physical card requested.",
-            "content": "A new physical card request created."
+            "title": "U heeft een pas besteld",
+            "title_informal": "Je hebt een pas besteld",
+            "content": "U heeft zojuist een pas besteld. De pas ontvangt u binnen 10 werkdagen op uw adres",
+            "content_informal": "Je hebt zojuist een pas besteld. De pas ontvang je binnen 10 werkdagen op jouw adres"
         }
     }
 }
