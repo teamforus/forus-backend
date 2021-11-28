@@ -65,6 +65,7 @@ class StoreFundRequest extends BaseFormRequest
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
+            'faq_title'                     => 'nullable|string|max:100',
             'faq'                           => 'present|array',
             'faq.*.title'                   => 'required|string|max:100',
             'faq.*.description'             => 'required|string|max:5000',

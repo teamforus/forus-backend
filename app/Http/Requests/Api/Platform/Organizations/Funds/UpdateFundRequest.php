@@ -67,7 +67,7 @@ class UpdateFundRequest extends BaseFormRequest
             'notification_amount'       => 'nullable|numeric',
             'description_media_uid'     => 'nullable|array',
             'description_media_uid.*'   => $this->mediaRule(),
-            'faq_title'                 => 'required|string|max:100',
+            'faq_title'                 => 'nullable|string|max:100',
             'faq'                       => 'present|array',
             'faq.*.title'               => 'required|string|max:100',
             'faq.*.description'         => 'required|string|max:5000',
