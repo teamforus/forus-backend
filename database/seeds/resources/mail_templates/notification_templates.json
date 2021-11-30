@@ -257,7 +257,7 @@
     },
     "notifications_funds.balance_low": {
         "mail": {
-            "title": "Het budget ':fund_name' fonds heeft de ingestelde aanvul-herinneringsgrens overschreden.",
+            "title": "Het budget :fund_name fonds heeft de ingestelde aanvul-herinneringsgrens overschreden.",
             "template": "notifications_funds/balance_low.md"
         },
         "push": {},
