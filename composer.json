@@ -19,7 +19,7 @@
         "aws/aws-sdk-php": "3.191.2",
         "barryvdh/laravel-dompdf": "^0.8.6",
         "barryvdh/laravel-ide-helper": "^2.7",
-        "bunq/sdk_php": "^1.13.1",
+        "bunq/sdk_php": "^1.14.18",
         "doctrine/dbal": "^2.10",
         "dusterio/laravel-aws-worker": "^0.1",
         "eduardokum/laravel-mail-auto-embed": "^1.0",

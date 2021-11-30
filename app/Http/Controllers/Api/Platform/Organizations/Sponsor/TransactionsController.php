@@ -70,12 +70,10 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
-        $type = $request->input('export_format', 'xls');
+        $fileData = new VoucherTransactionsSponsorExport($request, $organization);
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_format', 'xls');
 
-        return resolve('excel')->download(
-            new VoucherTransactionsSponsorExport($request, $organization),
-            date('Y-m-d H:i:s') . '.' . $type
-        );
+        return resolve('excel')->download($fileData, $fileName);
     }
 
     /**

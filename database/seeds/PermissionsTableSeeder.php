@@ -5,6 +5,27 @@ use App\Models\Permission;
 
 class PermissionsTableSeeder extends Seeder
 {
+    protected  $permissions = [
+        'manage_organization'       => "Manage organization",
+        'manage_funds'              => "Manage funds",
+        'manage_providers'          => "Manage providers",
+        'manage_provider_funds'     => "Manage providers funds",
+        'manage_products'           => "Manage products",
+        'manage_offices'            => "Manage offices",
+        'manage_validators'         => "Manage validators",
+        'manage_employees'          => "Manage employees",
+        'manage_vouchers'           => "Manage vouchers",
+        'manage_implementation'     => "Manage implementation",
+        'manage_implementation_cms' => "Manage implementation CMS",
+        'manage_implementation_notifications' => "Manage implementation notifications",
+        'manage_bank_connections'   => "Manage bank connections",
+        'manage_transaction_bulks'  => "Manage transaction bulks",
+        'view_finances'             => "See financial overview",
+        'validate_records'          => "Validate records",
+        'scan_vouchers'             => "Scan vouchers",
+        'view_funds'                => "See funds overview",
+    ];
+
     /**
      * Run the database seeds.
      *
@@ -12,27 +33,8 @@ class PermissionsTableSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = [
-            'manage_organization'       => "Manage organization",
-            'manage_funds'              => "Manage funds",
-            'manage_providers'          => "Manage providers",
-            'manage_provider_funds'     => "Manage providers funds",
-            'manage_products'           => "Manage products",
-            'manage_offices'            => "Manage offices",
-            'manage_validators'         => "Manage validators",
-            'manage_employees'          => "Manage employees",
-            'manage_vouchers'           => "Manage vouchers",
-            'manage_implementation'     => "Manage implementation",
-            'manage_implementation_cms' => "Manage implementation CMS",
-            'manage_implementation_notifications' => "Manage implementation notifications",
-            'view_finances'             => "See financial overview",
-            'validate_records'          => "Validate records",
-            'scan_vouchers'             => "Scan vouchers",
-            'view_funds'                => "See funds overview",
-        ];
-
-        collect($permissions)->each(function($name, $key) {
-            Permission::query()->create(compact('name', 'key'));
-        });
+        foreach ($this->permissions as $key => $name) {
+            Permission::create(compact('name', 'key'));
+        }
     }
 }

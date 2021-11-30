@@ -66,6 +66,7 @@ return array(
 
     'model_locations' => array(
         'app/Models',
+        'app/Services/BankService/Models',
         'app/Services/BunqService/Models',
         'app/Services/FileService/Models',
         'app/Services/MediaService/Models',

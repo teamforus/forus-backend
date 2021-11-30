@@ -11,34 +11,21 @@ class OfficePolicy
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * @param $identity_address
      * @param Organization $organization
      * @return bool
      */
-    public function viewAny(
-        $identity_address,
-        Organization $organization 
-    ) {
-        return $organization->identityCan(
-            $identity_address,
-            'manage_offices'
-        );
+    public function viewAny($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_offices');
     }
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnyPublic() {
+    public function viewAnyPublic(): bool
+    {
         return true;
     }
 
@@ -47,14 +34,9 @@ class OfficePolicy
      * @param Organization $organization
      * @return bool
      */
-    public function store(
-        $identity_address,
-        Organization $organization 
-    ) {
-        return $organization->identityCan(
-            $identity_address,
-            'manage_offices'
-        );
+    public function store($identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, 'manage_offices');
     }
 
     /**
@@ -63,11 +45,8 @@ class OfficePolicy
      * @param Organization $organization
      * @return bool
      */
-    public function show(
-        $identity_address,
-        Office $office,
-        Organization $organization 
-    ) {
+    public function show($identity_address, Office $office, Organization $organization): bool
+    {
         return $this->update($identity_address, $office, $organization);
     }
 
@@ -81,15 +60,12 @@ class OfficePolicy
         $identity_address,
         Office $office,
         Organization $organization
-    ) {
+    ): bool {
         if ($office->organization_id != $organization->id) {
             return false;
         }
 
-        return $office->organization->identityCan(
-            $identity_address,
-            'manage_offices'
-        );
+        return $office->organization->identityCan($identity_address, 'manage_offices');
     }
 
     /**
@@ -102,18 +78,15 @@ class OfficePolicy
         $identity_address,
         Office $office,
         Organization $organization 
-    ) {
+    ): bool {
         if ($office->organization_id != $organization->id) {
             return false;
         }
 
-        if($organization->offices()->count() <= 1){
+        if ($organization->offices()->count() <= 1){
             return false;
         }
 
-        return $office->organization->identityCan(
-            $identity_address,
-            'manage_offices'
-        );
+        return $office->organization->identityCan($identity_address, 'manage_offices');
     }
 }

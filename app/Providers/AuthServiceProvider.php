@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\BunqMeTab;
+use App\Models\BankConnection;
 use App\Models\Employee;
 use App\Models\FundProviderChat;
 use App\Models\FundProviderChatMessage;
@@ -20,7 +20,8 @@ use App\Models\Product;
 use App\Models\ProductReservation;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Policies\BunqMeTabPolicy;
+use App\Models\VoucherTransactionBulk;
+use App\Policies\BankConnectionPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FilePolicy;
 use App\Policies\FundProviderChatMessagePolicy;
@@ -39,6 +40,7 @@ use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
 use App\Policies\VoucherPolicy;
+use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
@@ -69,18 +71,19 @@ class AuthServiceProvider extends ServiceProvider
         Product::class                  => ProductPolicy::class,
         Voucher::class                  => VoucherPolicy::class,
         Employee::class                 => EmployeePolicy::class,
-        BunqMeTab::class                => BunqMeTabPolicy::class,
         FundRequest::class              => FundRequestPolicy::class,
         Organization::class             => OrganizationPolicy::class,
         FundProvider::class             => FundProviderPolicy::class,
         PhysicalCard::class             => PhysicalCardPolicy::class,
         Prevalidation::class            => PrevalidationPolicy::class,
         Implementation::class           => ImplementationPolicy::class,
+        BankConnection::class           => BankConnectionPolicy::class,
         FundProviderChat::class         => FundProviderChatPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
         ProductReservation::class       => ProductReservationPolicy::class,
         PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,
+        VoucherTransactionBulk::class   => VoucherTransactionBulkPolicy::class,
         FundProviderInvitation::class   => FundProviderInvitationPolicy::class,
         FundProviderChatMessage::class  => FundProviderChatMessagePolicy::class,
         FundRequestClarification::class => FundRequestClarificationPolicy::class,

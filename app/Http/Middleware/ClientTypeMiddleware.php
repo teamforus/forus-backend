@@ -20,6 +20,7 @@ class ClientTypeMiddleware
         'digidRedirect',
         'emailSignUpRedirect',
         'emailSignInRedirect',
+        'bankOauthRedirect',
     ];
 
     /**
