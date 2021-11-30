@@ -7,6 +7,7 @@ use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
+use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
@@ -1073,29 +1074,20 @@ class Voucher extends Model
 
     /**
      * @param array $options
-     * @param string|null $mailToAddress
+     * @param bool $shouldNotifyRequester
      * @return PhysicalCardRequest|\Illuminate\Database\Eloquent\Model
      */
     public function makePhysicalCardRequest(
         array $options,
-        ?string $mailToAddress = null
+        bool $shouldNotifyRequester = false
     ): PhysicalCardRequest {
-        if ($mailToAddress) {
-            resolve('forus.services.notification')->requestPhysicalCard($mailToAddress, [
-                'postcode'       => $options['postcode'] ?? '',
-                'house_number'   => $options['house'] ?? '',
-                'house_addition' => $options['house_addition'] ?? '',
-                'city'           => $options['city'] ?? '',
-                'street_name'    => $options['address'] ?? '',
-                'fund_name'      => $this->fund->name,
-                'sponsor_phone'  => $this->fund->organization->phone,
-                'sponsor_email'  => $this->fund->organization->email
-            ], $this->fund->getEmailFrom());
-        }
-
-        return $this->physical_card_requests()->create(Arr::only($options, [
+        $cardRequest = $this->physical_card_requests()->create(Arr::only($options, [
             'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
         ]));
+
+        VoucherPhysicalCardRequestedEvent::broadcast($this, $cardRequest, $shouldNotifyRequester);
+
+        return $cardRequest;
     }
 
     /**

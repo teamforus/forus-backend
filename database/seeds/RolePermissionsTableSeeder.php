@@ -39,6 +39,9 @@ class RolePermissionsTableSeeder extends Seeder
         ],
         "implementation_cms_manager" => [
             "view_funds", "manage_implementation_cms",
+        ],
+        "implementation_communication_manager" => [
+            "view_funds", "manage_implementation_cms", "manage_implementation_notifications"
         ]
     ];
 
@@ -51,7 +54,7 @@ class RolePermissionsTableSeeder extends Seeder
     {
         $roles = Role::pluck('id','key');
         $permissions = Permission::pluck('id','key');
-
+      
         foreach ($this->rolePermissions as $roleKey => $permissionKeys) {
             foreach ($permissionKeys as $permissionKey) {
                 RolePermission::create([

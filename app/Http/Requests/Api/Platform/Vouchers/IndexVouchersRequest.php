@@ -29,9 +29,10 @@ class IndexVouchersRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'state' => 'nullable|in:' . implode(',', Voucher::STATES),
             'per_page' => 'nullable|numeric|between:1,100',
             'product_id' => 'nullable|exists:products,id',
-            'type' => 'nullable|in:' . join(',', Voucher::TYPES),
+            'type' => 'nullable|in:' . implode(',', Voucher::TYPES),
         ];
     }
 }

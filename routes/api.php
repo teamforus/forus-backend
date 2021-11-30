@@ -170,7 +170,7 @@ Route::group(['middleware' => ['api.auth']], static function() use ($router) {
     }
 });
 
-Route::get('/status', 'Api\StatusController@getStatus');
+Route::get('/status', 'Api\StatusController@getStatus')->name('status');
 
 if (env('APP_DEBUG', false) === true && env('APP_ENV') === 'dev') {
     Route::group(['middleware' => ['api.auth']], static function() use ($router) {

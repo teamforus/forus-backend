@@ -100,14 +100,6 @@
             "content": ":provider_name is geaccepteerd als aanbieder voor :fund_name door :sponsor_name"
         }
     },
-    "notifications_identities.requester_fund_ended": {
-        "mail": {},
-        "push": {},
-        "database": {
-            "title": "",
-            "content": ""
-        }
-    },
     "notifications_identities.requester_product_added": {
         "mail": {},
         "push": {},
@@ -136,8 +128,8 @@
         "mail": {},
         "push": {},
         "database": {
-            "title": "Er is een nieuwe aanvraag voor :fund_name.",
-            "content": "Er is een nieuwe aanvraag voor :fund_name."
+            "title": "Nieuwe aanvraag voor :fund_name",
+            "content": "Er is een nieuwe aanvraag voor :fund_name"
         }
     },
     "notifications_identities.fund_request_created": {
@@ -150,7 +142,8 @@
         "push": {},
         "database": {
             "title": "Aanvraag voor :fund_name is ontvangen.",
-            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag."
+            "content": "De aanvraag voor :fund_name is ontvangen. U ontvangt binnen twee weken een reactie op uw aanvraag.",
+            "content_informal": "De aanvraag voor :fund_name is ontvangen. Je ontvangt binnen twee weken een reactie op jouw aanvraag."
         }
     },
     "notifications_identities.fund_request_approved": {
@@ -163,7 +156,8 @@
         "push": {},
         "database": {
             "title": "Aanvraag is behandeld",
-            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld."
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld.",
+            "content_informal": ":sponsor_name heeft jouw aanvraag voor :fund_name behandeld."
         }
     },
     "notifications_identities.fund_request_denied": {
@@ -176,7 +170,8 @@
         "push": {},
         "database": {
             "title": "Aanvraag is behandeld",
-            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld."
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name behandeld.",
+            "content_informal": ":sponsor_name heeft jouw aanvraag voor :fund_name behandeld."
         }
     },
     "notifications_identities.fund_request_record_declined": {
@@ -206,7 +201,7 @@
         "push": {},
         "database": {
             "title": ":fund_name is aangemaakt!",
-            "content": ":fund_name is aangemaakt."
+            "content": "Er is een nieuwe fonds aangemaakt met de naam :fund_name."
         }
     },
     "notifications_funds.started": {
@@ -262,13 +257,13 @@
     },
     "notifications_funds.balance_low": {
         "mail": {
-            "title": "Het budget ':fund_name' fonds heeft de ingestelde aanvul-herinneringsgrens overschreden.",
+            "title": "Het budget :fund_name fonds heeft de ingestelde aanvul-herinneringsgrens overschreden.",
             "template": "notifications_funds/balance_low.md"
         },
         "push": {},
         "database": {
             "title": "Het budget \":fund_name\" heeft de ingestelde aanvul-herinneringsgrens overschreden.",
-            "content": "Het budget \":fund_name\" is lager dan :fund_notification_amount_locale. Het budget \":fund_name\" is momenteel :fund_budget_left_locale."
+            "content": "Het budget \":fund_name\" is lager dan €:fund_notification_amount_locale. Het budget \":fund_name\" is momenteel €:fund_budget_left_locale."
         }
     },
     "notifications_funds.balance_supplied": {
@@ -276,7 +271,7 @@
         "push": {},
         "database": {
             "title": "Het budget voor \":fund_name\" is opgehoogd.",
-            "content": "Het budget voor \":fund_name\" is opgehoogd met :fund_top_up_amount_locale."
+            "content": "Het budget voor \":fund_name\" is opgehoogd met €:fund_top_up_amount_locale."
         }
     },
     "notifications_funds.product_subsidy_removed": {
@@ -300,7 +295,7 @@
         "push": {},
         "database": {
             "title": ":fund_name is verlopen.",
-            "content": ":fund_name liep van :start_date: tot :end_date_minus1: en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
+            "content": ":fund_name liep van :start_date tot :end_date_minus1 en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
         }
     },
     "notifications_fund_providers.fund_expiring": {
@@ -374,7 +369,7 @@
         "mail": {},
         "push": {},
         "database": {
-            "title": ":product_name is verwijderd :fund_name.",
+            "title": ":product_name is verwijderd uit :fund_name.",
             "content": ":product_name is verwijderd uit :fund_name door :sponsor_name"
         }
     },
@@ -403,7 +398,7 @@
     "notifications_identities.identity_voucher_assigned_budget": {
         "mail": {
             "title": "Hierbij ontvangt u uw :fund_name",
-            "title_informal": "Hierbij ontvang je jouw :fund_name",
+            "title_informal": "Hierbij ontvang je :fund_name",
             "template": "notifications_identities/identity_voucher_assigned_budget.md",
             "template_informal": "notifications_identities/identity_voucher_assigned_budget_informal.md"
         },
@@ -413,14 +408,14 @@
         },
         "database": {
             "title": ":fund_name is aan u toegekend.",
-            "title_informal": "Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
+            "title_informal": "Alsjeblieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
             "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
         }
     },
     "notifications_identities.identity_voucher_assigned_subsidy": {
         "mail": {
             "title": "Hierbij ontvangt u uw :fund_name",
-            "title_informal": "Hierbij ontvang je jouw :fund_name",
+            "title_informal": "Hierbij ontvang je :fund_name",
             "template": "notifications_identities/identity_voucher_assigned_subsidy.md",
             "template_informal": "notifications_identities/identity_voucher_assigned_subsidy_informal.md"
         },
@@ -430,22 +425,27 @@
         },
         "database": {
             "title": ":fund_name is aan u toegekend.",
-            "title_informal": "Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
+            "title_informal": "Alsjeblieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
             "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
         }
     },
     "notifications_identities.identity_voucher_assigned_product": {
         "mail": {
             "title": "Hierbij ontvangt u uw :product_name",
-            "title_informal": "Hierbij ontvang je jouw :product_name",
+            "title_informal": "Hierbij ontvang je :product_name",
             "template": "notifications_identities/identity_voucher_assigned_product.md",
             "template_informal": "notifications_identities/identity_voucher_assigned_product_informal.md"
         },
         "push": {
             "title": ":implementation_name",
-            "content": "U hebt een aanbieding gekocht in ':implementation_name' webshop."
+            "content": "U hebt een aanbieding gekocht in ':implementation_name' webshop.",
+            "content_informal": "Je hebt een aanbieding gekocht in ':implementation_name' webshop."
         },
-        "database": {}
+        "database": {
+            "title": ":fund_name is aan u toegekend",
+            "title_informal": "Alsjeblieft, hier is je :fund_name!",
+            "content": "Het tegoed is geldig tot en met :voucher_expire_date_locale."
+        }
     },
     "notifications_identities.product_voucher_added": {
         "mail": {},
@@ -458,7 +458,8 @@
     "notifications_identities.product_voucher_reserved": {
         "mail": {
             "title": "Aanbieding bij :provider_name gereserveerd!",
-            "template": "notifications_identities/product_voucher_reserved.md"
+            "template": "notifications_identities/product_voucher_reserved.md",
+            "template_informal": "notifications_identities/product_voucher_reserved_informal.md"
         },
         "push": {},
         "database": {
@@ -473,7 +474,7 @@
         "push": {},
         "database": {
             "title": "Er is een :fund_name aan u toegekend.",
-            "title_informal": "Alstublieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
+            "title_informal": "Alsjeblieft, hier is je :fund_name! Je aanvraag is goedgekeurd.",
             "content": "De QR-code is geldig tot en met :voucher_expire_date_locale."
         }
     },
@@ -482,7 +483,8 @@
         "push": {},
         "database": {
             "title": "Gefeliciteerd! :fund_name is geactiveerd!",
-            "content": "Uw :fund_name is geactiveerd. Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale."
+            "content": "Uw :fund_name is geactiveerd. Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale.",
+            "content_informal": "Jouw :fund_name is geactiveerd. Het tegoed heeft een waarde van :voucher_amount_locale en is geldig tot en met :voucher_expire_date_locale."
         }
     },
     "notifications_identities.voucher_deactivated": {
@@ -539,7 +541,11 @@
             "template_informal": "notifications_identities/voucher_physical_card_requested_informal.md"
         },
         "push": {},
-        "database": {}
+        "database": {
+            "title": "Pas besteld!",
+            "content": "U heeft zojuist een pas besteld. De pas ontvangt u binnen 10 werkdagen op uw adres.",
+            "content_informal": "Je hebt zojuist een pas besteld. De pas ontvang je binnen 10 werkdagen op je adres."
+        }
     },
     "notifications_identities.voucher_shared_by_email": {
         "mail": {},
@@ -555,12 +561,13 @@
         },
         "push": {
             "title": ":fund_name",
-            "content": "Er is :amount afgeschreven van :fund_name."
+            "content": "Er is :voucher_transaction_amount_locale afgeschreven van :fund_name."
         },
         "database": {
             "title": "Er is een bedrag van uw :fund_name afgeschreven.",
             "title_informal": "Er is een bedrag van je :fund_name afgeschreven.",
-            "content": "Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van uw :fund_name is :voucher_amount_locale."
+            "content": "Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van uw :fund_name is €:voucher_amount_locale.",
+            "content_informal": "Er is met je tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven. Het huidige bedrag van je :fund_name is €:voucher_amount_locale."
         }
     },
     "notifications_identities.voucher_subsidy_transaction": {
@@ -595,5 +602,15 @@
             "content": "Uw transactie van :voucher_transaction_amount_locale is uitbetaald."
         },
         "database": {}
+    },
+    "notifications_physical_card_requests.physical_card_request_created": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "U heeft een pas besteld",
+            "title_informal": "Je hebt een pas besteld",
+            "content": "U heeft zojuist een pas besteld. De pas ontvangt u binnen 10 werkdagen op uw adres",
+            "content_informal": "Je hebt zojuist een pas besteld. De pas ontvang je binnen 10 werkdagen op jouw adres"
+        }
     }
 }

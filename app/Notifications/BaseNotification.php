@@ -120,7 +120,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         ],
         "notifications_funds.balance_low" => [
             "fund_budget_left_locale", "fund_name", "fund_notification_amount_locale",
-            "sponsor_name",
+            "sponsor_name", "fund_transaction_costs","fund_transaction_costs_locale"
         ],
         "notifications_funds.balance_supplied" => [
             "fund_name", "fund_top_up_amount_locale",
