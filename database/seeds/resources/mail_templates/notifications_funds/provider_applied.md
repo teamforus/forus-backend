@@ -1,6 +1,6 @@
 # :provider_name wilt zich aanmelden voor :fund_name
 
-Beste :sponsor_name,,
+Beste :sponsor_name,
 
 Een nieuwe aanbieder heeft zich aangemeld om deel te nemen aan :fund_name. 
 

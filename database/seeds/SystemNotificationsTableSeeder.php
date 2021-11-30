@@ -11,13 +11,14 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.removed_employee" => ["database", "push"],
 
         "notifications_fund_providers.approved_budget" => ["database", "mail", "push"],
-        "notifications_fund_providers.approved_products" => ["database"],
+        "notifications_fund_providers.approved_products" => [''], // TODO can database notifications be removed
+        
         "notifications_fund_providers.revoked_budget" => ["database", "mail"],
-        "notifications_fund_providers.revoked_products" => ["database"],
+        "notifications_fund_providers.revoked_products" => [''], // TODO can database notifications be removed
         "notifications_fund_providers.sponsor_message" => ["database"],
 
         "notifications_identities.requester_provider_approved_budget" => ["database"],
-        "notifications_identities.requester_provider_approved_products" => ["database"],
+        "notifications_identities.requester_provider_approved_products" => [''],// TODO can database notifications be removed
 
         "notifications_fund_requests.created_validator_employee" => ["database"],
 
@@ -27,10 +28,14 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_record_declined" => ["database", "mail"],
         "notifications_identities.fund_request_feedback_requested" => ["database", "mail"],
 
+        'notifications_fund_providers.fund_started' => ["database"],
+        'notifications_fund_providers.fund_ended' => [''], // TODO can database notifications be removed
+        'notifications_fund_providers.fund_expiring' => [''], // TODO can database notifications be removed
+
         "notifications_funds.created" => ["database"],
-        "notifications_funds.started" => ["database"],
-        "notifications_funds.ended" => ["database"],
-        "notifications_funds.expiring" => ["database"],
+        "notifications_funds.started" => ["databas "],
+        "notifications_funds.ended" => [''], // TODO can database notifications be removed
+        "notifications_funds.expiring" => [''], // TODO can database notifications be removed
         "notifications_funds.product_added" => ["database"],
         "notifications_funds.provider_applied" => ["database", "mail"],
         "notifications_funds.provider_message" => ["database"],
@@ -38,10 +43,9 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_funds.balance_low" => ["database", "mail"],
         "notifications_funds.balance_supplied" => ["database"],
 
-        'notifications_identities.requester_fund_ended' => ['database'],
-        'notifications_identities.requester_product_added' => ['database'],
-        'notifications_identities.requester_product_approved' => ['database'],
-        'notifications_identities.requester_product_revoked' => ['database'],
+        'notifications_identities.requester_product_added' => [''], // TODO can database notifications be removed
+        'notifications_identities.requester_product_approved' => [''], // TODO can database notifications be removed
+        'notifications_identities.requester_product_revoked' => [''], // TODO can database notifications be removed
 
         "notifications_identities.product_reservation_created" => ["database"],
         "notifications_identities.product_reservation_accepted" => ["database"],
@@ -54,7 +58,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_products.revoked" => ["database"],
         "notifications_products.sold_out" => ["database", "mail"],
 
-        "notifications_identities.product_voucher_shared" => ["database", "mail"],
+        "notifications_identities.product_voucher_shared" => ["database", "mail"], //
         "notifications_identities.identity_voucher_assigned_budget" => ["database", "mail", "push"],
         "notifications_identities.identity_voucher_assigned_subsidy" => ["database", "mail", "push"],
         "notifications_identities.identity_voucher_assigned_product" => ["database", "mail", "push"],
@@ -62,11 +66,11 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.product_voucher_reserved" => ["database", "mail"],
         "notifications_identities.voucher_added_subsidy" => ["database"],
         "notifications_identities.voucher_added_budget" => ["database"],
-        "notifications_identities.voucher_deactivated" => ["database", "mail"],
-        "notifications_identities.budget_voucher_expired" => ["database"],
+        "notifications_identities.voucher_deactivated" => ["mail"],
+        "notifications_identities.budget_voucher_expired" => [''], // TODO can database notifications be removed
         "notifications_identities.product_voucher_expired" => ["database"],
         "notifications_identities.voucher_expire_soon_budget" => ["database", "mail"],
-        "notifications_identities.voucher_expire_soon_product" => ["database"],
+        "notifications_identities.voucher_expire_soon_product" => [''], // TODO can database notifications be removed
         "notifications_identities.voucher_physical_card_requested" => ["database", "mail"],
         "notifications_identities.voucher_shared_by_email" => ["database"],
         "notifications_identities.voucher_budget_transaction" => ["database", "mail", "push"],
@@ -78,13 +82,13 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_bank_connections.activated" => ["database"],
         "notifications_bank_connections.disabled_invalid" => ["database"],
         "notifications_bank_connections.monetary_account_changed" => ["database"],
+
+        "notifications_physical_card_requests.physical_card_request_created" => [''], // TODO can database notifications be removed
     ];
 
     protected $optionalNotifications = [
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
-        'notifications_fund_providers.fund_ended',
-        'notifications_identities.requester_fund_ended',
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
@@ -94,29 +98,15 @@ class SystemNotificationsTableSeeder extends Seeder
 
     protected $visibleNotifications = [
         'notifications_fund_providers.approved_budget',
-        'notifications_fund_providers.approved_products',
         'notifications_fund_providers.revoked_budget',
-        'notifications_fund_providers.revoked_products',
         'notifications_fund_providers.sponsor_message',
 
         'notifications_identities.requester_provider_approved_budget',
-        'notifications_identities.requester_provider_approved_products',
 
         'notifications_identities.fund_request_created',
         'notifications_identities.fund_request_denied',
         'notifications_identities.fund_request_approved',
-        'notifications_identities.fund_request_record_declined',
-
         'notifications_identities.fund_request_feedback_requested',
-
-        'notifications_fund_providers.fund_started',
-        'notifications_fund_providers.fund_ended',
-        'notifications_fund_providers.fund_expiring',
-
-        'notifications_identities.requester_fund_ended',
-        'notifications_identities.requester_product_added',
-        'notifications_identities.requester_product_approved',
-        'notifications_identities.requester_product_revoked',
 
         'notifications_identities.product_reservation_created',
         'notifications_identities.product_reservation_accepted',
@@ -129,7 +119,6 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_products.revoked',
         'notifications_products.sold_out',
 
-        'notifications_identities.product_voucher_shared',
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
@@ -139,12 +128,9 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.product_voucher_added',
         'notifications_identities.product_voucher_reserved',
         'notifications_identities.voucher_deactivated',
-        'notifications_identities.budget_voucher_expired',
         'notifications_identities.product_voucher_expired',
         'notifications_identities.voucher_expire_soon_budget',
-        'notifications_identities.voucher_expire_soon_product',
         'notifications_identities.voucher_physical_card_requested',
-        'notifications_identities.voucher_shared_by_email',
 
         'notifications_identities.product_voucher_transaction',
         'notifications_identities.voucher_budget_transaction',
@@ -159,11 +145,8 @@ class SystemNotificationsTableSeeder extends Seeder
 
         'notifications_identities.fund_request_created',
         'notifications_identities.fund_request_approved',
-        'notifications_identities.fund_request_record_declined',
 
         'notifications_identities.fund_request_feedback_requested',
-
-        'notifications_identities.requester_fund_ended',
 
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
@@ -192,7 +175,6 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.requester_product_revoked",
             "notifications_identities.requester_product_approved",
             "notifications_identities.requester_product_added",
-            "notifications_identities.requester_fund_ended",
             "notifications_identities.voucher_deactivated",
             "notifications_identities.voucher_expire_soon_budget",
             "notifications_identities.budget_voucher_expired",
@@ -250,7 +232,7 @@ class SystemNotificationsTableSeeder extends Seeder
             "notifications_identities.added_employee",
             "notifications_identities.changed_employee_roles",
             "notifications_identities.removed_employee"
-        ]
+        ],
     ];
 
     /**

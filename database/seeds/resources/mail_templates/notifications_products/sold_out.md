@@ -3,7 +3,7 @@
 Beste aanbieder,
 
 Uw aanbod in de webshop voor ':product_name' is uitverkocht.
-U kunt het aanbod aanvullen of verwijderen. Als u het aanbod verwijderd kunt u daarna een nieuw aanbod plaatsen.
+U kunt het aanbod aanvullen of verwijderen. Als u het aanbod verwijdert kunt u daarna een nieuw aanbod plaatsen.
 &nbsp;  
 &nbsp;  
 
