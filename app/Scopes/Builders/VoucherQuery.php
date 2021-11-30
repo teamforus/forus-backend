@@ -72,9 +72,18 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
+    public static function whereActive(Builder $builder): Builder
+    {
+        return $builder->where('state', Voucher::STATE_ACTIVE);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
     public static function whereNotExpiredAndActive(Builder $builder): Builder
     {
-        return self::whereNotExpired($builder)->where('state', Voucher::STATE_ACTIVE);
+        return self::whereActive(self::whereNotExpired($builder));
     }
 
     /**

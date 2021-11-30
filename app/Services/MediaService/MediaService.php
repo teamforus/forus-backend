@@ -458,8 +458,8 @@ class MediaService
         $type = $type ?? $media->type;
         $copyFiles = $type === $media->type;
 
-        if (!$forceRegenerate && $copyFiles) {
-            return $this->cloneMediaCopy($media);
+        if ($copyFiles && !$forceRegenerate) {
+            return $this->cloneMediaCopy($media, $type);
         }
 
         return $this->cloneMediaGenerate($media, $type);
@@ -467,39 +467,36 @@ class MediaService
 
     /**
      * @param Media $media
+     * @param string|null $type
      * @return Media
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException|\Exception
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \Exception
      */
-    protected function cloneMediaCopy(Media $media): Media
+    protected function cloneMediaGenerate(Media $media, ?string $type = null): Media
     {
         $oldMediaConfig = self::getMediaConfig($media->type);
         $source = $media->findPreset($oldMediaConfig->getRegenerationPresetName());
+        $file = new TmpFile($this->storage()->get($source->path));
 
-        return $this->makeMedia(
-            new TmpFile($this->storage()->get($source->path)),
-            $media->original_name,
-            $media->ext,
-            $media->type
-        );
+        return $this->makeMedia($file, $media->original_name, $media->ext, $type ?: $media->type);
     }
 
     /**
      * @param Media $media
-     * @param string $type
+     * @param string|null $type
      * @return Media
      * @throws \Exception
      */
-    protected function cloneMediaGenerate(Media $media, string $type): Media
+    protected function cloneMediaCopy(Media $media, ?string $type = null): Media
     {
+        $type = $type ?: $media->type;
         $mediaConfig = self::getMediaConfig($type);
         $mediaPresets = $mediaConfig->getPresets();
         $newMedia = $this->makeMediaModel($media->original_name, $media->ext, $type);
 
         foreach ($mediaPresets as $mediaPreset) {
             /** @var PresetModel $presetModel */
-            if ($presetModel = $media->presets()->where([
-                'key' => $mediaPreset->name
-            ])->first()) {
+            if ($presetModel = $media->presets()->where('key', $mediaPreset->name)->first()) {
                 $mediaPreset->copyPresetModel(
                     $this->storage(),
                     $this->storagePath,

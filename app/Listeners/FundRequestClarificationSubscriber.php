@@ -25,10 +25,10 @@ class FundRequestClarificationSubscriber
 
         $eventLog = $fundRequest->log(FundRequest::EVENT_CLARIFICATION_REQUESTED, [
             'fund' => $fundRequest->fund,
+            'sponsor' => $fundRequest->fund->organization,
             'fund_request' => $fundRequest,
-            'fund_request_clarification' => $clarification
-        ], [
-            'sponsor_name' => $fundRequest->fund->organization->name
+            'implementation' => $fundRequest->fund->getImplementation(),
+            'fund_request_clarification' => $clarification,
         ]);
 
         IdentityFundRequestFeedbackRequestedNotification::send($eventLog);

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
 use App\Http\Requests\BaseFormRequest;
+use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -462,21 +463,6 @@ class Product extends Model
         }
 
         return $query->orderBy('created_at', 'desc');
-    }
-
-    /**
-     * Send product sold out email to provider
-     * @return void
-     */
-    public function sendSoldOutEmail(): void
-    {
-        $mailService = resolve('forus.services.notification');
-        $mailService->productSoldOut(
-            $this->organization->email,
-            Implementation::emailFrom(),
-            $this->name,
-            Implementation::active()['url_provider']
-        );
     }
 
     /**

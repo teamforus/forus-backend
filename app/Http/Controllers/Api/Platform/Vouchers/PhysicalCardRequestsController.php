@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
-use App\Events\PhysicalCardRequests\PhysicalCardRequestsCreated;
+use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;
@@ -58,10 +58,8 @@ class PhysicalCardRequestsController extends Controller
         $this->throttleWithKey('to_many_attempts', $request, 'physical_card_requests');
 
         $cardRequest = $voucherToken->voucher->makePhysicalCardRequest($request->only([
-            'address', 'house', 'house_addition', 'postcode', 'city'
-        ]), $request->records_repo()->primaryEmailByAddress($request->auth_address()));
-
-        PhysicalCardRequestsCreated::dispatch($cardRequest);
+            'address', 'house', 'house_addition', 'postcode', 'city',
+        ]), true);
 
         return new PhysicalCardRequestResource($cardRequest);
     }

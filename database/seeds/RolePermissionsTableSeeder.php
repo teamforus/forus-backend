@@ -44,6 +44,9 @@ class RolePermissionsTableSeeder extends Seeder
             ],
             "implementation_cms_manager" => [
                 "view_funds", "manage_implementation_cms"
+            ],
+            "implementation_communication_manager" => [
+                "view_funds", "manage_implementation_cms", "manage_implementation_notifications"
             ]
         ];
 

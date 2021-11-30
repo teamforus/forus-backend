@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\FundRequests;
 
-use App\Events\FundRequestRecords\FundRequestRecordDeclined;
+use App\Events\FundRequests\FundRequestRecordDeclined;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\ApproveFundRequestRecordRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\DeclineFundRequestRecordRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\IndexFundRequestRecordsRequest;

@@ -73,13 +73,8 @@ class FundProviderChatMessagesController extends Controller
         FundProvider $fundProvider,
         FundProviderChat $fundProviderChat
     ): FundProviderChatMessageResource {
-        $this->authorize('showSponsor', [
-            $fundProvider, $organization, $fund
-        ]);
-
-        $this->authorize('viewSponsor', [
-            $fundProviderChat, $fundProvider, $fund, $organization
-        ]);
+        $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
+        $this->authorize('viewSponsor', [$fundProviderChat, $fundProvider, $fund, $organization]);
 
         $this->authorize('createSponsor', [
             FundProviderChatMessage::class, $fundProviderChat, $fundProvider, $fund, $organization
@@ -87,10 +82,10 @@ class FundProviderChatMessagesController extends Controller
 
         $chatMessage = $fundProviderChat->addSponsorMessage(
             $request->input('message'),
-            auth_address()
+            $request->auth_address()
         );
 
-        FundProviderSponsorChatMessage::dispatch($chatMessage);
+        FundProviderSponsorChatMessage::dispatch($fundProvider, $chatMessage);
 
         return new FundProviderChatMessageResource($chatMessage);
     }

@@ -65,23 +65,15 @@ class NotificationsTokensImportCommand extends Command
             [$type, $identity_address, $token] = $tokenRow;
 
             try {
-                $notificationService->storeNotificationToken($identity_address, $type, $token);
+                $notificationService->storeNotificationToken($identity_address, $token, $type);
                 $countSuccess++;
             } catch (\Exception $exception) {
-                $this->error(sprintf(
-                    'Could not import a token, line %s',
-                    $tokenRowKey + 2
-                ));
-
+                $this->error(sprintf('Could not import a token, line %s', $tokenRowKey + 2));
                 $this->error(sprintf('The error: %s', $exception->getMessage()));
                 $countError++;
             }
         }
 
-        $this->line(sprintf(
-            "%s rows imported, %s rows failed.",
-            $countSuccess,
-            $countError
-        ));
+        $this->line("${$countSuccess} rows imported, ${$countError} rows failed.");
     }
 }

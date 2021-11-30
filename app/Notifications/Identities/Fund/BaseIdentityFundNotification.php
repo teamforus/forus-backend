@@ -4,6 +4,7 @@ namespace App\Notifications\Identities\Fund;
 
 use App\Models\Fund;
 use App\Notifications\Identities\BaseIdentityNotification;
+use App\Scopes\Builders\VoucherQuery;
 use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Support\Collection;
 
@@ -18,8 +19,10 @@ abstract class BaseIdentityFundNotification extends BaseIdentityNotification
      */
     public static function eligibleIdentities($loggable): Collection
     {
-        $identities = $loggable->vouchers()->pluck('identity_address')->unique();
+        $vouchers = VoucherQuery::whereNotExpiredAndActive(
+            $loggable->vouchers()->select('vouchers.*')->getQuery()
+        )->select('vouchers.identity_address')->distinct();
 
-        return Identity::whereIn('address', $identities->toArray())->get();
+        return Identity::whereIn('address', $vouchers)->get();
     }
 }

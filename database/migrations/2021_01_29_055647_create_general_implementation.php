@@ -8,8 +8,9 @@ class CreateGeneralImplementation extends Migration
      * Run the migrations.
      *
      * @return void
+     * @throws Exception
      */
-    public function up()
+    public function up(): void
     {
         (new ImplementationsTableSeeder())->run();
     }
@@ -20,8 +21,5 @@ class CreateGeneralImplementation extends Migration
      * @return void
      * @throws Exception
      */
-    public function down()
-    {
-        //
-    }
+    public function down(): void {}
 }

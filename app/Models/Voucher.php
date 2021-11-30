@@ -7,6 +7,9 @@ use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
+use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
+use App\Events\Vouchers\VoucherSendToEmailEvent;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
@@ -14,16 +17,17 @@ use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Identity\Models\Identity;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use RuntimeException;
+use Carbon\Carbon;
 
 /**
  * App\Models\Voucher
@@ -60,6 +64,8 @@ use RuntimeException;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
+ * @property-read bool $has_product_vouchers
+ * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
  * @property-read \Carbon\Carbon|\Illuminate\Support\Carbon $last_active_day
@@ -132,6 +138,9 @@ class Voucher extends Model
     public const EVENT_TRANSACTION = 'transaction';
     public const EVENT_TRANSACTION_PRODUCT = 'transaction_product';
     public const EVENT_TRANSACTION_SUBSIDY = 'transaction_subsidy';
+
+    public const EVENT_SHARED_BY_EMAIL = 'shared_by_email';
+    public const EVENT_PHYSICAL_CARD_REQUESTED = 'physical_card_requested';
 
     public const TYPE_BUDGET = 'regular';
     public const TYPE_PRODUCT = 'product';
@@ -325,9 +334,10 @@ class Voucher extends Model
      */
     public function product(): BelongsTo
     {
-        return query_with_trashed($this->belongsTo(
-            Product::class, 'product_id', 'id'
-        ));
+        return $this->belongsTo(Product::class)->where(function(Builder $builder) {
+            /** @var Builder|SoftDeletes $builder */
+            return $builder->withTrashed();
+        });
     }
 
     /**
@@ -486,58 +496,7 @@ class Voucher extends Model
      */
     public function sendToEmail(string $email = null): void
     {
-        /** @var VoucherToken $voucherToken */
-        $voucherToken = $this->tokens()->where([
-            'need_confirmation' => false
-        ])->first();
-
-        if ($voucherToken->voucher->type === 'product') {
-            $fund_product_name = $voucherToken->voucher->product->name;
-        } else {
-            $fund_product_name = $voucherToken->voucher->fund->name;
-        }
-
-        resolve('forus.services.notification')->sendVoucher(
-            $email,
-            $voucherToken->voucher->fund->fund_config->implementation->getEmailFrom(),
-            $fund_product_name,
-            $this->amount,
-            format_date_locale($this->expire_at, 'long_date_locale'),
-            $fund_product_name,
-            $voucherToken->address
-        );
-    }
-
-    /**
-     * @param string|null $email
-     */
-    public function assignedVoucherEmail(string $email = null): void
-    {
-        $mailFrom = $this->fund->fund_config->implementation->getEmailFrom();
-        $expireDate = format_date_locale($this->expire_at, 'long_date_locale');
-
-        if ($this->isBudgetType()) {
-            $type = $this->fund->isTypeBudget() ? 'budget' : 'subsidies';
-        } else {
-            $type = 'product';
-        }
-
-        resolve('forus.services.notification')->assignVoucher($email, $mailFrom, $type, [
-            'fund_name' => $this->fund->name,
-            'link_webshop' => $this->fund->urlWebshop(),
-            'qr_token' => $this->token_without_confirmation->address,
-            'product_name' => $this->product->name ?? null,
-            'provider_name' => $this->product->organization->name ?? null,
-            'provider_email' => $this->product->organization->email ?? null,
-            'provider_phone' => $this->product->organization->phone ?? null,
-            'provider_website' => $this->product->organization->website ?? null,
-            'sponsor_name' => $this->fund->organization->name ?? null,
-            'sponsor_email' => $this->fund->organization->email ?? null,
-            'sponsor_phone' => $this->fund->organization->phone ?? null,
-            'sponsor_description' => $this->fund->organization->description ?? null,
-            'voucher_amount' => $this->amount,
-            'voucher_last_active_day' => $expireDate,
-        ]);
+        VoucherSendToEmailEvent::dispatch($this, $email);
     }
 
     /**
@@ -559,64 +518,11 @@ class Voucher extends Model
     }
 
     /**
-     * @param int $days
-     */
-    public static function checkVoucherExpireQueue(int $days = 4 * 7): void
-    {
-        $date = now()->addDays($days)->startOfDay()->format('Y-m-d');
-
-        $vouchers = self::query()
-            ->whereNull('product_id')
-            ->whereNotNull('identity_address')
-            ->with(['fund', 'fund.organization'])
-            ->whereDate('expire_at', '=', $date)
-            ->get();
-
-        /** @var self $voucher */
-        foreach ($vouchers as $voucher) {
-            if ($voucher->amount_available_cached > 0) {
-                $voucher->sendVoucherExpireMail();
-            }
-        }
-    }
-
-    /**
-     * Send voucher expiration warning email to requester identity
-     */
-    public function sendVoucherExpireMail(): void {
-        $voucher = $this;
-        $notificationService = resolve('forus.services.notification');
-        $recordRepo = resolve('forus.services.record');
-        $primaryEmail = $recordRepo->primaryEmailByAddress($voucher->identity_address);
-
-        $fund_name = $voucher->fund->name;
-        $sponsor_name = $voucher->fund->organization->name;
-        $start_date = $voucher->fund->start_date;
-        $end_date = $voucher->fund->end_date;
-        $phone = $voucher->fund->organization->phone;
-        $email = $voucher->fund->organization->email;
-        $webshopLink = $voucher->fund->urlWebshop();
-
-        $notificationService->voucherExpireSoon(
-            $primaryEmail,
-            $voucher->fund->fund_config->implementation->getEmailFrom(),
-            $fund_name,
-            $sponsor_name,
-            $start_date,
-            $end_date,
-            $phone,
-            $email,
-            $webshopLink
-        );
-    }
-
-    /**
      * @param Request $request
      * @return Builder
      */
-    public static function search(
-        Request $request
-    ): Builder {
+    public static function search(Request $request): Builder
+    {
         /** @var Builder $query */
         $query = self::query();
         $granted = $request->input('granted');
@@ -651,13 +557,13 @@ class Voucher extends Model
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder
      */
     public static function searchSponsorQuery(
-        Request $request,
+        BaseFormRequest $request,
         Organization $organization,
         Fund $fund = null
     ): Builder {
@@ -699,12 +605,12 @@ class Voucher extends Model
         }
 
         if ($request->has('email') && $email = $request->input('email')) {
-            $query->where('identity_address', identity_repo()->getAddress($email) ?: '_');
+            $query->where('identity_address', $request->identity_repo()->getAddress($email) ?: '_');
         }
 
         if ($request->has('bsn') && $bsn = $request->input('bsn')) {
-            $query->where(static function(Builder $builder) use ($bsn) {
-                $builder->where('identity_address', record_repo()->identityAddressByBsn($bsn) ?: '-');
+            $query->where(static function(Builder $builder) use ($bsn, $request) {
+                $builder->where('identity_address', $request->records_repo()->identityAddressByBsn($bsn) ?: '-');
                 $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($bsn) {
                     $builder->where(compact('bsn'));
                 });
@@ -748,13 +654,13 @@ class Voucher extends Model
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder[]|Collection
      */
     public static function searchSponsor(
-        Request $request,
+        BaseFormRequest $request,
         Organization $organization,
         Fund $fund = null
     ) {
@@ -995,10 +901,10 @@ class Voucher extends Model
     ): array {
         $vouchersData = [];
         $vouchersDataNames = [];
-        $vouchers->load(
+        $vouchers->load([
             'transactions', 'voucher_relation', 'product', 'fund',
             'token_without_confirmation', 'identity.primary_email'
-        );
+        ]);
 
         $fp = fopen('php://temp/maxmemory:1048576', 'wb');
 
@@ -1168,29 +1074,20 @@ class Voucher extends Model
 
     /**
      * @param array $options
-     * @param string|null $mailToAddress
+     * @param bool $shouldNotifyRequester
      * @return PhysicalCardRequest|\Illuminate\Database\Eloquent\Model
      */
     public function makePhysicalCardRequest(
         array $options,
-        ?string $mailToAddress = null
+        bool $shouldNotifyRequester = false
     ): PhysicalCardRequest {
-        if ($mailToAddress) {
-            resolve('forus.services.notification')->requestPhysicalCard($mailToAddress, [
-                'postcode'       => $options['postcode'] ?? '',
-                'house_number'   => $options['house'] ?? '',
-                'house_addition' => $options['house_addition'] ?? '',
-                'city'           => $options['city'] ?? '',
-                'street_name'    => $options['address'] ?? '',
-                'fund_name'      => $this->fund->name,
-                'sponsor_phone'  => $this->fund->organization->phone,
-                'sponsor_email'  => $this->fund->organization->email
-            ], $this->fund->getEmailFrom());
-        }
-
-        return $this->physical_card_requests()->create(Arr::only($options, [
+        $cardRequest = $this->physical_card_requests()->create(Arr::only($options, [
             'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
         ]));
+
+        VoucherPhysicalCardRequestedEvent::broadcast($this, $cardRequest, $shouldNotifyRequester);
+
+        return $cardRequest;
     }
 
     /**
@@ -1255,19 +1152,13 @@ class Voucher extends Model
     public function sponsorHistoryLogs(): Collection
     {
         return $this->logs->whereIn('event', array_merge([
+            self::EVENT_PHYSICAL_CARD_REQUESTED,
             self::EVENT_EXPIRED_BUDGET,
             self::EVENT_EXPIRED_PRODUCT,
             self::EVENT_DEACTIVATED,
             self::EVENT_ACTIVATED,
             self::EVENT_ASSIGNED,
-        ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION))->merge(
-            EventLog::query()->where([
-                'loggable_type' => 'physical_card_request'
-            ])->whereIn(
-                'loggable_id',
-                $this->physical_card_requests()->pluck('id')->toArray()
-            )->get()
-        );
+        ], self::EVENTS_CREATED, self::EVENTS_TRANSACTION));
     }
 
     /**
@@ -1296,15 +1187,41 @@ class Voucher extends Model
      */
     public function reportBackofficeReceived(): ?FundBackofficeLog
     {
-        if (!$this->parent_id && $this->identity_address && !$this->backoffice_log_received) {
-            $eligibilityLog = $this->backoffice_log_eligible;
+        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_received;
+
+        if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
+            $eligibilityLog = $this->backoffice_log_eligible;
             $bsn = record_repo()->bsnByAddress($this->identity_address);
 
             if ($backOffice && $bsn) {
                 $requestId = $eligibilityLog->response_id ?? null;
 
                 return $backOffice->reportReceived($bsn, $requestId)->updateModel([
+                    'voucher_id' => $this->id,
+                ]);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return null
+     */
+    public function reportBackofficeFirstUse()
+    {
+        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_first_use;
+
+        if ($voucherShouldReport) {
+            $backOffice = $this->fund->getBackofficeApi();
+            $firstUseLog = $this->backoffice_log_first_use;
+            $bsn = record_repo()->bsnByAddress($this->identity_address);
+
+            if ($backOffice && $bsn) {
+                $requestId = $firstUseLog->response_id ?? null;
+
+                return $backOffice->reportFirstUse($bsn, $requestId)->updateModel([
                     'voucher_id' => $this->id,
                 ]);
             }
@@ -1324,24 +1241,5 @@ class Voucher extends Model
         }
 
         return $this->transactions->count() + $this->product_vouchers->count();
-    }
-
-    /**
-     * @return null
-     */
-    public function reportBackofficeFirstUse()
-    {
-        if (!$this->parent_id && $this->identity_address && !$this->backoffice_log_first_use) {
-            $backOffice = $this->fund->getBackofficeApi();
-            $bsn = record_repo()->bsnByAddress($this->identity_address);
-
-            if ($backOffice && $bsn) {
-                return $backOffice->reportFirstUse($bsn)->updateModel([
-                    'voucher_id' => $this->id,
-                ]);
-            }
-        }
-
-        return null;
     }
 }

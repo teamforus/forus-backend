@@ -9,7 +9,6 @@ use App\Events\FundProviders\FundProviderReplied;
 use App\Events\FundProviders\FundProviderRevokedBudget;
 use App\Events\FundProviders\FundProviderRevokedProducts;
 use App\Events\FundProviders\FundProviderSponsorChatMessage;
-use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedBudgetNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedProductsNotification;
@@ -26,118 +25,103 @@ use Illuminate\Events\Dispatcher;
  */
 class FundProviderSubscriber
 {
-    private $notificationService;
-
     /**
-     * FundSubscriber constructor.
+     * @param FundProvider $fundProvider
+     * @return array
      */
-    public function __construct()
+    private function getFundProviderLogModels(FundProvider $fundProvider): array
     {
-        $this->notificationService = resolve('forus.services.notification');
+        return [
+            'implementation' => $fundProvider->fund->getImplementation(),
+            'provider' => $fundProvider->organization,
+            'sponsor' => $fundProvider->fund->organization,
+            'fund' => $fundProvider->fund,
+        ];
     }
 
     /**
      * @param FundProviderApprovedBudget $event
      */
-    public function onApprovedBudget(FundProviderApprovedBudget $event): void {
+    public function onApprovedBudget(FundProviderApprovedBudget $event): void
+    {
         $fundProvider = $event->getFundProvider();
-        $transData =  [
-            "fund_name" => $fundProvider->fund->name,
-            "sponsor_phone" => $fundProvider->organization->phone
-        ];
 
-        $this->notificationService->sendPushNotification(
-            $fundProvider->organization->identity_address,
-            trans('push.providers.accepted.title', $transData),
-            trans('push.providers.accepted.body', $transData),
-            'funds.provider_approved'
-        );
+        FundProvidersApprovedBudgetNotification::send($fundProvider->log(
+            $fundProvider::EVENT_APPROVED_BUDGET,
+            $this->getFundProviderLogModels($fundProvider)
+        ));
 
-        $providerEventLog = $fundProvider->log(FundProvider::EVENT_APPROVED_BUDGET, [
-            'provider' => $fundProvider->organization,
-            'sponsor' => $fundProvider->fund->organization,
-            'fund' => $fundProvider->fund,
-        ]);
-
-        $fundEventLog = $fundProvider->fund->log(Fund::EVENT_PROVIDER_APPROVED_BUDGET, [
-            'provider' => $fundProvider->organization,
-            'sponsor' => $fundProvider->fund->organization,
-            'fund' => $fundProvider->fund,
-        ]);
-
-        FundProvidersApprovedBudgetNotification::send($providerEventLog);
-        IdentityRequesterProviderApprovedBudgetNotification::send($fundEventLog);
+        IdentityRequesterProviderApprovedBudgetNotification::send($fundProvider->fund->log(
+            $fundProvider->fund::EVENT_PROVIDER_APPROVED_BUDGET,
+            $this->getFundProviderLogModels($fundProvider)
+        ));
     }
 
     /**
      * @param FundProviderApprovedProducts $event
      */
-    public function onApprovedProducts(FundProviderApprovedProducts $event): void {
+    public function onApprovedProducts(FundProviderApprovedProducts $event): void
+    {
         $fundProvider = $event->getFundProvider();
-        $providerEventLog = $fundProvider->log(FundProvider::EVENT_APPROVED_PRODUCTS, [
-            'provider' => $fundProvider->organization,
-            'sponsor' => $fundProvider->fund->organization,
-            'fund' => $fundProvider->fund,
-        ]);
 
-        $fundEventLog = $fundProvider->fund->log(Fund::EVENT_PROVIDER_APPROVED_PRODUCTS, [
-            'provider' => $fundProvider->organization,
-            'sponsor' => $fundProvider->fund->organization,
-            'fund' => $fundProvider->fund,
-        ]);
+        FundProvidersApprovedProductsNotification::send($fundProvider->log(
+            $fundProvider::EVENT_APPROVED_PRODUCTS,
+            $this->getFundProviderLogModels($fundProvider)
+        ));
 
-        FundProvidersApprovedProductsNotification::send($providerEventLog);
-        IdentityRequesterProviderApprovedProductsNotification::send($fundEventLog);
+        IdentityRequesterProviderApprovedProductsNotification::send($fundProvider->fund->log(
+            $fundProvider->fund::EVENT_PROVIDER_APPROVED_PRODUCTS,
+            $this->getFundProviderLogModels($fundProvider)
+        ));
     }
 
     /**
      * @param FundProviderRevokedBudget $event
      */
-    public function onRevokedBudget(FundProviderRevokedBudget $event): void {
+    public function onRevokedBudget(FundProviderRevokedBudget $event): void
+    {
         $fundProvider = $event->getFundProvider();
-        $eventLog = $fundProvider->log(FundProvider::EVENT_REVOKED_BUDGET, [
-            'provider' => $fundProvider->organization,
-            'fund' => $fundProvider->fund,
-        ]);
 
-        $fundProvider->fund->log(Fund::EVENT_PROVIDER_REVOKED_BUDGET, [
-            'provider' => $fundProvider->organization,
-            'fund' => $fundProvider->fund,
-        ]);
+        $fundProvider->fund->log(
+            $fundProvider->fund::EVENT_PROVIDER_REVOKED_BUDGET,
+            $this->getFundProviderLogModels($fundProvider)
+        );
 
-        FundProvidersRevokedBudgetNotification::send($eventLog);
+        FundProvidersRevokedBudgetNotification::send($fundProvider->log(
+            $fundProvider::EVENT_REVOKED_BUDGET,
+            $this->getFundProviderLogModels($fundProvider)
+        ));
     }
 
     /**
      * @param FundProviderRevokedProducts $event
      */
-    public function onRevokedProducts(FundProviderRevokedProducts $event): void {
+    public function onRevokedProducts(FundProviderRevokedProducts $event): void
+    {
         $fundProvider = $event->getFundProvider();
-        $eventLog = $fundProvider->log(FundProvider::EVENT_REVOKED_PRODUCTS, [
-            'provider' => $fundProvider->organization,
-            'fund' => $fundProvider->fund,
-        ]);
 
-        $fundProvider->fund->log(Fund::EVENT_PROVIDER_REVOKED_PRODUCTS, [
-            'provider' => $fundProvider->organization,
-            'fund' => $fundProvider->fund,
-        ]);
+        $fundProvider->fund->log(
+            $fundProvider->fund::EVENT_PROVIDER_REVOKED_PRODUCTS,
+            $this->getFundProviderLogModels($fundProvider)
+        );
 
-        FundProvidersRevokedProductsNotification::send($eventLog);
+        FundProvidersRevokedProductsNotification::send($fundProvider->log(
+            $fundProvider::EVENT_REVOKED_PRODUCTS,
+            $this->getFundProviderLogModels($fundProvider)
+        ));
     }
 
     /**
      * @param FundProviderSponsorChatMessage $event
      */
-    public function onSponsorMessage(FundProviderSponsorChatMessage $event): void {
+    public function onSponsorMessage(FundProviderSponsorChatMessage $event): void
+    {
         $chat = $event->getChat();
         $fundProvider = $chat->fund_provider;
-        $eventLog = $fundProvider->log(FundProvider::EVENT_SPONSOR_MESSAGE, [
+
+        $eventLog = $fundProvider->log($fundProvider::EVENT_SPONSOR_MESSAGE, array_merge([
             'product' => $chat->product,
-            'provider' => $fundProvider->organization,
-            'sponsor' => $fundProvider->fund->organization,
-            'fund' => $fundProvider->fund,
-        ]);
+        ], $this->getFundProviderLogModels($fundProvider)));
 
         FundProviderSponsorChatMessageNotification::send($eventLog);
     }

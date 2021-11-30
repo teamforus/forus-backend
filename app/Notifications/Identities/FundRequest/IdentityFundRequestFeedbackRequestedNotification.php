@@ -12,8 +12,7 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundRequestNotification
 {
-    protected $key = 'notifications_identities.fund_request_feedback_requested';
-    protected $sendMail = true;
+    protected static $key = 'notifications_identities.fund_request_feedback_requested';
 
     /**
      * @param Identity $identity
@@ -22,22 +21,19 @@ class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundR
     {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;
-        $fund = $fundRequest->fund;
 
-        $this->getNotificationService()->sendMailNotification(
+        $linkClarification = $fundRequest->fund->urlWebshop(sprintf(
+            'funds/%s/requests/%s/clarifications/%s',
+            $this->eventLog->data['fund_id'],
+            $this->eventLog->data['fund_request_id'],
+            $this->eventLog->data['fund_request_clarification_id']
+        ));
+
+        $this->sendMailNotification(
             $identity->primary_email->email,
-            new FundRequestClarificationRequestedMail(
-                $this->eventLog->data['fund_name'],
-                $this->eventLog->data['fund_request_clarification_question'],
-                $fund->urlWebshop(sprintf(
-                    'funds/%s/requests/%s/clarifications/%s',
-                    $this->eventLog->data['fund_id'],
-                    $this->eventLog->data['fund_request_id'],
-                    $this->eventLog->data['fund_request_clarification_id']
-                )),
-                $fund->urlWebshop(),
-                $fund->getEmailFrom()
-            )
+            new FundRequestClarificationRequestedMail(array_merge($this->eventLog->data, [
+                'webshop_clarification_link' => $linkClarification,
+            ]), $fundRequest->fund->getEmailFrom())
         );
     }
 }

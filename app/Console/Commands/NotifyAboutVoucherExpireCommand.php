@@ -2,8 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Events\Vouchers\VoucherExpired;
+use App\Events\Vouchers\VoucherExpireSoon;
 use App\Models\Voucher;
+use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\VoucherQuery;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class NotifyAboutVoucherExpireCommand extends Command
 {
@@ -19,7 +26,7 @@ class NotifyAboutVoucherExpireCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Send vouchers expiration warning email 3 and 6 weeks before expiration.';
+    protected $description = 'Send vouchers expiration warning email 4 weeks before expiration.';
 
     /**
      * Execute the console command.
@@ -28,13 +35,109 @@ class NotifyAboutVoucherExpireCommand extends Command
      */
     public function handle(): void
     {
-        try {
-            Voucher::checkVoucherExpireQueue(3 * 7);
-            Voucher::checkVoucherExpireQueue(6 * 7);
-        } catch (\Exception $e) {
-            if ($logger = logger()) {
-                $logger->error($e->getMessage());
-            }
+        $interval3Weeks = [now(), now()->addWeeks(3)];
+        $interval6Weeks = [now()->addWeeks(3)->addDay(), now()->addWeeks(6)];
+
+        $expiredVouchers = $this->getExpiredVouchers();
+        $expiringVouchers3Weeks = $this->getExpiringVouchers($interval3Weeks[0], $interval3Weeks[1]);
+        $expiringVouchers6Weeks = $this->getExpiringVouchers($interval6Weeks[0], $interval6Weeks[1]);
+
+        foreach ($expiringVouchers3Weeks as $voucher) {
+            VoucherExpireSoon::dispatch($voucher);
         }
+
+        foreach ($expiringVouchers6Weeks as $voucher) {
+            VoucherExpireSoon::dispatch($voucher);
+        }
+
+        foreach ($expiredVouchers as $voucher) {
+            VoucherExpired::dispatch($voucher);
+        }
+    }
+
+    /**
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return Collection
+     */
+    public function getExpiringVouchers(Carbon $startDate, Carbon $endDate): Collection
+    {
+        $builder = $this->queryVouchers(
+            VoucherQuery::whereNotExpiredAndActive(Voucher::query()),
+            Voucher::EVENT_EXPIRING_SOON_BUDGET,
+            Voucher::EVENT_EXPIRING_SOON_PRODUCT
+        )->whereBetween('expire_at', [
+            $startDate->format('Y-m-d'),
+            $endDate->format('Y-m-d'),
+        ]);
+
+        return $builder->with('fund', 'fund.organization')->get();
+    }
+
+    /**
+     * @return Builder[]|\Illuminate\Database\Eloquent\Collection
+     */
+    private function getExpiredVouchers(): Collection
+    {
+        $builder = $this->queryVouchers(
+            Voucher::query(),
+            Voucher::EVENT_EXPIRED_BUDGET,
+            Voucher::EVENT_EXPIRED_PRODUCT
+        )->where('expire_at', now()->format('Y-m-d'));
+
+        return $builder->with('fund', 'fund.organization')->get();
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $budgetEvent
+     * @param string $productEvent
+     * @return Builder
+     */
+    protected function queryVouchers(
+        Builder $builder,
+        string  $budgetEvent,
+        string $productEvent
+    ): Builder {
+        $builder->where(function(Builder $builder) use ($budgetEvent, $productEvent) {
+            // budget vouchers
+            $builder->where(function(Builder $builder) use ($budgetEvent) {
+                $builder->whereNull('product_id');
+                $builder->whereDoesntHave('logs', function(Builder $builder) use ($budgetEvent) {
+                    $builder->where('event', $budgetEvent);
+                });
+            });
+
+            // product vouchers
+            $builder->orWhere(function(Builder $builder) use ($productEvent) {
+                $builder->whereNotNull('product_id');
+                $builder->whereDoesntHave('transactions');
+
+                $builder->whereDoesntHave('logs', function(Builder $builder) use ($productEvent) {
+                    $builder->where('event', $productEvent);
+                });
+            });
+        });
+
+        $builder->whereNull('parent_id');
+        $builder->whereNull('product_reservation_id');
+        $builder->whereNotNull('identity_address');
+
+        return $builder->whereHas('fund', function(Builder $builder) {
+            $this->validFundsQuery($builder);
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    protected function validFundsQuery(Builder $builder): Builder
+    {
+        $builder->whereHas('fund_config', function(Builder $builder) {
+            $builder->whereHas('implementation');
+        });
+
+        return FundQuery::whereActiveFilter($builder);
     }
 }

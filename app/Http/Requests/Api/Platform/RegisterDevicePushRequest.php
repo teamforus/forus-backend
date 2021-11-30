@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class RegisterDevicePushRequest extends FormRequest
+class RegisterDevicePushRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

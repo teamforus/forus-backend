@@ -75,6 +75,7 @@ class ImplementationPolicy
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function updateEmail(
         $identity_address,
@@ -86,6 +87,27 @@ class ImplementationPolicy
         }
 
         return $organization->identityCan($identity_address, 'manage_implementation');
+    }
+
+    /**
+     * Determine whether the user can update the implementation.
+     *
+     * @param $identity_address
+     * @param Implementation $implementation
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function updateEmailBranding(
+        $identity_address,
+        Implementation $implementation,
+        Organization $organization
+    ): bool {
+        if (!$this->checkIntegrity($implementation, $organization)) {
+            return false;
+        }
+
+        return $organization->identityCan($identity_address, 'manage_implementation_cms');
     }
 
     /**

@@ -2,26 +2,22 @@
 
 namespace App\Events\Funds;
 
+use App\Models\Fund;
 use App\Models\FundProvider;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
 
-class FundProviderApplied
+class FundProviderApplied extends BaseFundEvent
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    private $fund;
     private $fundProvider;
 
     /**
      * Create a new event instance.
      *
+     * @param Fund $fund
      * @param FundProvider $fundProvider
      */
-    public function __construct(FundProvider $fundProvider)
+    public function __construct(Fund $fund, FundProvider $fundProvider)
     {
+        parent::__construct($fund);
         $this->fundProvider = $fundProvider;
     }
 
@@ -30,18 +26,8 @@ class FundProviderApplied
      *
      * @return FundProvider
      */
-    public function getFundProvider()
+    public function getFundProvider(): FundProvider
     {
         return $this->fundProvider;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return \Illuminate\Broadcasting\Channel|array
-     */
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-name');
     }
 }
