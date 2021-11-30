@@ -132,6 +132,30 @@
             "content": "Er is een nieuwe aanvraag voor :fund_name"
         }
     },
+    "notifications_bank_connections.activated": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Nieuwe verbinding met :bank_name tot stand gebracht.",
+            "content": "Gefeliciteerd! De verbinding met :bank_name is tot stand gebracht. U kunt nu via Forus uw banktransacties uitlezen en bulk betalingen initieren."
+        }
+    },
+    "notifications_bank_connections.disabled_invalid": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": "Uw verbinding met :bank_name is gedeactiveerd.",
+            "content": "Er is een autorisatie fout ontstaan bij uw :bank_name integratie daarom is deze nu uitgeschakeld.\n Geef Forus opnieuw toestemming om de integratie te herstellen."
+        }
+    },
+    "notifications_bank_connections.monetary_account_changed": {
+        "mail": {},
+        "push": {},
+        "database": {
+            "title": ":organization_name actieve IBAN :bank_name is veranderd.",
+            "content": "De actieve IBAN voor de :bank_name integratie van :organization_name is veranderd naar :bank_connection_account_monetary_account_iban."
+        }
+    },
     "notifications_identities.fund_request_created": {
         "mail": {
             "title": "Uw :fund_name aanvraag is ontvangen",

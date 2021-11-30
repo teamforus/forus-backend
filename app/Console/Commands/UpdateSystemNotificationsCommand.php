@@ -3,24 +3,23 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use NotificationTemplatesTableSeeder;
+use SystemNotificationsTableSeeder;
 
-class UpdateNotificationTemplatesCommand extends Command
+class UpdateSystemNotificationsCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'notifications:update-templates';
+    protected $signature = 'notifications:update-system-notifications';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Update notification templates.';
-
+    protected $description = 'Update system notification list.';
 
     /**
      * Execute the console command.
@@ -30,7 +29,7 @@ class UpdateNotificationTemplatesCommand extends Command
      */
     public function handle(): void
     {
-        (new NotificationTemplatesTableSeeder())->run();
-        echo "Templates updated!\n";
+        (new SystemNotificationsTableSeeder())->run();
+        echo "System notifications updated!\n";
     }
 }
