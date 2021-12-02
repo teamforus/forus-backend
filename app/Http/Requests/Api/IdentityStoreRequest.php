@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api;
 use App\Http\Requests\BaseFormRequest;
 use App\Rules\IdentityRecordsAddressRule;
 use App\Rules\IdentityRecordsRule;
+use Illuminate\Validation\Rule;
 
 class IdentityStoreRequest extends BaseFormRequest
 {
@@ -31,7 +32,11 @@ class IdentityStoreRequest extends BaseFormRequest
         $this->throttleWithKey('to_many_attempts', $this, 'auth');
 
         return [
-            'email' => 'required|email:strict|unique:identity_emails,email',
+            'email' => [
+                'required',
+                'email:strict',
+                Rule::unique('identity_emails', 'email')->whereNull('deleted_at'),
+            ],
             'records' => [
                 'nullable',
                 'array',
