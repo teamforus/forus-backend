@@ -5,7 +5,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
-use App\Rules\IdentityEmailExistsRule;
 
 /**
  * Class SendVoucherRequest
@@ -35,10 +34,7 @@ class SendVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'email' => [
-                'required',
-                new IdentityEmailExistsRule()
-            ],
+            'email' => 'required|email:strict',
         ];
     }
 }
