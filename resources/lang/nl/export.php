@@ -39,8 +39,17 @@ return [
         'bsn' => 'Burgerservicenummer',
         'fund_name' => 'Fondsnaam',
         'status' => 'Status',
-        'validator' => 'Validator',
-        'created_at' => 'Indien datum',
+        'state-values' => [
+            'pending' => 'Wachtend',
+            'declined' => 'Geweigerd',
+            'approved' => 'Geaccepteerd',
+            'approved_partly' => 'Aanvulling gevraagd',
+        ],
+        'validator'         => 'Validator',
+        'created_at'        => 'Indien datum',
+        'resolved_at'       => 'Oplosdatum',
+        'lead_time_days'    => 'Doorlooptijd (dagen)',
+        'lead_time_locale'  => 'Doorlooptijd (leesbaar)',
     ],    
 
     'voucher_transactions'    => [
