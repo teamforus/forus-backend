@@ -334,10 +334,10 @@ class Voucher extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class)->where(function(Builder $builder) {
-            /** @var Builder|SoftDeletes $builder */
-            return $builder->withTrashed();
-        });
+        /** @var Builder|SoftDeletes $relationQuery */
+        $relationQuery = $this->belongsTo(Product::class, 'product_id', 'id');
+
+        return $relationQuery->withTrashed();
     }
 
     /**

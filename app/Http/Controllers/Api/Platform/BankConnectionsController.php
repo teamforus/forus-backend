@@ -38,10 +38,10 @@ class BankConnectionsController extends Controller
 
             $bankConnection->update(compact('code', 'access_token'));
             $bankConnection->updateContext($bankConnection->makeNewContext());
-            $bankConnection->updateMonetaryAccount($bankConnection->getMonetaryAccounts()[0] ?? []);
+            $bankConnection->setMonetaryAccounts($bankConnection->getMonetaryAccounts());
             $bankConnection->setActive();
         } catch (BadResponseException $exception) {
-            $errorBody = @json_decode($exception->getResponse()->getBody()->getContents(), true);
+            $errorBody = json_decode($exception->getResponse()->getBody()->getContents(), true);
 
             return $this->redirectWithQuery($bankConnection, $dashboardUrl, [
                 'error' => $errorBody['error'] ?? 'Unknown error.',

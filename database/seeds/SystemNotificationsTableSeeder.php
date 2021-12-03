@@ -77,7 +77,11 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.voucher_subsidy_transaction" => ["database", "mail", "push"],
         "notifications_identities.product_voucher_transaction" => ["database", "push"],
 
-        "notifications_fund_providers.bunq_transaction_success" => ["push"],
+        "notifications_fund_providers.bunq_transaction_success" => ["database", "push"],
+
+        "notifications_bank_connections.activated" => ["database"],
+        "notifications_bank_connections.disabled_invalid" => ["database"],
+        "notifications_bank_connections.monetary_account_changed" => ["database"],
 
         "notifications_physical_card_requests.physical_card_request_created" => [''], // TODO can database notifications be removed
     ];
