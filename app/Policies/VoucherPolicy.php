@@ -56,6 +56,10 @@ class VoucherPolicy
             $this->deny('no_permission_to_make_vouchers');
         }
 
+        if (!$fund->fund_config->is_configured) {
+            $this->deny('Fund not configured.');
+        }
+
         if (!$organization->identityCan($identity_address, 'manage_vouchers')) {
             $this->deny('no_manage_vouchers_permission');
         }
@@ -92,6 +96,7 @@ class VoucherPolicy
     ): bool {
         return $organization->identityCan($identity_address, 'manage_vouchers') &&
             ($voucher->fund->organization_id === $organization->id) &&
+            ($voucher->fund->fund_config->is_configured) &&
             !$voucher->deactivated &&
             !$voucher->is_granted;
     }
@@ -109,6 +114,7 @@ class VoucherPolicy
     ): bool {
         return $organization->identityCan($identity_address, 'manage_vouchers') &&
             ($voucher->fund->organization_id === $organization->id) &&
+            ($voucher->fund->fund_config->is_configured) &&
             !$voucher->activated &&
             !$voucher->expired;
     }
@@ -157,6 +163,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $this->assignSponsor($identity_address, $voucher, $organization) &&
+            $voucher->fund->fund_config->is_configured &&
             !$voucher->activation_code &&
             !$voucher->deactivated &&
             !$voucher->expired;
@@ -171,6 +178,7 @@ class VoucherPolicy
     public function redeem(string $identity_address, Voucher $voucher): bool
     {
         return ($identity_address && $voucher->exists) &&
+            $voucher->fund->fund_config->is_configured &&
             $voucher->activation_code &&
             !$voucher->identity_address &&
             !$voucher->deactivated;
@@ -209,6 +217,7 @@ class VoucherPolicy
     public function sendEmail(string $identity_address, Voucher $voucher): bool
     {
         return $this->show($identity_address, $voucher) &&
+            $voucher->fund->fund_config->is_configured &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -232,6 +241,7 @@ class VoucherPolicy
     {
         return $this->show($identity_address, $voucher) &&
             Gate::allows('create', [PhysicalCard::class, $voucher]) &&
+            $voucher->fund->fund_config->is_configured &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }
@@ -248,6 +258,7 @@ class VoucherPolicy
         Organization $organization
     ): bool {
         return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            $voucher->fund->fund_config->is_configured &&
             $voucher->fund->fund_config->allow_physical_cards &&
             $voucher->fund->organization_id == $organization->id &&
             !$voucher->deactivated &&
@@ -263,6 +274,10 @@ class VoucherPolicy
     public function useAsProvider(string $identity_address, Voucher $voucher): bool
     {
         $fund = $voucher->fund;
+
+        if (!$voucher->fund->fund_config->is_configured) {
+            $this->deny('Fund not configured.');
+        }
 
         // fund should not be expired
         if ($voucher->expired) {
@@ -371,7 +386,6 @@ class VoucherPolicy
             ])->pluck('organization_id')->diff($providersApproved)->values();
         } else {
             $this->deny('unknown_fund_type');
-            return false;
         }
 
         $providersApplied = $fund->providers()->pluck('organization_id');

@@ -34,15 +34,12 @@ class FundResource extends Resource
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
             'organization_id', 'state', 'notification_amount', 'tags', 'type', 'archived',
+            'request_btn_text', 'request_btn_url',
+        ]), $fund->fund_config->only([
+            'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
         ]), [
-            'key' => $fund->fund_config->key ?? '',
-            'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
-            'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
-            'allow_direct_requests' => $fund->fund_config->allow_direct_requests ?? false,
-            'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers ?? false,
-            'request_btn_text' => $fund->fund_config->request_btn_text,
-            'request_btn_link' => $fund->fund_config->request_btn_link,
-            'backoffice_fallback' => $fund->fund_config->backoffice_fallback ?? false,
+            'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
@@ -54,7 +51,6 @@ class FundResource extends Resource
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
-            'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'has_pending_fund_requests' => $fund->fund_requests()->where([
                 'identity_address' => auth_address(),
                 'state' => FundRequest::STATE_PENDING,

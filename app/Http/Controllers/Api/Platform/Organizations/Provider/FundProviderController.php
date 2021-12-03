@@ -13,6 +13,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\Tag;
+use App\Scopes\Builders\FundQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
@@ -42,7 +43,9 @@ class FundProviderController extends Controller
 
         $fundsQuery = Implementation::queryFundsByState([
             Fund::STATE_ACTIVE, Fund::STATE_PAUSED
-        ])->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
+        ])->where(function(Builder $builder) {
+            FundQuery::whereIsConfiguredByForus($builder);
+        })->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
 
         $meta = [
             'organizations' => Organization::whereHas('funds', static function(

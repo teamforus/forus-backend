@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Resources\MediaResource;
+use App\Scopes\Builders\FundQuery;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
@@ -338,7 +339,9 @@ class Implementation extends Model
     public static function queryFundsByState($states): Builder
     {
         /** @var Builder $query */
-        $query = Fund::query()->has('fund_config')->whereIn('state', (array)$states);
+        $query = Fund::where(function(Builder $builder) {
+            FundQuery::whereIsConfiguredByForus($builder);
+        })->whereIn('state', (array) $states);
 
         if (self::activeKey() !== self::KEY_GENERAL) {
             $query->whereHas('fund_config.implementation', static function (Builder $builder) {

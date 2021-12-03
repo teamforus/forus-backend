@@ -4,10 +4,14 @@ namespace App\Http\Requests\Api\Platform\Prevalidations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
-use App\Models\Organization;
+use App\Models\Prevalidation;
 use App\Rules\PrevalidationItemHasRequiredKeysRule;
 use App\Rules\PrevalidationItemRule;
+use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\OrganizationQuery;
 use App\Services\Forus\Record\Models\RecordType;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class StorePrevalidationsRequest extends BaseFormRequest
@@ -19,7 +23,7 @@ class StorePrevalidationsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('store', Prevalidation::class);
     }
 
     /**
@@ -34,16 +38,14 @@ class StorePrevalidationsRequest extends BaseFormRequest
         return array_merge([
             'fund_id' => [
                 'required',
-                Rule::in($this->getAvailableFunds())
+                Rule::in($this->getAvailableFunds()->pluck('id')->toArray())
             ],
             'data' => [
                 'required',
                 'array',
                 new PrevalidationItemHasRequiredKeysRule($fund),
             ],
-            'data.*' => [
-                'required',
-            ]
+            'data.*' => 'required'
         ], array_fill_keys($this->getRequiredKeysRules($fund), [
             'required', new PrevalidationItemRule($fund)
         ]));
@@ -51,27 +53,26 @@ class StorePrevalidationsRequest extends BaseFormRequest
 
     /**
      * @param Fund|null $fund
-     * @param string $prefix
      * @return array
      */
-    private function getRequiredKeysRules(?Fund $fund, string $prefix = 'data.'): array
+    private function getRequiredKeysRules(?Fund $fund): array
     {
         // all required keys must be present and validated by criteria
-        return $fund ? array_map(static function($key) use ($prefix) {
-            return $prefix . $key;
+        return $fund ? array_map(static function($key) {
+            return "data.$key";
         }, $fund->requiredPrevalidationKeys()->toArray()) : [];
     }
 
     /**
-     * @return array
+     * @return Builder
      */
-    private function getAvailableFunds(): array
+    private function getAvailableFunds(): Builder
     {
-        return Organization::queryByIdentityPermissions($this->auth_address(), [
-            'validate_records'
-        ])->get()->pluck('funds')->flatten()->filter(static function ($fund) {
-            return $fund->state !== Fund::STATE_CLOSED;
-        })->pluck('id')->toArray();
+        return Fund::whereHas('organization', function(Builder $builder) {
+            OrganizationQuery::whereHasPermissions($builder, $this->auth_address(), 'validate_records');
+        })->where(function(Builder $builder) {
+            FundQuery::whereIsConfiguredByForus($builder);
+        })->where('state', '!=', Fund::STATE_CLOSED);
     }
 
     /**
@@ -80,9 +81,7 @@ class StorePrevalidationsRequest extends BaseFormRequest
     public function attributes(): array
     {
         return RecordType::get()->mapWithKeys(static function(RecordType $recordType) {
-            return [
-                sprintf('data.%s', $recordType->key) => strtolower($recordType->name)
-            ];
+            return ["data.$recordType->key" => strtolower($recordType->name)];
         })->toArray();
     }
 
@@ -92,9 +91,7 @@ class StorePrevalidationsRequest extends BaseFormRequest
     public function messages(): array
     {
         if ($fund = Fund::find($this->input('fund_id'))) {
-            return [
-                "data.{$fund->fund_config->csv_primary_key}.in" => trans('validation.unique')
-            ];
+            return ["data.{$fund->fund_config->csv_primary_key}.in" => trans('validation.unique')];
         }
 
         return parent::messages();

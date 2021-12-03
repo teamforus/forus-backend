@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
  * @property string $request_btn_text
- * @property string $request_btn_link
+ * @property string $request_btn_url
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property bool $backoffice_enabled
@@ -87,7 +87,7 @@ class FundConfig extends Model
         'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
         'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
-        'allow_fund_requests', 'allow_prevalidations', 'request_btn_text', 'request_btn_link'
+        'allow_fund_requests', 'allow_prevalidations', 'request_btn_text', 'request_btn_url'
     ];
 
     /**
