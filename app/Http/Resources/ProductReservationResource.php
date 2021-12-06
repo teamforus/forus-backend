@@ -59,7 +59,7 @@ class ProductReservationResource extends JsonResource
         }
 
         return array_merge($reservation->only([
-            'id', 'state', 'amount', 'code', 'first_name', 'last_name', 'user_note',
+            'id', 'state', 'state_locale', 'amount', 'code', 'first_name', 'last_name', 'user_note',
         ]), [
             'created_at' => $reservation->created_at ? $reservation->created_at->format('Y-m-d H:i:s') : null,
             'created_at_locale' => format_date_locale($reservation->created_at),
