@@ -45,7 +45,7 @@ class SponsorVoucherTransactionResource extends Resource
         return array_merge($voucherTransaction->only([
             "id", "organization_id", "product_id", "state_locale",
             "updated_at", "address", "state", "payment_id", 'voucher_transaction_bulk_id',
-            "transaction_cost", 'attempts',
+            "transaction_cost", 'attempts', 'transfer_at',
         ]), [
             'created_at' => $createdAt ? $createdAt->format('Y-m-d H:i:s') : null,
             'created_at_locale' => format_datetime_locale($voucherTransaction->created_at),
@@ -53,6 +53,7 @@ class SponsorVoucherTransactionResource extends Resource
             'updated_at_locale' => format_datetime_locale($voucherTransaction->updated_at),
             'amount' => currency_format($voucherTransaction->amount),
             'timestamp' => $voucherTransaction->created_at->timestamp,
+            'transaction_in' => $voucherTransaction->daysBeforeTransaction(),
             "organization" => collect($voucherTransaction->provider)->only("id", "name"),
             "fund" => collect($voucherTransaction->voucher->fund)->only("id", "name", "organization_id"),
             'notes' => VoucherTransactionNoteResource::collection($voucherTransaction->notes_sponsor),
