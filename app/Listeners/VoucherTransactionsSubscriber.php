@@ -39,13 +39,13 @@ class VoucherTransactionsSubscriber
         }
 
         $eventMeta = [
-            'fund'              => $voucher->fund,
-            'voucher'           => $voucher,
-            'sponsor'           => $voucher->fund->organization,
-            'transaction'       => $transaction,
-            'provider'          => $transaction->provider,
-            'product'           => $transaction->product,
-            'implementation'    => $fund->getImplementation(),
+            'fund'                  => $voucher->fund,
+            'voucher'               => $voucher,
+            'sponsor'               => $voucher->fund->organization,
+            'provider'              => $transaction->provider,
+            'product'               => $transaction->product,
+            'voucher_transaction'   => $transaction,
+            'implementation'        => $fund->getImplementation(),
         ];
 
         if ($type == 'product') {

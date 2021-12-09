@@ -40,6 +40,10 @@ class VouchersController extends Controller
             $query->whereNotNull('product_id');
         }
 
+        if ($request->has('state')) {
+            $query->where('state', $request->input('state'));
+        }
+
         // todo: remove fallback pagination 1000, when apps are ready
         $vouchers = $query
             ->with(VoucherCollectionResource::load())

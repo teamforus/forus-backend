@@ -39,8 +39,6 @@ class PhysicalCardRequestsController extends Controller
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
         ]));
 
-        VoucherPhysicalCardRequestedEvent::broadcast($voucherToken->voucher, $cardRequest);
-
         return new PhysicalCardRequestResource($cardRequest);
     }
 

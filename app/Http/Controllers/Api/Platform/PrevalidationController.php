@@ -26,9 +26,8 @@ class PrevalidationController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function store(
-        StorePrevalidationsRequest $request
-    ): PrevalidationResource {
+    public function store(StorePrevalidationsRequest $request): PrevalidationResource
+    {
         $this->authorize('store', Prevalidation::class);
 
         /** @var Prevalidation $prevalidation */

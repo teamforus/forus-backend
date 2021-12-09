@@ -40,24 +40,27 @@ class ValidatorFundRequestResource extends Resource
     {
         $recordRepo = resolve('forus.services.record');
         $fundRequest = $this->resource;
+        $criteria = FundCriterionResource::collection($fundRequest->fund->criteria);
 
-        return array_merge(array_only($fundRequest->toArray(), [
-            'id', 'state', 'fund_id', 'note', 'created_at', 'updated_at'
+        return array_merge($fundRequest->only([
+            'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
         ]), [
+            'created_at' => $fundRequest->created_at ? $fundRequest->created_at->format('Y-m-d H:i:s') : null,
+            'updated_at' => $fundRequest->updated_at ? $fundRequest->updated_at->format('Y-m-d H:i:s') : null,
             'fund' => array_merge($fundRequest->fund->only([
                 'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
                 'tags', 'type',
-            ]), [
-                'criteria' => FundCriterionResource::collection($fundRequest->fund->criteria),
-            ]),
+            ]), compact('criteria')),
             'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
+            'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
             'records' => $this->getRecordsData($request, $fundRequest),
         ]);
     }
 
-    public function getRecordsData(Request $request, FundRequest $fundRequest): array {
+    public function getRecordsData(Request $request, FundRequest $fundRequest): array
+    {
         /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);
         $employee = $organization->findEmployee(auth_address()) or abort(403);

@@ -172,7 +172,6 @@ class FundSubscriber
         $eventLog = $fund->log($fund::EVENT_FUND_ENDED, $this->getFundLogModels($fund));
 
         FundEndedNotification::send($eventLog);
-        IdentityRequesterFundEndedNotification::send($eventLog);
 
         $query = $fund->providers()->getQuery();
         $fundProviders = FundProviderQuery::whereApprovedForFundsFilter($query, $fund->id)->get();

@@ -46,6 +46,8 @@ use Carbon\Carbon;
  * @property string|null $description
  * @property string|null $description_text
  * @property string|null $description_short
+ * @property string $request_btn_text
+ * @property string|null $request_btn_url
  * @property string|null $faq_title
  * @property string $type
  * @property string $state
@@ -155,6 +157,8 @@ use Carbon\Carbon;
  * @method static Builder|Fund whereNotifiedAt($value)
  * @method static Builder|Fund whereOrganizationId($value)
  * @method static Builder|Fund wherePublic($value)
+ * @method static Builder|Fund whereRequestBtnText($value)
+ * @method static Builder|Fund whereRequestBtnUrl($value)
  * @method static Builder|Fund whereStartDate($value)
  * @method static Builder|Fund whereState($value)
  * @method static Builder|Fund whereType($value)
@@ -214,6 +218,7 @@ class Fund extends Model
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
+        'request_btn_text', 'request_btn_url',
     ];
 
     protected $hidden = [
@@ -374,6 +379,30 @@ class Fund extends Model
         ]), $employee);
 
         return $this;
+    }
+
+    /**
+     * @param array $attributes
+     * @return void
+     */
+    public function makeFundConfig(array $attributes = []): void
+    {
+        if (!$this->fund_config()->exists()) {
+            $this->fund_config()->create()->forceFill($attributes)->save();
+        }
+    }
+
+    /**
+     * @param array $attributes
+     * @return void
+     */
+    public function updateFundsConfig(array $attributes): void
+    {
+        $fields = $this->isWaiting() ? [
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+        ] : [];
+
+        $this->fund_config->forceFill(array_only($attributes, $fields))->save();
     }
 
     /**
@@ -879,27 +908,24 @@ class Fund extends Model
      * Update fund state by the start and end dates
      */
     public static function checkStateQueue(): void {
-        $funds = self::whereHas('fund_config', static function (Builder $query) {
-            return $query->where('is_configured', true);
-        })->whereDate('start_date', '<=', now())->get();
+        /** @var Fund[] $funds */
+        $funds = FundQuery::whereIsConfiguredByForus(static::query())
+            ->whereDate('start_date', '<=', now())->get();
 
         foreach ($funds as $fund) {
-            if ($fund->state === self::STATE_PAUSED &&
-                $fund->start_date->startOfDay()->isPast()) {
+            if ($fund->isPaused() && $fund->start_date->startOfDay()->isPast()) {
                 $fund->changeState(self::STATE_ACTIVE);
                 FundStartedEvent::dispatch($fund);
             }
 
-            $expirationNotified = $fund->logs()->where([
-                'event' => self::EVENT_FUND_EXPIRING
-            ])->exists();
+            $expirationNotified = $fund->logs()->where('event', self::EVENT_FUND_EXPIRING)->exists();
+            $isTimeToNotify = $fund->end_date->clone()->subDays(14)->isPast();
 
-            if (!$expirationNotified && $fund->state !== self::STATE_CLOSED &&
-                $fund->end_date->clone()->subDays(14)->isPast()) {
+            if (!$expirationNotified && !$fund->isClosed() && $isTimeToNotify) {
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if ($fund->state !== self::STATE_CLOSED && $fund->end_date->isPast()) {
+            if (!$fund->isClosed() && $fund->end_date->isPast()) {
                 $fund->changeState(self::STATE_CLOSED);
                 FundEndedEvent::dispatch($fund);
             }
@@ -1034,6 +1060,38 @@ class Fund extends Model
     public function isArchived(): bool
     {
         return $this->archived;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->state === static::STATE_ACTIVE;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWaiting(): bool
+    {
+        return $this->state === static::STATE_WAITING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaused(): bool
+    {
+        return $this->state === static::STATE_PAUSED;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isClosed(): bool
+    {
+        return $this->state === static::STATE_CLOSED;
     }
 
     /**

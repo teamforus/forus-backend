@@ -55,6 +55,10 @@ class FundsController extends Controller
             $query->where('public', true);
         }
 
+        if ($request->input('configured', false)) {
+            $query = FundQuery::whereIsConfiguredByForus($query);
+        }
+
         return FundResource::collection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
         ])->paginate($request->input('per_page')));
@@ -68,25 +72,24 @@ class FundsController extends Controller
      * @return FundResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function store(
-        StoreFundRequest $request,
-        Organization $organization
-    ): FundResource {
+    public function store(StoreFundRequest $request, Organization $organization): FundResource
+    {
         $this->authorize('show', $organization);
         $this->authorize('store', [Fund::class, $organization]);
 
         $auto_requests_validation =
-            !$request->input('default_validator_employee_id') ? null :
-                $request->input('auto_requests_validation');
+            $request->input('default_validator_employee_id') &&
+            $request->input('auto_requests_validation');
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'description_short', 'state', 'start_date', 'end_date', 'type',
-            'notification_amount', 'default_validator_employee_id', 'faq_title',
-        ], [
+            'name', 'description', 'description_short', 'start_date', 'end_date', 'type',
+            'notification_amount', 'default_validator_employee_id',
+            'faq_title', 'request_btn_text', 'request_btn_url',
+        ]), [
             'state' => Fund::STATE_WAITING,
             'auto_requests_validation' => $auto_requests_validation,
-        ])));
+        ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
@@ -100,6 +103,10 @@ class FundsController extends Controller
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
+
+        $fund->makeFundConfig($request->only([
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+        ]));
 
         FundCreatedEvent::dispatch($fund);
 
@@ -126,6 +133,7 @@ class FundsController extends Controller
      * @param Organization $organization
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function storeFaqValidate(
         StoreFundFaqRequest $request,
@@ -169,30 +177,30 @@ class FundsController extends Controller
         $this->authorize('update', [$fund, $organization]);
 
         $auto_requests_validation =
-            !$request->input('default_validator_employee_id') ? null :
-                $request->input('auto_requests_validation');
+            $request->input('default_validator_employee_id') &&
+            $request->input('auto_requests_validation');
 
-        if ($fund->state === Fund::STATE_WAITING) {
-            $params = array_merge($request->only([
-                'name', 'description', 'description_short', 'start_date', 'end_date',
-                'notification_amount', 'default_validator_employee_id'
-            ]), [
-                'auto_requests_validation' => $auto_requests_validation
-            ]);
-        } else {
-            $params = array_merge($request->only([
-                'name', 'description', 'description_short', 'notification_amount',
-                'default_validator_employee_id', 'faq_title',
-            ]), [
-                'auto_requests_validation' => $auto_requests_validation
-            ]);
+        $params = array_merge($request->only([
+            'name', 'description', 'description_short', 'notification_amount',
+            'default_validator_employee_id', 'request_btn_text', 'request_btn_url', 'faq_title',
+        ]), [
+            'auto_requests_validation' => $auto_requests_validation
+        ]);
+
+        if ($fund->isWaiting()) {
+            $params = array_merge($params, $request->only('start_date', 'end_date'));
         }
 
-        FundUpdatedEvent::dispatch($fund->updateModel($params));
-
+        $fund->updateModel($params);
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
         $fund->syncFaqOptional($request->input('faq'));
+
+        $fund->updateFundsConfig($request->only([
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests'
+        ]));
+
+        FundUpdatedEvent::dispatch($fund);
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));

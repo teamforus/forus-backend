@@ -33,6 +33,9 @@ class StoreProductReservationRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'first_name' => 'required|string|max:20',
+            'last_name' => 'required|string|max:20',
+            'user_note' => 'nullable|string|max:400',
             'voucher_address' => [
                 'required',
                 new IdentityVoucherAddressRule($this->auth_address(), Voucher::TYPE_BUDGET),

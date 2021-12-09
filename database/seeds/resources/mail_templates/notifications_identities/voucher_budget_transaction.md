@@ -1,4 +1,4 @@
-# Er is een bedrag van uw :fund_name afgeschreven
+# Er is een bedrag van uw tegoed afgeschreven
 
 Beste deelnemer,
 

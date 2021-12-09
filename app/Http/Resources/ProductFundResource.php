@@ -32,9 +32,7 @@ class ProductFundResource extends JsonResource
             'start_date_locale' => format_date_locale($fund->start_date),
             'end_date_locale' => format_date_locale($fund->end_date),
             'organization' => new OrganizationResource($fund->organization),
-            'implementation' => new ImplementationResource(
-                $fund->fund_config->implementation ?? null
-            ),
+            'implementation' => new ImplementationResource($fund->fund_config->implementation),
         ]);
     }
 }

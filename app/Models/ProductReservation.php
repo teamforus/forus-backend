@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Product $product
@@ -123,6 +124,7 @@ class ProductReservation extends Model
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
+        'first_name', 'last_name', 'user_note',
     ];
 
     /**
@@ -194,6 +196,14 @@ class ProductReservation extends Model
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
+    }
+
+    /**
+     * @return string
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return trans('states/product_reservations.' . $this->state);
     }
 
     /**

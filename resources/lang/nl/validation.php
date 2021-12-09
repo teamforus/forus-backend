@@ -153,7 +153,7 @@ return [
     'prevalidation_invalid_record_key' => 'Een veldtype dat is opgenomen in het bestand bestaat niet.',
     'validation.prevalidation_invalid_type_primary_email' => 'Het primaire e-mailadres veld is een systeemveld en kan hier niet gebruikt worden.',
     'validation.prevalidation_missing_primary_key' => 'Het sleutelveld ontbreekt in het bestand.',
-    'fund_request_request_field_incomplete' => 'Typ een bericht. Dit veld mag niet leeg zijn.',
+    'fund_request_request_field_incomplete' => 'Dit veld mag niet leeg zijn.',
     'email_already_used' => 'Dit e-mailadres is al ingenomen door een ander account.',
     'iban' => 'Het IBAN-nummer is verplicht en moet geldig zijn.',
     'kvk' => 'Het KVK-nummer is verplicht en moet geldig zijn.',
@@ -228,6 +228,9 @@ return [
         'limit_total' => "totaal aanbod",
         'city' => "plaats",
         'limit_total_per_identity' => "limiet per aanvrager",
+        'first_name' => "voornaam",
+        'last_name' => "achternaam",
+        'user_note' => "opmerking",
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',
