@@ -148,6 +148,7 @@ class Voucher extends Model
     public const STATE_ACTIVE = 'active';
     public const STATE_PENDING = 'pending';
     public const STATE_DEACTIVATED = 'deactivated';
+    public const STATE_EXPIRED = 'expired';
 
     public const EVENTS_TRANSACTION = [
         self::EVENT_TRANSACTION,
@@ -169,6 +170,7 @@ class Voucher extends Model
         self::STATE_ACTIVE,
         self::STATE_PENDING,
         self::STATE_DEACTIVATED,
+        self::STATE_EXPIRED
     ];
 
     protected $withCount = [
@@ -583,7 +585,9 @@ class Voucher extends Model
         });
 
         if ($state = $request->input('state')) {
-            $query->where('state', $state);
+            $query = $state == 'expired' ? VoucherQuery::whereExpired($query) : VoucherQuery::whereNotExpired($query)->where(
+                'state', $state
+            );
         }
 
         if ($unassignedOnly) {
