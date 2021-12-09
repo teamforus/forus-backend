@@ -14,6 +14,7 @@ class DomainMiddleware
      * @var array
      */
     private $except = [
+        'status',
         'digidStart',
         'digidResolve',
         'digidRedirect',

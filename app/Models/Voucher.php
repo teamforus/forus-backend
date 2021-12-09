@@ -7,6 +7,7 @@ use App\Events\Vouchers\ProductVoucherShared;
 use App\Events\Vouchers\VoucherAssigned;
 use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
+use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
@@ -333,10 +334,10 @@ class Voucher extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class)->where(function(Builder $builder) {
-            /** @var Builder|SoftDeletes $builder */
-            return $builder->withTrashed();
-        });
+        /** @var Builder|SoftDeletes $relationQuery */
+        $relationQuery = $this->belongsTo(Product::class, 'product_id', 'id');
+
+        return $relationQuery->withTrashed();
     }
 
     /**
@@ -778,14 +779,14 @@ class Voucher extends Model
     /**
      * @param Product $product
      * @param Employee|null $employee
-     * @param string|null $note
+     * @param array $extraData
      * @return ProductReservation
      * @throws \Exception
      */
     public function reserveProduct(
         Product $product,
         ?Employee $employee = null,
-        string $note = null
+        array $extraData = []
     ): ProductReservation {
         $isSubsidy = $this->fund->isTypeSubsidy();
         $fundProviderProduct = $isSubsidy ? $product->getSubsidyDetailsForFund($this->fund) : null;
@@ -794,14 +795,15 @@ class Voucher extends Model
         /** @var ProductReservation $reservation */
         $reservation = $this->product_reservations()->create(array_merge([
             'code'                      => ProductReservation::makeCode(),
-            'note'                      => $note,
             'amount'                    => $amount,
             'state'                     => ProductReservation::STATE_PENDING,
             'product_id'                => $product->id,
             'employee_id'               => $employee ? $employee->id : null,
             'fund_provider_product_id'  => $fundProviderProduct ? $fundProviderProduct->id : null,
-            'expire_at'                 => $this->calcExpireDateForProduct($product)
-        ], $product->only('price', 'price_type', 'price_discount')));
+            'expire_at'                 => $this->calcExpireDateForProduct($product),
+        ], array_only($extraData, [
+            'first_name', 'last_name', 'user_note', 'note',
+        ]), $product->only('price', 'price_type', 'price_discount')));
 
         $reservation->makeVoucher();
 
@@ -1073,29 +1075,20 @@ class Voucher extends Model
 
     /**
      * @param array $options
-     * @param string|null $mailToAddress
+     * @param bool $shouldNotifyRequester
      * @return PhysicalCardRequest|\Illuminate\Database\Eloquent\Model
      */
     public function makePhysicalCardRequest(
         array $options,
-        ?string $mailToAddress = null
+        bool $shouldNotifyRequester = false
     ): PhysicalCardRequest {
-        if ($mailToAddress) {
-            resolve('forus.services.notification')->requestPhysicalCard($mailToAddress, [
-                'postcode'       => $options['postcode'] ?? '',
-                'house_number'   => $options['house'] ?? '',
-                'house_addition' => $options['house_addition'] ?? '',
-                'city'           => $options['city'] ?? '',
-                'street_name'    => $options['address'] ?? '',
-                'fund_name'      => $this->fund->name,
-                'sponsor_phone'  => $this->fund->organization->phone,
-                'sponsor_email'  => $this->fund->organization->email
-            ], $this->fund->getEmailFrom());
-        }
-
-        return $this->physical_card_requests()->create(Arr::only($options, [
+        $cardRequest = $this->physical_card_requests()->create(Arr::only($options, [
             'address', 'house', 'house_addition', 'postcode', 'city', 'employee_id',
         ]));
+
+        VoucherPhysicalCardRequestedEvent::broadcast($this, $cardRequest, $shouldNotifyRequester);
+
+        return $cardRequest;
     }
 
     /**

@@ -17,6 +17,7 @@ class PermissionsTableSeeder extends Seeder
         'manage_vouchers'           => "Manage vouchers",
         'manage_implementation'     => "Manage implementation",
         'manage_implementation_cms' => "Manage implementation CMS",
+        'manage_implementation_notifications' => "Manage implementation notifications",
         'manage_bank_connections'   => "Manage bank connections",
         'manage_transaction_bulks'  => "Manage transaction bulks",
         'view_finances'             => "See financial overview",

@@ -3,6 +3,7 @@
 namespace App\Rules\Vouchers;
 
 use App\Models\Voucher;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -39,9 +40,11 @@ class IdentityVoucherAddressRule implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        $query = Voucher::whereHas('tokens', function(Builder $builder) use ($value) {
+        $query = VoucherQuery::whereNotExpiredAndActive(
+            Voucher::whereIdentityAddress($this->identity_address)
+        )->whereHas('tokens', function(Builder $builder) use ($value) {
             $builder->where('address', $value);
-        })->where('identity_address', '=', $this->identity_address);
+        });
 
         if (!is_null($this->fund_type)) {
             $query->whereHas('fund', function(Builder $builder) {

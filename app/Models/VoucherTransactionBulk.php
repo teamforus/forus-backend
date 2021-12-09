@@ -27,6 +27,7 @@ use Throwable;
  * @property int|null $bank_connection_id
  * @property int|null $payment_id
  * @property string $monetary_account_id
+ * @property string $monetary_account_iban
  * @property string $state
  * @property int $accepted_manually
  * @property int $state_fetched_times
@@ -46,6 +47,7 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk whereBankConnectionId($value)
  * @method static Builder|VoucherTransactionBulk whereCreatedAt($value)
  * @method static Builder|VoucherTransactionBulk whereId($value)
+ * @method static Builder|VoucherTransactionBulk whereMonetaryAccountIban($value)
  * @method static Builder|VoucherTransactionBulk whereMonetaryAccountId($value)
  * @method static Builder|VoucherTransactionBulk wherePaymentId($value)
  * @method static Builder|VoucherTransactionBulk whereState($value)
@@ -64,11 +66,21 @@ class VoucherTransactionBulk extends Model
     public const EVENT_ACCEPTED = 'accepted';
     public const EVENT_REJECTED = 'rejected';
 
+    public const EVENTS = [
+        self::EVENT_RESET,
+        self::EVENT_CREATED,
+        self::EVENT_SUBMITTED,
+        self::EVENT_ACCEPTED,
+        self::EVENT_REJECTED,
+    ];
+
+    public const STATE_DRAFT = 'draft';
     public const STATE_PENDING = 'pending';
     public const STATE_ACCEPTED = 'accepted';
     public const STATE_REJECTED = 'rejected';
 
     public const STATES = [
+        self::STATE_DRAFT,
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,
@@ -79,7 +91,7 @@ class VoucherTransactionBulk extends Model
      */
     protected $fillable = [
         'bank_connection_id', 'state', 'state_fetched_times', 'state_fetched_at',
-        'payment_id', 'accepted_manually', 'monetary_account_id',
+        'payment_id', 'accepted_manually', 'monetary_account_id', 'monetary_account_iban',
     ];
 
     /**
@@ -109,6 +121,7 @@ class VoucherTransactionBulk extends Model
             static::STATE_PENDING => 'In afwachting',
             static::STATE_ACCEPTED => 'Geaccepteerd',
             static::STATE_REJECTED => 'Geannuleerd',
+            static::STATE_DRAFT => 'In voorbereiding',
         ][$this->state] ?? $this->state;
     }
 
@@ -166,7 +179,7 @@ class VoucherTransactionBulk extends Model
      */
     public function fetchPayment(): DraftPayment
     {
-        return DraftPayment::get($this->payment_id)->getValue();
+        return DraftPayment::get($this->payment_id, $this->monetary_account_id)->getValue();
     }
 
     /**
@@ -191,7 +204,7 @@ class VoucherTransactionBulk extends Model
                 $transaction->forceFill([
                     'state'             => VoucherTransaction::STATE_SUCCESS,
                     'payment_id'        => $payment ? $payment->getId() : null,
-                    'iban_from'         => $this->bank_connection->monetary_account_iban,
+                    'iban_from'         => $this->monetary_account_iban,
                     'iban_to'           => $transaction->provider->iban,
                     'payment_time'      => now(),
                 ])->save();
@@ -230,10 +243,11 @@ class VoucherTransactionBulk extends Model
                 return new DraftPaymentEntry($paymentAmount, $paymentPointer, $paymentDescription);
             })->toArray();
 
-            $monetaryAccountId = $this->bank_connection->monetary_account_id;
+            $monetaryAccountId = $this->monetary_account_id;
             $payment = DraftPayment::create($transactions, 1, $monetaryAccountId);
 
             $this->updateModel([
+                'state' => self::STATE_PENDING,
                 'payment_id' => $payment->getValue(),
             ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
 
@@ -268,7 +282,9 @@ class VoucherTransactionBulk extends Model
             $builder->whereHas('voucher_transactions', function(Builder $builder) {
                 VoucherTransactionQuery::whereAvailableForBulking($builder);
             });
-        })->whereHas('bank_connection_active')->get();
+        })->whereHas('bank_connection_active', function(Builder $builder) {
+            $builder->whereHas('bank_connection_default_account');
+        })->get();
 
         foreach ($sponsors as $sponsor) {
             self::buildBulksForOrganization($sponsor);
@@ -309,9 +325,11 @@ class VoucherTransactionBulk extends Model
         }
 
         /** @var VoucherTransactionBulk $transactionsBulk */
+        $defaultAccount = $sponsor->bank_connection_active->bank_connection_default_account;
         $transactionsBulk = $sponsor->bank_connection_active->voucher_transaction_bulks()->create([
-            'state' => VoucherTransactionBulk::STATE_PENDING,
-            'monetary_account_id' => $sponsor->bank_connection_active->monetary_account_id,
+            'state' => VoucherTransactionBulk::STATE_DRAFT,
+            'monetary_account_id' => $defaultAccount->monetary_account_id,
+            'monetary_account_iban' => $defaultAccount->monetary_account_iban,
         ]);
 
         $transactionsBulk->log(self::EVENT_CREATED, $transactionsBulk->getLogModels($employee));

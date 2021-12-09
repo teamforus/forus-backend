@@ -23,6 +23,7 @@ use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
+use App\Console\Commands\UpdateSystemNotificationsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -80,6 +81,7 @@ class Kernel extends ConsoleKernel
         BankVoucherTransactionBulksBuildCommand::class,
         BankVoucherTransactionBulksUpdateStateCommand::class,
         UpdateNotificationTemplatesCommand::class,
+        UpdateSystemNotificationsCommand::class,
     ];
 
     /**
@@ -146,7 +148,7 @@ class Kernel extends ConsoleKernel
          * BankProcessFundTopUpsCommand
          */
         $schedule->command('bank:process-top-ups')
-            ->everyFiveMinutes()
+            ->everyFifteenMinutes()
             ->withoutOverlapping()
             ->onOneServer();
 

@@ -113,16 +113,12 @@ class FundQuery
 
     /**
      * @param Builder $query
-     * @param $implementation_id
+     * @param array|int $implementation_id
      * @return Builder
      */
-    public static function whereImplementationIdFilter(
-        Builder $query,
-        $implementation_id
-    ): Builder {
-        return $query->whereHas('fund_config', static function(
-            Builder $builder
-        ) use ($implementation_id) {
+    public static function whereImplementationIdFilter(Builder $query, $implementation_id): Builder
+    {
+        return $query->whereHas('fund_config', static function(Builder $builder) use ($implementation_id) {
             $builder->whereIn('implementation_id', (array) $implementation_id);
         });
     }
@@ -132,10 +128,8 @@ class FundQuery
      * @param $organization_id
      * @return Builder
      */
-    public static function whereHasProviderFilter(
-        Builder $query,
-        $organization_id
-    ): Builder {
+    public static function whereHasProviderFilter(Builder $query, $organization_id): Builder
+    {
         return $query->whereHas('providers.organization', static function(
             Builder $builder
         ) use ($organization_id) {
@@ -148,7 +142,8 @@ class FundQuery
      * @param string $q
      * @return Builder
      */
-    public static function whereQueryFilter(Builder $query, string $q): Builder {
+    public static function whereQueryFilter(Builder $query, string $q): Builder
+    {
         return $query->where(function(Builder $builder) use ($q) {
             $builder->where('name', 'LIKE', "%$q%");
             $builder->orWhere('description_text', 'LIKE', "%$q%");
@@ -161,7 +156,8 @@ class FundQuery
      * @param array $states
      * @return Builder
      */
-    public static function sortByState(Builder $query, array $states): Builder {
+    public static function sortByState(Builder $query, array $states): Builder
+    {
         foreach ($states as $state) {
             $query->orderByRaw('`funds`.`state` = ? DESC', [$state]);
         }
