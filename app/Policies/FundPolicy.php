@@ -70,6 +70,10 @@ class FundPolicy
             return $this->deny("Bank connection invalid or expired.", 403);
         }
 
+        if ($fund->is_external) {
+            return $this->deny("Topup not allowed for external funds", 403);
+        }
+
         return $hasPermission && $hasBankConnection;
     }
 
@@ -98,6 +102,7 @@ class FundPolicy
     {
         return !$fund->archived &&
             $fund->state == Fund::STATE_CLOSED &&
+            !$fund->is_external &&
             $this->update($identity_address, $fund, $organization);
     }
 
@@ -138,6 +143,10 @@ class FundPolicy
 
         if ($fund->state !== $fund::STATE_ACTIVE) {
             return $this->deny(trans('fund.state_' . $fund->state));
+        }
+
+        if ($fund->is_external) {
+            return $this->deny(trans('fund.type_external'));
         }
 
         if ($fund->fund_config->hash_partner_deny && $fund->isTakenByPartner($identity_address)) {

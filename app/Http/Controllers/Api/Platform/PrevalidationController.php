@@ -31,11 +31,13 @@ class PrevalidationController extends Controller
     ): PrevalidationResource {
         $this->authorize('store', Prevalidation::class);
 
+        $fund = Fund::find($request->input('fund_id'));
+        if ($fund->is_external) {
+            abort(403, 'prevalidation_create_no_permission');
+        }
+
         /** @var Prevalidation $prevalidation */
-        $prevalidation = Prevalidation::storePrevalidations(
-            Fund::find($request->input('fund_id')),
-            [$request->input('data')]
-        )->first();
+        $prevalidation = Prevalidation::storePrevalidations($fund, [$request->input('data')])->first();
 
         return new PrevalidationResource($prevalidation);
     }
@@ -51,8 +53,13 @@ class PrevalidationController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('store', Prevalidation::class);
 
+        $fund = Fund::find($request->input('fund_id'));
+        if ($fund->is_external) {
+            abort(403, 'prevalidation_create_no_permission');
+        }
+
         $prevalidations = Prevalidation::storePrevalidations(
-            Fund::find($request->input('fund_id')),
+            $fund,
             $request->input('data', []),
             $request->input('overwrite', [])
         );

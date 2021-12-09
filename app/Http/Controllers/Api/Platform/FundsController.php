@@ -45,7 +45,7 @@ class FundsController extends Controller
         ] : Fund::STATE_ACTIVE;
 
         $query = Fund::search($request->only([
-            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir', 'with_external',
         ]), Implementation::queryFundsByState($state));
 
         $meta = [

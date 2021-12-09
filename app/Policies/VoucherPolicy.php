@@ -52,7 +52,9 @@ class VoucherPolicy
         Fund $fund
     ): bool {
         if (($fund->organization_id !== $organization->id) ||
-            !$this->viewAnySponsor($identity_address, $organization)) {
+            !$this->viewAnySponsor($identity_address, $organization) ||
+            $fund->is_external
+        ) {
             $this->deny('no_permission_to_make_vouchers');
         }
 

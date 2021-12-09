@@ -37,6 +37,7 @@ class IndexFundRequest extends BaseFormRequest
             'order_by' => 'nullable|in:created_at',
             'order_by_dir' => 'nullable|in:asc,desc',
             'with_archived' => 'nullable|bool',
+            'with_external' => 'nullable|bool',
         ];
     }
 }

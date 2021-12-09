@@ -57,6 +57,7 @@ class FundResource extends Resource
                 'identity_address' => auth_address(),
                 'state' => FundRequest::STATE_PENDING,
             ])->exists(),
+            'is_external' => $fund->is_external
         ], $checkCriteria ? [
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&

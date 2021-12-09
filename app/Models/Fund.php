@@ -93,6 +93,7 @@ use Carbon\Carbon;
  * @property-read float $budget_used_active_vouchers
  * @property-read float $budget_used
  * @property-read float $budget_validated
+ * @property-read bool $is_external
  * @property-read string $description_html
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read Media|null $logo
@@ -194,10 +195,12 @@ class Fund extends Model
 
     public const TYPE_BUDGET = 'budget';
     public const TYPE_SUBSIDIES = 'subsidies';
+    public const TYPE_EXTERNAL = 'external';
 
     public const TYPES = [
         self::TYPE_BUDGET,
         self::TYPE_SUBSIDIES,
+        self::TYPE_EXTERNAL,
     ];
 
     /**
@@ -472,6 +475,14 @@ class Fund extends Model
     public function getBudgetReservedAttribute(): float
     {
         return round($this->budget_vouchers()->sum('amount'), 2);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsExternalAttribute(): bool
+    {
+        return $this->type == self::TYPE_EXTERNAL;
     }
 
     /**
@@ -779,6 +790,10 @@ class Fund extends Model
             $query->where('archived', false);
         }
 
+        if (!array_get($options, 'with_external', false)) {
+            $query->whereIn('type', array_diff(self::TYPES, [self::TYPE_EXTERNAL]));
+        }
+
         if ($tag = array_get($options, 'tag')) {
             $query->whereHas('tags', static function(Builder $query) use ($tag) {
                 return $query->where('key', $tag);
@@ -875,7 +890,10 @@ class Fund extends Model
             if ($fund->state === self::STATE_PAUSED &&
                 $fund->start_date->startOfDay()->isPast()) {
                 $fund->changeState(self::STATE_ACTIVE);
-                FundStartedEvent::dispatch($fund);
+
+                if (!$fund->is_external) {
+                    FundStartedEvent::dispatch($fund);
+                }
             }
 
             $expirationNotified = $fund->logs()->where([
@@ -883,11 +901,13 @@ class Fund extends Model
             ])->exists();
 
             if (!$expirationNotified && $fund->state !== self::STATE_CLOSED &&
+                !$fund->is_external &&
                 $fund->end_date->clone()->subDays(14)->isPast()) {
+
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if ($fund->state !== self::STATE_CLOSED && $fund->end_date->isPast()) {
+            if ($fund->state !== self::STATE_CLOSED && !$fund->is_external && $fund->end_date->isPast()) {
                 $fund->changeState(self::STATE_CLOSED);
                 FundEndedEvent::dispatch($fund);
             }
@@ -904,7 +924,9 @@ class Fund extends Model
             return $query->where('is_configured', true);
         })->whereIn('state', [
             self::STATE_ACTIVE, self::STATE_PAUSED
-        ])->get();
+        ])->where(
+            'type', '!=', self::TYPE_EXTERNAL
+        )->get();
 
         foreach ($funds as $fund) {
             $organization = $fund->organization;

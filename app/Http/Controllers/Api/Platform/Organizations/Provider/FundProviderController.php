@@ -42,7 +42,9 @@ class FundProviderController extends Controller
 
         $fundsQuery = Implementation::queryFundsByState([
             Fund::STATE_ACTIVE, Fund::STATE_PAUSED
-        ])->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
+        ])->where('type', '!=', Fund::TYPE_EXTERNAL)->whereNotIn(
+            'id', $organization->fund_providers()->pluck('fund_id')
+        );
 
         $meta = [
             'organizations' => Organization::whereHas('funds', static function(
@@ -108,10 +110,14 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
+        $fund_id = $request->only('fund_id');
+
+        if (Fund::find($fund_id)->is_external) {
+            abort(403, 'provider_apply_no_permission');
+        }
+
         /** @var FundProvider $fundProvider */
-        $fundProvider = $organization->fund_providers()->firstOrCreate(
-            $request->only('fund_id')
-        );
+        $fundProvider = $organization->fund_providers()->firstOrCreate($fund_id);
 
         FundProviderApplied::dispatch($fundProvider->fund, $fundProvider);
 
