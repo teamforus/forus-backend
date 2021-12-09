@@ -46,6 +46,7 @@ use Carbon\Carbon;
  * @property string|null $description
  * @property string|null $description_text
  * @property string|null $description_short
+ * @property string|null $faq_title
  * @property string $type
  * @property string $state
  * @property bool $archived
@@ -147,6 +148,7 @@ use Carbon\Carbon;
  * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
+ * @method static Builder|Fund whereFaqTitle($value)
  * @method static Builder|Fund whereId($value)
  * @method static Builder|Fund whereName($value)
  * @method static Builder|Fund whereNotificationAmount($value)
@@ -1094,7 +1096,8 @@ class Fund extends Model
      * @param array $criteria
      * @return $this
      */
-    public function syncCriteria(array $criteria): self {
+    public function syncCriteria(array $criteria): self
+    {
         // remove criteria not listed in the array
         if ($this->criteriaIsEditable()) {
             $this->criteria()->whereNotIn('id', array_filter(
@@ -1115,12 +1118,10 @@ class Fund extends Model
      * @param array $faq
      * @return $this
      */
-    public function syncFaq(array $faq): self {
+    public function syncFaq(array $faq = []): self
+    {
         // remove faq not listed in the array
-        $this->faq()->whereNotIn('id', array_filter(
-            array_pluck($faq, 'id'), static function($id) {
-            return !empty($id);
-        }))->delete();
+        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
 
         foreach ($faq as $question) {
             $this->syncQuestion($question);
@@ -1130,20 +1131,26 @@ class Fund extends Model
     }
 
     /**
+     * Update faq for existing fund when provided
+     * @param array|null $faq
+     * @return $this
+     */
+    public function syncFaqOptional(?array $faq = null): self
+    {
+        return !is_array($faq) ? $this->syncFaq($faq) : $this;
+    }
+
+    /**
      * Update faq question or create new fund question
      * @param array $question
+     * @return FundFaq|\Illuminate\Database\Eloquent\Model
      */
-    protected function syncQuestion(array $question): void {
-        /** @var FundFaq $fundFaq */
-        $fundQuestion = $this->faq()->find($question['id'] ?? null);
+    protected function syncQuestion(array $question): FundFaq
+    {
+        /** @var FundFaq $faq */
+        $faq = $this->faq()->find($question['id']) ?: $this->faq()->create();
 
-        $data_question = array_only($question, ['title', 'description']);
-
-        if ($fundQuestion) {
-            $fundQuestion->update($data_question);
-        } else {
-            $this->faq()->create($data_question);
-        }
+        return $faq->updateModel(array_only($question, ['title', 'description']));
     }
 
     /**

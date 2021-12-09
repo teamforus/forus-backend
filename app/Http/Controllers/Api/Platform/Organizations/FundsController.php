@@ -82,7 +82,7 @@ class FundsController extends Controller
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
             'name', 'description', 'description_short', 'state', 'start_date', 'end_date', 'type',
-            'notification_amount', 'default_validator_employee_id',
+            'notification_amount', 'default_validator_employee_id', 'faq_title',
         ], [
             'state' => Fund::STATE_WAITING,
             'auto_requests_validation' => $auto_requests_validation,
@@ -90,13 +90,11 @@ class FundsController extends Controller
 
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
+        $fund->syncFaq($request->input('faq'));
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));
         }
-
-        $fund->syncFaq($request->input('faq'));
-        $fund->fund_config()->create($request->only('faq_title'));
 
         if (config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
@@ -184,7 +182,7 @@ class FundsController extends Controller
         } else {
             $params = array_merge($request->only([
                 'name', 'description', 'description_short', 'notification_amount',
-                'default_validator_employee_id'
+                'default_validator_employee_id', 'faq_title',
             ]), [
                 'auto_requests_validation' => $auto_requests_validation
             ]);
@@ -194,18 +192,16 @@ class FundsController extends Controller
 
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
+        $fund->syncFaqOptional($request->input('faq'));
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
             $fund->syncCriteria($request->input('criteria'));
         }
 
-        $fund->syncFaq($request->input('faq'));
-
         if (config('forus.features.dashboard.organizations.funds.formula_products') &&
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
-        $fund->fund_config()->update($request->only('faq_title'));
 
         return new FundResource($fund);
     }

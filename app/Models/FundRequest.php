@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
  * @property string $identity_address
  * @property string $note
  * @property string $state
+ * @property string|null $resolved_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundRequestClarification[] $clarifications
@@ -47,6 +48,7 @@ use Illuminate\Http\Request;
  * @method static Builder|FundRequest whereId($value)
  * @method static Builder|FundRequest whereIdentityAddress($value)
  * @method static Builder|FundRequest whereNote($value)
+ * @method static Builder|FundRequest whereResolvedAt($value)
  * @method static Builder|FundRequest whereState($value)
  * @method static Builder|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent

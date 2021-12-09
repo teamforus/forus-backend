@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundFaq;
 use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\VoucherQuery;
@@ -34,6 +35,7 @@ class FundResource extends Resource
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
             'organization_id', 'state', 'notification_amount', 'tags', 'type', 'archived',
+            'faq_title',
         ]), [
             'key' => $fund->fund_config->key ?? '',
             'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
@@ -50,8 +52,9 @@ class FundResource extends Resource
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
-            'faq' => $fund->faq,
-            'faq_title' => $fund->fund_config->faq_title,
+            'faq' => $fund->faq->map(function(FundFaq $faq) {
+                return $faq->only('id', 'title', 'description', 'description_html');
+            }),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),

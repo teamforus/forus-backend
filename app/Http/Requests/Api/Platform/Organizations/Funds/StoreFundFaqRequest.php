@@ -31,11 +31,15 @@ class StoreFundFaqRequest extends BaseFormRequest
     {
         return [
             'faq'                       => 'present|array',
-            'faq.*.title'               => 'required|string|max:100',
+            'faq.*'                     => 'required|array',
+            'faq.*.title'               => 'required|string|max:200',
             'faq.*.description'         => 'required|string|max:5000',
         ];
     }
 
+    /**
+     * @return array
+     */
     public function attributes(): array
     {
         $keys = array_dot(array_keys($this->rules()));

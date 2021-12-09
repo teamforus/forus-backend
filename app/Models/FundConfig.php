@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_prevalidations
  * @property bool $allow_direct_requests
  * @property bool $allow_blocking_vouchers
- * @property string|null $faq_title
  * @property bool $is_configured
  * @property bool $limit_generator_amount
  * @property bool $backoffice_enabled
@@ -56,7 +55,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqSandbox($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereCsvPrimaryKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFaqTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereFundId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
@@ -74,7 +72,7 @@ class FundConfig extends Model
 {
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
-        'backoffice_certificate', 'backoffice_fallback', 'faq_title'
+        'backoffice_certificate', 'backoffice_fallback',
     ];
 
     /**

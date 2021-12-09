@@ -26,6 +26,7 @@ use Throwable;
  * @property int|null $bank_connection_id
  * @property int|null $payment_id
  * @property string $monetary_account_id
+ * @property string $monetary_account_iban
  * @property string $state
  * @property int $accepted_manually
  * @property int $state_fetched_times
@@ -45,6 +46,7 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk whereBankConnectionId($value)
  * @method static Builder|VoucherTransactionBulk whereCreatedAt($value)
  * @method static Builder|VoucherTransactionBulk whereId($value)
+ * @method static Builder|VoucherTransactionBulk whereMonetaryAccountIban($value)
  * @method static Builder|VoucherTransactionBulk whereMonetaryAccountId($value)
  * @method static Builder|VoucherTransactionBulk wherePaymentId($value)
  * @method static Builder|VoucherTransactionBulk whereState($value)

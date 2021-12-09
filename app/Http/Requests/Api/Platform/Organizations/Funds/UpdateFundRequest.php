@@ -46,6 +46,7 @@ class UpdateFundRequest extends BaseFormRequest
 
         $criteriaRules = $criteriaEditable ? [
             'criteria'                      => 'present|array',
+            'criteria.*'                    => 'required|array',
             'criteria.*.id'                 => [
                 'nullable', Rule::in($this->fund->criteria()->pluck('id'))
             ],
@@ -67,8 +68,10 @@ class UpdateFundRequest extends BaseFormRequest
             'notification_amount'       => 'nullable|numeric',
             'description_media_uid'     => 'nullable|array',
             'description_media_uid.*'   => $this->mediaRule(),
-            'faq_title'                 => 'nullable|string|max:100',
-            'faq'                       => 'present|array',
+            'faq_title'                 => 'nullable|string|max:200',
+            'faq'                       => 'nullable|array',
+            'faq.*'                     => 'required|array',
+            'faq.*.id'                  => ['nullable', 'in:' . $this->fund->faq()->pluck('id')->join(',')],
             'faq.*.title'               => 'required|string|max:100',
             'faq.*.description'         => 'required|string|max:5000',
         ], [

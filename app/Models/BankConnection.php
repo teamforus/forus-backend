@@ -24,8 +24,7 @@ use Throwable;
  * @property int $bank_id
  * @property int $organization_id
  * @property int $implementation_id
- * @property string $monetary_account_id
- * @property string $monetary_account_iban
+ * @property int|null $bank_connection_account_id
  * @property string $redirect_token
  * @property string $access_token
  * @property string $code
@@ -45,14 +44,13 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection query()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAccessToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankConnectionAccountId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereContext($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereMonetaryAccountIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereMonetaryAccountId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereRedirectToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereSessionExpireAt($value)
