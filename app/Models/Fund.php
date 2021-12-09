@@ -218,7 +218,7 @@ class Fund extends Model
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
-        'request_btn_text', 'request_btn_url',
+        'request_btn_text', 'request_btn_url', 'faq_title',
     ];
 
     protected $hidden = [
@@ -1195,7 +1195,7 @@ class Fund extends Model
      */
     public function syncFaqOptional(?array $faq = null): self
     {
-        return !is_array($faq) ? $this->syncFaq($faq) : $this;
+        return is_array($faq) ? $this->syncFaq($faq) : $this;
     }
 
     /**
@@ -1206,7 +1206,7 @@ class Fund extends Model
     protected function syncQuestion(array $question): FundFaq
     {
         /** @var FundFaq $faq */
-        $faq = $this->faq()->find($question['id']) ?: $this->faq()->create();
+        $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
 
         return $faq->updateModel(array_only($question, ['title', 'description']));
     }
