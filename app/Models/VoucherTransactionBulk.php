@@ -64,6 +64,7 @@ class VoucherTransactionBulk extends Model
     public const EVENT_SUBMITTED = 'submitted';
     public const EVENT_ACCEPTED = 'accepted';
     public const EVENT_REJECTED = 'rejected';
+    public const EVENT_ERROR = 'error';
 
     public const EVENTS = [
         self::EVENT_RESET,
@@ -71,15 +72,18 @@ class VoucherTransactionBulk extends Model
         self::EVENT_SUBMITTED,
         self::EVENT_ACCEPTED,
         self::EVENT_REJECTED,
+        self::EVENT_ERROR,
     ];
 
     public const STATE_DRAFT = 'draft';
+    public const STATE_ERROR = 'error';
     public const STATE_PENDING = 'pending';
     public const STATE_ACCEPTED = 'accepted';
     public const STATE_REJECTED = 'rejected';
 
     public const STATES = [
         self::STATE_DRAFT,
+        self::STATE_ERROR,
         self::STATE_PENDING,
         self::STATE_ACCEPTED,
         self::STATE_REJECTED,
@@ -120,6 +124,7 @@ class VoucherTransactionBulk extends Model
             static::STATE_PENDING => 'In afwachting',
             static::STATE_ACCEPTED => 'Geaccepteerd',
             static::STATE_REJECTED => 'Geannuleerd',
+            static::STATE_ERROR => 'Error',
             static::STATE_DRAFT => 'In voorbereiding',
         ][$this->state] ?? $this->state;
     }
@@ -220,38 +225,52 @@ class VoucherTransactionBulk extends Model
     /**
      * @param Employee|null $employee
      * @return $this
-     * @throws Throwable
      */
     public function submitBulk(?Employee $employee = null): self
     {
-        return DB::transaction(function() use ($employee) {
-            if (!$this->bank_connection->useContext()) {
-                throw new Exception("Bank connection invalid.", 403);
-            }
+        try {
+            DB::transaction(function() use ($employee) {
+                if (!$this->bank_connection->useContext()) {
+                    throw new Exception("Bank connection invalid.", 403);
+                }
 
-            $transactions = $this->voucher_transactions->map(function(VoucherTransaction $transaction) {
-                $amount = number_format($transaction->amount, 2, '.', '');
-                $paymentAmount = new Amount($amount, 'EUR');
-                $paymentPointer = new Pointer('IBAN', $transaction->provider->iban, $transaction->provider->name);
-                $paymentDescription = $transaction->makePaymentDescription();
+                $transactions = $this->voucher_transactions->map(function(VoucherTransaction $transaction) {
+                    $amount = number_format($transaction->amount, 2, '.', '');
+                    $paymentAmount = new Amount($amount, 'EUR');
+                    $paymentPointer = new Pointer('IBAN', $transaction->provider->iban, $transaction->provider->name);
+                    $paymentDescription = $transaction->makePaymentDescription();
 
-                $transaction->update([
-                    'payment_description' => $paymentDescription,
-                ]);
+                    $transaction->update([
+                        'payment_description' => $paymentDescription,
+                    ]);
 
-                return new DraftPaymentEntry($paymentAmount, $paymentPointer, $paymentDescription);
-            })->toArray();
+                    return new DraftPaymentEntry($paymentAmount, $paymentPointer, $paymentDescription);
+                })->toArray();
 
-            $monetaryAccountId = $this->monetary_account_id;
-            $payment = DraftPayment::create($transactions, 1, $monetaryAccountId);
+                $monetaryAccountId = $this->monetary_account_id;
+                $payment = DraftPayment::create($transactions, 1, $monetaryAccountId);
+
+                $this->updateModel([
+                    'state' => self::STATE_PENDING,
+                    'payment_id' => $payment->getValue(),
+                ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
+
+                return $this;
+            });
+
+            // This endpoint is throttled by bunq: You can do a maximum of 3 calls per 3 second to this endpoint.
+            sleep(2);
+        } catch (Throwable $e) {
+            logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
             $this->updateModel([
-                'state' => self::STATE_PENDING,
-                'payment_id' => $payment->getValue(),
-            ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
+                'state' => self::STATE_ERROR,
+            ])->log(self::EVENT_ERROR, $this->getLogModels($employee), [
+                'error_message' => $e->getMessage(),
+            ]);
+        }
 
-            return $this;
-        });
+        return $this;
     }
 
     /**
@@ -335,13 +354,7 @@ class VoucherTransactionBulk extends Model
             'voucher_transaction_bulk_id' => $transactionsBulk->id,
         ]);
 
-        try {
-            $transactionsBulk->submitBulk($employee);
-            // This endpoint is throttled by bunq: You can do a maximum of 3 calls per 3 second to this endpoint.
-            sleep(2);
-        } catch (Throwable $e) {
-            logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
-        }
+        $transactionsBulk->submitBulk($employee);
 
         $bulksList = array_merge($previousBulks, (array) $transactionsBulk->id);
 
