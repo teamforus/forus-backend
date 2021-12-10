@@ -26,20 +26,14 @@ class PrevalidationController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function store(
-        StorePrevalidationsRequest $request
-    ): PrevalidationResource {
+    public function store(StorePrevalidationsRequest $request): PrevalidationResource
+    {
         $this->authorize('store', Prevalidation::class);
 
-        $fund = Fund::find($request->input('fund_id'));
-        if ($fund->is_external) {
-            abort(403, 'prevalidation_create_no_permission');
-        }
-
-        /** @var Prevalidation $prevalidation */
-        $prevalidation = Prevalidation::storePrevalidations($fund, [$request->input('data')])->first();
-
-        return new PrevalidationResource($prevalidation);
+        return new PrevalidationResource(Prevalidation::storePrevalidations(
+            Fund::find($request->input('fund_id')),
+            [$request->input('data')]
+        )->first());
     }
 
     /**
@@ -53,20 +47,13 @@ class PrevalidationController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('store', Prevalidation::class);
 
-        $fund = Fund::find($request->input('fund_id'));
-        if ($fund->is_external) {
-            abort(403, 'prevalidation_create_no_permission');
-        }
-
         $prevalidations = Prevalidation::storePrevalidations(
-            $fund,
+            Fund::find($request->input('fund_id')),
             $request->input('data', []),
             $request->input('overwrite', [])
         );
 
-        return PrevalidationResource::collection($prevalidations->load(
-            PrevalidationResource::$load
-        ));
+        return PrevalidationResource::collection($prevalidations->load(PrevalidationResource::$load));
     }
 
     /**

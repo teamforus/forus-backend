@@ -35,6 +35,7 @@ class StoreFundCriteriaRequest extends BaseFormRequest
 
         return [
             'criteria'                      => 'present|array',
+            'criteria.*'                    => 'required|array',
             'criteria.*.id'                 => ['nullable', Rule::in([])],
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',

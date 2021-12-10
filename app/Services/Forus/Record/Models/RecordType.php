@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Record\Models;
 
+use App\Services\Forus\Record\Models\Traits\RecordTranslationTrait;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class RecordType extends Model
 {
-    use Translatable;
+    use Translatable, RecordTranslationTrait;
 
     /**
      * The attributes that are mass assignable.

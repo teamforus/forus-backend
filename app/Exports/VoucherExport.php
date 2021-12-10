@@ -26,7 +26,7 @@ class VoucherExport implements FromCollection, WithHeadings
         $voucherData = collect();
         $vouchers->load(
             'transactions', 'voucher_relation', 'product', 'fund',
-            'token_without_confirmation', 'identity.primary_email', 'product_vouchers',
+            'token_without_confirmation', 'identity.primary_email', 'product_vouchers'
         );
 
         foreach ($vouchers as $voucher) {

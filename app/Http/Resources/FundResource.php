@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Fund;
+use App\Models\FundFaq;
 use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\VoucherQuery;
@@ -34,13 +35,12 @@ class FundResource extends Resource
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
             'organization_id', 'state', 'notification_amount', 'tags', 'type', 'archived',
+            'request_btn_text', 'request_btn_url', 'faq_title', 'is_external',
+        ]), $fund->fund_config->only([
+            'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
         ]), [
-            'key' => $fund->fund_config->key ?? '',
-            'allow_fund_requests' => $fund->fund_config->allow_fund_requests ?? false,
-            'allow_prevalidations' => $fund->fund_config->allow_prevalidations ?? false,
-            'allow_direct_requests' => $fund->fund_config->allow_direct_requests ?? false,
-            'allow_blocking_vouchers' => $fund->fund_config->allow_blocking_vouchers ?? false,
-            'backoffice_fallback' => $fund->fund_config->backoffice_fallback ?? false,
+            'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
             'start_date' => $fund->start_date->format('Y-m-d'),
@@ -50,14 +50,15 @@ class FundResource extends Resource
             'organization' => new OrganizationResource($organization),
             'criteria' => FundCriterionResource::collection($fund->criteria),
             'formulas' => FundFormulaResource::collection($fund->fund_formulas),
+            'faq' => $fund->faq->map(function(FundFaq $faq) {
+                return $faq->only('id', 'title', 'description', 'description_html');
+            }),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
-            'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'has_pending_fund_requests' => $fund->fund_requests()->where([
                 'identity_address' => auth_address(),
                 'state' => FundRequest::STATE_PENDING,
             ])->exists(),
-            'is_external' => $fund->is_external
         ], $checkCriteria ? [
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&

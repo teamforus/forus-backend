@@ -13,6 +13,7 @@ use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\FundProvider;
 use App\Models\Tag;
+use App\Scopes\Builders\FundQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\Api\Platform\Funds\IndexFundsRequest;
@@ -40,16 +41,14 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
-        $fundsQuery = Implementation::queryFundsByState([
-            Fund::STATE_ACTIVE, Fund::STATE_PAUSED
-        ])->where('type', '!=', Fund::TYPE_EXTERNAL)->whereNotIn(
-            'id', $organization->fund_providers()->pluck('fund_id')
-        );
+        $fundsQuery = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED);
+        $fundsQuery->where('type', '!=', Fund::TYPE_EXTERNAL);
+        $fundsQuery->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
+
+        FundQuery::whereIsConfiguredByForus($fundsQuery);
 
         $meta = [
-            'organizations' => Organization::whereHas('funds', static function(
-                Builder $builder
-            ) use ($fundsQuery) {
+            'organizations' => Organization::whereHas('funds', function(Builder $builder) use ($fundsQuery) {
                 $builder->whereIn('id', $fundsQuery->pluck('id'));
             })->select(['id', 'name'])->get()->map(static function(Organization $organization) {
                 return $organization->only('id', 'name');
@@ -112,7 +111,7 @@ class FundProviderController extends Controller
 
         $fund_id = $request->only('fund_id');
 
-        if (Fund::find($fund_id)->is_external) {
+        if (Fund::find($fund_id)->isExternal()) {
             abort(403, 'provider_apply_no_permission');
         }
 

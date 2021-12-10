@@ -4,8 +4,12 @@ namespace App\Http\Requests\Api\Platform\Prevalidations;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
-use App\Models\Organization;
+use App\Models\Prevalidation;
 use App\Rules\PrevalidationDataRule;
+use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\OrganizationQuery;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 class UploadPrevalidationsRequest extends BaseFormRequest
 {
@@ -16,7 +20,7 @@ class UploadPrevalidationsRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return Gate::allows('store', Prevalidation::class);
     }
 
     /**
@@ -25,11 +29,7 @@ class UploadPrevalidationsRequest extends BaseFormRequest
      * @return array
      */
     public function rules(): array {
-        $fundsAvailable = Organization::queryByIdentityPermissions($this->auth_address(), [
-            'validate_records'
-        ])->get()->pluck('funds')->flatten()->filter(static function (Fund $fund) {
-            return $fund->state !== Fund::STATE_CLOSED;
-        })->pluck('id');
+        $fundsAvailable = $this->getAvailableFunds()->pluck('id');
 
         return [
             'fund_id' => 'required|in:' . $fundsAvailable->implode(','),
@@ -41,5 +41,19 @@ class UploadPrevalidationsRequest extends BaseFormRequest
             'overwrite' => 'nullable|array',
             'overwrite.*' => 'required',
         ];
+    }
+
+    /**
+     * @return Builder
+     */
+    private function getAvailableFunds(): Builder
+    {
+        return Fund::whereHas('organization', function(Builder $builder) {
+            OrganizationQuery::whereHasPermissions($builder, $this->auth_address(), 'validate_records');
+        })->where(function(Builder $builder) {
+            FundQuery::whereIsConfiguredByForus($builder);
+        })->where(function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
+        })->where('state', '!=', Fund::STATE_CLOSED);
     }
 }

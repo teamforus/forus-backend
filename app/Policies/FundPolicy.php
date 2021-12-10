@@ -45,11 +45,9 @@ class FundPolicy
             return false;
         }
 
-        return $fund->public || $fund->organization->identityCan(
-            $identity_address,
-            ['manage_funds', 'view_finances', 'view_funds'],
-            false
-        );
+        return $fund->public || $fund->organization->identityCan($identity_address, [
+            'manage_funds', 'view_finances', 'view_funds'
+        ], false);
     }
 
     /**
@@ -59,19 +57,21 @@ class FundPolicy
      * @return bool|\Illuminate\Auth\Access\Response
      * @noinspection PhpUnused
      */
-    public function topUp(
-        $identity_address, Fund $fund,
-        Organization $organization
-    ) {
+    public function topUp($identity_address, Fund $fund, Organization $organization)
+    {
         $hasPermission = $this->show($identity_address, $fund, $organization);
         $hasBankConnection = $organization->bank_connection_active;
+
+        if (!$fund->isConfigured()) {
+            return false;
+        }
 
         if (!$organization->bank_connection_active->useContext()) {
             return $this->deny("Bank connection invalid or expired.", 403);
         }
 
-        if ($fund->is_external) {
-            return $this->deny("Topup not allowed for external funds", 403);
+        if ($fund->isExternal()) {
+            return $this->deny("Top-up not allowed for external funds", 403);
         }
 
         return $hasPermission && $hasBankConnection;
@@ -102,7 +102,6 @@ class FundPolicy
     {
         return !$fund->archived &&
             $fund->state == Fund::STATE_CLOSED &&
-            !$fund->is_external &&
             $this->update($identity_address, $fund, $organization);
     }
 
@@ -126,7 +125,9 @@ class FundPolicy
      */
     public function updateBackoffice($identity_address, Fund $fund, Organization $organization): bool
     {
-        return $organization->backoffice_available && $fund->fund_config &&
+        return $organization->backoffice_available &&
+            $fund->isInternal() &&
+            $fund->isConfigured() &&
             $this->update($identity_address, $fund, $organization);
     }
 
@@ -141,12 +142,16 @@ class FundPolicy
             return false;
         }
 
-        if ($fund->state !== $fund::STATE_ACTIVE) {
+        if (!$fund->isActive()) {
             return $this->deny(trans('fund.state_' . $fund->state));
         }
 
-        if ($fund->is_external) {
+        if (!$fund->isInternal()) {
             return $this->deny(trans('fund.type_external'));
+        }
+
+        if (!$fund->isConfigured()) {
+            return $this->deny(trans('fund.not_configured'));
         }
 
         if ($fund->fund_config->hash_partner_deny && $fund->isTakenByPartner($identity_address)) {
@@ -188,6 +193,10 @@ class FundPolicy
             return false;
         }
 
+        if (!$fund->isConfigured()) {
+            return false;
+        }
+
         return $fund->public ||
             $fund->organization->identityCan($identity_address, 'view_finances');
     }
@@ -201,6 +210,10 @@ class FundPolicy
     public function manageVouchers($identity_address, Fund $fund, Organization $organization): bool
     {
         if ($fund->organization_id !== $organization->id) {
+            return false;
+        }
+
+        if ($fund->isConfigured()) {
             return false;
         }
 

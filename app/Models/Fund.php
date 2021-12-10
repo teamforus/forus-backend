@@ -46,6 +46,9 @@ use Carbon\Carbon;
  * @property string|null $description
  * @property string|null $description_text
  * @property string|null $description_short
+ * @property string $request_btn_text
+ * @property string|null $request_btn_url
+ * @property string|null $faq_title
  * @property string $type
  * @property string $state
  * @property bool $archived
@@ -72,6 +75,8 @@ use Carbon\Carbon;
  * @property-read int|null $employees_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
+ * @property-read Collection|\App\Models\FundFaq[] $faq
+ * @property-read int|null $faq_count
  * @property-read Collection|\App\Models\Product[] $formula_products
  * @property-read int|null $formula_products_count
  * @property-read \App\Models\FundConfig|null $fund_config
@@ -146,12 +151,15 @@ use Carbon\Carbon;
  * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
+ * @method static Builder|Fund whereFaqTitle($value)
  * @method static Builder|Fund whereId($value)
  * @method static Builder|Fund whereName($value)
  * @method static Builder|Fund whereNotificationAmount($value)
  * @method static Builder|Fund whereNotifiedAt($value)
  * @method static Builder|Fund whereOrganizationId($value)
  * @method static Builder|Fund wherePublic($value)
+ * @method static Builder|Fund whereRequestBtnText($value)
+ * @method static Builder|Fund whereRequestBtnUrl($value)
  * @method static Builder|Fund whereStartDate($value)
  * @method static Builder|Fund whereState($value)
  * @method static Builder|Fund whereType($value)
@@ -213,6 +221,7 @@ class Fund extends Model
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
+        'request_btn_text', 'request_btn_url', 'faq_title',
     ];
 
     protected $hidden = [
@@ -259,6 +268,14 @@ class Fund extends Model
     public function criteria(): HasMany
     {
         return $this->hasMany(FundCriterion::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function faq(): HasMany
+    {
+        return $this->hasMany(FundFaq::class);
     }
 
     /**
@@ -368,6 +385,30 @@ class Fund extends Model
     }
 
     /**
+     * @param array $attributes
+     * @return void
+     */
+    public function makeFundConfig(array $attributes = []): void
+    {
+        if (!$this->fund_config()->exists()) {
+            $this->fund_config()->create()->forceFill($attributes)->save();
+        }
+    }
+
+    /**
+     * @param array $attributes
+     * @return void
+     */
+    public function updateFundsConfig(array $attributes): void
+    {
+        $fields = $this->isWaiting() ? [
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+        ] : [];
+
+        $this->fund_config->forceFill(array_only($attributes, $fields))->save();
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnusedPrivateMethodInspection
      */
@@ -419,6 +460,30 @@ class Fund extends Model
     public function fund_request_records(): HasManyThrough
     {
         return $this->hasManyThrough(FundRequestRecord::class, FundRequest::class);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExternal(): bool
+    {
+        return $this->type === static::TYPE_EXTERNAL;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInternal(): bool
+    {
+        return $this->type !== static::TYPE_EXTERNAL;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isConfigured(): bool
+    {
+        return $this->fund_config->is_configured ?? false;
     }
 
     /**
@@ -479,10 +544,11 @@ class Fund extends Model
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getIsExternalAttribute(): bool
     {
-        return $this->type == self::TYPE_EXTERNAL;
+        return $this->isExternal();
     }
 
     /**
@@ -882,34 +948,24 @@ class Fund extends Model
      * Update fund state by the start and end dates
      */
     public static function checkStateQueue(): void {
-        $funds = self::whereHas('fund_config', static function (Builder $query) {
-            return $query->where('is_configured', true);
+        $funds = static::where(function(Builder $builder) {
+            FundQuery::whereIsConfiguredByForus($builder);
         })->whereDate('start_date', '<=', now())->get();
 
         foreach ($funds as $fund) {
-            if ($fund->state === self::STATE_PAUSED &&
-                $fund->start_date->startOfDay()->isPast()) {
-                $fund->changeState(self::STATE_ACTIVE);
-
-                if (!$fund->is_external) {
-                    FundStartedEvent::dispatch($fund);
-                }
+            if ($fund->isPaused() && $fund->start_date->startOfDay()->isPast()) {
+                FundStartedEvent::dispatch($fund->changeState(self::STATE_ACTIVE));
             }
 
-            $expirationNotified = $fund->logs()->where([
-                'event' => self::EVENT_FUND_EXPIRING
-            ])->exists();
+            $expirationNotified = $fund->logs()->where('event', self::EVENT_FUND_EXPIRING)->exists();
+            $isTimeToNotify = $fund->end_date->clone()->subDays(14)->isPast();
 
-            if (!$expirationNotified && $fund->state !== self::STATE_CLOSED &&
-                !$fund->is_external &&
-                $fund->end_date->clone()->subDays(14)->isPast()) {
-
+            if (!$expirationNotified && !$fund->isClosed() && $isTimeToNotify) {
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if ($fund->state !== self::STATE_CLOSED && !$fund->is_external && $fund->end_date->isPast()) {
-                $fund->changeState(self::STATE_CLOSED);
-                FundEndedEvent::dispatch($fund);
+            if (!$fund->isClosed() && $fund->end_date->isPast()) {
+                FundEndedEvent::dispatch($fund->changeState(self::STATE_CLOSED));
             }
         }
     }
@@ -924,9 +980,7 @@ class Fund extends Model
             return $query->where('is_configured', true);
         })->whereIn('state', [
             self::STATE_ACTIVE, self::STATE_PAUSED
-        ])->where(
-            'type', '!=', self::TYPE_EXTERNAL
-        )->get();
+        ])->where('type', '!=', self::TYPE_EXTERNAL)->get();
 
         foreach ($funds as $fund) {
             $organization = $fund->organization;
@@ -1047,6 +1101,38 @@ class Fund extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->state === static::STATE_ACTIVE;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWaiting(): bool
+    {
+        return $this->state === static::STATE_WAITING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaused(): bool
+    {
+        return $this->state === static::STATE_PAUSED;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isClosed(): bool
+    {
+        return $this->state === static::STATE_CLOSED;
+    }
+
+    /**
      * @param FundCriterion|null $fundCriterion
      * @return array
      */
@@ -1106,7 +1192,8 @@ class Fund extends Model
      * @param array $criteria
      * @return $this
      */
-    public function syncCriteria(array $criteria): self {
+    public function syncCriteria(array $criteria): self
+    {
         // remove criteria not listed in the array
         if ($this->criteriaIsEditable()) {
             $this->criteria()->whereNotIn('id', array_filter(
@@ -1120,6 +1207,46 @@ class Fund extends Model
         }
 
         return $this;
+    }
+
+    /**
+     * Update faq for existing fund
+     * @param array $faq
+     * @return $this
+     */
+    public function syncFaq(array $faq = []): self
+    {
+        // remove faq not listed in the array
+        $this->faq()->whereNotIn('id', array_filter(array_pluck($faq, 'id')))->delete();
+
+        foreach ($faq as $question) {
+            $this->syncQuestion($question);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update faq for existing fund when provided
+     * @param array|null $faq
+     * @return $this
+     */
+    public function syncFaqOptional(?array $faq = null): self
+    {
+        return is_array($faq) ? $this->syncFaq($faq) : $this;
+    }
+
+    /**
+     * Update faq question or create new fund question
+     * @param array $question
+     * @return FundFaq|\Illuminate\Database\Eloquent\Model
+     */
+    protected function syncQuestion(array $question): FundFaq
+    {
+        /** @var FundFaq $faq */
+        $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
+
+        return $faq->updateModel(array_only($question, ['title', 'description']));
     }
 
     /**

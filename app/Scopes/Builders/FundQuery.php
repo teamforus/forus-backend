@@ -170,4 +170,24 @@ class FundQuery
 
         return $query;
     }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereIsConfiguredByForus(Builder $query): Builder
+    {
+        return $query->whereHas('fund_config', static function (Builder $query) {
+            return $query->where('is_configured', true);
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereIsInternal(Builder $query): Builder
+    {
+        return $query->where('type', '!=', Fund::TYPE_EXTERNAL);
+    }
 }
