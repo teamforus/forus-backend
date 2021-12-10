@@ -99,7 +99,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         // add custom guard provider
-        Auth::provider('identity_service', function ($app, array $config) {
+        Auth::provider('identity_service', function () {
             return new ServiceIdentityProvider(app()->make(IIdentityRepo::class));
         });
 

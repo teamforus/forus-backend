@@ -274,6 +274,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->post('product-reservations/validate', "Api\Platform\ProductReservationsController@storeValidate");
+
     $router->group(['prefix' => '/provider'], static function() use ($router) {
         $router->resource('vouchers', "Api\Platform\Provider\VouchersController", [
             'only' => [
@@ -664,8 +666,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->only('index', 'show', 'store', 'update', 'destroy');
 
     $router->resource('organizations.bank-connections', "Api\Platform\Organizations\BankConnectionsController")->only([
-        'index', 'show', 'store', 'update', 'destroy'
-    ]);
+        'index', 'show', 'store', 'update',
+    ])->parameter('bank-connections', 'bankConnection');
 
     $router->resource(
         'organizations.validators',

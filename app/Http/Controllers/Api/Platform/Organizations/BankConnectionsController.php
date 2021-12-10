@@ -37,7 +37,7 @@ class BankConnectionsController extends Controller
             $query->where('state', $request->input('state'));
         }
 
-        return BankConnectionResource::collection($query->paginate($request->input('per_page')));
+        return BankConnectionResource::queryCollection($query, $request);
     }
 
     /**
@@ -60,7 +60,7 @@ class BankConnectionsController extends Controller
             $request->implementation_model()
         );
 
-        return (new BankConnectionResource($bankConnection))->additional([
+        return BankConnectionResource::create($bankConnection)->additional([
             'oauth_url' => $bankConnection->getOauthUrl(),
         ]);
     }
@@ -79,7 +79,7 @@ class BankConnectionsController extends Controller
     ): BankConnectionResource {
         $this->authorize('view', [$bankConnection, $organization]);
 
-        return new BankConnectionResource($bankConnection);
+        return BankConnectionResource::create($bankConnection);
     }
 
     /**
@@ -98,10 +98,20 @@ class BankConnectionsController extends Controller
     ): BankConnectionResource {
         $this->authorize('update', [$bankConnection, $organization]);
 
+        $employee = $organization->findEmployee($request->auth_address());
+        $bank_connection_account_id = $request->input('bank_connection_account_id');
+
+        $activeConnection = $organization->bank_connection_active;
+        $isActiveConnection = $activeConnection && ($activeConnection->id == $bankConnection->id);
+
         if ($request->input('state') == BankConnection::STATE_DISABLED) {
-            $bankConnection->disable($organization->findEmployee($request->auth_address()));
+            $bankConnection->disable($employee);
         }
 
-        return new BankConnectionResource($bankConnection);
+        if ($isActiveConnection && $bank_connection_account_id) {
+            $bankConnection->switchBankConnectionAccount($bank_connection_account_id, $employee);
+        }
+
+        return BankConnectionResource::create($bankConnection);
     }
 }
