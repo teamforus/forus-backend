@@ -200,7 +200,7 @@ class VoucherTransaction extends Model
      */
     public function getIbanFinalAttribute(): bool
     {
-        return $this->iban_from && $this->iban_to;
+        return $this->isPaid() || ($this->iban_from && $this->iban_to);
     }
 
     /**
