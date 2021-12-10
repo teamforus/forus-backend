@@ -39,7 +39,7 @@ class ProviderVoucherTransactionResource extends Resource
 
         return collect($transaction)->only([
             "id", "organization_id", "product_id", "created_at",
-            "updated_at", "address", "state", "payment_id",
+            "updated_at", "address", "state", "payment_id", 'iban_final',
         ])->merge($this->getIbanFields($transaction))->merge([
             'created_at_locale' => format_datetime_locale($transaction->created_at),
             'updated_at_locale' => format_datetime_locale($transaction->updated_at),
@@ -71,9 +71,9 @@ class ProviderVoucherTransactionResource extends Resource
      */
     public function getIbanFields(VoucherTransaction $transaction): array
     {
-        return $transaction->isPending() ? [
+        return $transaction->iban_final ? $transaction->only('iban_from', 'iban_to') : [
             'iban_from' => $transaction->voucher->fund->organization->bank_connection_active->iban ?? null,
             'iban_to' => $transaction->provider->iban ?? null,
-        ] : $transaction->only('iban_from', 'iban_to');
+        ];
     }
 }

@@ -46,7 +46,7 @@ class SponsorVoucherTransactionResource extends Resource
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "state_locale",
             "updated_at", "address", "state", "payment_id", 'voucher_transaction_bulk_id',
-            "transaction_cost", 'attempts', 'transfer_at',
+            "transaction_cost", 'attempts', 'transfer_at', 'iban_final',
         ]), $this->getIbanFields($transaction), [
             'created_at' => $createdAt ? $createdAt->format('Y-m-d H:i:s') : null,
             'created_at_locale' => format_datetime_locale($transaction->created_at),
@@ -67,9 +67,9 @@ class SponsorVoucherTransactionResource extends Resource
      */
     public function getIbanFields(VoucherTransaction $transaction): array
     {
-        return $transaction->isPending() ? [
+        return $transaction->iban_final ? $transaction->only('iban_from', 'iban_to') : [
             'iban_from' => $transaction->voucher->fund->organization->bank_connection_active->iban ?? null,
             'iban_to' => $transaction->provider->iban ?? null,
-        ] : $transaction->only('iban_from', 'iban_to');
+        ];
     }
 }
