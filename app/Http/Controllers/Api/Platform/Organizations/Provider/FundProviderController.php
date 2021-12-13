@@ -41,20 +41,21 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [FundProvider::class, $organization]);
 
-        $fundsQuery = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED);
-        $fundsQuery->where('type', '!=', Fund::TYPE_EXTERNAL);
-        $fundsQuery->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
+        $query = Implementation::queryFundsByState(Fund::STATE_ACTIVE, Fund::STATE_PAUSED);
+        $query->where('type', '!=', Fund::TYPE_EXTERNAL);
+        $query->whereNotIn('id', $organization->fund_providers()->pluck('fund_id'));
 
-        FundQuery::whereIsConfiguredByForus($fundsQuery);
+        FundQuery::whereIsInternal($query);
+        FundQuery::whereIsConfiguredByForus($query);
 
         $meta = [
-            'organizations' => Organization::whereHas('funds', function(Builder $builder) use ($fundsQuery) {
-                $builder->whereIn('id', $fundsQuery->pluck('id'));
+            'organizations' => Organization::whereHas('funds', function(Builder $builder) use ($query) {
+                $builder->whereIn('id', (clone($query))->select('funds.id'));
             })->select(['id', 'name'])->get()->map(static function(Organization $organization) {
                 return $organization->only('id', 'name');
             }),
-            'tags' => Tag::whereHas('funds', static function(Builder $builder) use ($fundsQuery) {
-                return $builder->whereIn('funds.id', $fundsQuery->pluck('id'));
+            'tags' => Tag::whereHas('funds', static function(Builder $builder) use ($query) {
+                return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
             })->select(['key', 'name'])->get()->map(static function(Tag $tag) {
                 return $tag->only('key', 'name');
             }),
@@ -62,7 +63,7 @@ class FundProviderController extends Controller
 
         return FundResource::collection(Fund::search($request->only([
             'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
-        ]), $fundsQuery)->latest()->paginate(
+        ]), $query)->latest()->paginate(
             $request->input('per_page', 10))
         )->additional(compact('meta'));
     }

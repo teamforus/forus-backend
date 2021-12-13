@@ -71,9 +71,8 @@ class StorePrevalidationsRequest extends BaseFormRequest
         return Fund::whereHas('organization', function(Builder $builder) {
             OrganizationQuery::whereHasPermissions($builder, $this->auth_address(), 'validate_records');
         })->where(function(Builder $builder) {
-            FundQuery::whereIsConfiguredByForus($builder);
-        })->where(function(Builder $builder) {
             FundQuery::whereIsInternal($builder);
+            FundQuery::whereIsConfiguredByForus($builder);
         })->where('state', '!=', Fund::STATE_CLOSED);
     }
 

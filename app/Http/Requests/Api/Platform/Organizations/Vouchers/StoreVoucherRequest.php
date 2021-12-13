@@ -40,6 +40,7 @@ class StoreVoucherRequest extends BaseFormRequest
         $fund = $this->organization->funds()->find($this->input('fund_id'));
 
         $funds = $this->organization->funds()->where(function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);
         });
 

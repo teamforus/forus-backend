@@ -48,15 +48,11 @@ class FundsController extends Controller
 
         $query = Fund::search($request->only([
             'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by',
-            'order_by_dir', 'with_archived', 'with_external',
+            'order_by_dir', 'with_archived', 'with_external', 'configured',
         ]), $organization->funds()->getQuery());
 
         if (!$request->isAuthenticated()) {
             $query->where('public', true);
-        }
-
-        if ($request->input('configured', false)) {
-            $query = FundQuery::whereIsConfiguredByForus($query);
         }
 
         return FundResource::collection(FundQuery::sortByState($query, [
@@ -85,9 +81,9 @@ class FundsController extends Controller
         $fund = $organization->funds()->create(array_merge($request->only([
             'name', 'description', 'description_short', 'start_date', 'end_date', 'type',
             'notification_amount', 'default_validator_employee_id',
-                'faq_title', 'request_btn_text', 'request_btn_url',
+            'faq_title', 'request_btn_text', 'request_btn_url',
         ]), [
-            'state' => $request->input('type') == Fund::TYPE_EXTERNAL ? Fund::STATE_PAUSED : Fund::STATE_WAITING,
+            'state' => Fund::STATE_WAITING,
             'auto_requests_validation' => $auto_requests_validation,
         ]));
 

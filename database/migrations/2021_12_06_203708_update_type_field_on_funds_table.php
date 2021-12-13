@@ -2,6 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * @noinspection PhpUnused
+ */
 class UpdateTypeFieldOnFundsTable extends Migration
 {
     /**
@@ -9,7 +12,7 @@ class UpdateTypeFieldOnFundsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         DB::statement("ALTER TABLE `funds` CHANGE `type` `type` ENUM('budget', 'subsidies', 'external') DEFAULT 'budget';");
     }
@@ -19,7 +22,7 @@ class UpdateTypeFieldOnFundsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         DB::statement("ALTER TABLE `funds` CHANGE `type` `type` ENUM('budget', 'subsidies') DEFAULT 'budget';");
     }

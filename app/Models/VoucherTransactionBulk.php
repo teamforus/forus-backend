@@ -277,6 +277,7 @@ class VoucherTransactionBulk extends Model
     {
         /** @var Organization[]|Collection $sponsors */
         $sponsors = Organization::whereHas('funds', function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);
 
             $builder->whereHas('voucher_transactions', function(Builder $builder) {

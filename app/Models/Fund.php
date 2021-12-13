@@ -46,10 +46,10 @@ use Carbon\Carbon;
  * @property string|null $description
  * @property string|null $description_text
  * @property string|null $description_short
+ * @property string|null $faq_title
  * @property string $request_btn_text
  * @property string|null $request_btn_url
- * @property string|null $faq_title
- * @property string $type
+ * @property string|null $type
  * @property string $state
  * @property bool $archived
  * @property bool $public
@@ -98,8 +98,8 @@ use Carbon\Carbon;
  * @property-read float $budget_used_active_vouchers
  * @property-read float $budget_used
  * @property-read float $budget_validated
- * @property-read bool $is_external
  * @property-read string $description_html
+ * @property-read bool $is_external
  * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -857,7 +857,11 @@ class Fund extends Model
         }
 
         if (!array_get($options, 'with_external', false)) {
-            $query->whereIn('type', array_diff(self::TYPES, [self::TYPE_EXTERNAL]));
+            $query->where('type', '!=', self::TYPE_EXTERNAL);
+        }
+
+        if (array_get($options, 'configured', false)) {
+            FundQuery::whereIsConfiguredByForus($query);
         }
 
         if ($tag = array_get($options, 'tag')) {
