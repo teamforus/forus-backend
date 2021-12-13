@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,6 +21,7 @@ use Illuminate\Http\Request;
  * @property int|null $employee_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
+ * @property int|null $voucher_transaction_bulk_id
  * @property string $amount
  * @property string|null $iban_from
  * @property string|null $iban_to
@@ -30,11 +32,14 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $payment_id
+ * @property string $payment_description
  * @property int $attempts
  * @property string $state
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read string $state_locale
+ * @property-read float $transaction_cost
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\VoucherTransactionNote[] $notes
@@ -62,6 +67,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereId($value)
  * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
  * @method static Builder|VoucherTransaction whereOrganizationId($value)
+ * @method static Builder|VoucherTransaction wherePaymentDescription($value)
  * @method static Builder|VoucherTransaction wherePaymentId($value)
  * @method static Builder|VoucherTransaction wherePaymentTime($value)
  * @method static Builder|VoucherTransaction whereProductId($value)
@@ -69,6 +75,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
+ * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
  * @mixin \Eloquent
  */
 class VoucherTransaction extends Model
@@ -102,6 +109,7 @@ class VoucherTransaction extends Model
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'payment_time', 'employee_id', 'transfer_at',
+        'voucher_transaction_bulk_id', 'payment_description',
     ];
 
     protected $hidden = [
@@ -174,6 +182,26 @@ class VoucherTransaction extends Model
     public function fund_provider_product(): BelongsTo
     {
         return $this->belongsTo(FundProviderProduct::class);
+    }
+
+    /**
+     * @return float
+     * @noinspection PhpUnused
+     */
+    public function getTransactionCostAttribute(): float
+    {
+        return $this->amount > 0 ? .11 : 0;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return [
+            static::STATE_PENDING => 'In afwachting',
+            static::STATE_SUCCESS => 'Voltooid',
+        ][$this->state] ?? $this->state;
     }
 
     /**
@@ -263,6 +291,14 @@ class VoucherTransaction extends Model
             $builder->where('organization_id', $provider->id);
         }
 
+        if ($voucher_transaction_bulk_id = $request->input('voucher_transaction_bulk_id')) {
+            $builder->where(compact('voucher_transaction_bulk_id'));
+        }
+
+        if ($request->input('pending_bulking')) {
+            VoucherTransactionQuery::whereAvailableForBulking($builder);
+        }
+
         if ($fund) {
             $builder->whereHas('voucher', static function (Builder $builder) use ($fund) {
                 $builder->where('fund_id', $fund->id);
@@ -277,10 +313,8 @@ class VoucherTransaction extends Model
      * @param Organization $organization
      * @return Builder
      */
-    public static function searchProvider(
-        Request $request,
-        Organization $organization
-    ): Builder {
+    public static function searchProvider(Request $request, Organization $organization): Builder
+    {
         return self::search($request)->where([
             'organization_id' => $organization->id
         ]);
@@ -291,10 +325,8 @@ class VoucherTransaction extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function searchVoucher(
-        Voucher $voucher,
-        Request $request
-    ): Builder {
+    public static function searchVoucher(Voucher $voucher, Request $request): Builder
+    {
         return self::search($request)->where([
             'voucher_id' => $voucher->id
         ]);
@@ -304,7 +336,8 @@ class VoucherTransaction extends Model
      * @param Builder $builder
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder) {
+    private static function exportTransform(Builder $builder)
+    {
         $transKey = "export.voucher_transactions";
 
         return $builder->with([
@@ -332,10 +365,8 @@ class VoucherTransaction extends Model
      * @param Organization $organization
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function exportProvider(
-        Request $request,
-        Organization $organization
-    ) {
+    public static function exportProvider(Request $request, Organization $organization)
+    {
         return self::exportTransform(self::searchProvider($request, $organization));
     }
 
@@ -423,6 +454,17 @@ class VoucherTransaction extends Model
         return $this->updateModel([
             'attempts' => 50,
             'last_attempt_at' => now()
+        ]);
+    }
+
+    /**
+     * @return string
+     */
+    public function makePaymentDescription(): string
+    {
+        return trans('bunq.transaction.from_fund', [
+            'fund_name' => $this->voucher->fund->name,
+            'transaction_id' => $this->id
         ]);
     }
 }

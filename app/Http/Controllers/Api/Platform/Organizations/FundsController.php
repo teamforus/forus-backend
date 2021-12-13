@@ -372,6 +372,7 @@ class FundsController extends Controller
     {
         $this->authorize('show', $organization);
         $this->authorize('show', [$fund, $organization]);
+        $this->authorize('topUp', [$fund, $organization]);
 
         return new TopUpResource($fund->top_up_model);
     }

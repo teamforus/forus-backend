@@ -47,7 +47,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'source'            => 'required|in:all,user,employee',
             'export_type'       => 'nullable|in:pdf,xls,csv,png',
             'sort_by'           => 'nullable|in:amount,expire_at,created_at',
-            'state'             => 'nullable|in:' . implode(',', Voucher::STATES),
+            'state'             => 'nullable|in:' . implode(',', $this->statesList()),
             'sort_order'        => 'nullable|in:asc,desc',
             'export_only_data'  => 'nullable|boolean',
             'q'                 => 'nullable|string|max:100',
@@ -58,5 +58,15 @@ class IndexVouchersRequest extends BaseFormRequest
             'count_per_identity_min'    => 'nullable|numeric',
             'count_per_identity_max'    => 'nullable|numeric',
         ];
+    }
+
+    /**
+     * @return array
+     */
+    private function statesList(): array
+    {
+        return array_merge(Voucher::STATES, [
+            'expired'
+        ]);
     }
 }

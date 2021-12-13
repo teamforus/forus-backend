@@ -55,12 +55,12 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Media|null $banner
+ * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
  * @property-read int|null $fund_configs_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
- * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\NotificationTemplate[] $mail_templates
  * @property-read int|null $mail_templates_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Media[] $medias
@@ -430,39 +430,53 @@ class Implementation extends Model
     }
 
     /**
-     * @param string $uri
+     * @param string $url
+     * @param array $getParams
      * @return string
      */
-    public function urlWebshop(string $uri = "/"): string
+    protected function buildFrontendUrl(string $url, array $getParams = []): string
     {
-        return http_resolve_url($this->url_webshop, $uri);
+        return implode('?', array_filter([$url, http_build_query($getParams)]));
     }
 
     /**
      * @param string $uri
+     * @param array $getParams
      * @return string
      */
-    public function urlSponsorDashboard(string $uri = "/"): string
+    public function urlWebshop(string $uri = "/", array $getParams = []): string
     {
-        return http_resolve_url($this->url_sponsor, $uri);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_webshop, $uri), $getParams);
     }
 
     /**
      * @param string $uri
+     * @param array $getParams
      * @return string
      */
-    public function urlProviderDashboard(string $uri = "/"): string
+    public function urlSponsorDashboard(string $uri = "/", array $getParams = []): string
     {
-        return http_resolve_url($this->url_provider, $uri);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_sponsor, $uri), $getParams);
     }
 
     /**
      * @param string $uri
+     * @param array $getParams
      * @return string
      */
-    public function urlValidatorDashboard(string $uri = "/"): string
+    public function urlProviderDashboard(string $uri = "/", array $getParams = []): string
     {
-        return http_resolve_url($this->url_validator, $uri);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_provider, $uri), $getParams);
+    }
+
+    /**
+     * @param string $uri
+     * @param array $getParams
+     * @return string
+     */
+    public function urlValidatorDashboard(string $uri = "/", array $getParams = []): string
+    {
+        return $this->buildFrontendUrl(http_resolve_url($this->url_validator, $uri), $getParams);
     }
 
     /**

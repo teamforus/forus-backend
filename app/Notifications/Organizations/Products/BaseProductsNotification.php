@@ -11,8 +11,6 @@ use App\Notifications\Organizations\BaseOrganizationNotification;
  */
 abstract class BaseProductsNotification extends BaseOrganizationNotification
 {
-    protected static $visible = true;
-
     /**
      * @var string
      */

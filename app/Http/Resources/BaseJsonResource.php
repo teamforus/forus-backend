@@ -49,7 +49,7 @@ class BaseJsonResource extends JsonResource
      * @return AnonymousResourceCollection
      */
     public static function queryCollection(
-        Builder $query,
+        $query,
         Request $request = null
     ): AnonymousResourceCollection {
         $request = $request ?: BaseFormRequest::createFromBase(request());

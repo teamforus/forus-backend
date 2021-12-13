@@ -1,9 +1,13 @@
-<?php /** @noinspection PhpIllegalPsrClassPathInspection */
+<?php
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * @noinspection PhpUnused
+ * @noinspection PhpIllegalPsrClassPathInspection
+ */
 class CreateBunqIdealIssuersTable extends Migration
 {
     /**

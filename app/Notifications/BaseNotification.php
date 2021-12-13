@@ -29,12 +29,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected static $key;
     protected static $scope;
     protected static $pushKey;
-    protected static $sendMail =false;
-    protected static $sendPush = false;
-    protected static $group;
-
-    protected static $visible = false;
-    protected static $editable = false;
 
     protected $eventLog;
     protected $meta = [];
@@ -249,14 +243,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * @return bool
-     */
-    public static function isVisible(): bool
-    {
-        return static::$visible;
-    }
-
-    /**
      * @return string|null
      */
     public static function getKey(): ?string
@@ -278,14 +264,6 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public static function getPushKey(): ?string
     {
         return static::$pushKey;
-    }
-
-    /**
-     * @return mixed
-     */
-    public static function getGroup()
-    {
-        return static::$group;
     }
 
     /**
@@ -400,8 +378,9 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         } catch (\Exception $exception) {
             if ($logger = logger()) {
                 $logger->error(sprintf(
-                    "Unable to create notification:\n %s \n %s",
+                    "Unable to create notification:\n %s \n %s \n %s",
                     $exception->getMessage(),
+                    $exception->getFile() . ": ". $exception->getLine(),
                     $exception->getTraceAsString()
                 ));
             }

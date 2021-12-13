@@ -209,7 +209,7 @@ return [
         App\Services\MediaService\MediaServiceProvider::class,
         App\Services\GeocodeService\GeocodeServiceProvider::class,
 
-        App\Services\BunqService\BunqServiceProvider::class,
+        App\Services\BankService\BankServiceProvider::class,
         App\Services\Forus\Notification\NotificationServiceProvider::class,
 
         App\Services\Forus\SmsNotification\SmsNotificationServiceProvider::class,

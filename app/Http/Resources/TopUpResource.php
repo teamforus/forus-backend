@@ -19,16 +19,14 @@ class TopUpResource extends Resource
      * @return array|mixed
      * @throws \Exception
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        if (!$bunq = $this->resource->fund->getBunq()) {
-            abort(403, 'Top up for this fund not available yet.');
-        }
+        $bankConnection = $this->resource->fund->organization->bank_connection_active;
 
-        return collect($this->resource)->only([
-            'code', 'state'
-        ])->merge([
-            'iban' => e($bunq->getBankAccountIban()),
+        return array_merge($this->resource->only('id', 'code', 'state'), [
+            'iban' => $bankConnection->fetchActiveMonetaryAccountIban(),
+            'created_at' => $this->resource->created_at->format('Y-m-d H:i:s'),
+            'created_at_locale' => format_datetime_locale($this->resource->created_at),
         ]);
     }
 }
