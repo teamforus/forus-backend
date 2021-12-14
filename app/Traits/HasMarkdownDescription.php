@@ -26,7 +26,7 @@ trait HasMarkdownDescription {
      */
     public function descriptionToHtml(): string
     {
-        return resolve('markdown')->convertToHtml(e($this->description));
+        return resolve('markdown')->convertToHtml($this->description ?: '');
     }
 
     /**

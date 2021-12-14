@@ -208,8 +208,6 @@ class VoucherTransactionBulk extends Model
                 $transaction->forceFill([
                     'state'             => VoucherTransaction::STATE_SUCCESS,
                     'payment_id'        => $payment ? $payment->getId() : null,
-                    'iban_from'         => $this->monetary_account_iban,
-                    'iban_to'           => $transaction->provider->iban,
                     'payment_time'      => now(),
                 ])->save();
 
@@ -241,6 +239,8 @@ class VoucherTransactionBulk extends Model
                     $paymentDescription = $transaction->makePaymentDescription();
 
                     $transaction->update([
+                        'iban_to' => $transaction->provider->iban,
+                        'iban_from' => $this->monetary_account_iban,
                         'payment_description' => $paymentDescription,
                     ]);
 
