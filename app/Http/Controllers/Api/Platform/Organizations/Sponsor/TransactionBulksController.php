@@ -71,6 +71,7 @@ class TransactionBulksController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
