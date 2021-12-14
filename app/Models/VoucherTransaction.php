@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read bool $iban_final
  * @property-read string $state_locale
  * @property-read float $transaction_cost
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -191,6 +192,15 @@ class VoucherTransaction extends Model
     public function getTransactionCostAttribute(): float
     {
         return $this->amount > 0 ? .11 : 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getIbanFinalAttribute(): bool
+    {
+        return $this->isPaid() || ($this->iban_from && $this->iban_to);
     }
 
     /**
