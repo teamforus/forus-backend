@@ -2,7 +2,14 @@
 
 Beste deelnemer,
 
-Er is met uw tegoed een aankoop gedaan. Hierdoor is er een bedrag afgeschreven.
-&nbsp;
+Bedrag afgeschreven van uw :fund_name tegoed.
+&nbsp;  
+Er is een betaling gedaan met uw tegoed voor :fund_name.
 
-Het huidige saldo van uw ':fund_name'-tegoed is :voucher_amount_locale
+Betaling
+&nbsp;  
+Op :voucher_transaction_date_locale is er door :provider_name :voucher_transaction_amount_locale afgeschreven.
+
+Uw tegoed
+&nbsp;  
+U heeft nu nog :voucher_amount_locale over.
