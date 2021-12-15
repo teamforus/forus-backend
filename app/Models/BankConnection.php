@@ -444,7 +444,10 @@ class BankConnection extends Model
             return [];
         }
 
-        return Payment::listing(null, compact('count'))->getValue();
+        return Payment::listing(
+            $this->bank_connection_default_account->monetary_account_id,
+            compact('count')
+        )->getValue();
     }
 
     /**

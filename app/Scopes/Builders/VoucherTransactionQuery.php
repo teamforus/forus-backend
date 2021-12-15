@@ -23,6 +23,7 @@ class VoucherTransactionQuery
 
         // To exclude transactions marked for review and those which failed before the update
         $builder->where('attempts', '<=', 3);
+        $builder->where('amount', '>', 0);
 
         $builder->whereDoesntHave('provider', function(Builder $builder) {
             $builder->whereIn('iban', config('bunq.skip_iban_numbers'));
