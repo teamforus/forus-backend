@@ -25,6 +25,7 @@ class DigIdSessionsCleanupCommand extends Command
      * Execute the console command.
      *
      * @return void
+     * @throws \Exception
      */
     public function handle(): void
     {

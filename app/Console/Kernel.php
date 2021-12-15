@@ -148,9 +148,9 @@ class Kernel extends ConsoleKernel
          * BankProcessFundTopUpsCommand
          */
         $schedule->command('bank:process-top-ups')
-            ->everyFifteenMinutes()
-            ->withoutOverlapping()
-            ->onOneServer();
+            ->hourly()
+            ->onOneServer()
+            ->withoutOverlapping();
 
         /**
          * BankUpdateContextSessionsCommand

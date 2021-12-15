@@ -22,7 +22,7 @@ class RolePermissionsTableSeeder extends Seeder
             "manage_bank_connections", "manage_transaction_bulks",
         ],
         "finance" => [
-            "view_finances", "manage_vouchers",
+            "view_finances", "manage_vouchers", "manage_bank_connections",
         ],
         "validation" => [
             "validate_records", "view_funds",
