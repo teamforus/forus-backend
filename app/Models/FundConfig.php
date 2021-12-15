@@ -85,7 +85,7 @@ class FundConfig extends Model
         'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
         'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
-        'allow_fund_requests', 'allow_prevalidations', 'request_btn_text', 'request_btn_url'
+        'allow_fund_requests', 'allow_prevalidations',
     ];
 
     /**

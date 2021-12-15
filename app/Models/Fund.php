@@ -48,7 +48,8 @@ use Carbon\Carbon;
  * @property string|null $description_short
  * @property string|null $faq_title
  * @property string $request_btn_text
- * @property string|null $request_btn_url
+ * @property string|null $external_link_url
+ * @property string $external_link_text
  * @property string|null $type
  * @property string $state
  * @property bool $archived
@@ -151,6 +152,8 @@ use Carbon\Carbon;
  * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
+ * @method static Builder|Fund whereExternalLinkText($value)
+ * @method static Builder|Fund whereExternalLinkUrl($value)
  * @method static Builder|Fund whereFaqTitle($value)
  * @method static Builder|Fund whereId($value)
  * @method static Builder|Fund whereName($value)
@@ -159,7 +162,6 @@ use Carbon\Carbon;
  * @method static Builder|Fund whereOrganizationId($value)
  * @method static Builder|Fund wherePublic($value)
  * @method static Builder|Fund whereRequestBtnText($value)
- * @method static Builder|Fund whereRequestBtnUrl($value)
  * @method static Builder|Fund whereStartDate($value)
  * @method static Builder|Fund whereState($value)
  * @method static Builder|Fund whereType($value)
@@ -221,7 +223,7 @@ class Fund extends Model
         'end_date', 'notification_amount', 'fund_id', 'notified_at', 'public',
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
-        'request_btn_text', 'request_btn_url', 'faq_title',
+        'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
     ];
 
     protected $hidden = [
@@ -390,9 +392,19 @@ class Fund extends Model
      */
     public function makeFundConfig(array $attributes = []): void
     {
-        if (!$this->fund_config()->exists()) {
-            $this->fund_config()->create()->forceFill($attributes)->save();
+        if ($this->fund_config()->exists()) {
+            return;
         }
+
+        $preApprove = $this->isExternal() && $this->organization->pre_approve_external_funds;
+
+        $this->fund_config()->create()->forceFill($preApprove ? [
+            'key' => str_slug($this->name, '_') . '_' . resolve('token_generator')->generate(8),
+            'is_configured' => 1,
+            'implementation_id' => $this->organization->implementations[0]->id ?? null,
+        ] : [])->save();
+
+        $this->updateFundsConfig($attributes);
     }
 
     /**
@@ -401,11 +413,15 @@ class Fund extends Model
      */
     public function updateFundsConfig(array $attributes): void
     {
-        $fields = $this->isWaiting() ? [
+        $values = array_only($attributes, [
             'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-        ] : [];
+        ]);
 
-        $this->fund_config->forceFill(array_only($attributes, $fields))->save();
+        $replaceValues = $this->isExternal() ? array_fill_keys([
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+        ], false) : [];
+
+        $this->fund_config->forceFill(array_merge($values, $replaceValues))->save();
     }
 
     /**

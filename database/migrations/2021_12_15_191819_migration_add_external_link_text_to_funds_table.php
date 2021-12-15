@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * @noinspection PhpUnused
  */
-class AddRequestBtnFieldsToFundsTable extends Migration
+class MigrationAddExternalLinkTextToFundsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -17,8 +17,7 @@ class AddRequestBtnFieldsToFundsTable extends Migration
     public function up(): void
     {
         Schema::table('funds', function (Blueprint $table) {
-            $table->string('request_btn_text', 100)->after('description_short')->default('Aanvragen');
-            $table->string('request_btn_url', 200)->after('request_btn_text')->nullable();
+            $table->string('external_link_text', 100)->after('request_btn_url')->default(null);
         });
     }
 
@@ -30,8 +29,7 @@ class AddRequestBtnFieldsToFundsTable extends Migration
     public function down(): void
     {
         Schema::table('funds', function (Blueprint $table) {
-            $table->dropColumn('request_btn_text');
-            $table->dropColumn('request_btn_url');
+            $table->dropColumn('external_link_text');
         });
     }
 }

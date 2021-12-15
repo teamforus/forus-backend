@@ -54,6 +54,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
+ * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -76,6 +77,8 @@ use Illuminate\Database\Query\Builder;
  * @property-read Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @property-read string $description_html
+ * @property-read Collection|\App\Models\Implementation[] $implementations
+ * @property-read int|null $implementations_count
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -134,6 +137,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereName($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
+ * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)
@@ -182,7 +186,21 @@ class Organization extends Model
         'reservations_subsidy_enabled'          => 'boolean',
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
+        'pre_approve_external_funds'            => 'boolean',
     ];
+
+    /**
+     * @param string|null $type
+     * @return string
+     */
+    public function initialFundState(?string $type = 'budget'): string
+    {
+        if ($type === Fund::TYPE_EXTERNAL && $this->pre_approve_external_funds) {
+            return Fund::STATE_PAUSED;
+        }
+
+        return Fund::STATE_WAITING;
+    }
 
     /**
      * @param BaseFormRequest $request
@@ -275,6 +293,15 @@ class Organization extends Model
     public function bank_connections(): HasMany
     {
         return $this->hasMany(BankConnection::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function implementations(): HasMany
+    {
+        return $this->hasMany(Implementation::class);
     }
 
     /**

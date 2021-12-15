@@ -79,12 +79,16 @@ class FundsController extends Controller
 
         /** @var Fund $fund */
         $fund = $organization->funds()->create(array_merge($request->only([
-            'name', 'description', 'description_short', 'start_date', 'end_date', 'type',
-            'notification_amount', 'default_validator_employee_id',
-            'faq_title', 'request_btn_text', 'request_btn_url',
+            'name', 'description', 'description_short', 'start_date', 'end_date',
+            'type', 'notification_amount', 'default_validator_employee_id',
+            'faq_title', 'request_btn_text', 'external_link_text', 'external_link_url',
         ]), [
-            'state' => Fund::STATE_WAITING,
+            'state' => $organization->initialFundState($request->input('type')),
             'auto_requests_validation' => $auto_requests_validation,
+        ]));
+
+        $fund->makeFundConfig($request->only([
+            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
         ]));
 
         $fund->attachMediaByUid($request->input('media_uid'));
@@ -99,10 +103,6 @@ class FundsController extends Controller
             $request->has('formula_products')) {
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
-
-        $fund->makeFundConfig($request->only([
-            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
-        ]));
 
         FundCreatedEvent::dispatch($fund);
 
@@ -176,25 +176,21 @@ class FundsController extends Controller
             $request->input('default_validator_employee_id') &&
             $request->input('auto_requests_validation');
 
-        $params = array_merge($request->only([
+        $fund->updateModel(array_merge($request->only([
             'name', 'description', 'description_short', 'notification_amount',
-            'default_validator_employee_id', 'request_btn_text', 'request_btn_url', 'faq_title',
-        ]), [
-            'auto_requests_validation' => $auto_requests_validation
-        ]);
+            'default_validator_employee_id', 'faq_title',
+            'request_btn_text', 'external_link_text', 'external_link_url',
+        ]), compact('auto_requests_validation')));
 
         if ($fund->isWaiting()) {
-            $params = array_merge($params, $request->only('start_date', 'end_date'));
+            $fund->updateFundsConfig($request->only([
+                'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
+            ]));
         }
 
-        $fund->updateModel($params);
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
         $fund->syncFaqOptional($request->input('faq'));
-
-        $fund->updateFundsConfig($request->only([
-            'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests'
-        ]));
 
         FundUpdatedEvent::dispatch($fund);
 

@@ -78,7 +78,8 @@ class UpdateFundRequest extends BaseFormRequest
             'allow_prevalidations'      => 'nullable|boolean',
             'allow_direct_requests'     => 'nullable|boolean',
             'request_btn_text'          => 'nullable|string|max:50',
-            'request_btn_url'          => 'nullable|string|max:200',
+            'external_link_text'        => 'nullable|string|max:50',
+            'external_link_url'         => 'nullable|string|max:200',
         ], [
             'auto_requests_validation'  => 'nullable|boolean',
             'default_validator_employee_id' => [
