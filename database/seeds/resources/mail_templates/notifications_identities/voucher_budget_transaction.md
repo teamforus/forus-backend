@@ -8,7 +8,7 @@ Er is een betaling gedaan met uw tegoed voor :fund_name.
 
 Betaling
 &nbsp;  
-Op :voucher_transaction_date_locale is er door :provider_name :voucher_transaction_amount_locale afgeschreven.
+Op :voucher_transaction_created_at_locale is er door :provider_name :voucher_transaction_amount_locale afgeschreven.
 
 Uw tegoed
 &nbsp;  
