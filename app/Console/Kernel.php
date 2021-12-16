@@ -6,6 +6,7 @@ use App\Console\Commands\BankProcessFundTopUpsCommand;
 use App\Console\Commands\BankUpdateContextSessionsCommand;
 use App\Console\Commands\BankVoucherTransactionBulksBuildCommand;
 use App\Console\Commands\BankVoucherTransactionBulksUpdateStateCommand;
+use App\Console\Commands\BankVoucherTransactionProcessZeroAmountCommand;
 use App\Console\Commands\CalculateFundUsersCommand;
 use App\Console\Commands\CheckFundStateCommand;
 use App\Console\Commands\CheckProductExpirationCommand;
@@ -80,6 +81,7 @@ class Kernel extends ConsoleKernel
         BankUpdateContextSessionsCommand::class,
         BankVoucherTransactionBulksBuildCommand::class,
         BankVoucherTransactionBulksUpdateStateCommand::class,
+        BankVoucherTransactionProcessZeroAmountCommand::class,
         UpdateNotificationTemplatesCommand::class,
         UpdateSystemNotificationsCommand::class,
     ];
@@ -164,6 +166,14 @@ class Kernel extends ConsoleKernel
          * BankVoucherTransactionBulksBuildCommand
          */
         $schedule->command('bank:bulks-build')
+            ->dailyAt(env('BANK_DAILY_BULK_BUILD_TIME', '09:00'))
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        /**
+         * BankVoucherTransactionProcessZeroAmountCommand:
+         */
+        $schedule->command('bank:process-zero-amount')
             ->dailyAt(env('BANK_DAILY_BULK_BUILD_TIME', '09:00'))
             ->withoutOverlapping()
             ->onOneServer();

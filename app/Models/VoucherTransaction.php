@@ -477,4 +477,16 @@ class VoucherTransaction extends Model
             'transaction_id' => $this->id
         ]);
     }
+
+    /**
+     * Set all transactions with zero amount as paid when is payment time (skip bank payment)
+     * @return void
+     */
+    public static function processZeroAmount(): void
+    {
+        VoucherTransactionQuery::whereReadyForPayoutAndAmountIsZero(static::query())->update([
+            'state'         => static::STATE_SUCCESS,
+            'payment_time'  => now(),
+        ]);
+    }
 }

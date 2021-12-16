@@ -16,14 +16,13 @@ class VoucherTransactionQuery
      * @param Builder $builder
      * @return Builder
      */
-    public static function whereAvailableForBulking(Builder $builder): Builder
+    protected static function whereReadyForPayment(Builder $builder): Builder
     {
         $builder->where('voucher_transactions.state', VoucherTransaction::STATE_PENDING);
         $builder->whereNull('voucher_transaction_bulk_id');
 
         // To exclude transactions marked for review and those which failed before the update
         $builder->where('attempts', '<=', 3);
-        $builder->where('amount', '>', 0);
 
         $builder->whereDoesntHave('provider', function(Builder $builder) {
             $builder->whereIn('iban', config('bunq.skip_iban_numbers'));
@@ -33,5 +32,23 @@ class VoucherTransactionQuery
             $query->whereNull('transfer_at');
             $query->orWhereDate('transfer_at', '<', now());
         });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereAvailableForBulking(Builder $builder): Builder
+    {
+        return static::whereReadyForPayment($builder->where('amount', '>', 0));
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereReadyForPayoutAndAmountIsZero(Builder $builder): Builder
+    {
+        return self::whereReadyForPayment($builder->where('amount', '=', 0));
     }
 }
