@@ -40,7 +40,7 @@ class VoucherTransactionQuery
      */
     public static function whereAvailableForBulking(Builder $builder): Builder
     {
-        return static::whereReadyForPayment($builder->where('amount', '>', 0));
+        return static::whereReadyForPayment($builder->where('voucher_transactions.amount', '>', 0));
     }
 
     /**
@@ -49,6 +49,6 @@ class VoucherTransactionQuery
      */
     public static function whereReadyForPayoutAndAmountIsZero(Builder $builder): Builder
     {
-        return self::whereReadyForPayment($builder->where('amount', '=', 0));
+        return self::whereReadyForPayment($builder->where('voucher_transactions.amount', '=', 0));
     }
 }
