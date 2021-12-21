@@ -1070,7 +1070,10 @@ class Voucher extends Model
      */
     public function addPhysicalCard(string $code): PhysicalCard
     {
-        return $this->physical_cards()->create(compact('code'));
+        return $this->physical_cards()->create([
+            'code' => $code,
+            'identity_address' => $this->identity_address,
+        ]);
     }
 
     /**
