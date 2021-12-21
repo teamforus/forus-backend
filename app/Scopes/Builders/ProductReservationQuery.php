@@ -21,6 +21,8 @@ class ProductReservationQuery
     {
         return $query->where(function(Builder $builder) use ($q) {
             $builder->where('code', 'LIKE', "%$q%");
+            $builder->orWhere('first_name', 'LIKE', "%$q%");
+            $builder->orWhere('last_name', 'LIKE', "%$q%");
 
             $builder->orWhereHas('product', function(Builder $builder) use ($q) {
                 ProductQuery::queryFilter($builder, $q);

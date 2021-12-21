@@ -45,17 +45,19 @@ class FundRequestClarification extends Model
     ];
 
     protected $fillable = [
-        'fund_request_record_id', 'state', 'question', 'answer', 'answered_at'
+        'fund_request_record_id', 'state', 'question', 'answer', 'answered_at',
     ];
 
     protected $dates = [
-        'answered_at'
+        'answered_at',
     ];
 
     /**
      * @return BelongsTo
+     * @noinspection PhpUnused
      */
-    public function fund_request_record(): BelongsTo {
+    public function fund_request_record(): BelongsTo
+    {
         return $this->belongsTo(FundRequestRecord::class);
     }
 }

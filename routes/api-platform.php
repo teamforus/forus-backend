@@ -274,6 +274,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->post('product-reservations/validate', "Api\Platform\ProductReservationsController@storeValidate");
+
     $router->group(['prefix' => '/provider'], static function() use ($router) {
         $router->resource('vouchers', "Api\Platform\Provider\VouchersController", [
             'only' => [

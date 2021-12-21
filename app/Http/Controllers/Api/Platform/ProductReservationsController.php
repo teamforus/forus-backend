@@ -59,7 +59,9 @@ class ProductReservationsController extends Controller
         $product = Product::find($request->input('product_id'));
         $voucher = Voucher::findByAddress($request->input('voucher_address'), $request->auth_address());
 
-        $reservation = $voucher->reserveProduct($product);
+        $reservation = $voucher->reserveProduct($product, null, $request->only([
+            'first_name', 'last_name', 'user_note',
+        ]));
 
         if ($reservation->product->autoAcceptsReservations($voucher->fund)) {
             $reservation->acceptProvider();
@@ -69,6 +71,12 @@ class ProductReservationsController extends Controller
             ProductReservationResource::load()
         ));
     }
+
+    /**
+     * Validate product reservation request
+     * @param StoreProductReservationRequest $request
+     */
+    public function storeValidate(StoreProductReservationRequest $request): void {}
 
     /**
      * Display the specified resource.
