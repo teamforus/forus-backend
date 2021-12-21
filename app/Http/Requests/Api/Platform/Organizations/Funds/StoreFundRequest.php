@@ -43,6 +43,7 @@ class StoreFundRequest extends BaseFormRequest
 
         $criteriaRules = $criteriaEditable ? [
             'criteria'                      => 'present|array',
+            'criteria.*'                    => 'required|array',
             'criteria.*.id'                 => ['nullable', Rule::in([])],
             'criteria.*.operator'           => 'required|in:=,<,>',
             'criteria.*.record_type_key'    => 'required|exists:record_types,key',
@@ -57,7 +58,7 @@ class StoreFundRequest extends BaseFormRequest
         return array_merge([
             'type'                          => ['required', Rule::in(Fund::TYPES)],
             'name'                          => 'required|between:2,200',
-            'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
+            'media_uid'                     => ['nullable', new MediaUidRule('fund_logo')],
             'description'                   => 'nullable|string|max:4000',
             'description_short'             => 'nullable|string|max:140',
             'description_media_uid'         => 'nullable|array',
@@ -65,6 +66,18 @@ class StoreFundRequest extends BaseFormRequest
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
             'end_date'                      => 'required|date_format:Y-m-d|after:start_date',
             'notification_amount'           => 'nullable|numeric',
+            'faq_title'                     => 'nullable|string|max:200',
+            'faq'                           => 'present|array',
+            'faq.*'                         => 'required|array',
+            'faq.*.id'                      => 'nullable|in:',
+            'faq.*.title'                   => 'required|string|max:200',
+            'faq.*.description'             => 'required|string|max:5000',
+            'allow_fund_requests'           => 'required|boolean',
+            'allow_prevalidations'          => 'required|boolean',
+            'allow_direct_requests'         => 'required|boolean',
+            'request_btn_text'              => 'nullable|string|max:50',
+            'external_link_text'            => 'nullable|string|max:50',
+            'external_link_url'             => 'nullable|string|max:200',
         ], [
             'auto_requests_validation' => 'nullable|boolean',
             'default_validator_employee_id' => 'nullable|in:' . $availableEmployees->join(','),

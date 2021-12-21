@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
+use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use bunq\Model\Generated\Endpoint\DraftPayment;
@@ -276,6 +277,9 @@ class VoucherTransactionBulk extends Model
     {
         /** @var Organization[]|Collection $sponsors */
         $sponsors = Organization::whereHas('funds', function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
+            FundQuery::whereIsConfiguredByForus($builder);
+
             $builder->whereHas('voucher_transactions', function(Builder $builder) {
                 VoucherTransactionQuery::whereAvailableForBulking($builder);
             });
