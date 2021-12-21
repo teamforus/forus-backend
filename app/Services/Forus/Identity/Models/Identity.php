@@ -2,6 +2,7 @@
 
 namespace App\Services\Forus\Identity\Models;
 
+use App\Models\PhysicalCard;
 use App\Models\Voucher;
 use App\Services\Forus\Record\Models\Record;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Services\Forus\Identity\Models\IdentityEmail|null $initial_email
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\App\Services\Forus\Identity\Models\DatabaseNotification[] $notifications
  * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|PhysicalCard[] $physical_cards
+ * @property-read int|null $physical_cards_count
  * @property-read \App\Services\Forus\Identity\Models\IdentityEmail|null $primary_email
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\Forus\Identity\Models\IdentityProxy[] $proxies
  * @property-read int|null $proxies_count
@@ -120,6 +123,14 @@ class Identity extends Model
     public function vouchers(): HasMany
     {
         return $this->hasMany(Voucher::class, 'identity_address', 'address');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function physical_cards(): HasMany
+    {
+        return $this->hasMany(PhysicalCard::class, 'identity_address', 'address');
     }
 
     /**

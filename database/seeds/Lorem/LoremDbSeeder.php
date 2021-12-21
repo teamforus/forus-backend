@@ -27,6 +27,7 @@ use App\Events\Products\ProductCreated;
 use App\Events\FundProviders\FundProviderApprovedBudget;
 use App\Events\FundProviders\FundProviderApprovedProducts;
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
+use App\Scopes\Builders\FundQuery;
 
 /**
  * Class LoremDbSeeder
@@ -43,6 +44,8 @@ class LoremDbSeeder extends Seeder
     private $countValidators;
     private $countFundRequests;
     private $fundRequestEmailPattern;
+    private $vouchersPerFund;
+    private $emailNth = 0;
 
     private $implementations = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
@@ -54,10 +57,10 @@ class LoremDbSeeder extends Seeder
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk', 'Potjeswijzer',
     ];
 
-    private $implementationsWithMultipleFunds = [
+    private $sponsorsWithMultipleFunds = [
         'Westerkwartier' => 2,
-        'Nijmegen' => 2,
         'Stadjerspas' => 3,
+        'Nijmegen' => 2,
     ];
 
     private $subsidyFunds = [
@@ -109,6 +112,7 @@ class LoremDbSeeder extends Seeder
 
         $this->primaryEmail = config('forus.seeders.lorem_db_seeder.default_email');
         $this->fundRequestEmailPattern = config('forus.seeders.lorem_db_seeder.fund_request_email_pattern');
+        $this->vouchersPerFund = config('forus.seeders.lorem_db_seeder.vouchers_per_fund_count');
     }
 
     private function disableEmails(): void {
@@ -136,7 +140,7 @@ class LoremDbSeeder extends Seeder
         $this->success("✓ Identity created!");
 
         $this->info("⇾ Making Sponsors!");
-        $this->makeSponsors($baseIdentity);
+        $this->makeSponsorsFunds($this->makeSponsors($baseIdentity));
         $this->success("✓ Sponsors created!");
         $this->separator();
 
@@ -155,6 +159,11 @@ class LoremDbSeeder extends Seeder
         $this->success("✓ Providers applied to funds!");
         $this->separator();
 
+        $this->info("⇾ Making vouchers!");
+        $this->makeVouchers();
+        $this->success("✓ Vouchers created!");
+        $this->separator();
+
         $this->info("⇾ Making other implementations!");
         $this->makeOtherImplementations(array_diff($this->implementations, $this->implementationsWithFunds));
         $this->success("✓ Other implementations created!");
@@ -165,30 +174,34 @@ class LoremDbSeeder extends Seeder
         $this->success("✓ Fund requests created!");
         $this->separator();
 
+        $this->info("⇾ Appending physical cards!");
+        $this->appendPhysicalCards();
+        $this->success("✓ Physical cards attached!");
+        $this->separator();
+
         $this->enableEmails();
     }
 
     /**
-     * @param string $primaryEmail
+     * @param string|null $primaryEmail
      * @param bool $print
-     * @return mixed
-     * @throws Exception
+     * @return string
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function makeIdentity(
-        string $primaryEmail,
-        bool $print = false
-    ) {
+    public function makeIdentity(?string $primaryEmail = null, bool $print = false): string
+    {
+        $primaryEmail = $primaryEmail ?: strtolower(sprintf(
+            $this->fundRequestEmailPattern,
+            $this->integerToRoman($this->emailNth++)
+        ));
+
         $identityAddress = $this->identityRepo->make([
             'primary_email' => $primaryEmail,
             'given_name' => 'John',
             'family_name' => 'Doe'
         ]);
 
-        $proxy = $this->identityRepo->makeProxy(
-            'confirmation_code',
-            $identityAddress,
-            'active'
-        );
+        $proxy = $this->identityRepo->makeProxy('confirmation_code', $identityAddress, 'active');
 
         if ($print) {
             $this->info("Base identity access token \"{$proxy['access_token']}\"");
@@ -199,53 +212,20 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param string $identity_address
+     * @return array
      * @throws Exception
      */
-    public function makeSponsors(
-        string $identity_address
-    ): void {
-        $self = $this;
-
-        $organizations = array_map(static function($implementation) use ($self, $identity_address) {
-            return $self->makeOrganization($implementation, $identity_address, []);
+    public function makeSponsors(string $identity_address): array
+    {
+        $organizations = array_map(function($implementation) use ($identity_address) {
+            return $this->makeOrganization($implementation, $identity_address, []);
         }, $this->implementationsWithFunds);
 
         foreach ($organizations as $organization) {
             $this->makeOffices($organization, 2);
-            $countFunds = $this->implementationsWithMultipleFunds[$organization->name] ?? 1;
-
-            while ($countFunds-- > 0) {
-                $fund = $this->makeFund($organization, true);
-                $implementationKey = str_slug(explode(' ', $fund->name)[0]);
-                $fundKey = str_slug($fund->name . '_' . date('Y'));
-                $fundKey = $this->fundKeyOverwrite[$fund->name] ?? $fundKey;
-
-                if (!$implementation = Implementation::where([
-                    'key' => $implementationKey
-                ])->first()) {
-                    $implementation = $this->makeImplementation(
-                        $implementationKey,
-                        $fund->name . ' ' . date('Y')
-                    );
-                }
-
-                $this->fundConfigure($fund, $implementation, $fundKey);
-
-                if (!$this->isUsingAutoValidation($fund->name)) {
-                    $this->makePrevalidations(
-                        $fund->organization->identity_address,
-                        $fund,
-                        $this->generatePrevalidationData($fund, 10, [
-                            $fund->fund_config->key . '_eligible' => 'Ja',
-                        ])
-                    );
-                }
-
-                $implementation->update([
-                    'organization_id' => $fund->organization_id,
-                ]);
-            }
         }
+
+        return $organizations;
     }
 
     /**
@@ -828,7 +808,7 @@ class LoremDbSeeder extends Seeder
 
         while ($count-- > 0) {
             do {
-                $primaryKeyValue = random_int(100000, 999999);
+                $primaryKeyValue = random_int(111111, 999999);
             } while (collect($out)->pluck($csv_primary_key)->search($primaryKeyValue) !== false);
 
             $bsn_value = $env_lorem_bsn && ($count === $bsn_prevalidation_index) ?
@@ -965,10 +945,8 @@ class LoremDbSeeder extends Seeder
     public function makeFundRequests(): void {
         $requesters = [];
 
-        foreach (range(1, $this->countFundRequests) as $nth) {
-            $requesters[] = $this->makeIdentity(
-                strtolower(sprintf($this->fundRequestEmailPattern, $this->integerToRoman($nth)))
-            );
+        for ($i = 1; $i <= $this->countFundRequests; ++$i) {
+            $requesters[] = $this->makeIdentity();
         }
 
         /** @var Fund[] $funds */
@@ -1040,7 +1018,7 @@ class LoremDbSeeder extends Seeder
              'I' => 1
          ];
 
-         foreach($lookup as $roman => $value){
+         foreach ($lookup as $roman => $value){
             $result .= str_repeat($roman, (int) ($integer / $value));
             $integer %= $value;
          }
@@ -1099,5 +1077,100 @@ class LoremDbSeeder extends Seeder
     public function timestamp(): string
     {
         return now()->format('[H:i:s] - ');
+    }
+
+    /**
+     * @param Organization[] $sponsors
+     * @return void
+     * @throws Exception
+     */
+    private function makeSponsorsFunds(array $sponsors)
+    {
+        foreach ($sponsors as $sponsor) {
+            $this->makeSponsorFunds($sponsor);
+        }
+    }
+
+    /**
+     * @param Organization $sponsor
+     * @return void
+     * @throws Exception
+     */
+    private function makeSponsorFunds(Organization $sponsor)
+    {
+        $countFunds = $this->sponsorsWithMultipleFunds[$sponsor->name] ?? 1;
+
+        while ($countFunds-- > 0) {
+            $fund = $this->makeFundConfig($this->makeFund($sponsor, true));
+
+            if (!$fund->auto_requests_validation) {
+                $this->makePrevalidations(
+                    $fund->organization->identity_address,
+                    $fund,
+                    $this->generatePrevalidationData($fund, 10, [
+                        $fund->fund_config->key . '_eligible' => 'Ja',
+                    ])
+                );
+            }
+        }
+    }
+
+    /**
+     * @param Fund $fund
+     * @return Fund
+     */
+    private function makeFundConfig(Fund $fund): Fund
+    {
+        $implementationKey = str_slug(explode(' ', $fund->name)[0]);
+        $fundKey = str_slug($fund->name . '_' . date('Y'));
+        $fundKey = $this->fundKeyOverwrite[$fund->name] ?? $fundKey;
+
+        if (!$implementation = Implementation::where([
+            'key' => $implementationKey
+        ])->first()) {
+            $implementation = $this->makeImplementation($implementationKey, $fund->name . ' ' . date('Y'));
+            $implementation->update([
+                'organization_id' => $fund->organization_id,
+            ]);
+        }
+
+        $this->fundConfigure($fund, $implementation, $fundKey);
+
+        return $fund;
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function appendPhysicalCards()
+    {
+        $funds = Fund::whereHas('fund_config', function(Builder $builder) {
+            $builder->where('allow_physical_cards', true);
+        })->get();
+
+        foreach ($funds as $fund) {
+            foreach ($fund->vouchers as $voucher) {
+                $voucher->addPhysicalCard((string) random_int(11111111, 99999999));
+            }
+        }
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    private function makeVouchers(): void
+    {
+        $funds = Fund::where(function(Builder $builder) {
+            FundQuery::whereActiveFilter($builder);
+        })->get();
+
+        foreach ($funds as $fund) {
+            for ($i = 1; $i <= $this->countFundRequests; ++$i) {
+                $fund->makeVoucher($this->makeIdentity(), [
+                    'note' => 'Lorem seeder!',
+                ]);
+            }
+        }
     }
 }

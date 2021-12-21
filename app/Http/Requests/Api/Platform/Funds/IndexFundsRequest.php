@@ -36,6 +36,7 @@ class IndexFundsRequest extends FormRequest
             'organization_id' => 'nullable|exists:organizations,id',
             'order_by' => 'nullable|in:created_at',
             'order_by_dir' => 'nullable|in:asc,desc',
+            'with_external' => 'nullable|bool',
         ];
     }
 }

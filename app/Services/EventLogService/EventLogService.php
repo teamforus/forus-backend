@@ -11,6 +11,7 @@ use App\Models\FundRequestClarification;
 use App\Models\FundTopUpTransaction;
 use App\Models\Implementation;
 use App\Models\Organization;
+use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\Product;
 use App\Models\ProductReservation;
@@ -71,6 +72,7 @@ class EventLogService implements IEventLogService
             case 'employee': $modelMeta = $this->employeeMeta($model); break;
             case 'product_reservation': $modelMeta = $this->productReservationMeta($model); break;
             case 'voucher_transaction': $modelMeta = $this->voucherTransactionMeta($model); break;
+            case 'physical_card': $modelMeta = $this->physicalCardMeta($model); break;
             case 'physical_card_request': $modelMeta = $this->physicalCardRequestMeta($model); break;
             case 'bank': $modelMeta = $this->bankMeta($model); break;
             case 'bank_connection': $modelMeta = $this->bankConnectionMeta($model); break;
@@ -248,6 +250,20 @@ class EventLogService implements IEventLogService
         return [
             'fund_top_up_amount' => $transaction->amount,
             'fund_top_up_amount_locale' => currency_format($transaction->amount),
+        ];
+    }
+
+    /**
+     * @param PhysicalCard $physicalCard
+     * @return array
+     */
+    protected function physicalCardMeta(PhysicalCard $physicalCard): array
+    {
+        return [
+            'physical_card_id'                  => $physicalCard->id,
+            'physical_card_code'                => $physicalCard->code,
+            'physical_card_voucher_id'          => $physicalCard->voucher_id,
+            'physical_card_identity_address'    => $physicalCard->identity_address,
         ];
     }
 

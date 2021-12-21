@@ -45,7 +45,8 @@ class FundsController extends Controller
         ] : Fund::STATE_ACTIVE;
 
         $query = Fund::search($request->only([
-            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id', 'order_by', 'order_by_dir'
+            'tag', 'organization_id', 'fund_id', 'q', 'implementation_id',
+            'order_by', 'order_by_dir', 'with_external',
         ]), Implementation::queryFundsByState($state));
 
         $meta = [
@@ -57,9 +58,7 @@ class FundsController extends Controller
         ];
 
         if ($per_page = $request->input('per_page', false)) {
-            return FundResource::collection(
-                $query->paginate($per_page)
-            )->additional(compact('meta'));
+            return FundResource::collection($query->paginate($per_page))->additional(compact('meta'));
         }
 
         return FundResource::collection($query->get());
@@ -117,19 +116,21 @@ class FundsController extends Controller
      * Apply fund for identity
      *
      * @param Fund $fund
-     * @return VoucherResource
+     * @return VoucherResource|null
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
      */
-    public function apply(Fund $fund): VoucherResource
+    public function apply(Fund $fund): ?VoucherResource
     {
         $this->authorize('apply', $fund);
 
         $identity_address = auth_address();
         $voucher = $fund->makeVoucher($identity_address);
 
-        return new VoucherResource($voucher ?: $fund->vouchers()->where([
+        $voucher = $voucher ?: $fund->vouchers()->where([
             'identity_address' => $identity_address,
-        ])->first());
+        ])->first();
+
+        return $voucher ? new VoucherResource($voucher) : null;
     }
 }

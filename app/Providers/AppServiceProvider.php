@@ -17,6 +17,7 @@ use App\Models\FundRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\NotificationTemplate;
+use App\Models\PhysicalCard;
 use App\Models\PhysicalCardRequest;
 use App\Models\ProductReservation;
 use App\Models\VoucherTransaction;
@@ -62,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
             'organization'          => Organization::class,
             'mail_template'         => NotificationTemplate::class,
             'fund_provider'         => FundProvider::class,
+            'physical_card'         => PhysicalCard::class,
             'bank_connection'       => BankConnection::class,
             'implementation'        => Implementation::class,
             'product_category'      => ProductCategory::class,

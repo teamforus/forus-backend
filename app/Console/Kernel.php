@@ -22,6 +22,7 @@ use App\Console\Commands\Digests\SendProviderProductsDigestCommand;
 use App\Console\Commands\Digests\SendRequesterDigestCommand;
 use App\Console\Commands\Digests\SendSponsorDigestCommand;
 use App\Console\Commands\Digests\SendValidatorDigestCommand;
+use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
@@ -84,6 +85,9 @@ class Kernel extends ConsoleKernel
         BankVoucherTransactionProcessZeroAmountCommand::class,
         UpdateNotificationTemplatesCommand::class,
         UpdateSystemNotificationsCommand::class,
+
+        // physical cards
+        MigratePhysicalCardsCommand::class,
     ];
 
     /**
