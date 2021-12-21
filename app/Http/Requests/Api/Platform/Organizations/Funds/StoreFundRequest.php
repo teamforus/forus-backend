@@ -58,7 +58,7 @@ class StoreFundRequest extends BaseFormRequest
             'type'                          => ['required', Rule::in(Fund::TYPES)],
             'name'                          => 'required|between:2,200',
             'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
-            'description'                   => 'nullable|string|max:4000',
+            'description'                   => 'nullable|string|max:15000',
             'description_short'             => 'nullable|string|max:140',
             'description_media_uid'         => 'nullable|array',
             'description_media_uid.*'       => $this->mediaRule(),

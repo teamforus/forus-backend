@@ -38,6 +38,7 @@ use Illuminate\Http\Request;
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read bool $iban_final
  * @property-read string $state_locale
  * @property-read float $transaction_cost
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
@@ -191,6 +192,15 @@ class VoucherTransaction extends Model
     public function getTransactionCostAttribute(): float
     {
         return $this->amount > 0 ? .11 : 0;
+    }
+
+    /**
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function getIbanFinalAttribute(): bool
+    {
+        return $this->isPaid() || ($this->iban_from && $this->iban_to);
     }
 
     /**
@@ -465,6 +475,18 @@ class VoucherTransaction extends Model
         return trans('bunq.transaction.from_fund', [
             'fund_name' => $this->voucher->fund->name,
             'transaction_id' => $this->id
+        ]);
+    }
+
+    /**
+     * Set all transactions with zero amount as paid when is payment time (skip bank payment)
+     * @return void
+     */
+    public static function processZeroAmount(): void
+    {
+        VoucherTransactionQuery::whereReadyForPayoutAndAmountIsZero(static::query())->update([
+            'state'         => static::STATE_SUCCESS,
+            'payment_time'  => now(),
         ]);
     }
 }

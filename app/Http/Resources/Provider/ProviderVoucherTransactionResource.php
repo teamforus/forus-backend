@@ -2,19 +2,20 @@
 
 namespace App\Http\Resources\Provider;
 
-use App\Http\Resources\MediaResource;
+use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\ProductReservationResource;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\Tiny\FundTinyResource;
+use App\Http\Resources\Tiny\OrganizationTinyResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class ProviderVoucherTransactionResource
  * @property VoucherTransaction $resource
  * @package App\Http\Resources\Provider
  */
-class ProviderVoucherTransactionResource extends Resource
+class ProviderVoucherTransactionResource extends BaseJsonResource
 {
     public static $load = [
         'provider',
@@ -22,6 +23,7 @@ class ProviderVoucherTransactionResource extends Resource
         'provider.logo.presets',
         'voucher.fund',
         'voucher.fund.logo.presets',
+        'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'product',
         'notes',
     ];
@@ -35,32 +37,33 @@ class ProviderVoucherTransactionResource extends Resource
     public function toArray($request): array
     {
         $transaction = $this->resource;
+        $providerNotes = $transaction->notes->where('group', 'provider')->values();
 
-        return collect($transaction)->only([
-            "id", "organization_id", "product_id", "created_at",
-            "updated_at", "address", "state", "payment_id",
-        ])->merge([
-            'created_at_locale' => format_datetime_locale($transaction->created_at),
-            'updated_at_locale' => format_datetime_locale($transaction->updated_at),
+        return array_merge($transaction->only([
+            "id", "organization_id", "product_id", "address",
+            "state", 'state_locale', "payment_id", 'iban_final',
+        ]), $this->getIbanFields($transaction), [
             'amount' => currency_format($transaction->amount),
             'timestamp' => $transaction->created_at->timestamp,
             'cancelable' => $transaction->isCancelable(),
             'transaction_in' => $transaction->daysBeforeTransaction(),
-            "organization" => collect($transaction->provider)->only(
-                "id", "name"
-            )->merge([
-                'logo' => new MediaResource($transaction->provider->logo),
-            ]),
+            "fund" => new FundTinyResource($transaction->voucher->fund),
+            'notes' => VoucherTransactionNoteResource::collection($providerNotes),
             "product" => new ProductResource($transaction->product),
-            "fund" => collect($transaction->voucher->fund)->only([
-                "id", "name", "organization_id"
-            ])->merge([
-                'logo' => new MediaResource($transaction->voucher->fund->logo),
-            ]),
-            'notes' => VoucherTransactionNoteResource::collection(
-                $transaction->notes->where('group', 'provider')->values()
-            ),
             'reservation' => new ProductReservationResource($transaction->product_reservation),
-        ])->toArray();
+            "organization" => new OrganizationTinyResource($transaction->provider),
+        ], $this->timestamps($transaction, 'created_at', 'updated_at'));
+    }
+
+    /**
+     * @param VoucherTransaction $transaction
+     * @return array
+     */
+    public function getIbanFields(VoucherTransaction $transaction): array
+    {
+        return $transaction->iban_final ? $transaction->only('iban_from', 'iban_to') : [
+            'iban_from' => $transaction->voucher->fund->organization->bank_connection_active->iban ?? null,
+            'iban_to' => $transaction->provider->iban ?? null,
+        ];
     }
 }
