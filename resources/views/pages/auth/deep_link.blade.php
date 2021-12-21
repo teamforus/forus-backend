@@ -1,7 +1,7 @@
 @extends('pages.layout')
 
 @section('content')
-    @if(user_agent_data(request()->userAgent())->isMobile())
+    @if(request()->userAgent() && user_agent_data(request()->userAgent())->isMobile())
         <div class="block block-missing-app">
             <p>Open deze link op het zelfde apparaat waar het aanmeldverzoek is aangevraagd.</p>
             <a class="button button-primary" href="{{ $redirectUrl }}" onclick="onClick()">OPEN ME APP</a>

@@ -11,7 +11,6 @@ use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
-use App\Services\TokenGeneratorService\Facades\TokenGenerator;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TransactionsController extends Controller

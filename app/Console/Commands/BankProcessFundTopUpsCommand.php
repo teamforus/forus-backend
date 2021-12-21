@@ -100,7 +100,7 @@ class BankProcessFundTopUpsCommand extends Command
             'amount' => $amount->getValue()
         ]);
 
-        FundBalanceSuppliedEvent::dispatch($transaction);
+        FundBalanceSuppliedEvent::dispatch($topUp->fund, $transaction);
 
         $this->info(sprintf(
             "A new top-up payment found and processed: \nID: %s\nAMOUNT: %s\nDESCRIPTION: %s\n",

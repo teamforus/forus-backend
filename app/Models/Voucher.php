@@ -573,6 +573,7 @@ class Voucher extends Model
         $expired = $request->input('expired');
         $count_per_identity_min = $request->input('count_per_identity_min');
         $count_per_identity_max = $request->input('count_per_identity_max');
+        $state = $request->input('state');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -582,8 +583,12 @@ class Voucher extends Model
             }
         });
 
-        if ($state = $request->input('state')) {
-            $query->where('state', $state);
+        if ($state && $state == 'expired') {
+            VoucherQuery::whereExpired($query);
+        }
+
+        if ($state && $state != 'expired') {
+            VoucherQuery::whereNotExpired($query->where('state', $state));
         }
 
         if ($unassignedOnly) {

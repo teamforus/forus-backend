@@ -11,14 +11,14 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.removed_employee" => ["database", "push"],
 
         "notifications_fund_providers.approved_budget" => ["database", "mail", "push"],
-        "notifications_fund_providers.approved_products" => [''], // TODO can database notifications be removed
-        
+        "notifications_fund_providers.approved_products" => [], // TODO can database notifications be removed
+
         "notifications_fund_providers.revoked_budget" => ["database", "mail"],
-        "notifications_fund_providers.revoked_products" => [''], // TODO can database notifications be removed
+        "notifications_fund_providers.revoked_products" => [], // TODO can database notifications be removed
         "notifications_fund_providers.sponsor_message" => ["database"],
 
         "notifications_identities.requester_provider_approved_budget" => ["database"],
-        "notifications_identities.requester_provider_approved_products" => [''],// TODO can database notifications be removed
+        "notifications_identities.requester_provider_approved_products" => [],// TODO can database notifications be removed
 
         "notifications_fund_requests.created_validator_employee" => ["database"],
 
@@ -29,13 +29,13 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.fund_request_feedback_requested" => ["database", "mail"],
 
         'notifications_fund_providers.fund_started' => ["database"],
-        'notifications_fund_providers.fund_ended' => [''], // TODO can database notifications be removed
-        'notifications_fund_providers.fund_expiring' => [''], // TODO can database notifications be removed
+        'notifications_fund_providers.fund_ended' => [], // TODO can database notifications be removed
+        'notifications_fund_providers.fund_expiring' => [], // TODO can database notifications be removed
 
         "notifications_funds.created" => ["database"],
-        "notifications_funds.started" => ["databas "],
-        "notifications_funds.ended" => [''], // TODO can database notifications be removed
-        "notifications_funds.expiring" => [''], // TODO can database notifications be removed
+        "notifications_funds.started" => ["database"],
+        "notifications_funds.ended" => [], // TODO can database notifications be removed
+        "notifications_funds.expiring" => [], // TODO can database notifications be removed
         "notifications_funds.product_added" => ["database"],
         "notifications_funds.provider_applied" => ["database", "mail"],
         "notifications_funds.provider_message" => ["database"],
@@ -43,9 +43,9 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_funds.balance_low" => ["database", "mail"],
         "notifications_funds.balance_supplied" => ["database"],
 
-        'notifications_identities.requester_product_added' => [''], // TODO can database notifications be removed
-        'notifications_identities.requester_product_approved' => [''], // TODO can database notifications be removed
-        'notifications_identities.requester_product_revoked' => [''], // TODO can database notifications be removed
+        'notifications_identities.requester_product_added' => [], // TODO can database notifications be removed
+        'notifications_identities.requester_product_approved' => [], // TODO can database notifications be removed
+        'notifications_identities.requester_product_revoked' => [], // TODO can database notifications be removed
 
         "notifications_identities.product_reservation_created" => ["database"],
         "notifications_identities.product_reservation_accepted" => ["database"],
@@ -58,7 +58,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_products.revoked" => ["database"],
         "notifications_products.sold_out" => ["database", "mail"],
 
-        "notifications_identities.product_voucher_shared" => ["database", "mail"], //
+        "notifications_identities.product_voucher_shared" => ["database", "mail"],
         "notifications_identities.identity_voucher_assigned_budget" => ["database", "mail", "push"],
         "notifications_identities.identity_voucher_assigned_subsidy" => ["database", "mail", "push"],
         "notifications_identities.identity_voucher_assigned_product" => ["database", "mail", "push"],
@@ -67,23 +67,23 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_identities.voucher_added_subsidy" => ["database"],
         "notifications_identities.voucher_added_budget" => ["database"],
         "notifications_identities.voucher_deactivated" => ["mail"],
-        "notifications_identities.budget_voucher_expired" => [''], // TODO can database notifications be removed
+        "notifications_identities.budget_voucher_expired" => [], // TODO can database notifications be removed
         "notifications_identities.product_voucher_expired" => ["database"],
         "notifications_identities.voucher_expire_soon_budget" => ["database", "mail"],
-        "notifications_identities.voucher_expire_soon_product" => [''], // TODO can database notifications be removed
+        "notifications_identities.voucher_expire_soon_product" => [], // TODO can database notifications be removed
         "notifications_identities.voucher_physical_card_requested" => ["database", "mail"],
         "notifications_identities.voucher_shared_by_email" => ["database"],
         "notifications_identities.voucher_budget_transaction" => ["database", "mail", "push"],
         "notifications_identities.voucher_subsidy_transaction" => ["database", "mail", "push"],
         "notifications_identities.product_voucher_transaction" => ["database", "push"],
 
-        "notifications_fund_providers.bunq_transaction_success" => ["database", "push"],
+        "notifications_fund_providers.bunq_transaction_success" => ["database"],
 
         "notifications_bank_connections.activated" => ["database"],
         "notifications_bank_connections.disabled_invalid" => ["database"],
         "notifications_bank_connections.monetary_account_changed" => ["database"],
 
-        "notifications_physical_card_requests.physical_card_request_created" => [''], // TODO can database notifications be removed
+        "notifications_physical_card_requests.physical_card_request_created" => [], // TODO can database notifications be removed
     ];
 
     protected $optionalNotifications = [
