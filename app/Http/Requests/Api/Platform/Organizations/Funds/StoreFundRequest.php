@@ -60,7 +60,7 @@ class StoreFundRequest extends BaseFormRequest
             'name'                          => 'required|between:2,200',
             'media_uid'                     => ['nullable', new MediaUidRule('fund_logo')],
             'description'                   => 'nullable|string|max:15000',
-            'description_short'             => 'nullable|string|max:140',
+            'description_short'             => 'nullable|string|max:280',
             'description_media_uid'         => 'nullable|array',
             'description_media_uid.*'       => $this->mediaRule(),
             'start_date'                    => 'required|date_format:Y-m-d|after:' . $start_after,
