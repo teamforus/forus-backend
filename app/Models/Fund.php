@@ -984,7 +984,7 @@ class Fund extends Model
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if (!$fund->isClosed() && $fund->end_date->isPast()) {
+            if (!$fund->isClosed() && $fund->end_date->clone()->addDay()->isPast()) {
                 FundEndedEvent::dispatch($fund->changeState(self::STATE_CLOSED));
             }
         }
