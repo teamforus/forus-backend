@@ -53,6 +53,7 @@ class FundResource extends Resource
             'faq' => $fund->faq->map(function(FundFaq $faq) {
                 return $faq->only('id', 'title', 'description', 'description_html');
             }),
+            'categories' => FundCategoryResource::collection($fund->categories),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount'    => $fund->amountFixedByFormula(),
             'has_pending_fund_requests' => $fund->fund_requests()->where([

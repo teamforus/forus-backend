@@ -203,6 +203,8 @@ class FundsController extends Controller
             $fund->updateFormulaProducts($request->input('formula_products', []));
         }
 
+        $fund->syncCategories($request->input('category_tag_ids'));
+
         return new FundResource($fund);
     }
 

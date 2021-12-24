@@ -30,6 +30,7 @@ class IndexFundsRequest extends FormRequest
         return [
             'q' => 'nullable|string',
             'tag' => 'nullable|string|exists:tags,key',
+            'category_tag_id' => 'nullable|exists:tags,id|exists:fund_categories,tag_id',
             'state' => 'nullable|in:active_and_closed,active',
             'fund_id' => 'nullable|exists:funds,id',
             'per_page' => 'nullable|numeric|between:1,100',

@@ -67,6 +67,8 @@ use Carbon\Carbon;
  * @property-read int|null $backoffice_logs_count
  * @property-read Collection|\App\Models\Voucher[] $budget_vouchers
  * @property-read int|null $budget_vouchers_count
+ * @property-read Collection|\App\Models\FundCategory[] $categories
+ * @property-read int|null $categories_count
  * @property-read Collection|\App\Models\FundCriterion[] $criteria
  * @property-read int|null $criteria_count
  * @property-read \App\Models\Employee|null $default_validator_employee
@@ -278,6 +280,13 @@ class Fund extends Model
     public function faq(): HasMany
     {
         return $this->hasMany(FundFaq::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function categories() {
+        return $this->hasMany(FundCategory::class);
     }
 
     /**
@@ -886,6 +895,12 @@ class Fund extends Model
             });
         }
 
+        if ($category_tag_id = array_get($options, 'category_tag_id')) {
+            $query->whereHas('categories', static function(Builder $query) use ($category_tag_id) {
+                return $query->where('tag_id', $category_tag_id);
+            });
+        }
+
         if ($organization_id = array_get($options, 'organization_id')) {
             $query->where('organization_id', $organization_id);
         }
@@ -1224,6 +1239,25 @@ class Fund extends Model
 
         foreach ($criteria as $criterion) {
             $this->syncCriterion($criterion);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Update categories for existing fund
+     * @param array $category_tag_ids
+     * @return $this
+     */
+    public function syncCategories(array $category_tag_ids = []): self
+    {
+        // remove categories not listed in the array
+        $this->categories()->whereNotIn('tag_id', $category_tag_ids)->delete();
+
+        foreach ($category_tag_ids as $category_tag_id) {
+            if (!$this->categories()->where('tag_id', $category_tag_id ?? null)->exists()) {
+                $this->categories()->create(['tag_id' => $category_tag_id]);
+            }
         }
 
         return $this;
