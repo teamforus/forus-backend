@@ -110,14 +110,14 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('storeProvider', [FundProvider::class, $organization]);
 
-        $fund_id = $request->only('fund_id');
+        $fund_id = $request->input('fund_id');
 
         if (Fund::find($fund_id)->isExternal()) {
             abort(403, 'provider_apply_no_permission');
         }
 
         /** @var FundProvider $fundProvider */
-        $fundProvider = $organization->fund_providers()->firstOrCreate($fund_id);
+        $fundProvider = $organization->fund_providers()->firstOrCreate(compact('fund_id'));
 
         FundProviderApplied::dispatch($fundProvider->fund, $fundProvider);
 
