@@ -343,4 +343,17 @@ class FundRequestPolicy
         return $fundRequest->fund->organization_id === $organization->id ||
             in_array($organization->id, $externalValidators, true);
     }
+
+    /**
+     * @param string|null $identity_address
+     * @param Organization $organization
+     * @return bool
+     */
+    public function viewPersonBSNData(
+        ?string $identity_address,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity_address, 'view_person_bsn_data');
+    }
+
 }
