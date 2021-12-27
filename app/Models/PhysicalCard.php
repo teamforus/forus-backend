@@ -16,6 +16,8 @@ use App\Services\Forus\Identity\Models\Identity;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Identity|null $identity
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read int|null $logs_count
  * @property-read \App\Models\Voucher $voucher
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCard newQuery()
