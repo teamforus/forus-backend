@@ -53,6 +53,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\ProductReservation|null $product_reservation
  * @property-read \App\Models\Organization $provider
  * @property-read \App\Models\Voucher $voucher
+ * @property-read \App\Models\VoucherTransactionBulk|null $voucher_transaction_bulk
  * @method static Builder|VoucherTransaction newModelQuery()
  * @method static Builder|VoucherTransaction newQuery()
  * @method static Builder|VoucherTransaction query()
@@ -126,6 +127,15 @@ class VoucherTransaction extends Model
      */
     public function product(): BelongsTo {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function voucher_transaction_bulk(): BelongsTo
+    {
+        return $this->belongsTo(VoucherTransactionBulk::class);
     }
 
     /**
@@ -429,7 +439,8 @@ class VoucherTransaction extends Model
      */
     public function isCancelable(): bool
     {
-        return ($this->state === $this::STATE_PENDING) &&
+        return !$this->voucher_transaction_bulk &&
+            ($this->state === $this::STATE_PENDING) &&
             ($this->transfer_at && $this->transfer_at->isFuture());
     }
 

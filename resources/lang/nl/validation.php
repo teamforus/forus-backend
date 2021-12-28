@@ -228,6 +228,12 @@ return [
         'limit_total' => "totaal aanbod",
         'city' => "plaats",
         'limit_total_per_identity' => "limiet per aanvrager",
+        'first_name' => "voornaam",
+        'last_name' => "achternaam",
+        'user_note' => "opmerking",
+        'request_btn_text' => 'knoptekst aanvragen',
+        'external_link_text' => 'externe linktekst',
+        'external_link_url' => 'externe link-url',
     ],
     'voucher_generator' => [
         'budget_exceeded' => 'De som van alle tegoeden overschrijven het saldo op het fonds.',

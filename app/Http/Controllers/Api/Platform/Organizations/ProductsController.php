@@ -37,7 +37,9 @@ class ProductsController extends Controller
 
         return ProviderProductResource::collection(Product::searchAny($request)->where([
             'organization_id' => $organization->id
-        ])->paginate($request->input('per_page', 15)))->additional([
+        ])->with(
+            ProviderProductResource::load()
+        )->paginate($request->input('per_page', 15)))->additional([
             'meta' => $organization->productsMeta()
         ]);
     }

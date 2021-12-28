@@ -58,7 +58,7 @@ class DigIdController extends Controller
             ]));
         }
 
-        // request BSN number from digid and store in session
+        // request BSN from digid and store in session
         $session->requestBsn(
             $request->get('rid', ''),
             $request->get('a-select-server', ''),

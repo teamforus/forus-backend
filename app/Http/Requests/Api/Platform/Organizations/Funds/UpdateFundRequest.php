@@ -46,6 +46,7 @@ class UpdateFundRequest extends BaseFormRequest
 
         $criteriaRules = $criteriaEditable ? [
             'criteria'                      => 'present|array',
+            'criteria.*'                    => 'required|array',
             'criteria.*.id'                 => [
                 'nullable', Rule::in($this->fund->criteria()->pluck('id'))
             ],
@@ -63,10 +64,22 @@ class UpdateFundRequest extends BaseFormRequest
             'name'                      => 'required|between:2,200',
             'media_uid'                 => ['nullable', new MediaUidRule('fund_logo')],
             'description'               => 'nullable|string|max:15000',
-            'description_short'         => 'nullable|string|max:140',
+            'description_short'         => 'nullable|string|max:280',
             'notification_amount'       => 'nullable|numeric',
             'description_media_uid'     => 'nullable|array',
             'description_media_uid.*'   => $this->mediaRule(),
+            'faq_title'                 => 'nullable|string|max:200',
+            'faq'                       => 'nullable|array',
+            'faq.*'                     => 'required|array',
+            'faq.*.id'                  => ['nullable', 'in:' . $this->fund->faq()->pluck('id')->join(',')],
+            'faq.*.title'               => 'required|string|max:100',
+            'faq.*.description'         => 'required|string|max:5000',
+            'allow_fund_requests'       => 'nullable|boolean',
+            'allow_prevalidations'      => 'nullable|boolean',
+            'allow_direct_requests'     => 'nullable|boolean',
+            'request_btn_text'          => 'nullable|string|max:50',
+            'external_link_text'        => 'nullable|string|max:50',
+            'external_link_url'         => 'nullable|string|max:200',
         ], [
             'auto_requests_validation'  => 'nullable|boolean',
             'default_validator_employee_id' => [

@@ -2,8 +2,7 @@
 
 namespace App\Services\KvkApiService;
 
-use App\Models\Model;
-use Illuminate\Support\Collection;
+use GuzzleHttp\Client;
 
 /**
  * Class KvkApi
@@ -14,7 +13,7 @@ class KvkApi
     protected $api_url = "https://api.kvk.nl/";
     protected $api_debug;
     protected $api_key;
-    protected $disable_ssl_check;
+    protected $api_cert_path;
 
     /** @var string $cache_prefix Cache key */
     protected $cache_prefix = 'kvk_service:kvk-number:';
@@ -26,103 +25,90 @@ class KvkApi
      * KvkApi constructor.
      * @param bool $api_debug
      * @param string|null $api_key
-     * @param bool $disable_ssl_check
      */
-    public function __construct(
-        bool $api_debug,
-        string $api_key = null,
-        bool $disable_ssl_check = false
-    ) {
-        $this->api_debug = $api_debug;
+    public function __construct(bool $api_debug, string $api_key = null)
+    {
         $this->api_key = $api_key;
-        $this->disable_ssl_check = $disable_ssl_check;
+        $this->api_debug = $api_debug;
+        $this->api_url = $this->api_url . ($api_debug ? 'test/' : '');
+        $this->api_cert_path = storage_path('/kvk-api/api_kvk_nl.crt');
     }
 
     /**
      * @param string $kvk_number
      * @return string
      */
-    public function getApiUrl(
-        string $kvk_number
-    ): string {
-        return sprintf(
-            "%sapi/v2/%s/companies?q=%s&user_key=%s",
-            $this->api_url,
-            $this->api_debug ? 'testprofile' : 'profile',
-            $kvk_number,
-            $this->api_key
-        );
+    public function getApiUrl(string $kvk_number): string
+    {
+        return "{$this->api_url}api/v1/basisprofielen/$kvk_number/hoofdvestiging";
     }
 
     /**
      * @param string $kvk_number
      * @return bool|mixed
      */
-    public function kvkNumberData(
-        string $kvk_number
-    ) {
+    public function kvkNumberData(string $kvk_number): ?object
+    {
         try {
             $response = json_decode($this->makeApiCall($kvk_number), false);
-
-            if (is_object($response) && (count($response->data->items) > 0)) {
-                return $response;
-            }
+            return is_object($response) ? $response : null;
         } catch (\Exception $e) {
             if ($logger = logger()) {
                 $logger->error($e->getMessage());
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
      * @param string $kvk_number
-     * @return mixed
+     * @return string|null
      * @throws \Exception
      */
-    private function makeApiCall(
-        string $kvk_number
-    ) {
+    private function makeApiCall(string $kvk_number): ?string
+    {
         $cacheKey = $this->cache_prefix . $kvk_number;
         $cacheDuration = $this->cache_time * 60;
 
         return cache()->remember($cacheKey, $cacheDuration, function() use ($kvk_number) {
-            $arrContextOptions = [
-                "ssl" => [
-                    "verify_peer" => !$this->disable_ssl_check,
-                    "verify_peer_name" => !$this->disable_ssl_check,
+            return (new Client())->get($this->getApiUrl($kvk_number), [
+                'verify' => $this->api_cert_path,
+                'headers' => [
+                    'apikey' => $this->api_key
                 ],
-            ];
-
-            return file_get_contents($this->getApiUrl(
-                $kvk_number
-            ), false, stream_context_create($arrContextOptions));
+            ])->getBody()->getContents();
         });
     }
 
     /**
      * @param string $kvk_number
-     * @return \Illuminate\Support\Collection|Model[]
+     * @return array
      */
-    public function getOffices(string $kvk_number): Collection {
+    public function getOffices(string $kvk_number): array
+    {
         $kvkData = $this->kvkNumberData($kvk_number);
-        $addresses = $kvkData->data->items[0]->addresses;
+        $addresses = $kvkData->adressen ?? [];
+        $geocodeService = resolve('geocode_api');
 
-        return collect($addresses)->map(function($address) {
-            return [
-                'original' => $address,
-                'address' => sprintf(
-                    "%s %s%s, %s, %s",
-                    $address->street,
-                    $address->houseNumber,
-                    $address->houseNumberAddition,
-                    $address->postalCode,
-                    $address->city
-                ),
-                'lat' => $address->gpsLatitude,
-                'lon' => $address->gpsLongitude,
-            ];
-        });
+        return array_map(function($addressItem) use ($geocodeService) {
+            $address = sprintf(
+                "%s %s, %s, %s",
+                $addressItem->straatnaam,
+                $addressItem->huisnummer,
+                $addressItem->postcode,
+                $addressItem->plaats
+            );
+
+            $arr = compact('address');
+            $location = $geocodeService->getLocation($address);
+
+            if (is_array($location)) {
+                $arr['lon'] = $location['lng'] ?? null;
+                $arr['lat'] = $location['lat'] ?? null;
+            }
+
+            return $arr;
+        }, $addresses);
     }
 }

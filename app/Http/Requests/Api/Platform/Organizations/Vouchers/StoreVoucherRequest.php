@@ -6,6 +6,8 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Rules\ProductIdInStockRule;
+use App\Scopes\Builders\FundQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 
 /**
@@ -35,8 +37,12 @@ class StoreVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         /** @var Fund $fund */
-        $funds = $this->organization->funds();
-        $fund = $funds->find($this->input('fund_id'));
+        $fund = $this->organization->funds()->find($this->input('fund_id'));
+
+        $funds = $this->organization->funds()->where(function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
+            FundQuery::whereIsConfiguredByForus($builder);
+        });
 
         return [
             'fund_id'   => [
@@ -49,13 +55,13 @@ class StoreVoucherRequest extends BaseFormRequest
             'amount'    => [
                 $fund && $fund->isTypeBudget() ? 'required_without:product_id' : 'nullable',
                 'numeric',
-                'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
+                'between:.1,' . ($fund ? currency_format($fund->getMaxAmountPerVoucher()) : .1),
             ],
             'expire_at' => [
                 'nullable',
                 'date_format:Y-m-d',
-                'after:' . $fund->start_date->format('Y-m-d'),
-                'before_or_equal:' . $fund->end_date->format('Y-m-d'),
+                'after:' . ($fund ? $fund->start_date->format('Y-m-d') : null),
+                'before_or_equal:' . ($fund ? $fund->end_date->format('Y-m-d') : null),
             ],
             'product_id' => [
                 $fund && $fund->isTypeBudget() ? 'required_without:amount' : 'nullable',

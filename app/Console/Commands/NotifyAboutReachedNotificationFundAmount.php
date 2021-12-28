@@ -55,6 +55,7 @@ class NotifyAboutReachedNotificationFundAmount extends Command
         });
 
         $fundsQuery->where('state', 'active');
+        $fundsQuery->where('type', '!=', Fund::TYPE_EXTERNAL);
         $fundsQuery->where('notification_amount', '>', 0);
         $fundsQuery->whereNotNull('notification_amount');
 

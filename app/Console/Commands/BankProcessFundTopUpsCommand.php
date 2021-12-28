@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Events\Funds\FundBalanceSuppliedEvent;
 use App\Models\Fund;
 use App\Models\FundTopUp;
+use App\Scopes\Builders\FundQuery;
 use bunq\Model\Generated\Endpoint\Payment;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
@@ -115,6 +116,9 @@ class BankProcessFundTopUpsCommand extends Command
     {
         return Fund::whereHas('organization', function(Builder $builder) {
             $builder->whereHas('bank_connection_active');
+        })->where(function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
+            FundQuery::whereIsConfiguredByForus($builder);
         })->whereHas('top_ups')->get();
     }
 }

@@ -26,18 +26,14 @@ class PrevalidationController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function store(
-        StorePrevalidationsRequest $request
-    ): PrevalidationResource {
+    public function store(StorePrevalidationsRequest $request): PrevalidationResource
+    {
         $this->authorize('store', Prevalidation::class);
 
-        /** @var Prevalidation $prevalidation */
-        $prevalidation = Prevalidation::storePrevalidations(
+        return new PrevalidationResource(Prevalidation::storePrevalidations(
             Fund::find($request->input('fund_id')),
             [$request->input('data')]
-        )->first();
-
-        return new PrevalidationResource($prevalidation);
+        )->first());
     }
 
     /**
@@ -57,9 +53,7 @@ class PrevalidationController extends Controller
             $request->input('overwrite', [])
         );
 
-        return PrevalidationResource::collection($prevalidations->load(
-            PrevalidationResource::$load
-        ));
+        return PrevalidationResource::collection($prevalidations->load(PrevalidationResource::$load));
     }
 
     /**

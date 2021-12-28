@@ -44,7 +44,8 @@ class VoucherRelation extends Model
     /**
      * @return BelongsTo
      */
-    public function voucher(): BelongsTo {
+    public function voucher(): BelongsTo
+    {
         return $this->belongsTo(Voucher::class);
     }
 

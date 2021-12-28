@@ -27,6 +27,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $code
  * @property string $price_type
  * @property string $state
+ * @property string|null $first_name
+ * @property string|null $last_name
+ * @property string|null $user_note
  * @property string|null $note
  * @property \Illuminate\Support\Carbon|null $accepted_at
  * @property \Illuminate\Support\Carbon|null $canceled_at
@@ -37,6 +40,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
+ * @property-read string $state_locale
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Product $product
@@ -55,8 +59,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExpireAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFirstName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFundProviderProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceDiscount($value)
@@ -65,6 +71,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereRejectedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUserNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherTransactionId($value)
  * @method static \Illuminate\Database\Query\Builder|ProductReservation withTrashed()
@@ -117,6 +124,7 @@ class ProductReservation extends Model
         'product_id', 'voucher_id', 'voucher_transaction_id', 'fund_provider_product_id',
         'amount', 'state', 'accepted_at', 'rejected_at', 'canceled_at', 'expire_at',
         'price', 'price_type', 'price_discount', 'code', 'note', 'employee_id',
+        'first_name', 'last_name', 'user_note',
     ];
 
     /**
@@ -191,11 +199,19 @@ class ProductReservation extends Model
     }
 
     /**
+     * @return string
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return trans('states/product_reservations.' . $this->state);
+    }
+
+    /**
      * @return bool
      */
     public function hasExpired(): bool
     {
-        return $this->isPending() && !$this->expire_at->isFuture();
+        return $this->isPending() && !$this->expire_at->endOfDay()->isFuture();
     }
 
     /**
@@ -213,13 +229,18 @@ class ProductReservation extends Model
      */
     public function makeTransaction(?Employee $employee = null): VoucherTransaction
     {
+        $fund_end_date = $this->voucher->fund->end_date;
+
         /** @var VoucherTransaction $transaction */
         $transaction = $this->product_voucher->transactions()->create(array_merge([
             'state' => 'pending',
             'amount' => $this->amount,
             'address' => token_generator()->address(),
             'product_id' => $this->product_id,
-            'transfer_at' => now()->addDays(self::TRANSACTION_DELAY),
+            'transfer_at' => $fund_end_date->isPast() ? $fund_end_date : now()->closest(
+                now()->addDays(self::TRANSACTION_DELAY),
+                $fund_end_date
+            ),
             'employee_id' => $employee ? $employee->id : null,
             'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
             'organization_id' => $this->product->organization_id,

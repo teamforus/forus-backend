@@ -23,17 +23,23 @@ class FundQuery
     /**
      * @param Builder $query
      * @param bool $includeArchived
+     * @param bool $includeExternal
      * @return Builder
      */
     public static function whereActiveOrClosedFilter(
         Builder $query,
-        bool $includeArchived = true
+        bool $includeArchived = true,
+        bool $includeExternal = true
     ): Builder {
         return $query->whereIn('state', [
             Fund::STATE_ACTIVE, Fund::STATE_CLOSED
-        ])->where(function(Builder $builder) use ($includeArchived) {
+        ])->where(function(Builder $builder) use ($includeArchived, $includeExternal) {
             if (!$includeArchived) {
                 $builder->where('archived', false);
+            }
+
+            if (!$includeExternal) {
+                $builder->where('type', '!=', Fund::TYPE_EXTERNAL);
             }
         });
     }
@@ -163,5 +169,25 @@ class FundQuery
         }
 
         return $query;
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereIsConfiguredByForus(Builder $query): Builder
+    {
+        return $query->whereHas('fund_config', static function (Builder $query) {
+            return $query->where('is_configured', true);
+        });
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereIsInternal(Builder $query): Builder
+    {
+        return $query->where('type', '!=', Fund::TYPE_EXTERNAL);
     }
 }

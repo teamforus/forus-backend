@@ -112,6 +112,15 @@ class VoucherQuery
 
     /**
      * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereExpiredButActive(Builder $builder): Builder
+    {
+        return static::whereActive(static::whereExpired($builder));
+    }
+
+    /**
+     * @param Builder $builder
      * @param string $query
      * @return Builder
      */

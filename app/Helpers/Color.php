@@ -105,7 +105,7 @@ class Color
      * Convert a hexadecimal color code to its RGB equivalent
      *
      * @param string $hexStr (hexadecimal color value)
-     * @param boolean $returnAsString (if set true, returns the value separated by the separator character. Otherwise returns associative array)
+     * @param boolean $returnAsString (if set true, returns the value separated by the separator character. Otherwise, returns associative array)
      * @param string $separator (to separate RGB values. Applicable only if second parameter is true.)
      * @return array|string (depending on second parameter. Returns False if invalid hex color value)
      */
