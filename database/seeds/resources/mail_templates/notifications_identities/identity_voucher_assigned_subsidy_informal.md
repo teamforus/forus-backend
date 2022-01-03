@@ -5,7 +5,7 @@ Beste deelnemer,
 Alsjeblieft, hier is je :fund_name! Je aanvraag is goedgekeurd.
 &nbsp;  
 
-Op de :link_webshop vind je het complete aanbod.
+Op de :webshop_link vind je het complete aanbod.
 &nbsp;  
 
 :qr_token
@@ -19,7 +19,7 @@ Laat de QR-code scannen door een medewerker.
 Het tegoed wordt automatisch afgeschreven.
 &nbsp;  
 
-De afschrijvingen en resterende tegoeden kun je altijd inzien door in te loggen op de :link_webshop.
+De afschrijvingen en resterende tegoeden kun je altijd inzien door in te loggen op de :webshop_link.
 &nbsp;
 
 Heb je vragen? Stuur dan een e-mail naar :sponsor_email of bel naar :sponsor_phone.
