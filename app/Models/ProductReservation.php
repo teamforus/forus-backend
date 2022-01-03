@@ -211,7 +211,7 @@ class ProductReservation extends Model
      */
     public function hasExpired(): bool
     {
-        return $this->isPending() && !$this->expire_at->isFuture();
+        return $this->isPending() && !$this->expire_at->endOfDay()->isFuture();
     }
 
     /**
@@ -229,13 +229,18 @@ class ProductReservation extends Model
      */
     public function makeTransaction(?Employee $employee = null): VoucherTransaction
     {
+        $fund_end_date = $this->voucher->fund->end_date;
+
         /** @var VoucherTransaction $transaction */
         $transaction = $this->product_voucher->transactions()->create(array_merge([
             'state' => 'pending',
             'amount' => $this->amount,
             'address' => token_generator()->address(),
             'product_id' => $this->product_id,
-            'transfer_at' => now()->addDays(self::TRANSACTION_DELAY),
+            'transfer_at' => $fund_end_date->isPast() ? $fund_end_date : now()->closest(
+                now()->addDays(self::TRANSACTION_DELAY),
+                $fund_end_date
+            ),
             'employee_id' => $employee ? $employee->id : null,
             'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
             'organization_id' => $this->product->organization_id,
