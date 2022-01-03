@@ -294,21 +294,21 @@ class FundRequestPolicy
      *
      * @param string|null $identity_address
      * @param FundRequest $fundRequest
-     * @return bool
+     * @return bool|\Illuminate\Auth\Access\Response
      */
     public function disregard(
         ?string $identity_address,
         FundRequest $fundRequest
     ) {
         if (!$fundRequest->clarifications_pending()->exists()) {
-            return false;
+            return $this->deny("this request doesn't have any pending clarifications", 403);
         }
 
         /** @var FundRequestClarification $clarification */
         $clarification = $fundRequest->clarifications_pending->last();
 
-        if (now()->diffInWeeks($clarification->created_at) >= 2) {
-            return false;
+        if (now()->diffInWeeks($clarification->created_at) < 2) {
+            return $this->deny("2 weeks not passed since the clarification message", 403);
         }
 
         return true;
