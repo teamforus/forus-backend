@@ -52,11 +52,13 @@ class FundRequestRecord extends Model
     public const STATE_PENDING = 'pending';
     public const STATE_APPROVED = 'approved';
     public const STATE_DECLINED = 'declined';
+    public const STATE_DISREGARDED = 'disregarded';
 
     public const STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
+        self::STATE_DISREGARDED,
     ];
 
     protected $fillable = [
@@ -142,6 +144,16 @@ class FundRequestRecord extends Model
         if (!$this->fund_request->records_pending()->exists()) {
             $this->fund_request->resolve();
         }
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $note
+     * @return $this
+     */
+    public function disregard(string $note = null): self {
+        $this->setState(self::STATE_DISREGARDED, $note);
 
         return $this;
     }

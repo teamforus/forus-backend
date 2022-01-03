@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
@@ -134,6 +135,29 @@ class FundRequestsController extends Controller
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
 
         return new ValidatorFundRequestResource($fundRequest->decline(
+            $organization->findEmployee(auth_address()),
+            $request->input('note', '')
+        ));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param DisregardFundRequestsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function disregard(
+        DisregardFundRequestsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
+        $this->authorize('disregard', [$fundRequest]);
+
+        return new ValidatorFundRequestResource($fundRequest->disregard(
             $organization->findEmployee(auth_address()),
             $request->input('note', '')
         ));

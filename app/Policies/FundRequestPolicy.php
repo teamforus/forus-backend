@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\FundRequest;
+use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
 use App\Scopes\Builders\FundRequestRecordQuery;
@@ -283,6 +284,31 @@ class FundRequestPolicy
         // only fund validators may update requests
         if (!in_array($identity_address, $fundRequest->fund->validatorEmployees(), true)) {
             return $this->deny('fund_request.invalid_validator');
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the validator can disregard the fundRequest.
+     *
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @return bool
+     */
+    public function disregard(
+        ?string $identity_address,
+        FundRequest $fundRequest
+    ) {
+        if (!$fundRequest->clarifications_pending()->exists()) {
+            return false;
+        }
+
+        /** @var FundRequestClarification $clarification */
+        $clarification = $fundRequest->clarifications_pending->last();
+
+        if (now()->diffInWeeks($clarification->created_at) >= 2) {
+            return false;
         }
 
         return true;

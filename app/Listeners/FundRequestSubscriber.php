@@ -6,7 +6,9 @@ use App\Events\FundRequests\FundRequestRecordDeclined;
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Models\FundRequest;
+use App\Models\FundRequestClarification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
@@ -78,13 +80,30 @@ class FundRequestSubscriber
             $fundRequest->log($stateEvent, $this->getFundRequestLogModels($fundRequest));
         }
 
-        $eventLog = $fundRequest->log(
-            $fundRequest::EVENT_RESOLVED,
-            $this->getFundRequestLogModels($fundRequest)
-        );
+        /** @var FundRequestClarification $clarification */
+        $clarification = $fundRequest->clarifications_pending()->exists() ?
+            $fundRequest->clarifications_pending->last() : null;
+
+        $models = array_merge($this->getFundRequestLogModels($fundRequest), $clarification ? [
+            'fund_request_clarification' => $clarification
+        ] : []);
+
+        $raw_meta = $clarification ? [
+            'fund_request_clarification_date' => $clarification->created_at,
+            'fund_request_clarification_date_locale' =>
+                format_date_locale($clarification->created_at),
+            'fund_request_clarification_date_plus_2_weeks' =>
+                $clarification->created_at->addWeeks(2),
+            'fund_request_clarification_date_plus_2_weeks_locale' =>
+                format_date_locale($clarification->created_at->addWeeks(2)),
+        ] : [];
+
+        $eventLog = $fundRequest->log($fundRequest::EVENT_RESOLVED, $models, $raw_meta);
 
         if ($fundRequest->state === FundRequest::STATE_APPROVED) {
             IdentityFundRequestApprovedNotification::send($eventLog);
+        } elseif ($fundRequest->state === FundRequest::STATE_DISREGARDED) {
+            IdentityFundRequestDisregardedNotification::send($eventLog);
         } else {
             IdentityFundRequestDeniedNotification::send($eventLog);
         }

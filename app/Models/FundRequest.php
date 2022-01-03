@@ -42,6 +42,7 @@ use Illuminate\Http\Request;
  * @property-read int|null $records_declined_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records_pending
  * @property-read int|null $records_pending_count
+ * @property-read Collection|\App\Models\FundRequestRecord[] $records_disregarded
  * @method static Builder|FundRequest newModelQuery()
  * @method static Builder|FundRequest newQuery()
  * @method static Builder|FundRequest query()
@@ -71,18 +72,21 @@ class FundRequest extends Model
     public const STATE_APPROVED = 'approved';
     public const STATE_DECLINED = 'declined';
     public const STATE_APPROVED_PARTLY = 'approved_partly';
+    public const STATE_DISREGARDED = 'disregarded';
 
     public const STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_APPROVED_PARTLY,
+        self::STATE_DISREGARDED,
     ];
 
     public const STATES_RESOLVED = [
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_APPROVED_PARTLY,
+        self::STATE_DISREGARDED
     ];
 
     protected $fillable = [
@@ -247,20 +251,34 @@ class FundRequest extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
      */
-    public function clarifications_pending(): HasMany {
-        return $this->hasMany(FundRequestRecord::class)->where([
+    public function records_disregarded(): HasMany {
+        return $this->records()->where([
+            'fund_request_records.state' => FundRequestRecord::STATE_DISREGARDED
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function clarifications_pending(): HasManyThrough {
+        return $this->hasManyThrough(
+            FundRequestClarification::class,
+            FundRequestRecord::class
+        )->where([
             'fund_request_clarifications.state' => FundRequestClarification::STATE_PENDING
         ]);
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\hasManyThrough
      * @noinspection PhpUnused
      */
-    public function clarifications_answered(): HasMany {
-        return $this->hasMany(FundRequestRecord::class)->where([
+    public function clarifications_answered(): hasManyThrough {
+        return $this->hasManyThrough(
+            FundRequestClarification::class,
+            FundRequestRecord::class
+        )->where([
             'fund_request_clarifications.state' => FundRequestClarification::STATE_ANSWERED
         ]);
     }
@@ -303,6 +321,29 @@ class FundRequest extends Model
     }
 
     /**
+     * Set all fund request records assigned to given employee as declined
+     * @param Employee $employee
+     * @param string|null $note
+     * @return FundRequest
+     */
+    public function disregard(Employee $employee, string $note = null): self
+    {
+        $this->update([
+            'note' => $note ?: '',
+        ]);
+
+        $this->records()->where([
+            'employee_id' => $employee->id
+        ])->each(static function(FundRequestRecord $record) use ($note) {
+            $record->disregard($note);
+        });
+
+        $this->resolve();
+
+        return $this;
+    }
+
+    /**
      * Resolve fund request by applying validations to requester
      * from all approved fund request records and changes the status of
      * the request accordingly
@@ -329,12 +370,16 @@ class FundRequest extends Model
     public function updateStateByRecords(): FundRequest {
         $countAll = $this->records()->count();
         $countApproved = $this->records_approved()->count();
+        $countDisregarded = $this->records_disregarded()->count();
         $allApproved = $countAll === $countApproved;
+        $allDisregarded = $countAll === $countDisregarded;
         $hasApproved = $countApproved > 0;
         $oldState = $this->state;
 
         if ($allApproved) {
             $state = self::STATE_APPROVED;
+        } elseif ($allDisregarded) {
+            $state = self::STATE_DISREGARDED;
         } else {
             $state = $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;
         }
