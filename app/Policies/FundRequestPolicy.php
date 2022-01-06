@@ -353,7 +353,8 @@ class FundRequestPolicy
         ?string $identity_address,
         Organization $organization
     ): bool {
-        return $organization->identityCan($identity_address, 'view_person_bsn_data');
+        return $organization->hasPersonBsnApi() &&
+            $organization->identityCan($identity_address, 'view_person_bsn_data');
     }
 
 }

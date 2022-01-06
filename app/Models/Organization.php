@@ -58,6 +58,7 @@ use Illuminate\Database\Query\Builder;
  * @property int $provider_throttling_value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $person_bsn_api_id
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
@@ -135,6 +136,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereKvk($value)
  * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
  * @method static EloquentBuilder|Organization whereName($value)
+ * @method static EloquentBuilder|Organization wherePersonBsnApiId($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
@@ -165,7 +167,7 @@ class Organization extends Model
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
-        'reservations_auto_accept',
+        'reservations_auto_accept', 'person_bsn_api_id'
     ];
 
     /**
@@ -846,5 +848,13 @@ class Organization extends Model
         Implementation $implementation
     ): BankConnection {
         return BankConnection::addConnection($bank, $employee, $this, $implementation);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPersonBsnApi(): bool
+    {
+        return !empty($this->person_bsn_api_id);
     }
 }

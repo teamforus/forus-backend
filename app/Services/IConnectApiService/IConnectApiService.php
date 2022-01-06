@@ -3,6 +3,7 @@
 
 namespace App\Services\IConnectApiService;
 
+use App\Models\Organization;
 use App\Services\IConnectApiService\Responses\Child;
 use App\Services\IConnectApiService\Responses\ParentPerson;
 use App\Services\IConnectApiService\Responses\Partner;
@@ -30,6 +31,17 @@ class IConnectApiService
         'children' => 'kinderen',
         'partners' => 'partners'
     ];
+
+    /** @var string|null  */
+    private $person_bsn_api_id;
+
+    /**
+     * @param string $personBsnApiId
+     */
+    public function __construct(string $personBsnApiId)
+    {
+        $this->person_bsn_api_id = $personBsnApiId;
+    }
 
     /**
      * @param string $bsn
@@ -299,7 +311,7 @@ class IConnectApiService
         return [
             'apikey' => config('iconnect_api.header_key'),
             'x-doelbinding' => config('iconnect_api.target_binding'),
-            'x-origin-oin' => config('iconnect_api.origin_oin'),
+            'x-origin-oin' => $this->person_bsn_api_id,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ];

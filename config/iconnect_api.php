@@ -13,6 +13,5 @@ return [
     'cert_trust_pass' => env('ICONNECT_API_CRT_TRUST_PATH', storage_path('/app/certificates/cliq-apitest.locgov.nl_rsa.pem')),
 
     "target_binding" => env('ICONNECT_API_TARGET_BINDING', 'BurgerlijkeStand'),
-    "origin_oin" => env('ICONNECT_API_ORIGIN_OIN'),
     "header_key" => env('ICONNECT_API_HEADER_KEY')
 ];

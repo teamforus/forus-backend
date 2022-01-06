@@ -57,7 +57,7 @@ class OrganizationResource extends Resource
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = $organization->only([
                 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-                'phone_public', 'website_public'
+                'phone_public', 'website_public', 'person_bsn_api_id'
             ]);
         }
 
@@ -83,6 +83,7 @@ class OrganizationResource extends Resource
         ]), $privateData,
             $ownerData, [
             'has_bank_connection' => (bool) !empty($organization->bank_connection_active),
+            'has_person_bsn_api' => $organization->hasPersonBsnApi(),
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(
                 $organization->business_type

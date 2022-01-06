@@ -27,8 +27,6 @@ class IConnectApiServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('iconnect_api', function () {
-            return new IConnectApiService();
-        });
+
     }
 }

@@ -19,6 +19,7 @@ class PersonBSNController extends Controller
      * @param $bsn
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function show(Organization $organization, $bsn): JsonResponse
     {
@@ -26,8 +27,7 @@ class PersonBSNController extends Controller
             FundRequest::class, $organization
         ]);
 
-        /** @var IConnectApiService $iconnect */
-        $iconnect = resolve('iconnect_api');
+        $iconnect = new IConnectApiService($organization->person_bsn_api_id);
 
         $person = $iconnect->getPerson($bsn, ['parents', 'children', 'partners']);
 
