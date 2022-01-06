@@ -10,7 +10,6 @@ use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
-use App\Services\IConnectApiService\IConnectApiService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -34,16 +33,14 @@ class ValidatorFundRequestResource extends Resource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param  \Illuminate\Http\Request  $request
      * @return array
-     * @throws \Exception
      */
     public function toArray($request): array
     {
         $recordRepo = resolve('forus.services.record');
         $fundRequest = $this->resource;
         $criteria = FundCriterionResource::collection($fundRequest->fund->criteria);
-        $bsn = $recordRepo->bsnByAddress($fundRequest->identity_address);
 
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
@@ -54,20 +51,21 @@ class ValidatorFundRequestResource extends Resource
                 'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
                 'tags', 'type',
             ]), compact('criteria')),
-            'bsn' => $bsn,
+            'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
-            'records' => $this->getRecordsData($request, $fundRequest, $bsn),
+            'records' => $this->getRecordsData($request, $fundRequest),
         ]);
     }
 
     /**
-     * @throws \Exception
+     * @param Request $request
+     * @param FundRequest $fundRequest
+     * @return array
      */
-    public function getRecordsData(
-        Request $request, FundRequest $fundRequest, ?string $bsn
-    ): array {
+    public function getRecordsData(Request $request, FundRequest $fundRequest): array
+    {
         /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);
         $employee = $organization->findEmployee(auth_address()) or abort(403);
@@ -78,17 +76,11 @@ class ValidatorFundRequestResource extends Resource
         )->pluck('fund_request_records.id')->toArray();
 
         $records = [];
-        $apiData = [];
-
-        if ($organization->person_bsn_service_enabled && $bsn) {
-            $apiData = $this->getApiDataByBSN($bsn);
-        }
 
         foreach ($fundRequest->records as $record) {
-            $records[] = static::recordToArray(
-                $record, $employee, $apiData,
-                in_array($record->id, $availableRecords)
-            );
+            $records[] = static::recordToArray($record, $employee, in_array(
+                $record->id, $availableRecords
+            ));
         }
 
         return $records;
@@ -99,14 +91,12 @@ class ValidatorFundRequestResource extends Resource
      *
      * @param FundRequestRecord $record
      * @param Employee|null $employee
-     * @param array $apiData
      * @param bool $isValueReadable
      * @return array
      */
-    private static function recordToArray(
+    static function recordToArray(
         FundRequestRecord $record,
         Employee $employee,
-        array $apiData,
         bool $isValueReadable
     ): array {
         $is_value_readable = $isValueReadable;
@@ -131,51 +121,9 @@ class ValidatorFundRequestResource extends Resource
             'clarifications' => [],
         ], [
             'employee' => new EmployeeResource($record->employee),
-            'person_bsn_api_value' => $apiData[$record->record_type_key] ?? null,
             'record_type' => $recordTypes[$record->record_type_key],
             'created_at_locale' => format_datetime_locale($record->created_at),
             'updated_at_locale' => format_datetime_locale($record->updated_at),
         ], compact('is_assignable', 'is_assigned', 'is_visible')));
-    }
-
-    /**
-     * @param string $bsn
-     * @return array
-     * @throws \Exception
-     */
-    private function getApiDataByBSN(string $bsn): array
-    {
-        /** @var IConnectApiService $iconnect */
-        $iconnect = resolve('iconnect_api');
-
-        $person = $iconnect->getPerson($bsn, [
-            'parents', 'children', 'partners'
-        ]);
-
-        if ($person) {
-            $array = $person->toArray();
-            $map = [
-                'first_name' => 'given_name',
-                'last_name' => 'family_name',
-                'birth_date' => 'birth_date',
-                'bsn' => 'bsn',
-                'gender' => 'gender',
-                'residence' => 'address'
-            ];
-
-            $result = [];
-            array_walk($array, static function($value, $key) use ($map, &$result) {
-                if ($map[$key] ?? false) {
-                    $result[$map[$key]] = is_array($value) ? implode(', ', $value) : $value;
-                }
-            });
-
-            $result['partner_bsn'] = $array['partners'][0]['bsn'] ?? null;
-            $result['children_nth'] = count($array['children']);
-
-            return $result;
-        }
-
-        return [];
     }
 }
