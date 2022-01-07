@@ -290,25 +290,42 @@ class FundRequestPolicy
     }
 
     /**
-     * Determine whether the validator can disregard the fundRequest.
+     * Determine whether the validator can undo the disregard operation.
      *
      * @param string|null $identity_address
      * @param FundRequest $fundRequest
+     * @param Organization $organization
      * @return bool|\Illuminate\Auth\Access\Response
      */
-    public function disregard(
+    public function disregardUndo(
         ?string $identity_address,
-        FundRequest $fundRequest
+        FundRequest $fundRequest,
+        Organization $organization
     ) {
-        if (!$fundRequest->clarifications_pending()->exists()) {
-            return $this->deny("this request doesn't have any pending clarifications", 403);
+        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
+            return $this->deny('fund_requests.invalid_endpoint');
         }
 
-        /** @var FundRequestClarification $clarification */
-        $clarification = $fundRequest->clarifications_pending->last();
+        if (!$organization->identityCan($identity_address, 'validate_records')) {
+            return $this->deny('fund_requests.invalid_validator');
+        }
 
-        if (now()->diffInWeeks($clarification->created_at) < 2) {
-            return $this->deny("2 weeks not passed since the clarification message", 403);
+        if ($fundRequest->state !== FundRequest::STATE_DISREGARDED) {
+            return $this->deny('fund_request.not_disregarded');
+        }
+
+        // only assigned employee is allowed to resolve the request
+        if (!FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
+            $fundRequest->records()->getQuery(),
+            $identity_address,
+            $organization->findEmployee($identity_address)->id
+        )->exists()) {
+            return $this->deny('fund_request.not_assigned_employee');
+        }
+
+        // only fund validators may update requests
+        if (!in_array($identity_address, $fundRequest->fund->validatorEmployees(), true)) {
+            return $this->deny('fund_request.invalid_validator');
         }
 
         return true;

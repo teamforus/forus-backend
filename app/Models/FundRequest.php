@@ -321,7 +321,7 @@ class FundRequest extends Model
     }
 
     /**
-     * Set all fund request records assigned to given employee as declined
+     * Set all fund request pending records assigned to given employee as disregarded
      * @param Employee $employee
      * @param string|null $note
      * @return FundRequest
@@ -332,13 +332,35 @@ class FundRequest extends Model
             'note' => $note ?: '',
         ]);
 
-        $this->records()->where([
+        $this->records_pending()->where([
             'employee_id' => $employee->id
         ])->each(static function(FundRequestRecord $record) use ($note) {
             $record->disregard($note);
         });
 
         $this->resolve();
+
+        return $this;
+    }
+
+    /**
+     * Set all disregarded fund request records assigned to given employee as pending
+     * @param Employee $employee
+     * @return FundRequest
+     */
+    public function disregardUndo(Employee $employee): self
+    {
+        $this->records_disregarded()->where([
+            'employee_id' => $employee->id
+        ])->each(static function(FundRequestRecord $record) {
+            $record->state = self::STATE_PENDING;
+            $record->save();
+        });
+
+        $this->update([
+            'state'       => self::STATE_PENDING,
+            'resolved_at' => NULL
+        ]);
 
         return $this;
     }
@@ -372,13 +394,13 @@ class FundRequest extends Model
         $countApproved = $this->records_approved()->count();
         $countDisregarded = $this->records_disregarded()->count();
         $allApproved = $countAll === $countApproved;
-        $allDisregarded = $countAll === $countDisregarded;
+        $hasDisregarded = $countDisregarded > 0;
         $hasApproved = $countApproved > 0;
         $oldState = $this->state;
 
         if ($allApproved) {
             $state = self::STATE_APPROVED;
-        } elseif ($allDisregarded) {
+        } elseif ($hasDisregarded) {
             $state = self::STATE_DISREGARDED;
         } else {
             $state = $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;

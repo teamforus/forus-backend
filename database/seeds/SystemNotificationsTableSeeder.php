@@ -107,6 +107,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.fund_request_created',
         'notifications_identities.fund_request_denied',
         'notifications_identities.fund_request_approved',
+        "notifications_identities.fund_request_disregarded",
         'notifications_identities.fund_request_feedback_requested',
 
         'notifications_identities.product_reservation_created',

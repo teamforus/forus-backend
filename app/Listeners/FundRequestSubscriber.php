@@ -80,25 +80,10 @@ class FundRequestSubscriber
             $fundRequest->log($stateEvent, $this->getFundRequestLogModels($fundRequest));
         }
 
-        /** @var FundRequestClarification $clarification */
-        $clarification = $fundRequest->clarifications_pending()->exists() ?
-            $fundRequest->clarifications_pending->last() : null;
-
-        $models = array_merge($this->getFundRequestLogModels($fundRequest), $clarification ? [
-            'fund_request_clarification' => $clarification
-        ] : []);
-
-        $raw_meta = $clarification ? [
-            'fund_request_clarification_date' => $clarification->created_at,
-            'fund_request_clarification_date_locale' =>
-                format_date_locale($clarification->created_at),
-            'fund_request_clarification_date_plus_2_weeks' =>
-                $clarification->created_at->addWeeks(2),
-            'fund_request_clarification_date_plus_2_weeks_locale' =>
-                format_date_locale($clarification->created_at->addWeeks(2)),
-        ] : [];
-
-        $eventLog = $fundRequest->log($fundRequest::EVENT_RESOLVED, $models, $raw_meta);
+        $eventLog = $fundRequest->log(
+            $fundRequest::EVENT_RESOLVED,
+            $this->getFundRequestLogModels($fundRequest)
+        );
 
         if ($fundRequest->state === FundRequest::STATE_APPROVED) {
             IdentityFundRequestApprovedNotification::send($eventLog);
