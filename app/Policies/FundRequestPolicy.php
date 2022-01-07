@@ -314,6 +314,13 @@ class FundRequestPolicy
             return $this->deny('fund_request.not_disregarded');
         }
 
+        if ($fundRequest->fund->fund_requests()->where([
+            'identity_address' => $fundRequest->identity_address,
+            'state' => FundRequest::STATE_PENDING,
+        ])->exists()) {
+            return $this->deny('fund_request.pending_request_exists');
+        }
+
         // only assigned employee is allowed to resolve the request
         if (!FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
             $fundRequest->records()->getQuery(),

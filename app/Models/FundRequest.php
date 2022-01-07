@@ -373,11 +373,14 @@ class FundRequest extends Model
      */
     public function resolve(): self {
         $records = $this->records()->whereHas('employee');
-        $records->where('state', '=', self::STATE_APPROVED);
 
-        $records->get()->each(static function(FundRequestRecord $record) {
-            $record->makeValidation();
-        });
+        if (!$records->where('state', '=', self::STATE_DISREGARDED)->exists()) {
+            $records->where('state', '=', self::STATE_APPROVED);
+
+            $records->get()->each(static function(FundRequestRecord $record) {
+                $record->makeValidation();
+            });
+        }
 
         if (!$this->records_pending()->exists()) {
             $this->updateStateByRecords();
