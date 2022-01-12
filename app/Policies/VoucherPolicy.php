@@ -79,7 +79,8 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return ($voucher->isBudgetType() || ($voucher->isProductType() && $voucher->employee_id)) &&
+        return ($voucher->isBudgetType() || ($voucher->isProductType() &&
+            ($voucher->employee_id || $voucher->fund->fund_formula_products->count()))) &&
             ($voucher->fund->organization_id === $organization->id) &&
             $organization->identityCan($identity_address, 'manage_vouchers');
     }
