@@ -6,7 +6,6 @@ use App\Events\FundRequests\FundRequestRecordDeclined;
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResolved;
 use App\Models\FundRequest;
-use App\Models\FundRequestClarification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
@@ -71,25 +70,26 @@ class FundRequestSubscriber
      */
     public function onFundRequestResolved(FundRequestResolved $fundCreated): void
     {
-        $fundRequest = $fundCreated->getFundRequest();
-
-        $stateEvent = array_combine($fundRequest::STATES, $fundRequest::STATES);
-        $stateEvent = $stateEvent[$fundRequest->state] ?? null;
-
-        if ($stateEvent) {
-            $fundRequest->log($stateEvent, $this->getFundRequestLogModels($fundRequest));
+        if (!$fundCreated->getFundRequest()->isResolved()) {
+            return;
         }
 
-        $eventLog = $fundRequest->log(
-            $fundRequest::EVENT_RESOLVED,
-            $this->getFundRequestLogModels($fundRequest)
-        );
+        $fundRequest = $fundCreated->getFundRequest();
+        $eventModels = $this->getFundRequestLogModels($fundRequest);
+        $eventsList = array_combine($fundRequest::EVENTS, $fundRequest::EVENTS);
 
-        if ($fundRequest->state === FundRequest::STATE_APPROVED) {
+        $fundRequest->log($eventsList[$fundRequest->state], $eventModels);
+        $eventLog = $fundRequest->log($fundRequest::EVENT_RESOLVED, $eventModels);
+
+        if ($fundRequest->isDisregarded()) {
+            if ($fundRequest->disregard_notify) {
+                IdentityFundRequestDisregardedNotification::send($eventLog);
+            }
+        }
+
+        if ($fundRequest->isApproved()) {
             IdentityFundRequestApprovedNotification::send($eventLog);
-        } elseif ($fundRequest->state === FundRequest::STATE_DISREGARDED) {
-            IdentityFundRequestDisregardedNotification::send($eventLog);
-        } else {
+        } elseif (!$fundRequest->isDisregarded()) {
             IdentityFundRequestDeniedNotification::send($eventLog);
         }
     }

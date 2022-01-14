@@ -113,7 +113,9 @@ class EventLogService implements IEventLogService
             'fund_request_id' => $fundRequest->id,
             'fund_request_note' => $fundRequest->note,
             'fund_request_state' => $fundRequest->state,
-            'fund_request_created_date' => $fundRequest->created_at,
+            'fund_request_disregard_note' => $fundRequest->disregard_note,
+            'fund_request_disregard_notify' => $fundRequest->disregard_notify,
+            'fund_request_created_date' => $fundRequest->created_at->format('Y-m-d'),
             'fund_request_created_date_locale' => format_date_locale($fundRequest->created_at),
         ];
     }

@@ -1,9 +1,10 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddDisregardedStateToFundRequestsTable extends Migration
 {
     /**
@@ -11,7 +12,7 @@ class AddDisregardedStateToFundRequestsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         DB::statement(
             "ALTER TABLE `fund_requests` CHANGE `state` `state` ".
@@ -24,7 +25,7 @@ class AddDisregardedStateToFundRequestsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         DB::statement(
             "ALTER TABLE `fund_requests` CHANGE `state` `state` ".

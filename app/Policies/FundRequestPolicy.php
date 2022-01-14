@@ -268,7 +268,7 @@ class FundRequestPolicy
             return $this->deny('fund_requests.invalid_validator');
         }
 
-        if ($fundRequest->state !== FundRequest::STATE_PENDING) {
+        if (!$fundRequest->isPending() && !$fundRequest->isDisregarded()) {
             return $this->deny('fund_request.not_pending');
         }
 
@@ -290,7 +290,31 @@ class FundRequestPolicy
     }
 
     /**
-     * Determine whether the validator can undo the disregard operation.
+     * Determine whether the validator can disregard the fundRequest.
+     *
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return bool|\Illuminate\Auth\Access\Response
+     */
+    public function disregard(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Organization $organization
+    ) {
+        if (!$response = $this->resolveAsValidator($identity_address, $fundRequest, $organization)) {
+            return $response;
+        }
+
+        if ($organization->id !== $fundRequest->fund->organization_id) {
+            return $this->deny('fund_requests.only_sponsor_employee');
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine whether the validator can disregard the fundRequest.
      *
      * @param string|null $identity_address
      * @param FundRequest $fundRequest
@@ -302,37 +326,12 @@ class FundRequestPolicy
         FundRequest $fundRequest,
         Organization $organization
     ) {
-        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+        if (!$response = $this->resolveAsValidator($identity_address, $fundRequest, $organization)) {
+            return $response;
         }
 
-        if (!$organization->identityCan($identity_address, 'validate_records')) {
-            return $this->deny('fund_requests.invalid_validator');
-        }
-
-        if ($fundRequest->state !== FundRequest::STATE_DISREGARDED) {
-            return $this->deny('fund_request.not_disregarded');
-        }
-
-        if ($fundRequest->fund->fund_requests()->where([
-            'identity_address' => $fundRequest->identity_address,
-            'state' => FundRequest::STATE_PENDING,
-        ])->exists()) {
-            return $this->deny('fund_request.pending_request_exists');
-        }
-
-        // only assigned employee is allowed to resolve the request
-        if (!FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
-            $fundRequest->records()->getQuery(),
-            $identity_address,
-            $organization->findEmployee($identity_address)->id
-        )->exists()) {
-            return $this->deny('fund_request.not_assigned_employee');
-        }
-
-        // only fund validators may update requests
-        if (!in_array($identity_address, $fundRequest->fund->validatorEmployees(), true)) {
-            return $this->deny('fund_request.invalid_validator');
+        if ($organization->id !== $fundRequest->fund->organization_id) {
+            return $this->deny('fund_requests.only_sponsor_employee');
         }
 
         return true;

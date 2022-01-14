@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $record_type_key
  * @property string $value
  * @property string $note
- * @property string $state
+ * @property string|null $state
  * @property int|null $employee_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -112,9 +112,15 @@ class FundRequestRecord extends Model
      * @param string|null $note
      * @return FundRequestRecord
      */
-    private function setState(string $state, ?string $note = null): FundRequestRecord
+    private function setStateAndResolve(string $state, ?string $note = null): FundRequestRecord
     {
-        return $this->updateModel(compact('state', 'note'));
+        $this->updateModel(compact('state', 'note'));
+
+        if ($this->fund_request->records_pending()->doesntExist()) {
+            $this->fund_request->resolve();
+        }
+
+        return $this;
     }
 
     /**
@@ -122,14 +128,9 @@ class FundRequestRecord extends Model
      * @param string|null $note
      * @return $this
      */
-    public function approve(string $note = null): self {
-        $this->setState(self::STATE_APPROVED, $note);
-
-        if (!$this->fund_request->records_pending()->exists()) {
-            $this->fund_request->resolve();
-        }
-
-        return $this;
+    public function approve(?string $note = null): self
+    {
+        return $this->setStateAndResolve(self::STATE_APPROVED, $note);
     }
 
     /**
@@ -138,32 +139,36 @@ class FundRequestRecord extends Model
      * @return $this
      * @throws \Exception
      */
-    public function decline(string $note = null): self {
-        $this->setState(self::STATE_DECLINED, $note);
-
-        if (!$this->fund_request->records_pending()->exists()) {
-            $this->fund_request->resolve();
-        }
-
-        return $this;
+    public function decline(?string $note = null): self
+    {
+        return $this->setStateAndResolve(self::STATE_DECLINED, $note);
     }
 
     /**
      * @param string|null $note
      * @return $this
      */
-    public function disregard(string $note = null): self {
-        $this->setState(self::STATE_DISREGARDED, $note);
+    public function disregard(?string $note = null): self
+    {
+        return $this->setStateAndResolve(self::STATE_DISREGARDED, $note);
+    }
 
-        return $this;
+    /**
+     * @return $this
+     */
+    public function disregardUndo(): self
+    {
+        return $this->updateModel([
+            'state' => self::STATE_PENDING,
+        ]);
     }
 
     /**
      * Make and validate records for requester
      * @return $this
      */
-    public function makeValidation(): self {
-
+    public function makeValidation(): self
+    {
         if ($this->record_type_key === 'partner_bsn' &&
             $hash_bsn_salt = $this->fund_request->fund->fund_config->hash_bsn_salt) {
             $this->applyRecordAndValidation(
@@ -237,5 +242,13 @@ class FundRequestRecord extends Model
         return FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
             self::whereId($this->id), $identity_address, $employee_id
         )->exists();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state === static::STATE_PENDING;
     }
 }

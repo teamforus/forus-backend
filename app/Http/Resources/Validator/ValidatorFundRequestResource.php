@@ -96,7 +96,7 @@ class ValidatorFundRequestResource extends Resource
     ): array {
         $is_value_readable = $isValueReadable;
         $is_assigned = $record->employee_id === $employee->id;
-        $is_assignable = $is_value_readable && !$is_assigned;
+        $is_assignable = $is_value_readable && !$record->employee_id && $record->isPending();
 
         $is_visible = $is_assignable || $is_assigned || $is_value_readable;
         $recordTypes = collect(record_types_cached())->keyBy('key');

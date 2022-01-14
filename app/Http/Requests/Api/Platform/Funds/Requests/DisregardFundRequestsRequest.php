@@ -2,16 +2,22 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\FundRequest;
 
-class DisregardFundRequestsRequest extends FormRequest
+/**
+ * Class DisregardFundRequestsRequest
+ * @property FundRequest $fund_request
+ * @package App\Http\Requests\Api\Platform\Funds\FundRequests
+ */
+class DisregardFundRequestsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,10 +27,11 @@ class DisregardFundRequestsRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'note'  => 'nullable|string|between:0,2000',
+            'note'      => 'nullable|string|between:0,2000',
+            'notify'    => 'required|boolean',
         ];
     }
 }
