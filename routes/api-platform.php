@@ -19,45 +19,12 @@ $router = resolve('router');
  * Public api routes
  */
 $router->group([], static function() use ($router) {
-    $router->resource(
-        'product-categories',
-        "Api\Platform\ProductCategoryController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
-
-    $router->resource(
-        'business-types',
-        "Api\Platform\BusinessTypeController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
-
-    $router->resource(
-        'organizations',
-        "Api\Platform\OrganizationsController", [
-        'only' => [
-            'index',
-        ]
-    ]);
-
-    $router->resource(
-        'funds',
-        "Api\Platform\FundsController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
-
-    $router->resource(
-        'search',
-        "Api\Platform\SearchController", [
-        'only' => [
-            'index',
-        ]
-    ]);
+    $router->resource('tags', "Api\Platform\TagsController")->only('index', 'show');
+    $router->resource('funds', "Api\Platform\FundsController")->only('index', 'show');
+    $router->resource('search', "Api\Platform\SearchController")->only('index');
+    $router->resource('organizations', "Api\Platform\OrganizationsController")->only('index');
+    $router->resource('business-types', "Api\Platform\BusinessTypeController")->only('index', 'show');
+    $router->resource('product-categories', "Api\Platform\ProductCategoryController")->only('index', 'show');
 
     if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
         $router->resource(
