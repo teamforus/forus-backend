@@ -101,6 +101,11 @@ class FundRequest extends Model
         self::STATE_DISREGARDED
     ];
 
+    public const STATES_PENDING = [
+        self::STATE_PENDING,
+        self::STATE_DISREGARDED,
+    ];
+
     protected $fillable = [
         'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at',
         'disregard_note', 'disregard_notify',

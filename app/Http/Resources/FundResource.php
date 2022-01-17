@@ -7,6 +7,7 @@ use App\Models\FundFaq;
 use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\VoucherQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -54,11 +55,11 @@ class FundResource extends Resource
                 return $faq->only('id', 'title', 'description', 'description_html');
             }),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
-            'fund_amount'    => $fund->amountFixedByFormula(),
-            'has_pending_fund_requests' => $fund->fund_requests()->where([
-                'identity_address' => auth_address(),
-                'state' => FundRequest::STATE_PENDING,
-            ])->exists(),
+            'fund_amount' => $fund->amountFixedByFormula(),
+            'has_pending_fund_requests' => $fund->fund_requests()->where(function(Builder $builder) {
+                $builder->where('identity_address', '=', auth_address());
+                $builder->whereIn('state', FundRequest::STATES_PENDING);
+            })->exists(),
         ], $checkCriteria ? [
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&

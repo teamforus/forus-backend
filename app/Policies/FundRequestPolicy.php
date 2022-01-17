@@ -79,19 +79,15 @@ class FundRequestPolicy
             return $this->deny('fund_request.bsn_record_is_mandatory');
         }
 
-        if ($fund->fund_requests()->where([
-            'identity_address' => $identity_address,
-            'state' => FundRequest::STATE_PENDING,
-        ])->exists()) {
+        if ($fund->fund_requests()->where(function(Builder $builder) use ($identity_address) {
+            $builder->where('identity_address', $identity_address);
+            $builder->whereIn('state', FundRequest::STATES_PENDING);
+        })->exists()) {
             return $this->deny('fund_request.pending_request_exists');
         }
 
-        if ($fund->fund_requests()->whereHas('fund', static function(
-            Builder $builder
-        ) use ($identity_address) {
-            $builder->whereHas('vouchers', static function(
-                Builder $builder
-            ) use ($identity_address) {
+        if ($fund->fund_requests()->whereHas('fund', static function(Builder $builder) use ($identity_address) {
+            $builder->whereHas('vouchers', static function(Builder $builder) use ($identity_address) {
                 $builder->where(compact('identity_address'));
                 VoucherQuery::whereNotExpired($builder);
             });
@@ -230,7 +226,7 @@ class FundRequestPolicy
         }
 
         // only pending requests could be updated by fund validators
-        if ($fundRequest->state !== FundRequest::STATE_PENDING) {
+        if (!$fundRequest->isPending()) {
             return $this->deny('fund_request.not_pending');
         }
 

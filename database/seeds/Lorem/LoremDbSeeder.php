@@ -683,7 +683,7 @@ class LoremDbSeeder extends Seeder
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
         ]), $backofficeConfig));
 
-        $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config);
+        $eligibility_key = sprintf("%s_eligible", $fund->load('fund_config')->fund_config->key);
         $criteria = [];
 
         if (!$fund->isAutoValidatingRequests()) {
@@ -704,6 +704,7 @@ class LoremDbSeeder extends Seeder
                 'record_type_key' => $recordType->key,
                 'operator' => '=',
                 'value' => 'Ja',
+                'show_attachment' => false,
             ];
         }
 
@@ -1096,7 +1097,7 @@ class LoremDbSeeder extends Seeder
      * @return void
      * @throws Exception
      */
-    private function makeSponsorFunds(Organization $sponsor)
+    private function makeSponsorFunds(Organization $sponsor): void
     {
         $countFunds = $this->sponsorsWithMultipleFunds[$sponsor->name] ?? 1;
 
