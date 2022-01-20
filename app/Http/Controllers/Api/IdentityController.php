@@ -10,6 +10,7 @@ use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BaseFormRequest;
+use App\Mail\User\IdentityDestroyRequestMail;
 use App\Models\Implementation;
 use App\Traits\ThrottleLoginAttempts;
 use Illuminate\Http\JsonResponse;
@@ -432,5 +433,23 @@ class IdentityController extends Controller
         $request->identity_repo()->destroyProxyIdentity($proxyDestroy);
 
         return response()->json(null);
+    }
+
+    /**
+     * @param BaseFormRequest $request
+     * @return JsonResponse
+     */
+    public function destroy(BaseFormRequest $request): JsonResponse
+    {
+        if ($email = env('EMAIL_FOR_IDENTITY_DESTROY', false)) {
+            resolve('forus.services.notification')->sendSystemMail(
+                $email, new IdentityDestroyRequestMail([
+                    'email' => identity_repo()->getPrimaryEmail(auth_address()),
+                    'comment' => (string)$request->get('comment')
+                ])
+            );
+        }
+
+        return response()->json();
     }
 }
