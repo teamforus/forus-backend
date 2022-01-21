@@ -20,8 +20,9 @@ class VoucherExport implements FromCollection, WithHeadings
 
     /**
      * @param EloquentCollection $vouchers
+     * @param array $fieldsList
      */
-    public function __construct(EloquentCollection $vouchers)
+    public function __construct(EloquentCollection $vouchers, array $fieldsList)
     {
         $voucherData = collect();
         $vouchers->load(
@@ -30,7 +31,7 @@ class VoucherExport implements FromCollection, WithHeadings
         );
 
         foreach ($vouchers as $voucher) {
-            $voucherData->push((new VoucherExportData($voucher, true))->toArray());
+            $voucherData->push((new VoucherExportData($voucher, $fieldsList, true))->toArray());
         }
 
         $this->data = $voucherData;

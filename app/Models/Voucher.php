@@ -836,7 +836,7 @@ class Voucher extends Model
      * @param $exportType
      * @return string
      */
-    public static function zipVouchers(Collection $vouchers, $exportType): string {
+    public static function zipVouchers(Collection $vouchers, $exportType, array $fields_list): string {
         $vouchersData = [];
         $vouchersDataNames = [];
         $token_generator = resolve('token_generator');
@@ -859,12 +859,12 @@ class Voucher extends Model
         }
 
         if ($vouchers->count() > 0) {
-            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0]))->toArray()));
+            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $fields_list))->toArray()));
         }
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher);
+                $voucherData = new VoucherExportData($voucher, $fields_list);
             } while(in_array($voucherData->getName(), $vouchersDataNames, true));
 
             fputcsv($fp, $voucherData->toArray());
@@ -897,12 +897,14 @@ class Voucher extends Model
     /**
      * @param Collection $vouchers
      * @param string $exportType
+     * @param array $fields_list
      * @param bool|null $data_only
      * @return array
      */
     public static function zipVouchersData(
         Collection $vouchers,
         string $exportType,
+        array $fields_list,
         ?bool $data_only = true
     ): array {
         $vouchersData = [];
@@ -915,13 +917,13 @@ class Voucher extends Model
         $fp = fopen('php://temp/maxmemory:1048576', 'wb');
 
         if ($vouchers->count() > 0) {
-            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $data_only))->toArray()));
+            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $fields_list, $data_only))->toArray()));
         }
 
         foreach ($vouchers as $voucher) {
             /** @var Voucher $voucher */
             do {
-                $voucherData = new VoucherExportData($voucher, $data_only);
+                $voucherData = new VoucherExportData($voucher, $fields_list, $data_only);
             } while(!$data_only && in_array($voucherData->getName(), $vouchersDataNames, true));
 
             fputcsv($fp, $voucherData->toArray());

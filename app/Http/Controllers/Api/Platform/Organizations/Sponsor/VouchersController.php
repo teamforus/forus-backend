@@ -342,8 +342,9 @@ class VouchersController extends Controller
         $fund = $organization->findFund($request->get('fund_id'));
         $vouchers = Voucher::searchSponsor($request, $organization, $fund);
         $fileName = date('Y-m-d H:i:s') . '.xls';
+        $fieldsList = $request->input('fields_list');
 
-        return resolve('excel')->download(new VoucherExport($vouchers), $fileName);
+        return resolve('excel')->download(new VoucherExport($vouchers, $fieldsList), $fileName);
     }
 
     /**
@@ -363,12 +364,13 @@ class VouchersController extends Controller
         $fund = $organization->findFund($request->get('fund_id'));
         $export_type = $request->get('export_type', 'png');
         $vouchers = Voucher::searchSponsor($request, $organization, $fund);
+        $fields_list = $request->input('fields_list');
 
         if ($vouchers->count() === 0) {
             abort(404, "No vouchers to be exported.");
         }
 
-        if (!$zipFile = Voucher::zipVouchers($vouchers, $export_type)) {
+        if (!$zipFile = Voucher::zipVouchers($vouchers, $export_type, $fields_list)) {
             abort(500, "Couldn't make the archive.");
         }
 
@@ -392,11 +394,12 @@ class VouchersController extends Controller
         $data_only = $request->get('export_only_data', false);
         $export_type = $request->get('export_type', 'png');
         $vouchers = Voucher::searchSponsor($request, $organization, $fund);
+        $fields_list = $request->input('fields_list');
 
         if ($vouchers->count() === 0) {
             abort(404, "No vouchers to be exported.");
         }
 
-        return Voucher::zipVouchersData($vouchers, $export_type, $data_only);
+        return Voucher::zipVouchersData($vouchers, $export_type, $fields_list, $data_only);
     }
 }
