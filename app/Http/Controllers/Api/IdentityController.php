@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Identity\IdentityAuthorizeCodeRequest;
 use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
+use App\Http\Requests\Api\Identity\IdentityDestroyRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailRedirectRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BaseFormRequest;
-use App\Mail\User\IdentityDestroyRequestMail;
+use App\Mail\Forus\IdentityDestroyRequestMail;
 use App\Models\Implementation;
-use App\Traits\ThrottleLoginAttempts;
+use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -21,6 +22,8 @@ use Illuminate\Http\JsonResponse;
  */
 class IdentityController extends Controller
 {
+    use ThrottleWithMeta;
+
     /**
      * Get identity details
      *
@@ -436,20 +439,25 @@ class IdentityController extends Controller
     }
 
     /**
-     * @param BaseFormRequest $request
+     * @param IdentityDestroyRequest $request
      * @return JsonResponse
+     * @throws \App\Exceptions\AuthorizationJsonException
      */
-    public function destroy(BaseFormRequest $request): JsonResponse
+    public function destroy(IdentityDestroyRequest $request): JsonResponse
     {
+        $this->maxAttempts = env('DELETE_IDENTITY_THROTTLE_ATTEMPTS', 10);
+        $this->decayMinutes = env('DELETE_IDENTITY_THROTTLE_DECAY', 10);
+        $this->throttleWithKey('to_many_attempts', $request, 'delete_identity');
+
         if ($email = env('EMAIL_FOR_IDENTITY_DESTROY', false)) {
-            resolve('forus.services.notification')->sendSystemMail(
+            $request->notification_repo()->sendSystemMail(
                 $email, new IdentityDestroyRequestMail([
-                    'email' => identity_repo()->getPrimaryEmail(auth_address()),
-                    'comment' => (string)$request->get('comment')
+                    'email' => $request->identity_repo()->getPrimaryEmail($request->auth_address()),
+                    'comment' => $request->get('comment')
                 ])
             );
         }
 
-        return response()->json();
+        return new JsonResponse();
     }
 }

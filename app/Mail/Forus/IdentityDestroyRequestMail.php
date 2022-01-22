@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mail\User;
+namespace App\Mail\Forus;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
