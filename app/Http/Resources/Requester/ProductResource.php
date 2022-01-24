@@ -14,7 +14,8 @@ class ProductResource extends \App\Http\Resources\ProductResource
     /**
      * @return Builder
      */
-    protected function fundsQuery(): Builder {
+    protected function fundsQuery(): Builder
+    {
         return Implementation::activeFundsQuery();
     }
 }

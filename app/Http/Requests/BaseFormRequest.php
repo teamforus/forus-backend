@@ -24,7 +24,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return array
      * @noinspection PhpUnused
      */
-    public function rules(): array {
+    public function rules(): array
+    {
         return [];
     }
 
@@ -33,7 +34,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @throws AuthorizationException
      * @noinspection PhpUnused
      */
-    public function deny($message = 'This action is unauthorized.'): void {
+    public function deny($message = 'This action is unauthorized.'): void
+    {
         $this->message = $message;
         $this->failedAuthorization();
     }
@@ -45,7 +47,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    protected function failedAuthorization(): void {
+    protected function failedAuthorization(): void
+    {
         throw new AuthorizationException($this->message);
     }
 
@@ -53,31 +56,50 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return string|null
      * @noinspection PhpUnused
      */
-    public function auth_address(): ?string {
+    public function auth_address(): ?string
+    {
         return auth_address();
     }
 
     /**
+     * @param bool $abortOnFail
+     * @param int $errorCode
      * @return string|null
      * @noinspection PhpUnused
      */
-    public function client_type(): ?string {
-        return client_type();
+    public function auth_proxy_id($abortOnFail = false, $errorCode = 403): ?string
+    {
+        $auth = auth_model($abortOnFail, $errorCode);
+
+        return $auth && method_exists($auth, 'getProxyId') ? $auth->getProxyId() : null;
+    }
+
+    /**
+     * @param string|null $default
+     * @return string|null
+     * @noinspection PhpUnused
+     */
+    public function client_type(?string $default = null): ?string
+    {
+        return $this->header('Client-Type', $default);
+    }
+
+    /**
+     * @param int|null $default
+     * @return int|null
+     * @noinspection PhpUnused
+     */
+    public function client_version(?int $default = null): ?int
+    {
+        return $this->header('Client-Version', $default);
     }
 
     /**
      * @return string|null
      * @noinspection PhpUnused
      */
-    public function client_version(): ?string {
-        return client_version();
-    }
-
-    /**
-     * @return string|null
-     * @noinspection PhpUnused
-     */
-    public function implementation_key(): ?string {
+    public function implementation_key(): ?string
+    {
         return implementation_key();
     }
 
@@ -85,7 +107,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return Implementation|null
      * @noinspection PhpUnused
      */
-    public function implementation_model(): Implementation {
+    public function implementation_model(): Implementation
+    {
         return Implementation::active();
     }
 
@@ -101,7 +124,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return IIdentityRepo
      * @noinspection PhpUnused
      */
-    public function identity_repo(): IIdentityRepo {
+    public function identity_repo(): IIdentityRepo
+    {
         return resolve('forus.services.identity');
     }
 
@@ -109,7 +133,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return IRecordRepo
      * @noinspection PhpUnused
      */
-    public function records_repo(): IRecordRepo {
+    public function records_repo(): IRecordRepo
+    {
         return resolve('forus.services.record');
     }
 
@@ -117,7 +142,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return NotificationService
      * @noinspection PhpUnused
      */
-    public function notification_repo(): NotificationService {
+    public function notification_repo(): NotificationService
+    {
         return resolve('forus.services.notification');
     }
 
@@ -148,5 +174,13 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
         }
 
         return Gate::allows($abilityOrRules, $arguments);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMeApp(): bool
+    {
+        return in_array($this->client_type(), config('forus.clients.mobile'));
     }
 }

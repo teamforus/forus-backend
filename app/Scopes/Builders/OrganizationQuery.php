@@ -26,9 +26,7 @@ class OrganizationQuery
         string $identityAddress
     ): Builder {
         return $builder->where(static function(Builder $builder) use ($identityAddress) {
-            $builder->whereHas('employees', static function(
-                Builder $builder
-            ) use ($identityAddress) {
+            $builder->whereHas('employees', static function(Builder $builder) use ($identityAddress) {
                 $builder->whereIn('employees.identity_address', (array) $identityAddress);
             });
         });
@@ -45,17 +43,11 @@ class OrganizationQuery
         string $identityAddress,
         $permissions
     ): Builder {
-        return $builder->where(static function(
-            Builder $builder
-        ) use ($identityAddress, $permissions) {
-            $builder->whereHas('employees', static function(
-                Builder $builder
-            ) use ($identityAddress, $permissions) {
+        return $builder->where(static function(Builder $builder) use ($identityAddress, $permissions) {
+            $builder->whereHas('employees', static function(Builder $builder) use ($identityAddress, $permissions) {
                 $builder->where('employees.identity_address', $identityAddress);
 
-                $builder->whereHas('roles.permissions', static function(
-                    Builder $builder
-                ) use ($permissions) {
+                $builder->whereHas('roles.permissions', static function(Builder $builder) use ($permissions) {
                     $builder->whereIn('permissions.key', (array) $permissions);
                 });
             })->orWhere('organizations.identity_address', $identityAddress);
@@ -73,14 +65,15 @@ class OrganizationQuery
         string $identity_address,
         Voucher $voucher
     ): Builder {
-        return self::whereHasPermissions(
-            $query, $identity_address,'scan_vouchers'
-        )->whereHas('fund_providers', static function(
-            Builder $builder
-        ) use ($voucher) {
+        $query = self::whereHasPermissions($query, $identity_address,'scan_vouchers');
+
+        return $query->whereHas('fund_providers', static function(Builder $builder) use ($voucher) {
             if ($voucher->isProductType()) {
                 FundProviderQuery::whereApprovedForFundsFilter(
-                    $builder, $voucher->fund_id, 'product', $voucher->product_id
+                    $builder,
+                    $voucher->fund_id,
+                    'product',
+                    $voucher->product_id
                 );
             } else {
                 FundProviderQuery::whereApprovedForFundsFilter(

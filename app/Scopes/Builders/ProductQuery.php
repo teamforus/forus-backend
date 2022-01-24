@@ -7,6 +7,7 @@ use App\Models\Fund;
 use App\Models\FundProviderProduct;
 use App\Models\Implementation;
 use App\Models\Product;
+use App\Models\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -26,15 +27,11 @@ class ProductQuery
             $builder = self::whereFundNotExcluded($builder, $fund_id);
 
             $builder->where(static function(Builder $builder) use ($fund_id) {
-                $builder->whereHas('fund_provider_products.fund_provider', static function(
-                    Builder $builder
-                ) use ($fund_id) {
+                $builder->whereHas('fund_provider_products.fund_provider', static function(Builder $builder) use ($fund_id) {
                     $builder->whereIn('fund_id', (array) $fund_id);
                 });
 
-                $builder->orWhereHas('organization.fund_providers', static function(
-                    Builder $builder
-                ) use ($fund_id) {
+                $builder->orWhereHas('organization.fund_providers', static function(Builder $builder) use ($fund_id) {
                     $builder->where([
                         'allow_products' => TRUE,
                     ])->whereIn('fund_id', (array) $fund_id);
@@ -254,5 +251,54 @@ class ProductQuery
         );
 
         return $query;
+    }
+
+    /**
+     * @param Builder $builder
+     * @param Voucher $voucher
+     * @param Builder|null $providerOrganization
+     * @param bool $checkReservationFlags
+     * @return Builder
+     */
+    public static function whereAvailableForVoucher(
+        Builder $builder,
+        Voucher $voucher,
+        Builder $providerOrganization = null,
+        bool $checkReservationFlags = true
+    ): Builder {
+        $builder = $builder->where('price', '<=', $voucher->amount_available);
+        $builder = ProductQuery::approvedForFundsAndActiveFilter($builder, $voucher->fund_id);
+
+        if ($voucher->product_id) {
+            $builder->where('id', $voucher->product_id);
+        }
+
+        if ($providerOrganization) {
+            $builder->whereIn('organization_id', $providerOrganization);
+        }
+
+        if ($checkReservationFlags) {
+            self::whereReservationEnabled($builder, $voucher->fund->isTypeSubsidy() ? 'subsidy' : 'budget');
+        }
+
+        return $builder;
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string $type
+     * @return Builder
+     */
+    public static function whereReservationEnabled(Builder $builder, string $type = 'subsidy'): Builder
+    {
+        return $builder->whereHas('organization', function(Builder $builder) use ($type) {
+            if ($type === 'subsidy') {
+                $builder->where('reservations_subsidy_enabled', true);
+            }
+
+            if ($type === 'budget') {
+                $builder->where('reservations_budget_enabled', true);
+            }
+        });
     }
 }

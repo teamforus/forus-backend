@@ -8,15 +8,25 @@ use App\Models\FundRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class FundResource
  * @property Fund $resource
  * @package App\Http\Resources
  */
-class FundResource extends Resource
+class FundResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'faq',
+        'tags',
+        'criteria.fund',
+        'organization.logo',
+        'organization.employees',
+        'organization.business_type',
+        'fund_config.implementation',
+        'provider_organizations_approved.employees',
+    ];
+
     /**
      * Transform the resource into an array.
      *

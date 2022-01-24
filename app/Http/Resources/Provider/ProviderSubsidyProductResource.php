@@ -2,20 +2,20 @@
 
 namespace App\Http\Resources\Provider;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\FundProviderProduct;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class ProviderSubsidyProductResource
  * @property FundProviderProduct $resource
  * @package App\Http\Resources\Provider
  */
-class ProviderSubsidyProductResource extends JsonResource
+class ProviderSubsidyProductResource extends BaseJsonResource
 {
-    public static $load = [
+    public const LOAD = [
         'fund_provider.fund.organization',
         'product.photo.presets',
         'product.product_category.translations',
@@ -38,8 +38,7 @@ class ProviderSubsidyProductResource extends JsonResource
 
         $price = $product->price;
         $price_user = max($product->price - $fundProviderProduct->amount, 0);
-        $price_user_local = $payment_required ?
-            'Prijs: ' . currency_format_locale($price_user) : $product->price_locale;
+        $price_user_local = $payment_required ? 'Prijs: ' . currency_format_locale($price_user) : $product->price_locale;
         $sponsor_subsidy = $fundProviderProduct->amount;
 
         return array_merge($product->only([
@@ -51,6 +50,7 @@ class ProviderSubsidyProductResource extends JsonResource
             'price_user' => currency_format($price_user),
             'price_user_locale' => $price_user_local,
             'sponsor_subsidy' => currency_format($sponsor_subsidy),
+            'sponsor_subsidy_locale' => currency_format_locale($sponsor_subsidy),
 
             'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : '',
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),

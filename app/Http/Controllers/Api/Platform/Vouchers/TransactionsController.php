@@ -49,12 +49,22 @@ class TransactionsController extends Controller
         StoreVoucherTransactionRequest $request,
         VoucherToken $voucherToken
     ): VoucherTransactionResource {
-        $this->authorize('useAsProvider', $voucherToken->voucher);
+        if ($voucherToken->voucher->fund->isTypeBudget() &&
+            $voucherToken->voucher->isBudgetType() &&
+            $request->has('product_id')) {
+            $this->authorize('useAsProviderWithProducts', [
+                $voucherToken->voucher,
+                $request->input('product_id'),
+            ]);
+        } else {
+            $this->authorize('useAsProvider', $voucherToken->voucher);
+        }
 
         $note = $request->input('note', false);
         $voucher = $voucherToken->voucher;
         $transactionState = VoucherTransaction::STATE_PENDING;
 
+        // Product reservation voucher
         if ($voucher->product_reservation) {
             $this->authorize('acceptProvider', [
                 $voucher->product_reservation,
@@ -66,11 +76,18 @@ class TransactionsController extends Controller
             );
         }
 
+        // Budget fund voucher
         if ($voucher->fund->isTypeBudget()) {
             if ($voucher->isBudgetType()) {
-                // budget fund and budget voucher
-                $amount = $request->input('amount');
-                $organization = Organization::find($request->input('organization_id'));
+                if ($request->has('product_id')) {
+                    $product = Product::findOrFail($request->input('product_id'));
+                    $amount = $product->price;
+                    $organization = $product->organization;
+                } else {
+                    // budget fund and budget voucher
+                    $amount = $request->input('amount');
+                    $organization = Organization::findOrFail($request->input('organization_id'));
+                }
             } else {
                 // budget fund and product voucher
                 $amount = $voucher->amount;
@@ -78,7 +95,7 @@ class TransactionsController extends Controller
                 $organization = $product->organization;
             }
         } else {
-            // subsidy fund
+            // Subsidy fund voucher
             $product = Product::findOrFail($request->input('product_id'));
             $fundProviderProduct = $product->getSubsidyDetailsForFundOrFail($voucher->fund);
 

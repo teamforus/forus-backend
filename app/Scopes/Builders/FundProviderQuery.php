@@ -30,8 +30,10 @@ class FundProviderQuery
 
             $builder->where(static function(Builder $builder) use ($type, $product_id) {
                 if ($type === null) {
-                    $builder->where('allow_budget', true);
-                    $builder->orWhere('allow_products', true);
+                    $builder->where(function(Builder $builder) {
+                        $builder->where('allow_budget', true);
+                        $builder->orWhere('allow_products', true);
+                    });
                 } else if ($type === 'budget') {
                     $builder->where('allow_budget', true);
                 } else if ($type === 'product') {

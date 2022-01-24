@@ -26,11 +26,11 @@ class FundProviderProductQuery
     /**
      * @param Builder $query
      * @param Voucher $voucher
-     * @param null $organization_id
+     * @param null|int|array|Builder $organization_id
      * @param bool $validateLimits
      * @return Builder
      */
-    public static function whereAvailableForSubsidyVoucherFilter(
+    public static function whereAvailableForSubsidyVoucher(
         Builder $query,
         Voucher $voucher,
         $organization_id = null,
@@ -42,8 +42,12 @@ class FundProviderProductQuery
                     FundProvider::query(), $voucher->fund_id,'subsidy', $voucher->product_id
                 );
 
-                if ($organization_id) {
+                if (is_numeric($organization_id) || is_array($organization_id)) {
                     $providersQuery->whereIn('organization_id', (array) $organization_id);
+                }
+
+                if ($organization_id instanceof Builder) {
+                    $providersQuery->whereIn('organization_id', $organization_id);
                 }
 
                 $builder->whereIn('organization_id', $providersQuery->pluck('organization_id'));
@@ -55,6 +59,10 @@ class FundProviderProductQuery
         $query->whereHas('fund_provider', static function(Builder $builder) use ($voucher) {
             $builder->where('fund_id', '=', $voucher->fund_id);
         });
+
+        if ($voucher->product_id) {
+            $query->where('product_id', $voucher->product_id);
+        }
 
         return $validateLimits ? self::whereInSubsidyLimitsFilter($query, $voucher) : $query;
     }

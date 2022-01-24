@@ -6,8 +6,6 @@ use App\Models\Fund;
 use App\Models\Product;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductSubQuery;
-use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\Json\Resource;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -15,23 +13,20 @@ use Illuminate\Database\Eloquent\Builder;
  * @property Product $resource
  * @package App\Http\Resources
  */
-class ProductResource extends Resource
+class ProductResource extends BaseJsonResource
 {
-    public static function load(): array
-    {
-        return [
-            'voucher_transactions',
-            'vouchers_reserved',
-            'photo.presets',
-            'product_category.translations',
-            'organization.offices.photo.presets',
-            'organization.offices.schedules',
-            'organization.offices.organization',
-            'organization.offices.organization.logo.presets',
-            'organization.logo.presets',
-            'organization.business_type.translations',
-        ];
-    }
+    public const LOAD = [
+        'voucher_transactions',
+        'vouchers_reserved',
+        'photo.presets',
+        'product_category.translations',
+        'organization.offices.photo.presets',
+        'organization.offices.schedules',
+        'organization.offices.organization',
+        'organization.offices.organization.logo.presets',
+        'organization.logo.presets',
+        'organization.business_type.translations',
+    ];
 
     /**
      * Transform the resource into an array.
@@ -44,16 +39,7 @@ class ProductResource extends Resource
         $product = $this->resource;
         $simplified = $request->has('simplified') && $request->input('simplified');
 
-        return array_merge($product->only([
-            'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
-            'organization_id', 'reservation_enabled', 'reservation_policy',
-        ]), $simplified ? [
-            'photo' => new MediaResource($product->photo),
-            'organization' => new OrganizationBasicResource($product->organization),
-            'price' => is_null($product->price) ? null : currency_format($product->price),
-            'price_locale' => $product->price_locale,
-        ] : [
-            'organization' => new OrganizationBasicResource($product->organization),
+        return $simplified ? $this->baseFields($product) : array_merge($this->baseFields($product), [
             'total_amount' => $product->total_amount,
 
             // new price fields
@@ -65,8 +51,6 @@ class ProductResource extends Resource
             'reserved_amount' => $product->vouchers_reserved->count(),
             'sold_amount' => $product->countSold(),
             'stock_amount' => $product->stock_amount,
-            'price' => is_null($product->price) ? null : currency_format($product->price),
-            'price_locale' => $product->price_locale,
             'expire_at' => $product->expire_at ? $product->expire_at->format('Y-m-d') : null,
             'expire_at_locale' => format_date_locale($product->expire_at ?? null),
             'expired' => $product->expired,
@@ -76,9 +60,24 @@ class ProductResource extends Resource
             'funds' => $product->trashed() ? [] : $this->getProductFunds($product),
             'price_min' => currency_format($this->getProductSubsidyPrice($product, 'max')),
             'price_max' => currency_format($this->getProductSubsidyPrice($product, 'min')),
-            'photo' => new MediaResource($product->photo),
             'offices' => OfficeResource::collection($product->organization->offices),
             'product_category' => new ProductCategoryResource($product->product_category)
+        ]);
+    }
+
+    /**
+     * @param Product $product
+     * @return array
+     */
+    protected function baseFields(Product $product): array {
+        return array_merge($product->only([
+            'id', 'name', 'description', 'description_html', 'product_category_id', 'sold_out',
+            'organization_id', 'reservation_enabled', 'reservation_policy',
+        ]), [
+            'photo' => new MediaResource($product->photo),
+            'organization' => new OrganizationBasicResource($product->organization),
+            'price' => is_null($product->price) ? null : currency_format($product->price),
+            'price_locale' => $product->price_locale,
         ]);
     }
 
@@ -96,7 +95,9 @@ class ProductResource extends Resource
      */
     private function getProductFunds(Product $product) {
         $fundsQuery = FundQuery::whereProductsAreApprovedAndActiveFilter($this->fundsQuery(), $product);
-        $fundsQuery->with('organization');
+        $fundsQuery->with([
+            'organization', 'logo',
+        ]);
 
         return $fundsQuery->get()->map(function(Fund $fund) use ($product) {
             $data = [
@@ -118,7 +119,7 @@ class ProductResource extends Resource
             $productData = ProductSubQuery::appendReservationStats([
                 'identity_address' => auth_address(),
                 'fund_id' => $fund->id
-            ], Product::whereId($product->id))->first()->only([
+            ], Product::whereId($product->id))->firstOrFail()->only([
                 'limit_total', 'limit_per_identity', 'limit_available'
             ]);
 

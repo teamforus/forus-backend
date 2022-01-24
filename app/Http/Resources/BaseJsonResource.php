@@ -17,19 +17,25 @@ class BaseJsonResource extends JsonResource
     public const LOAD_COUNT = [];
 
     /**
+     * @param string|null $append
      * @return array
      */
-    public static function load(): array
+    public static function load(?string $append = null): array
     {
-        return static::LOAD;
+        return $append ? array_map(function($load) use ($append) {
+            return "$append.$load";
+        }, static::LOAD) : static::LOAD;
     }
 
     /**
+     * @param string|null $append
      * @return array
      */
-    public static function load_count(): array
+    public static function load_count(?string $append = null): array
     {
-        return static::LOAD_COUNT;
+        return $append ? array_map(function($load) use ($append) {
+            return "$append.$load";
+        }, static::LOAD_COUNT) : static::LOAD_COUNT;
     }
 
     /**

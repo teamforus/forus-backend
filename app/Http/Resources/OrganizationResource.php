@@ -29,7 +29,10 @@ class OrganizationResource extends Resource
      */
     public static function load($request = null): array
     {
-        $load = [];
+        $load = [
+            'tags',
+            'bank_connection_active',
+        ];
 
         self::isRequested('logo', $request) && array_push($load, 'logo');
         self::isRequested('funds', $request) && array_push($load, 'funds');
