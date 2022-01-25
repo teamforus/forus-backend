@@ -238,6 +238,8 @@ class EventLogService implements IEventLogService
             'voucher_transaction_iban_from' => $voucherTransaction->iban_from,
             'voucher_transaction_payment_time' => $voucherTransaction->payment_time,
             'voucher_transaction_payment_time_locale' => format_date_locale($voucherTransaction->payment_time),
+            'voucher_transaction_created_at' => $voucherTransaction->created_at->format('Y-m-d'),
+            'voucher_transaction_created_at_locale' => format_date_locale($voucherTransaction->created_at),
         ];
     }
 
