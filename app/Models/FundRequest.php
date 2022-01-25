@@ -98,11 +98,6 @@ class FundRequest extends Model
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_APPROVED_PARTLY,
-        self::STATE_DISREGARDED
-    ];
-
-    public const STATES_PENDING = [
-        self::STATE_PENDING,
         self::STATE_DISREGARDED,
     ];
 
@@ -235,7 +230,8 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function clarifications(): HasManyThrough {
+    public function clarifications(): HasManyThrough
+    {
         return $this->hasManyThrough(
             FundRequestClarification::class,
             FundRequestRecord::class
@@ -245,7 +241,8 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records_approved(): HasMany {
+    public function records_approved(): HasMany
+    {
         return $this->records()->where([
             'fund_request_records.state' => FundRequestRecord::STATE_APPROVED
         ]);
@@ -255,7 +252,8 @@ class FundRequest extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function records_declined(): HasMany {
+    public function records_declined(): HasMany
+    {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_records.state' => FundRequestRecord::STATE_DECLINED
         ]);
@@ -265,7 +263,8 @@ class FundRequest extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function records_pending(): HasMany {
+    public function records_pending(): HasMany
+    {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_records.state' => FundRequestRecord::STATE_PENDING
         ]);

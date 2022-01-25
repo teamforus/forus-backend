@@ -10,6 +10,8 @@ use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
+use App\Scopes\Builders\FundRequestQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -56,7 +58,21 @@ class ValidatorFundRequestResource extends Resource
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
             'records' => $this->getRecordsData($request, $fundRequest),
+            'replaced' => $fundRequest->isDisregarded() && $this->isReplaced($fundRequest),
         ]);
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return bool
+     */
+    protected function isReplaced(FundRequest $fundRequest): bool
+    {
+        return $fundRequest->fund->fund_requests()->where(function(Builder $builder) use ($fundRequest) {
+            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder->where(function(Builder $builder) use ($fundRequest) {
+                $builder->where('id', '!=', $fundRequest->id);
+            }), $fundRequest->identity_address);
+        })->where('id', '!=', $fundRequest->id)->exists();
     }
 
     public function getRecordsData(Request $request, FundRequest $fundRequest): array

@@ -4,8 +4,8 @@ namespace App\Http\Resources;
 
 use App\Models\Fund;
 use App\Models\FundFaq;
-use App\Models\FundRequest;
 use App\Models\Organization;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -57,8 +57,7 @@ class FundResource extends Resource
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount' => $fund->amountFixedByFormula(),
             'has_pending_fund_requests' => $fund->fund_requests()->where(function(Builder $builder) {
-                $builder->where('identity_address', '=', auth_address());
-                $builder->whereIn('state', FundRequest::STATES_PENDING);
+                FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth_address());
             })->exists(),
         ], $checkCriteria ? [
             'taken_by_partner' =>
