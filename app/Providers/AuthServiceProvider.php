@@ -18,6 +18,7 @@ use App\Models\PhysicalCardRequest;
 use App\Models\Prevalidation;
 use App\Models\Product;
 use App\Models\ProductReservation;
+use App\Models\Tag;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Models\VoucherTransactionBulk;
@@ -39,6 +40,7 @@ use App\Policies\OfficePolicy;
 use App\Policies\FundProviderPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\ProductReservationPolicy;
+use App\Policies\TagPolicy;
 use App\Policies\VoucherPolicy;
 use App\Policies\VoucherTransactionBulkPolicy;
 use App\Policies\VoucherTransactionPolicy;
@@ -64,6 +66,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
+        Tag::class                      => TagPolicy::class,
         File::class                     => FilePolicy::class,
         Fund::class                     => FundPolicy::class,
         Media::class                    => MediaPolicy::class,
