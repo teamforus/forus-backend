@@ -84,7 +84,7 @@ class VouchersController extends Controller
             $voucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
         }
 
-        if ($bsn = $request->input('bsn', false)) {
+        if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
 
@@ -153,7 +153,7 @@ class VouchersController extends Controller
                 $voucherModel = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
             }
 
-            if ($bsn = ($voucher['bsn'] ?? false)) {
+            if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
                 $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
             }
 
