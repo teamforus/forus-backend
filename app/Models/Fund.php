@@ -1180,7 +1180,15 @@ class Fund extends Model
      */
     public function isActive(): bool
     {
-        return $this->state === static::STATE_ACTIVE;
+        return ($this->state === static::STATE_ACTIVE) && !$this->isExpired();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExpired(): bool
+    {
+        return $this->end_date->isPast();
     }
 
     /**

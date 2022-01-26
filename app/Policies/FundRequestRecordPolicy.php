@@ -149,7 +149,7 @@ class FundRequestRecordPolicy
         }
 
         return $requestRecord->employee &&
-            ($requestRecord->state === $requestRecord::STATE_PENDING) &&
+            ($requestRecord->isPending()) &&
             ($requestRecord->employee->identity_address === $identity_address);
     }
 

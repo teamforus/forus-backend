@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
-use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Class UpdateFundRequestsRequest
+ * Class DisregardFundRequestsRequest
  * @property FundRequest $fund_request
  * @package App\Http\Requests\Api\Platform\Funds\FundRequests
  */
-class ApproveFundRequestsRequest extends FormRequest
+class DisregardFundRequestsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -30,7 +30,8 @@ class ApproveFundRequestsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'note'  => 'nullable|string|between:0,2000'
+            'note'      => 'nullable|string|between:0,2000',
+            'notify'    => 'required|boolean',
         ];
     }
 }
