@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * App\Models\Fund
@@ -132,6 +133,10 @@ use Carbon\Carbon;
  * @property-read int|null $providers_approved_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
+ * @property-read Collection|\App\Models\Tag[] $tags_provider
+ * @property-read int|null $tags_provider_count
+ * @property-read Collection|\App\Models\Tag[] $tags_webshop
+ * @property-read int|null $tags_webshop_count
  * @property-read Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
  * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\FundTopUp[] $top_ups
@@ -363,6 +368,26 @@ class Fund extends Model
     }
 
     /**
+     * @return MorphToMany
+     * @noinspection PhpUnused
+     */
+    public function tags_webshop(): MorphToMany
+    {
+        return $this->morphToMany(Tag::class, 'taggable')
+            ->where('scope', 'webshop');
+    }
+
+    /**
+     * @return MorphToMany
+     * @noinspection PhpUnused
+     */
+    public function tags_provider(): MorphToMany
+    {
+        return $this->morphToMany(Tag::class, 'taggable')
+            ->where('scope', 'provider');
+    }
+
+    /**
      * @return $this
      */
     public function archive(Employee $employee): self
@@ -422,6 +447,30 @@ class Fund extends Model
         ], false) : [];
 
         $this->fund_config->forceFill(array_merge($values, $replaceValues))->save();
+    }
+
+    /**
+     * @param $tagIds
+     * @param string $scope
+     * @return void
+     */
+    public function syncTags($tagIds, $scope = 'webshop')
+    {
+        $query = Tag::query();
+
+        // Target tags of scope
+        $query->where(function(Builder $builder) use ($tagIds, $scope) {
+            $builder->whereIn('id', $tagIds);
+            $builder->whereIn('scope', (array) $scope);
+        });
+
+        // Tags to keep from other scopes
+        $query->orWhere(function(Builder $builder) use ($scope) {
+            $otherScopeTags = $this->tags()->whereNotIn('scope', (array) $scope);
+            $builder->whereIn('id', $otherScopeTags->select('tags.id')->getQuery());
+        });
+
+        $this->tags_webshop()->sync($query->pluck('id'));
     }
 
     /**
@@ -881,8 +930,14 @@ class Fund extends Model
         }
 
         if ($tag = array_get($options, 'tag')) {
-            $query->whereHas('tags', static function(Builder $query) use ($tag) {
-                return $query->where('key', $tag);
+            $query->whereHas('tags_provider', static function(Builder $query) use ($tag) {
+                $query->where('key', $tag);
+            });
+        }
+
+        if ($tag_id = array_get($options, 'tag_id')) {
+            $query->whereHas('tags_webshop', static function(Builder $query) use ($tag_id) {
+                $query->where('tags.id', $tag_id);
             });
         }
 
@@ -984,7 +1039,7 @@ class Fund extends Model
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if (!$fund->isClosed() && $fund->end_date->isPast()) {
+            if (!$fund->isClosed() && $fund->end_date->clone()->addDay()->isPast()) {
                 FundEndedEvent::dispatch($fund->changeState(self::STATE_CLOSED));
             }
         }

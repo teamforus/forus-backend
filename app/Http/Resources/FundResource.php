@@ -35,12 +35,13 @@ class FundResource extends Resource
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
-            'organization_id', 'state', 'notification_amount', 'tags', 'type', 'archived',
+            'organization_id', 'state', 'notification_amount', 'type', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
         ]), [
+            'tags' => TagResource::collection($fund->tags_webshop),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),

@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use A\B;
 use App\Events\Funds\FundBalanceSuppliedEvent;
 use App\Models\Fund;
 use App\Models\FundTopUp;

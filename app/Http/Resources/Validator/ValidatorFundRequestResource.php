@@ -6,6 +6,7 @@ use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\FileResource;
 use App\Http\Resources\FundCriterionResource;
 use App\Http\Resources\FundRequestClarificationResource;
+use App\Http\Resources\TagResource;
 use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
@@ -50,9 +51,11 @@ class ValidatorFundRequestResource extends Resource
             'created_at' => $fundRequest->created_at ? $fundRequest->created_at->format('Y-m-d H:i:s') : null,
             'updated_at' => $fundRequest->updated_at ? $fundRequest->updated_at->format('Y-m-d H:i:s') : null,
             'fund' => array_merge($fundRequest->fund->only([
-                'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
-                'tags', 'type',
-            ]), compact('criteria')),
+                'id', 'name', 'description', 'organization_id', 'state', 'notification_amount', 'type',
+            ]), [
+                'criteria' => $criteria,
+                'tags' => TagResource::collection($fundRequest->fund->tags),
+            ]),
             'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
