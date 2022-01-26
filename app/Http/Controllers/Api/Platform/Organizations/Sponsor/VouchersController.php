@@ -362,7 +362,8 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         $fund = $organization->findFund($request->get('fund_id'));
-        $export_type = $request->get('export_type', 'png');
+        $table_data_type = $request->get('table_data_type', 'csv');
+        $qr_codes_type = $request->get('qr_codes_type', 'png');
         $vouchers = Voucher::searchSponsor($request, $organization, $fund);
         $fields_list = $request->input('fields_list');
 
@@ -370,7 +371,7 @@ class VouchersController extends Controller
             abort(404, "No vouchers to be exported.");
         }
 
-        if (!$zipFile = Voucher::zipVouchers($vouchers, $export_type, $fields_list)) {
+        if (!$zipFile = Voucher::zipVouchers($vouchers, $fields_list, $table_data_type, $qr_codes_type)) {
             abort(500, "Couldn't make the archive.");
         }
 

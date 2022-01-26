@@ -9,6 +9,7 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
 use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
+use App\Exports\VoucherExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
@@ -833,10 +834,17 @@ class Voucher extends Model
 
     /**
      * @param Collection $vouchers
-     * @param $exportType
+     * @param array $fields_list
+     * @param string $table_data_type
+     * @param string $qr_codes_type
      * @return string
      */
-    public static function zipVouchers(Collection $vouchers, $exportType, array $fields_list): string {
+    public static function zipVouchers(
+        Collection $vouchers,
+        array $fields_list,
+        string $table_data_type,
+        string $qr_codes_type
+    ): string {
         $vouchersData = [];
         $vouchersDataNames = [];
         $token_generator = resolve('token_generator');
@@ -854,12 +862,14 @@ class Voucher extends Model
         $zip = new \ZipArchive();
         $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
-        if ($exportType === 'png') {
+        if ($qr_codes_type === 'png') {
             $zip->addEmptyDir('images');
         }
 
         if ($vouchers->count() > 0) {
-            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $fields_list))->toArray()));
+            if ($table_data_type == 'csv') {
+                fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $fields_list))->toArray()));
+            }
         }
 
         foreach ($vouchers as $voucher) {
@@ -867,11 +877,13 @@ class Voucher extends Model
                 $voucherData = new VoucherExportData($voucher, $fields_list);
             } while(in_array($voucherData->getName(), $vouchersDataNames, true));
 
-            fputcsv($fp, $voucherData->toArray());
+            if ($table_data_type == 'csv') {
+                fputcsv($fp, $voucherData->toArray());
+            }
             $vouchersData[] = $voucherData;
             $vouchersDataNames[] = $voucherData->getName();
 
-            if ($exportType === 'png') {
+            if ($qr_codes_type === 'png') {
                 $zip->addFromString(
                     sprintf("images/%s.png", $voucherData->getName()),
                     make_qr_code('voucher', $voucher->token_without_confirmation->address)
@@ -879,15 +891,23 @@ class Voucher extends Model
             }
         }
 
-        if ($exportType === 'pdf') {
+        if ($qr_codes_type === 'pdf') {
             $pdf = resolve('dompdf.wrapper');
             $pdf->loadView('pdf.vouchers_export', compact('vouchersData'));
             $zip->addFromString('qr_codes.pdf', $pdf->output());
         }
 
-        rewind($fp);
-        $zip->addFromString('qr_codes.csv', stream_get_contents($fp));
-        fclose($fp);
+        if ($table_data_type == 'csv') {
+            rewind($fp);
+            $zip->addFromString('qr_codes.csv', stream_get_contents($fp));
+            fclose($fp);
+        }
+
+        if ($table_data_type == 'xls') {
+            $zip->addFile(resolve('excel')->download(
+                new VoucherExport($vouchers, $fields_list), 'qr_codes.xls')->getFile(), 'qr_codes.xls'
+            );
+        }
 
         $zip->close();
 
