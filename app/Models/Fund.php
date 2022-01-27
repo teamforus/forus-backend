@@ -1793,20 +1793,26 @@ class Fund extends Model
     }
 
     /**
+     * @param bool $skipEnabledCheck
      * @return ?BackofficeApi
      */
-    public function getBackofficeApi(): ?BackofficeApi
+    public function getBackofficeApi(bool $skipEnabledCheck = false): ?BackofficeApi
     {
-        return $this->isBackofficeApiAvailable() ? new BackofficeApi(record_repo(), $this) : null;
+        if ($this->isBackofficeApiAvailable($skipEnabledCheck)) {
+            return new BackofficeApi(record_repo(), $this);
+        }
+
+        return null;
     }
 
     /**
+     * @param bool $skipEnabledCheck
      * @return bool
      */
-    public function isBackofficeApiAvailable(): bool
+    public function isBackofficeApiAvailable(bool $skipEnabledCheck = false): bool
     {
         return $this->organization->backoffice_available &&
-            $this->fund_config->backoffice_enabled;
+            ($this->fund_config->backoffice_enabled || $skipEnabledCheck);
     }
 
     /**
