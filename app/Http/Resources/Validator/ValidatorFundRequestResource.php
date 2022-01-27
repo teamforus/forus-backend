@@ -44,6 +44,12 @@ class ValidatorFundRequestResource extends Resource
         $recordRepo = resolve('forus.services.record');
         $fundRequest = $this->resource;
         $criteria = FundCriterionResource::collection($fundRequest->fund->criteria);
+        /** @var Organization $organization */
+        $organization = $request->route('organization') or abort(403);
+
+        $bsn = $organization->bsn_enabled
+            ? $recordRepo->bsnByAddress($fundRequest->identity_address)
+            : null;
 
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
@@ -56,7 +62,7 @@ class ValidatorFundRequestResource extends Resource
                 'criteria' => $criteria,
                 'tags' => TagResource::collection($fundRequest->fund->tags),
             ]),
-            'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
+            'bsn' => $bsn,
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
@@ -78,6 +84,11 @@ class ValidatorFundRequestResource extends Resource
         })->where('id', '!=', $fundRequest->id)->exists();
     }
 
+    /**
+     * @param Request $request
+     * @param FundRequest $fundRequest
+     * @return array
+     */
     public function getRecordsData(Request $request, FundRequest $fundRequest): array
     {
         /** @var Organization $organization */
@@ -92,9 +103,13 @@ class ValidatorFundRequestResource extends Resource
         $records = [];
 
         foreach ($fundRequest->records as $record) {
-            $records[] = static::recordToArray($record, $employee, in_array(
-                $record->id, $availableRecords
-            ));
+            if ($organization->bsn_enabled || !in_array($record->record_type_key, [
+                'bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'
+            ], true)) {
+                $records[] = static::recordToArray($record, $employee, in_array(
+                    $record->id, $availableRecords
+                ));
+            }
         }
 
         return $records;
