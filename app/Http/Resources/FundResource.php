@@ -57,9 +57,9 @@ class FundResource extends Resource
             }),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount' => $fund->amountFixedByFormula(),
-            'has_pending_fund_requests' => $fund->fund_requests()->where(function(Builder $builder) {
+            'has_pending_fund_requests' => auth_address() ? $fund->fund_requests()->where(function(Builder $builder) {
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth_address());
-            })->exists(),
+            })->exists() : false,
         ], $checkCriteria ? [
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&
