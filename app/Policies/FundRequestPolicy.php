@@ -10,6 +10,7 @@ use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 
 class FundRequestPolicy
@@ -26,7 +27,7 @@ class FundRequestPolicy
     public function viewAnyAsRequester(?string $identity_address, Fund $fund)
     {
         if (!$fund->isActive()) {
-            return $this->deny('fund_request.fund_not_active');
+            return $this->deny('fund_not_active');
         }
 
         return !empty($identity_address);
@@ -44,11 +45,11 @@ class FundRequestPolicy
     public function viewAsRequester(?string $identity_address, FundRequest $fundRequest, Fund $fund)
     {
         if (!$this->checkIntegrityRequester($fund, $fundRequest)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny('invalid_endpoint');
         }
 
         if ($fundRequest->identity_address !== $identity_address) {
-            return $this->deny('fund_request.not_requester');
+            return $this->deny('not_requester');
         }
 
         return true;
@@ -64,12 +65,12 @@ class FundRequestPolicy
     public function createAsRequester(?string $identity_address, Fund $fund)
     {
         if (!$fund->isActive()) {
-            return $this->deny('fund_request.fund_not_active');
+            return $this->deny('fund_not_active');
         }
 
         if ($fund->fund_config->implementation->digid_required &&
             !record_repo()->bsnByAddress($identity_address)) {
-            return $this->deny('fund_request.bsn_record_is_mandatory');
+            return $this->deny('bsn_record_is_mandatory');
         }
 
         // has pending fund requests
@@ -77,12 +78,12 @@ class FundRequestPolicy
             $builder->where('identity_address', $identity_address);
             $builder->where('state', FundRequest::STATE_PENDING);
         })->exists()) {
-            return $this->deny('fund_request.pending_request_exists');
+            return $this->deny('pending_request_exists');
         }
 
         // has approved fund requests where voucher is not expired
         if (FundRequestQuery::whereApprovedAndVoucherIsActive($fund->fund_requests(), $identity_address)->exists()) {
-            return $this->deny('fund_request.approved_request_exists');
+            return $this->deny('approved_request_exists');
         }
 
         return !empty($identity_address);
@@ -100,7 +101,7 @@ class FundRequestPolicy
         if ($organization->employeesWithPermissionsQuery('validate_records')->where([
             'identity_address' => $identity_address,
         ])->doesntExist()) {
-            return $this->deny('fund_requests.invalid_validator');
+            return $this->deny('invalid_validator');
         }
 
         return true;
@@ -133,15 +134,15 @@ class FundRequestPolicy
         Organization $organization
     ) {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity_address, 'validate_records')) {
-            return $this->deny('fund_requests.invalid_validator');
+            return $this->deny('invalid_validator');
         }
 
         if (!in_array($identity_address, $fundRequest->fund->validatorEmployees(), true)) {
-            return $this->deny('fund_request.not_validator');
+            return $this->deny('not_validator');
         }
 
         return true;
@@ -161,16 +162,16 @@ class FundRequestPolicy
         Organization $organization
     ) {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity_address, 'validate_records')) {
-            return $this->deny('fund_requests.invalid_validator');
+            return $this->deny('invalid_validator');
         }
 
         // only pending requests could be assigned
         if ($fundRequest->state !== FundRequest::STATE_PENDING) {
-            return $this->deny('fund_request.not_pending');
+            return $this->deny('not_pending');
         }
 
         $hasRecordsAvailable = FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
@@ -183,7 +184,7 @@ class FundRequestPolicy
 
         // doesn't have pending vouchers that could be assigned
         if (!$hasRecordsAvailable) {
-            return $this->deny('fund_request.no_records_available');
+            return $this->deny('no_records_available');
         }
 
         return true;
@@ -203,16 +204,16 @@ class FundRequestPolicy
         Organization $organization
     ) {
         if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
-            return $this->deny('fund_requests.invalid_endpoint');
+            return $this->deny('invalid_endpoint');
         }
 
         if (!$organization->identityCan($identity_address, 'validate_records')) {
-            return $this->deny('fund_requests.invalid_validator');
+            return $this->deny('invalid_validator');
         }
 
         // only pending requests could be updated by fund validators
         if (!$fundRequest->isPending()) {
-            return $this->deny('fund_request.not_pending');
+            return $this->deny('not_pending');
         }
 
         $recordsAssigned = FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
@@ -223,17 +224,17 @@ class FundRequestPolicy
 
         // need to have at least one record assigned to you
         if ((clone $recordsAssigned)->doesntExist()) {
-            return $this->deny('fund_request.no_records_assigned');
+            return $this->deny('no_records_assigned');
         }
 
         // should not have any records disregarded by you
         if ((clone $recordsAssigned)->where('state', FundRequestRecord::STATE_DISREGARDED)->exists()) {
-            return $this->deny('fund_request.has_disregarded_records');
+            return $this->deny('has_disregarded_records');
         }
 
         // only fund validators may update requests
         if (!in_array($identity_address, $fundRequest->fund->validatorEmployees(), true)) {
-            return $this->deny('fund_request.invalid_validator');
+            return $this->deny('invalid_validator');
         }
 
         return true;
@@ -273,7 +274,7 @@ class FundRequestPolicy
         }
 
         if ($organization->id !== $fundRequest->fund->organization_id) {
-            return $this->deny('fund_requests.only_sponsor_employee');
+            return $this->deny('only_sponsor_employee');
         }
 
         return true;
@@ -303,18 +304,18 @@ class FundRequestPolicy
 
         // has other pending requests
         if ((clone $requestsQuery->where('state', $fundRequest::STATE_PENDING))->exists()) {
-            return $this->deny('fund_requests.fund_request_replaced');
+            return $this->deny('fund_request_replaced');
         }
 
         // has other approved requests
         if (FundRequestQuery::whereApprovedAndVoucherIsActive(
             (clone $requestsQuery),
             $fundRequest->identity_address)->exists()) {
-            return $this->deny('fund_request.approved_request_exists');
+            return $this->deny('approved_request_exists');
         }
 
         if ($organization->id !== $fundRequest->fund->organization_id) {
-            return $this->deny('fund_requests.only_sponsor_employee');
+            return $this->deny('only_sponsor_employee');
         }
 
         return true;
@@ -339,7 +340,7 @@ class FundRequestPolicy
         }
 
         if ($organization->id !== $fundRequest->fund->organization_id) {
-            return $this->deny('fund_requests.only_sponsor_employee');
+            return $this->deny('only_sponsor_employee');
         }
 
         return $fundRequest->records()->where([
@@ -373,5 +374,17 @@ class FundRequestPolicy
 
         return $fundRequest->fund->organization_id === $organization->id ||
             in_array($organization->id, $externalValidators, true);
+    }
+
+    /**
+     * Throws an unauthorized exception.
+     *
+     * @param string $message
+     * @param ?int $code
+     * @return Response
+     */
+    protected function deny(string $message, ?int $code = null): Response
+    {
+        return Response::deny(trans('policies/fund_requests.' . $message), $code);
     }
 }
