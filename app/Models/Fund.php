@@ -450,11 +450,11 @@ class Fund extends Model
     }
 
     /**
-     * @param $tagIds
-     * @param string $scope
+     * @param array $tagIds
+     * @param $scope
      * @return void
      */
-    public function syncTags($tagIds, $scope = 'webshop')
+    public function syncTags(array $tagIds, $scope = 'webshop')
     {
         $query = Tag::query();
 
@@ -471,6 +471,18 @@ class Fund extends Model
         });
 
         $this->tags_webshop()->sync($query->pluck('id'));
+    }
+
+    /**
+     * @param array|null $tagIds
+     * @param string $scope
+     * @return void
+     */
+    public function syncTagsOptional(?array $tagIds = null, $scope = 'webshop')
+    {
+        if (!is_null($tagIds)) {
+            $this->syncTags($tagIds, $scope);
+        }
     }
 
     /**
@@ -1180,7 +1192,15 @@ class Fund extends Model
      */
     public function isActive(): bool
     {
-        return $this->state === static::STATE_ACTIVE;
+        return ($this->state === static::STATE_ACTIVE) && !$this->isExpired();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExpired(): bool
+    {
+        return $this->end_date->isPast();
     }
 
     /**

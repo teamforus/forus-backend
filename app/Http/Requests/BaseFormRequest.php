@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Employee;
 use App\Models\Implementation;
+use App\Models\Organization;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Notification\NotificationService;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
@@ -24,7 +26,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return array
      * @noinspection PhpUnused
      */
-    public function rules(): array {
+    public function rules(): array
+    {
         return [];
     }
 
@@ -148,5 +151,14 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
         }
 
         return Gate::allows($abilityOrRules, $arguments);
+    }
+
+    /**
+     * @param Organization $organization
+     * @return Employee|null
+     */
+    public function employee(Organization $organization): ?Employee
+    {
+        return $organization->findEmployee($this->auth_address());
     }
 }

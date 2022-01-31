@@ -198,6 +198,20 @@
             "content_informal": ":sponsor_name heeft jouw aanvraag voor :fund_name behandeld."
         }
     },
+    "notifications_identities.fund_request_disregarded": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name niet behandelen.",
+            "title_informal": "Uw aanvraag voor :fund_name niet behandelen.",
+            "template": "notifications_identities/fund_request_disregarded.md",
+            "template_informal": "notifications_identities/fund_request_disregarded_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag niet behandelen",
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name niet behandelen.",
+            "content_informal": ":sponsor_name heeft uw aanvraag voor :fund_name niet behandelen."
+        }
+    },
     "notifications_identities.fund_request_record_declined": {
         "mail": {
             "title": "Uw aanvraag voor :fund_name is afgewezen",
