@@ -795,6 +795,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\VouchersController@exportData"
     );
 
+    $router->get(
+        'organizations/{organization}/sponsor/vouchers/export-fields-list',
+        "Api\Platform\Organizations\Sponsor\VouchersController@getExportFields"
+    );
+
     $router->patch(
         'organizations/{organization}/sponsor/vouchers/{voucher}/assign',
         "Api\Platform\Organizations\Sponsor\VouchersController@assign"

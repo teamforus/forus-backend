@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
+use App\Exports\VoucherExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
+use Illuminate\Validation\Rule;
 
 /**
  * Class IndexVouchersRequest
@@ -33,6 +35,7 @@ class IndexVouchersRequest extends BaseFormRequest
     public function rules(): array
     {
         $funds = $this->organization->funds()->pluck('funds.id');
+        $fields_list = collect(VoucherExport::getExportFieldsList())->pluck('key')->toArray();
 
         return [
             'per_page'          => 'numeric|between:1,100',
@@ -57,6 +60,8 @@ class IndexVouchersRequest extends BaseFormRequest
             'expired'           => 'nullable|boolean',
             'count_per_identity_min'    => 'nullable|numeric',
             'count_per_identity_max'    => 'nullable|numeric',
+            'fields_list'               => 'nullable|array',
+            'fields_list.*'             => ['nullable', Rule::in($fields_list)]
         ];
     }
 

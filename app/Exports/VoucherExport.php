@@ -54,4 +54,72 @@ class VoucherExport implements FromCollection, WithHeadings
             return array_keys($row);
         })->flatten()->unique()->toArray();
     }
+
+    /**
+     * @return object[]
+     */
+    public static function getExportFieldsList() : array {
+        return array(
+            (object) [
+                'name' => 'Toegekend',
+                'key'  => 'granted'
+            ],
+            (object) [
+                'name' => 'E-mailadres',
+                'key'  => 'identity_email'
+            ],
+            (object) [
+                'name' => 'Aanmaker',
+                'key'  => 'source'
+            ],
+            (object) [
+                'name' => 'In gebruik',
+                'key'  => 'in_use'
+            ],
+            (object) [
+                'name' => 'Status',
+                'key'  => 'state'
+            ],
+            (object) [
+                'name' => 'Bedrag',
+                'key'  => 'amount'
+            ],
+            (object) [
+                'name' => 'In gebruik datum',
+                'key'  => 'in_use_date'
+            ],
+            (object) [
+                'name' => 'Activatiecode',
+                'key'  => 'activation_code'
+            ],
+            (object) [
+                'name' => 'Fondsnaam',
+                'key'  => 'fund_name'
+            ],
+            (object) [
+                'name' => 'BSN (door medewerker)',
+                'key'  => 'reference_bsn'
+            ],
+            (object) [
+                'name' => 'Uniek nummer',
+                'key'  => 'activation_code_uid'
+            ],
+            (object) [
+                'name' => 'Aangemaakt op',
+                'key'  => 'created_at'
+            ],
+            (object) [
+                'name' => 'BSN (DigiD)',
+                'key'  => 'identity_bsn'
+            ],
+            (object) [
+                'name' => 'Notitie',
+                'key'  => 'note'
+            ],
+            (object) [
+                'name' => 'Verlopen op',
+                'key'  => 'expire_at'
+            ]
+        );
+    }
 }

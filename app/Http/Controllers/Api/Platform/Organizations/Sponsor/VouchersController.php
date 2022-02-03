@@ -325,6 +325,18 @@ class VouchersController extends Controller
     }
 
     /**
+     * @param Organization $organization
+     * @return array
+     * @throws AuthorizationException
+     */
+    public function getExportFields(Organization $organization): array {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+
+        return VoucherExport::getExportFieldsList();
+    }
+
+    /**
      * @param IndexVouchersRequest $request
      * @param Organization $organization
      * @return BinaryFileResponse
