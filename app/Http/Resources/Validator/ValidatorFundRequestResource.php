@@ -6,10 +6,13 @@ use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\FileResource;
 use App\Http\Resources\FundCriterionResource;
 use App\Http\Resources\FundRequestClarificationResource;
+use App\Http\Resources\TagResource;
 use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
+use App\Scopes\Builders\FundRequestQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\Resource;
 
@@ -48,15 +51,31 @@ class ValidatorFundRequestResource extends Resource
             'created_at' => $fundRequest->created_at ? $fundRequest->created_at->format('Y-m-d H:i:s') : null,
             'updated_at' => $fundRequest->updated_at ? $fundRequest->updated_at->format('Y-m-d H:i:s') : null,
             'fund' => array_merge($fundRequest->fund->only([
-                'id', 'name', 'description', 'organization_id', 'state', 'notification_amount',
-                'tags', 'type',
-            ]), compact('criteria')),
+                'id', 'name', 'description', 'organization_id', 'state', 'notification_amount', 'type',
+            ]), [
+                'criteria' => $criteria,
+                'tags' => TagResource::collection($fundRequest->fund->tags),
+            ]),
             'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
             'records' => $this->getRecordsData($request, $fundRequest),
+            'replaced' => $fundRequest->isDisregarded() && $this->isReplaced($fundRequest),
         ]);
+    }
+
+    /**
+     * @param FundRequest $fundRequest
+     * @return bool
+     */
+    protected function isReplaced(FundRequest $fundRequest): bool
+    {
+        return $fundRequest->fund->fund_requests()->where(function(Builder $builder) use ($fundRequest) {
+            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder->where(function(Builder $builder) use ($fundRequest) {
+                $builder->where('id', '!=', $fundRequest->id);
+            }), $fundRequest->identity_address);
+        })->where('id', '!=', $fundRequest->id)->exists();
     }
 
     public function getRecordsData(Request $request, FundRequest $fundRequest): array
@@ -96,7 +115,7 @@ class ValidatorFundRequestResource extends Resource
     ): array {
         $is_value_readable = $isValueReadable;
         $is_assigned = $record->employee_id === $employee->id;
-        $is_assignable = $is_value_readable && !$is_assigned;
+        $is_assignable = $is_value_readable && !$record->employee_id && $record->isPending();
 
         $is_visible = $is_assignable || $is_assigned || $is_value_readable;
         $recordTypes = collect(record_types_cached())->keyBy('key');

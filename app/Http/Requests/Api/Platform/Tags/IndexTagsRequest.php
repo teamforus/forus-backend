@@ -1,16 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Funds\Requests;
+namespace App\Http\Requests\Api\Platform\Tags;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\FundRequest;
 
-/**
- * Class UpdateFundRequestsRequest
- * @property FundRequest $fund_request
- * @package App\Http\Requests\Api\Platform\Funds\FundRequests
- */
-class DeclineFundRequestsRequest extends BaseFormRequest
+class IndexTagsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -30,7 +24,9 @@ class DeclineFundRequestsRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'note'  => 'nullable|string|between:0,2000',
+            'type' => 'nullable|in:funds',
+            'scope' => 'nullable|string:in,dashboard,webshop',
+            'per_page' => 'nullable|numeric|min:1|max:1000',
         ];
     }
 }

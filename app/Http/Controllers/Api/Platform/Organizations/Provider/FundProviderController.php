@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Platform\Organizations\Provider\StoreFundProviderReque
 use App\Http\Requests\Api\Platform\Organizations\Provider\UpdateFundProviderRequest;
 use App\Http\Resources\FundResource;
 use App\Http\Resources\FundProviderResource;
+use App\Http\Resources\TagResource;
 use App\Models\Fund;
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -54,11 +55,9 @@ class FundProviderController extends Controller
             })->select(['id', 'name'])->get()->map(static function(Organization $organization) {
                 return $organization->only('id', 'name');
             }),
-            'tags' => Tag::whereHas('funds', static function(Builder $builder) use ($query) {
+            'tags' => TagResource::collection(Tag::whereHas('funds', static function(Builder $builder) use ($query) {
                 return $builder->whereIn('funds.id', (clone($query))->select('funds.id'));
-            })->select(['key', 'name'])->get()->map(static function(Tag $tag) {
-                return $tag->only('key', 'name');
-            }),
+            })->where('scope', 'provider')->get()),
         ];
 
         return FundResource::collection(Fund::search($request->only([

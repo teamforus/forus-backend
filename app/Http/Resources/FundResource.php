@@ -4,9 +4,10 @@ namespace App\Http\Resources;
 
 use App\Models\Fund;
 use App\Models\FundFaq;
-use App\Models\FundRequest;
 use App\Models\Organization;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -44,12 +45,13 @@ class FundResource extends BaseJsonResource
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
-            'organization_id', 'state', 'notification_amount', 'tags', 'type', 'archived',
+            'organization_id', 'state', 'notification_amount', 'type', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
         ]), [
+            'tags' => TagResource::collection($fund->tags_webshop),
             'implementation' => new ImplementationResource($fund->fund_config->implementation ?? null),
             'auto_validation' => $fund->isAutoValidatingRequests(),
             'logo' => new MediaResource($fund->logo),
@@ -64,11 +66,10 @@ class FundResource extends BaseJsonResource
                 return $faq->only('id', 'title', 'description', 'description_html');
             }),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
-            'fund_amount'    => $fund->amountFixedByFormula(),
-            'has_pending_fund_requests' => $fund->fund_requests()->where([
-                'identity_address' => auth_address(),
-                'state' => FundRequest::STATE_PENDING,
-            ])->exists(),
+            'fund_amount' => $fund->amountFixedByFormula(),
+            'has_pending_fund_requests' => auth_address() ? $fund->fund_requests()->where(function(Builder $builder) {
+                FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth_address());
+            })->exists() : false,
         ], $checkCriteria ? [
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&

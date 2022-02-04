@@ -151,6 +151,8 @@ class OrganizationQuery
 
                 $query->leftJoinSub($providersQuery, 'fund_providers', 'fund_providers.organization_id', 'organizations.id');
                 $query->orderBy('fund_providers.last_created_at', Arr::get($options, 'order_dir', 'desc'));
+                $query->orderBy('name');
+                $query->orderBy('id', 'desc');
                 $query->select('organizations.*');
             } break;
             case 'name': {

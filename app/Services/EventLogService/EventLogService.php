@@ -113,6 +113,10 @@ class EventLogService implements IEventLogService
             'fund_request_id' => $fundRequest->id,
             'fund_request_note' => $fundRequest->note,
             'fund_request_state' => $fundRequest->state,
+            'fund_request_disregard_note' => $fundRequest->disregard_note,
+            'fund_request_disregard_notify' => $fundRequest->disregard_notify,
+            'fund_request_created_date' => $fundRequest->created_at->format('Y-m-d'),
+            'fund_request_created_date_locale' => format_date_locale($fundRequest->created_at),
         ];
     }
 
@@ -238,6 +242,8 @@ class EventLogService implements IEventLogService
             'voucher_transaction_iban_from' => $voucherTransaction->iban_from,
             'voucher_transaction_payment_time' => $voucherTransaction->payment_time,
             'voucher_transaction_payment_time_locale' => format_date_locale($voucherTransaction->payment_time),
+            'voucher_transaction_created_at' => $voucherTransaction->created_at->format('Y-m-d'),
+            'voucher_transaction_created_at_locale' => format_date_locale($voucherTransaction->created_at),
         ];
     }
 

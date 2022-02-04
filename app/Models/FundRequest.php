@@ -19,16 +19,14 @@ use Illuminate\Http\Request;
  * @property int $fund_id
  * @property string $identity_address
  * @property string $note
- * @property string $state
+ * @property string $disregard_note
+ * @property bool $disregard_notify
+ * @property string|null $state
  * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundRequestClarification[] $clarifications
  * @property-read int|null $clarifications_count
- * @property-read Collection|\App\Models\FundRequestRecord[] $clarifications_answered
- * @property-read int|null $clarifications_answered_count
- * @property-read Collection|\App\Models\FundRequestRecord[] $clarifications_pending
- * @property-read int|null $clarifications_pending_count
  * @property-read \App\Models\Fund $fund
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
@@ -40,12 +38,16 @@ use Illuminate\Http\Request;
  * @property-read int|null $records_approved_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records_declined
  * @property-read int|null $records_declined_count
+ * @property-read Collection|\App\Models\FundRequestRecord[] $records_disregarded
+ * @property-read int|null $records_disregarded_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records_pending
  * @property-read int|null $records_pending_count
  * @method static Builder|FundRequest newModelQuery()
  * @method static Builder|FundRequest newQuery()
  * @method static Builder|FundRequest query()
  * @method static Builder|FundRequest whereCreatedAt($value)
+ * @method static Builder|FundRequest whereDisregardNote($value)
+ * @method static Builder|FundRequest whereDisregardNotify($value)
  * @method static Builder|FundRequest whereFundId($value)
  * @method static Builder|FundRequest whereId($value)
  * @method static Builder|FundRequest whereIdentityAddress($value)
@@ -60,37 +62,56 @@ class FundRequest extends Model
     use HasLogs;
 
     public const EVENT_CREATED = 'created';
-    public const EVENT_RESOLVED = 'resolved';
     public const EVENT_APPROVED = 'approved';
     public const EVENT_DECLINED = 'declined';
-    public const EVENT_RECORD_DECLINED = 'record_declined';
+    public const EVENT_DISREGARDED = 'disregarded';
     public const EVENT_APPROVED_PARTLY = 'approved_partly';
+    public const EVENT_RESOLVED = 'resolved';
+
+    public const EVENT_RECORD_DECLINED = 'record_declined';
     public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
 
     public const STATE_PENDING = 'pending';
     public const STATE_APPROVED = 'approved';
     public const STATE_DECLINED = 'declined';
+    public const STATE_DISREGARDED = 'disregarded';
     public const STATE_APPROVED_PARTLY = 'approved_partly';
+
+    public const EVENTS = [
+        self::EVENT_CREATED,
+        self::EVENT_APPROVED,
+        self::EVENT_DECLINED,
+        self::EVENT_DISREGARDED,
+        self::EVENT_APPROVED_PARTLY,
+        self::EVENT_RESOLVED,
+    ];
 
     public const STATES = [
         self::STATE_PENDING,
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_APPROVED_PARTLY,
+        self::STATE_DISREGARDED,
     ];
 
     public const STATES_RESOLVED = [
         self::STATE_APPROVED,
         self::STATE_DECLINED,
         self::STATE_APPROVED_PARTLY,
+        self::STATE_DISREGARDED,
     ];
 
     protected $fillable = [
         'fund_id', 'identity_address', 'employee_id', 'note', 'state', 'resolved_at',
+        'disregard_note', 'disregard_notify',
     ];
 
     protected $dates = [
         'resolved_at'
+    ];
+
+    protected $casts = [
+        'disregard_notify' => 'boolean',
     ];
 
     /**
@@ -209,7 +230,8 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
      */
-    public function clarifications(): HasManyThrough {
+    public function clarifications(): HasManyThrough
+    {
         return $this->hasManyThrough(
             FundRequestClarification::class,
             FundRequestRecord::class
@@ -219,7 +241,8 @@ class FundRequest extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function records_approved(): HasMany {
+    public function records_approved(): HasMany
+    {
         return $this->records()->where([
             'fund_request_records.state' => FundRequestRecord::STATE_APPROVED
         ]);
@@ -229,7 +252,8 @@ class FundRequest extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function records_declined(): HasMany {
+    public function records_declined(): HasMany
+    {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_records.state' => FundRequestRecord::STATE_DECLINED
         ]);
@@ -239,7 +263,8 @@ class FundRequest extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnused
      */
-    public function records_pending(): HasMany {
+    public function records_pending(): HasMany
+    {
         return $this->hasMany(FundRequestRecord::class)->where([
             'fund_request_records.state' => FundRequestRecord::STATE_PENDING
         ]);
@@ -247,21 +272,11 @@ class FundRequest extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
      */
-    public function clarifications_pending(): HasMany {
-        return $this->hasMany(FundRequestRecord::class)->where([
-            'fund_request_clarifications.state' => FundRequestClarification::STATE_PENDING
-        ]);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @noinspection PhpUnused
-     */
-    public function clarifications_answered(): HasMany {
-        return $this->hasMany(FundRequestRecord::class)->where([
-            'fund_request_clarifications.state' => FundRequestClarification::STATE_ANSWERED
+    public function records_disregarded(): HasMany
+    {
+        return $this->records()->where([
+            'fund_request_records.state' => FundRequestRecord::STATE_DISREGARDED
         ]);
     }
 
@@ -271,7 +286,7 @@ class FundRequest extends Model
      * @param string|null $note
      * @return FundRequest
      */
-    public function decline(Employee $employee, string $note = null): self
+    public function decline(Employee $employee, ?string $note = null): self
     {
         $this->update([
             'note' => $note ?: '',
@@ -288,18 +303,73 @@ class FundRequest extends Model
 
     /**
      * Set all fund request records assigned to given employee as approved
+     *
      * @param Employee $employee
-     * @param string|null $note
      * @return $this
      */
-    public function approve(Employee $employee, string $note = null): self {
+    public function approve(Employee $employee): self
+    {
         $this->records_pending()->where([
             'employee_id' => $employee->id
-        ])->each(static function(FundRequestRecord $record) use ($note) {
-            $record->approve($note);
+        ])->each(static function(FundRequestRecord $record) {
+            $record->approve();
         });
 
         return $this;
+    }
+
+    /**
+     * Set all fund request pending records assigned to given employee as disregarded
+     *
+     * @param Employee $employee
+     * @param string|null $note
+     * @param bool $notify
+     * @return FundRequest
+     */
+    public function disregard(Employee $employee, ?string $note = null, bool $notify = false): self
+    {
+        $this->update([
+            'disregard_note' => $note ?: '',
+            'disregard_notify' => $notify ?: '',
+        ]);
+
+        $this->records_pending()->where([
+            'employee_id' => $employee->id
+        ])->each(static function(FundRequestRecord $record) use ($note) {
+            $record->disregard($note);
+        });
+
+        return $this;
+    }
+
+    /**
+     * Set all disregarded fund request records assigned to given employee as pending
+     * @param Employee $employee
+     * @return FundRequest
+     */
+    public function disregardUndo(Employee $employee): self
+    {
+        $this->records_disregarded()->where([
+            'employee_id' => $employee->id
+        ])->each(static function(FundRequestRecord $record) {
+            $record->disregardUndo();
+        });
+
+        if ($this->records_pending()->exists()) {
+            $this->updateStateByRecords();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $state
+     * @param array $data
+     * @return $this
+     */
+    protected function updateState(string $state, array $data = []): self
+    {
+        return $this->updateModel(array_merge(compact('state'), $data));
     }
 
     /**
@@ -308,17 +378,19 @@ class FundRequest extends Model
      * the request accordingly
      * @return $this
      */
-    public function resolve(): self {
+    public function resolve(): self
+    {
         $records = $this->records()->whereHas('employee');
-        $records->where('state', '=', self::STATE_APPROVED);
 
-        $records->get()->each(static function(FundRequestRecord $record) {
-            $record->makeValidation();
-        });
+        if ((clone $records)->where('state', '=', self::STATE_DISREGARDED)->doesntExist()) {
+            $records->where('state', '=', self::STATE_APPROVED);
 
-        if (!$this->records_pending()->exists()) {
-            $this->updateStateByRecords();
+            $records->get()->each(static function(FundRequestRecord $record) {
+                $record->makeValidation();
+            });
         }
+
+        $this->updateStateByRecords();
 
         return $this;
     }
@@ -326,28 +398,35 @@ class FundRequest extends Model
     /**
      * @return $this
      */
-    public function updateStateByRecords(): FundRequest {
+    public function updateStateByRecords(): FundRequest
+    {
         $countAll = $this->records()->count();
+        $countPending = $this->records_pending()->count();
         $countApproved = $this->records_approved()->count();
-        $allApproved = $countAll === $countApproved;
-        $hasApproved = $countApproved > 0;
+        $countDisregarded = $this->records_disregarded()->count();
         $oldState = $this->state;
 
-        if ($allApproved) {
+        if ($countPending > 0) {
+            if ($this->state !== self::STATE_PENDING) {
+                $this->updateState(self::STATE_PENDING);
+            }
+
+            return $this;
+        }
+
+        if ($countApproved === $countAll) {
             $state = self::STATE_APPROVED;
+        } elseif ($countDisregarded > 0) {
+            $state = self::STATE_DISREGARDED;
         } else {
-            $state = $hasApproved ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;
+            $state = $countApproved > 0 ? self::STATE_APPROVED_PARTLY : self::STATE_DECLINED;
         }
 
-        if (in_array($state, static::STATES_RESOLVED)) {
-            $this->update(array_merge(compact('state'), [
-                'resolved_at' => now(),
-            ]));
-        } else {
-            $this->update(compact('state'));
-        }
+        $this->updateState($state, in_array($state, static::STATES_RESOLVED) ? [
+            'resolved_at' => now(),
+        ] : []);
 
-        if (($oldState !== $this->state) && ($this->state !== 'pending')) {
+        if (!$this->isPending() && ($oldState !== $this->state)) {
             FundRequestResolved::dispatch($this);
         }
 
@@ -359,7 +438,8 @@ class FundRequest extends Model
      * @param Employee $employee
      * @return $this
      */
-    public function assignEmployee(Employee $employee): self {
+    public function assignEmployee(Employee $employee): self
+    {
         FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
             $this->records()->where([
                 'state' => FundRequestRecord::STATE_PENDING,
@@ -453,5 +533,45 @@ class FundRequest extends Model
         string $identity_address
     ) {
         return self::exportTransform(self::search($request, $organization, $identity_address));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state === self::STATE_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDisregarded(): bool
+    {
+        return $this->state === self::STATE_DISREGARDED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isApproved(): bool
+    {
+        return $this->state === self::STATE_APPROVED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeclined(): bool
+    {
+        return $this->state === self::STATE_DECLINED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isResolved(): bool
+    {
+        return in_array($this->state, self::STATES_RESOLVED);
     }
 }
