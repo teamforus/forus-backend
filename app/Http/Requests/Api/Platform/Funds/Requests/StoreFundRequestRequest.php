@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Rules\FundRequestFilesRule;
 use App\Rules\FundRequestRecordRecordTypeKeyRule;
 use App\Rules\FundRequestRecordValueRule;
@@ -60,16 +61,20 @@ class StoreFundRequestRequest extends BaseFormRequest
      * @return array
      */
     public function messages(): array {
-        $recordRepo = resolve('forus.services.record');
         $messages = [];
 
         foreach ($this->get('records') as $key => $val) {
             if (isset($val['record_type_key'])) {
-                $recordTypeName = collect(
-                    $recordRepo->getRecordTypes()
-                )->firstWhere('key', $val['record_type_key'])['name'] ?? '';
+                /** @var FundCriterion $fund_criteria */
+                $fund_criteria = $this->fund->criteria()->where(
+                    'record_type_key', $val['record_type_key']
+                )->first();
+                $is_checkbox_field = $fund_criteria && $fund_criteria->operator == '=';
 
-                $messages["records.*.value.required"] = trans('validation.fund_request_request_field_incomplete');
+                $messages["records.*.value.required"] = trans(
+                    'validation.fund_request_request_' .
+                    ($is_checkbox_field ? 'checkbox_' : '') . 'field_incomplete'
+                );
             }
         }
 
