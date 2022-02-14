@@ -26,7 +26,6 @@ use Carbon\Carbon;
  * @property bool $allow_budget
  * @property bool $allow_products
  * @property bool $allow_some_products
- * @property bool $dismissed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -50,12 +49,13 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider whereAllowProducts($value)
  * @method static Builder|FundProvider whereAllowSomeProducts($value)
  * @method static Builder|FundProvider whereCreatedAt($value)
- * @method static Builder|FundProvider whereDismissed($value)
  * @method static Builder|FundProvider whereFundId($value)
  * @method static Builder|FundProvider whereId($value)
  * @method static Builder|FundProvider whereOrganizationId($value)
  * @method static Builder|FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property string $state
+ * @method static Builder|FundProvider whereState($value)
  */
 class FundProvider extends Model
 {
@@ -73,12 +73,14 @@ class FundProvider extends Model
 
     public const STATE_APPROVED = 'approved';
     public const STATE_PENDING = 'pending';
+    public const STATE_DECLINED = 'declined';
+
     public const STATE_APPROVED_OR_HAS_TRANSACTIONS = 'approved_or_has_transactions';
 
     public const STATES = [
         self::STATE_APPROVED,
         self::STATE_PENDING,
-        self::STATE_APPROVED_OR_HAS_TRANSACTIONS,
+        self::STATE_DECLINED,
     ];
 
     /**
@@ -87,15 +89,14 @@ class FundProvider extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'fund_id', 'dismissed',
-        'allow_products', 'allow_budget', 'allow_some_products'
+        'organization_id', 'fund_id', 'allow_products', 'allow_budget',
+        'allow_some_products', 'state'
     ];
 
     /**
      * @var array
      */
     protected $casts = [
-        'dismissed' => 'boolean',
         'allow_budget' => 'boolean',
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
@@ -397,7 +398,7 @@ class FundProvider extends Model
         $fund_id = $request->input('fund_id');
         $fund_ids = $request->input('fund_ids');
         $organization_id = $request->input('organization_id');
-        $dismissed = $request->input('dismissed');
+        $state = $request->input('state');
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
 
@@ -432,8 +433,8 @@ class FundProvider extends Model
             $query->where('organization_id', $organization_id);
         }
 
-        if ($dismissed !== null) {
-            $query->where('dismissed', (bool) $dismissed);
+        if ($state) {
+            $query->where('state', $state);
         }
 
         if ($allow_budget !== null) {
@@ -480,7 +481,7 @@ class FundProvider extends Model
             }
         }
 
-        return $query->orderBy('created_at')->orderBy('dismissed');
+        return $query->orderBy('created_at');
     }
 
     /**
@@ -585,9 +586,15 @@ class FundProvider extends Model
      */
     public function isApproved(): bool
     {
-        return FundProviderQuery::whereApprovedForFundsFilter(
-            self::query()->where('id', $this->id), $this->fund_id
-        )->exists();
+        return $this->state === self::STATE_APPROVED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state === self::STATE_PENDING;
     }
 
     /**

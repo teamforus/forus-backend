@@ -8,8 +8,8 @@ use App\Http\Resources\MediaCompactResource;
 use App\Http\Resources\OfficeResource;
 use App\Http\Resources\OrganizationWithPrivateResource;
 use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\Organization;
-use App\Scopes\Builders\FundProviderQuery;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -60,7 +60,7 @@ class SponsorProviderResource extends JsonResource
             'last_activity_locale' => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
             'funds' => $funds,
             'funds_active' => $funds->filter(function (array $fund) {
-                return $fund['active'];
+                return $fund['state'] === FundProvider::STATE_APPROVED;
             })->count(),
         ]);
     }
@@ -80,14 +80,13 @@ class SponsorProviderResource extends JsonResource
         )->where('archived', false)->get();
 
         return $funds->map(function(Fund $fund) use ($providerOrganization) {
-            $fundProvider = $providerOrganization->fund_providers->where('fund_id', $fund->id);
+            /** @var FundProvider|null $fundProvider */
+            $fundProvider = $providerOrganization->fund_providers
+                ->where('fund_id', $fund->id)->first();
 
             return array_merge($fund->only('id', 'name', 'organization_id'), [
-                'active' => FundProviderQuery::whereApprovedForFundsFilter(
-                    $providerOrganization->fund_providers()->getQuery(),
-                    $fund->id
-                )->exists(),
-                'fund_provider_id' => $fundProvider->pluck('id')->first(),
+                'state' => $fundProvider->state,
+                'fund_provider_id' => $fundProvider->id
             ]);
         });
     }

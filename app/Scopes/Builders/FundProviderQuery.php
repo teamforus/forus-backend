@@ -3,6 +3,7 @@
 
 namespace App\Scopes\Builders;
 
+use App\Models\FundProvider;
 use App\Models\VoucherTransaction;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -26,21 +27,17 @@ class FundProviderQuery
         $product_id = null
     ): Builder {
         return $query->where(static function(Builder $builder) use ($fund_id, $type, $product_id) {
-            $builder->whereIn('fund_id', (array) $fund_id);
+            $builder->whereIn('fund_id', (array) $fund_id)
+                ->where('state', FundProvider::STATE_APPROVED);
 
             $builder->where(static function(Builder $builder) use ($type, $product_id) {
-                if ($type === null) {
-                    $builder->where(function(Builder $builder) {
-                        $builder->where('allow_budget', true);
-                        $builder->orWhere('allow_products', true);
-                    });
-                } else if ($type === 'budget') {
+                if ($type === 'budget') {
                     $builder->where('allow_budget', true);
                 } else if ($type === 'product') {
                     $builder->where('allow_products', true);
                 }
 
-                if ($type === null || $type === 'product' || $type === 'subsidy') {
+                if ($type === 'product' || $type === 'subsidy') {
                     if ($product_id) {
                         $builder->orWhereHas('fund_provider_products', static function(Builder $builder) use ($product_id) {
                             $builder->whereHas('product', static function(Builder $builder) use ($product_id) {
@@ -69,13 +66,8 @@ class FundProviderQuery
     public static function wherePendingForFundsFilter(Builder $query, $fund_id): Builder
     {
         return $query->where(function(Builder $builder) use ($fund_id) {
-            $builder->whereIn('fund_id', (array) $fund_id);
-
-            $builder->where(function(Builder $builder) {
-                $builder->where('allow_budget', false);
-                $builder->where('allow_products', false);
-                $builder->doesntHave('fund_provider_products');
-            });
+            $builder->whereIn('fund_id', (array) $fund_id)
+                ->where('state', FundProvider::STATE_PENDING);
         });
     }
 

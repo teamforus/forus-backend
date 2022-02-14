@@ -560,6 +560,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/funds/{fund}/providers/{organization_fund}/transactions/{transaction_address}',
         "Api\Platform\Organizations\Funds\FundProviderController@transaction");
 
+    $router->patch(
+        'organizations/{organization}/funds/{fund}/providers/{fund_provider}/approve',
+        "Api\Platform\Organizations\Funds\FundProviderController@approve"
+    );
+
+    $router->patch(
+        'organizations/{organization}/funds/{fund}/providers/{fund_provider}/decline',
+        "Api\Platform\Organizations\Funds\FundProviderController@decline"
+    );
+
     $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController"
