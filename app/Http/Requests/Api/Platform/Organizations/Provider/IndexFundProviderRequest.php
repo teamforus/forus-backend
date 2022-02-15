@@ -37,7 +37,6 @@ class IndexFundProviderRequest extends BaseFormRequest
         )->pluck('id')->toArray();
 
         return [
-            'dismissed'         => 'nullable|boolean',
             'allow_budget'      => 'nullable|boolean',
             'allow_products'    => 'nullable|in:1,0,some',
             'per_page'          => 'numeric|between:1,1000',
