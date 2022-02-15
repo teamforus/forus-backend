@@ -44,7 +44,8 @@ class UpdateFundProviderRequest extends FormRequest
     private function baseRules(): array {
         return [
             'allow_products' => 'nullable|boolean',
-            'allow_budget' => 'nullable|boolean'
+            'allow_budget' => 'nullable|boolean',
+            'dismissed' => 'nullable|boolean',
         ];
     }
 

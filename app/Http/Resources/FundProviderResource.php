@@ -43,7 +43,7 @@ class FundProviderResource extends Resource
         $lastActivity = $fundProvider->getLastActivity();
 
         return array_merge($fundProvider->only([
-            'id', 'organization_id', 'fund_id', 'state',
+            'id', 'organization_id', 'fund_id', 'dismissed',
             'allow_products', 'allow_some_products', 'allow_budget',
         ]), $this->productFields($fundProvider), [
             'fund' => new FundResource($fundProvider->fund),
@@ -52,7 +52,7 @@ class FundProviderResource extends Resource
             'organization' => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization
             ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
-            'cancelable' => $fundProvider->isPending() && !$fundProvider->hasTransactions(),
+            'cancelable' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved(),
             'last_activity' => $lastActivity ? $lastActivity->format('Y-m-d H:i:s') : null,
             'last_activity_locale' => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
         ]);

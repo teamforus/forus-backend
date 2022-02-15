@@ -465,7 +465,13 @@ class Organization extends Model
         return $this->belongsToMany(
             Fund::class,
             'fund_providers'
-        )->where('fund_providers.state', FundProvider::STATE_APPROVED);
+        )->where(function(EloquentBuilder $builder) {
+            $builder->where('fund_providers.allow_budget', true);
+            $builder->orWhere(function(EloquentBuilder $builder) {
+                $builder->where('fund_providers.allow_products', true);
+                $builder->orWhere('fund_providers.allow_some_products', true);
+            });
+        });
     }
 
     /**
@@ -474,8 +480,12 @@ class Organization extends Model
      */
     public function supplied_funds_approved_budget(): BelongsToMany
     {
-        return $this->supplied_funds_approved()
-            ->where('fund_providers.allow_budget', true);
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(function(EloquentBuilder $builder) {
+            $builder->where('fund_providers.allow_budget', true);
+        });
     }
 
     /**
@@ -484,8 +494,12 @@ class Organization extends Model
      */
     public function supplied_funds_approved_products(): BelongsToMany
     {
-        return $this->supplied_funds_approved()
-            ->where('fund_providers.allow_products', true);
+        return $this->belongsToMany(
+            Fund::class,
+            'fund_providers'
+        )->where(static function(EloquentBuilder $builder) {
+            $builder->where('fund_providers.allow_products', true);
+        });
     }
 
     /**

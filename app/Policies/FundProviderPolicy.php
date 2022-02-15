@@ -140,72 +140,6 @@ class FundProviderPolicy
             return false;
         }
 
-        if ($fundProvider->state !== FundProvider::STATE_APPROVED) {
-            return false;
-        }
-
-        return !$fund->isArchived() &&
-            $fund->organization->identityCan($identity_address, 'manage_funds');
-    }
-
-    /**
-     * @param $identity_address
-     * @param FundProvider $fundProvider
-     * @param Organization|null $organization
-     * @param Fund|null $fund
-     * @return bool
-     */
-    public function approve(
-        $identity_address,
-        FundProvider $fundProvider,
-        Organization $organization,
-        Fund $fund
-    ): bool {
-        if ($organization->id != $fundProvider->fund->organization_id) {
-            return false;
-        }
-
-        if ($fund->id != $fundProvider->fund_id) {
-            return false;
-        }
-
-        if (!in_array($fundProvider->state, [
-            FundProvider::STATE_DECLINED, FundProvider::STATE_PENDING
-        ], true)) {
-            return false;
-        }
-
-        return !$fund->isArchived() &&
-            $fund->organization->identityCan($identity_address, 'manage_funds');
-    }
-
-    /**
-     * @param $identity_address
-     * @param FundProvider $fundProvider
-     * @param Organization|null $organization
-     * @param Fund|null $fund
-     * @return bool
-     */
-    public function decline(
-        $identity_address,
-        FundProvider $fundProvider,
-        Organization $organization,
-        Fund $fund
-    ): bool {
-        if ($organization->id != $fundProvider->fund->organization_id) {
-            return false;
-        }
-
-        if ($fund->id != $fundProvider->fund_id) {
-            return false;
-        }
-
-        if (!in_array($fundProvider->state, [
-            FundProvider::STATE_APPROVED, FundProvider::STATE_PENDING
-        ], true)) {
-            return false;
-        }
-
         return !$fund->isArchived() &&
             $fund->organization->identityCan($identity_address, 'manage_funds');
     }
@@ -239,7 +173,7 @@ class FundProviderPolicy
         FundProvider $fundProvider,
         Organization $organization
     ): bool {
-        $isPending = $fundProvider->isPending();
+        $isPending = !$fundProvider->isApproved();
         $hasPermission = $this->updateProvider($identity_address, $fundProvider, $organization);
         $doesntHaveTransactions = !$fundProvider->hasTransactions();
 

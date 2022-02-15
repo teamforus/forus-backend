@@ -150,7 +150,6 @@ class FundProviderInvitation extends Model
      */
     public function accept(): FundProviderInvitation
     {
-        // TODO ASK IF HERE MUST BE STATUS
         $this->fund->providers()->firstOrCreate([
             'organization_id' => $this->organization_id,
         ])->update($this->only([

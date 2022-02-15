@@ -333,8 +333,11 @@ class Fund extends Model
      */
     public function providers_approved(): HasMany
     {
-        return $this->hasMany(FundProvider::class)
-            ->where('state', FundProvider::STATE_APPROVED);
+        return $this->hasMany(FundProvider::class)->where(static function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products', true);
+        });
     }
 
     /**
@@ -644,7 +647,11 @@ class Fund extends Model
         return $this->belongsToMany(
             Organization::class,
             'fund_providers'
-        )->where('fund_providers.state', FundProvider::STATE_APPROVED);
+        )->where(static function(Builder $builder) {
+            $builder->where('allow_budget', true);
+            $builder->orWhere('allow_products', true);
+            $builder->orWhere('allow_some_products', true);
+        });
     }
 
     /**
@@ -653,8 +660,11 @@ class Fund extends Model
      */
     public function provider_organizations_approved_budget(): BelongsToMany
     {
-        return $this->provider_organizations_approved()
-            ->where('allow_budget', true);
+        return $this->belongsToMany(Organization::class,
+            'fund_providers'
+        )->where(static function(Builder $builder) {
+            $builder->where('allow_budget', true);
+        });
     }
 
     /**
@@ -663,8 +673,34 @@ class Fund extends Model
      */
     public function provider_organizations_approved_products(): BelongsToMany
     {
-        return $this->provider_organizations_approved()
-            ->where('allow_products', true);
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where(static function(Builder $builder) {
+            $builder->where('allow_products', true);
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
+     */
+    public function provider_organizations_declined(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+            'dismissed' => true,
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @noinspection PhpUnused
+     */
+    public function provider_organizations_pending(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
+            'allow_budget' => false,
+            'allow_products' => false,
+        ]);
     }
 
     /**

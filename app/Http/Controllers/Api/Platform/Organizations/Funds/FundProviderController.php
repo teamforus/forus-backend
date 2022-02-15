@@ -121,10 +121,18 @@ class FundProviderController extends Controller
         $enable_products = $request->input('enable_products');
         $disable_products = $request->input('disable_products');
 
-        if ($fund->isTypeBudget()) {
-            $fundProvider->update($request->only([
-                'allow_products', 'allow_budget'
-            ]));
+        $fundProvider->update($request->only($fund->isTypeBudget() ? [
+            'dismissed', 'allow_products', 'allow_budget',
+        ]: 'dismissed'));
+
+        if ($fundProvider->allow_budget || $fundProvider->allow_products || !empty($enable_products)) {
+            $fundProvider->update([
+                'dismissed' => false
+            ]);
+        }
+
+        if ($request->input('dismissed')) {
+            $disable_products = $fundProvider->products->pluck('id')->toArray();
         }
 
         if (is_array($enable_products)) {
@@ -137,62 +145,6 @@ class FundProviderController extends Controller
 
         $fundProvider->update([
             'allow_some_products' => $fundProvider->fund_provider_products()->count() > 0
-        ]);
-
-        return new FundProviderResource($fundProvider);
-    }
-
-    /**
-     * @param Organization $organization
-     * @param Fund $fund
-     * @param FundProvider $fundProvider
-     * @return FundProviderResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function approve(
-        Organization $organization,
-        Fund $fund,
-        FundProvider $fundProvider
-    ): FundProviderResource {
-        $this->authorize('show', $organization);
-        $this->authorize('show', [$fund, $organization]);
-        $this->authorize('approve', [$fundProvider, $organization, $fund]);
-
-        $fundProvider->update(['state' => FundProvider::STATE_APPROVED]);
-
-        return new FundProviderResource($fundProvider);
-    }
-
-    /**
-     * @param Organization $organization
-     * @param Fund $fund
-     * @param FundProvider $fundProvider
-     * @return FundProviderResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function decline(
-        Organization $organization,
-        Fund $fund,
-        FundProvider $fundProvider
-    ): FundProviderResource {
-        $this->authorize('show', $organization);
-        $this->authorize('show', [$fund, $organization]);
-        $this->authorize('decline', [$fundProvider, $organization, $fund]);
-
-        if ($fund->isTypeBudget()) {
-            $fundProvider->update([
-                'allow_products' => false,
-                'allow_budget' => false
-            ]);
-        }
-
-        $fundProvider->declineProducts(
-            $fundProvider->products->pluck('id')->toArray()
-        );
-
-        $fundProvider->update([
-            'allow_some_products' => false,
-            'state' => FundProvider::STATE_DECLINED
         ]);
 
         return new FundProviderResource($fundProvider);

@@ -364,11 +364,13 @@ class VoucherPolicy
                 )->pluck('organization_id');
 
                 $declined = $voucher->fund->providers()->where([
-                    'state' => FundProvider::STATE_DECLINED
+                    'allow_budget' => false,
+                    'dismissed' => true,
                 ])->pluck('organization_id');
 
                 $pending = $voucher->fund->providers()->where([
-                    'state' => FundProvider::STATE_PENDING
+                    'allow_budget' => false,
+                    'dismissed' => false,
                 ])->pluck('organization_id');
             } else {
                 if ($voucher->product->expired) {
@@ -392,12 +394,12 @@ class VoucherPolicy
                 )->pluck('organization_id');
 
                 $declined = $voucher->fund->providers()->where([
-                    'state' => FundProvider::STATE_DECLINED
-                ])->pluck('organization_id')->values();
+                    'dismissed' => true,
+                ])->pluck('organization_id')->diff($approved)->values();
 
                 $pending = $voucher->fund->providers()->where([
-                    'state' => FundProvider::STATE_PENDING
-                ])->pluck('organization_id')->values();
+                    'dismissed' => false,
+                ])->pluck('organization_id')->diff($approved)->values();
             }
         } elseif ($voucher->fund->isTypeSubsidy()) {
             $approved = FundProviderQuery::whereApprovedForFundsFilter(
@@ -408,12 +410,12 @@ class VoucherPolicy
             )->pluck('organization_id');
 
             $declined = $voucher->fund->providers()->where([
-                'state' => FundProvider::STATE_DECLINED
-            ])->pluck('organization_id')->values();
+                'dismissed' => true,
+            ])->pluck('organization_id')->diff($approved)->values();
 
             $pending = $voucher->fund->providers()->where([
-                'state' => FundProvider::STATE_PENDING
-            ])->pluck('organization_id')->values();
+                'dismissed' => false,
+            ])->pluck('organization_id')->diff($approved)->values();
         } else {
             return $this->deny('unknown_fund_type');
         }
