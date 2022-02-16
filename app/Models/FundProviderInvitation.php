@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $allow_products
  * @property string $state
  * @property string $token
+ * @property string $provider_state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $from_fund
@@ -36,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|FundProviderInvitation whereFundId($value)
  * @method static Builder|FundProviderInvitation whereId($value)
  * @method static Builder|FundProviderInvitation whereOrganizationId($value)
+ * @method static Builder|FundProviderInvitation whereProviderState($value)
  * @method static Builder|FundProviderInvitation whereState($value)
  * @method static Builder|FundProviderInvitation whereToken($value)
  * @method static Builder|FundProviderInvitation whereUpdatedAt($value)
@@ -58,7 +60,7 @@ class FundProviderInvitation extends Model
 
     protected $fillable = [
         'organization_id', 'from_fund_id', 'fund_id', 'state', 'token',
-        'allow_budget', 'allow_products',
+        'allow_budget', 'allow_products', 'provider_state'
     ];
 
     protected $casts = [
@@ -98,7 +100,10 @@ class FundProviderInvitation extends Model
      */
     public static function inviteFromFundToFund(Fund $fundFrom, Fund $fundTo): Collection
     {
-        $alreadyProviders = $fundTo->provider_organizations_approved->pluck('id');
+        $alreadyProviders = $fundTo->provider_organizations()
+            ->whereIn('fund_providers.state', [
+                FundProvider::STATE_APPROVED, FundProvider::STATE_PENDING
+            ])->pluck('organizations.id');
         $alreadyInvited = $fundFrom->provider_invitations()->where([
             'state' => self::STATE_PENDING
         ])->pluck('organization_id');
@@ -114,7 +119,8 @@ class FundProviderInvitation extends Model
                 'organization_id'   => $provider->organization_id,
                 'state'             => self::STATE_PENDING,
                 'allow_budget'      => $provider->allow_budget,
-                'allow_products'    => $provider->allow_products || $provider->allow_some_products
+                'allow_products'    => $provider->allow_products || $provider->allow_some_products,
+                'provider_state'    => $provider->state
             ]);
 
             FundProviderInvitedEvent::dispatch($fundTo, $providerInvitation);
@@ -152,9 +158,9 @@ class FundProviderInvitation extends Model
     {
         $this->fund->providers()->firstOrCreate([
             'organization_id' => $this->organization_id,
-        ])->update($this->only([
+        ])->update(array_merge($this->only([
             'allow_products', 'allow_budget'
-        ]));
+        ]), ['state' => $this->provider_state]));
 
         return $this->updateModel([
             'state' => self::STATE_ACCEPTED
