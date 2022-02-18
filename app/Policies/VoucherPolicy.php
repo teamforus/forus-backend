@@ -146,6 +146,22 @@ class VoucherPolicy
     /**
      * @param string $identity_address
      * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function updateLimitMultiplier(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            ($voucher->fund->organization_id === $organization->id) &&
+            ($voucher->fund->isTypeSubsidy());
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
      * @return bool
      */
     public function deactivateRequester(

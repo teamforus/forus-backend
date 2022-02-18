@@ -773,6 +773,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->patch(
+        'organizations/{organization}/sponsor/vouchers/{voucher}/update-limit-multiplier',
+        "Api\Platform\Organizations\Sponsor\VouchersController@updateLimitMultiplier"
+    );
+
+    $router->patch(
         'organizations/{organization}/sponsor/vouchers/{voucher}/assign',
         "Api\Platform\Organizations\Sponsor\VouchersController@assign"
     );

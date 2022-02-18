@@ -11,6 +11,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateLimitMultiplierRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -228,6 +229,28 @@ class VouchersController extends Controller
         } else if ($bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param UpdateLimitMultiplierRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException
+     */
+    public function updateLimitMultiplier(
+        UpdateLimitMultiplierRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('updateLimitMultiplier', [$voucher, $organization]);
+
+        $voucher->update([
+            'limit_multiplier' => $request->input('limit_multiplier')
+        ]);
 
         return new SponsorVoucherResource($voucher);
     }
