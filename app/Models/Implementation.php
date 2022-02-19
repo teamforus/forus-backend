@@ -652,6 +652,30 @@ class Implementation extends Model
             });
         }
 
+        if (($postcode = array_get($options, 'postcode')) &&
+            ($distance = array_get($options, 'distance')))
+        {
+            $geocodeService = resolve('geocode_api');
+            $location = $geocodeService->getLocation($postcode);
+
+            if (is_array($location)) {
+                $lon = $location['lng'] ?? null;
+                $lat = $location['lat'] ?? null;
+
+                if ($lat && $lon) {
+                    $query->whereHas('offices', static function (
+                        Builder $builder
+                    ) use ($lat, $lon, $distance) {
+                        $builder->whereRaw("6371 * acos(cos(radians(" . $lat . "))
+                         * cos(radians(lat)) 
+                         * cos(radians(lon) - radians(" . $lon . ")) 
+                         + sin(radians(" . $lat . ")) 
+                         * sin(radians(lat))) < " . $distance);
+                    });
+                }
+            }
+        }
+
         return $query->orderBy(
             array_get($options, 'order_by', 'created_at'),
             array_get($options, 'order_by_dir', 'desc'));
