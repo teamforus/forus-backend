@@ -11,7 +11,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
-use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateLimitMultiplierRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -234,23 +234,23 @@ class VouchersController extends Controller
     }
 
     /**
-     * @param UpdateLimitMultiplierRequest $request
+     * @param UpdateVoucherRequest $request
      * @param Organization $organization
      * @param Voucher $voucher
      * @return SponsorVoucherResource
      * @throws AuthorizationException
      */
-    public function updateLimitMultiplier(
-        UpdateLimitMultiplierRequest $request,
+    public function update(
+        UpdateVoucherRequest $request,
         Organization $organization,
         Voucher $voucher
     ): SponsorVoucherResource {
         $this->authorize('show', $organization);
-        $this->authorize('updateLimitMultiplier', [$voucher, $organization]);
+        $this->authorize('update', [$voucher, $organization]);
 
-        $voucher->update([
-            'limit_multiplier' => $request->input('limit_multiplier')
-        ]);
+        if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
+            $voucher->update($request->only('limit_multiplier'));
+        }
 
         return new SponsorVoucherResource($voucher);
     }

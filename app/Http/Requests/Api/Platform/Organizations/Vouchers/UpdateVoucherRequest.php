@@ -7,12 +7,12 @@ use App\Models\Organization;
 use App\Models\Voucher;
 
 /**
- * Class UpdateLimitMultiplierRequest
+ * Class UpdateVoucherRequest
  * @property-read Organization $organization
  * @property-read Voucher $voucher
  * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
-class UpdateLimitMultiplierRequest extends BaseFormRequest
+class UpdateVoucherRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,9 +21,7 @@ class UpdateLimitMultiplierRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->auth_address(), [
-            'manage_vouchers'
-        ]);
+        return $this->organization->identityCan($this->auth_address(), ['manage_vouchers']);
     }
 
     /**
@@ -34,7 +32,7 @@ class UpdateLimitMultiplierRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'limit_multiplier' => 'required|integer|min:'.$this->voucher->limit_multiplier
+            'limit_multiplier' => 'nullable|numeric',
         ];
     }
 }
