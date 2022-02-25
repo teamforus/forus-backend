@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -11,16 +13,17 @@
 |
 */
 
-$router = resolve('router');
-
 /**
  * Authorization not required
  */
-$router->get('/', function () {
+Route::get('/', function () {
     return "";
 });
 
-$router->get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
-$router->get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');
+Route::get('/notifications/unsubscribe/{unsubscribeToken}', 'NotificationsController@unsubscribe');
+Route::get('/notifications/subscribe/{unsubscribeToken}', 'NotificationsController@subscribe');
 
-$router->get('/email-verification/{identity_email_token}', 'Api\Identity\IdentityEmailsController@emailVerificationToken');
+Route::get('/email-verification/{identity_email_token}', 'Api\Identity\IdentityEmailsController@emailVerificationToken');
+
+Route::get('/bng/bank-connections/{bngBankConnectionToken}', 'BNGController@bankConnectionRedirect');
+Route::get('/bng/payment-bulks/{bngVoucherTransactionBulkToken}', 'BNGController@voucherTransactionBulkRedirect');

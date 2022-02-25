@@ -3,8 +3,19 @@
 namespace App\Models;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
+use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Services\BNGService\BNGService;
+use App\Services\BNGService\Data\PaymentInfoData;
+use App\Services\BNGService\Exceptions\ApiException;
+use App\Services\BNGService\Responses\BulkPaymentValue;
+use App\Services\BNGService\Responses\Entries\Account;
+use App\Services\BNGService\Responses\Entries\Amount as AmountBNG;
+use App\Services\BNGService\Responses\Entries\BulkPayment;
+use App\Services\BNGService\Responses\Entries\Payment as PaymentBNG;
+use App\Services\BNGService\Responses\Entries\PaymentInitiator;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use bunq\Model\Generated\Endpoint\DraftPayment;
 use bunq\Model\Generated\Endpoint\Payment;
@@ -12,12 +23,12 @@ use bunq\Model\Generated\Endpoint\PaymentBatch;
 use bunq\Model\Generated\Object\Amount;
 use bunq\Model\Generated\Object\DraftPaymentEntry;
 use bunq\Model\Generated\Object\Pointer;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
-use Exception;
 use Throwable;
 
 /**
@@ -25,9 +36,18 @@ use Throwable;
  *
  * @property int $id
  * @property int|null $bank_connection_id
- * @property int|null $payment_id
- * @property string $monetary_account_id
+ * @property string|null $payment_id
+ * @property string|null $monetary_account_id
  * @property string $monetary_account_iban
+ * @property string|null $monetary_account_name
+ * @property string|null $code
+ * @property string|null $access_token
+ * @property string|null $redirect_token
+ * @property string|null $auth_url
+ * @property string|null $sepa_xml
+ * @property \Illuminate\Support\Carbon|null $execution_date
+ * @property int|null $implementation_id
+ * @property array|null $auth_params
  * @property string $state
  * @property int $accepted_manually
  * @property int $state_fetched_times
@@ -36,7 +56,8 @@ use Throwable;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection
  * @property-read string $state_locale
- * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read \App\Models\Implementation|null $implementation
+ * @property-read Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
  * @property-read int|null $voucher_transactions_count
@@ -44,12 +65,21 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk newQuery()
  * @method static Builder|VoucherTransactionBulk query()
  * @method static Builder|VoucherTransactionBulk whereAcceptedManually($value)
+ * @method static Builder|VoucherTransactionBulk whereAccessToken($value)
+ * @method static Builder|VoucherTransactionBulk whereAuthParams($value)
+ * @method static Builder|VoucherTransactionBulk whereAuthUrl($value)
  * @method static Builder|VoucherTransactionBulk whereBankConnectionId($value)
+ * @method static Builder|VoucherTransactionBulk whereCode($value)
  * @method static Builder|VoucherTransactionBulk whereCreatedAt($value)
  * @method static Builder|VoucherTransactionBulk whereId($value)
+ * @method static Builder|VoucherTransactionBulk whereImplementationId($value)
  * @method static Builder|VoucherTransactionBulk whereMonetaryAccountIban($value)
  * @method static Builder|VoucherTransactionBulk whereMonetaryAccountId($value)
+ * @method static Builder|VoucherTransactionBulk whereMonetaryAccountName($value)
  * @method static Builder|VoucherTransactionBulk wherePaymentId($value)
+ * @method static Builder|VoucherTransactionBulk whereRedirectToken($value)
+ * @method static Builder|VoucherTransactionBulk whereRequestedExecutionDate($value)
+ * @method static Builder|VoucherTransactionBulk whereSepaXml($value)
  * @method static Builder|VoucherTransactionBulk whereState($value)
  * @method static Builder|VoucherTransactionBulk whereStateFetchedAt($value)
  * @method static Builder|VoucherTransactionBulk whereStateFetchedTimes($value)
@@ -58,7 +88,7 @@ use Throwable;
  */
 class VoucherTransactionBulk extends Model
 {
-    use HasLogs;
+    use HasLogs, HasDbTokens;
 
     public const EVENT_RESET = 'reset';
     public const EVENT_CREATED = 'created';
@@ -90,12 +120,27 @@ class VoucherTransactionBulk extends Model
         self::STATE_REJECTED,
     ];
 
+    protected $dates = [
+        'execution_date',
+    ];
+
+    protected $casts = [
+        'auth_params' => 'array',
+    ];
+
+    protected $hidden = [
+        'code', 'sepa_xml', 'auth_url', 'auth_params', 'access_token',
+        'redirect_token',
+    ];
+
     /**
      * @var string[]
      */
     protected $fillable = [
         'bank_connection_id', 'state', 'state_fetched_times', 'state_fetched_at',
         'payment_id', 'accepted_manually', 'monetary_account_id', 'monetary_account_iban',
+        'monetary_account_name', 'code', 'access_token', 'redirect_token', 'sepa_xml',
+        'execution_date', 'auth_url', 'auth_params', 'implementation_id',
     ];
 
     /**
@@ -105,6 +150,15 @@ class VoucherTransactionBulk extends Model
     public function bank_connection(): BelongsTo
     {
         return $this->belongsTo(BankConnection::class);
+    }
+
+    /**
+     * @return BelongsTo
+     * @noinspection PhpUnused
+     */
+    public function implementation(): BelongsTo
+    {
+        return $this->belongsTo(Implementation::class);
     }
 
     /**
@@ -133,6 +187,14 @@ class VoucherTransactionBulk extends Model
     /**
      * @return bool
      */
+    public function isDraft(): bool
+    {
+        return $this->state == static::STATE_DRAFT;
+    }
+
+    /**
+     * @return bool
+     */
     public function isRejected(): bool
     {
         return $this->state == static::STATE_REJECTED;
@@ -144,14 +206,6 @@ class VoucherTransactionBulk extends Model
     public function isPending(): bool
     {
         return $this->state == static::STATE_PENDING;
-    }
-
-    /**
-     * @return string
-     */
-    public function fetchStatus(): string
-    {
-        return $this->fetchPayment()->getStatus();
     }
 
     /**
@@ -180,11 +234,30 @@ class VoucherTransactionBulk extends Model
     }
 
     /**
-     * @return DraftPayment
+     * @return BulkPaymentValue|DraftPayment|null
      */
-    public function fetchPayment(): DraftPayment
+    public function fetchPayment()
     {
-        return DraftPayment::get($this->payment_id, $this->monetary_account_id)->getValue();
+        if ($this->bank_connection->bank->isBunq()) {
+            if (!$this->bank_connection->useContext()) {
+                return null;
+            }
+
+            return DraftPayment::get($this->payment_id, $this->monetary_account_id)->getValue();
+        }
+
+        if ($this->bank_connection->bank->isBNG()) {
+            /** @var BNGService $bngService */
+            $bngService = resolve('bng_service');
+
+            try {
+                return $bngService->getBulkDetails($this->payment_id, $this->access_token);
+            } catch (ApiException $exception) {
+                logger()->error($exception->getMessage());
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -222,10 +295,40 @@ class VoucherTransactionBulk extends Model
     }
 
     /**
+     * @param BulkPaymentValue $draftPayment
+     * @return VoucherTransactionBulk
+     * @throws Throwable
+     */
+    public function setAcceptedBNG(BulkPaymentValue $draftPayment): self
+    {
+        DB::transaction(function() use ($draftPayment) {
+            $this->update([
+                'state' => static::STATE_ACCEPTED,
+            ]);
+
+            $this->log(static::STATE_ACCEPTED, $this->getLogModels());
+
+            foreach ($this->voucher_transactions as $transaction) {
+                $transaction->forceFill([
+                    'state'             => VoucherTransaction::STATE_SUCCESS,
+                    'payment_id'        => null,
+                    'payment_time'      => now(),
+                ])->save();
+
+                VoucherTransactionBunqSuccess::dispatch($transaction);
+            }
+        });
+
+        sleep(1);
+
+        return $this->fresh();
+    }
+
+    /**
      * @param Employee|null $employee
      * @return $this
      */
-    public function submitBulk(?Employee $employee = null): self
+    public function submitBulkToBunq(?Employee $employee = null): self
     {
         try {
             DB::transaction(function() use ($employee) {
@@ -266,9 +369,84 @@ class VoucherTransactionBulk extends Model
 
             $this->updateModel([
                 'state' => self::STATE_ERROR,
-            ])->log(self::EVENT_ERROR, $this->getLogModels($employee), [
+            ])->logError([
                 'error_message' => $e->getMessage(),
-            ]);
+            ], $employee);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @param Implementation|null $implementation
+     * @return $this
+     */
+    public function submitBulkToBNG(
+        ?Employee $employee = null,
+        ?Implementation $implementation = null
+    ): self {
+        try {
+            $implementation = $implementation ?: Implementation::general();
+            $bngService = resolve('bng_service');
+
+            DB::transaction(function() use ($employee, $bngService, $implementation) {
+                $payments = [];
+                $requestedExecutionDate = PaymentBNG::getNextBusinessDay()->format('Y-m-d');
+
+                foreach ($this->voucher_transactions as $transaction) {
+                    $transaction->update([
+                        'iban_to' => $transaction->provider->iban,
+                        'iban_from' => $this->monetary_account_iban,
+                        'payment_description' => $transaction->makePaymentDescription(),
+                    ]);
+
+                    $payments[] = new PaymentBNG(
+                        new AmountBNG(number_format($transaction->amount, 2, '.', ''), 'EUR'),
+                        new Account($this->monetary_account_iban, $this->monetary_account_name),
+                        new Account($transaction->provider->iban, $transaction->provider->name),
+                        $transaction->id,
+                        $transaction->payment_description,
+                        $requestedExecutionDate
+                    );
+                }
+
+                $redirectToken = static::makeUniqueToken('redirect_token', 200);
+
+                $bulkPayment = new BulkPayment(
+                    new PaymentInitiator(),
+                    new Account($this->monetary_account_iban, $this->monetary_account_name),
+                    $payments,
+                    new PaymentInfoData($this->id, $requestedExecutionDate, $redirectToken),
+                    token_generator()->generate(32)
+                );
+
+                $response = $bngService->bulkPayment($bulkPayment);
+
+                $this->updateModel([
+                    'state' => self::STATE_PENDING,
+                    'payment_id' => $response->getPaymentId(),
+                    'auth_url' => $response->getAuthData()->getUrl(),
+                    'sepa_xml' => $bulkPayment->toXml(),
+                    'redirect_token' => $bulkPayment->getRedirectToken(),
+                    'auth_params' => $response->getAuthData()->getParams(),
+                    'execution_date' => $requestedExecutionDate,
+                    'implementation_id' => $implementation->id,
+                ])->log(self::EVENT_SUBMITTED, $this->getLogModels($employee));
+
+                return $this;
+            });
+
+            // Throttle calls just in case
+            sleep(2);
+        } catch (Throwable $e) {
+            logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
+
+            $this->updateModel([
+                'state' => self::STATE_ERROR,
+            ])->logError([
+                'error_message' => $e->getMessage(),
+            ], $employee);
         }
 
         return $this;
@@ -350,6 +528,7 @@ class VoucherTransactionBulk extends Model
             'state' => VoucherTransactionBulk::STATE_DRAFT,
             'monetary_account_id' => $defaultAccount->monetary_account_id,
             'monetary_account_iban' => $defaultAccount->monetary_account_iban,
+            'monetary_account_name' => $defaultAccount->monetary_account_name,
         ]);
 
         $transactionsBulk->log(self::EVENT_CREATED, $transactionsBulk->getLogModels($employee));
@@ -358,9 +537,11 @@ class VoucherTransactionBulk extends Model
             'voucher_transaction_bulk_id' => $transactionsBulk->id,
         ]);
 
-        $transactionsBulk->submitBulk($employee);
+        if ($sponsor->bank_connection_active->bank->isBunq()) {
+            $transactionsBulk->submitBulkToBunq($employee);
+        }
 
-        $bulksList = array_merge($previousBulks, (array) $transactionsBulk->id);
+        $bulksList[] = $transactionsBulk->id;
 
         if (static::getNextBulkTransactionsForSponsor($sponsor)->exists()) {
             return static::buildBulksForOrganization($sponsor, $employee, $bulksList);
@@ -381,7 +562,7 @@ class VoucherTransactionBulk extends Model
         ]);
 
         $this->log(self::EVENT_RESET, $this->getLogModels($employee));
-        $this->submitBulk($employee);
+        $this->submitBulkToBunq($employee);
 
         return $this;
     }
@@ -399,5 +580,62 @@ class VoucherTransactionBulk extends Model
             'bank_connection' => $this->bank_connection,
             'voucher_transaction_bulk' => $this,
         ], $extraModels);
+    }
+
+    /**
+     * @return bool
+     * @throws Throwable
+     */
+    public function updatePaymentStatus(): bool
+    {
+        $payment = $this->fetchPayment();
+
+        if (!$payment) {
+            return false;
+        }
+
+        $this->update([
+            'state_fetched_times'   => $this->state_fetched_times + 1,
+            'state_fetched_at'      => now(),
+        ]);
+
+        switch (strtolower($payment->getStatus())) {
+            case static::STATE_REJECTED: $this->setRejected(); break;
+            case static::STATE_ACCEPTED: {
+                if ($this->bank_connection->bank->isBunq()) {
+                    $this->setAccepted($payment);
+                }
+
+                if ($this->bank_connection->bank->isBNG()) {
+                    $this->setAcceptedBNG($payment);
+                }
+            } break;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $array
+     * @param Employee|null $employee
+     * @return \App\Services\EventLogService\Models\EventLog|mixed
+     */
+    public function logError(array $array = [], ?Employee $employee = null): EventLog
+    {
+        return $this->log(static::EVENT_ERROR, $this->getLogModels($employee), $array);
+    }
+
+    /**
+     * @param string|null $success
+     * @param string|null $error
+     * @return string
+     */
+    public function dashboardDetailsUrl(?string $success = null, ?string $error = null): string
+    {
+        return $this->implementation->urlSponsorDashboard(sprintf(
+            "/organizations/%d/transaction-bulks/%d",
+            $this->bank_connection->organization_id,
+            $this->id
+        ), array_filter(compact('success', 'error')));
     }
 }

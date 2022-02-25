@@ -26,7 +26,7 @@ class BanksTableSeeder extends Seeder
     /**
      * @var string Bunq allows only one active oauth client
      */
-    protected $bunqContextFile = '/bank-contexts/bunq-data.json';
+    protected $bunqContextFile = '/bank-connections/bunq/bunq-data.json';
 
     /**
      * Run the database seeds.
@@ -35,6 +35,26 @@ class BanksTableSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->bunqBank();
+        $this->bngBank();
+    }
+
+    /**
+     * @return void
+     */
+    protected function bngBank()
+    {
+        Bank::create([
+            'name' => 'BNG',
+            'key' => 'bng',
+            'data' => '',
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    protected function bunqBank() {
         $hasBunqContextFile = $this->hasBunqContextFile();
 
         if ($hasBunqContextFile) {

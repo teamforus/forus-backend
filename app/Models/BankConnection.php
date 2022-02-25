@@ -8,7 +8,14 @@ use App\Events\BankConnections\BankConnectionDisabled;
 use App\Events\BankConnections\BankConnectionDisabledInvalid;
 use App\Events\BankConnections\BankConnectionMonetaryAccountChanged;
 use App\Events\BankConnections\BankConnectionReplaced;
+use App\Models\Traits\HasDbTokens;
 use App\Services\BankService\Models\Bank;
+use App\Services\BankService\Values\BankBalance;
+use App\Services\BankService\Values\BankMonetaryAccount;
+use App\Services\BankService\Values\BankPayment;
+use App\Services\BNGService\Exceptions\ApiException;
+use App\Services\BNGService\Responses\TransactionValue;
+use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
 use bunq\Context\ApiContext;
 use bunq\Context\BunqContext;
@@ -31,7 +38,10 @@ use Throwable;
  * @property int $organization_id
  * @property int $implementation_id
  * @property int|null $bank_connection_account_id
- * @property string $redirect_token
+ * @property string|null $consent_id
+ * @property string|null $auth_url
+ * @property array|null $auth_params
+ * @property string|null $redirect_token
  * @property string $access_token
  * @property string $code
  * @property array $context
@@ -54,9 +64,12 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection query()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAccessToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAuthParams($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAuthUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankConnectionAccountId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereConsentId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereContext($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereId($value)
@@ -70,7 +83,7 @@ use Throwable;
  */
 class BankConnection extends Model
 {
-    use HasLogs;
+    use HasLogs, HasDbTokens;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_REPLACED = 'replaced';
@@ -79,6 +92,7 @@ class BankConnection extends Model
     public const EVENT_ACTIVATED = 'activated';
     public const EVENT_DISABLED_INVALID = 'disabled_invalid';
     public const EVENT_MONETARY_ACCOUNT_CHANGED = 'monetary_account_changed';
+    public const EVENT_ERROR = 'error';
 
     public const EVENTS = [
         self::EVENT_CREATED,
@@ -88,6 +102,7 @@ class BankConnection extends Model
         self::EVENT_ACTIVATED,
         self::EVENT_DISABLED_INVALID,
         self::EVENT_MONETARY_ACCOUNT_CHANGED,
+        self::EVENT_ERROR,
     ];
 
     public const STATE_ACTIVE = 'active';
@@ -97,6 +112,7 @@ class BankConnection extends Model
     public const STATE_REJECTED = 'rejected';
     public const STATE_DISABLED = 'disabled';
     public const STATE_INVALID = 'invalid';
+    public const STATE_ERROR = 'error';
 
     public const STATES = [
         self::STATE_ACTIVE,
@@ -106,6 +122,7 @@ class BankConnection extends Model
         self::STATE_REJECTED,
         self::STATE_DISABLED,
         self::STATE_INVALID,
+        self::STATE_ERROR,
     ];
 
     /**
@@ -114,13 +131,15 @@ class BankConnection extends Model
     protected $fillable = [
         'bank_id', 'organization_id', 'implementation_id', 'redirect_token', 'access_token',
         'code', 'state', 'context', 'session_expire_at', 'bank_connection_account_id',
+        'auth_url', 'auth_params', 'consent_id',
     ];
 
     /**
      * @var string[]
      */
     protected $hidden = [
-        'redirect_token', 'access_token', 'code', 'context',
+        'redirect_token', 'access_token', 'code', 'context', 'auth_url', 'auth_params',
+        'consent_id',
     ];
 
     /**
@@ -128,6 +147,7 @@ class BankConnection extends Model
      */
     protected $casts = [
         'context' => 'array',
+        'auth_params' => 'array',
     ];
 
     /**
@@ -212,7 +232,7 @@ class BankConnection extends Model
             'bank_id' => $bank->id,
             'organization_id' => $organization->id,
             'implementation_id' => $implementation->id,
-            'redirect_token' => token_generator_db(static::query(), 'redirect_token', 128),
+            'redirect_token' => static::makeUniqueToken('redirect_token', 200),
             'state' => BankConnection::STATE_PENDING,
         ]);
 
@@ -224,7 +244,25 @@ class BankConnection extends Model
     /**
      * @return string
      */
-    public function getOauthUrl(): string
+    public function makeOauthUrl(): ?string
+    {
+        $auth_url = null;
+
+        if ($this->bank->isBunq()) {
+            $auth_url = $this->makeOauthUrlBunq();
+        }
+
+        if ($this->bank->isBNG()) {
+            $auth_url = $this->makeOauthUrlBNG();
+        }
+
+        return $auth_url;
+    }
+
+    /**
+     * @return string
+     */
+    protected function makeOauthUrlBunq(): string
     {
         $this->bank->useContext();
 
@@ -234,6 +272,34 @@ class BankConnection extends Model
             $this->bank->getOauthClient(),
             $this->redirect_token
         )->getAuthorizationUriString();
+    }
+
+    /**
+     * @return string
+     */
+    protected function makeOauthUrlBNG(): ?string
+    {
+        $bngService = resolve('bng_service');
+
+        try {
+            $response = $bngService->makeAccountConsentRequest($this->redirect_token);
+            $authData = $response->getAuthData();
+            $consentId = $response->getConsentId();
+
+            $this->update([
+                'auth_url' => $authData->getUrl(),
+                'auth_params' => $authData->getParams(),
+                'consent_id' => $consentId,
+            ]);
+        } catch (ApiException $exception) {
+            $error_message = $exception->getMessage();
+            $this->logError(compact('error_message'));
+            logger()->error($error_message);
+
+            return null;
+        }
+
+        return $authData->getUrl();
     }
 
     /**
@@ -284,16 +350,17 @@ class BankConnection extends Model
     }
 
     /**
-     * @param array $monetaryAccounts
+     * @param BankMonetaryAccount[] $bankMonetaryAccounts
      * @return BankConnection
      */
-    public function setMonetaryAccounts(array $monetaryAccounts): self
+    public function setMonetaryAccounts(array $bankMonetaryAccounts): self
     {
-        foreach (array_values($monetaryAccounts) as $index => $monetaryAccount) {
+        foreach ($bankMonetaryAccounts as $index => $bankMonetaryAccount) {
             /** @var BankConnectionAccount $account */
             $account = $this->bank_connection_accounts()->create([
-                'monetary_account_id' => $monetaryAccount['id'] ?? null,
-                'monetary_account_iban' => $monetaryAccount['iban'] ?? null,
+                'monetary_account_id' => $bankMonetaryAccount->getId(),
+                'monetary_account_iban' => $bankMonetaryAccount->getIban(),
+                'monetary_account_name' => $bankMonetaryAccount->getName(),
             ]);
 
             if ($index === 0) {
@@ -332,6 +399,14 @@ class BankConnection extends Model
     /**
      * @return $this
      */
+    public function updateFundBalances(): self
+    {
+        return tap($this->organization)->updateFundBalancesByBankConnection();
+    }
+
+    /**
+     * @return $this
+     */
     public function setRejected(): self
     {
         BankConnectionReplaced::dispatch($this->updateModel([
@@ -361,24 +436,65 @@ class BankConnection extends Model
     }
 
     /**
-     * @return ?array
+     * @return array|null
      */
-    public function getMonetaryAccounts(): ?array
+    public function fetchConnectionMonetaryAccounts(): ?array
+    {
+        try {
+            if ($this->bank->isBNG()) {
+                return $this->fetchConnectionMonetaryAccountsBNG();
+            }
+
+            if ($this->bank->isBunq()) {
+                return $this->fetchConnectionMonetaryAccountsBunq();
+            }
+        } catch (Throwable $exception) {
+            logger()->error($exception->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array
+     * @throws ApiException
+     */
+    protected function fetchConnectionMonetaryAccountsBNG(): array
+    {
+        $bngService = resolve('bng_service');
+
+        return array_map(function(array $account) {
+            return new BankMonetaryAccount(
+                $account['resourceId'] ?? null,
+                $account['iban'] ?? null,
+                $account['name'] ?? null
+            );
+        }, $bngService->getAccounts($this->consent_id, $this->access_token)->getAccounts());
+    }
+
+    /**
+     * @return null|array
+     */
+    protected function fetchConnectionMonetaryAccountsBunq(): ?array
     {
         if (!$this->useContext()) {
             return null;
         }
 
         $bankAccountBanks = array_map(function (MonetaryAccount $monetaryAccount) {
-           return $monetaryAccount->getMonetaryAccountBank();
+            return $monetaryAccount->getMonetaryAccountBank();
         }, MonetaryAccount::listing()->getValue());
 
         return array_map(function(MonetaryAccountBank $bankAccount) {
-            return array_merge([
-                'id' => $bankAccount->getId()
-            ], array_reduce($bankAccount->getAlias(), function(array $arr, Pointer $pointer) {
+            $pointerValues = array_reduce($bankAccount->getAlias(), function(array $arr, Pointer $pointer) {
                 return array_merge($arr, [strtolower($pointer->getType()) => $pointer->getValue()]);
-            }, []));
+            }, []);
+
+            return new BankMonetaryAccount(
+                $bankAccount->getId(),
+                $pointerValues['iban'],
+                $bankAccount->getDescription()
+            );
         }, array_filter($bankAccountBanks));
     }
 
@@ -417,37 +533,138 @@ class BankConnection extends Model
     }
 
     /**
-     * @return string|null
+     * @return BankBalance
      */
-    public function fetchActiveMonetaryAccountIban(): ?string
+    public function fetchBalance(): ?BankBalance
     {
-        if (!$this->bank_connection_default_account) {
+        $bank_connection_default_account = $this->bank_connection_default_account;
+        $monetary_account_id = $bank_connection_default_account->monetary_account_id ?? null;
+
+        if ($monetary_account_id && $this->bank->isBunq()) {
+            return $this->fetchBalanceBunq($monetary_account_id);
+        }
+
+        if ($monetary_account_id && $this->bank->isBNG()) {
+            return $this->fetchBalanceBNG($monetary_account_id);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @return BankBalance|null
+     */
+    protected function fetchBalanceBunq(string $monetary_account_id): ?BankBalance
+    {
+        if (!$this->useContext()) {
             return null;
         }
 
-        if (!$monetaryAccounts = $this->getMonetaryAccounts()) {
-            return null;
+        $account = MonetaryAccount::get($monetary_account_id);
+        $balance = $account->getValue()->getMonetaryAccountBank()->getBalance();
+
+        return new BankBalance($balance->getValue(), $balance->getCurrency());
+    }
+
+    /**
+     * @return BankBalance
+     */
+    public function fetchBalanceBNG(string $monetary_account_id): ?BankBalance
+    {
+        $bngService = resolve('bng_service');
+
+        try {
+            $response = $bngService->getBalance($monetary_account_id, $this->consent_id, $this->access_token);
+            $balance = $response->getClosingBookedBalance();
+
+            return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
+        } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
         }
 
-        return array_filter($monetaryAccounts, function(array $account) {
-            return $account['id'] == $this->bank_connection_default_account->monetary_account_id;
-        })[0]['iban'] ?? null;
+        return null;
     }
 
     /**
      * @param int $count
-     * @return Payment[]
+     * @return BankPayment[]
      */
-    public function fetchPayments($count = 100): array
+    public function fetchPayments(int $count = 100): array
     {
-        if (!$this->useContext()) {
-            return [];
+        $bank_connection_default_account = $this->bank_connection_default_account;
+        $monetary_account_id = $bank_connection_default_account->monetary_account_id ?? null;
+
+        if ($monetary_account_id && $this->bank->isBunq()) {
+            return $this->fetchPaymentsBunq($monetary_account_id, $count);
         }
 
-        return Payment::listing(
-            $this->bank_connection_default_account->monetary_account_id,
-            compact('count')
-        )->getValue();
+        if ($monetary_account_id && $this->bank->isBNG()) {
+            return $this->fetchPaymentsBNG($monetary_account_id, $count);
+        }
+
+        return [];
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @param int $count
+     * @return BankPayment[]
+     */
+    protected function fetchPaymentsBunq(string $monetary_account_id, int $count = 100): ?array
+    {
+        if (!$this->useContext()) {
+            return null;
+        }
+
+        return array_map(function(Payment $payment) {
+            return new BankPayment(
+                $payment->getId(),
+                $payment->getAmount()->getValue(),
+                $payment->getAmount()->getCurrency(),
+                $payment->getDescription()
+            );
+        }, Payment::listing($monetary_account_id, compact('count'))->getValue());
+    }
+
+    /**
+     * @param string $monetary_account_id
+     * @param int $count
+     * @return BankPayment[]
+     */
+    protected function fetchPaymentsBNG(string $monetary_account_id, int $count = 100): ?array
+    {
+        try {
+            $page = 1;
+            $transactions = [];
+            $bngService = resolve('bng_service');
+            $totalPages = $count / 10;
+
+            do {
+                $response = $bngService->getTransactions(
+                    $monetary_account_id,
+                    $this->consent_id,
+                    $this->access_token,
+                    ['bookingStatus' => 'booked', 'page' => $page++]
+                );
+
+                $totalPages = min($totalPages, $response->getTransactionsLinks()->getLast()->getParams()['page']);
+                $transactions = array_merge($transactions, $response->getTransactionsBooked());
+            } while ($page <= $totalPages);
+
+            return array_map(function(TransactionValue $transaction) {
+                return new BankPayment(
+                    $transaction->getTransactionId(),
+                    $transaction->getTransactionAmount(),
+                    $transaction->getTransactionCurrency(),
+                    $transaction->getTransactionDescription()
+                );
+            }, $transactions);
+        } catch (Throwable $exception) {
+            logger()->error($exception->getMessage());
+        }
+
+        return null;
     }
 
     /**
@@ -461,5 +678,44 @@ class BankConnection extends Model
                 compact('bank_connection_account_id')
             ), $employee);
         }
+    }
+
+    /**
+     * @param Employee|null $employee
+     * @param array $extraModels
+     * @return array
+     */
+    public function getLogModels(?Employee $employee = null, array $extraModels = []): array
+    {
+        return array_merge([
+            'bank' => $this->bank,
+            'employee' => $employee,
+            'organization' => $this->organization,
+            'bank_connection' => $this,
+            'bank_connection_account' => $this->bank_connection_default_account,
+        ], $extraModels);
+    }
+
+    /**
+     * @param array $array
+     * @param Employee|null $employee
+     * @return \App\Services\EventLogService\Models\EventLog|mixed
+     */
+    public function logError(array $array = [], ?Employee $employee = null): EventLog
+    {
+        return $this->log(static::EVENT_ERROR, $this->getLogModels($employee), $array);
+    }
+
+    /**
+     * @param string|null $success
+     * @param string|null $error
+     * @return string
+     */
+    public function dashboardDetailsUrl(?string $success = null, ?string $error = null): string
+    {
+        return $this->implementation->urlSponsorDashboard(sprintf(
+            "/organizations/%s/bank-connections",
+            $this->organization_id
+        ), array_filter(compact('success', 'error')));
     }
 }
