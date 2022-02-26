@@ -42,6 +42,7 @@ class AddBngFieldsToVoucherTransactionBulksTable extends Migration
     public function down(): void
     {
         Schema::table('voucher_transaction_bulks', function (Blueprint $table) {
+            $table->dropForeign('voucher_transaction_bulks_implementation_id_foreign');
             $table->removeColumn('voucher_transaction_bulks_implementation_id_foreign');
 
             $table->dropColumn([

@@ -39,6 +39,7 @@ class RenameBunqTransactionIdOnFundTopUpTransactionsTable extends Migration
     public function down(): void
     {
         Schema::table('fund_top_up_transactions', function(Blueprint $table) {
+            $table->dropForeign('fund_top_up_transactions_bank_connection_account_id_foreign');
             $table->renameColumn('bank_transaction_id', 'bunq_transaction_id');
             $table->dropColumn('bank_connection_account_id');
         });
