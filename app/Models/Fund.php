@@ -18,7 +18,6 @@ use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
@@ -1826,7 +1825,8 @@ class Fund extends Model
     public function isBackofficeApiAvailable(): bool
     {
         return $this->organization->backoffice_available &&
-            $this->fund_config->backoffice_enabled;
+            $this->fund_config->backoffice_enabled &&
+            $this->organization->bsn_enabled;
     }
 
     /**

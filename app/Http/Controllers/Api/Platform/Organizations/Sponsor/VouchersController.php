@@ -225,7 +225,7 @@ class VouchersController extends Controller
 
         if ($email) {
             $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
-        } else if ($bsn) {
+        } else if ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
 
