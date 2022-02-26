@@ -2,8 +2,12 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests\Records;
 
+use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property-read Organization $organization
+ */
 class StoreFundRequestRecordRequest extends FormRequest
 {
     /**
@@ -25,7 +29,7 @@ class StoreFundRequestRecordRequest extends FormRequest
     {
         return [
             'value' => 'required|numeric',
-            'record_type_key' => 'required|in:partner_bsn',
+            'record_type_key' => 'required|in:' . ($this->organization->bsn_enabled ? 'partner_bsn' : ''),
         ];
     }
 }

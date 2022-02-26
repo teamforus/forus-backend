@@ -38,6 +38,7 @@ class AssignVoucherRequest extends BaseFormRequest
             'bsn' => 'required_without:email|string|between:8,9',
         ] : [
             'email' => 'required|email:strict',
+            'bsn' => 'nullable|in:',
         ];
     }
 }
