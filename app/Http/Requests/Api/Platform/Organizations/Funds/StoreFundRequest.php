@@ -72,6 +72,8 @@ class StoreFundRequest extends BaseFormRequest
             'faq.*.id'                      => 'nullable|in:',
             'faq.*.title'                   => 'required|string|max:200',
             'faq.*.description'             => 'required|string|max:5000',
+            'tag_ids'                       => 'nullable|array',
+            'tag_ids.*'                     => 'required|exists:tags,id',
             'allow_fund_requests'           => 'required|boolean',
             'allow_prevalidations'          => 'required|boolean',
             'allow_direct_requests'         => 'required|boolean',

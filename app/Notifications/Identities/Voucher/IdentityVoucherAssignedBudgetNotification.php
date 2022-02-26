@@ -5,6 +5,7 @@ namespace App\Notifications\Identities\Voucher;
 use App\Mail\Vouchers\VoucherAssignedBudgetMail;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Models\Voucher;
+use Illuminate\Mail\Mailable;
 
 /**
  * Budget voucher was assigned to identity
@@ -21,6 +22,10 @@ class IdentityVoucherAssignedBudgetNotification extends BaseIdentityVoucherNotif
     {
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
+
+        if ($voucher->expired) {
+            return;
+        }
 
         $mailable = new VoucherAssignedBudgetMail(array_merge($this->eventLog->data, [
             'qr_token' => $voucher->token_without_confirmation->address,
