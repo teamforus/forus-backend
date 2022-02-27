@@ -36,6 +36,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         $fund = $this->getFund();
+        $bsn_enabled = $this->organization->bsn_enabled;
 
         return [
             'fund_id'                           => $this->fundIdRule(),
@@ -46,7 +47,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
             'vouchers.*.expire_at'              => $this->expireAtRule($fund),
             'vouchers.*.note'                   => 'nullable|string|max:280',
             'vouchers.*.email'                  => 'nullable|string|email:strict',
-            'vouchers.*.bsn'                    => 'nullable|string|digits:9',
+            'vouchers.*.bsn'                    => $bsn_enabled ? 'nullable|string|digits:9' : 'nullable|in:',
             'vouchers.*.activate'               => 'boolean',
             'vouchers.*.activation_code'        => 'boolean',
             'vouchers.*.activation_code_uid'    => 'nullable|string|max:20',

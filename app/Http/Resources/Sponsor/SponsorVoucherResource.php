@@ -27,18 +27,11 @@ class SponsorVoucherResource extends Resource
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
         $physical_cards = $voucher->physical_cards()->first();
-
-        $organization = $voucher->fund->organization;
+        $bsn_enabled = $voucher->fund->organization->bsn_enabled;
 
         if ($voucher->is_granted && $voucher->identity_address) {
             $identity_email = $recordRepo->primaryEmailByAddress($voucher->identity_address);
-            $identity_bsn = $organization->bsn_enabled
-                ? $recordRepo->bsnByAddress($voucher->identity_address)
-                : null;
-        }
-
-        if ($organization->bsn_enabled) {
-            $relation_bsn = $voucher->voucher_relation->bsn ?? null;
+            $identity_bsn = $bsn_enabled ? $recordRepo->bsnByAddress($voucher->identity_address): null;
         }
 
         return array_merge($voucher->only([
@@ -50,7 +43,7 @@ class SponsorVoucherResource extends Resource
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
-            'relation_bsn' => $relation_bsn ?? null,
+            'relation_bsn' => $bsn_enabled ? $voucher->voucher_relation->bsn ?? null : null,
             'address' => $address ?? null,
             'fund' => array_merge($voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'), [
                 'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,

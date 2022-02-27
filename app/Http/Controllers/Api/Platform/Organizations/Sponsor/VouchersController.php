@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
@@ -331,6 +331,7 @@ class VouchersController extends Controller
      * @throws AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @noinspection PhpUnused
      */
     public function exportXls(
         IndexVouchersRequest $request,
@@ -380,6 +381,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return array
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function exportData(
         IndexVouchersRequest $request,
