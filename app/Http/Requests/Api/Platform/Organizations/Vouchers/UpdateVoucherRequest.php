@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class UpdateVoucherRequest
@@ -21,7 +22,7 @@ class UpdateVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->auth_address(), ['manage_vouchers']);
+        return Gate::allows('update', [$this->voucher, $this->organization]);
     }
 
     /**
@@ -32,7 +33,7 @@ class UpdateVoucherRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'limit_multiplier' => 'nullable|numeric',
+            'limit_multiplier' => 'nullable|numeric|min:' . $this->voucher->limit_multiplier,
         ];
     }
 }
