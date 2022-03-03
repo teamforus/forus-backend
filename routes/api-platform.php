@@ -848,6 +848,20 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'Api\Platform\PrevalidationController@collectionHash'
     );
 
+    $router->post(
+        'feedback-productboard/validate',
+        'Api\Platform\FeedbackProductBoardController@storeValidate'
+    );
+
+    $router->resource(
+        'feedback-productboard',
+        'Api\Platform\FeedbackProductBoardController', [
+            'only' => [
+                'store'
+            ],
+        ]
+    );
+
     $router->resource(
         'prevalidations',
         'Api\Platform\PrevalidationController', [
