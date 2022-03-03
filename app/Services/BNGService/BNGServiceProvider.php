@@ -2,6 +2,8 @@
 
 namespace App\Services\BNGService;
 
+use App\Services\BankService\Models\Bank;
+use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 
 class BNGServiceProvider extends ServiceProvider
@@ -13,19 +15,32 @@ class BNGServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->app->singleton('bng_service', function () {
-            $authRedirectUrl = url(rtrim(config('forus.bng.auth_redirect_url'), '/'));
-            $psuApi = env('BNG_PSU_IP_ADDRESS', 'auto');
+            $bngBank = Bank::where('key', 'bng')->first();
 
-            return new BNGService(env('BNG_ENV', BNGService::ENV_SANDBOX), [
-                'keyId' => str_replace(["\n", "\r"], "", env('BNG_KEY_ID', '')),
-                'clientId' => env('BNG_CLIENT_ID', 'PSDNL-AUT-SANDBOX'),
-                'signatureCertificatePath' => storage_path(env('BNG_SIGNATURE_CERT_PATH', '')),
-                'signatureCertificateKeyPath' => storage_path(env('BNG_SIGNATURE_KEY_PATH', '')),
-                'cert' => storage_path(env('BNG_TLS_CERT_PATH', '')),
-                'ssl_key' => storage_path(env('BNG_TLS_KEY_PATH', '')),
-                'psuIpAddress' => $psuApi == 'auto' ? request()->server('SERVER_ADDR') : $psuApi,
-                'authRedirectUrl' => $authRedirectUrl,
-            ]);
+            if ($bngBank) {
+                return $this->getBngServiceInstance($bngBank);
+            }
+
+            throw new \Exception("BNG Bank not found.");
         });
+    }
+
+    /**
+     * @param Bank $bngBank
+     * @return BNGService
+     */
+    protected function getBngServiceInstance(Bank $bngBank): BNGService
+    {
+        $psuIp = config('forus.bng.psu_ip', 'auto');
+        $env = $bngBank->data['env'] ?? 'sandbox';
+
+        return new BNGService($env, array_merge(Arr::only($bngBank->data, [
+            'keyId', 'clientId',
+            'signatureCertificate', 'signatureCertificateKey',
+            'tlsCertificate', 'tlsCertificateKey',
+        ]), [
+            'psuIpAddress' => $psuIp == 'auto' ? request()->server('SERVER_ADDR') : $psuIp,
+            'authRedirectUrl' => url(rtrim(config('forus.bng.auth_redirect_url'), '/')),
+        ]));
     }
 }

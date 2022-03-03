@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -414,7 +415,7 @@ class VoucherTransactionBulk extends Model
                 $redirectToken = static::makeUniqueToken('redirect_token', 200);
 
                 $bulkPayment = new BulkPayment(
-                    new PaymentInitiator(),
+                    new PaymentInitiator(Arr::get($this->bank_connection->bank->data, 'paymentInitiatorName')),
                     new Account($this->monetary_account_iban, $this->monetary_account_name),
                     $payments,
                     new PaymentInfoData($this->id, $requestedExecutionDate, $redirectToken),

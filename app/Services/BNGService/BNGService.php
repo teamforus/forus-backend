@@ -38,12 +38,12 @@ class BNGService
     public const ENDPOINT_PAYMENT_BULK = '/api/v1/bulk-payments/pain.001-sepa-credit-transfers';
 
     protected $env;
-    protected $cert;
-    protected $ssl_key;
     protected $keyId;
     protected $clientId;
-    protected $signatureCertificatePath;
-    protected $signatureCertificateKeyPath;
+    protected $tlsCertificate;
+    protected $tlsCertificateKey;
+    protected $signatureCertificate;
+    protected $signatureCertificateKey;
     protected $config;
 
     protected $authRedirectUrl;
@@ -56,12 +56,12 @@ class BNGService
     {
         $this->env = $env;
         $this->config = $config;
-        $this->cert = $config['cert'];
-        $this->ssl_key = $config['ssl_key'];
         $this->keyId = $config['keyId'];
         $this->clientId = $config['clientId'];
-        $this->signatureCertificatePath = $config['signatureCertificatePath'];
-        $this->signatureCertificateKeyPath = $config['signatureCertificateKeyPath'];
+        $this->tlsCertificate = $config['tlsCertificate'];
+        $this->tlsCertificateKey = $config['tlsCertificateKey'];
+        $this->signatureCertificate = $config['signatureCertificate'];
+        $this->signatureCertificateKey = $config['signatureCertificateKey'];
         $this->authRedirectUrl = $config['authRedirectUrl'];
     }
 
@@ -293,14 +293,20 @@ class BNGService
         $bodyString = $data;
 
         try {
+            $tlsCertificate = new TmpFile($this->tlsCertificate);
+            $tlsCertificateKey = new TmpFile($this->tlsCertificateKey);
+
             return $client->request($method, $url, [
                 'headers' => $this->makeHeaders($method, $url, $requestId, $bodyString, $contentType, $headers),
                 'body' => $bodyString,
-                'cert' => $this->cert,
-                'ssl_key' => $this->ssl_key,
+                'cert' => $tlsCertificate->path(),
+                'ssl_key' => $tlsCertificateKey->path(),
             ]);
         } catch (\Throwable $e) {
             throw new ApiException($e->getMessage(), $e->getCode());
+        } finally {
+            $tlsCertificate->close();
+            $tlsCertificateKey->close();
         }
     }
 
@@ -353,7 +359,7 @@ class BNGService
      */
     protected function getSignatureCertificate(): string
     {
-        return str_replace(["\n", "\r"], "", file_get_contents($this->signatureCertificatePath));
+        return str_replace(["\n", "\r"], "", $this->signatureCertificate);
     }
 
     /**
@@ -363,7 +369,7 @@ class BNGService
      */
     protected function makeSignature($method = 'post', $headers = []): string
     {
-        $private_key = openssl_pkey_get_private(file_get_contents($this->signatureCertificateKeyPath));
+        $private_key = openssl_pkey_get_private($this->signatureCertificateKey);
         $signatureHeaderNames = ['request-target', 'Date', 'Digest', 'X-Request-ID'];
 
         foreach (array_keys($headers) as $header) {
@@ -438,7 +444,10 @@ class BNGService
      */
     public function getEndpoint(string $name, array $segments = [], array $query = []): ?string
     {
-        $url = $this->env === self::ENV_PRODUCTION ? self::URL_PRODUCTION : self::URL_SANDBOX;
+        $url = [
+            static::ENV_SANDBOX => static::URL_SANDBOX,
+            static::ENV_PRODUCTION => static::URL_PRODUCTION,
+        ][$this->env] ?? static::URL_SANDBOX;
 
         switch ($name) {
             case 'token': $endpoint = static::ENDPOINT_TOKEN; break;

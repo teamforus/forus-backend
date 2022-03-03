@@ -401,7 +401,9 @@ class BankConnection extends Model
      */
     public function updateFundBalances(): self
     {
-        return tap($this->organization)->updateFundBalancesByBankConnection();
+        $this->organization->updateFundBalancesByBankConnection();
+
+        return $this;
     }
 
     /**

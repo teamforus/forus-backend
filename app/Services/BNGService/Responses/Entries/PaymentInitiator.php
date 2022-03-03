@@ -9,9 +9,9 @@ class PaymentInitiator
     /**
      * @param string|null $name
      */
-    public function __construct(string $name = null)
+    public function __construct(?string $name = null)
     {
-        $this->name = $name ?: env('BNG_PAYMENT_INITIATOR_NAME', 'Forus');
+        $this->name = $name ?: 'Payment initiator';
     }
 
     /**
