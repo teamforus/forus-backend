@@ -786,17 +786,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->get(
-        'organizations/{organization}/sponsor/vouchers/export-xls',
-        "Api\Platform\Organizations\Sponsor\VouchersController@exportXls"
-    );
-
-    $router->get(
-        'organizations/{organization}/sponsor/vouchers/export-data',
-        "Api\Platform\Organizations\Sponsor\VouchersController@exportData"
-    );
-
-    $router->get(
-        'organizations/{organization}/sponsor/vouchers/export-fields-list',
+        'organizations/{organization}/sponsor/vouchers/export-fields',
         "Api\Platform\Organizations\Sponsor\VouchersController@getExportFields"
     );
 

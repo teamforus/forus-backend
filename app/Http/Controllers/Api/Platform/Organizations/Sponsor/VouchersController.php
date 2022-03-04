@@ -3,23 +3,27 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Exports\VoucherExport;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivateVoucherRequest;
-use App\Http\Requests\Api\Platform\Organizations\Vouchers\DeactivateVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\ActivationCodeVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\AssignVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\DeactivateVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersExportFieldsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
+use App\Http\Resources\Arr\VoucherExportArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
-use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -325,94 +329,48 @@ class VouchersController extends Controller
     }
 
     /**
+     * @param IndexVouchersExportFieldsRequest $request
      * @param Organization $organization
-     * @return array
+     * @return AnonymousResourceCollection
      * @throws AuthorizationException
      */
-    public function getExportFields(Organization $organization): array {
-        $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
-
-        return VoucherExport::getExportFieldsList();
-    }
-
-    /**
-     * @param IndexVouchersRequest $request
-     * @param Organization $organization
-     * @return BinaryFileResponse
-     * @throws AuthorizationException
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
-     */
-    public function exportXls(
-        IndexVouchersRequest $request,
+    public function getExportFields(
+        IndexVouchersExportFieldsRequest $request,
         Organization $organization
-    ): BinaryFileResponse {
+    ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        $fund = $organization->findFund($request->get('fund_id'));
-        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
-        $fileName = date('Y-m-d H:i:s') . '.xls';
-        $fieldsList = $request->input('fields_list');
-
-        return resolve('excel')->download(new VoucherExport($vouchers, $fieldsList), $fileName);
+        return ExportFieldArrResource::collection(VoucherExport::getExportFieldsList(
+            $request->input('type', 'budget')
+        ));
     }
 
     /**
      * @param IndexVouchersRequest $request
      * @param Organization $organization
-     * @return BinaryFileResponse
-     * @throws AuthorizationException
-     * @noinspection PhpUnused
+     * @return VoucherExportArrResource
+     * @throws AuthorizationException|Exception
      */
     public function export(
         IndexVouchersRequest $request,
         Organization $organization
-    ): BinaryFileResponse {
+    ): VoucherExportArrResource {
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         $fund = $organization->findFund($request->get('fund_id'));
-        $table_data_type = $request->get('table_data_type', 'csv');
-        $qr_codes_type = $request->get('qr_codes_type', 'png');
-        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
-        $fields_list = $request->input('fields_list');
+        $fields = $request->input('fields', VoucherExport::getExportFieldsList('product'));
+        $qrFormat = $request->get('qr_format');
+        $dataFormat = $request->get('data_format', 'csv');
 
-        if ($vouchers->count() === 0) {
-            abort(404, "No vouchers to be exported.");
-        }
+        $vouchers = Voucher::searchSponsor($request, $organization, $fund)->load([
+            'transactions', 'voucher_relation', 'product', 'fund',
+            'token_without_confirmation', 'identity.primary_email', 'product_vouchers'
+        ]);
 
-        if (!$zipFile = Voucher::zipVouchers($vouchers, $fields_list, $table_data_type, $qr_codes_type)) {
-            abort(500, "Couldn't make the archive.");
-        }
+        $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);
 
-        return response()->download($zipFile)->deleteFileAfterSend(true);
-    }
-
-    /**
-     * @param IndexVouchersRequest $request
-     * @param Organization $organization
-     * @return array
-     * @throws AuthorizationException
-     */
-    public function exportData(
-        IndexVouchersRequest $request,
-        Organization $organization
-    ): array {
-        $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
-
-        $fund = $organization->findFund($request->get('fund_id'));
-        $data_only = $request->get('export_only_data', false);
-        $export_type = $request->get('export_type', 'png');
-        $vouchers = Voucher::searchSponsor($request, $organization, $fund);
-        $fields_list = $request->input('fields_list');
-
-        if ($vouchers->count() === 0) {
-            abort(404, "No vouchers to be exported.");
-        }
-
-        return Voucher::zipVouchersData($vouchers, $export_type, $fields_list, $data_only);
+        return new VoucherExportArrResource(Arr::only($exportData, ['files', 'data']));
     }
 }
