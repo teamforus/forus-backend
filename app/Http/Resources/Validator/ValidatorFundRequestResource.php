@@ -12,6 +12,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
 use App\Scopes\Builders\FundRequestQuery;
+use App\Scopes\Builders\FundRequestRecordQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\Resource;
@@ -45,6 +46,15 @@ class ValidatorFundRequestResource extends Resource
         $fundRequest = $this->resource;
         $criteria = FundCriterionResource::collection($fundRequest->fund->criteria);
 
+        $recordsAssigned = FundRequestRecordQuery::whereHasAssignedOrganizationEmployeeFilter(
+            $fundRequest->records()->getQuery(),
+            $fundRequest->fund->organization_id
+        );
+
+        $recordsDisregarded = (clone $recordsAssigned)->where(
+            'fund_request_records.state', FundRequestRecord::STATE_DISREGARDED
+        );
+
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
         ]), [
@@ -61,6 +71,8 @@ class ValidatorFundRequestResource extends Resource
             'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
             'records' => $this->getRecordsData($request, $fundRequest),
+            'is_assigned_internal' => $recordsAssigned->exists(),
+            'is_assigned_internal_has_disregarded' => $recordsDisregarded->exists(),
             'replaced' => $fundRequest->isDisregarded() && $this->isReplaced($fundRequest),
         ]);
     }
@@ -83,6 +95,7 @@ class ValidatorFundRequestResource extends Resource
         /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);
         $employee = $organization->findEmployee(auth_address()) or abort(403);
+        $canManageValidators = $organization->identityCan(auth_address(), 'manage_validators');
 
         $availableRecords = $fundRequest->recordsWhereCanValidateQuery(
             auth_address(),
@@ -92,9 +105,9 @@ class ValidatorFundRequestResource extends Resource
         $records = [];
 
         foreach ($fundRequest->records as $record) {
-            $records[] = static::recordToArray($record, $employee, in_array(
-                $record->id, $availableRecords
-            ));
+            $records[] = static::recordToArray($record, $employee,
+                $canManageValidators || in_array($record->id, $availableRecords)
+            );
         }
 
         return $records;

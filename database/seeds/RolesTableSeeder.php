@@ -31,6 +31,11 @@ class RolesTableSeeder extends Seeder
         ]);
 
         Role::create([
+            'key' => 'supervisor_validation',
+            // 'name' => 'Validator',
+        ]);
+
+        Role::create([
             'key' => 'policy_officer',
             // 'name' => 'Manager',
         ]);

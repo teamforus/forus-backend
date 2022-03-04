@@ -750,6 +750,24 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function employees_validator_managers(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles.permissions', static function(Builder $builder) {
+            $builder->where('key', 'manage_validators');
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */

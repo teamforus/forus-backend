@@ -33,6 +33,7 @@ class RoleTranslationTableSeeder extends Seeder
             'admin'                                 => 'Beheerder',
             'finance'                               => 'Financien',
             'validation'                            => 'Validator',
+            'supervisor_validation'                 => 'Supervisor validator',
             'policy_officer'                        => 'Manager',
             'operation_officer'                     => 'Kassa',
             'implementation_manager'                => 'Implementatie manager',

@@ -12,6 +12,7 @@ use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\EmployeeQuery;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use App\Traits\ThrottleWithMeta;
@@ -61,6 +62,10 @@ class EmployeesController extends Controller
             $query = $organization->employeesOfRoleQuery($role);
         } else {
             $query = $organization->employees();
+        }
+
+        if ($request->has('permission') && $permission = $request->input('permission')) {
+            EmployeeQuery::whereHasPermissionFilter($query->getQuery(), $permission);
         }
 
         return EmployeeResource::collection($query->paginate(

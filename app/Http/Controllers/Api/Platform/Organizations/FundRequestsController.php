@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
+use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundRequestRecord;
+use App\Scopes\Builders\FundRequestRecordQuery;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
@@ -208,5 +211,53 @@ class FundRequestsController extends Controller
             new FundRequestsExport($request, $organization, $request->auth_address()),
             date('Y-m-d H:i:s') . '.'. $type
         );
+    }
+
+    /**
+     * @param AssignEmployeeFundRequestRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function assignEmployee(
+        AssignEmployeeFundRequestRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('assignEmployeeAsValidator', [
+            $fundRequest, $organization, $request->get('employee')
+        ]);
+
+        return new ValidatorFundRequestResource($fundRequest->assignEmployee(
+            $organization->findEmployee($request->get('employee'))
+        ));
+    }
+
+    /**
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function resignEmployee(
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('resignEmployeeAsValidator', [
+            $fundRequest, $organization
+        ]);
+
+        /** @var FundRequestRecord $recordAssigned */
+        $recordAssigned = FundRequestRecordQuery::whereHasAssignedOrganizationEmployeeFilter(
+            $fundRequest->records()->getQuery(),
+            $fundRequest->fund->organization_id
+        )->first();
+
+        $fundRequest->resignEmployee($recordAssigned->employee);
+
+        return new ValidatorFundRequestResource($fundRequest->load(
+            ValidatorFundRequestResource::$load
+        ));
     }
 }

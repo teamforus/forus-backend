@@ -153,7 +153,8 @@ class FundRequest extends Model
             FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
                 $builder,
                 $identity_address,
-                $organization->findEmployee($identity_address)->id
+                $organization->findEmployee($identity_address)->id,
+                ['manage_validators']
             );
         });
 

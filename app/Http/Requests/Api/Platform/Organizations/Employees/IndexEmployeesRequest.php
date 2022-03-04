@@ -27,6 +27,9 @@ class IndexEmployeesRequest extends FormRequest
             'per_page'  => 'numeric|between:1,100',
             'role' => [
                 'nullable', 'string', 'exists:roles,key'
+            ],
+            'permission' => [
+                'nullable', 'string', 'exists:permissions,key'
             ]
         ];
     }

@@ -98,7 +98,7 @@ class FundRequestPolicy
      */
     public function viewAnyAsValidator(?string $identity_address, Organization $organization)
     {
-        if ($organization->employeesWithPermissionsQuery('validate_records')->where([
+        if ($organization->employeesWithPermissionsQuery(['validate_records', 'manage_validators'])->where([
             'identity_address' => $identity_address,
         ])->doesntExist()) {
             return $this->deny('invalid_validator');
@@ -137,11 +137,17 @@ class FundRequestPolicy
             return $this->deny('invalid_endpoint');
         }
 
-        if (!$organization->identityCan($identity_address, 'validate_records')) {
+        if (!$organization->identityCan($identity_address, ['validate_records', 'manage_validators'], false)) {
             return $this->deny('invalid_validator');
         }
 
-        if (!in_array($identity_address, $fundRequest->fund->validatorEmployees(), true)) {
+        $employees = array_merge(
+            $fundRequest->fund->validatorEmployees(),
+            $fundRequest->fund->employees_validator_managers()
+                ->pluck('employees.identity_address')->all()
+        );
+
+        if (!in_array($identity_address, $employees, true)) {
             return $this->deny('not_validator');
         }
 
@@ -374,6 +380,87 @@ class FundRequestPolicy
 
         return $fundRequest->fund->organization_id === $organization->id ||
             in_array($organization->id, $externalValidators, true);
+    }
+
+    /**
+     * Determine whether the user can view the fundRequest.
+     *
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @param string $employee_identity_address
+     * @return bool|\Illuminate\Auth\Access\Response
+     */
+    public function assignEmployeeAsValidator(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Organization $organization,
+        string $employee_identity_address
+    ) {
+        if ($organization->id !== $fundRequest->fund->organization_id) {
+            return $this->deny('only_sponsor_employee');
+        }
+
+        if (!$organization->identityCan($identity_address, 'manage_validators')) {
+            return $this->deny('invalid_permissions');
+        }
+
+        if (!$organization->identityCan($employee_identity_address, 'validate_records')) {
+            return $this->deny('invalid_validator');
+        }
+
+        // only pending requests could be assigned
+        if ($fundRequest->state !== FundRequest::STATE_PENDING) {
+            return $this->deny('not_pending');
+        }
+
+        $hasRecordsAvailable = FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
+            $fundRequest->records()->where([
+                'state' => $fundRequest::STATE_PENDING,
+            ])->whereDoesntHave('employee')->getQuery(),
+            $employee_identity_address,
+            $organization->findEmployee($employee_identity_address)->id
+        )->exists();
+
+        if (!$hasRecordsAvailable) {
+            return $this->deny('no_records_available');
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return bool|\Illuminate\Auth\Access\Response
+     */
+    public function resignEmployeeAsValidator(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Organization $organization
+    ) {
+        if ($organization->id !== $fundRequest->fund->organization_id) {
+            return $this->deny('only_sponsor_employee');
+        }
+
+        if (!$organization->identityCan($identity_address, 'manage_validators')) {
+            return $this->deny('invalid_permissions');
+        }
+
+        /** @var FundRequestRecord $recordAssigned */
+        $recordAssigned = FundRequestRecordQuery::whereHasAssignedOrganizationEmployeeFilter(
+            $fundRequest->records()->getQuery(),
+            $fundRequest->fund->organization_id
+        )->first();
+
+        if (!$recordAssigned) {
+            return $this->deny('no_records_assigned');
+        }
+
+        return $this->resolveAsValidator(
+            $recordAssigned->employee->identity_address, $fundRequest, $organization
+        );
     }
 
     /**

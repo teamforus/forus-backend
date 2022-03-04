@@ -464,6 +464,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         );
 
         $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/assign-employee',
+            "Api\Platform\Organizations\FundRequestsController@assignEmployee"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/resign-employee',
+            "Api\Platform\Organizations\FundRequestsController@resignEmployee"
+        );
+
+        $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/approve',
             "Api\Platform\Organizations\FundRequestsController@approve"
         );
