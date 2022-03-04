@@ -286,12 +286,15 @@ class FundRequest extends Model
      * @param Employee $employee
      * @param string|null $note
      * @return FundRequest
+     * @throws \Exception
      */
     public function decline(Employee $employee, ?string $note = null): self
     {
         $this->update([
-            'note' => $note ?: '',
+            'note' => $note ?: ''
         ]);
+
+        $this->checkPartnerBsnRecord($employee, $note);
 
         $this->records_pending()->where([
             'employee_id' => $employee->id
@@ -300,6 +303,28 @@ class FundRequest extends Model
         });
 
         return $this;
+    }
+
+    /**
+     * @param Employee $employee
+     * @param string|null $note
+     * @throws \Exception
+     */
+    private function checkPartnerBsnRecord(Employee $employee, ?string $note = null): void
+    {
+        /** @var FundRequestRecord $record_partner_bsn */
+        $record_partner_bsn = $this->records()->where([
+            'employee_id' => $employee->id,
+            'record_type_key' => 'partner_bsn'
+        ])->first();
+
+        $decline = $record_partner_bsn && !$this->records_approved()
+                ->whereNotIn('fund_request_records.id', [$record_partner_bsn->id])
+                ->count();
+
+        if ($decline) {
+            $record_partner_bsn->decline($note);
+        }
     }
 
     /**
