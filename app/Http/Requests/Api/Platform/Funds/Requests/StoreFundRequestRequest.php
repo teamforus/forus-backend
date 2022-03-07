@@ -9,6 +9,7 @@ use App\Rules\FundRequestFilesRule;
 use App\Rules\FundRequestRecordRecordTypeKeyRule;
 use App\Rules\FundRequestRecordValueRule;
 use App\Rules\RecordTypeKeyExistsRule;
+use Illuminate\Support\Arr;
 
 /**
  * Class StoreFundRequestRequest
@@ -60,21 +61,18 @@ class StoreFundRequestRequest extends BaseFormRequest
     /**
      * @return array
      */
-    public function messages(): array {
+    public function messages(): array
+    {
         $messages = [];
 
-        foreach ($this->get('records') as $key => $val) {
-            if (isset($val['record_type_key'])) {
-                /** @var FundCriterion $fund_criteria */
-                $fund_criteria = $this->fund->criteria()->where(
-                    'record_type_key', $val['record_type_key']
-                )->first();
-                $is_checkbox_field = $fund_criteria && $fund_criteria->operator == '=';
+        foreach ($this->get('records') as $val) {
+            $record_type_key = Arr::get($val, 'record_type_key', false);
 
-                $messages["records.*.value.required"] = trans(
-                    'validation.fund_request_request_' .
-                    ($is_checkbox_field ? 'checkbox_' : '') . 'field_incomplete'
-                );
+            if ($record_type_key) {
+                $prefix = (ends_with($record_type_key, '_eligible') ? 'eligible_' : '');
+
+                $messages["records.*.value.required"] =
+                    trans("validation.fund_request_request_{$prefix}field_incomplete");
             }
         }
 
