@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Resources\MediaResource;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\OfficeQuery;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
@@ -652,28 +653,16 @@ class Implementation extends Model
             });
         }
 
-        if (($postcode = array_get($options, 'postcode')) &&
-            ($distance = array_get($options, 'distance')))
-        {
+        if (array_get($options, 'postcode') && array_get($options, 'distance')) {
             $geocodeService = resolve('geocode_api');
-            $location = $geocodeService->getLocation($postcode);
+            $location = $geocodeService->getLocation(array_get($options, 'postcode') . ', Netherlands');
 
-            if (is_array($location)) {
-                $lon = $location['lng'] ?? null;
-                $lat = $location['lat'] ?? null;
-
-                if ($lat && $lon) {
-                    $query->whereHas('offices', static function (
-                        Builder $builder
-                    ) use ($lat, $lon, $distance) {
-                        $builder->whereRaw("6371 * acos(cos(radians(" . $lat . "))
-                         * cos(radians(lat)) 
-                         * cos(radians(lon) - radians(" . $lon . ")) 
-                         + sin(radians(" . $lat . ")) 
-                         * sin(radians(lat))) < " . $distance);
-                    });
-                }
-            }
+            $query->whereHas('offices', static function (Builder $builder) use ($location, $options) {
+                OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
+                    'lat' => $location ? $location['lat'] : 0,
+                    'lng' => $location ? $location['lng'] : 0,
+                ]);
+            });
         }
 
         return $query->orderBy(
