@@ -29,8 +29,8 @@ class EmployeesController extends Controller
 {
     use ThrottleWithMeta;
 
-    private $recordRepo;
-    private $identityRepo;
+    private IRecordRepo $recordRepo;
+    private IIdentityRepo $identityRepo;
 
     public function __construct(
         IRecordRepo $recordRepo,
@@ -58,19 +58,19 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('viewAny', [Employee::class, $organization]);
 
-        if ($request->has('role') && $role = $request->input('role')) {
-            $query = $organization->employeesOfRoleQuery($role);
-        } else {
-            $query = $organization->employees();
+        $query = $organization->employees();
+        $roleFilters = $request->only('role', 'roles');
+        $permissionFilters = $request->only('permission', 'permissions');
+
+        foreach ($roleFilters as $roleFilter) {
+            EmployeeQuery::whereHasRoleFilter($query, $roleFilter);
         }
 
-        if ($request->has('permission') && $permission = $request->input('permission')) {
-            EmployeeQuery::whereHasPermissionFilter($query->getQuery(), $permission);
+        foreach ($permissionFilters as $permissionFilter) {
+            EmployeeQuery::whereHasPermissionFilter($query, $permissionFilter);
         }
 
-        return EmployeeResource::collection($query->paginate(
-            $request->input('per_page', 10)
-        ));
+        return EmployeeResource::queryCollection($query, $request);
     }
 
     /**

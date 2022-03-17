@@ -14,6 +14,8 @@ use App\Models\BankConnection;
 use App\Models\Fund;
 use App\Models\FundProvider;
 use App\Models\FundRequest;
+use App\Models\FundRequestClarification;
+use App\Models\FundRequestRecord;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\NotificationTemplate;
@@ -43,6 +45,32 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
+     * @var array|string[]
+     */
+    public static array $morphMap = [
+        'fund'                          => Fund::class,
+        'office'                        => Office::class,
+        'voucher'                       => Voucher::class,
+        'product'                       => Product::class,
+        'employees'                     => Employee::class,
+        'fund_request'                  => FundRequest::class,
+        'organization'                  => Organization::class,
+        'mail_template'                 => NotificationTemplate::class,
+        'fund_provider'                 => FundProvider::class,
+        'physical_card'                 => PhysicalCard::class,
+        'bank_connection'               => BankConnection::class,
+        'implementation'                => Implementation::class,
+        'product_category'              => ProductCategory::class,
+        'implementation_page'           => ImplementationPage::class,
+        'product_reservation'           => ProductReservation::class,
+        'physical_card_request'         => PhysicalCardRequest::class,
+        'fund_request_record'           => FundRequestRecord::class,
+        'fund_request_clarification'    => FundRequestClarification::class,
+        'voucher_transaction'           => VoucherTransaction::class,
+        'voucher_transaction_bulk'      => VoucherTransactionBulk::class,
+    ];
+
+    /**
      * Bootstrap any application services.
      *
      * @throws \App\Services\MediaService\Exceptions\MediaConfigAlreadyRegisteredException
@@ -52,27 +80,7 @@ class AppServiceProvider extends ServiceProvider
         $this->setLocale(config('app.locale'));
 
         Schema::defaultStringLength(191);
-
-        Relation::morphMap([
-            'fund'                  => Fund::class,
-            'office'                => Office::class,
-            'voucher'               => Voucher::class,
-            'product'               => Product::class,
-            'employees'             => Employee::class,
-            'fund_request'          => FundRequest::class,
-            'organization'          => Organization::class,
-            'mail_template'         => NotificationTemplate::class,
-            'fund_provider'         => FundProvider::class,
-            'physical_card'         => PhysicalCard::class,
-            'bank_connection'       => BankConnection::class,
-            'implementation'        => Implementation::class,
-            'product_category'      => ProductCategory::class,
-            'implementation_page'   => ImplementationPage::class,
-            'product_reservation'   => ProductReservation::class,
-            'physical_card_request' => PhysicalCardRequest::class,
-            'voucher_transaction'   => VoucherTransaction::class,
-            'voucher_transaction_bulk'  => VoucherTransactionBulk::class,
-        ]);
+        Relation::morphMap(self::$morphMap);
 
         MediaService::setMediaConfigs([
             new CmsMediaConfig(),

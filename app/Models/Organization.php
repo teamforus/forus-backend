@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
+use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 
 /**
@@ -553,27 +555,21 @@ class Organization extends Model
     }
 
     /**
-     * @param $role
-     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @param string|array $role
+     * @return EloquentBuilder|Relation
      */
-    public function employeesOfRoleQuery($role) {
-        return $this->employees()->whereHas('roles', function(
-            EloquentBuilder $query
-        ) use ($role) {
-            $query->whereIn('key', (array) $role);
-        });
+    public function employeesOfRoleQuery($role)
+    {
+        return EmployeeQuery::whereHasRoleFilter($this->employees(), $role);
     }
 
     /**
-     * @param $permission
-     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @param string|array $permission
+     * @return EloquentBuilder|Relation
      */
-    public function employeesWithPermissionsQuery($permission) {
-        return $this->employees()->whereHas('roles.permissions', static function(
-            EloquentBuilder $query
-        ) use ($permission) {
-            $query->whereIn('permissions.key', (array) $permission);
-        });
+    public function employeesWithPermissionsQuery($permission)
+    {
+        return EmployeeQuery::whereHasPermissionFilter($this->employees(), $permission);
     }
 
     /**

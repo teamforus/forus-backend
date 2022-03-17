@@ -3,10 +3,13 @@
 namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundRequest;
+use App\Models\Organization;
+use App\Scopes\Builders\EmployeeQuery;
 
 /**
- * Class AssignEmployeeFundRequestRequest
- * @package App\Http\Requests\Api\Platform\Funds\Requests
+ * @property-read Organization $organization
+ * @property-read FundRequest $fund_request
  */
 class AssignEmployeeFundRequestRequest extends BaseFormRequest
 {
@@ -28,7 +31,20 @@ class AssignEmployeeFundRequestRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'employee' => 'required|exists:employees,identity_address'
+            'employee_id' => 'required|in:' . implode(',', $this->validEmployeeId()),
         ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function validEmployeeId(): array
+    {
+        $recordsQuery = $this->fund_request->records_pending()->whereDoesntHave('employee');
+
+        return EmployeeQuery::whereCanValidateRecords(
+            $this->organization->employees(),
+            $recordsQuery->select('fund_request_records.id')->getQuery()
+        )->pluck('id')->toArray();
     }
 }

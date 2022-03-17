@@ -505,25 +505,17 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/records',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController", [
-            'only' => [
-                'index', 'store', 'show',
-            ],
-            'parameters' => [
-                'records' => 'fund_request_record',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
+        )->parameters([
+            'records' => 'fund_request_record',
+        ])->only( 'index', 'show', 'store');
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/clarifications',
-            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController", [
-            'only' => [
-                'index', 'show', 'store'
-            ],
-            'parameters' => [
-                'clarifications' => 'fund_request_clarification',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController"
+        )->parameters([
+            'clarifications' => 'fund_request_clarification',
+        ])->only( 'index', 'store', 'show');
 
         $router->get(
             'organizations/{organization}/fund-requests/export',

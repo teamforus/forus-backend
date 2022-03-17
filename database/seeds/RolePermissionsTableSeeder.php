@@ -13,7 +13,7 @@ class RolePermissionsTableSeeder extends Seeder
     /**
      * @var string[][]
      */
-    protected $rolePermissions = [
+    protected array $rolePermissions = [
         "admin" => [
             "manage_funds", "manage_providers", "manage_products", "manage_offices",
             "view_finances", "validate_records", "scan_vouchers", "manage_provider_funds",
