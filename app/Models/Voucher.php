@@ -1018,16 +1018,17 @@ class Voucher extends Model
     /**
      * @param string $identity_address
      */
-    public static function assignAvailableToIdentityByBsn(
-        string $identity_address
-    ): void {
+    public static function assignAvailableToIdentityByBsn(string $identity_address): void
+    {
         if (!$bsn = record_repo()->bsnByAddress($identity_address)) {
             return;
         }
 
         /** @var Builder $query */
         $query = self::whereNull('identity_address');
-        $query->whereHas('voucher_relation', static function(Builder $builder) use ($bsn) {
+        $query->whereHas('fund.organization', function(Builder $builder) {
+            $builder->where('bsn_enabled', true);
+        })->whereHas('voucher_relation', static function(Builder $builder) use ($bsn) {
             $builder->where('bsn', '=', $bsn);
         })->get()->each(static function(Voucher $voucher) {
             $voucher->voucher_relation->assignIfExists();
