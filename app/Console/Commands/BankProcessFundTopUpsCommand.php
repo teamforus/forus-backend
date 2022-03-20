@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use A\B;
 use App\Events\Funds\FundBalanceSuppliedEvent;
 use App\Models\Fund;
 use App\Models\FundTopUp;
@@ -33,7 +32,7 @@ class BankProcessFundTopUpsCommand extends Command
     /**
      * @var int Seconds to wait until next request to the API
      */
-    protected $fetchInterval = 1;
+    protected $fetchInterval = 5;
 
     /**
      * Execute the console command.

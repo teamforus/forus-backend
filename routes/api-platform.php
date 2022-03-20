@@ -19,45 +19,12 @@ $router = resolve('router');
  * Public api routes
  */
 $router->group([], static function() use ($router) {
-    $router->resource(
-        'product-categories',
-        "Api\Platform\ProductCategoryController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
-
-    $router->resource(
-        'business-types',
-        "Api\Platform\BusinessTypeController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
-
-    $router->resource(
-        'organizations',
-        "Api\Platform\OrganizationsController", [
-        'only' => [
-            'index',
-        ]
-    ]);
-
-    $router->resource(
-        'funds',
-        "Api\Platform\FundsController", [
-        'only' => [
-            'index', 'show'
-        ]
-    ]);
-
-    $router->resource(
-        'search',
-        "Api\Platform\SearchController", [
-        'only' => [
-            'index',
-        ]
-    ]);
+    $router->resource('tags', "Api\Platform\TagsController")->only('index', 'show');
+    $router->resource('funds', "Api\Platform\FundsController")->only('index', 'show');
+    $router->resource('search', "Api\Platform\SearchController")->only('index');
+    $router->resource('organizations', "Api\Platform\OrganizationsController")->only('index');
+    $router->resource('business-types', "Api\Platform\BusinessTypeController")->only('index', 'show');
+    $router->resource('product-categories', "Api\Platform\ProductCategoryController")->only('index', 'show');
 
     if (config('forus.features.webshop.funds.fund_requests', FALSE)) {
         $router->resource(
@@ -497,6 +464,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         );
 
         $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/assign-employee',
+            "Api\Platform\Organizations\FundRequestsController@assignEmployee"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/resign-employee',
+            "Api\Platform\Organizations\FundRequestsController@resignEmployee"
+        );
+
+        $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/approve',
             "Api\Platform\Organizations\FundRequestsController@approve"
         );
@@ -504,6 +481,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/decline',
             "Api\Platform\Organizations\FundRequestsController@decline"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/disregard',
+            "Api\Platform\Organizations\FundRequestsController@disregard"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/disregard-undo',
+            "Api\Platform\Organizations\FundRequestsController@disregardUndo"
         );
 
         $router->patch(
@@ -518,25 +505,17 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/records',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController", [
-            'only' => [
-                'index', 'store', 'show',
-            ],
-            'parameters' => [
-                'records' => 'fund_request_record',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
+        )->parameters([
+            'records' => 'fund_request_record',
+        ])->only( 'index', 'show', 'store');
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/clarifications',
-            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController", [
-            'only' => [
-                'index', 'show', 'store'
-            ],
-            'parameters' => [
-                'clarifications' => 'fund_request_clarification',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController"
+        )->parameters([
+            'clarifications' => 'fund_request_clarification',
+        ])->only( 'index', 'store', 'show');
 
         $router->get(
             'organizations/{organization}/fund-requests/export',

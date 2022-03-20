@@ -47,6 +47,7 @@ class FundRequestRecordPolicy
      * @param FundRequest $request
      * @param Fund $fund
      * @return bool|\Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function viewAsRequester(
         ?string $identity_address,
@@ -98,6 +99,7 @@ class FundRequestRecordPolicy
      * @param FundRequest $request
      * @param Organization $organization
      * @return bool|\Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function viewAsValidator(
         ?string $identity_address,
@@ -140,16 +142,15 @@ class FundRequestRecordPolicy
         }
 
         // only assigned employee is allowed to resolve the request
-        if (!FundRequestRecordQuery::whereIdentityIsAssignedEmployeeFilter(
-            $request->records()->getQuery(),
-            $identity_address,
-            $organization->findEmployee($identity_address)->id
+        if (!FundRequestRecordQuery::whereEmployeeIsAssignedValidator(
+            $request->records(),
+            $organization->findEmployee($identity_address)
         )->where('fund_request_records.id', $requestRecord->id)->exists()) {
             return $this->deny('fund_request.not_assigned_employee');
         }
 
         return $requestRecord->employee &&
-            ($requestRecord->state === $requestRecord::STATE_PENDING) &&
+            ($requestRecord->isPending()) &&
             ($requestRecord->employee->identity_address === $identity_address);
     }
 

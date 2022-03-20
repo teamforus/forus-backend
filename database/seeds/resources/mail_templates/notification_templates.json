@@ -198,6 +198,20 @@
             "content_informal": ":sponsor_name heeft jouw aanvraag voor :fund_name behandeld."
         }
     },
+    "notifications_identities.fund_request_disregarded": {
+        "mail": {
+            "title": "Uw aanvraag voor :fund_name niet behandelen.",
+            "title_informal": "Uw aanvraag voor :fund_name niet behandelen.",
+            "template": "notifications_identities/fund_request_disregarded.md",
+            "template_informal": "notifications_identities/fund_request_disregarded_informal.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanvraag niet behandelen",
+            "content": ":sponsor_name heeft uw aanvraag voor :fund_name niet behandelen.",
+            "content_informal": ":sponsor_name heeft uw aanvraag voor :fund_name niet behandelen."
+        }
+    },
     "notifications_identities.fund_request_record_declined": {
         "mail": {
             "title": "Uw aanvraag voor :fund_name is afgewezen",
@@ -318,8 +332,8 @@
         "mail": {},
         "push": {},
         "database": {
-            "title": ":fund_name is verlopen.",
-            "content": ":fund_name liep van :start_date tot :end_date_minus1 en is vanaf dit moment niet meer geldig. Dit betekent dat er geen betalingen meer gedaan kunnen worden met QR-codes van :fund_name. Kijk in uw beheeromgeving of u zich voor een nieuw fonds kunt aanmelden."
+            "title": ":fund_name is gesloten",
+            "content": ":fund_name is vanaf dit moment gesloten. U blijft aangemeld voor het fonds wanneer de sponsor bepaalt om het fonds te verlengen en nieuwe tegoeden te verstrekken."
         }
     },
     "notifications_fund_providers.fund_expiring": {

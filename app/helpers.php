@@ -639,7 +639,7 @@ if (!function_exists('user_agent_data')) {
 
 if (!function_exists('query_to_sql')) {
     /**
-     * @param Builder|\Illuminate\Database\Query\Builder $builder
+     * @param Builder|\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Relations\Relation $builder
      * @return string
      */
     function query_to_sql($builder): string

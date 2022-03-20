@@ -80,6 +80,9 @@ abstract class BaseNotification extends Notification implements ShouldQueue
         "notifications_identities.fund_request_approved" => [
             "app_link", "fund_name", "sponsor_name", "webshop_button", "webshop_link"
         ],
+        "notifications_identities.fund_request_disregarded" => [
+            "fund_name", "sponsor_email", "sponsor_name", "sponsor_phone",
+        ],
         "notifications_identities.fund_request_record_declined" => [
             "fund_name", "rejection_note", "webshop_link", "webshop_button",
         ],

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * App\Models\FundCriterion
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \App\Models\Fund $fund
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundCriterionValidator[] $fund_criterion_validators
  * @property-read int|null $fund_criterion_validators_count
+ * @property-read \App\Models\FundRequestRecord|null $fund_request_record
  * @property-read string $description_html
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundCriterion newQuery()
@@ -63,6 +65,15 @@ class FundCriterion extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return HasOne
+     * @noinspection PhpUnused
+     */
+    public function fund_request_record(): HasOne
+    {
+        return $this->hasOne(FundRequestRecord::class);
     }
 
     /**

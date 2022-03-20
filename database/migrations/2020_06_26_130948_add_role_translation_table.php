@@ -25,7 +25,7 @@ class AddRoleTranslationTable extends Migration
             )->references('id')->on('roles')->onDelete('cascade');
         });
 
-        resolve(RoleTranslationTableSeeder::class)->run();
+        resolve(RolesTableSeeder::class)->run();
     }
 
     /**

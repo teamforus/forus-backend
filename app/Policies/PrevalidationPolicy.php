@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Exceptions\AuthorizationJsonException;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Scopes\Builders\VoucherQuery;
 
 /**
  * Class PrevalidationPolicy
@@ -45,15 +46,13 @@ class PrevalidationPolicy extends BasePolicy
      * @return bool
      * @throws AuthorizationJsonException
      */
-    public function redeem(
-        ?string $identity_address,
-        Prevalidation $prevalidation
-    ): bool {
+    public function redeem(?string $identity_address, Prevalidation $prevalidation): bool
+    {
         if (empty($identity_address)) {
             return false;
         }
 
-        if (!$prevalidation || !$prevalidation->exists()) {
+        if (!$prevalidation->exists()) {
             $this->deny('wrong_code');
         }
 
@@ -61,10 +60,10 @@ class PrevalidationPolicy extends BasePolicy
             $this->deny('used');
         }
 
-        if (Voucher::where([
+        if (VoucherQuery::whereNotExpired(Voucher::where([
             'fund_id' => $prevalidation->fund_id,
             'identity_address' => $identity_address,
-        ])->exists()) {
+        ]))->exists()) {
             $this->deny('used_same_fund');
         }
 
@@ -76,10 +75,8 @@ class PrevalidationPolicy extends BasePolicy
      * @param Prevalidation $prevalidation
      * @return bool
      */
-    public function destroy(
-        ?string $identity_address,
-        Prevalidation $prevalidation
-    ): bool {
+    public function destroy(?string $identity_address, Prevalidation $prevalidation): bool
+    {
         $organization = $prevalidation->organization;
         $isCreator = $prevalidation->identity_address === $identity_address;
         $isOrganizationEmployee = false;

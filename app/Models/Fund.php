@@ -18,7 +18,6 @@ use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
@@ -36,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * App\Models\Fund
@@ -74,6 +74,8 @@ use Carbon\Carbon;
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Employee[] $employees_validator_managers
+ * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
  * @property-read Collection|\App\Models\FundFaq[] $faq
@@ -132,6 +134,10 @@ use Carbon\Carbon;
  * @property-read int|null $providers_approved_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
+ * @property-read Collection|\App\Models\Tag[] $tags_provider
+ * @property-read int|null $tags_provider_count
+ * @property-read Collection|\App\Models\Tag[] $tags_webshop
+ * @property-read int|null $tags_webshop_count
  * @property-read Collection|\App\Models\FundTopUpTransaction[] $top_up_transactions
  * @property-read int|null $top_up_transactions_count
  * @property-read Collection|\App\Models\FundTopUp[] $top_ups
@@ -363,6 +369,26 @@ class Fund extends Model
     }
 
     /**
+     * @return MorphToMany
+     * @noinspection PhpUnused
+     */
+    public function tags_webshop(): MorphToMany
+    {
+        return $this->morphToMany(Tag::class, 'taggable')
+            ->where('scope', 'webshop');
+    }
+
+    /**
+     * @return MorphToMany
+     * @noinspection PhpUnused
+     */
+    public function tags_provider(): MorphToMany
+    {
+        return $this->morphToMany(Tag::class, 'taggable')
+            ->where('scope', 'provider');
+    }
+
+    /**
      * @return $this
      */
     public function archive(Employee $employee): self
@@ -422,6 +448,42 @@ class Fund extends Model
         ], false) : [];
 
         $this->fund_config->forceFill(array_merge($values, $replaceValues))->save();
+    }
+
+    /**
+     * @param array $tagIds
+     * @param $scope
+     * @return void
+     */
+    public function syncTags(array $tagIds, $scope = 'webshop')
+    {
+        $query = Tag::query();
+
+        // Target tags of scope
+        $query->where(function(Builder $builder) use ($tagIds, $scope) {
+            $builder->whereIn('id', $tagIds);
+            $builder->whereIn('scope', (array) $scope);
+        });
+
+        // Tags to keep from other scopes
+        $query->orWhere(function(Builder $builder) use ($scope) {
+            $otherScopeTags = $this->tags()->whereNotIn('scope', (array) $scope);
+            $builder->whereIn('id', $otherScopeTags->select('tags.id')->getQuery());
+        });
+
+        $this->tags_webshop()->sync($query->pluck('id'));
+    }
+
+    /**
+     * @param array|null $tagIds
+     * @param string $scope
+     * @return void
+     */
+    public function syncTagsOptional(?array $tagIds = null, $scope = 'webshop')
+    {
+        if (!is_null($tagIds)) {
+            $this->syncTags($tagIds, $scope);
+        }
     }
 
     /**
@@ -689,6 +751,24 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function employees_validator_managers(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles.permissions', static function(Builder $builder) {
+            $builder->where('key', 'manage_validators');
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */
@@ -881,8 +961,14 @@ class Fund extends Model
         }
 
         if ($tag = array_get($options, 'tag')) {
-            $query->whereHas('tags', static function(Builder $query) use ($tag) {
-                return $query->where('key', $tag);
+            $query->whereHas('tags_provider', static function(Builder $query) use ($tag) {
+                $query->where('key', $tag);
+            });
+        }
+
+        if ($tag_id = array_get($options, 'tag_id')) {
+            $query->whereHas('tags_webshop', static function(Builder $query) use ($tag_id) {
+                $query->where('tags.id', $tag_id);
             });
         }
 
@@ -984,7 +1070,7 @@ class Fund extends Model
                 FundExpiringEvent::dispatch($fund);
             }
 
-            if (!$fund->isClosed() && $fund->end_date->isPast()) {
+            if (!$fund->isClosed() && $fund->end_date->clone()->addDay()->isPast()) {
                 FundEndedEvent::dispatch($fund->changeState(self::STATE_CLOSED));
             }
         }
@@ -1125,7 +1211,15 @@ class Fund extends Model
      */
     public function isActive(): bool
     {
-        return $this->state === static::STATE_ACTIVE;
+        return ($this->state === static::STATE_ACTIVE) && !$this->isExpired();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExpired(): bool
+    {
+        return $this->end_date->isPast();
     }
 
     /**
@@ -1156,9 +1250,8 @@ class Fund extends Model
      * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(
-        ?FundCriterion $fundCriterion = null
-    ): array {
+    public function validatorEmployees(?FundCriterion $fundCriterion = null): array
+    {
         $employees = $this->employees_validators()->pluck('employees.identity_address');
         $externalEmployees = [];
 
@@ -1751,7 +1844,8 @@ class Fund extends Model
     public function isBackofficeApiAvailable(): bool
     {
         return $this->organization->backoffice_available &&
-            $this->fund_config->backoffice_enabled;
+            $this->fund_config->backoffice_enabled &&
+            $this->organization->bsn_enabled;
     }
 
     /**

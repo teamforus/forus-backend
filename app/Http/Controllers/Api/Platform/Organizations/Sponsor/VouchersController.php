@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
@@ -84,7 +84,7 @@ class VouchersController extends Controller
             $voucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
         }
 
-        if ($bsn = $request->input('bsn', false)) {
+        if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
 
@@ -153,7 +153,7 @@ class VouchersController extends Controller
                 $voucherModel = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
             }
 
-            if ($bsn = ($voucher['bsn'] ?? false)) {
+            if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
                 $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
             }
 
@@ -225,7 +225,7 @@ class VouchersController extends Controller
 
         if ($email) {
             $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
-        } else if ($bsn) {
+        } else if ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
 
@@ -331,6 +331,7 @@ class VouchersController extends Controller
      * @throws AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @noinspection PhpUnused
      */
     public function exportXls(
         IndexVouchersRequest $request,
@@ -380,6 +381,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return array
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function exportData(
         IndexVouchersRequest $request,

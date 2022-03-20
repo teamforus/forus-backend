@@ -12,8 +12,8 @@ use Illuminate\Http\Resources\Json\Resource;
  */
 class RoleResource extends Resource
 {
-    public static $load = [
-        'translations'
+    public static array $load = [
+        'translations',
     ];
 
     /**
@@ -22,10 +22,8 @@ class RoleResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        return collect($this->resource)->only([
-            'id', 'key', 'name', 'description'
-        ])->toArray();
+        return $this->resource->only('id', 'key', 'name', 'description');
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\FundRequests;
 
-use App\Events\FundRequestClarifications\FundRequestClarificationCreated;
+use App\Events\FundRequestClarifications\FundRequestClarificationRequested;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\IndexFundRequestClarificationsRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Clarifications\StoreFundRequestClarificationsRequest;
 use App\Http\Resources\FundRequestClarificationResource;
@@ -67,7 +67,7 @@ class FundRequestClarificationsController extends Controller
             'question', 'fund_request_record_id'
         ]));
 
-        FundRequestClarificationCreated::dispatch($clarification);
+        FundRequestClarificationRequested::dispatch($clarification);
 
         return new FundRequestClarificationResource($clarification);
     }

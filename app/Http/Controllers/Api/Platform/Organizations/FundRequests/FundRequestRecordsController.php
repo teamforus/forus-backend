@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\FundRequests;
 
-use App\Events\FundRequests\FundRequestRecordDeclined;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\ApproveFundRequestRecordRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\DeclineFundRequestRecordRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\Records\IndexFundRequestRecordsRequest;
@@ -39,9 +38,7 @@ class FundRequestRecordsController extends Controller
             FundRequestRecord::class, $fundRequest, $organization
         ]);
 
-        return ValidatorFundRequestRecordResource::collection($fundRequest->records()->with(
-            ValidatorFundRequestRecordResource::$load
-        )->paginate($request->input('per_page')));
+        return ValidatorFundRequestRecordResource::queryCollection($fundRequest->records(), $request);
     }
 
     /**
@@ -70,9 +67,7 @@ class FundRequestRecordsController extends Controller
 
         $fundRequestRecord->approve();
 
-        return new ValidatorFundRequestRecordResource($fundRequestRecord->load(
-            ValidatorFundRequestRecordResource::$load
-        ));
+        return ValidatorFundRequestRecordResource::create($fundRequestRecord);
     }
 
     /**
@@ -80,22 +75,18 @@ class FundRequestRecordsController extends Controller
      *
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @param FundRequestRecord $fundRequestClarification
+     * @param FundRequestRecord $record
      * @return ValidatorFundRequestRecordResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         Organization $organization,
         FundRequest $fundRequest,
-        FundRequestRecord $fundRequestClarification
+        FundRequestRecord $record
     ): ValidatorFundRequestRecordResource {
-        $this->authorize('viewAsValidator', [
-            $fundRequestClarification, $fundRequest, $organization
-        ]);
+        $this->authorize('viewAsValidator', [$record, $fundRequest, $organization]);
 
-        return new ValidatorFundRequestRecordResource(
-            $fundRequestClarification->load(ValidatorFundRequestRecordResource::$load)
-        );
+        return ValidatorFundRequestRecordResource::create($record);
     }
 
     /**
@@ -104,7 +95,7 @@ class FundRequestRecordsController extends Controller
      * @param ApproveFundRequestRecordRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @param FundRequestRecord $fundRequestRecord
+     * @param FundRequestRecord $record
      * @return ValidatorFundRequestRecordResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
@@ -112,18 +103,14 @@ class FundRequestRecordsController extends Controller
         ApproveFundRequestRecordRequest $request,
         Organization $organization,
         FundRequest $fundRequest,
-        FundRequestRecord $fundRequestRecord
+        FundRequestRecord $record
     ): ValidatorFundRequestRecordResource {
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
-        $this->authorize('resolveAsValidator', [
-            $fundRequestRecord, $fundRequest, $organization
-        ]);
+        $this->authorize('resolveAsValidator', [$record, $fundRequest, $organization]);
 
-        $fundRequestRecord->approve($request->input('note'));
+        $record->approve($request->input('note'));
 
-        return new ValidatorFundRequestRecordResource(
-            $fundRequestRecord->load(ValidatorFundRequestRecordResource::$load)
-        );
+        return ValidatorFundRequestRecordResource::create($record);
     }
 
     /**
@@ -132,7 +119,7 @@ class FundRequestRecordsController extends Controller
      * @param DeclineFundRequestRecordRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
-     * @param FundRequestRecord $fundRequestRecord
+     * @param FundRequestRecord $record
      * @return ValidatorFundRequestRecordResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
@@ -140,19 +127,13 @@ class FundRequestRecordsController extends Controller
         DeclineFundRequestRecordRequest $request,
         Organization $organization,
         FundRequest $fundRequest,
-        FundRequestRecord $fundRequestRecord
+        FundRequestRecord $record
     ): ValidatorFundRequestRecordResource {
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
-        $this->authorize('resolveAsValidator', [
-            $fundRequestRecord, $fundRequest, $organization
-        ]);
+        $this->authorize('resolveAsValidator', [$record, $fundRequest, $organization]);
 
-        FundRequestRecordDeclined::dispatch($fundRequestRecord->decline(
-            $request->input('note')
-        ));
+        $record->decline($request->input('note'));
 
-        return new ValidatorFundRequestRecordResource(
-            $fundRequestRecord->load(ValidatorFundRequestRecordResource::$load)
-        );
+        return ValidatorFundRequestRecordResource::create($record);
     }
 }

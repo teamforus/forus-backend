@@ -12,7 +12,7 @@ abstract class BaseFundRequestClarificationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $fundRequestClarification;
+    protected FundRequestClarification $fundRequestClarification;
 
     /**
      * Create a new event instance.

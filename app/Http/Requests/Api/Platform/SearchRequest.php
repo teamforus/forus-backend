@@ -40,6 +40,7 @@ class SearchRequest extends BaseFormRequest
             'overview'              => 'nullable|bool',
             'order_by'              => 'nullable|in:created_at',
             'order_by_dir'          => 'nullable|in:asc,desc',
+            'with_external'         => 'nullable|bool',
         ];
     }
 }
