@@ -57,6 +57,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $pre_approve_external_funds
+ * @property bool $bsn_enabled
  * @property int $provider_throttling_value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -167,7 +168,7 @@ class Organization extends Model
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
-        'reservations_auto_accept',
+        'reservations_auto_accept', 'bsn_enabled'
     ];
 
     /**
@@ -189,6 +190,7 @@ class Organization extends Model
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
+        'bsn_enabled'                           => 'boolean'
     ];
 
     /**

@@ -355,6 +355,10 @@ class FundRequestPolicy
             return $this->deny('only_sponsor_employee');
         }
 
+        if (!$organization->bsn_enabled) {
+            return $this->deny('bsn_not_enabled');
+        }
+
         return $fundRequest->records()->where([
             'record_type_key' => 'partner_bsn'
         ])->doesntExist();

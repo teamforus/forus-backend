@@ -38,6 +38,7 @@ class StoreVoucherRequest extends BaseFormRequest
     {
         /** @var Fund $fund */
         $fund = $this->organization->funds()->find($this->input('fund_id'));
+        $bsn_enabled = $this->organization->bsn_enabled;
 
         $funds = $this->organization->funds()->where(function(Builder $builder) {
             FundQuery::whereIsInternal($builder);
@@ -50,7 +51,7 @@ class StoreVoucherRequest extends BaseFormRequest
                 Rule::exists('funds', 'id')->whereIn('id', $funds->pluck('id')->toArray())
             ],
             'email'     => 'nullable|required_if:assign_by_type,email|email:strict',
-            'bsn'       => 'nullable|required_if:assign_by_type,bsn|digits:9',
+            'bsn'       => $bsn_enabled ? 'nullable|required_if:assign_by_type,bsn|digits:9' : 'nullable|in:',
             'note'      => 'nullable|string|max:280',
             'amount'    => [
                 $fund && $fund->isTypeBudget() ? 'required_without:product_id' : 'nullable',
@@ -71,9 +72,20 @@ class StoreVoucherRequest extends BaseFormRequest
             'activate'              => 'boolean',
             'activation_code'       => 'boolean',
             'activation_code_uid'   => 'nullable|string|max:20',
-            'assign_by_type'        => 'required|in:email,bsn,activation_code_uid',
+            'assign_by_type'        => 'required|in:' . $this->availableAssignTypes($bsn_enabled),
             'limit_multiplier'      => 'nullable|numeric|min:1|max:1000',
         ];
+    }
+
+    /**
+     * @param bool $bsn_enabled
+     * @return string
+     */
+    protected function availableAssignTypes(bool $bsn_enabled): string
+    {
+        return implode(",", array_filter([
+            'email', 'activation_code_uid', $bsn_enabled ? 'bsn' : null,
+        ]));
     }
 
     /**

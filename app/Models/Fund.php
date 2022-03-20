@@ -1844,7 +1844,8 @@ class Fund extends Model
     public function isBackofficeApiAvailable(): bool
     {
         return $this->organization->backoffice_available &&
-            $this->fund_config->backoffice_enabled;
+            $this->fund_config->backoffice_enabled &&
+            $this->organization->bsn_enabled;
     }
 
     /**

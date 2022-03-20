@@ -54,10 +54,14 @@ class ValidatorFundRequestResource extends BaseJsonResource
         $organization = $request->route('organization') or abort(403);
         $allowedEmployees = $this->getAllowedRequestEmployeesQuery($fundRequest, $organization)->get();
 
+        /** @var Organization $organization */
+        $organization = $request->route('organization') or abort(403);
+        $bsn_enabled = $organization->bsn_enabled;
+
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
         ]), [
-            'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
+            'bsn' => $bsn_enabled ? $recordRepo->bsnByAddress($fundRequest->identity_address) : null,
             'fund' => $this->fundDetails($fundRequest),
             'records' => $this->getRecordsDetails($organization, $fundRequest),
             'replaced' => $this->isReplaced($fundRequest),
@@ -128,13 +132,15 @@ class ValidatorFundRequestResource extends BaseJsonResource
     public function getRecordsDetails(Organization $organization, FundRequest $fundRequest): array
     {
         $employee = $organization->findEmployee(auth_address()) or abort(403);
-
+        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
         $availableRecords = FundRequestRecordQuery::whereEmployeeCanBeValidator(
             $fundRequest->records(),
             $employee,
         )->pluck('fund_request_records.id');
 
-        return $fundRequest->records->map(function(FundRequestRecord $record) use ($employee, $availableRecords) {
+        return $fundRequest->records->filter(function(FundRequestRecord $record) use ($organization, $bsnFields) {
+            return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);
+        })->map(function(FundRequestRecord $record) use ($employee, $availableRecords) {
             return static::recordToArray($record, $employee, $availableRecords->search($record->id) !== false);
         })->toArray();
     }
