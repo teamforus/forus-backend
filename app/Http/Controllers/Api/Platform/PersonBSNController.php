@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Api\Platform;
 use App\Http\Controllers\Controller;
 use App\Models\FundRequest;
 use App\Models\Organization;
-use App\Services\IConnectApiService\IConnectApiService;
 use Illuminate\Http\JsonResponse;
 
 /**
  * Class PersonBSNController
  * @package App\Http\Controllers\Api\Platform
+ * @noinspection PhpUnused
  */
 class PersonBSNController extends Controller
 {
@@ -23,16 +23,14 @@ class PersonBSNController extends Controller
      */
     public function show(Organization $organization, $bsn): JsonResponse
     {
-        $this->authorize('viewPersonBSNData', [
-            FundRequest::class, $organization
+        $this->authorize('viewPersonBSNData', [FundRequest::class, $organization]);
+
+        $person = $organization->getIConnect()->getPerson($bsn, [
+            'parents', 'children', 'partners',
         ]);
 
-        $iconnect = new IConnectApiService($organization->person_bsn_api_id);
-
-        $person = $iconnect->getPerson($bsn, ['parents', 'children', 'partners']);
-
-        return $person
-            ? response()->json(['data' => $person->toArray()])
-            : response()->json(['message' => 'Not found'], 404);
+        return new JsonResponse([
+            'data' => $person ? $person->toArray() : null,
+        ]);
     }
 }

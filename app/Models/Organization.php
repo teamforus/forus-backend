@@ -12,6 +12,7 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
+use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
@@ -61,7 +62,7 @@ use Illuminate\Database\Query\Builder;
  * @property int $provider_throttling_value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $person_bsn_api_id
+ * @property string|null $iconnect_api_oin
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
@@ -170,7 +171,7 @@ class Organization extends Model
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
-        'reservations_auto_accept', 'bsn_enabled', 'person_bsn_api_id',
+        'reservations_auto_accept', 'bsn_enabled',
     ];
 
     /**
@@ -192,7 +193,8 @@ class Organization extends Model
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
-        'bsn_enabled'                           => 'boolean'
+        'bsn_enabled'                           => 'boolean',
+        'iconnect_api_oin'                      => 'string',
     ];
 
     /**
@@ -851,8 +853,24 @@ class Organization extends Model
     /**
      * @return bool
      */
-    public function hasPersonBsnApi(): bool
+    public function hasIConnectApiOin(): bool
     {
-        return !empty($this->person_bsn_api_id);
+        return $this->isIconnectApiConfigured() && $this->bsn_enabled && !empty($this->iconnect_api_oin);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isIconnectApiConfigured(): bool
+    {
+        return !empty(IConnect::getConfigs());
+    }
+
+    /**
+     * @return IConnect|null
+     */
+    public function getIConnect(): ?IConnect
+    {
+        return $this->hasIConnectApiOin() ? new IConnect($this->iconnect_api_oin) : null;
     }
 }

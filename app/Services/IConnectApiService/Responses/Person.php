@@ -9,44 +9,13 @@ namespace App\Services\IConnectApiService\Responses;
 class Person extends BasePerson
 {
     /** @var array  */
-    protected $parents;
+    protected array $parents;
 
     /** @var array  */
-    protected $children;
+    protected array $children;
 
     /** @var array  */
-    protected $partners;
-
-    /**
-     * @param array $data
-     */
-    public function __construct(array $data = []) {
-        parent::__construct($data);
-
-        $this->parents = [];
-        $parentsRaw = $this->raw['_embedded']['ouders'] ?? [];
-        if (is_array($parentsRaw) && count($parentsRaw)) {
-            foreach ($parentsRaw as $item) {
-                $this->parents[] = new ParentPerson($item);
-            }
-        }
-
-        $this->children = [];
-        $childrenRaw = $this->raw['_embedded']['kinderen'] ?? [];
-        if (is_array($childrenRaw) && count($childrenRaw)) {
-            foreach ($childrenRaw as $item) {
-                $this->children[] = new Child($item);
-            }
-        }
-
-        $this->partners = [];
-        $partnersRaw = $this->raw['_embedded']['partners'] ?? [];
-        if (is_array($partnersRaw) && count($partnersRaw)) {
-            foreach ($partnersRaw as $item) {
-                $this->partners[] = new Partner($item);
-            }
-        }
-    }
+    protected array $partners;
 
     /**
      * @return string
@@ -61,7 +30,7 @@ class Person extends BasePerson
      */
     public function getIsDeceased(): bool
     {
-        return (bool)($this->raw['overlijden']['indicatieOverleden'] ?? false);
+        return (bool) ($this->raw['overlijden']['indicatieOverleden'] ?? false);
     }
 
     /**
@@ -87,26 +56,22 @@ class Person extends BasePerson
             'date_entry_validity' => $this->raw['verblijfplaats']['datumIngangGeldigheid']['datum'] ?? '',
             'date_registration_in_municipality' => $this->raw['verblijfplaats']['datumInschrijvingInGemeente']['datum'] ?? '',
             'municipality_of_registration' => $this->raw['verblijfplaats']['gemeenteVanInschrijving']['omschrijving'] ?? '',
-            'address' => ($this->raw['verblijfplaats']['adresregel1'] ?? '') .
-                ($this->raw['verblijfplaats']['adresregel2'] ?? '') .
-                ($this->raw['verblijfplaats']['adresregel3'] ?? '')
+            'address' => implode('', [
+                $this->raw['verblijfplaats']['adresregel1'] ?? '',
+                $this->raw['verblijfplaats']['adresregel2'] ?? '',
+                $this->raw['verblijfplaats']['adresregel3'] ?? '',
+            ])
         ];
     }
 
     /**
-     * @return array
+     * @return ParentPerson[]
      */
     public function getParents(): array
     {
-        return $this->parents;
-    }
-
-    /**
-     * @return array
-     */
-    public function getPartners(): array
-    {
-        return $this->partners;
+        return array_map(function(array $item) {
+            return new ParentPerson($item);
+        }, $this->raw['_embedded']['ouders'] ?? []);
     }
 
     /**
@@ -114,7 +79,19 @@ class Person extends BasePerson
      */
     public function getChildren(): array
     {
-        return $this->children;
+        return array_map(function(array $item) {
+            return new Child($item);
+        }, $this->raw['_embedded']['kinderen'] ?? []);
+    }
+
+    /**
+     * @return array
+     */
+    public function getPartners(): array
+    {
+        return array_map(function(array $item) {
+            return new Partner($item);
+        }, $this->raw['_embedded']['partners'] ?? []);
     }
 
     /**
@@ -139,12 +116,6 @@ class Person extends BasePerson
      */
     private function responsesToArray(array $data = []): array
     {
-        $result = [];
-        array_walk($data, static function ($value, $key) use (&$result) {
-            /** @var BasePerson $value */
-            $result[] = $value->toArray();
-        });
-
-        return $result;
+        return array_map(fn(BasePerson $value) => $value->toArray(), $data);
     }
 }

@@ -9,12 +9,13 @@ namespace App\Services\IConnectApiService\Responses;
 abstract class BasePerson
 {
     /** @var array  */
-    protected $raw;
+    protected array $raw;
 
     /**
      * @param array $data
      */
-    public function __construct(array $data = []) {
+    public function __construct(array $data = [])
+    {
         $this->raw = $data;
     }
 
@@ -81,7 +82,7 @@ abstract class BasePerson
     {
         return [
             'country' => $this->raw['geboorte']['land']['omschrijving'] ?? '',
-            'place' => $this->raw['geboorte']['plaats']['omschrijving'] ?? ''
+            'place' => $this->raw['geboorte']['plaats']['omschrijving'] ?? '',
         ];
     }
 
@@ -94,11 +95,11 @@ abstract class BasePerson
             'name' => $this->getName(),
             'first_name' => $this->getFirstName(),
             'last_name' => $this->getLastName(),
-            'age' => $this->getAge(),
             'birth_date' => $this->getBirthdate(),
             'birth_place' => $this->getBirthplace(),
+            'gender' => $this->getGender(),
             'bsn' => $this->getBSN(),
-            'gender' => $this->getGender()
+            'age' => $this->getAge(),
         ], $this->getCustomDataArray());
     }
 
@@ -106,5 +107,4 @@ abstract class BasePerson
      * @return array
      */
     abstract public function getCustomDataArray(): array;
-
 }

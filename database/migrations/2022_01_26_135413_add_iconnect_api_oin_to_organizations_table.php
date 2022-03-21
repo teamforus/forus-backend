@@ -4,17 +4,20 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddPersonBsnApiIdToOrganizations extends Migration
+/**
+ * @noinspection PhpUnused
+ */
+class AddIconnectApiOinToOrganizationsTable extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->string('person_bsn_api_id')->nullable();
+            $table->string('iconnect_api_oin')->after('bsn_enabled')->nullable();
         });
     }
 
@@ -23,10 +26,10 @@ class AddPersonBsnApiIdToOrganizations extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
-            $table->dropColumn('person_bsn_api_id');
+            $table->dropColumn('iconnect_api_oin');
         });
     }
 }

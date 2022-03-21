@@ -3,44 +3,67 @@
 
 namespace App\Services\IConnectApiService;
 
-use App\Models\Organization;
 use App\Services\IConnectApiService\Responses\Child;
 use App\Services\IConnectApiService\Responses\ParentPerson;
 use App\Services\IConnectApiService\Responses\Partner;
 use App\Services\IConnectApiService\Responses\Person;
 use GuzzleHttp\Client;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Support\Arr;
 
 /**
- * Class IConnectApiService
+ * Class IConnect
  * @package App\Services\IConnectApiService
  */
-class IConnectApiService
+class IConnect
 {
-    /** @var string  */
     private const METHOD_GET = 'GET';
-    /** @var string  */
-    private static $cache_key_prefix = 'iconnect_';
+    private const CACHE_KEY = 'iconnect_';
 
-    /** @var string  */
-    private $api_url = 'https://apitest.locgov.nl/iconnect/brpmks/1.3.0/';
+    private const ENV_PRODUCTION = 'production';
+    private const ENV_SANDBOX = 'sandbox';
 
-    /** @var string[]  */
-    private $with = [
-        'parents' => 'ouders',
-        'children' => 'kinderen',
-        'partners' => 'partners'
+    private const ENVIRONMENTS = [
+        self::ENV_SANDBOX,
+        self::ENV_PRODUCTION,
     ];
 
-    /** @var string|null  */
-    private $person_bsn_api_id;
+    private const URL_PRODUCTION = 'https://api.locgov.nl/iconnect/brpmks/1.3.0/';
+    private const URL_SANDBOX = 'https://apitest.locgov.nl/iconnect/brpmks/1.3.0/';
+
+    private array $with = [
+        'parents' => 'ouders',
+        'children' => 'kinderen',
+        'partners' => 'partners',
+    ];
+
+    private string $iconnect_api_oin;
+    private string $api_url;
+
+    private int $cache_time;
+    private string $cert_trust_path;
+    private array $configs;
 
     /**
-     * @param string $personBsnApiId
+     * @param string $iconnectApiOin
      */
-    public function __construct(string $personBsnApiId)
+    public function __construct(string $iconnectApiOin)
     {
-        $this->person_bsn_api_id = $personBsnApiId;
+        $configs = static::getConfigs();
+
+        if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS)) {
+            throw new RuntimeException('Invalid iConnection "env" type.');
+        }
+
+        $this->configs = $configs;
+        $this->cache_time = Arr::get($configs, 'cache_time', 60) * 60;
+        $this->cert_trust_path = Arr::get($configs, 'cert_trust_path', '');
+        $this->iconnect_api_oin = $iconnectApiOin;
+
+        $this->api_url = [
+            'production' => self::URL_PRODUCTION,
+            'sandbox' => self::URL_SANDBOX,
+        ][Arr::get($configs, 'env')];
     }
 
     /**
@@ -52,16 +75,9 @@ class IConnectApiService
         $url = $this->getEndpoint('children', $bsn);
         $result = $this->request(self::METHOD_GET, $url);
 
-        if ($result['success']) {
-            $arr = [];
-            foreach ($result['response_body']['_embedded'] ?? [] as $item) {
-                $arr[] = new Child($item);
-            }
-
-            return $arr;
-        }
-
-        return [];
+        return array_map(function(array $item) {
+            return new Child($item);
+        }, $result['success'] ? $result['response_body']['_embedded'] ?? [] : []);
     }
 
     /**
@@ -86,16 +102,9 @@ class IConnectApiService
         $url = $this->getEndpoint('parents', $bsn);
         $result = $this->request(self::METHOD_GET, $url);
 
-        if ($result['success']) {
-            $arr = [];
-            foreach ($result['response_body']['_embedded'] ?? [] as $item) {
-                $arr[] = new ParentPerson($item);
-            }
-
-            return $arr;
-        }
-
-        return [];
+        return array_map(function(array $item) {
+            return new ParentPerson($item);
+        }, $result['success'] ? $result['response_body']['_embedded'] ?? [] : []);
     }
 
     /**
@@ -113,14 +122,14 @@ class IConnectApiService
 
     /**
      * @param string $bsn
-     * @return Partner|null
+     * @return Partner[]
      */
-    public function getPartners(string $bsn): ?Partner
+    public function getPartners(string $bsn): array
     {
         $url = $this->getEndpoint('partners', $bsn);
         $result = $this->request(self::METHOD_GET, $url);
 
-        return $result['success'] ? new Partner($result['response_body']['_embedded'] ?? []) : null;
+        return $result['success'] ? [new Partner($result['response_body']['_embedded'] ?? [])] : [];
     }
 
     /**
@@ -146,26 +155,12 @@ class IConnectApiService
     public function getPerson(string $bsn, array $with = [], array $fields = []): ?Person
     {
         $url = $this->getEndpoint('person', $bsn);
+        $query = $this->buildQuery($with, $fields);
 
-        $query = [];
-        $with = array_intersect_key($this->with, array_flip($with));
-        if (count($with)) {
-            $query['expand'] = implode(',', $with);
-        }
-
-        if (count($fields)) {
-            $query['fields'] = implode(',', $fields);
-        }
-
-        $result = cache()->remember(
-            self::$cache_key_prefix . 'person_' . $bsn,
-            config('iconnect_api.cache_time') * 60,
-            function() use ($url, $query) {
-                $request = $this->request(self::METHOD_GET, $url, $query);
-
-                return $request['success'] ? $request['response_body'] : null;
-            }
-        );
+        $result = $this->remember("person-$bsn", $query, function() use ($url, $query) {
+            $request = $this->request(self::METHOD_GET, $url, $query);
+            return $request['success'] ? $request['response_body'] : null;
+        });
 
         return $result ? new Person($result) : null;
     }
@@ -179,30 +174,12 @@ class IConnectApiService
     public function search(array $with = [], array $fields = [], array $search = []): array
     {
         $url = $this->getEndpoint('search');
-
-        $query = [];
-        $with = array_intersect_key($this->with, array_flip($with));
-        if (count($with)) {
-            $query['expand'] = implode(',', $with);
-        }
-
-        if (count($fields)) {
-            $query['fields'] = implode(',', $fields);
-        }
-
-        $query = array_merge($query, $this->getSearchParams($search));
+        $query = array_merge($this->buildQuery($with, $fields), $this->getSearchParams($search));
         $result = $this->request(self::METHOD_GET, $url, $query);
 
-        if ($result['success']) {
-            $arr = [];
-            foreach ($result['response_body']['_embedded']['ingeschrevenpersonen'] ?? [] as $item) {
-                $arr[] = new Person($item);
-            }
-
-            return $arr;
-        }
-
-        return [];
+        return array_map(function(array $item) {
+            return new Partner($item);
+        }, $result['success'] ? $result['response_body']['_embedded']['ingeschrevenpersonen'] ?? [] : []);
     }
 
     /**
@@ -237,12 +214,9 @@ class IConnectApiService
             'name_public_space' => 'verblijfplaats__naamopenbareruimte',
         ];
 
-        $result = [];
-        array_walk($search, static function($value, $key) use ($arr, &$result) {
-            $result[$arr[$key] ?? ''] = $value;
-        });
-
-        return $result;
+        return array_reduce($search, function(array $query, string $key) use ($arr, $search) {
+            return array_merge($query, [$arr[$key] => $search[$key]]);
+        }, []);
     }
 
     /**
@@ -259,7 +233,7 @@ class IConnectApiService
 
         try {
             $options = $this->makeRequestOptions($method, $data);
-            $options['verify'] = config('iconnect_api.cert_trust_pass');
+            $options['verify'] = $this->cert_trust_path;
             $response = $guzzleClient->request($method, $url, $options);
 
             return [
@@ -287,18 +261,22 @@ class IConnectApiService
      */
     private function getEndpoint(string $action, string $bsn = null, int $id = null): string
     {
-        $endpoint = [
-                'children' => "ingeschrevenpersonen/$bsn/kinderen",
-                'child' => "ingeschrevenpersonen/$bsn/kinderen/$id",
-                'parents' => "ingeschrevenpersonen/$bsn/ouders",
-                'parent' => "ingeschrevenpersonen/$bsn/ouders/$id",
-                'partners' => "ingeschrevenpersonen/$bsn/partners",
-                'partner' => "ingeschrevenpersonen/$bsn/partners/$id",
-                'person' => "ingeschrevenpersonen/$bsn",
-                'search' => "ingeschrevenpersonen"
-            ][$action] ?? abort(403);
+        $endpoints = [
+            'children' => "ingeschrevenpersonen/$bsn/kinderen",
+            'child' => "ingeschrevenpersonen/$bsn/kinderen/$id",
+            'parents' => "ingeschrevenpersonen/$bsn/ouders",
+            'parent' => "ingeschrevenpersonen/$bsn/ouders/$id",
+            'partners' => "ingeschrevenpersonen/$bsn/partners",
+            'partner' => "ingeschrevenpersonen/$bsn/partners/$id",
+            'person' => "ingeschrevenpersonen/$bsn",
+            'search' => "ingeschrevenpersonen"
+        ];
 
-        return $this->api_url . $endpoint;
+        if (empty($endpoints[$action] ?? null)) {
+            throw new RuntimeException('Invalid iConnection action.');
+        }
+
+        return $this->api_url . $endpoints[$action];
     }
 
     /**
@@ -309,9 +287,9 @@ class IConnectApiService
     private function makeRequestHeaders(): array
     {
         return [
-            'apikey' => config('iconnect_api.header_key'),
-            'x-doelbinding' => config('iconnect_api.target_binding'),
-            'x-origin-oin' => $this->person_bsn_api_id,
+            'apikey' => Arr::get($this->configs, 'header_key', ''),
+            'x-doelbinding' => Arr::get($this->configs, 'target_binding', ''),
+            'x-origin-oin' => $this->iconnect_api_oin,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ];
@@ -325,22 +303,71 @@ class IConnectApiService
      * @return array
      */
     private function makeRequestOptions(string $method, array $data): array {
-        return array_merge([
+        return [
+            'cert' => [Arr::get($this->configs, 'cert_path'), Arr::get($this->configs, 'cert_pass')],
+            'ssl_key' => [Arr::get($this->configs, 'key_path'), Arr::get($this->configs, 'key_pass')],
             'headers' => $this->makeRequestHeaders(),
-            'connect_timeout' => config('iconnect_api.connect_timeout', 10),
-            'cert' => [
-                config('iconnect_api.cert_path'),
-                config('iconnect_api.cert_pass')
-            ],
-            'ssl_key' => [
-                config('iconnect_api.key_path'),
-                config('iconnect_api.key_pass')
-            ],
-        ], $method === 'GET' ? [
-            'query' => $data,
-        ]: [
-            'json' => $data,
+            'connect_timeout' => Arr::get($this->configs, 'connect_timeout', 10),
+            $method === 'GET' ? 'query' : 'json' => $data,
+        ];
+    }
+
+    /**
+     * @param string $prefix
+     * @param array $query
+     * @param callable $callback
+     * @return mixed
+     * @throws \Exception
+     */
+    protected function remember(string $prefix, array $query, callable $callback): ?array
+    {
+        return cache()->remember(
+            sprintf(self::CACHE_KEY . ".%s-%s", $prefix, http_build_query($query)),
+            $this->cache_time,
+            $callback
+        );
+    }
+
+    /**
+     * @param array $with
+     * @param array $fields
+     * @return array
+     */
+    private function buildQuery(array $with = [], array $fields = []): array
+    {
+        $with = array_only($this->with, array_keys($with));
+
+        sort($with);
+        sort($fields);
+
+        return array_filter([
+            'with' => implode(',', count($with) ? $with : []),
+            'fields' => implode(',', count($fields) ? $fields : []),
         ]);
     }
 
+    /**
+     * @return array|null
+     */
+    public static function getConfigs(): ?array
+    {
+        $storage = resolve('filesystem')->disk('local');
+        $configPath = config('iconnect.config_path');
+
+        if ($storage->has($configPath)) {
+            try {
+                $config = json_decode($storage->get($configPath), true);
+
+                return array_merge([
+                    'key_path' => $storage->path($config['key_storage_path'] ?? ''),
+                    'cert_path' => $storage->path($config['cert_storage_path'] ?? ''),
+                    'cert_trust_path' => $storage->path($config['cert_storage_trust_path'] ?? ''),
+                ], $config);
+            } catch (FileNotFoundException $e) {
+                logger()->error($e->getMessage());
+            }
+        }
+
+        return null;
+    }
 }

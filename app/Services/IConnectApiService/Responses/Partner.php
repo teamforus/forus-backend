@@ -8,7 +8,6 @@ namespace App\Services\IConnectApiService\Responses;
  */
 class Partner extends BasePerson
 {
-
     /**
      * @return string
      */
@@ -32,7 +31,7 @@ class Partner extends BasePerson
     {
         return [
             'country' => $this->raw['aangaanHuwelijkPartnerschap']['land']['omschrijving'] ?? '',
-            'place' => $this->raw['aangaanHuwelijkPartnerschap']['plaats']['omschrijving'] ?? ''
+            'place' => $this->raw['aangaanHuwelijkPartnerschap']['plaats']['omschrijving'] ?? '',
         ];
     }
 
@@ -44,7 +43,7 @@ class Partner extends BasePerson
         return [
             'type_of_commitment' => $this->getTypeOfCommitment(),
             'date_start_marriage_partnership' => $this->getDateStartMarriagePartnership(),
-            'place_start_marriage_partnership' => $this->getPlaceStartMarriagePartnership()
+            'place_start_marriage_partnership' => $this->getPlaceStartMarriagePartnership(),
         ];
     }
 }

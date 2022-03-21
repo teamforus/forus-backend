@@ -400,7 +400,8 @@ class FundRequestPolicy
      */
     public function viewPersonBSNData(?string $identity_address, Organization $organization): bool
     {
-        return $organization->hasPersonBsnApi() &&
+        return
+            $organization->hasIConnectApiOin() &&
             $organization->identityCan($identity_address, 'view_person_bsn_data');
     }
 

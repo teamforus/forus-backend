@@ -57,7 +57,7 @@ class OrganizationResource extends Resource
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = $organization->only([
                 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-                'phone_public', 'website_public', 'person_bsn_api_id'
+                'phone_public', 'website_public',
             ]);
         }
 
@@ -82,8 +82,8 @@ class OrganizationResource extends Resource
             'allow_batch_reservations', 'bsn_enabled'
         ]), $privateData, $ownerData, [
             'tags' => TagResource::collection($organization->tags),
-            'has_bank_connection' => (bool) !empty($organization->bank_connection_active),
-            'has_person_bsn_api' => $organization->hasPersonBsnApi(),
+            'has_bank_connection' => !empty($organization->bank_connection_active),
+            'has_person_bsn_api' => $organization->hasIConnectApiOin(),
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(
                 $organization->business_type

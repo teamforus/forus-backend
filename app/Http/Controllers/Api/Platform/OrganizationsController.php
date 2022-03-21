@@ -61,8 +61,7 @@ class OrganizationsController extends Controller
         $organization = Organization::create(
             collect($request->only([
                 'name', 'email', 'phone', 'kvk', 'website', 'description',
-                'email_public', 'phone_public', 'website_public',
-                'business_type_id', 'person_bsn_api_id'
+                'email_public', 'phone_public', 'website_public', 'business_type_id',
             ]))->merge([
                 'btw' => (string) $request->get('btw', ''),
                 'iban' => strtoupper($request->get('iban')),
@@ -115,7 +114,7 @@ class OrganizationsController extends Controller
         $organization->update(array_merge($request->only([
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
-            'business_type_id', 'description', 'person_bsn_api_id'
+            'business_type_id', 'description',
         ]), $request->has('iban') ? [
             'iban' => strtoupper($request->get('iban'))
         ]: []));

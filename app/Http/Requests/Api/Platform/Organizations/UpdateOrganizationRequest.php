@@ -59,7 +59,6 @@ class UpdateOrganizationRequest extends FormRequest
             'website'               => 'nullable|max:200|url',
             'website_public'        => 'boolean',
             'business_type_id'      => 'required|exists:business_types,id',
-            'person_bsn_api_id'     => 'nullable|string|max:255'
         ];
     }
 }
