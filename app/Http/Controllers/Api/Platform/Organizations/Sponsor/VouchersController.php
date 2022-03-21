@@ -11,6 +11,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\IndexVouchersRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\SendVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherRequest;
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -227,6 +228,28 @@ class VouchersController extends Controller
             $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
         } else if ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
+        }
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param UpdateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException
+     */
+    public function update(
+        UpdateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('update', [$voucher, $organization]);
+
+        if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
+            $voucher->update($request->only('limit_multiplier'));
         }
 
         return new SponsorVoucherResource($voucher);
