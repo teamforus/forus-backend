@@ -1586,10 +1586,12 @@ class Fund extends Model
         $vouchersQuery = VoucherQuery::whereNotExpired($vouchersQuery);
         $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
         $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
 
         $vouchers_count = $vouchersQuery->count();
         $inactive_count = $inactiveVouchersQuery->count();
         $active_count = $activeVouchersQuery->count();
+        $deactivated_count = $deactivatedVouchersQuery->count();
         $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
 
         return [
@@ -1601,6 +1603,8 @@ class Fund extends Model
             'inactive_amount'       => $inactiveVouchersQuery->sum('amount'),
             'inactive_count'        => $inactive_count,
             'inactive_percentage'   => currency_format($inactive_percentage),
+            'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
+            'deactivated_count'     => $deactivated_count,
         ];
     }
 
@@ -1620,14 +1624,17 @@ class Fund extends Model
         $vouchersQuery = VoucherQuery::whereNotExpired($query);
         $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
         $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
 
         $vouchers_amount = currency_format($vouchersQuery->sum('amount'));
         $active_vouchers_amount = currency_format($activeVouchersQuery->sum('amount'));
         $inactive_vouchers_amount = currency_format($inactiveVouchersQuery->sum('amount'));
+        $deactivated_vouchers_amount = currency_format($deactivatedVouchersQuery->sum('amount'));
 
         $vouchers_count = $vouchersQuery->count();
         $active_vouchers_count = $activeVouchersQuery->count();
         $inactive_vouchers_count = $inactiveVouchersQuery->count();
+        $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
 
         foreach ($funds as $fund) {
             $budget += $fund->budget_total;
@@ -1641,7 +1648,8 @@ class Fund extends Model
             'budget', 'budget_left',
             'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
             'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
-            'inactive_vouchers_amount', 'inactive_vouchers_count'
+            'inactive_vouchers_amount', 'inactive_vouchers_count',
+            'deactivated_vouchers_amount', 'deactivated_vouchers_count'
         );
     }
 

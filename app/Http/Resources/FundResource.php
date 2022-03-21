@@ -153,6 +153,8 @@ class FundResource extends Resource
             'active_vouchers_count'     => $details['active_count'],
             'inactive_vouchers_amount'  => currency_format($details['inactive_amount']),
             'inactive_vouchers_count'   => $details['inactive_count'],
+            'deactivated_vouchers_amount' => currency_format($details['deactivated_amount']),
+            'deactivated_vouchers_count'  => $details['deactivated_count'],
         ];
     }
 
