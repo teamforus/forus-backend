@@ -73,15 +73,15 @@ class OrganizationResource extends Resource
         ];
         
         return array_filter(array_merge($organization->only([
-            'id', 'identity_address', 'name', 'kvk', 'business_type_id', 'tags',
+            'id', 'identity_address', 'name', 'kvk', 'business_type_id',
             'email_public', 'phone_public', 'website_public',
             'is_sponsor', 'is_provider', 'is_validator',
             'validator_auto_accept_funds', 'description', 'description_html',
             'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
-            'allow_batch_reservations',
-        ]), $privateData,
-            $ownerData, [
+            'allow_batch_reservations', 'bsn_enabled'
+        ]), $privateData, $ownerData, [
+            'tags' => TagResource::collection($organization->tags),
             'has_bank_connection' => (bool) !empty($organization->bank_connection_active),
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(

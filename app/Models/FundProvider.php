@@ -496,10 +496,13 @@ class FundProvider extends Model
             $provider = $fundProvider->organization;
             $lastActivity = $provider->getLastActivity();
 
-            $provider_products_count = $provider->products_provider()->count();
-            $sponsor_products_count = $provider->products_sponsor()->where([
+            $provider_products_count = ProductQuery::whereNotExpired(
+                $provider->products_provider()->getQuery()
+            )->count();
+            
+            $sponsor_products_count = ProductQuery::whereNotExpired($provider->products_sponsor()->where([
                 'sponsor_organization_id' => $fundProvider->fund->organization_id
-            ])->count();
+            ])->getQuery())->count();
 
             $active_products_count = ProductQuery::approvedForFundsAndActiveFilter(
                 $fundProvider->products()->getQuery(),

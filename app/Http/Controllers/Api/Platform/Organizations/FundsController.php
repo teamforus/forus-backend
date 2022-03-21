@@ -93,6 +93,7 @@ class FundsController extends Controller
 
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
+        $fund->syncTagsOptional($request->input('tag_ids'));
         $fund->syncFaq($request->input('faq'));
 
         if (config('forus.features.dashboard.organizations.funds.criteria')) {
@@ -191,6 +192,7 @@ class FundsController extends Controller
         $fund->attachMediaByUid($request->input('media_uid'));
         $fund->appendMedia($request->input('description_media_uid', []), 'cms_media');
         $fund->syncFaqOptional($request->input('faq'));
+        $fund->syncTagsOptional($request->input('tag_ids'));
 
         FundUpdatedEvent::dispatch($fund);
 

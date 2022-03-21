@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations;
 
-use App\Http\Requests\Api\Platform\Funds\Requests\ApproveFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
+use App\Http\Requests\BaseFormRequest;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
@@ -32,7 +33,7 @@ class FundRequestsController extends Controller
         ]);
 
         return ValidatorFundRequestResource::collection(FundRequest::search(
-            $request, $organization, auth_address()
+            $request, $organization, $request->auth_address()
         )->with(ValidatorFundRequestResource::$load)->paginate(
             $request->input('per_page'))
         );
@@ -58,37 +59,41 @@ class FundRequestsController extends Controller
     /**
      * Assign fund request to employee
      *
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
      */
     public function assign(
+        BaseFormRequest $request,
         Organization $organization,
         FundRequest $fundRequest
     ): ValidatorFundRequestResource {
         $this->authorize('assignAsValidator', [$fundRequest, $organization]);
 
         return new ValidatorFundRequestResource($fundRequest->assignEmployee(
-            $organization->findEmployee(auth_address())
+            $request->employee($organization)
         ));
     }
 
     /**
      * Resign employee from fund request
      *
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
-     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function resign(
+        BaseFormRequest $request,
         Organization $organization,
         FundRequest $fundRequest
     ): ValidatorFundRequestResource {
         $this->authorize('resignAsValidator', [$fundRequest, $organization]);
 
-        $fundRequest->resignEmployee($organization->findEmployee(auth_address()));
+        $fundRequest->resignEmployee($request->employee($organization));
 
         return new ValidatorFundRequestResource($fundRequest->load(
             ValidatorFundRequestResource::$load
@@ -98,22 +103,21 @@ class FundRequestsController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param ApproveFundRequestsRequest $request
+     * @param BaseFormRequest $request
      * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function approve(
-        ApproveFundRequestsRequest $request,
+        BaseFormRequest $request,
         Organization $organization,
         FundRequest $fundRequest
     ): ValidatorFundRequestResource {
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
 
         return new ValidatorFundRequestResource($fundRequest->approve(
-            $organization->findEmployee(auth_address()),
-            $request->input('note', '')
+            $request->employee($organization)
         ));
     }
 
@@ -134,8 +138,52 @@ class FundRequestsController extends Controller
         $this->authorize('resolveAsValidator', [$fundRequest, $organization]);
 
         return new ValidatorFundRequestResource($fundRequest->decline(
-            $organization->findEmployee(auth_address()),
-            $request->input('note', '')
+            $request->employee($organization),
+            $request->input('note')
+        ));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param DisregardFundRequestsRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     */
+    public function disregard(
+        DisregardFundRequestsRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('disregard', [$fundRequest, $organization]);
+
+        return new ValidatorFundRequestResource($fundRequest->disregard(
+            $request->employee($organization),
+            $request->input('note'),
+            $request->input('notify')
+        ));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param BaseFormRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return ValidatorFundRequestResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function disregardUndo(
+        BaseFormRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): ValidatorFundRequestResource {
+        $this->authorize('disregardUndo', [$fundRequest, $organization]);
+
+        return new ValidatorFundRequestResource($fundRequest->disregardUndo(
+            $request->employee($organization)
         ));
     }
 
@@ -152,14 +200,12 @@ class FundRequestsController extends Controller
         IndexFundRequestsRequest $request,
         Organization $organization
     ): BinaryFileResponse {
-        $this->authorize('exportAnyAsValidator', [
-            FundRequest::class, $organization
-        ]);
+        $this->authorize('exportAnyAsValidator', [FundRequest::class, $organization]);
 
         $type = $request->input('export_format', 'xls');
 
         return resolve('excel')->download(
-            new FundRequestsExport($request, $organization, auth_address()),
+            new FundRequestsExport($request, $organization, $request->auth_address()),
             date('Y-m-d H:i:s') . '.'. $type
         );
     }

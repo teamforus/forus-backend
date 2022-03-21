@@ -79,7 +79,11 @@ class VoucherPolicy
         Voucher $voucher,
         Organization $organization
     ): bool {
-        return ($voucher->isBudgetType() || ($voucher->isProductType() && $voucher->employee_id)) &&
+        $isBudgetType = $voucher->isBudgetType();
+        $isProductTypeMadeByEmployee = $voucher->isProductType() && $voucher->employee_id;
+        $employeeCanSeeProductVouchers = $voucher->fund->fund_config->employee_can_see_product_vouchers;
+
+        return ($isBudgetType || $isProductTypeMadeByEmployee || $employeeCanSeeProductVouchers) &&
             ($voucher->fund->organization_id === $organization->id) &&
             $organization->identityCan($identity_address, 'manage_vouchers');
     }
@@ -137,6 +141,21 @@ class VoucherPolicy
             ($voucher->fund->organization_id === $organization->id) &&
             !$voucher->deactivated &&
             !$voucher->expired;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function update(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            ($voucher->fund->organization_id === $organization->id);
     }
 
     /**
@@ -268,7 +287,7 @@ class VoucherPolicy
             $voucher->fund->isConfigured() &&
             $voucher->fund->isInternal() &&
             $voucher->fund->fund_config->allow_physical_cards &&
-            $voucher->fund->organization_id == $organization->id &&
+            $voucher->fund->organization_id === $organization->id &&
             !$voucher->deactivated &&
             !$voucher->expired;
     }

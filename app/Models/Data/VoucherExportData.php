@@ -52,8 +52,14 @@ class VoucherExportData
      */
     public function toArray(): array
     {
+        $sponsor = $this->voucher->fund->organization;
         $assigned = $this->voucher->identity_address && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
+
+        $bsnData = $sponsor->bsn_enabled ? [
+            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
+            'identity_bsn' =>  $assigned ? record_repo()->bsnByAddress($this->voucher->identity_address) : null
+        ]: [];
 
         $export_data = array_merge($this->onlyData ? [] : [
             'name' => $this->name,
@@ -62,8 +68,7 @@ class VoucherExportData
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
             'in_use_date' => format_date_locale($this->getFirstUsageDate()),
             'product_name' => $this->voucher->product ? $this->voucher->product->name : null,
-            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
-            'identity_bsn' => $assigned ? record_repo()->bsnByAddress($this->voucher->identity_address) : null,
+        ], $bsnData, [
             'identity_email' => $assigned ? ($identity ? $identity->primary_email->email : null) : null,
             'state' => $this->voucher->state ?? null,
             'activation_code' => $this->voucher->activation_code ?? null,

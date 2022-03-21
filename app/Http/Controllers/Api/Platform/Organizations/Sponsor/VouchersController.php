@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnused */
+<?php
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
@@ -15,6 +15,7 @@ use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreBatchVoucherReque
 use App\Http\Requests\Api\Platform\Organizations\Vouchers\StoreVoucherRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Arr\VoucherExportArrResource;
+use App\Http\Requests\Api\Platform\Organizations\Vouchers\UpdateVoucherRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -24,7 +25,6 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Class VouchersController
@@ -88,7 +88,7 @@ class VouchersController extends Controller
             $voucher = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
         }
 
-        if ($bsn = $request->input('bsn', false)) {
+        if ($organization->bsn_enabled && ($bsn = $request->input('bsn', false))) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }
 
@@ -157,7 +157,7 @@ class VouchersController extends Controller
                 $voucherModel = $fund->makeVoucher($identity, $extraFields, $amount, $expire_at, $multiplier);
             }
 
-            if ($bsn = ($voucher['bsn'] ?? false)) {
+            if ($organization->bsn_enabled && ($bsn = ($voucher['bsn'] ?? false))) {
                 $voucherModel->setBsnRelation((string) $bsn)->assignIfExists();
             }
 
@@ -229,8 +229,30 @@ class VouchersController extends Controller
 
         if ($email) {
             $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
-        } else if ($bsn) {
+        } else if ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
+        }
+
+        return new SponsorVoucherResource($voucher);
+    }
+
+    /**
+     * @param UpdateVoucherRequest $request
+     * @param Organization $organization
+     * @param Voucher $voucher
+     * @return SponsorVoucherResource
+     * @throws AuthorizationException
+     */
+    public function update(
+        UpdateVoucherRequest $request,
+        Organization $organization,
+        Voucher $voucher
+    ): SponsorVoucherResource {
+        $this->authorize('show', $organization);
+        $this->authorize('update', [$voucher, $organization]);
+
+        if ($voucher->fund->isTypeSubsidy() && $request->has('limit_multiplier')) {
+            $voucher->update($request->only('limit_multiplier'));
         }
 
         return new SponsorVoucherResource($voucher);

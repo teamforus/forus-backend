@@ -40,6 +40,9 @@ class SearchRequest extends BaseFormRequest
             'overview'              => 'nullable|bool',
             'order_by'              => 'nullable|in:created_at',
             'order_by_dir'          => 'nullable|in:asc,desc',
+            'postcode'              => 'nullable|string|max:100',
+            'distance'              => 'nullable|integer|max:1000',
+            'with_external'         => 'nullable|bool',
         ];
     }
 }

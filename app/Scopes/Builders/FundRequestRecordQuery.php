@@ -71,9 +71,7 @@ class FundRequestRecordQuery
                     );
 
                     if ($employee_id) {
-                        $builder->whereHas('employees', static function(
-                            Builder $builder
-                        ) use ($employee_id) {
+                        $builder->whereHas('employees', static function(Builder $builder) use ($employee_id) {
                             $builder->whereIn('employees.id', (array) $employee_id);
                         });
                     }
