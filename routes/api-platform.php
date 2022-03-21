@@ -474,6 +474,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         );
 
         $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/disregard',
+            "Api\Platform\Organizations\FundRequestsController@disregard"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/disregard-undo',
+            "Api\Platform\Organizations\FundRequestsController@disregardUndo"
+        );
+
+        $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/records/{fund_request_record}/approve',
             "Api\Platform\Organizations\FundRequests\FundRequestRecordsController@approve"
         );
@@ -784,15 +794,8 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations/{organization}/sponsor/vouchers',
-        "Api\Platform\Organizations\Sponsor\VouchersController", [
-            'only' => [
-                'index', 'show', 'store'
-            ],
-            'parameters' => [
-                'vouchers' => 'voucher_id',
-            ]
-        ]
-    );
+        "Api\Platform\Organizations\Sponsor\VouchersController"
+    )->only('index', 'show', 'store', 'update',);
 
     $router->get('organizations/{organization}/sponsor/providers/finances',"Api\Platform\Organizations\Sponsor\ProvidersController@finances");
     $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");

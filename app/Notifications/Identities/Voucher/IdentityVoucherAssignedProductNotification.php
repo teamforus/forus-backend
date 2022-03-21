@@ -23,6 +23,10 @@ class IdentityVoucherAssignedProductNotification extends BaseIdentityVoucherNoti
         /** @var Voucher $voucher */
         $voucher = $this->eventLog->loggable;
 
+        if ($voucher->expired) {
+            return;
+        }
+
         $mailable = new VoucherAssignedProductMail(array_merge($this->eventLog->data, [
             'qr_token' => $voucher->token_without_confirmation->address,
             'webshop_link' => $voucher->fund->urlWebshop(),

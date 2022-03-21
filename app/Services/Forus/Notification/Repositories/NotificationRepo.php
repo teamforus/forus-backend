@@ -28,6 +28,7 @@ use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNot
 use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
@@ -109,6 +110,7 @@ class NotificationRepo implements INotificationRepo
         IdentityFundRequestCreatedNotification::class,
         IdentityFundRequestDeniedNotification::class,
         IdentityFundRequestApprovedNotification::class,
+        IdentityFundRequestDisregardedNotification::class,
         IdentityFundRequestRecordDeclinedNotification::class,
         IdentityFundRequestFeedbackRequestedNotification::class,
 

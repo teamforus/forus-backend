@@ -147,7 +147,7 @@ class FundRequestRecordsController extends Controller
             $fundRequestRecord, $fundRequest, $organization
         ]);
 
-        FundRequestRecordDeclined::dispatch($fundRequestRecord->decline(
+        FundRequestRecordDeclined::dispatch($fundRequest, $fundRequestRecord->decline(
             $request->input('note')
         ));
 

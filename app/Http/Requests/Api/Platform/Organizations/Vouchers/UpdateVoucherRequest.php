@@ -5,14 +5,15 @@ namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Models\Voucher;
+use Illuminate\Support\Facades\Gate;
 
 /**
- * Class AssignVoucherRequest
+ * Class UpdateVoucherRequest
  * @property-read Organization $organization
  * @property-read Voucher $voucher
  * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
-class AssignVoucherRequest extends BaseFormRequest
+class UpdateVoucherRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,9 +22,7 @@ class AssignVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->auth_address(), 'manage_vouchers') &&
-            $this->voucher->fund->organization_id === $this->organization->id &&
-            !$this->voucher->is_granted;
+        return Gate::allows('update', [$this->voucher, $this->organization]);
     }
 
     /**
@@ -33,12 +32,8 @@ class AssignVoucherRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return $this->organization->bsn_enabled ? [
-            'email' => 'required_without:bsn|email:strict',
-            'bsn' => 'required_without:email|string|between:8,9',
-        ] : [
-            'email' => 'required|email:strict',
-            'bsn' => 'nullable|in:',
+        return [
+            'limit_multiplier' => 'nullable|numeric|min:' . $this->voucher->limit_multiplier,
         ];
     }
 }

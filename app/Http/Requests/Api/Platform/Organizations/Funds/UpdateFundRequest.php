@@ -74,6 +74,8 @@ class UpdateFundRequest extends BaseFormRequest
             'faq.*.id'                  => ['nullable', 'in:' . $this->fund->faq()->pluck('id')->join(',')],
             'faq.*.title'               => 'required|string|max:100',
             'faq.*.description'         => 'required|string|max:5000',
+            'tag_ids'                   => 'nullable|array',
+            'tag_ids.*'                 => 'required|exists:tags,id',
             'allow_fund_requests'       => 'nullable|boolean',
             'allow_prevalidations'      => 'nullable|boolean',
             'allow_direct_requests'     => 'nullable|boolean',

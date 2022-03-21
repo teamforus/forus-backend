@@ -88,7 +88,7 @@ class ProductSubQuery
         /** @var string|null $identity_address */
         $identity_address = array_get($options, 'identity_address');
 
-        return VoucherQuery::whereNotExpiredAndActive(
+        return VoucherQuery::whereNotExpired(
             Voucher::query()->where(function(Builder $builder) use ($identity_address, $voucher_id) {
                 $voucher_id && $builder->whereIn('vouchers.id', (array) $voucher_id);
                 $identity_address && $builder->whereIn('vouchers.identity_address', (array) $identity_address);
@@ -251,6 +251,8 @@ class ProductSubQuery
      */
     protected static function voucherQuery(Builder $builder, array $options): Builder
     {
+        VoucherQuery::whereNotExpired($builder);
+
         /** @var string|null $identity_address */
         if ($identity_address = array_get($options, 'identity_address')) {
             $builder->where(compact('identity_address'));
