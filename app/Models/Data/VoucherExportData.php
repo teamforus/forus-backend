@@ -53,6 +53,22 @@ class VoucherExportData
         $assigned_to_identity = $this->voucher->identity_address && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
 
+        if ($this->voucher->fund->organization->bsn_enabled) {
+            $identityArray = $assigned_to_identity ? [
+                'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
+                'identity_bsn' => record_repo()->bsnByAddress($this->voucher->identity_address),
+                'identity_email' => $identity ? $identity->primary_email->email : null
+            ] : [
+                'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
+                'identity_bsn' => null,
+                'identity_email' => null
+            ];
+        } else {
+            $identityArray = [
+                'identity_email' => $assigned_to_identity && $identity ? $identity->primary_email->email : null
+            ];
+        }
+
         return array_merge($this->data_only ? [] : [
             'name' => $this->name,
         ], [
@@ -61,15 +77,7 @@ class VoucherExportData
             'in_use_date' => format_date_locale($this->getFirstUsageDate()),
         ], $this->voucher->product ? [
             'product_name' => $this->voucher->product->name,
-        ] : [], $assigned_to_identity ? [
-            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
-            'identity_bsn' => record_repo()->bsnByAddress($this->voucher->identity_address),
-            'identity_email' => $identity ? $identity->primary_email->email : null,
-        ] : [
-            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
-            'identity_bsn' => null,
-            'identity_email' => null,
-        ], [
+        ] : [], $identityArray, [
             'state' => $this->voucher->state ?? null,
             'activation_code' => $this->voucher->activation_code ?? null,
             'activation_code_uid' => $this->voucher->activation_code_uid ?? null,

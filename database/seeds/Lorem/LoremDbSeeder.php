@@ -469,6 +469,7 @@ class LoremDbSeeder extends Seeder
             'iban' => env('DB_SEED_PROVIDER_IBAN'),
             'phone' => '123456789',
             'email' => $this->primaryEmail,
+            'bsn_enabled' => true,
             'phone_public' => true,
             'email_public' => true,
             'business_type_id' => BusinessType::pluck('id')->random(),
@@ -478,7 +479,7 @@ class LoremDbSeeder extends Seeder
             'name', 'iban', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'identity_address', 'business_type_id', 'manage_provider_products',
-            'backoffice_available',
+            'backoffice_available', 'bsn_enabled',
         ]));
 
         OrganizationCreated::dispatch($organization);
