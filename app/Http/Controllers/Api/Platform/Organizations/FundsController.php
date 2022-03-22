@@ -293,7 +293,7 @@ class FundsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateBackoffice', [$fund, $organization]);
 
-        $log = $fund->getBackofficeApi()->checkStatus();
+        $log = $fund->getBackofficeApi(true)->checkStatus();
 
         return response()->json($log->only([
             'state', 'response_code'

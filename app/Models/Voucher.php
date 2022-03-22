@@ -9,6 +9,7 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Events\Vouchers\VoucherDeactivated;
 use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Events\Vouchers\VoucherSendToEmailEvent;
+use App\Exports\VoucherExport;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
@@ -26,8 +27,10 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use RuntimeException;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel as ExcelModel;
+use ZipArchive;
 
 /**
  * App\Models\Voucher
@@ -833,113 +836,79 @@ class Voucher extends Model
 
     /**
      * @param Collection $vouchers
-     * @param $exportType
-     * @return string
+     * @param array $fields
+     * @param string $dataFormat
+     * @param string|null $qrFormat
+     * @return array
      */
-    public static function zipVouchers(Collection $vouchers, $exportType): string {
-        $vouchersData = [];
-        $vouchersDataNames = [];
-        $token_generator = resolve('token_generator');
-        $zipPath = storage_path('vouchers-export');
+    public static function exportData(
+        Collection $vouchers,
+        array $fields,
+        string $dataFormat,
+        ?string $qrFormat = null
+    ): array {
+        $data = [];
 
-        do {
-            $zipFile = sprintf('%s/%s.zip', $zipPath, $token_generator->generate(64));
-        } while (file_exists($zipFile));
+        $domPdf = resolve('dompdf.wrapper');
+        $dataOnly = empty($qrFormat);
 
-        if (!file_exists($zipPath) && !mkdir($zipPath, 0777, true) && !is_dir($zipPath)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $zipPath));
-        }
+        $zipFile = tmpfile();
+        $zipFilePath = stream_get_meta_data($zipFile)['uri'];
 
-        $fp = fopen('php://temp/maxmemory:1048576', 'wb');
-        $zip = new \ZipArchive();
-        $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $zip = new ZipArchive();
+        $zip->open($zipFilePath, ZipArchive::CREATE);
 
-        if ($exportType === 'png') {
+        if ($qrFormat === 'png') {
             $zip->addEmptyDir('images');
         }
 
-        if ($vouchers->count() > 0) {
-            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0]))->toArray()));
-        }
-
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher);
-            } while(in_array($voucherData->getName(), $vouchersDataNames, true));
+                $voucherData = new VoucherExportData($voucher, $fields, $dataOnly);
+            } while(!$dataOnly && in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
-            fputcsv($fp, $voucherData->toArray());
-            $vouchersData[] = $voucherData;
-            $vouchersDataNames[] = $voucherData->getName();
+            $data[] = [
+                'name' => $voucherData->getName(),
+                'values' => $voucherData->toArray(),
+                'voucherData' => $voucherData,
+            ];
 
-            if ($exportType === 'png') {
-                $zip->addFromString(
-                    sprintf("images/%s.png", $voucherData->getName()),
-                    make_qr_code('voucher', $voucher->token_without_confirmation->address)
-                );
+            if (in_array($qrFormat, ['png', 'all'])) {
+                $pngPath = sprintf("images/%s.png", $voucherData->getName());
+                $pngData = make_qr_code('voucher', $voucher->token_without_confirmation->address);
+
+                $zip->addFromString($pngPath, $pngData);
             }
         }
 
-        if ($exportType === 'pdf') {
-            $pdf = resolve('dompdf.wrapper');
-            $pdf->loadView('pdf.vouchers_export', compact('vouchersData'));
-            $zip->addFromString('qr_codes.pdf', $pdf->output());
+        if (in_array($qrFormat, ['pdf', 'all'])) {
+            $domPdfFile = $domPdf->loadView('pdf.vouchers_export', [
+                'vouchersData' => Arr::pluck($data, 'voucherData'),
+            ]);
+
+            $zip->addFromString('qr_codes.pdf', $domPdfFile->output());
         }
 
-        rewind($fp);
-        $zip->addFromString('qr_codes.csv', stream_get_contents($fp));
-        fclose($fp);
+        $export = new VoucherExport(Arr::pluck($data, 'values'));
+        $exportName = 'qr_codes.';
+        $files = [];
+
+        if ($dataFormat === 'xls' || $dataFormat === 'all') {
+            $files['xls'] = Excel::raw($export, ExcelModel::XLS);
+            $zip->addFromString($exportName . 'xls', $files['xls']);
+        }
+
+        if ($dataFormat === 'csv' || $dataFormat === 'all') {
+            $files['csv'] = Excel::raw($export, ExcelModel::CSV);
+            $zip->addFromString($exportName . 'csv', $files['csv']);
+        }
 
         $zip->close();
 
-        return $zipFile;
-    }
+        $data = Arr::pluck($data, 'values');
+        $files['zip'] = file_get_contents($zipFilePath);
 
-    /**
-     * @param Collection $vouchers
-     * @param string $exportType
-     * @param bool|null $data_only
-     * @return array
-     */
-    public static function zipVouchersData(
-        Collection $vouchers,
-        string $exportType,
-        ?bool $data_only = true
-    ): array {
-        $vouchersData = [];
-        $vouchersDataNames = [];
-        $vouchers->load([
-            'transactions', 'voucher_relation', 'product', 'fund',
-            'token_without_confirmation', 'identity.primary_email'
-        ]);
-
-        $fp = fopen('php://temp/maxmemory:1048576', 'wb');
-
-        if ($vouchers->count() > 0) {
-            fputcsv($fp, array_keys((new VoucherExportData($vouchers[0], $data_only))->toArray()));
-        }
-
-        foreach ($vouchers as $voucher) {
-            /** @var Voucher $voucher */
-            do {
-                $voucherData = new VoucherExportData($voucher, $data_only);
-            } while(!$data_only && in_array($voucherData->getName(), $vouchersDataNames, true));
-
-            fputcsv($fp, $voucherData->toArray());
-            $vouchersDataNames[] = $voucherData->getName();
-
-            if ($exportType === 'png' && !$data_only) {
-                $vouchersData[] = [
-                    'name' => $voucherData->getName(),
-                    'value' => $voucher->token_without_confirmation->address
-                ];
-            }
-        }
-
-        rewind($fp);
-        $rawCsv = stream_get_contents($fp);
-        fclose($fp);
-
-        return compact('rawCsv', 'vouchersData');
+        return compact('files', 'data');
     }
 
     /**
