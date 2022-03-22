@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
- * Class FundRequestResource
+ * Class ValidatorFundRequestResource
  * @property FundRequest $resource
  * @package App\Http\Resources
  */

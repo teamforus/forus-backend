@@ -393,6 +393,19 @@ class FundRequestPolicy
     }
 
     /**
+     * @param string|null $identity_address
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewPersonBSNData(?string $identity_address, Organization $organization): bool
+    {
+        return
+            $organization->hasIConnectApiOin() &&
+            $organization->identityCan($identity_address, 'view_person_bsn_data');
+    }
+
+    /**
      * Determine whether the user can view the fundRequest.
      *
      * @param string|null $identity_address
