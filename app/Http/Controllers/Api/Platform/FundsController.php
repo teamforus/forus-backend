@@ -87,9 +87,8 @@ class FundsController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function redeem(
-        RedeemFundsRequest $request
-    ): JsonResponse {
+    public function redeem(RedeemFundsRequest $request): JsonResponse
+    {
         $vouchersAvailable = $request->getAvailableVouchers();
 
         if ($prevalidation = $request->getPrevalidation()) {

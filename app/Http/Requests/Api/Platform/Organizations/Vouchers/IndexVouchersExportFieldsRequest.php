@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Funds\Requests\Records;
+namespace App\Http\Requests\Api\Platform\Organizations\Vouchers;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
 
 /**
+ * Class IndexVouchersRequest
  * @property-read Organization $organization
+ * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
-class StoreFundRequestRecordRequest extends FormRequest
+class IndexVouchersExportFieldsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -17,7 +19,9 @@ class StoreFundRequestRecordRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->organization->identityCan($this->auth_address(), [
+            'manage_vouchers'
+        ]);
     }
 
     /**
@@ -28,8 +32,7 @@ class StoreFundRequestRecordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'value' => 'required|numeric',
-            'record_type_key' => 'required|in:' . ($this->organization->bsn_enabled ? 'partner_bsn' : ''),
+            'type' => 'nullable|in:budget,product',
         ];
     }
 }

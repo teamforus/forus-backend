@@ -23,7 +23,7 @@ class ProvidersController extends Controller
      */
     public function index(SearchProvidersRequest $request): AnonymousResourceCollection {
         return ProviderResource::collection(Implementation::searchProviders($request->only([
-            'q', 'business_type_id', 'fund_id', 'order_by', 'order_by_dir'
+            'q', 'business_type_id', 'fund_id', 'postcode', 'distance', 'order_by', 'order_by_dir'
         ]))->paginate($request->input('per_page', 10)));
     }
 

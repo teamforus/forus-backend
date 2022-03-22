@@ -37,7 +37,7 @@ class UpdateFundBackofficeRequest extends BaseFormRequest
             'backoffice_enabled'        => 'nullable|boolean',
             'backoffice_url'            => 'nullable|string|min:0,2000|url|starts_with:https://',
             'backoffice_key'            => 'nullable|string|min:0,200',
-            'backoffice_certificate'    => 'nullable|string|min:0,2000',
+            'backoffice_certificate'    => 'nullable|string|min:0,8000',
             'backoffice_fallback'       => 'nullable|boolean',
         ];
     }
