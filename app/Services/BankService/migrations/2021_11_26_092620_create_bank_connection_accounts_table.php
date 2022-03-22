@@ -5,6 +5,10 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\BankConnection;
 
+/**
+ * @noinspection PhpUnused
+ * @noinspection PhpIllegalPsrClassPathInspection
+ */
 class CreateBankConnectionAccountsTable extends Migration
 {
     /**

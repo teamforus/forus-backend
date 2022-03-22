@@ -1,0 +1,16 @@
+{
+    "paymentInitiatorName": "Forus",
+    "keyId": "",
+    "clientId": "",
+    "signatureCertificate": "",
+    "signatureCertificateKey": "",
+    "tlsCertificate": "",
+    "tlsCertificateKey": "",
+
+    "__comments": [
+        "!! remove __comments section !!",
+
+        "sandbox 'keyId' and 'clientId' can be found here: https://api.xs2a-sandbox.bngbank.nl/developer-portal/guides/signature-setup",
+        "sandbox 'signature' and 'tls' certificates: https://api.xs2a-sandbox.bngbank.nl/developer-portal/guides/sandbox-certificates"
+    ]
+}

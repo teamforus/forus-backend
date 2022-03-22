@@ -40,21 +40,7 @@ class BankVoucherTransactionBulksUpdateStateCommand extends Command
 
         foreach ($bulks as $transactionBulk) {
             try {
-                if (!$transactionBulk->bank_connection->useContext()) {
-                    continue;
-                }
-
-                $transactionBulk->update([
-                    'state_fetched_times'   => $transactionBulk->state_fetched_times + 1,
-                    'state_fetched_at'      => now(),
-                ]);
-
-                $payment = $transactionBulk->fetchPayment();
-
-                switch (strtolower($payment->getStatus())) {
-                    case $transactionBulk::STATE_REJECTED: $transactionBulk->setRejected(); break;
-                    case $transactionBulk::STATE_ACCEPTED: $transactionBulk->setAccepted($payment); break;
-                }
+                $transactionBulk->updatePaymentStatus();
             } catch (Throwable $e) {
                 logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
             }

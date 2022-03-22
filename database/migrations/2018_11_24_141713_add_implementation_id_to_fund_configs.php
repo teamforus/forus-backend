@@ -17,8 +17,8 @@ class AddImplementationIdToFundConfigs extends Migration
             $table->integer('implementation_id')->unsigned()->nullable()
                 ->index()->after('fund_id');
 
-            $table->foreign('implementation_id'
-            )->references('id')->on('implementations')->onDelete('cascade');
+            $table->foreign('implementation_id')->references('id')
+                ->on('implementations')->onDelete('cascade');
         });
     }
 
