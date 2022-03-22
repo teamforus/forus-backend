@@ -146,6 +146,21 @@ class VoucherPolicy
     /**
      * @param string $identity_address
      * @param Voucher $voucher
+     * @param Organization $organization
+     * @return bool
+     */
+    public function update(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $organization
+    ): bool {
+        return $organization->identityCan($identity_address, 'manage_vouchers') &&
+            ($voucher->fund->organization_id === $organization->id);
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Voucher $voucher
      * @return bool
      */
     public function deactivateRequester(

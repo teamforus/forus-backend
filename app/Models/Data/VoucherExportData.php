@@ -12,21 +12,23 @@ use Illuminate\Support\Carbon;
  */
 class VoucherExportData
 {
-    protected $data_only;
+    protected $onlyData;
     protected $voucher;
+    protected $fields;
     protected $name;
 
     /**
      * VoucherExportData constructor.
      * @param Voucher $voucher
-     * @param bool|null $data_only
+     * @param array $fields
+     * @param bool|null $onlyData
      */
-    public function __construct(Voucher $voucher, ?bool $data_only = false)
+    public function __construct(Voucher $voucher, array $fields, ?bool $onlyData = false)
     {
-        $this->data_only = $data_only;
-        $this->name = $data_only ? null : token_generator()->generate(6, 2);
-
+        $this->name = $onlyData ? null : token_generator()->generate(6, 2);
+        $this->fields = $fields;
         $this->voucher = $voucher;
+        $this->onlyData = $onlyData;
     }
 
     /**
@@ -50,26 +52,24 @@ class VoucherExportData
      */
     public function toArray(): array
     {
-        $assigned_to_identity = $this->voucher->identity_address && $this->voucher->is_granted;
+        $sponsor = $this->voucher->fund->organization;
+        $assigned = $this->voucher->identity_address && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
 
-        return array_merge($this->data_only ? [] : [
+        $bsnData = $sponsor->bsn_enabled ? [
+            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
+            'identity_bsn' =>  $assigned ? record_repo()->bsnByAddress($this->voucher->identity_address) : null
+        ]: [];
+
+        $export_data = array_merge($this->onlyData ? [] : [
             'name' => $this->name,
         ], [
-            'granted' => $assigned_to_identity ? 'Ja': 'Nee',
+            'granted' => $assigned ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
             'in_use_date' => format_date_locale($this->getFirstUsageDate()),
-        ], $this->voucher->product ? [
-            'product_name' => $this->voucher->product->name,
-        ] : [], $assigned_to_identity ? [
-            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
-            'identity_bsn' => record_repo()->bsnByAddress($this->voucher->identity_address),
-            'identity_email' => $identity ? $identity->primary_email->email : null,
-        ] : [
-            'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
-            'identity_bsn' => null,
-            'identity_email' => null,
-        ], [
+            'product_name' => $this->voucher->product ? $this->voucher->product->name : null,
+        ], $bsnData, [
+            'identity_email' => $assigned ? ($identity ? $identity->primary_email->email : null) : null,
             'state' => $this->voucher->state ?? null,
             'activation_code' => $this->voucher->activation_code ?? null,
             'activation_code_uid' => $this->voucher->activation_code_uid ?? null,
@@ -80,6 +80,8 @@ class VoucherExportData
             'created_at' => format_date_locale($this->voucher->created_at),
             'expire_at' => format_date_locale($this->voucher->expire_at),
         ]);
+
+        return array_only($export_data, array_merge(['name'], $this->fields));
     }
 
     /**
