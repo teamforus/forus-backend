@@ -33,7 +33,9 @@ class SearchProvidersRequest extends BaseFormRequest
         return [
             'q'                 => 'nullable|string',
             'business_type_id'  => 'nullable|exists:business_types,id',
-            'fund_id'           => $this->fundIdRules($this->implementation_model()),
+            'fund_id'           => $this->fundIdRules($this->implementation()),
+            'postcode'          => 'nullable|string|max:100',
+            'distance'          => 'nullable|integer|max:1000',
             'per_page'          => 'numeric|max:1000',
             'order_by'          => 'nullable|in:created_at',
             'order_by_dir'      => 'nullable|in:asc,desc',

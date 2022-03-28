@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\BankConnection;
 use App\Models\Fund;
 use App\Models\Employee;
 use App\Models\FundProvider;
@@ -169,6 +170,20 @@ class RouteServiceProvider extends ServiceProvider
                 'state'         => DigIdSession::STATE_PENDING_AUTH,
                 'session_uid'   => $digid_session_uid,
             ])->where('created_at', '>=', $sessionExpireTime)->firstOrFail();
+        });
+
+        $router->bind('bngBankConnectionToken', static function ($token) {
+            return BankConnection::whereRedirectToken($token)->whereHas('bank', function(Builder $builder) {
+                $builder->where('key', 'bng');
+            })->firstOrFail();
+        });
+
+        $router->bind('bngVoucherTransactionBulkToken', static function ($token) {
+            return VoucherTransactionBulk::whereRedirectToken($token)->where([
+                'state' => VoucherTransactionBulk::STATE_PENDING,
+            ])->whereHas('bank_connection.bank', function(Builder $builder) {
+                $builder->where('key', 'bng');
+            })->firstOrFail();
         });
 
         $router->bind('platform_config', static function ($value) {

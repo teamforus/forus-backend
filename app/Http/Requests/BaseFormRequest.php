@@ -80,7 +80,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return string|null
      * @noinspection PhpUnused
      */
-    public function implementation_key(): ?string {
+    public function implementation_key(): ?string
+    {
         return implementation_key();
     }
 
@@ -88,7 +89,8 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
      * @return Implementation|null
      * @noinspection PhpUnused
      */
-    public function implementation_model(): Implementation {
+    public function implementation(): Implementation
+    {
         return Implementation::active();
     }
 
@@ -160,5 +162,12 @@ class BaseFormRequest extends \Illuminate\Foundation\Http\FormRequest
     public function employee(Organization $organization): ?Employee
     {
         return $organization->findEmployee($this->auth_address());
+    }
+
+    /**
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Log\LogManager|null
+     */
+    public function logger() {
+        return logger();
     }
 }

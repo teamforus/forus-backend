@@ -20,7 +20,7 @@ class StartDigIdRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        $implementation = $this->implementation_model();
+        $implementation = $this->implementation();
         $clientType = $this->client_type();
 
         $isAuthenticated = $this->isAuthenticated();

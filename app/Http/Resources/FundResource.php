@@ -37,6 +37,7 @@ class FundResource extends Resource
             'id', 'name', 'description', 'description_html', 'description_short',
             'organization_id', 'state', 'notification_amount', 'type', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
+            'budget_provider',
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
@@ -57,9 +58,9 @@ class FundResource extends Resource
             }),
             'formula_products' => $fund->fund_formula_products->pluck('product_id'),
             'fund_amount' => $fund->amountFixedByFormula(),
-            'has_pending_fund_requests' => auth_address() ? $fund->fund_requests()->where(function(Builder $builder) {
+            'has_pending_fund_requests' => auth_address() && $fund->fund_requests()->where(function (Builder $builder) {
                 FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder, auth_address());
-            })->exists() : false,
+            })->exists(),
         ], $checkCriteria ? [
             'taken_by_partner' =>
                 ($fund->fund_config->hash_partner_deny ?? false) &&

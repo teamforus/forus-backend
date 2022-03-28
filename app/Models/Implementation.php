@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Resources\MediaResource;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\OfficeQuery;
 use App\Services\DigIdService\Repositories\DigIdRepo;
 use App\Services\Forus\Notification\EmailFrom;
 use App\Services\MediaService\MediaImageConfig;
@@ -649,6 +650,18 @@ class Implementation extends Model
                         );
                     });
                 });
+            });
+        }
+
+        if (array_get($options, 'postcode') && array_get($options, 'distance')) {
+            $geocodeService = resolve('geocode_api');
+            $location = $geocodeService->getLocation(array_get($options, 'postcode') . ', Netherlands');
+
+            $query->whereHas('offices', static function (Builder $builder) use ($location, $options) {
+                OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
+                    'lat' => $location ? $location['lat'] : 0,
+                    'lng' => $location ? $location['lng'] : 0,
+                ]);
             });
         }
 

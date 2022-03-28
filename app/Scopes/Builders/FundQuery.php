@@ -6,6 +6,7 @@ namespace App\Scopes\Builders;
 use App\Models\Fund;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class FundQuery
 {
@@ -189,5 +190,26 @@ class FundQuery
     public static function whereIsInternal(Builder $query): Builder
     {
         return $query->where('type', '!=', Fund::TYPE_EXTERNAL);
+    }
+
+    /**
+     * @param Builder|Relation $query
+     * @param string $balanceProvider
+     * @return Builder|Relation
+     */
+    public static function whereTopUpAndBalanceUpdateAvailable($query, string $balanceProvider)
+    {
+        return $query->whereHas('organization', function(Builder $builder) {
+            $builder->whereHas('bank_connection_active');
+        })->where(function(Builder $builder) {
+            FundQuery::whereIsInternal($builder);
+            FundQuery::whereIsConfiguredByForus($builder);
+        })->where(function(Builder $builder) use ($balanceProvider) {
+            if ($balanceProvider === Fund::BALANCE_PROVIDER_TOP_UPS) {
+                $builder->whereHas('top_ups');
+            }
+
+            $builder->where('balance_provider', $balanceProvider);
+        });
     }
 }

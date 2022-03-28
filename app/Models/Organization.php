@@ -851,8 +851,26 @@ class Organization extends Model
     }
 
     /**
-     * @return bool
+     * @return void
      */
+    public function updateFundBalancesByBankConnection(): void
+    {
+        /** @var Fund[] $funds */
+        $balanceProvider = Fund::BALANCE_PROVIDER_BANK_CONNECTION;
+        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($this->funds(), $balanceProvider)->get();
+        $balance = $funds->isNotEmpty() ? $this->bank_connection_active->fetchBalance() : null;
+
+        if ($funds->isNotEmpty() && $balance) {
+            foreach ($funds as $fund) {
+                $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
+            }
+        }
+    }
+    
+    /**
+     * @return void
+     */
+
     public function hasIConnectApiOin(): bool
     {
         return $this->isIconnectApiConfigured() && $this->bsn_enabled && !empty($this->iconnect_api_oin);

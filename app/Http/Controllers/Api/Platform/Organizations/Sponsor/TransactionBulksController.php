@@ -111,7 +111,14 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('resetBulk', [$transactionBulk, $organization]);
 
-        $transactionBulk->resetBulk($organization->findEmployee($request->auth_address()));
+        $employee = $request->employee($organization);
+        $implementation = $request->implementation();
+
+        if ($transactionBulk->bank_connection->bank->isBunq()) {
+            $transactionBulk->resetBulk($employee);
+        } else {
+            $transactionBulk->submitBulkToBNG($employee, $implementation);
+        }
 
         return new VoucherTransactionBulkResource($transactionBulk->load(
             VoucherTransactionBulkResource::load()
