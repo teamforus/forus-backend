@@ -76,6 +76,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Employee[] $employees_validator_managers
+ * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
  * @property-read Collection|\App\Models\FundFaq[] $faq
@@ -793,6 +795,24 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function employees_validator_managers(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles.permissions', static function(Builder $builder) {
+            $builder->where('key', 'manage_validators');
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */
@@ -1274,9 +1294,8 @@ class Fund extends Model
      * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(
-        ?FundCriterion $fundCriterion = null
-    ): array {
+    public function validatorEmployees(?FundCriterion $fundCriterion = null): array
+    {
         $employees = $this->employees_validators()->pluck('employees.identity_address');
         $externalEmployees = [];
 
