@@ -81,9 +81,27 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
+    public static function wherePending(Builder $builder): Builder
+    {
+        return $builder->where('state', Voucher::STATE_PENDING);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereDeactivated(Builder $builder): Builder
+    {
+        return $builder->where('state', Voucher::STATE_DEACTIVATED);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
     public static function whereNotExpiredAndActive(Builder $builder): Builder
     {
-        return self::whereActive(self::whereNotExpired($builder));
+        return self::whereNotExpired(self::whereActive($builder));
     }
 
     /**
@@ -92,7 +110,7 @@ class VoucherQuery
      */
     public static function whereNotExpiredAndPending(Builder $builder): Builder
     {
-        return self::whereNotExpired($builder)->where('state', Voucher::STATE_PENDING);
+        return self::whereNotExpired(self::wherePending($builder));
     }
 
     /**
@@ -101,7 +119,7 @@ class VoucherQuery
      */
     public static function whereNotExpiredAndDeactivated(Builder $builder): Builder
     {
-        return self::whereNotExpired($builder)->where('state', Voucher::STATE_DEACTIVATED);
+        return self::whereNotExpired(self::whereDeactivated($builder));
     }
 
     /**
