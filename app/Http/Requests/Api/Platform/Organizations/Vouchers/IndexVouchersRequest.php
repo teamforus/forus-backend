@@ -49,7 +49,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'type'              => 'required|in:fund_voucher,product_voucher',
             'unassigned'        => 'nullable|boolean',
             'source'            => 'required|in:all,user,employee',
-            'qr_format'         => 'nullable|in:pdf,png,all',
+            'qr_format'         => 'nullable|in:pdf,png,data,all',
             'data_format'       => 'nullable|in:csv,xls,all',
             'sort_by'           => 'nullable|in:amount,expire_at,created_at',
             'state'             => 'nullable|in:' . implode(',', $this->statesList()),
