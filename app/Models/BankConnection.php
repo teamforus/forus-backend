@@ -41,7 +41,7 @@ use Throwable;
  * @property string|null $consent_id
  * @property string|null $auth_url
  * @property array|null $auth_params
- * @property string|null $redirect_token
+ * @property string $redirect_token
  * @property string $access_token
  * @property string $code
  * @property array $context
@@ -55,7 +55,7 @@ use Throwable;
  * @property-read \App\Models\BankConnectionAccount|null $bank_connection_default_account
  * @property-read string|null $iban
  * @property-read \App\Models\Implementation $implementation
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
+ * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
