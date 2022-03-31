@@ -190,4 +190,13 @@ class FundQuery
     {
         return $query->where('type', '!=', Fund::TYPE_EXTERNAL);
     }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     */
+    public static function whereIsInternalConfiguredAndActive(Builder $query): Builder
+    {
+        return self::whereIsInternal(self::whereActiveFilter(self::whereIsConfiguredByForus($query)));
+    }
 }
