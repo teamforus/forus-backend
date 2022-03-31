@@ -37,7 +37,7 @@ class FundResource extends Resource
             'id', 'name', 'description', 'description_html', 'description_short',
             'organization_id', 'state', 'notification_amount', 'type', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'budget_provider',
+            'balance_provider',
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',

@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property int $id
  * @property int $bank_connection_id
- * @property string|null $monetary_account_id
- * @property string|null $monetary_account_iban
+ * @property string $monetary_account_id
+ * @property string $monetary_account_iban
  * @property string|null $monetary_account_name
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $created_at
