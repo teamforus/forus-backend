@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\BankConnection;
 use App\Models\VoucherTransactionBulk;
+use App\Services\BankService\Models\Bank;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,9 +34,18 @@ class BankVoucherTransactionBulksUpdateStateCommand extends Command
     public function handle(): void
     {
         /** @var VoucherTransactionBulk[]|Collection $bulks */
-        $bulksQuery = VoucherTransactionBulk::whereState(VoucherTransactionBulk::STATE_PENDING);
-        $bulks = $bulksQuery->whereHas('bank_connection', function(Builder $builder) {
+        $bulks = VoucherTransactionBulk::where([
+            'state' => VoucherTransactionBulk::STATE_PENDING,
+        ])->whereHas('bank_connection', function(Builder $builder) {
             $builder->where('state', '!=', BankConnection::STATE_INVALID);
+
+            $builder->whereHas('bank', function(Builder $builder) {
+                $builder->where('key', Bank::BANK_BUNQ);
+                $builder->orWhere(function(Builder $builder) {
+                    $builder->where('key', Bank::BANK_BNG);
+                    $builder->whereNotNull('access_token');
+                });
+            });
         })->get();
 
         foreach ($bulks as $transactionBulk) {
