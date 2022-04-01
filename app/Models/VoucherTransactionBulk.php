@@ -247,7 +247,7 @@ class VoucherTransactionBulk extends Model
             return DraftPayment::get($this->payment_id, $this->monetary_account_id)->getValue();
         }
 
-        if ($this->bank_connection->bank->isBNG()) {
+        if ($this->bank_connection->bank->isBNG() && $this->access_token) {
             /** @var BNGService $bngService */
             $bngService = resolve('bng_service');
 
