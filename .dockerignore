@@ -1,0 +1,11 @@
+.git
+.idea
+docker-cmd
+Dockerfile
+.DS_Store
+.gitignore
+readme.md
+readme-docker.md
+.env
+vendor
+docker-compose.yml
