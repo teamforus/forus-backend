@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * @noinspection PhpUnused
+ * @noinspection PhpIllegalPsrClassPathInspection
  */
 class CreateBankConnectionsTable extends Migration
 {

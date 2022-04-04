@@ -3,12 +3,12 @@
 namespace App\Http\Resources;
 
 use App\Models\VoucherTransactionBulk;
-use Illuminate\Http\Resources\Json\JsonResource;
+use App\Services\BankService\Resources\BankResource;
 
 /**
  * @property-read VoucherTransactionBulk $resource
  */
-class VoucherTransactionBulkResource extends JsonResource
+class VoucherTransactionBulkResource extends BaseJsonResource
 {
     /**
      * @return array
@@ -16,7 +16,8 @@ class VoucherTransactionBulkResource extends JsonResource
     static function load(): array
     {
         return [
-            'voucher_transactions'
+            'voucher_transactions',
+            'bank_connection.bank',
         ];
     }
 
@@ -29,13 +30,31 @@ class VoucherTransactionBulkResource extends JsonResource
     public function toArray($request): array
     {
         $transactionBulk = $this->resource;
+        $executionDate = $this->resource->execution_date;
 
         return array_merge($transactionBulk->only('id', 'state', 'state_locale', 'payment_id'), [
+            'auth_url' => $this->getAuthUrl($transactionBulk),
+            'bank' => new BankResource($transactionBulk->bank_connection->bank),
+            'execution_date' => $executionDate ? $executionDate->format('Y-m-d') : null,
+            'execution_date_locale' => format_date_locale($transactionBulk->execution_date),
             'voucher_transactions_amount' => $transactionBulk->voucher_transactions->sum('amount'),
             'voucher_transactions_count' => $transactionBulk->voucher_transactions->count(),
             'voucher_transactions_cost' => $transactionBulk->voucher_transactions->sum('transaction_cost'),
-            'created_at' => $transactionBulk->created_at ? $transactionBulk->created_at->format('Y-m-d H:i:s') : null,
-            'created_at_locale' => format_datetime_locale($transactionBulk->created_at),
-        ]);
+        ], $this->timestamps($this->resource, 'created_at'));
+    }
+
+    /**
+     * @param VoucherTransactionBulk $bulk
+     * @return string|null
+     */
+    private function getAuthUrl(VoucherTransactionBulk $bulk): ?string
+    {
+        $bank = $bulk->bank_connection->bank;
+
+        if ($bank->isBNG() && $bulk->isPending() && $bulk->execution_date->isFuture()) {
+            return $bulk->auth_url;
+        }
+
+        return null;
     }
 }

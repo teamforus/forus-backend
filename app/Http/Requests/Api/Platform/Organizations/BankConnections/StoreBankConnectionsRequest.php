@@ -29,8 +29,8 @@ class StoreBankConnectionsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        return [
+        return array_merge([
             'bank_id' => 'required|exists:banks,id',
-        ];
+        ]);
     }
 }

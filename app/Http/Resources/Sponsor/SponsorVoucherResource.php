@@ -61,10 +61,11 @@ class SponsorVoucherResource extends Resource
      * @param Voucher $voucher
      * @return array
      */
-    private function getProductDetails(Voucher $voucher): array {
+    private function getProductDetails(Voucher $voucher): array
+    {
         return array_merge($voucher->product->only([
             'id', 'name', 'description', 'price', 'total_amount', 'sold_amount',
-            'product_category_id', 'organization_id'
+            'product_category_id', 'organization_id',
         ]), [
             'product_category' => $voucher->product->product_category,
             'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : null,

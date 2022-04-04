@@ -49,12 +49,11 @@ class BankConnectionSubscriber
      */
     protected function makeEvent(BaseBankConnectionEvent $event, string $eventType): EventLog
     {
-        $logModels = $this->getBankConnectionLogModels(
-            $event->getBankConnection(),
-            $event->getEmployee()
+        return $event->getBankConnection()->log(
+            $eventType,
+            $event->getBankConnection()->getLogModels($event->getEmployee()),
+            $event->getData()
         );
-
-        return $event->getBankConnection()->log($eventType, $logModels, $event->getData());
     }
 
     /**
