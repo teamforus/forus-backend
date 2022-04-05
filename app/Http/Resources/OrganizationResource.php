@@ -82,10 +82,10 @@ class OrganizationResource extends Resource
             'validator_auto_accept_funds', 'description', 'description_html',
             'manage_provider_products', 'backoffice_available', 'reservations_auto_accept',
             'reservations_budget_enabled', 'reservations_subsidy_enabled',
-            'allow_batch_reservations',
+            'allow_batch_reservations', 'bsn_enabled'
         ]), $privateData, $ownerData, [
             'tags' => TagResource::collection($organization->tags),
-            'has_bank_connection' => (bool) !empty($organization->bank_connection_active),
+            'has_bank_connection' => !empty($organization->bank_connection_active),
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(
                 $organization->business_type

@@ -26,7 +26,8 @@ class BanksTableSeeder extends Seeder
     /**
      * @var string Bunq allows only one active oauth client
      */
-    protected $bunqContextFile = '/bank-contexts/bunq-data.json';
+    protected $bunqContextFile = '/bank-connections/bunq/bunq-data.json';
+    protected $bngContextFile = '/bank-connections/bng/bng-data.json';
 
     /**
      * Run the database seeds.
@@ -35,10 +36,38 @@ class BanksTableSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->bunqBank();
+        $this->bngBank();
+    }
+
+    /**
+     * @return void
+     */
+    protected function bngBank(): void
+    {
+        if ($this->hasBngContextFile()) {
+            echo "Using existing BNG context file from: ./storage$this->bngContextFile.\n";
+
+            Bank::firstOrCreate([
+                'name' => 'BNG',
+                'key' => 'bng',
+            ])->update([
+                'data' => json_decode(file_get_contents(storage_path($this->bngContextFile)), true),
+            ]);
+        } else {
+            $this->printWarning("No BNG context file at: ./storage$this->bngContextFile.");
+        }
+    }
+
+    /**
+     * @return void
+     */
+    protected function bunqBank(): void
+    {
         $hasBunqContextFile = $this->hasBunqContextFile();
 
         if ($hasBunqContextFile) {
-            echo "Using existing bank context file from: ./storage$this->bunqContextFile.\n";
+            echo "Using existing bunq context file from: ./storage$this->bunqContextFile.\n";
             $bank = $this->useExistingBunqBankInstallation();
         } else {
             echo "Making new bunq context installation.\n";
@@ -88,6 +117,14 @@ class BanksTableSeeder extends Seeder
     public function hasBunqContextFile(): bool
     {
         return file_exists(storage_path($this->bunqContextFile));
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasBngContextFile(): bool
+    {
+        return file_exists(storage_path($this->bngContextFile));
     }
 
     /**

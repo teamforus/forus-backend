@@ -27,10 +27,11 @@ class SponsorVoucherResource extends Resource
         $voucher = $this->resource;
         $address = $voucher->token_without_confirmation->address ?? null;
         $physical_cards = $voucher->physical_cards()->first();
+        $bsn_enabled = $voucher->fund->organization->bsn_enabled;
 
         if ($voucher->is_granted && $voucher->identity_address) {
-            $identity_bsn = $recordRepo->bsnByAddress($voucher->identity_address);
             $identity_email = $recordRepo->primaryEmailByAddress($voucher->identity_address);
+            $identity_bsn = $bsn_enabled ? $recordRepo->bsnByAddress($voucher->identity_address): null;
         }
 
         return array_merge($voucher->only([
@@ -42,7 +43,7 @@ class SponsorVoucherResource extends Resource
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'identity_bsn' => $identity_bsn ?? null,
             'identity_email' => $identity_email ?? null,
-            'relation_bsn' => $voucher->voucher_relation->bsn ?? null,
+            'relation_bsn' => $bsn_enabled ? $voucher->voucher_relation->bsn ?? null : null,
             'address' => $address ?? null,
             'fund' => array_merge($voucher->fund->only('id', 'name', 'organization_id', 'state', 'type'), [
                 'allow_physical_cards' => $voucher->fund->fund_config->allow_physical_cards ?? false,
@@ -60,10 +61,11 @@ class SponsorVoucherResource extends Resource
      * @param Voucher $voucher
      * @return array
      */
-    private function getProductDetails(Voucher $voucher): array {
+    private function getProductDetails(Voucher $voucher): array
+    {
         return array_merge($voucher->product->only([
             'id', 'name', 'description', 'price', 'total_amount', 'sold_amount',
-            'product_category_id', 'organization_id'
+            'product_category_id', 'organization_id',
         ]), [
             'product_category' => $voucher->product->product_category,
             'expire_at' => $voucher->product->expire_at ? $voucher->product->expire_at->format('Y-m-d') : null,

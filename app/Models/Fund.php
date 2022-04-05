@@ -18,7 +18,6 @@ use App\Models\Traits\HasTags;
 use App\Scopes\Builders\FundCriteriaQuery;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use App\Scopes\Builders\FundProviderQuery;
-use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
@@ -53,6 +52,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $external_link_text
  * @property string|null $type
  * @property string $state
+ * @property string $balance
+ * @property string $balance_provider
  * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -102,7 +103,6 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read float $budget_validated
  * @property-read string $description_html
  * @property-read bool $is_external
- * @property-read \App\Models\FundTopUp $top_up_model
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -150,6 +150,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static Builder|Fund query()
  * @method static Builder|Fund whereArchived($value)
  * @method static Builder|Fund whereAutoRequestsValidation($value)
+ * @method static Builder|Fund whereBalance($value)
+ * @method static Builder|Fund whereBalanceProvider($value)
  * @method static Builder|Fund whereCreatedAt($value)
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
@@ -195,11 +197,15 @@ class Fund extends Model
     public const EVENT_FUND_EXPIRING = 'fund_expiring';
     public const EVENT_ARCHIVED = 'archived';
     public const EVENT_UNARCHIVED = 'unarchived';
+    public const EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION = 'balance_updated_by_bank_connection';
 
     public const STATE_ACTIVE = 'active';
     public const STATE_CLOSED = 'closed';
     public const STATE_PAUSED = 'paused';
     public const STATE_WAITING = 'waiting';
+
+    public const BALANCE_PROVIDER_TOP_UPS = 'top_ups';
+    public const BALANCE_PROVIDER_BANK_CONNECTION = 'bank_connection_balance';
 
     public const STATES = [
         self::STATE_ACTIVE,
@@ -229,6 +235,7 @@ class Fund extends Model
         'default_validator_employee_id', 'auto_requests_validation',
         'criteria_editable_after_start', 'type', 'archived', 'description_short',
         'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title',
+        'balance',
     ];
 
     protected $hidden = [
@@ -486,6 +493,26 @@ class Fund extends Model
     }
 
     /**
+     * @param string $balance
+     * @param BankConnection $bankConnection
+     * @return $this
+     */
+    public function setBalance(string $balance, BankConnection $bankConnection): self
+    {
+        $this->update(compact('balance'));
+
+        $this->log(static::EVENT_BALANCE_UPDATED_BY_BANK_CONNECTION, [
+            'bank_connection' => $bankConnection,
+            'bank_connection_account' => $bankConnection->bank_connection_default_account,
+        ], [
+            'fund_balance' => $this->balance,
+            'fund_balance_provider' => $this->balance_provider,
+        ]);
+
+        return $this;
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      * @noinspection PhpUnusedPrivateMethodInspection
      */
@@ -578,7 +605,15 @@ class Fund extends Model
      */
     public function getBudgetTotalAttribute(): float
     {
-        return round($this->top_up_transactions->sum('amount'), 2);
+        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
+            return round($this->top_up_transactions->sum('amount'), 2);
+        }
+
+        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
+            return round(floatval($this->balance) + $this->budget_used, 2);
+        }
+
+        return 0;
     }
 
     /**
@@ -607,7 +642,15 @@ class Fund extends Model
      */
     public function getBudgetLeftAttribute(): float
     {
-        return round($this->budget_total - $this->budget_used, 2);
+        if ($this->balance_provider === static::BALANCE_PROVIDER_TOP_UPS) {
+            return round($this->budget_total - $this->budget_used, 2);
+        }
+
+        if ($this->balance_provider === static::BALANCE_PROVIDER_BANK_CONNECTION) {
+            return round($this->balance, 2);
+        }
+
+        return 0;
     }
 
     /**
@@ -1515,7 +1558,7 @@ class Fund extends Model
      * @return \App\Models\FundTopUp
      * @noinspection PhpUnused
      */
-    public function getTopUpModelAttribute(): FundTopUp
+    public function getOrCreateTopUp(): FundTopUp
     {
         /** @var FundTopUp $topUp */
         if ($this->top_ups()->count() > 0) {
@@ -1813,20 +1856,28 @@ class Fund extends Model
     }
 
     /**
+     * @param bool $skipEnabledCheck
      * @return ?BackofficeApi
      */
-    public function getBackofficeApi(): ?BackofficeApi
+    public function getBackofficeApi(bool $skipEnabledCheck = false): ?BackofficeApi
     {
-        return $this->isBackofficeApiAvailable() ? new BackofficeApi(record_repo(), $this) : null;
+        if ($this->isBackofficeApiAvailable($skipEnabledCheck)) {
+            return new BackofficeApi(record_repo(), $this);
+        }
+
+        return null;
     }
 
     /**
+     * @param bool $skipEnabledCheck
      * @return bool
      */
-    public function isBackofficeApiAvailable(): bool
+    public function isBackofficeApiAvailable(bool $skipEnabledCheck = false): bool
     {
-        return $this->organization->backoffice_available &&
-            $this->fund_config->backoffice_enabled;
+        return
+            $this->organization->bsn_enabled &&
+            $this->organization->backoffice_available &&
+            ($this->fund_config->backoffice_enabled || $skipEnabledCheck);
     }
 
     /**

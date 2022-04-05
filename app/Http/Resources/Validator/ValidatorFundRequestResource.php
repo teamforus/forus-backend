@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Validator;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Resources\FileResource;
 use App\Http\Resources\FundCriterionResource;
@@ -14,14 +15,13 @@ use App\Models\Organization;
 use App\Scopes\Builders\FundRequestQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class FundRequestResource
  * @property FundRequest $resource
  * @package App\Http\Resources
  */
-class ValidatorFundRequestResource extends Resource
+class ValidatorFundRequestResource extends BaseJsonResource
 {
     /**
      * @var string[]
@@ -45,24 +45,23 @@ class ValidatorFundRequestResource extends Resource
         $fundRequest = $this->resource;
         $criteria = FundCriterionResource::collection($fundRequest->fund->criteria);
 
+        /** @var Organization $organization */
+        $organization = $request->route('organization') or abort(403);
+        $bsn_enabled = $organization->bsn_enabled;
+
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
         ]), [
-            'created_at' => $fundRequest->created_at ? $fundRequest->created_at->format('Y-m-d H:i:s') : null,
-            'updated_at' => $fundRequest->updated_at ? $fundRequest->updated_at->format('Y-m-d H:i:s') : null,
             'fund' => array_merge($fundRequest->fund->only([
                 'id', 'name', 'description', 'organization_id', 'state', 'notification_amount', 'type',
             ]), [
                 'criteria' => $criteria,
                 'tags' => TagResource::collection($fundRequest->fund->tags),
             ]),
-            'bsn' => $recordRepo->bsnByAddress($fundRequest->identity_address),
-            'created_at_locale' => format_datetime_locale($this->resource->created_at),
-            'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
-            'resolved_at_locale' => format_datetime_locale($this->resource->resolved_at),
+            'bsn' => $bsn_enabled ? $recordRepo->bsnByAddress($fundRequest->identity_address) : null,
             'records' => $this->getRecordsData($request, $fundRequest),
             'replaced' => $fundRequest->isDisregarded() && $this->isReplaced($fundRequest),
-        ]);
+        ], $this->timestamps($fundRequest, 'created_at', 'updated_at', 'resolved_at'));
     }
 
     /**
@@ -78,6 +77,11 @@ class ValidatorFundRequestResource extends Resource
         })->where('id', '!=', $fundRequest->id)->exists();
     }
 
+    /**
+     * @param Request $request
+     * @param FundRequest $fundRequest
+     * @return array
+     */
     public function getRecordsData(Request $request, FundRequest $fundRequest): array
     {
         /** @var Organization $organization */
@@ -90,11 +94,12 @@ class ValidatorFundRequestResource extends Resource
         )->pluck('fund_request_records.id')->toArray();
 
         $records = [];
+        $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
 
         foreach ($fundRequest->records as $record) {
-            $records[] = static::recordToArray($record, $employee, in_array(
-                $record->id, $availableRecords
-            ));
+            if ($organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true)) {
+                $records[] = static::recordToArray($record, $employee, in_array($record->id, $availableRecords));
+            }
         }
 
         return $records;
