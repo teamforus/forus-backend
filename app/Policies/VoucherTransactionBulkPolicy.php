@@ -71,24 +71,28 @@ class VoucherTransactionBulkPolicy
      * Determine whether the user can build a new voucher transaction bulk.
      *
      * @param string $identity_address
-     * @param VoucherTransactionBulk $voucherTransactionBulk
+     * @param VoucherTransactionBulk $bulk
      * @param Organization $organization
      * @return bool|\Illuminate\Auth\Access\Response
      */
     public function resetBulk(
         string $identity_address,
-        VoucherTransactionBulk $voucherTransactionBulk,
+        VoucherTransactionBulk $bulk,
         Organization $organization
     ) {
-        $hasPermission =
-            $this->checkIntegrity($voucherTransactionBulk, $organization) &&
-            $organization->identityCan($identity_address, 'manage_transaction_bulks');
+        $integrityIsValid = $this->checkIntegrity($bulk, $organization);
+        $hasPermission = $organization->identityCan($identity_address, 'manage_transaction_bulks');
+        $bank = $bulk->bank_connection->bank;
 
-        if (!$voucherTransactionBulk->isRejected()) {
+        if ($bank->isBunq() && !$bulk->isRejected()) {
             return $this->deny("Only rejected bulks can be resent to the bank.");
         }
 
-        return $hasPermission;
+        if ($bank->isBunq() && (!$bulk->isPending() && !$bulk->isDraft() && !$bulk->isRejected())) {
+            return $this->deny("Only pending, draft and rejected bulks can be resent to the bank.");
+        }
+
+        return $integrityIsValid && $hasPermission;
     }
 
     /**
@@ -117,14 +121,15 @@ class VoucherTransactionBulkPolicy
 
     /**
      * Check that voucher transaction bulk belongs to given organization
-     * @param VoucherTransactionBulk $voucherTransactionBulk
+     * @param VoucherTransactionBulk $bulk
      * @param Organization $organization
      * @return bool
      */
-    protected function checkIntegrity(
-        VoucherTransactionBulk $voucherTransactionBulk,
-        Organization $organization
-    ): bool {
-        return $voucherTransactionBulk->bank_connection->organization_id == $organization->id;
+    protected function checkIntegrity(VoucherTransactionBulk $bulk, Organization $organization): bool
+    {
+        $bank = $bulk->bank_connection->bank;
+        $validBank = $bank->isBNG() || $bank->isBunq();
+
+        return $validBank && ($bulk->bank_connection->organization_id == $organization->id);
     }
 }

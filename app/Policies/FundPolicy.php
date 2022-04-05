@@ -60,13 +60,13 @@ class FundPolicy
     public function topUp($identity_address, Fund $fund, Organization $organization)
     {
         $hasPermission = $this->show($identity_address, $fund, $organization);
-        $hasBankConnection = $organization->bank_connection_active;
+        $bankConnection = $organization->bank_connection_active;
 
         if (!$fund->isConfigured()) {
             return false;
         }
 
-        if (!$organization->bank_connection_active->useContext()) {
+        if (!$bankConnection || ($bankConnection->bank->isBunq() && !$bankConnection->useContext())) {
             return $this->deny("Bank connection invalid or expired.", 403);
         }
 
@@ -74,7 +74,7 @@ class FundPolicy
             return $this->deny("Top-up not allowed for external funds", 403);
         }
 
-        return $hasPermission && $hasBankConnection;
+        return $hasPermission;
     }
 
     /**
