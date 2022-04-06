@@ -9,5 +9,6 @@ return [
         'rejected'  => 'Geweigerd',
         'disabled'  => 'Uitgeschakeld',
         'invalid'   => 'Ongeldig',
+        'error'     => 'Error',
     ],
 ];

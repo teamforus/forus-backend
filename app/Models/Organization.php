@@ -55,8 +55,8 @@ use Illuminate\Database\Query\Builder;
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $pre_approve_external_funds
- * @property bool $bsn_enabled
  * @property int $provider_throttling_value
+ * @property bool $bsn_enabled
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -120,6 +120,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
  * @method static EloquentBuilder|Organization whereCreatedAt($value)
@@ -848,5 +849,22 @@ class Organization extends Model
         Implementation $implementation
     ): BankConnection {
         return BankConnection::addConnection($bank, $employee, $this, $implementation);
+    }
+
+    /**
+     * @return void
+     */
+    public function updateFundBalancesByBankConnection(): void
+    {
+        /** @var Fund[] $funds */
+        $balanceProvider = Fund::BALANCE_PROVIDER_BANK_CONNECTION;
+        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($this->funds(), $balanceProvider)->get();
+        $balance = $funds->isNotEmpty() ? $this->bank_connection_active->fetchBalance() : null;
+
+        if ($funds->isNotEmpty() && $balance) {
+            foreach ($funds as $fund) {
+                $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
+            }
+        }
     }
 }

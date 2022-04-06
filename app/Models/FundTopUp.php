@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasDbTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 /**
  * App\Models\FundTopUp
  *
@@ -25,26 +29,30 @@ namespace App\Models;
  */
 class FundTopUp extends Model
 {
+    use HasDbTokens;
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'fund_id', 'amount', 'bunq_transaction_id', 'code', 'state'
+        'code', 'fund_id',
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fund() {
+    public function fund(): BelongsTo
+    {
         return $this->belongsTo(Fund::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function transactions() {
+    public function transactions(): HasMany
+    {
         return $this->hasMany(FundTopUpTransaction::class);
     }
 
@@ -52,13 +60,8 @@ class FundTopUp extends Model
      * Generate new top up code
      * @return string
      */
-    public static function generateCode() {
-        do {
-            $code = strtoupper(
-                token_generator()->generate(4,2)
-            );
-        } while(FundTopUp::query()->where('code', $code)->count() > 0);
-
-        return $code;
+    public static function generateCode(): string
+    {
+        return static::makeUniqueToken('code', 4, 2);
     }
 }

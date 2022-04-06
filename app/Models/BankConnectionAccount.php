@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $bank_connection_id
  * @property string $monetary_account_id
  * @property string $monetary_account_iban
+ * @property string|null $monetary_account_name
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereMonetaryAccountIban($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereMonetaryAccountId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereMonetaryAccountName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnectionAccount whereUpdatedAt($value)
  * @mixin \Eloquent
@@ -29,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
 class BankConnectionAccount extends Model
 {
     protected $fillable = [
-        'bank_connection_id', 'monetary_account_id', 'monetary_account_iban', 'type',
+        'bank_connection_id', 'monetary_account_id', 'monetary_account_iban',
+        'monetary_account_name', 'type',
     ];
 }
