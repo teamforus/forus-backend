@@ -6,14 +6,14 @@ services:
         user: forus
         uid: 1000
       context: ./
-      dockerfile: ./docker-compose/php/Dockerfile
+      dockerfile: ./docker/docker-compose/php/Dockerfile
     image: forus-backend
     container_name: forus-backend-app
     restart: unless-stopped
     working_dir: /var/www/
     volumes:
       - ./:/var/www
-      - ./docker-compose/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - ./docker/docker-compose/php/php.ini:/usr/local/etc/php/conf.d/php.ini
     ports:
       - "8000:80"
     depends_on:
@@ -34,7 +34,7 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
-      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+      - ./docker/docker-compose/mysql:/docker-entrypoint-initdb.d
     ports:
       - "33061:3306"
     networks:

@@ -28,7 +28,7 @@ docker-compose build
 Next you can run sh command, that will copy env file (if it's not exists), start images in containers and connect your folder with project to container (volume). 
 
 ``` 
-./docker-cmd/start-docker-compose.sh
+./docker/cmd/start-docker-compose.sh
 ```
 
 After you need to run composer installer, key generate and link to storage app (if you run project first time)
@@ -41,7 +41,7 @@ docker-compose exec app php artisan storage:link
 Or you can use next sh file to run all these commands:
 
 ``` 
-docker-compose exec app ./docker-cmd/install.sh 
+docker-compose exec app ./docker/cmd/install.sh 
 ```
 
 If you running project first time - maybe you need to set some configs (variables in .env or other files).  
@@ -61,7 +61,7 @@ docker-compose exec app php artisan db:seed --class LoremDbSeeder
 Or run next script for these two items (database migrations and test data seeders)
 
 ``` 
-docker-compose exec app ./docker-cmd/db-reset.sh 
+docker-compose exec app ./docker/cmd/db-reset.sh 
 ```
 
 If everything done - backend will be available on `http://localhost:8000` .
@@ -100,7 +100,7 @@ docker build -t forus-io/forus-backend .
 After you can run command to start docker containers (for php, apache2 and mysql)
 
 ``` 
-./docker-cmd/start.sh
+./docker/cmd/start.sh
 ```
 
 If you want to set some variables in .env - go to the editor and change what you need
@@ -128,5 +128,5 @@ docker network rm forus-network
 Or 
 
 ``` 
-./docker-cmd/stop.sh
+./docker/cmd/stop.sh
 ```
