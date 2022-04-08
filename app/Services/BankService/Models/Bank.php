@@ -35,6 +35,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Bank extends Model
 {
+    public const BANK_BNG = 'bng';
+    public const BANK_BUNQ = 'bunq';
+
     /**
      * @var array
      */
@@ -102,5 +105,21 @@ class Bank extends Model
     public function getContext(): ApiContext
     {
         return ApiContext::fromJson(json_encode($this->data['context']));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBunq(): bool
+    {
+        return $this->key === static::BANK_BUNQ;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBNG(): bool
+    {
+        return $this->key === static::BANK_BNG;
     }
 }

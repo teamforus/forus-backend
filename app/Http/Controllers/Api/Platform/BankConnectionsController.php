@@ -38,8 +38,9 @@ class BankConnectionsController extends Controller
 
             $bankConnection->update(compact('code', 'access_token'));
             $bankConnection->updateContext($bankConnection->makeNewContext());
-            $bankConnection->setMonetaryAccounts($bankConnection->getMonetaryAccounts());
+            $bankConnection->setMonetaryAccounts($bankConnection->fetchConnectionMonetaryAccounts());
             $bankConnection->setActive();
+            $bankConnection->updateFundBalances();
         } catch (BadResponseException $exception) {
             $errorBody = json_decode($exception->getResponse()->getBody()->getContents(), true);
 

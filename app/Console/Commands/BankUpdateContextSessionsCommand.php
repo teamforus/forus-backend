@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\BankConnection;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 
 class BankUpdateContextSessionsCommand extends Command
 {
@@ -30,7 +31,9 @@ class BankUpdateContextSessionsCommand extends Command
     public function handle(): void
     {
         /** @var BankConnection[] $bankConnections */
-        $bankConnections = BankConnection::whereState(BankConnection::STATE_ACTIVE)->get();
+        $bankConnections = BankConnection::whereHas('bank', function(Builder $builder) {
+            $builder->where('key', 'bunq');
+        })->whereState(BankConnection::STATE_ACTIVE)->get();
 
         foreach ($bankConnections as $bankConnection) {
             try {
