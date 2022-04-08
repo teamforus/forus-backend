@@ -10,6 +10,7 @@ use App\Services\IConnectApiService\Responses\Person;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * Class IConnect
@@ -38,6 +39,7 @@ class IConnect
     ];
 
     private string $iconnect_api_oin;
+    private string $iconnect_target_binding;
     private string $api_url;
 
     private int $cache_time;
@@ -46,9 +48,12 @@ class IConnect
 
     /**
      * @param string $iconnectApiOin
+     * @param string $targetBinding
+     * @param string $api_url
      */
-    public function __construct(string $iconnectApiOin)
-    {
+    public function __construct(
+        string $iconnectApiOin, string $targetBinding, string $api_url
+    ) {
         $configs = static::getConfigs();
 
         if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS)) {
@@ -59,11 +64,11 @@ class IConnect
         $this->cache_time = Arr::get($configs, 'cache_time', 60) * 60;
         $this->cert_trust_path = Arr::get($configs, 'cert_trust_path', '');
         $this->iconnect_api_oin = $iconnectApiOin;
+        $this->iconnect_target_binding = $targetBinding;
 
-        $this->api_url = [
-            'production' => self::URL_PRODUCTION,
-            'sandbox' => self::URL_SANDBOX,
-        ][Arr::get($configs, 'env')];
+        $this->api_url = Arr::get($configs, 'env') === self::ENV_SANDBOX
+            ? self::URL_SANDBOX
+            : Str::finish($api_url, '/');
     }
 
     /**
@@ -288,7 +293,7 @@ class IConnect
     {
         return [
             'apikey' => Arr::get($this->configs, 'header_key', ''),
-            'x-doelbinding' => Arr::get($this->configs, 'target_binding', ''),
+            'x-doelbinding' => $this->iconnect_target_binding,
             'x-origin-oin' => $this->iconnect_api_oin,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',

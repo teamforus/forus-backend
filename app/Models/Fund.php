@@ -22,6 +22,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\BackofficeApiService\BackofficeApi;
@@ -1910,5 +1911,37 @@ class Fund extends Model
         }
 
         return $default;
+    }
+
+    /**
+     * @return void
+     */
+    public function hasIConnectApiOin(): bool
+    {
+        return $this->isIconnectApiConfigured() &&
+            $this->organization->bsn_enabled &&
+            !empty($this->fund_config->iconnect_target_binding) &&
+            !empty($this->fund_config->iconnect_api_oin) &&
+            !empty($this->fund_config->iconnect_base_url);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isIconnectApiConfigured(): bool
+    {
+        return !empty(IConnect::getConfigs());
+    }
+
+    /**
+     * @return IConnect|null
+     */
+    public function getIConnect(): ?IConnect
+    {
+        return $this->hasIConnectApiOin() ? new IConnect(
+            $this->fund_config->iconnect_api_oin,
+            $this->fund_config->iconnect_target_binding,
+            $this->fund_config->iconnect_base_url
+        ) : null;
     }
 }

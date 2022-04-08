@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\Organization;
 use Illuminate\Http\JsonResponse;
@@ -16,16 +17,18 @@ class PersonBSNController extends Controller
 {
     /**
      * @param Organization $organization
+     * @param Fund $fund
      * @param $bsn
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Exception
      */
-    public function show(Organization $organization, $bsn): JsonResponse
+    public function show(Organization $organization, Fund $fund, $bsn): JsonResponse
     {
-        $this->authorize('viewPersonBSNData', [FundRequest::class, $organization]);
+        $this->authorize('viewPersonBSNData', [
+            FundRequest::class, $organization, $fund
+        ]);
 
-        $person = $organization->getIConnect()->getPerson($bsn, [
+        $person = $fund->getIConnect()->getPerson($bsn, [
             'parents', 'children', 'partners',
         ]);
 

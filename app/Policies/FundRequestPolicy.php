@@ -395,13 +395,16 @@ class FundRequestPolicy
     /**
      * @param string|null $identity_address
      * @param Organization $organization
+     * @param Fund $fund
      * @return bool
      * @noinspection PhpUnused
      */
-    public function viewPersonBSNData(?string $identity_address, Organization $organization): bool
-    {
-        return
-            $organization->hasIConnectApiOin() &&
+    public function viewPersonBSNData(
+        ?string $identity_address,
+        Organization $organization,
+        Fund $fund
+    ): bool {
+        return $fund->hasIConnectApiOin() &&
             $organization->identityCan($identity_address, 'view_person_bsn_data');
     }
 

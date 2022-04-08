@@ -109,6 +109,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         ]), [
             'criteria' => FundCriterionResource::collection($request->fund->criteria),
             'tags' => TagResource::collection($request->fund->tags),
+            'has_person_bsn_api' => $request->fund->hasIConnectApiOin(),
         ]);
     }
 

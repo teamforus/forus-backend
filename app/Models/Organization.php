@@ -12,7 +12,6 @@ use App\Services\BankService\Models\Bank;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Services\Forus\Session\Models\Session;
-use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\MediaService\Models\Media;
 use App\Traits\HasMarkdownDescription;
@@ -62,7 +61,6 @@ use Illuminate\Database\Query\Builder;
  * @property int $provider_throttling_value
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $iconnect_api_oin
  * @property-read \App\Models\BankConnection|null $bank_connection_active
  * @property-read Collection|\App\Models\BankConnection[] $bank_connections
  * @property-read int|null $bank_connections_count
@@ -194,7 +192,6 @@ class Organization extends Model
         'allow_batch_reservations'              => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
         'bsn_enabled'                           => 'boolean',
-        'iconnect_api_oin'                      => 'string',
     ];
 
     /**
@@ -865,30 +862,5 @@ class Organization extends Model
                 $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
             }
         }
-    }
-    
-    /**
-     * @return void
-     */
-
-    public function hasIConnectApiOin(): bool
-    {
-        return $this->isIconnectApiConfigured() && $this->bsn_enabled && !empty($this->iconnect_api_oin);
-    }
-
-    /**
-     * @return bool
-     */
-    private function isIconnectApiConfigured(): bool
-    {
-        return !empty(IConnect::getConfigs());
-    }
-
-    /**
-     * @return IConnect|null
-     */
-    public function getIConnect(): ?IConnect
-    {
-        return $this->hasIConnectApiOin() ? new IConnect($this->iconnect_api_oin) : null;
     }
 }
