@@ -21,6 +21,11 @@ class IdentityFundRequestApprovedNotification extends BaseIdentityFundRequestNot
     {
         /** @var FundRequest $fundRequest */
         $fundRequest = $this->eventLog->loggable;
+        $sponsor = $fundRequest->fund->organization;
+
+        if ($sponsor->fund_request_resolve_policy != $sponsor::FUND_REQUEST_POLICY_MANUAL) {
+            return;
+        }
 
         $mailable = new FundRequestApprovedMail(array_merge($this->eventLog->data, [
             'app_link'      => 'https://www.forus.io/DL',
