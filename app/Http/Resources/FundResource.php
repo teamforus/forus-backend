@@ -45,7 +45,7 @@ class FundResource extends BaseJsonResource
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
-            'organization_id', 'state', 'notification_amount', 'type', 'archived',
+            'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
             'balance_provider',
         ]), $fund->fund_config->only([

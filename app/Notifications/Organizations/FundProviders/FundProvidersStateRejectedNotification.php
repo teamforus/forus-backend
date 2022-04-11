@@ -3,16 +3,18 @@
 namespace App\Notifications\Organizations\FundProviders;
 
 use App\Mail\Funds\ProviderApprovedMail;
+use App\Mail\Funds\ProviderStateAcceptedMail;
+use App\Mail\Funds\ProviderStateRejectedMail;
 use App\Models\FundProvider;
 use App\Services\Forus\Identity\Models\Identity;
 
 /**
  * Notify fund provider that they can scan budget vouchers now
  */
-class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotification
+class FundProvidersStateRejectedNotification extends BaseFundProvidersNotification
 {
-    protected static $key = 'notifications_fund_providers.approved_budget';
-    protected static $pushKey = 'funds.provider_approved';
+    protected static $key = 'notifications_fund_providers.state_rejected';
+    protected static $pushKey = 'fund_providers.state_rejected';
 
     /**
      * @var string[]
@@ -28,13 +30,9 @@ class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotificat
         $fundProvider = $this->eventLog->loggable;
         $fund = $fundProvider->fund;
 
-        if (!$fundProvider->isAccepted()) {
-            return;
-        }
-
         $this->sendMailNotification(
             $identity->primary_email->email,
-            new ProviderApprovedMail(array_merge($this->eventLog->data, [
+            new ProviderStateRejectedMail(array_merge($this->eventLog->data, [
                 'provider_dashboard_link' => $fund->urlProviderDashboard(),
             ]), $fund->fund_config->implementation->getEmailFrom())
         );
