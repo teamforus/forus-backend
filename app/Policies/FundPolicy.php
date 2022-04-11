@@ -245,4 +245,21 @@ class FundPolicy
     {
         return $identity_address && $fund->public;
     }
+
+    /**
+     * @param string|null $identity_address
+     * @param Fund $fund
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewPersonBSNData(
+        ?string $identity_address,
+        Fund $fund,
+        Organization $organization
+    ): bool {
+        return $fund->organization_id === $organization->id && $fund->hasIConnectApiOin() &&
+            $organization->identityCan($identity_address, 'view_person_bsn_data');
+    }
+
 }

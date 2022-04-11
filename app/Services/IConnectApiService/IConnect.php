@@ -10,7 +10,9 @@ use App\Services\IConnectApiService\Responses\Person;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * Class IConnect
@@ -29,7 +31,6 @@ class IConnect
         self::ENV_PRODUCTION,
     ];
 
-    private const URL_PRODUCTION = 'https://api.locgov.nl/iconnect/brpmks/1.3.0/';
     private const URL_SANDBOX = 'https://apitest.locgov.nl/iconnect/brpmks/1.3.0/';
 
     private array $with = [
@@ -49,14 +50,12 @@ class IConnect
     /**
      * @param string $iconnectApiOin
      * @param string $targetBinding
-     * @param string $api_url
+     * @param string $apiUrl
      */
-    public function __construct(
-        string $iconnectApiOin, string $targetBinding, string $api_url
-    ) {
+    public function __construct(string $iconnectApiOin, string $targetBinding, string $apiUrl) {
         $configs = static::getConfigs();
 
-        if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS)) {
+        if (!in_array(Arr::get($configs, 'env'), self::ENVIRONMENTS, true)) {
             throw new RuntimeException('Invalid iConnection "env" type.');
         }
 
@@ -68,7 +67,7 @@ class IConnect
 
         $this->api_url = Arr::get($configs, 'env') === self::ENV_SANDBOX
             ? self::URL_SANDBOX
-            : Str::finish($api_url, '/');
+            : Str::finish($apiUrl, '/');
     }
 
     /**
@@ -155,7 +154,6 @@ class IConnect
      * @param array $with can contain parents,children,partners
      * @param array $fields can contain burgerservicenummer,naam.voorletters
      * @return Person|null
-     * @throws \Exception
      */
     public function getPerson(string $bsn, array $with = [], array $fields = []): ?Person
     {
@@ -322,11 +320,10 @@ class IConnect
      * @param array $query
      * @param callable $callback
      * @return mixed
-     * @throws \Exception
      */
     protected function remember(string $prefix, array $query, callable $callback): ?array
     {
-        return cache()->remember(
+        return Cache::remember(
             sprintf(self::CACHE_KEY . ".%s-%s", $prefix, http_build_query($query)),
             $this->cache_time,
             $callback

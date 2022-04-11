@@ -883,9 +883,9 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'index', 'show',
     ]);
 
-    $router->get(
-        'organizations/{organization_id}/funds/{fund}/person-bsn/{bsn}',
-        'Api\Platform\PersonBSNController@show'
+    $router->post(
+        'organizations/{organization_id}/funds/{fund}/person-bsn',
+        'Api\Platform\Organizations\FundsController@personBsn'
     );
 
 });
