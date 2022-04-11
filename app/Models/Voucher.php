@@ -835,7 +835,7 @@ class Voucher extends Model
     }
 
     /**
-     * @param Collection $vouchers
+     * @param Collection|Voucher[] $vouchers
      * @param array $fields
      * @param string $dataFormat
      * @param string|null $qrFormat
@@ -850,8 +850,6 @@ class Voucher extends Model
         $data = [];
 
         $domPdf = resolve('dompdf.wrapper');
-        $dataOnly = empty($qrFormat);
-
         $zipFile = tmpfile();
         $zipFilePath = stream_get_meta_data($zipFile)['uri'];
 
@@ -864,18 +862,19 @@ class Voucher extends Model
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher, $fields, $dataOnly);
-            } while(!$dataOnly && in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
+                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+            } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
-            $data[] = [
+            $dataItem = $data[] = [
                 'name' => $voucherData->getName(),
+                'value' => $voucher->token_without_confirmation->address,
                 'values' => $voucherData->toArray(),
                 'voucherData' => $voucherData,
             ];
 
             if (in_array($qrFormat, ['png', 'all'])) {
-                $pngPath = sprintf("images/%s.png", $voucherData->getName());
-                $pngData = make_qr_code('voucher', $voucher->token_without_confirmation->address);
+                $pngPath = sprintf("images/%s.png", $dataItem['name']);
+                $pngData = make_qr_code('voucher', $dataItem['value']);
 
                 $zip->addFromString($pngPath, $pngData);
             }
@@ -905,7 +904,12 @@ class Voucher extends Model
 
         $zip->close();
 
-        $data = Arr::pluck($data, 'values');
+        $data = array_map(function($item) use ($qrFormat) {
+            return array_merge($item['values'], array_only($item, $qrFormat == 'data' ? [
+                'name', 'value',
+            ] : []));
+        }, $data);
+
         $files['zip'] = file_get_contents($zipFilePath);
 
         return compact('files', 'data');
