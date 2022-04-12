@@ -37,7 +37,7 @@ class FundResource extends Resource
             'id', 'name', 'description', 'description_html', 'description_short',
             'organization_id', 'state', 'notification_amount', 'type', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
-            'budget_provider',
+            'balance_provider',
         ]), $fund->fund_config->only([
             'key', 'allow_fund_requests', 'allow_prevalidations', 'allow_direct_requests',
             'allow_blocking_vouchers', 'backoffice_fallback', 'is_configured',
@@ -141,19 +141,21 @@ class FundResource extends Resource
         $reservedAmount = VoucherQuery::whereNotExpiredAndActive($reservedQuery)->sum('amount');
 
         return [
-            'total'                     => currency_format($fund->budget_total),
-            'validated'                 => currency_format($fund->budget_validated),
-            'used'                      => currency_format($fund->budget_used),
-            'used_active_vouchers'      => currency_format($fund->budget_used_active_vouchers),
-            'left'                      => currency_format($fund->budget_left),
-            'transaction_costs'         => currency_format($fund->getTransactionCosts()),
-            'reserved'                  => round($reservedAmount, 2),
-            'vouchers_amount'           => currency_format($details['vouchers_amount']),
-            'vouchers_count'            => $details['vouchers_count'],
-            'active_vouchers_amount'    => currency_format($details['active_amount']),
-            'active_vouchers_count'     => $details['active_count'],
-            'inactive_vouchers_amount'  => currency_format($details['inactive_amount']),
-            'inactive_vouchers_count'   => $details['inactive_count'],
+            'total'                         => currency_format($fund->budget_total),
+            'validated'                     => currency_format($fund->budget_validated),
+            'used'                          => currency_format($fund->budget_used),
+            'used_active_vouchers'          => currency_format($fund->budget_used_active_vouchers),
+            'left'                          => currency_format($fund->budget_left),
+            'transaction_costs'             => currency_format($fund->getTransactionCosts()),
+            'reserved'                      => round($reservedAmount, 2),
+            'vouchers_amount'               => currency_format($details['vouchers_amount']),
+            'vouchers_count'                => $details['vouchers_count'],
+            'active_vouchers_amount'        => currency_format($details['active_amount']),
+            'active_vouchers_count'         => $details['active_count'],
+            'inactive_vouchers_amount'      => currency_format($details['inactive_amount']),
+            'inactive_vouchers_count'       => $details['inactive_count'],
+            'deactivated_vouchers_amount'   => currency_format($details['deactivated_amount']),
+            'deactivated_vouchers_count'    => $details['deactivated_count'],
         ];
     }
 

@@ -25,7 +25,7 @@ class VoucherExportData
      */
     public function __construct(Voucher $voucher, array $fields, ?bool $onlyData = false)
     {
-        $this->name = $onlyData ? null : token_generator()->generate(6, 2);
+        $this->name = token_generator()->generate(6, 2);
         $this->fields = $fields;
         $this->voucher = $voucher;
         $this->onlyData = $onlyData;

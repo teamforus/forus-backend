@@ -58,8 +58,9 @@ use Illuminate\Database\Query\Builder;
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
  * @property bool $pre_approve_external_funds
- * @property bool $bsn_enabled
  * @property int $provider_throttling_value
+ * @property string $fund_request_resolve_policy
+ * @property bool $bsn_enabled
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $iconnect_api_oin
@@ -124,6 +125,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
  * @method static EloquentBuilder|Organization whereCreatedAt($value)
@@ -131,6 +133,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereDescriptionText($value)
  * @method static EloquentBuilder|Organization whereEmail($value)
  * @method static EloquentBuilder|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder|Organization whereFundRequestResolvePolicy($value)
  * @method static EloquentBuilder|Organization whereIban($value)
  * @method static EloquentBuilder|Organization whereId($value)
  * @method static EloquentBuilder|Organization whereIdentityAddress($value)
@@ -159,6 +162,10 @@ class Organization extends Model
     use HasMedia, HasTags, HasLogs, HasDigests, HasMarkdownDescription;
 
     public const GENERIC_KVK = "00000000";
+
+    public const FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
+    public const FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
+    public const FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
 
     /**
      * The attributes that are mass assignable.
