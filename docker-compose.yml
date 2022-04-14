@@ -25,6 +25,7 @@ services:
     image: mysql:5.7
     container_name: forus-backend-db
     restart: unless-stopped
+    platform: linux/amd64
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}

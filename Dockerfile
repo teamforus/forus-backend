@@ -34,8 +34,7 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
-# Copy commands for database reset
-COPY docker/docker-compose/cmd/db-reset.sh /usr/local/bin/db-reset
+# Copy commands
 COPY docker/docker-compose/cmd/start-schedule.sh /usr/local/bin/start-schedule
 
 RUN chmod +x /usr/local/bin/db-reset /usr/local/bin/start-schedule
