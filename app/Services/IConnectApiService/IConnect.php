@@ -337,13 +337,13 @@ class IConnect
      */
     private function buildQuery(array $with = [], array $fields = []): array
     {
-        $with = array_only($this->with, array_keys($with));
+        $with = array_only($this->with, $with);
 
         sort($with);
         sort($fields);
 
         return array_filter([
-            'with' => implode(',', count($with) ? $with : []),
+            'expand' => implode(',', count($with) ? $with : []),
             'fields' => implode(',', count($fields) ? $fields : []),
         ]);
     }

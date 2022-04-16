@@ -8,6 +8,14 @@ namespace App\Services\IConnectApiService\Responses;
  */
 class ParentPerson extends BasePerson
 {
+    /**
+     * @return int
+     */
+    public function getIndex(): int
+    {
+        $array = explode("/", $this->raw['_links']['self']['href'] ?? '');
+        return (int)end($array);
+    }
 
     /**
      * @return string
@@ -31,6 +39,7 @@ class ParentPerson extends BasePerson
     public function getCustomDataArray(): array
     {
         return [
+            'index' => $this->getIndex(),
             'parent_type' => $this->getParentType(),
             'date_start_family_law_relationship' => $this->getDateStartFamilyLawRelationship(),
         ];

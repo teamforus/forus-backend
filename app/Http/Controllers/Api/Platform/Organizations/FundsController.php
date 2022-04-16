@@ -7,7 +7,6 @@ use App\Events\Funds\FundUpdatedEvent;
 use App\Exports\FundsExport;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceOverviewRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\FinanceRequest;
-use App\Http\Requests\Api\Platform\Organizations\Funds\PersonBSNRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundCriteriaRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundFaqRequest;
 use App\Http\Requests\Api\Platform\Organizations\Funds\StoreFundRequest;
@@ -455,25 +454,5 @@ class FundsController extends Controller
         $fund->unArchive($organization->findEmployee($request->auth_address()));
 
         return new FundResource($fund);
-    }
-
-    /**
-     * @param Organization $organization
-     * @param Fund $fund
-     * @param PersonBSNRequest $request
-     * @return JsonResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function personBsn(Organization $organization, Fund $fund, PersonBSNRequest $request): JsonResponse
-    {
-        $this->authorize('viewPersonBSNData', [$fund, $organization]);
-
-        $person = $fund->getIConnect()->getPerson($request->get('bsn'), [
-            'parents', 'children', 'partners',
-        ]);
-
-        return new JsonResponse([
-            'data' => $person ? $person->toArray() : null,
-        ]);
     }
 }

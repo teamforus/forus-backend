@@ -522,6 +522,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequestsController@export"
         );
 
+        $router->post(
+            'organizations/{organization}/fund-requests/{fund_request}/person-bsn',
+            "Api\Platform\Organizations\FundRequestsController@personBsn"
+        );
+
         $router->resource(
             'organizations/{organization}/fund-requests',
             "Api\Platform\Organizations\FundRequestsController", [
@@ -882,10 +887,4 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('banks', "Api\Platform\BanksController")->only([
         'index', 'show',
     ]);
-
-    $router->post(
-        'organizations/{organization_id}/funds/{fund}/person-bsn',
-        'Api\Platform\Organizations\FundsController@personBsn'
-    );
-
 });

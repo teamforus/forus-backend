@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\PersonBSNRequest;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Employee;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Http\Requests\Api\Platform\Funds\Requests\DeclineFundRequestsRequest;
@@ -246,5 +248,34 @@ class FundRequestsController extends Controller
             $organization,
             $request->employee($organization)
         ));
+    }
+
+    /**
+     * @param PersonBSNRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function personBsn(
+        PersonBSNRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): JsonResponse {
+        $this->authorize('viewPersonBSNData', [$fundRequest, $organization]);
+
+        $bsn = resolve('forus.services.record')->bsnByAddress($fundRequest->identity_address);
+        $person = $fundRequest->fund->getIConnect()->getPerson($bsn, [
+            'parents', 'children', 'partners',
+        ]);
+
+        if ($person && ($scope = $request->get('scope'))) {
+            $bsn = $person->getBsnByScope($scope, $request->get('scope_id'));
+            $person = $bsn ? $fundRequest->fund->getIConnect()->getPerson($bsn) : null;
+        }
+
+        return new JsonResponse([
+            'data' => $person ? $person->toArray() : null,
+        ]);
     }
 }

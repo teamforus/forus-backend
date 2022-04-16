@@ -444,6 +444,30 @@ class FundRequestPolicy
     }
 
     /**
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return bool|Response
+     * @noinspection PhpUnused
+     */
+    public function viewPersonBSNData(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Organization $organization
+    ) {
+        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
+            return $this->deny('invalid_endpoint');
+        }
+
+        if (!$organization->identityCan($identity_address, 'view_person_bsn_data')) {
+            return $this->deny('invalid_validator');
+        }
+
+        return $fundRequest->fund->hasIConnectApiOin() &&
+            resolve('forus.services.record')->bsnByAddress($fundRequest->identity_address);
+    }
+
+    /**
      * Throws an unauthorized exception.
      *
      * @param string $message

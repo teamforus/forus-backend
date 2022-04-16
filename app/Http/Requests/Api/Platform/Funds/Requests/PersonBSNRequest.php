@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Funds;
+namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 
@@ -28,7 +28,8 @@ class PersonBSNRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'bsn' => 'required|string|digits:9'
+            'scope' => 'nullable|in:parent,child,partner',
+            'scope_id' => 'required_with:scope|integer',
         ];
     }
 }

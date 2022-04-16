@@ -9,6 +9,15 @@ namespace App\Services\IConnectApiService\Responses;
 class Partner extends BasePerson
 {
     /**
+     * Only one partner can be so always '1'
+     * @return int
+     */
+    public function getIndex(): int
+    {
+        return 1;
+    }
+
+    /**
      * @return string
      */
     public function getTypeOfCommitment(): string
@@ -41,6 +50,7 @@ class Partner extends BasePerson
     public function getCustomDataArray(): array
     {
         return [
+            'index' => $this->getIndex(),
             'type_of_commitment' => $this->getTypeOfCommitment(),
             'date_start_marriage_partnership' => $this->getDateStartMarriagePartnership(),
             'place_start_marriage_partnership' => $this->getPlaceStartMarriagePartnership(),

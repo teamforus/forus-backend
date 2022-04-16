@@ -65,7 +65,7 @@ class Person extends BasePerson
     }
 
     /**
-     * @return ParentPerson[]
+     * @return array|ParentPerson[]
      */
     public function getParents(): array
     {
@@ -75,7 +75,7 @@ class Person extends BasePerson
     }
 
     /**
-     * @return array
+     * @return array|Child[]
      */
     public function getChildren(): array
     {
@@ -85,7 +85,7 @@ class Person extends BasePerson
     }
 
     /**
-     * @return array
+     * @return array|Partner[]
      */
     public function getPartners(): array
     {
@@ -117,5 +117,38 @@ class Person extends BasePerson
     private function responsesToArray(array $data = []): array
     {
         return array_map(fn(BasePerson $value) => $value->toArray(), $data);
+    }
+
+    /**
+     * @param string $scope
+     * @param int $scopeId
+     * @return string|null
+     */
+    public function getBsnByScope(string $scope, int $scopeId): ?string
+    {
+        switch ($scope) {
+            case 'parent':
+                $parent = array_values(array_filter(
+                    $this->getParents(),
+                    fn(ParentPerson $parent) => $parent->getIndex() === $scopeId
+                ));
+                $bsn = count($parent) ? $parent[0]->getBSN() : null;
+                break;
+            case 'child':
+                $child = array_values(array_filter(
+                    $this->getChildren(),
+                    fn(Child $child) => $child->getIndex() === $scopeId
+                ));
+                $bsn = count($child) ? $child[0]->getBSN() : null;
+                break;
+            case 'partner':
+                $partners = $this->getPartners();
+                $bsn = count($partners) ? $partners[0]->getBSN() : null;
+                break;
+            default:
+                return null;
+        }
+
+        return $bsn;
     }
 }
