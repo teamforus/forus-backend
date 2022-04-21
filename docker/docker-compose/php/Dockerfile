@@ -37,7 +37,7 @@ RUN mkdir -p /home/$user/.composer && \
 # Copy commands
 COPY docker/docker-compose/cmd/start-schedule.sh /usr/local/bin/start-schedule
 
-RUN chmod +x /usr/local/bin/db-reset /usr/local/bin/start-schedule
+RUN chmod +x /usr/local/bin/start-schedule
 
 # Apache2 conf
 ENV APACHE_DOCUMENT_ROOT=/var/www/public
