@@ -590,8 +590,8 @@ class LoremDbSeeder extends Seeder
             ) ? Fund::TYPE_SUBSIDIES : Fund::TYPE_BUDGET,
         ], $fields));
 
-        $transaction = $fund->top_up_model->transactions()->create([
-            'bunq_transaction_id' => "XXXX",
+        $transaction = $fund->getOrCreateTopUp()->transactions()->create([
+            'bank_transaction_id' => "XXXX",
             'amount' => 100000,
         ]);
 

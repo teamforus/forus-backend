@@ -7,25 +7,15 @@ use Illuminate\Contracts\Validation\Rule;
 class IbanRule implements Rule
 {
     /**
-     * Create a new rule instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * Determine if the validation rule passes.
      *
      * @param  string  $attribute
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
-        $valid = FALSE;
+        $valid = false;
 
         try {
             $valid = $this->isValidIBAN($value);
@@ -34,7 +24,12 @@ class IbanRule implements Rule
         return $valid;
     }
 
-    private function isValidIBAN ($iban) {
+    /**
+     * @param $iban
+     * @return bool
+     */
+    private function isValidIBAN ($iban): bool
+    {
         $iban = strtolower($iban);
 
         $Countries = array(
@@ -96,7 +91,7 @@ class IbanRule implements Rule
      *
      * @return string
      */
-    public function message()
+    public function message(): string
     {
         return trans('validation.iban');
     }

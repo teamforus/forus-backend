@@ -22,9 +22,10 @@ class TopUpResource extends Resource
     public function toArray($request): array
     {
         $bankConnection = $this->resource->fund->organization->bank_connection_active;
+        $bankConnectionAccount = $bankConnection->bank_connection_default_account;
 
         return array_merge($this->resource->only('id', 'code', 'state'), [
-            'iban' => $bankConnection->fetchActiveMonetaryAccountIban(),
+            'iban' => $bankConnectionAccount ? $bankConnectionAccount->monetary_account_iban : null,
             'created_at' => $this->resource->created_at->format('Y-m-d H:i:s'),
             'created_at_locale' => format_datetime_locale($this->resource->created_at),
         ]);
