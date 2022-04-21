@@ -130,7 +130,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
         foreach ($locales as $localeKey => $locale) {
             array_set($taxonomiesRaw, $localeKey, collect(
-                explode("\n", file_get_contents(database_path(
+                explode("\n\r", file_get_contents(database_path(
                     sprintf('/seeds/db/%s.%s.txt', $file, $locale)
                 ))))->filter(function ($row) {
                 return !empty($row) && !starts_with($row, ['#']);
