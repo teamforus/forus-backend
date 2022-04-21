@@ -9,6 +9,7 @@ use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\VoucherTransactionBulk;
+use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Throwable;
@@ -42,9 +43,11 @@ class TransactionBulksController extends Controller
             $builder->where('bank_connections.organization_id', $organization->id);
         });
 
-        return VoucherTransactionBulkResource::collection($query->with(
-            VoucherTransactionBulkResource::load()
-        )->paginate($request->input('per_page')));
+        return VoucherTransactionBulkResource::queryCollection(VoucherTransactionBulkQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ), $request);
     }
 
     /**
@@ -63,9 +66,7 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('show', [$voucherTransactionBulk, $organization]);
 
-        return new VoucherTransactionBulkResource($voucherTransactionBulk->load(
-            VoucherTransactionBulkResource::load()
-        ));
+        return VoucherTransactionBulkResource::create($voucherTransactionBulk);
     }
 
     /**
@@ -88,9 +89,7 @@ class TransactionBulksController extends Controller
         $bulks = VoucherTransactionBulk::buildBulksForOrganization($organization, $employee);
         $transactionBulks = VoucherTransactionBulk::query()->whereIn('id', $bulks);
 
-        return VoucherTransactionBulkResource::collection($transactionBulks->get()->load(
-            VoucherTransactionBulkResource::load()
-        ));
+        return VoucherTransactionBulkResource::queryCollection($transactionBulks);
     }
 
     /**
@@ -120,8 +119,6 @@ class TransactionBulksController extends Controller
             $transactionBulk->submitBulkToBNG($employee, $implementation);
         }
 
-        return new VoucherTransactionBulkResource($transactionBulk->load(
-            VoucherTransactionBulkResource::load()
-        ));
+        return VoucherTransactionBulkResource::create($transactionBulk);
     }
 }

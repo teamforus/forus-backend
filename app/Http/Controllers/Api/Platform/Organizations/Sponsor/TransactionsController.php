@@ -8,6 +8,7 @@ use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -49,9 +50,11 @@ class TransactionsController extends Controller
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
         $meta = compact('total_amount');
 
-        return SponsorVoucherTransactionResource::collection($query->with(
-            SponsorVoucherTransactionResource::load()
-        )->paginate($request->input('per_page')))->additional(compact('meta'));
+        return SponsorVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ))->additional(compact('meta'));
     }
 
     /**
@@ -92,8 +95,6 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucherTransaction, $organization]);
 
-        return new SponsorVoucherTransactionResource($voucherTransaction->load(
-            SponsorVoucherTransactionResource::load()
-        ));
+        return SponsorVoucherTransactionResource::create($voucherTransaction);
     }
 }

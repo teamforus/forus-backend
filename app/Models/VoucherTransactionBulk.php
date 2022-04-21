@@ -121,6 +121,10 @@ class VoucherTransactionBulk extends Model
         self::STATE_REJECTED,
     ];
 
+    public const SORT_BY_FIELDS = [
+        'id', 'amount', 'created_at', 'state', 'voucher_transactions_count',
+    ];
+
     protected $dates = [
         'execution_date',
     ];
@@ -173,6 +177,7 @@ class VoucherTransactionBulk extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getStateLocaleAttribute(): string
     {
