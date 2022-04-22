@@ -13,6 +13,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
 use App\Scopes\Builders\FundRequestQuery;
+use App\Services\Forus\Identity\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -59,6 +60,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
                 'tags' => TagResource::collection($fundRequest->fund->tags),
             ]),
             'bsn' => $bsn_enabled ? $recordRepo->bsnByAddress($fundRequest->identity_address) : null,
+            'email' => IdentityEmail::getEmailByAddress($fundRequest->identity_address),
             'records' => $this->getRecordsData($request, $fundRequest),
             'replaced' => $fundRequest->isDisregarded() && $this->isReplaced($fundRequest),
         ], $this->timestamps($fundRequest, 'created_at', 'updated_at', 'resolved_at'));
