@@ -48,6 +48,9 @@ class IndexTransactionsRequest extends FormRequest
             'product_category_ids'          => 'nullable|array',
             'product_category_ids.*'        => 'nullable|exists:product_categories,id',
             'voucher_transaction_bulk_id'   => 'nullable|exists:voucher_transaction_bulks,id',
+
+            'order_by'          => 'nullable|in:' . implode(',', VoucherTransaction::SORT_BY_FIELDS),
+            'order_dir'         => 'nullable|in:asc,desc',
         ];
     }
 }

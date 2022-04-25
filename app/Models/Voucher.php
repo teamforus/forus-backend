@@ -1170,7 +1170,10 @@ class Voucher extends Model
      */
     public function reportBackofficeReceived(): ?FundBackofficeLog
     {
-        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_received;
+        $voucherShouldReport =
+            !$this->parent_id &&
+            $this->identity_address &&
+            !$this->backoffice_log_received()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
@@ -1190,11 +1193,14 @@ class Voucher extends Model
     }
 
     /**
-     * @return null
+     * @return FundBackofficeLog|null
      */
-    public function reportBackofficeFirstUse()
+    public function reportBackofficeFirstUse(): ?FundBackofficeLog
     {
-        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_first_use;
+        $voucherShouldReport =
+            !$this->parent_id &&
+            $this->identity_address &&
+            !$this->backoffice_log_first_use()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();

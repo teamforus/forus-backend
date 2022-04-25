@@ -19,6 +19,7 @@ use App\Models\Organization;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class OrganizationsController
@@ -112,13 +113,17 @@ class OrganizationsController extends Controller
             $this->authorize('destroy', $media);
         }
 
-        $organization->update(array_merge($request->only([
+        $organization->update($request->only([
             'name', 'email', 'phone', 'kvk', 'btw', 'website',
             'email_public', 'phone_public', 'website_public',
             'business_type_id', 'description',
-        ]), $request->has('iban') ? [
-            'iban' => strtoupper($request->get('iban'))
-        ]: []));
+        ]));
+
+        if ($request->has('iban') && Gate::allows('updateIban', $organization)) {
+            $organization->update([
+                'iban' => strtoupper($request->get('iban'))
+            ]);
+        }
 
         if ($media instanceof Media && $media->type === 'organization_logo') {
             $organization->attachMedia($media);
@@ -134,6 +139,7 @@ class OrganizationsController extends Controller
      * @param Organization $organization
      * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function updateBusinessType(
         UpdateOrganizationBusinessTypeRequest $request,
@@ -153,6 +159,7 @@ class OrganizationsController extends Controller
      * @param Organization $organization
      * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function updateRoles(
         UpdateOrganizationRolesRequest $request,
@@ -173,6 +180,7 @@ class OrganizationsController extends Controller
      * @param Organization $organization
      * @return OrganizationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function updateAcceptReservations(
         UpdateOrganizationAcceptReservationsRequest $request,
