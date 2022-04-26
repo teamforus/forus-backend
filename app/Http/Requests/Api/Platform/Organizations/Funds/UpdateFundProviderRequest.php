@@ -41,18 +41,25 @@ class UpdateFundProviderRequest extends FormRequest
     /**
      * @return array
      */
-    private function baseRules(): array {
+    private function baseRules(): array
+    {
+        $states = [
+            FundProvider::STATE_ACCEPTED,
+            FundProvider::STATE_REJECTED,
+        ];
+
         return [
-            'allow_products' => 'nullable|boolean',
+            'state' => 'nullable|string|in:' . implode(',', $states),
             'allow_budget' => 'nullable|boolean',
-            'dismissed' => 'nullable|boolean',
+            'allow_products' => 'nullable|boolean',
         ];
     }
 
     /**
      * @return array
      */
-    private function enabledProductsRules(): array {
+    private function enabledProductsRules(): array
+    {
         return array_merge([
             'enable_products' => 'nullable|array',
             'enable_products.*.id' => ['required', 'numeric', Rule::exists('products', 'id')->where(
@@ -71,7 +78,8 @@ class UpdateFundProviderRequest extends FormRequest
     /**
      * @return array[]
      */
-    private function disabledProductsRules(): array {
+    private function disabledProductsRules(): array
+    {
         return [
             'disable_products' => 'nullable|array',
             'disable_products.*' => ['required', 'numeric', Rule::exists('products', 'id')->where(

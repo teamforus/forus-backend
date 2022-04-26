@@ -378,15 +378,18 @@ class VoucherPolicy
                     $product_id
                 )->pluck('organization_id');
 
-                $declined = $voucher->fund->providers()->where([
-                    'allow_budget' => false,
-                    'dismissed' => true,
-                ])->pluck('organization_id');
+                $declined = $voucher->fund->providers()->where(function(Builder $builder) {
+                    $builder->where('allow_budget', false);
+                    $builder->orWhere('state', FundProvider::STATE_REJECTED);
+                })->pluck('organization_id');
 
-                $pending = $voucher->fund->providers()->where([
-                    'allow_budget' => false,
-                    'dismissed' => false,
-                ])->pluck('organization_id');
+                $pending = $voucher->fund->providers()->where(function(Builder $builder) {
+                    $builder->where('state', FundProvider::STATE_PENDING);
+                    $builder->orWhere(function(Builder $builder) {
+                        $builder->where('state', FundProvider::STATE_ACCEPTED);
+                        $builder->where('allow_budget', false);
+                    });
+                })->pluck('organization_id');
             } else {
                 if ($voucher->product->expired) {
                     return $this->deny('product_expired');
@@ -408,13 +411,13 @@ class VoucherPolicy
                     $voucher->product_id
                 )->pluck('organization_id');
 
-                $declined = $voucher->fund->providers()->where([
-                    'dismissed' => true,
-                ])->pluck('organization_id')->diff($approved)->values();
+                $declined = $voucher->fund->providers()
+                    ->where('state', FundProvider::STATE_REJECTED)
+                    ->pluck('organization_id')->diff($approved)->values();
 
-                $pending = $voucher->fund->providers()->where([
-                    'dismissed' => false,
-                ])->pluck('organization_id')->diff($approved)->values();
+                $pending = $voucher->fund->providers()
+                    ->where('state', FundProvider::STATE_PENDING)
+                    ->pluck('organization_id')->diff($approved)->values();
             }
         } elseif ($voucher->fund->isTypeSubsidy()) {
             $approved = FundProviderQuery::whereApprovedForFundsFilter(
@@ -424,13 +427,13 @@ class VoucherPolicy
                 $voucher->product_id
             )->pluck('organization_id');
 
-            $declined = $voucher->fund->providers()->where([
-                'dismissed' => true,
-            ])->pluck('organization_id')->diff($approved)->values();
+            $declined = $voucher->fund->providers()
+                ->where('state', FundProvider::STATE_REJECTED)
+                ->pluck('organization_id')->diff($approved)->values();
 
-            $pending = $voucher->fund->providers()->where([
-                'dismissed' => false,
-            ])->pluck('organization_id')->diff($approved)->values();
+            $pending = $voucher->fund->providers()
+                ->where('state', FundProvider::STATE_PENDING)
+                ->pluck('organization_id')->diff($approved)->values();
         } else {
             return $this->deny('unknown_fund_type');
         }

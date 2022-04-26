@@ -38,14 +38,10 @@ class VoucherQuery
                     $builder->whereIn('organizations.id', (array) $organization_id);
                 }
 
-                OrganizationQuery::whereHasPermissions(
-                    $builder, $identity_address, 'scan_vouchers'
-                );
+                OrganizationQuery::whereHasPermissions($builder, $identity_address, 'scan_vouchers');
 
                 $builder->whereHas('fund_providers', static function(Builder $builder) use ($fund_id) {
-                    FundProviderQuery::whereApprovedForFundsFilter(
-                        $builder, $fund_id, 'product'
-                    );
+                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id, 'product');
                 });
             });
 

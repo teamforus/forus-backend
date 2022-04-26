@@ -790,7 +790,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource(
         'organizations/{organization}/sponsor/vouchers',
         "Api\Platform\Organizations\Sponsor\VouchersController"
-    )->only('index', 'show', 'store', 'update',);
+    )->only('index', 'show', 'store', 'update');
 
     $router->get('organizations/{organization}/sponsor/providers/finances',"Api\Platform\Organizations\Sponsor\ProvidersController@finances");
     $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");

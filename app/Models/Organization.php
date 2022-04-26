@@ -56,6 +56,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_batch_reservations
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
+ * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -128,6 +129,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereDescriptionText($value)
  * @method static EloquentBuilder|Organization whereEmail($value)
  * @method static EloquentBuilder|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder|Organization whereFundRequestResolvePolicy($value)
  * @method static EloquentBuilder|Organization whereIban($value)
  * @method static EloquentBuilder|Organization whereId($value)
  * @method static EloquentBuilder|Organization whereIdentityAddress($value)
@@ -465,10 +467,9 @@ class Organization extends Model
      */
     public function supplied_funds_approved(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(function(EloquentBuilder $builder) {
+        return $this->belongsToMany(Fund::class,'fund_providers')->where([
+            'fund_providers.state' => FundProvider::STATE_ACCEPTED
+        ])->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_budget', true);
             $builder->orWhere(function(EloquentBuilder $builder) {
                 $builder->where('fund_providers.allow_products', true);
@@ -487,6 +488,7 @@ class Organization extends Model
             Fund::class,
             'fund_providers'
         )->where(function(EloquentBuilder $builder) {
+            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
             $builder->where('fund_providers.allow_budget', true);
         });
     }
@@ -501,6 +503,7 @@ class Organization extends Model
             Fund::class,
             'fund_providers'
         )->where(static function(EloquentBuilder $builder) {
+            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
             $builder->where('fund_providers.allow_products', true);
         });
     }
