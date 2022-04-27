@@ -8,7 +8,7 @@ use App\Http\Requests\BaseFormRequest;
  * Class PersonBSNRequest
  * @package App\Http\Requests\Api\Platform\Organizations\Funds
  */
-class PersonBSNRequest extends BaseFormRequest
+class FundRequestPersonRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,7 +28,7 @@ class PersonBSNRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'scope' => 'nullable|in:parent,child,partner',
+            'scope' => 'nullable|in:parents,children,partners',
             'scope_id' => 'required_with:scope|integer',
         ];
     }

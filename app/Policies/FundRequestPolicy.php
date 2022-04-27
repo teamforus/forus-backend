@@ -463,8 +463,15 @@ class FundRequestPolicy
             return $this->deny('invalid_validator');
         }
 
-        return $fundRequest->fund->hasIConnectApiOin() &&
-            resolve('forus.services.record')->bsnByAddress($fundRequest->identity_address);
+        if (!resolve('forus.services.record')->bsnByAddress($fundRequest->identity_address)) {
+            return $this->deny('bsn_is_unknown');
+        }
+
+        if (!$fundRequest->fund->hasIConnectApiOin()) {
+            return $this->deny('iconnect_not_available');
+        }
+
+        return true;
     }
 
     /**

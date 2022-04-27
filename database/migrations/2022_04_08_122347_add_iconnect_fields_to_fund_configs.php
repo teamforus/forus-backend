@@ -4,6 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddIconnectFieldsToFundConfigs extends Migration
 {
     /**
@@ -11,7 +14,7 @@ class AddIconnectFieldsToFundConfigs extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
             $table->string('iconnect_target_binding')->nullable()->after('backoffice_fallback');
@@ -29,7 +32,7 @@ class AddIconnectFieldsToFundConfigs extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
             $table->string('iconnect_api_oin')->after('bsn_enabled')->nullable();

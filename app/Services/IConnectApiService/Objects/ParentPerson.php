@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\IConnectApiService\Responses;
+namespace App\Services\IConnectApiService\Objects;
 
 /**
  * Class ParentPerson
@@ -9,20 +9,11 @@ namespace App\Services\IConnectApiService\Responses;
 class ParentPerson extends BasePerson
 {
     /**
-     * @return int
-     */
-    public function getIndex(): int
-    {
-        $array = explode("/", $this->raw['_links']['self']['href'] ?? '');
-        return (int)end($array);
-    }
-
-    /**
      * @return string
      */
     public function getParentType(): string
     {
-        return $this->raw['ouderAanduiding'] ?? '';
+        return $this->data['ouderAanduiding'] ?? '';
     }
 
     /**
@@ -30,7 +21,7 @@ class ParentPerson extends BasePerson
      */
     public function getDateStartFamilyLawRelationship(): string
     {
-        return $this->raw['datumIngangFamilierechtelijkeBetrekking']['datum'] ?? '';
+        return $this->data['datumIngangFamilierechtelijkeBetrekking']['datum'] ?? '';
     }
 
     /**
