@@ -115,23 +115,4 @@ class IdentityEmail extends Model
             'verified' => true
         ]);
     }
-
-    /**
-     * @param string $identity_address
-     * @param string $type
-     * @return string|null
-     */
-    public static function getEmailByAddress(
-        string $identity_address, string $type = 'primary'
-    ): ?string {
-        $record = self::where('identity_address', $identity_address);
-
-        if ($type === 'primary') {
-            $record->where('primary', true);
-        } elseif ($type === 'initial') {
-            $record->where('initial', true);
-        }
-
-        return $record->first()->email ?? null;
-    }
 }

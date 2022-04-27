@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Events\FundRequests\FundRequestResolved;
+use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\FundRequestRecordQuery;
 use App\Services\EventLogService\Traits\HasLogs;
+use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +32,7 @@ use Illuminate\Http\Request;
  * @property-read \App\Models\Fund $fund
  * @property-read int|null $lead_time_days
  * @property-read string $lead_time_locale
+ * @property-read Identity $identity
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\FundRequestRecord[] $records
@@ -115,6 +118,14 @@ class FundRequest extends Model
     ];
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function identity(): BelongsTo
+    {
+        return $this->belongsTo(Identity::class, 'identity_address', 'address');
+    }
+
+    /**
      * @return int|null
      * @noinspection PhpUnused
      */
@@ -133,23 +144,19 @@ class FundRequest extends Model
     }
 
     /**
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param Organization $organization
      * @param string $identity_address
-     * @return FundRequest|\Illuminate\Database\Eloquent\Builder
+     * @return Builder|\Illuminate\Database\Query\Builder
      */
     public static function search(
         Request $request,
         Organization $organization,
         string $identity_address
     ) {
-        /** @var Builder $query */
-        $query = self::query();
-        $recordRepo = resolve('forus.services.record');
+        $query = static::query();
 
-        $query->whereHas('records', static function(
-            Builder $builder
-        ) use ($organization, $identity_address) {
+        $query->whereHas('records', static function(Builder $builder) use ($organization, $identity_address) {
             FundRequestRecordQuery::whereIdentityCanBeValidatorFilter(
                 $builder,
                 $identity_address,
@@ -158,15 +165,7 @@ class FundRequest extends Model
         });
 
         if ($request->has('q') && $q = $request->input('q')) {
-            $query->where(function (Builder $query) use ($q, $recordRepo) {
-                $query->whereHas('fund', static function(Builder $builder) use ($q) {
-                    $builder->where('name', 'LIKE', "%$q%");
-                });
-
-                if ($bsn_identity_address = $recordRepo->identityAddressByBsn($q)) {
-                    $query->orWhere('identity_address', '=', $bsn_identity_address);
-                }
-            });
+            FundRequestQuery::whereQueryFilter($query, $q);
         }
 
         if ($request->has('state') && $state = $request->input('state')) {
@@ -537,6 +536,7 @@ class FundRequest extends Model
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function isPending(): bool
     {
@@ -545,6 +545,7 @@ class FundRequest extends Model
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function isDisregarded(): bool
     {
@@ -553,6 +554,7 @@ class FundRequest extends Model
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function isApproved(): bool
     {
@@ -561,6 +563,7 @@ class FundRequest extends Model
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function isDeclined(): bool
     {
@@ -569,6 +572,7 @@ class FundRequest extends Model
 
     /**
      * @return bool
+     * @noinspection PhpUnused
      */
     public function isResolved(): bool
     {
