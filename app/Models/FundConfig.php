@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $backoffice_key
  * @property string|null $backoffice_certificate
  * @property bool $backoffice_fallback
+ * @property string|null $backoffice_not_eligible_redirect_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -49,6 +50,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeNotEligibleRedirectUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqAllowedIp($value)
@@ -74,7 +76,7 @@ class FundConfig extends Model
 {
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
-        'backoffice_certificate', 'backoffice_fallback',
+        'backoffice_certificate', 'backoffice_fallback', 'backoffice_not_eligible_redirect_url',
     ];
 
     /**
@@ -86,7 +88,7 @@ class FundConfig extends Model
         'csv_primary_key', 'subtract_transaction_costs',
         'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
         'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
-        'backoffice_certificate', 'backoffice_fallback',
+        'backoffice_certificate', 'backoffice_fallback', 'backoffice_not_eligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
     ];
 

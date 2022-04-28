@@ -166,7 +166,7 @@ class FundResource extends Resource
     private function getBackofficeData(Fund $fund): ?array
     {
         return $fund->fund_config ? $fund->fund_config->only([
-            'backoffice_enabled', 'backoffice_url',
+            'backoffice_enabled', 'backoffice_url', 'backoffice_not_eligible_redirect_url',
             'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
         ]): null;
     }

@@ -34,11 +34,12 @@ class UpdateFundBackofficeRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'backoffice_enabled'        => 'nullable|boolean',
-            'backoffice_url'            => 'nullable|string|min:0,2000|url|starts_with:https://',
-            'backoffice_key'            => 'nullable|string|min:0,200',
-            'backoffice_certificate'    => 'nullable|string|min:0,8000',
-            'backoffice_fallback'       => 'nullable|boolean',
+            'backoffice_enabled'                    => 'nullable|boolean',
+            'backoffice_url'                        => 'nullable|string|min:0|max:191|url|starts_with:https://',
+            'backoffice_key'                        => 'nullable|string|min:0|max:191',
+            'backoffice_certificate'                => 'nullable|string|min:0|max:8000',
+            'backoffice_fallback'                   => 'nullable|boolean',
+            'backoffice_not_eligible_redirect_url'  => 'nullable|string|min:0|max:200|url|starts_with:https://',
         ];
     }
 }

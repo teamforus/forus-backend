@@ -151,6 +151,11 @@ class DigIdController extends Controller
         if ($fund->organization->bsn_enabled && $hasBackoffice) {
             $backofficeResponse = $fund->checkBackofficeIfAvailable($identity);
 
+            if (!$backofficeResponse->isEligible() && $backofficeResponse->getLog()->success() &&
+                !empty($fund->fund_config->backoffice_not_eligible_redirect_url)) {
+                return redirect($fund->fund_config->backoffice_not_eligible_redirect_url);
+            }
+
             if ($backofficeResponse && !$backofficeResponse->getLog()->success()) {
                 $params['backoffice_error'] = 1;
                 $params['backoffice_fallback'] = $fund->fund_config->backoffice_fallback;
