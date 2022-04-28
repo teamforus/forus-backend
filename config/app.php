@@ -219,6 +219,8 @@ return [
 
         App\Services\EventLogService\EventLogServiceProvider::class,
         App\Services\BackofficeApiService\BackofficeApiServiceProvider::class,
+
+        App\Services\BNGService\BNGServiceProvider::class,
     ],
 
     /*

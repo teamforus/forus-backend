@@ -328,6 +328,7 @@ class EventLogService implements IEventLogService
             'bank_connection_account_id' => $bankConnectionAccount->id,
             'bank_connection_account_monetary_account_id' => $bankConnectionAccount->monetary_account_id,
             'bank_connection_account_monetary_account_iban' => $bankConnectionAccount->monetary_account_iban,
+            'bank_connection_account_monetary_account_name' => $bankConnectionAccount->monetary_account_name,
         ]);
     }
 
@@ -339,8 +340,15 @@ class EventLogService implements IEventLogService
     {
         return [
             'transaction_bulk_id' => $transactionBulk->id,
+            'transaction_bulk_code' => $transactionBulk->code,
             'transaction_bulk_state' => $transactionBulk->state,
+            'transaction_bulk_sepa_xml' => $transactionBulk->sepa_xml,
+            'transaction_bulk_auth_url' => $transactionBulk->auth_url,
+            'transaction_bulk_auth_params' => $transactionBulk->auth_params,
             'transaction_bulk_payment_id' => $transactionBulk->payment_id,
+            'transaction_bulk_access_token' => $transactionBulk->access_token,
+            'transaction_bulk_execution_date' => $transactionBulk->execution_date,
+            'transaction_bulk_redirect_token' => $transactionBulk->redirect_token,
             'transaction_bulk_monetary_account_id' => $transactionBulk->monetary_account_id,
         ];
     }

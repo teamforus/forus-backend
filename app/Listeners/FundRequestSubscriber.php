@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\FundRequests\FundRequestRecordDeclined;
 use App\Events\FundRequests\FundRequestCreated;
 use App\Events\FundRequests\FundRequestResolved;
+use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
@@ -13,7 +14,9 @@ use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotifica
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestCreatedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDeniedNotification;
+use App\Scopes\Builders\FundQuery;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Class FundRequestSubscriber
@@ -88,6 +91,24 @@ class FundRequestSubscriber
         }
 
         if ($fundRequest->isApproved()) {
+            /** @var Fund[] $funds */
+            $funds = [];
+            $sponsor = $fundRequest->fund->organization;
+            $resolvePolicy = $sponsor->fund_request_resolve_policy;
+            $sponsorFundsQuery = FundQuery::whereIsInternalConfiguredAndActive($sponsor->funds()->getQuery());
+
+            if ($resolvePolicy == $sponsor::FUND_REQUEST_POLICY_AUTO_REQUESTED) {
+                $funds = $sponsorFundsQuery->where('funds.id', $fundRequest->fund_id)->get();
+            } else if ($resolvePolicy == $sponsor::FUND_REQUEST_POLICY_AUTO_AVAILABLE) {
+                $funds = $sponsorFundsQuery->get();
+            }
+
+            foreach ($funds as $fund) {
+                if (Gate::forUser($fundRequest->identity_address)->allows('apply', $fund)) {
+                    $fund->makeVoucher($fundRequest->identity_address);
+                }
+            }
+
             IdentityFundRequestApprovedNotification::send($eventLog);
         } elseif (!$fundRequest->isDisregarded()) {
             IdentityFundRequestDeniedNotification::send($eventLog);

@@ -149,7 +149,7 @@ class DigIdSession extends Model
         return self::create([
             'client_type'           => $request->client_type(),
             'identity_address'      => $request->auth_address(),
-            'implementation_id'     => $request->implementation_model()->id,
+            'implementation_id'     => $request->implementation()->id,
             'state'                 => DigIdSession::STATE_CREATED,
             'session_uid'           => $token_generator->generate(100),
             'session_secret'        => $token_generator->generate(200),
@@ -291,7 +291,7 @@ class DigIdSession extends Model
         }
 
         if (($request->input('request') === 'auth')) {
-            return $request->implementation_model()->urlFrontend($request->client_type());
+            return $request->implementation()->urlFrontend($request->client_type());
         }
 
         return null;

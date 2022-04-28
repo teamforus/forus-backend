@@ -114,7 +114,9 @@ class Prevalidation extends Model
         /** @var Builder $query */
         $query = self::whereState(self::STATE_PENDING);
 
-        $query->where(static function (
+        $query->whereHas('fund.organization', function(Builder $builder) {
+            $builder->where('bsn_enabled', true);
+        })->where(static function (
             Builder $query
         ) use ($bsn_type_id, $bsn_hash_type_id, $bsn, $funds_with_hashed_bsn) {
             $query->whereHas('prevalidation_records', static function(

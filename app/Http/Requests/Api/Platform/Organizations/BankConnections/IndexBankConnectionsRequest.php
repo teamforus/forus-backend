@@ -30,7 +30,9 @@ class IndexBankConnectionsRequest extends BaseFormRequest
     public function rules(): array
     {
         $allowedStates = array_diff(BankConnection::STATES, [
+            BankConnection::STATE_REJECTED,
             BankConnection::STATE_PENDING,
+            BankConnection::STATE_ERROR,
         ]);
 
         return [

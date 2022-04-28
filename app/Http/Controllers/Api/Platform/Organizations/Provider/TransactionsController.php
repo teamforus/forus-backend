@@ -8,6 +8,7 @@ use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -28,17 +29,17 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        $transactionsQuery = VoucherTransaction::searchProvider($request, $organization)->with(
-            ProviderVoucherTransactionResource::$load
-        );
+        $query = VoucherTransaction::searchProvider($request, $organization);
         
         $meta = [
-            'total_amount' => currency_format($transactionsQuery->sum('amount'))
+            'total_amount' => currency_format((clone $query)->sum('amount')),
         ];
         
-        return ProviderVoucherTransactionResource::collection(
-            $transactionsQuery->paginate($request->input('per_page', 25))
-        )->additional(compact('meta'));
+        return ProviderVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ))->additional(compact('meta'));
     }
 
     /**
@@ -77,8 +78,6 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showProvider', [$voucherTransaction, $organization]);
 
-        return new ProviderVoucherTransactionResource($voucherTransaction->load(
-            ProviderVoucherTransactionResource::$load
-        ));
+        return ProviderVoucherTransactionResource::create($voucherTransaction);
     }
 }

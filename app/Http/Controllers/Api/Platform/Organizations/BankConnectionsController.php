@@ -29,6 +29,7 @@ class BankConnectionsController extends Controller
         $this->authorize('viewAny', [BankConnection::class, $organization]);
 
         $query = $organization->bank_connections()->whereNotIn('state', [
+            BankConnection::STATE_ERROR,
             BankConnection::STATE_PENDING,
             BankConnection::STATE_REJECTED,
         ])->orderByDesc('created_at');
@@ -54,15 +55,18 @@ class BankConnectionsController extends Controller
     ): BankConnectionResource {
         $this->authorize('store', [BankConnection::class, $organization]);
 
-        $bankConnection = $organization->makeBankConnection(
-            Bank::find($request->input('bank_id')),
-            $organization->findEmployee($request->auth_address()),
-            $request->implementation_model()
-        );
+        $bank = Bank::find($request->input('bank_id'));
+        $employee = $request->employee($organization);
+        $connection = $organization->makeBankConnection($bank, $employee, $request->implementation());
+        $auth_url = $connection->makeOauthUrl();
 
-        return BankConnectionResource::create($bankConnection)->additional([
-            'oauth_url' => $bankConnection->getOauthUrl(),
+        $connection->updateModel(is_string($auth_url) ? [
+            'auth_url' => $auth_url,
+        ] : [
+            'state' => $connection::STATE_ERROR,
         ]);
+
+        return BankConnectionResource::create($connection);
     }
 
     /**
@@ -110,6 +114,7 @@ class BankConnectionsController extends Controller
 
         if ($isActiveConnection && $bank_connection_account_id) {
             $bankConnection->switchBankConnectionAccount($bank_connection_account_id, $employee);
+            $bankConnection->updateFundBalances();
         }
 
         return BankConnectionResource::create($bankConnection);

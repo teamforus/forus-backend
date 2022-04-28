@@ -33,6 +33,8 @@ class IndexTransactionBulksRequest extends BaseFormRequest
     {
         return [
             'per_page' => $this->perPageRule(),
+            'order_by' => 'nullable|in:' . implode(',', VoucherTransactionBulk::SORT_BY_FIELDS),
+            'order_dir' => 'nullable|in:asc,desc',
         ];
     }
 }

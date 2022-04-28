@@ -141,14 +141,14 @@ class DigIdController extends Controller
         $isFirstSignUp = !$identity_bsn && !$bsn_identity;
         $hasBackoffice = $fund && $fund->fund_config && $fund->organization->backoffice_available;
 
-        if ($isFirstSignUp) {
+        if ($fund->organization->bsn_enabled && $isFirstSignUp) {
             $recordRepo->setBsnRecord($identity, $bsn);
         }
 
         Prevalidation::assignAvailableToIdentityByBsn($identity);
         Voucher::assignAvailableToIdentityByBsn($identity);
 
-        if ($hasBackoffice) {
+        if ($fund->organization->bsn_enabled && $hasBackoffice) {
             $backofficeResponse = $fund->checkBackofficeIfAvailable($identity);
 
             if ($backofficeResponse && !$backofficeResponse->getLog()->success()) {

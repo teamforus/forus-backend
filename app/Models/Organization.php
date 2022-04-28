@@ -56,6 +56,8 @@ use Illuminate\Database\Query\Builder;
  * @property bool $allow_batch_reservations
  * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
+ * @property string $fund_request_resolve_policy
+ * @property bool $bsn_enabled
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -119,6 +121,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
  * @method static EloquentBuilder|Organization whereCreatedAt($value)
@@ -126,6 +129,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereDescriptionText($value)
  * @method static EloquentBuilder|Organization whereEmail($value)
  * @method static EloquentBuilder|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder|Organization whereFundRequestResolvePolicy($value)
  * @method static EloquentBuilder|Organization whereIban($value)
  * @method static EloquentBuilder|Organization whereId($value)
  * @method static EloquentBuilder|Organization whereIdentityAddress($value)
@@ -154,6 +158,10 @@ class Organization extends Model
 
     public const GENERIC_KVK = "00000000";
 
+    public const FUND_REQUEST_POLICY_MANUAL = 'apply_manually';
+    public const FUND_REQUEST_POLICY_AUTO_REQUESTED = 'apply_auto_requested';
+    public const FUND_REQUEST_POLICY_AUTO_AVAILABLE = 'apply_auto_available';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -165,7 +173,7 @@ class Organization extends Model
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
-        'reservations_auto_accept',
+        'reservations_auto_accept', 'bsn_enabled'
     ];
 
     /**
@@ -187,6 +195,7 @@ class Organization extends Model
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
+        'bsn_enabled'                           => 'boolean'
     ];
 
     /**
@@ -846,5 +855,22 @@ class Organization extends Model
         Implementation $implementation
     ): BankConnection {
         return BankConnection::addConnection($bank, $employee, $this, $implementation);
+    }
+
+    /**
+     * @return void
+     */
+    public function updateFundBalancesByBankConnection(): void
+    {
+        /** @var Fund[] $funds */
+        $balanceProvider = Fund::BALANCE_PROVIDER_BANK_CONNECTION;
+        $funds = FundQuery::whereTopUpAndBalanceUpdateAvailable($this->funds(), $balanceProvider)->get();
+        $balance = $funds->isNotEmpty() ? $this->bank_connection_active->fetchBalance() : null;
+
+        if ($funds->isNotEmpty() && $balance) {
+            foreach ($funds as $fund) {
+                $fund->setBalance($balance->getAmount(), $this->bank_connection_active);
+            }
+        }
     }
 }

@@ -4,10 +4,12 @@ namespace App\Http\Requests\Api\Platform\Funds\Requests;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
+use App\Models\FundCriterion;
 use App\Rules\FundRequestFilesRule;
 use App\Rules\FundRequestRecordRecordTypeKeyRule;
 use App\Rules\FundRequestRecordValueRule;
 use App\Rules\RecordTypeKeyExistsRule;
+use Illuminate\Support\Arr;
 
 /**
  * Class StoreFundRequestRequest
@@ -59,17 +61,18 @@ class StoreFundRequestRequest extends BaseFormRequest
     /**
      * @return array
      */
-    public function messages(): array {
-        $recordRepo = resolve('forus.services.record');
+    public function messages(): array
+    {
         $messages = [];
 
-        foreach ($this->get('records') as $key => $val) {
-            if (isset($val['record_type_key'])) {
-                $recordTypeName = collect(
-                    $recordRepo->getRecordTypes()
-                )->firstWhere('key', $val['record_type_key'])['name'] ?? '';
+        foreach ($this->get('records') as $val) {
+            $record_type_key = Arr::get($val, 'record_type_key', false);
 
-                $messages["records.*.value.required"] = trans('validation.fund_request_request_field_incomplete');
+            if ($record_type_key) {
+                $prefix = (ends_with($record_type_key, '_eligible') ? 'eligible_' : '');
+
+                $messages["records.*.value.required"] =
+                    trans("validation.fund_request_request_{$prefix}field_incomplete");
             }
         }
 
