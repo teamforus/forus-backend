@@ -393,19 +393,6 @@ class FundRequestPolicy
     }
 
     /**
-     * @param string|null $identity_address
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function viewPersonBSNData(?string $identity_address, Organization $organization): bool
-    {
-        return
-            $organization->hasIConnectApiOin() &&
-            $organization->identityCan($identity_address, 'view_person_bsn_data');
-    }
-
-    /**
      * Determine whether the user can view the fundRequest.
      *
      * @param string|null $identity_address
@@ -454,6 +441,37 @@ class FundRequestPolicy
         }
 
         return $this->assignEmployeeAsSupervisor($identity_address, $fundRequest, $organization);
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param FundRequest $fundRequest
+     * @param Organization $organization
+     * @return bool|Response
+     * @noinspection PhpUnused
+     */
+    public function viewPersonBSNData(
+        ?string $identity_address,
+        FundRequest $fundRequest,
+        Organization $organization
+    ) {
+        if (!$this->checkIntegrityValidator($organization, $fundRequest)) {
+            return $this->deny('invalid_endpoint');
+        }
+
+        if (!$organization->identityCan($identity_address, 'view_person_bsn_data')) {
+            return $this->deny('invalid_validator');
+        }
+
+        if (!resolve('forus.services.record')->bsnByAddress($fundRequest->identity_address)) {
+            return $this->deny('bsn_is_unknown');
+        }
+
+        if (!$fundRequest->fund->hasIConnectApiOin()) {
+            return $this->deny('iconnect_not_available');
+        }
+
+        return true;
     }
 
     /**

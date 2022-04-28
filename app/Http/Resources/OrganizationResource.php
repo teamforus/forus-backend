@@ -83,7 +83,6 @@ class OrganizationResource extends Resource
         ]), $privateData, $ownerData, [
             'tags' => TagResource::collection($organization->tags),
             'has_bank_connection' => !empty($organization->bank_connection_active),
-            'has_person_bsn_api' => $organization->hasIConnectApiOin(),
             'logo' => !self::isRequested('logo') ? '_null_' : new MediaResource($organization->logo),
             'business_type' => $businessType ? new BusinessTypeResource(
                 $organization->business_type

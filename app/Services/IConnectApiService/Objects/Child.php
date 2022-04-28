@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\IConnectApiService\Responses;
+namespace App\Services\IConnectApiService\Objects;
 
 /**
  * Class ParentPerson
@@ -13,6 +13,8 @@ class Child extends BasePerson
      */
     public function getCustomDataArray(): array
     {
-        return [];
+        return [
+            'index' => $this->getIndex(),
+        ];
     }
 }

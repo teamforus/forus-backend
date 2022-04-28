@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Requests\Api\Platform\Funds\Requests\AssignEmployeeFundRequestRequest;
 use App\Http\Requests\Api\Platform\Funds\Requests\DisregardFundRequestsRequest;
+use App\Http\Requests\Api\Platform\Funds\Requests\FundRequestPersonRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\Arr\FundRequestPersonArrResource;
 use App\Models\Employee;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -84,6 +86,7 @@ class FundRequestsController extends Controller
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function resign(
         BaseFormRequest $request,
@@ -148,6 +151,7 @@ class FundRequestsController extends Controller
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException|\Exception
+     * @noinspection PhpUnused
      */
     public function disregard(
         DisregardFundRequestsRequest $request,
@@ -171,6 +175,7 @@ class FundRequestsController extends Controller
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function disregardUndo(
         BaseFormRequest $request,
@@ -192,6 +197,7 @@ class FundRequestsController extends Controller
      * @throws \Exception
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @noinspection PhpUnused
      */
     public function export(
         IndexFundRequestsRequest $request,
@@ -211,6 +217,7 @@ class FundRequestsController extends Controller
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function assignEmployee(
         AssignEmployeeFundRequestRequest $request,
@@ -234,6 +241,7 @@ class FundRequestsController extends Controller
      * @param FundRequest $fundRequest
      * @return ValidatorFundRequestResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function resignEmployee(
         BaseFormRequest $request,
@@ -246,5 +254,47 @@ class FundRequestsController extends Controller
             $organization,
             $request->employee($organization)
         ));
+    }
+
+    /**
+     * @param FundRequestPersonRequest $request
+     * @param Organization $organization
+     * @param FundRequest $fundRequest
+     * @return FundRequestPersonArrResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Throwable
+     * @noinspection PhpUnused
+     */
+    public function person(
+        FundRequestPersonRequest $request,
+        Organization $organization,
+        FundRequest $fundRequest
+    ): FundRequestPersonArrResource {
+        $this->authorize('viewPersonBSNData', [$fundRequest, $organization]);
+
+        $iConnect = $fundRequest->fund->getIConnect();
+        $bsn = $request->records_repo()->bsnByAddress($fundRequest->identity_address);
+        $person = $iConnect->getPerson($bsn, ['parents', 'children', 'partners']);
+
+        $scope = $request->input('scope');
+        $scope_id = $request->input('scope_id');
+
+        if ($person && $person->response()->success() && $scope && $scope_id) {
+            if (!$relation = $person->getRelatedByIndex($scope, $scope_id)) {
+                abort(404, 'Relation not found.');
+            }
+
+            $person = $relation->getBSN() ? $iConnect->getPerson($relation->getBSN()) : $relation;
+        }
+
+        if (!$person || $person->response() && $person->response()->error()) {
+            if ($person && $person->response()->getCode() === 404) {
+                abort(404, 'iConnect error, person not found.');
+            }
+
+            abort(400, $person ? 'iConnect, unknown error.' : 'iConnect, connection error.');
+        }
+
+        return new FundRequestPersonArrResource($person);
     }
 }

@@ -522,6 +522,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
             "Api\Platform\Organizations\FundRequestsController@export"
         );
 
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/person',
+            "Api\Platform\Organizations\FundRequestsController@person"
+        );
+
         $router->resource(
             'organizations/{organization}/fund-requests',
             "Api\Platform\Organizations\FundRequestsController", [
@@ -792,7 +797,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource(
         'organizations/{organization}/sponsor/vouchers',
         "Api\Platform\Organizations\Sponsor\VouchersController"
-    )->only('index', 'show', 'store', 'update',);
+    )->only('index', 'show', 'store', 'update');
 
     $router->get('organizations/{organization}/sponsor/providers/finances',"Api\Platform\Organizations\Sponsor\ProvidersController@finances");
     $router->get('organizations/{organization}/sponsor/providers/finances-export',"Api\Platform\Organizations\Sponsor\ProvidersController@exportFinances");
@@ -882,7 +887,4 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     $router->resource('banks', "Api\Platform\BanksController")->only([
         'index', 'show',
     ]);
-
-    $router->get('organizations/{organization_id}/person-bsn/{bsn}', 'Api\Platform\PersonBSNController@show');
-
 });

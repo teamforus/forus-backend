@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\IConnectApiService\Responses;
+namespace App\Services\IConnectApiService\Objects;
 
 /**
  * Class ParentPerson
@@ -13,7 +13,7 @@ class Partner extends BasePerson
      */
     public function getTypeOfCommitment(): string
     {
-        return $this->raw['soortVerbintenis'] ?? '';
+        return $this->data['soortVerbintenis'] ?? '';
     }
 
     /**
@@ -21,7 +21,7 @@ class Partner extends BasePerson
      */
     public function getDateStartMarriagePartnership(): string
     {
-        return $this->raw['aangaanHuwelijkPartnerschap']['datum']['datum'] ?? '';
+        return $this->data['aangaanHuwelijkPartnerschap']['datum']['datum'] ?? '';
     }
 
     /**
@@ -30,8 +30,8 @@ class Partner extends BasePerson
     public function getPlaceStartMarriagePartnership(): array
     {
         return [
-            'country' => $this->raw['aangaanHuwelijkPartnerschap']['land']['omschrijving'] ?? '',
-            'place' => $this->raw['aangaanHuwelijkPartnerschap']['plaats']['omschrijving'] ?? '',
+            'country' => $this->data['aangaanHuwelijkPartnerschap']['land']['omschrijving'] ?? '',
+            'place' => $this->data['aangaanHuwelijkPartnerschap']['plaats']['omschrijving'] ?? '',
         ];
     }
 
@@ -41,6 +41,7 @@ class Partner extends BasePerson
     public function getCustomDataArray(): array
     {
         return [
+            'index' => $this->getIndex(),
             'type_of_commitment' => $this->getTypeOfCommitment(),
             'date_start_marriage_partnership' => $this->getDateStartMarriagePartnership(),
             'place_start_marriage_partnership' => $this->getPlaceStartMarriagePartnership(),

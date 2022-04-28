@@ -7,6 +7,5 @@
   "key_storage_path": "/iconnect/certificates/client-key.pem",
   "key_pass": "",
   "cert_storage_trust_path": "/iconnect/certificates/cliq-apitest.locgov.nl_rsa.pem",
-  "target_binding": "BurgerlijkeStand",
   "header_key": ""
 }
