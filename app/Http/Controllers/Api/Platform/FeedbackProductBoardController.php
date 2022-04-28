@@ -21,9 +21,13 @@ class FeedbackProductBoardController extends Controller
      */
     public function store(StoreFeedbackProductBoardRequest $request): JsonResponse
     {
-        $data = array_merge($request->only(['title', 'content', 'tags',]), [
-            'customer_email' => resolve('forus.services.record')->primaryEmailByAddress(auth_address()),
-        ]);
+        $data = $request->only(['title', 'content', 'tags']);
+        if ($request->input('use_customer_email')) {
+            $data = array_merge($data, [
+                'customer_email' => resolve('forus.services.record')->primaryEmailByAddress(auth_address()),
+            ]);
+        }
+
         $apiResponse = resolve('productboard_api')->storeNote($data);
 
         return response()->json($data, $apiResponse['response_code']);

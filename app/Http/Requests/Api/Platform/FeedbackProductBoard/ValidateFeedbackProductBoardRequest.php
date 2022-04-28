@@ -28,6 +28,7 @@ class ValidateFeedbackProductBoardRequest extends FormRequest
             'tags'    => 'nullable|array',
             'tags.*'  => 'in:low,medium,high',
             'content' => 'required',
+            'use_customer_email' => 'required|boolean',
         ];
     }
 
