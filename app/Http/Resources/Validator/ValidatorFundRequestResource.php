@@ -31,6 +31,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         'records.files',
         'records.fund_request_clarifications',
         'fund.criteria.fund_criterion_validators.external_validator',
+        'identity.primary_email',
     ];
 
     /**
@@ -59,6 +60,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
                 'tags' => TagResource::collection($fundRequest->fund->tags),
             ]),
             'bsn' => $bsn_enabled ? $recordRepo->bsnByAddress($fundRequest->identity_address) : null,
+            'email' => $fundRequest->identity->primary_email->email ?? null,
             'records' => $this->getRecordsData($request, $fundRequest),
             'replaced' => $fundRequest->isDisregarded() && $this->isReplaced($fundRequest),
         ], $this->timestamps($fundRequest, 'created_at', 'updated_at', 'resolved_at'));
