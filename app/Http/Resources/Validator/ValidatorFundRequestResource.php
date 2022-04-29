@@ -35,6 +35,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         'records.employee.roles.translations',
         'records.employee.roles.permissions',
         'records.fund_request_clarifications',
+        'identity.primary_email',
         'fund.criteria.fund_criterion_validators.external_validator',
         'fund.tags',
     ];
@@ -63,6 +64,7 @@ class ValidatorFundRequestResource extends BaseJsonResource
         ]), [
             'bsn' => $bsn_enabled ? $recordRepo->bsnByAddress($fundRequest->identity_address) : null,
             'fund' => $this->fundDetails($fundRequest),
+            'email' => $fundRequest->identity->primary_email->email ?? null,
             'records' => $this->getRecordsDetails($organization, $fundRequest),
             'replaced' => $this->isReplaced($fundRequest),
             'allowed_employees' => $allowedEmployees->map(fn(Employee $employee) => $employee->only([

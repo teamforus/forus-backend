@@ -83,7 +83,6 @@ use Illuminate\Http\Request;
 class VoucherTransaction extends Model
 {
     use HasLogs;
-
     protected $perPage = 25;
 
     public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
@@ -100,6 +99,11 @@ class VoucherTransaction extends Model
         self::STATE_PENDING,
         self::STATE_SUCCESS,
         self::STATE_CANCELED,
+    ];
+
+    public const SORT_BY_FIELDS = [
+        'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
+        'fund_name', 'provider_name',
     ];
 
     /**
@@ -161,34 +165,43 @@ class VoucherTransaction extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
-    public function employee(): BelongsTo {
+    public function employee(): BelongsTo
+    {
         return $this->belongsTo(Employee::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function notes(): HasMany {
+    public function notes(): HasMany
+    {
         return $this->hasMany(VoucherTransactionNote::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function notes_sponsor(): HasMany {
+    public function notes_sponsor(): HasMany
+    {
         return $this->hasMany(VoucherTransactionNote::class)->where('group', 'sponsor');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
-    public function notes_provider(): HasMany {
+    public function notes_provider(): HasMany
+    {
         return $this->hasMany(VoucherTransactionNote::class)->where('group', 'provider');
     }
 
     /**
      * @return BelongsTo
+     * @noinspection PhpUnused
      */
     public function fund_provider_product(): BelongsTo
     {
@@ -215,6 +228,7 @@ class VoucherTransaction extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getStateLocaleAttribute(): string
     {
@@ -285,7 +299,7 @@ class VoucherTransaction extends Model
             });
         }
 
-        return $query->latest();
+        return $query;
     }
 
     /**
@@ -387,7 +401,11 @@ class VoucherTransaction extends Model
      */
     public static function exportProvider(Request $request, Organization $organization)
     {
-        return self::exportTransform(self::searchProvider($request, $organization));
+        return self::exportTransform(VoucherTransactionQuery::order(
+            self::searchProvider($request, $organization),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        ));
     }
 
     /**
@@ -403,7 +421,11 @@ class VoucherTransaction extends Model
         Fund $fund = null,
         Organization $provider = null
     ) {
-        return self::exportTransform(self::searchSponsor($request, $organization, $fund, $provider));
+        return self::exportTransform(VoucherTransactionQuery::order(
+            self::searchSponsor($request, $organization, $fund, $provider),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        ));
     }
     /**
      * @param string $group

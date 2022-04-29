@@ -3,6 +3,7 @@
 namespace App\Services\BNGService\Responses\Entries;
 
 use App\Services\BNGService\Data\PaymentInfoData;
+use App\Services\BNGService\Responses\Entries\Payment as PaymentBNG;
 use SimpleXMLElement;
 
 class BulkPayment
@@ -18,7 +19,7 @@ class BulkPayment
     /**
      * @param PaymentInitiator $paymentInitiator
      * @param Account $debtor
-     * @param array $payments
+     * @param PaymentBNG[] $payments
      * @param PaymentInfoData $paymentInfo
      * @param string|null $messageId
      */
@@ -48,6 +49,7 @@ class BulkPayment
 
     /**
      * @return PaymentInitiator
+     * @noinspection PhpUnused
      */
     public function getPaymentInitiator(): PaymentInitiator
     {
@@ -56,6 +58,7 @@ class BulkPayment
 
     /**
      * @return array
+     * @noinspection PhpUnused
      */
     public function getPayments(): array
     {
@@ -140,6 +143,7 @@ class BulkPayment
             $creditTransferTransactionInformation->addChild('Amt')->addChild('InstdAmt', $amount->getAmount())->addAttribute('Ccy', $amount->getCurrency());
             $creditTransferTransactionInformation->addChild('Cdtr')->addChild('Nm', $payment->getCreditor()->getName());
             $creditTransferTransactionInformation->addChild('CdtrAcct')->addChild('Id')->addChild('IBAN', $payment->getCreditor()->getIban());
+            $creditTransferTransactionInformation->addChild('RmtInf')->addChild('Ustrd', $payment->getDescription());
         }
 
         return $document->asXML();
