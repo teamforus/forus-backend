@@ -38,7 +38,7 @@ class SearchProductsRequest extends FormRequest
             'fund_id'               => 'nullable|exists:funds,id',
             'product_category_id'   => 'nullable|exists:product_categories,id',
             'fund_type'             => 'nullable|in:' . implode(',', Fund::TYPES),
-            'order_by'              => 'nullable|in:created_at,price_min,price_max,price',
+            'order_by'              => 'nullable|in:name,created_at,price_min,price_max,price',
             'order_by_dir'          => 'nullable|in:asc,desc',
             'simplified'            => 'nullable|bool',
         ];

@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\ApiAuthMiddleware;
 use App\Http\Middleware\ClientTypeMiddleware;
+use App\Http\Middleware\ClientVersionMiddleware;
 use App\Http\Middleware\DomainDigIdMiddleware;
 use App\Http\Middleware\DomainMiddleware;
 use App\Http\Middleware\EncryptCookies;
@@ -84,6 +85,7 @@ class Kernel extends HttpKernel
         'forus_session' => ForusSessionMiddleware::class,
         'implementation_key' => ImplementationKeyMiddleware::class,
         'client_key' => ClientTypeMiddleware::class,
+        'client_version' => ClientVersionMiddleware::class,
         'locale' => LocaleMiddleware::class,
         'domain' => DomainMiddleware::class,
         'domain.digid' => DomainDigIdMiddleware::class,

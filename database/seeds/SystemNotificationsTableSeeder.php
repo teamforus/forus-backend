@@ -17,6 +17,9 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_fund_providers.revoked_products" => [], // TODO can database notifications be removed
         "notifications_fund_providers.sponsor_message" => ["database"],
 
+        "notifications_fund_providers.state_accepted" => ["database", "mail"],
+        "notifications_fund_providers.state_rejected" => ["database", "mail"],
+
         "notifications_identities.requester_provider_approved_budget" => ["database"],
         "notifications_identities.requester_provider_approved_products" => [],// TODO can database notifications be removed
 
@@ -90,6 +93,8 @@ class SystemNotificationsTableSeeder extends Seeder
     protected $optionalNotifications = [
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
+        'notifications_fund_providers.state_accepted',
+        'notifications_fund_providers.state_rejected',
         'notifications_identities.identity_voucher_assigned_budget',
         'notifications_identities.identity_voucher_assigned_subsidy',
         'notifications_identities.identity_voucher_assigned_product',
@@ -101,6 +106,8 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.sponsor_message',
+        'notifications_fund_providers.state_accepted',
+        'notifications_fund_providers.state_rejected',
 
         'notifications_identities.requester_provider_approved_budget',
 
@@ -144,6 +151,8 @@ class SystemNotificationsTableSeeder extends Seeder
     protected $editableNotifications = [
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
+        'notifications_fund_providers.state_accepted',
+        'notifications_fund_providers.state_rejected',
 
         'notifications_identities.fund_request_created',
         'notifications_identities.fund_request_approved',
@@ -203,6 +212,8 @@ class SystemNotificationsTableSeeder extends Seeder
         "provider_fund_requests" => [
             "notifications_fund_providers.approved_budget",
             "notifications_fund_providers.approved_products",
+            'notifications_fund_providers.state_accepted',
+            'notifications_fund_providers.state_rejected',
             "notifications_products.approved",
             "notifications_fund_providers.revoked_budget",
             "notifications_fund_providers.revoked_products",

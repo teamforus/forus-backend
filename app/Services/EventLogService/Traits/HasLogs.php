@@ -2,6 +2,7 @@
 
 namespace App\Services\EventLogService\Traits;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Services\EventLogService\EventLogService;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -28,6 +29,7 @@ trait HasLogs
     ): EventLog {
         $identity_address = $identity_address ?: auth_address();
         $logService = resolve(EventLogService::class);
+        $request = BaseFormRequest::createFromGlobals();
 
         $meta = array_reduce(array_keys(array_filter($models, static function($model) {
             return $model !== null;
@@ -36,8 +38,9 @@ trait HasLogs
         }, []);
 
         $data = array_merge([
-            'client_type' => client_type(),
-            'implementation_key' => implementation_key(),
+            'client_type' => $request->client_type(),
+            'client_version' => $request->client_version(),
+            'implementation_key' => $request->implementation_key(),
         ], $meta, $raw_meta);
 
         return $this->logs()->create(compact('data', 'event', 'identity_address'));

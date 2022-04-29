@@ -9,6 +9,7 @@ use App\Events\FundProviders\FundProviderReplied;
 use App\Events\FundProviders\FundProviderRevokedBudget;
 use App\Events\FundProviders\FundProviderRevokedProducts;
 use App\Events\FundProviders\FundProviderSponsorChatMessage;
+use App\Events\FundProviders\FundProviderStateUpdated;
 use App\Models\FundProvider;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedBudgetNotification;
 use App\Notifications\Organizations\FundProviders\FundProvidersApprovedProductsNotification;
@@ -17,6 +18,8 @@ use App\Notifications\Organizations\FundProviders\FundProvidersRevokedBudgetNoti
 use App\Notifications\Organizations\FundProviders\FundProvidersRevokedProductsNotification;
 use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedBudgetNotification;
 use App\Notifications\Identities\Fund\IdentityRequesterProviderApprovedProductsNotification;
+use App\Notifications\Organizations\FundProviders\FundProvidersStateAcceptedNotification;
+use App\Notifications\Organizations\FundProviders\FundProvidersStateRejectedNotification;
 use Illuminate\Events\Dispatcher;
 
 /**
@@ -37,6 +40,38 @@ class FundProviderSubscriber
             'sponsor' => $fundProvider->fund->organization,
             'fund' => $fundProvider->fund,
         ];
+    }
+
+    /**
+     * @param FundProviderStateUpdated $event
+     */
+    public function onStateUpdated(FundProviderStateUpdated $event): void
+    {
+        $fundProvider = $event->getFundProvider();
+        $models = $this->getFundProviderLogModels($fundProvider);
+        $originalState = $event->getOriginalState();
+
+        $raw = [
+            'fund_provider_approved_before' => $event->getApprovedBefore(),
+            'fund_provider_approved_after' => $event->getApprovedAfter(),
+            'fund_provider_original_state' => $originalState,
+        ];
+
+        if ($fundProvider->isAccepted()) {
+            $eventLog = $fundProvider->log($fundProvider::EVENT_STATE_ACCEPTED, $models, $raw);
+
+            if ($event->getApprovedAfter() || ($originalState == $fundProvider::STATE_PENDING)) {
+                FundProvidersStateAcceptedNotification::send($eventLog);
+            }
+        }
+
+        if ($fundProvider->isRejected()) {
+            $eventLog = $fundProvider->log($fundProvider::EVENT_STATE_REJECTED, $models, $raw);
+
+            if ($event->getApprovedBefore() || ($originalState == $fundProvider::STATE_PENDING)) {
+                FundProvidersStateRejectedNotification::send($eventLog);
+            }
+        }
     }
 
     /**
@@ -133,6 +168,11 @@ class FundProviderSubscriber
      */
     public function subscribe(Dispatcher $events): void
     {
+        $events->listen(
+            FundProviderStateUpdated::class,
+            '\App\Listeners\FundProviderSubscriber@onStateUpdated'
+        );
+
         $events->listen(
             FundProviderApprovedBudget::class,
             '\App\Listeners\FundProviderSubscriber@onApprovedBudget'

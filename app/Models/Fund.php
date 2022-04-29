@@ -103,6 +103,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read float $budget_validated
  * @property-read string $description_html
  * @property-read bool $is_external
+ * @property-read string $type_locale
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -117,20 +118,10 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read int|null $provider_organizations_count
  * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved
  * @property-read int|null $provider_organizations_approved_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved_budget
- * @property-read int|null $provider_organizations_approved_budget_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved_products
- * @property-read int|null $provider_organizations_approved_products_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_declined
- * @property-read int|null $provider_organizations_declined_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_pending
- * @property-read int|null $provider_organizations_pending_count
  * @property-read Collection|\App\Models\FundProvider[] $providers
  * @property-read int|null $providers_count
  * @property-read Collection|\App\Models\FundProvider[] $providers_allowed_products
  * @property-read int|null $providers_allowed_products_count
- * @property-read Collection|\App\Models\FundProvider[] $providers_approved
- * @property-read int|null $providers_approved_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read Collection|\App\Models\Tag[] $tags_provider
@@ -333,18 +324,6 @@ class Fund extends Model
     public function providers(): HasMany
     {
         return $this->hasMany(FundProvider::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function providers_approved(): HasMany
-    {
-        return $this->hasMany(FundProvider::class)->where(static function(Builder $builder) {
-            $builder->where('allow_budget', true);
-            $builder->orWhere('allow_products', true);
-            $builder->orWhere('allow_some_products', true);
-        });
     }
 
     /**
@@ -600,6 +579,18 @@ class Fund extends Model
     }
 
     /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getTypeLocaleAttribute(): string
+    {
+        return [
+            self::TYPE_SUBSIDIES => 'Acties',
+            self::TYPE_BUDGET => 'Budget',
+        ][$this->type] ?? $this->type;
+    }
+
+    /**
      * @return float
      * @noinspection PhpUnused
      */
@@ -687,10 +678,9 @@ class Fund extends Model
      */
     public function provider_organizations_approved(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        )->where(static function(Builder $builder) {
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
+            'state' => FundProvider::STATE_ACCEPTED,
+        ])->where(static function(Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
             $builder->orWhere('allow_some_products', true);
@@ -701,61 +691,9 @@ class Fund extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      * @noinspection PhpUnused
      */
-    public function provider_organizations_approved_budget(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class,
-            'fund_providers'
-        )->where(static function(Builder $builder) {
-            $builder->where('allow_budget', true);
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function provider_organizations_approved_products(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class, 'fund_providers')->where(static function(Builder $builder) {
-            $builder->where('allow_products', true);
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function provider_organizations_declined(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
-            'allow_budget' => false,
-            'allow_products' => false,
-            'dismissed' => true,
-        ]);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function provider_organizations_pending(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
-            'allow_budget' => false,
-            'allow_products' => false,
-        ]);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
     public function provider_organizations(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        );
+        return $this->belongsToMany(Organization::class, 'fund_providers');
     }
 
     /**
