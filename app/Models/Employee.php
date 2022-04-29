@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\EventLogService\Traits\HasLogs;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -15,7 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $organization_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundRequestRecord[] $fund_request_records
+ * @property-read int|null $fund_request_records_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
@@ -23,6 +26,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $roles_count
  * @method static \Illuminate\Database\Eloquent\Builder|Employee newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Employee newQuery()
+ * @method static \Illuminate\Database\Query\Builder|Employee onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|Employee query()
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereDeletedAt($value)
@@ -30,11 +34,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereIdentityAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereOrganizationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Employee whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|Employee withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|Employee withoutTrashed()
  * @mixin \Eloquent
  */
 class Employee extends Model
 {
-    use /*SoftDeletes,*/ HasLogs;
+    use SoftDeletes, HasLogs;
 
     public const EVENT_CREATED = 'created';
     public const EVENT_UPDATED = 'updated';
@@ -63,12 +69,10 @@ class Employee extends Model
     }
 
     /**
-     * @param string $role
-     * @return bool
-     * @noinspection PhpUnused
+     * @return HasMany
      */
-    public function hasRole(string $role): bool
+    public function fund_request_records(): HasMany
     {
-        return $this->roles()->where('key', '=', $role)->count() > 0;
+        return $this->hasMany(FundRequestRecord::class);
     }
 }

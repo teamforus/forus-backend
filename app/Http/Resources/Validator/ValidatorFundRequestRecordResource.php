@@ -2,19 +2,20 @@
 
 namespace App\Http\Resources\Validator;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
-use Illuminate\Http\Resources\Json\Resource;
+use App\Scopes\Builders\EmployeeQuery;
 
 /**
  * Class FundRequestRecordResource
  * @property FundRequestRecord $resource
  * @package App\Http\Resources
  */
-class ValidatorFundRequestRecordResource extends Resource
+class ValidatorFundRequestRecordResource extends BaseJsonResource
 {
-    public static $load = [
-        'employee', 'files', 'fund_request_clarifications'
+    public const LOAD = [
+        'employee', 'files', 'fund_request_clarifications',
     ];
 
     /**
@@ -31,10 +32,10 @@ class ValidatorFundRequestRecordResource extends Resource
         $organization = $request->route('organization') or abort(403);
         $employee = $organization->findEmployee($identityAddress) or abort(403);
 
-        return ValidatorFundRequestResource::recordToArray(
-            $this->resource,
-            $employee,
-            $this->resource->isValueReadable($identityAddress, $employee->id)
-        );
+        $isAssignable = EmployeeQuery::whereCanValidateRecords($organization->employees(), [
+            $this->resource->id
+        ])->exists();
+
+        return ValidatorFundRequestResource::recordToArray($this->resource, $employee, $isAssignable);
     }
 }

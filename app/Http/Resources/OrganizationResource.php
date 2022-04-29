@@ -60,7 +60,7 @@ class OrganizationResource extends Resource
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = $organization->only([
                 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-                'phone_public', 'website_public'
+                'phone_public', 'website_public',
             ]);
         }
 

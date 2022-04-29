@@ -9,7 +9,7 @@ return [
     'validators_count'              => env('DB_SEED_VALIDATORS', 2),
     'provider_offices_count'        => env('DB_SEED_PROVIDER_OFFICES', 2),
     'provider_products_count'       => env('DB_SEED_PROVIDER_PRODUCTS', 4),
-    'vouchers_per_fund_count'       => env('DB_SEED_VOUCHERS_PER_FUND', 2),
+    'vouchers_per_fund_count'       => env('DB_SEED_VOUCHERS_PER_FUND', 5),
 
     // amount in generated vouchers
     'voucher_amount'                => env('DB_SEED_VOUCHER_AMOUNT', 600),
@@ -71,4 +71,8 @@ return [
     'backoffice_key' => env('DB_SEED_BACKOFFICE_KEY', ""),
     'backoffice_cert' => env('DB_SEED_BACKOFFICE_CERT', ""),
     'backoffice_fallback' => env('DB_SEED_BACKOFFICE_FALLBACK', true),
+
+    'iconnect_url' => env('DB_SEED_ICONNECT_URL', ""),
+    'iconnect_oin' => env('DB_SEED_ICONNECT_OIN', ""),
+    'iconnect_binding' => env('DB_SEED_ICONNECT_BINDING', ""),
 ];

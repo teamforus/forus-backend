@@ -33,6 +33,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $backoffice_key
  * @property string|null $backoffice_certificate
  * @property bool $backoffice_fallback
+ * @property string|null $iconnect_target_binding
+ * @property string|null $iconnect_api_oin
+ * @property string|null $iconnect_base_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -61,6 +64,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsn($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashBsnSalt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereHashPartnerDeny($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectApiOin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectBaseUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIconnectTargetBinding($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereIsConfigured($value)
@@ -88,6 +94,7 @@ class FundConfig extends Model
         'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
         'allow_fund_requests', 'allow_prevalidations',
+        'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
     ];
 
     /**

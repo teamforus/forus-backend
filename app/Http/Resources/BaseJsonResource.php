@@ -71,10 +71,21 @@ class BaseJsonResource extends JsonResource
      * @param string|array $key
      * @return array
      */
-    protected function timestamps($model, ...$key): array {
+    protected function timestamps($model, ...$key): array
+    {
+        return static::staticTimestamps($model, $key);
+    }
+
+    /**
+     * @param $model
+     * @param string|array $key
+     * @return array
+     */
+    protected static function staticTimestamps($model, ...$key): array
+    {
         if (is_array($key[0] ?? null) || count($key) > 1) {
             return array_reduce(is_array($key[0] ?? null) ? $key[0] : $key, function($prev, $key) use ($model) {
-                return array_merge($prev, $this->timestamps($model, $key));
+                return array_merge($prev, static::staticTimestamps($model, $key));
             }, []);
         }
 

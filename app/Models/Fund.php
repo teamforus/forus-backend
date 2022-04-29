@@ -22,6 +22,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\BackofficeApiService\BackofficeApi;
@@ -76,6 +77,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Employee[] $employees_validator_managers
+ * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
  * @property-read Collection|\App\Models\FundFaq[] $faq
@@ -731,6 +734,24 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function employees_validator_managers(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles.permissions', static function(Builder $builder) {
+            $builder->where('key', 'manage_validators');
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */
@@ -1212,9 +1233,8 @@ class Fund extends Model
      * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(
-        ?FundCriterion $fundCriterion = null
-    ): array {
+    public function validatorEmployees(?FundCriterion $fundCriterion = null): array
+    {
         $employees = $this->employees_validators()->pluck('employees.identity_address');
         $externalEmployees = [];
 
@@ -1837,5 +1857,37 @@ class Fund extends Model
         }
 
         return $default;
+    }
+
+    /**
+     * @return void
+     */
+    public function hasIConnectApiOin(): bool
+    {
+        return $this->isIconnectApiConfigured() &&
+            $this->organization->bsn_enabled &&
+            !empty($this->fund_config->iconnect_target_binding) &&
+            !empty($this->fund_config->iconnect_api_oin) &&
+            !empty($this->fund_config->iconnect_base_url);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isIconnectApiConfigured(): bool
+    {
+        return !empty(IConnect::getConfigs());
+    }
+
+    /**
+     * @return IConnect|null
+     */
+    public function getIConnect(): ?IConnect
+    {
+        return $this->hasIConnectApiOin() ? new IConnect(
+            $this->fund_config->iconnect_api_oin,
+            $this->fund_config->iconnect_target_binding,
+            $this->fund_config->iconnect_base_url
+        ) : null;
     }
 }
