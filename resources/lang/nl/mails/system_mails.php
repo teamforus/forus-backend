@@ -25,4 +25,7 @@ return [
             'informal' => 'Hierbij ontvang je jouw :fund_name',
         ],
     ],
+    'identity_destroy_request' => [
+        'title' => 'Verzoek tot verwijdering van account'
+    ],
 ];
