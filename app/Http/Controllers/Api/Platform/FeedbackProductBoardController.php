@@ -24,7 +24,7 @@ class FeedbackProductBoardController extends Controller
         $data = $request->only(['title', 'content', 'tags']);
         if ($request->input('use_customer_email')) {
             $data = array_merge($data, [
-                'customer_email' => resolve('forus.services.record')->primaryEmailByAddress(auth_address()),
+                'customer_email' => $request->input('customer_email'),
             ]);
         }
 
