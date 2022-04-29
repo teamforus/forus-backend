@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: forus
+        uid: 1000
+      context: ./
+      dockerfile: ./docker/docker-compose/php/Dockerfile
+    image: forus-backend
+    container_name: forus-backend-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+      - ./docker/docker-compose/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+    ports:
+      - "8000:80"
+    depends_on:
+      - forus-backend-db
+    networks:
+      - forus-network
+
+  forus-backend-db:
+    image: mysql:8.0
+    container_name: forus-backend-db
+    restart: unless-stopped
+    platform: linux/amd64
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker/docker-compose/mysql:/docker-entrypoint-initdb.d
+    ports:
+      - "33061:3306"
+    networks:
+      - forus-network
+
+  pma:
+    depends_on:
+      - forus-backend-db
+    image: phpmyadmin/phpmyadmin
+    container_name: forus-backend-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: forus-backend-db
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - forus-network
+
+networks:
+  forus-network:
+    driver: bridge
