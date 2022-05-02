@@ -464,6 +464,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         );
 
         $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/assign-employee',
+            "Api\Platform\Organizations\FundRequestsController@assignEmployee"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/resign-employee',
+            "Api\Platform\Organizations\FundRequestsController@resignEmployee"
+        );
+
+        $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/approve',
             "Api\Platform\Organizations\FundRequestsController@approve"
         );
@@ -495,29 +505,26 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/records',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController", [
-            'only' => [
-                'index', 'store', 'show',
-            ],
-            'parameters' => [
-                'records' => 'fund_request_record',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
+        )->parameters([
+            'records' => 'fund_request_record',
+        ])->only( 'index', 'show', 'store');
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/clarifications',
-            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController", [
-            'only' => [
-                'index', 'show', 'store'
-            ],
-            'parameters' => [
-                'clarifications' => 'fund_request_clarification',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController"
+        )->parameters([
+            'clarifications' => 'fund_request_clarification',
+        ])->only( 'index', 'store', 'show');
 
         $router->get(
             'organizations/{organization}/fund-requests/export',
             "Api\Platform\Organizations\FundRequestsController@export"
+        );
+
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/person',
+            "Api\Platform\Organizations\FundRequestsController@person"
         );
 
         $router->resource(

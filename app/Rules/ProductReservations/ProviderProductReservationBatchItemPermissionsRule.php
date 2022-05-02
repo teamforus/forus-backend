@@ -144,7 +144,7 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
             $allowed = ProductQuery::approvedForFundsFilter($productQuery, $voucher->fund_id)->exists();
         } elseif ($voucher->fund->isTypeSubsidy()) {
             $allowed = $productQuery->whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
-                FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(
+                FundProviderProductQuery::whereAvailableForSubsidyVoucher(
                     $builder,
                     $voucher,
                     $this->organization->id,

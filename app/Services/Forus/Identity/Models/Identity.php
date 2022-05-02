@@ -72,6 +72,7 @@ class Identity extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @noinspection PhpUnused
      */
     public function emails(): HasMany
     {
@@ -80,6 +81,7 @@ class Identity extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
     public function primary_email(): HasOne
     {
@@ -90,6 +92,7 @@ class Identity extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @noinspection PhpUnused
      */
     public function initial_email(): HasOne
     {
@@ -170,6 +173,7 @@ class Identity extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getEmailAttribute(): string
     {
@@ -178,6 +182,7 @@ class Identity extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function routeNotificationForMail(): string
     {

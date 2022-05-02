@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Funds\FundProviderInvitedEvent;
+use App\Scopes\Builders\FundProviderQuery;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -104,7 +105,10 @@ class FundProviderInvitation extends Model
         ])->pluck('organization_id');
 
         $skipProviders = $alreadyProviders->merge($alreadyInvited)->toArray();
-        $providers = $fundFrom->providers_approved()->whereNotIn('organization_id', $skipProviders)->get();
+
+        $providers = $fundFrom->providers()->where(function(Builder $builder) use ($fundFrom) {
+            FundProviderQuery::whereApprovedForFundsFilter($builder, $fundFrom->id);
+        })->whereNotIn('organization_id', $skipProviders)->get();
 
         return $providers->map(function (FundProvider $provider) use ($fundFrom, $fundTo) {
             /** @var FundProviderInvitation $providerInvitation */
@@ -152,9 +156,7 @@ class FundProviderInvitation extends Model
     {
         $this->fund->providers()->firstOrCreate([
             'organization_id' => $this->organization_id,
-        ])->update($this->only([
-            'allow_products', 'allow_budget'
-        ]));
+        ])->update($this->only('allow_products', 'allow_budget'));
 
         return $this->updateModel([
             'state' => self::STATE_ACCEPTED

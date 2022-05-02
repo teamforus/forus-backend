@@ -45,53 +45,53 @@ class LoremDbSeeder extends Seeder
     private $countFundRequests;
     private $fundRequestEmailPattern;
     private $vouchersPerFund;
-    private $emailNth = 0;
+    private int $emailNth = 0;
 
-    private $implementations = [
+    private array $implementations = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk', 'Potjeswijzer',
     ];
 
-    private $implementationsWithFunds = [
+    private array $implementationsWithFunds = [
         'Zuidhorn', 'Nijmegen', 'Westerkwartier', 'Stadjerspas', 'Berkelland',
         'Kerstpakket', 'Noordoostpolder', 'Oostgelre', 'Winterswijk', 'Potjeswijzer',
     ];
 
-    private $sponsorsWithMultipleFunds = [
+    private array $sponsorsWithMultipleFunds = [
         'Westerkwartier' => 2,
         'Stadjerspas' => 3,
         'Nijmegen' => 2,
     ];
 
-    private $subsidyFunds = [
+    private array $subsidyFunds = [
         'Stadjerspas',
     ];
 
-    private $implementationsWithInformalCommunication = [
+    private array $implementationsWithInformalCommunication = [
         'Zuidhorn', 'Nijmegen',
     ];
 
-    private $fundsWithCriteriaEditableAfterLaunch = [
+    private array $fundsWithCriteriaEditableAfterLaunch = [
         'Zuidhorn', 'Nijmegen',
     ];
 
-    private $fundsWithPhysicalCards = [
+    private array $fundsWithPhysicalCards = [
         'Nijmegen', 'Stadjerspas',
     ];
 
-    private $fundsWithAutoValidation = [
+    private array $fundsWithAutoValidation = [
         'Nijmegen'
     ];
 
-    private $sponsorsWithSponsorProducts = [
+    private array $sponsorsWithSponsorProducts = [
         'Stadjerspas'
     ];
 
-    private $sponsorsWithBackoffice = [
+    private array $sponsorsWithBackoffice = [
         'Zuidhorn', 'Nijmegen',
     ];
 
-    private $fundKeyOverwrite = [
+    private array $fundKeyOverwrite = [
         'Nijmegen' => 'meedoen_2020',
     ];
 
@@ -679,7 +679,10 @@ class LoremDbSeeder extends Seeder
             'allow_physical_cards'  => in_array($fund->name, $this->fundsWithPhysicalCards),
             'hash_bsn'              => $hashBsn,
             'hash_bsn_salt'         => $hashBsn ? $fund->name : null,
-            'bunq_key'              => config('forus.seeders.lorem_db_seeder.bunq_key'),
+            'bunq_key'                  => config('forus.seeders.lorem_db_seeder.bunq_key'),
+            'iconnect_api_oin'          => config('forus.seeders.lorem_db_seeder.iconnect_oin'),
+            'iconnect_base_url'         => config('forus.seeders.lorem_db_seeder.iconnect_url'),
+            'iconnect_target_binding'   => config('forus.seeders.lorem_db_seeder.iconnect_binding'),
         ], array_only($fields, [
             'key', 'bunq_key', 'bunq_allowed_ip', 'bunq_sandbox', 'csv_primary_key', 'is_configured',
         ]), $backofficeConfig));
@@ -713,9 +716,7 @@ class LoremDbSeeder extends Seeder
 
         $fund->fund_formulas()->create([
             'type' => 'fixed',
-            'amount' => $fund->isTypeBudget() ? config(
-                'forus.seeders.lorem_db_seeder.voucher_amount'
-            ): 0,
+            'amount' => $fund->isTypeBudget() ? config('forus.seeders.lorem_db_seeder.voucher_amount'): 0,
         ]);
 
         if ($fund->isTypeSubsidy()) {
@@ -1168,7 +1169,7 @@ class LoremDbSeeder extends Seeder
         })->get();
 
         foreach ($funds as $fund) {
-            for ($i = 1; $i <= $this->countFundRequests; ++$i) {
+            for ($i = 1; $i <= $this->vouchersPerFund; ++$i) {
                 $fund->makeVoucher($this->makeIdentity(), [
                     'note' => 'Lorem seeder!',
                 ]);

@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\Forus\Identity\Models\Identity;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 
 /**
@@ -39,19 +39,15 @@ use Illuminate\Notifications\DatabaseNotification;
 class Notification extends DatabaseNotification
 {
     /**
-     * @param Request $request
-     * @param string $scope
+     * @param BaseFormRequest $request
      * @param bool|null $seen
      * @param null $query
      * @return Builder
      */
-    public static function search(
-        Request $request,
-        string $scope,
-        ?bool $seen,
-        $query = null
-    ): Builder {
+    public static function search(BaseFormRequest $request, ?bool $seen, $query = null): Builder
+    {
         $query = $query ?: self::query();
+        $scope = $request->client_type();
 
         $query->where(static function(Builder $builder) use ($scope) {
             $builder->where('data->scope', $scope);
@@ -72,25 +68,21 @@ class Notification extends DatabaseNotification
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @param Identity $identity
      * @return LengthAwarePaginator
      */
     public static function paginateFromRequest(
-        Request $request,
+        BaseFormRequest $request,
         Identity $identity
     ): LengthAwarePaginator {
-        $per_page = $request->input('per_page', 15);
         $seen = $request->input('seen');
+        $per_page = $request->input('per_page', 15);
 
-        $notifications = self::search(
-            $request, client_type(), $seen, $identity->notifications()->getQuery()
-        )->paginate($per_page);
+        $notifications = self::search($request, $seen, $identity->notifications()->getQuery())->paginate($per_page);
 
         if ($request->input('mark_read', false)) {
-            self::whereKey(
-                array_pluck($notifications->items(), 'id')
-            )->whereNull('read_at')->update([
+            self::whereKey(array_pluck($notifications->items(), 'id'))->whereNull('read_at')->update([
                 'read_at' => now()
             ]);
         }
@@ -99,16 +91,13 @@ class Notification extends DatabaseNotification
     }
 
     /**
-     * @param Request $request
+     * @param BaseFormRequest $request
      * @param Identity $identity
      * @return int
      */
-    public static function totalUnseenFromRequest(
-        Request $request, Identity $identity
-    ): int {
-        return self::search(
-            $request, client_type(), false, $identity->notifications()->getQuery()
-        )->count();
+    public static function totalUnseenFromRequest(BaseFormRequest $request, Identity $identity): int
+    {
+        return self::search($request, false, $identity->notifications()->getQuery())->count();
     }
 
     /**

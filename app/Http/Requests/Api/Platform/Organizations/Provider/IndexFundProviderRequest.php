@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Platform\Organizations\Provider;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\FundProvider;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Models\Organization;
 
@@ -37,14 +38,14 @@ class IndexFundProviderRequest extends BaseFormRequest
         )->pluck('id')->toArray();
 
         return [
-            'dismissed'         => 'nullable|boolean',
+            'state'             => 'nullable|in:' . implode(',', FundProvider::STATES),
             'allow_budget'      => 'nullable|boolean',
             'allow_products'    => 'nullable|in:1,0,some',
             'per_page'          => 'numeric|between:1,1000',
             'fund_id'           => 'nullable|in:' . implode(',', $fundIds),
             'organization_id'   => 'nullable|in:' . implode(',', $providerIds),
             'q'                 => 'nullable|string',
-            'export_format'     => 'nullable|in:csv,xls'
+            'export_format'     => 'nullable|in:csv,xls',
         ];
     }
 }

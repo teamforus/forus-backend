@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\FundProviders\FundProviderStateUpdated;
 use App\Events\Products\ProductApproved;
 use App\Events\Products\ProductRevoked;
 use App\Scopes\Builders\FundProviderChatQuery;
@@ -26,7 +27,7 @@ use Carbon\Carbon;
  * @property bool $allow_budget
  * @property bool $allow_products
  * @property bool $allow_some_products
- * @property bool $dismissed
+ * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -36,6 +37,7 @@ use Carbon\Carbon;
  * @property-read int|null $fund_provider_products_count
  * @property-read Collection|\App\Models\FundProviderProduct[] $fund_provider_products_with_trashed
  * @property-read int|null $fund_provider_products_with_trashed_count
+ * @property-read string $state_locale
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read \App\Models\Organization $organization
@@ -50,10 +52,10 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider whereAllowProducts($value)
  * @method static Builder|FundProvider whereAllowSomeProducts($value)
  * @method static Builder|FundProvider whereCreatedAt($value)
- * @method static Builder|FundProvider whereDismissed($value)
  * @method static Builder|FundProvider whereFundId($value)
  * @method static Builder|FundProvider whereId($value)
  * @method static Builder|FundProvider whereOrganizationId($value)
+ * @method static Builder|FundProvider whereState($value)
  * @method static Builder|FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -62,6 +64,8 @@ class FundProvider extends Model
     use HasLogs;
 
     public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
+    public const EVENT_STATE_ACCEPTED = 'state_accepted';
+    public const EVENT_STATE_REJECTED = 'state_rejected';
     public const EVENT_APPROVED_BUDGET = 'approved_budget';
     public const EVENT_REVOKED_BUDGET = 'revoked_budget';
     public const EVENT_APPROVED_PRODUCTS = 'approved_products';
@@ -71,14 +75,14 @@ class FundProvider extends Model
     public const EVENT_FUND_STARTED = 'fund_started';
     public const EVENT_FUND_ENDED = 'fund_ended';
 
-    public const STATE_APPROVED = 'approved';
     public const STATE_PENDING = 'pending';
-    public const STATE_APPROVED_OR_HAS_TRANSACTIONS = 'approved_or_has_transactions';
+    public const STATE_ACCEPTED = 'accepted';
+    public const STATE_REJECTED = 'rejected';
 
     public const STATES = [
-        self::STATE_APPROVED,
         self::STATE_PENDING,
-        self::STATE_APPROVED_OR_HAS_TRANSACTIONS,
+        self::STATE_ACCEPTED,
+        self::STATE_REJECTED,
     ];
 
     /**
@@ -87,15 +91,14 @@ class FundProvider extends Model
      * @var array
      */
     protected $fillable = [
-        'organization_id', 'fund_id', 'dismissed',
-        'allow_products', 'allow_budget', 'allow_some_products'
+        'organization_id', 'fund_id', 'state',
+        'allow_products', 'allow_budget', 'allow_some_products',
     ];
 
     /**
      * @var array
      */
     protected $casts = [
-        'dismissed' => 'boolean',
         'allow_budget' => 'boolean',
         'allow_products' => 'boolean',
         'allow_some_products' => 'boolean',
@@ -153,7 +156,8 @@ class FundProvider extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      * @noinspection PhpUnused
      */
-    public function organization(): BelongsTo {
+    public function organization(): BelongsTo
+    {
         return $this->belongsTo(Organization::class);
     }
 
@@ -161,7 +165,8 @@ class FundProvider extends Model
      * @return HasMany
      * @noinspection PhpUnused
      */
-    public function product_exclusions(): HasMany {
+    public function product_exclusions(): HasMany
+    {
         return $this->hasMany(FundProviderProductExclusion::class);
     }
 
@@ -171,198 +176,6 @@ class FundProvider extends Model
     public function getLastActivity(): ?Carbon
     {
         return $this->organization->getLastActivity();
-    }
-
-    /**
-     * @param Request $request
-     * @param Fund $fund
-     * @return array
-     */
-    public function getFinances(
-        Request $request,
-        Fund $fund
-    ): array {
-        $dates = collect();
-
-        $type = $request->input('type', 'all');
-        $year = $request->input('year');
-        $nth = $request->input('nth', 1);
-        $product_category_id = $request->input('product_category');
-
-        if ($type === 'quarter') {
-            $startDate = Carbon::createFromDate($year, ($nth * 3) - 2, 1)->startOfDay();
-            $endDate = $startDate->copy()->endOfQuarter()->endOfDay();
-
-            $dates->push($startDate);
-            $dates->push($startDate->copy()->addDays(14));
-            $dates->push($startDate->copy()->addMonth());
-            $dates->push($startDate->copy()->addMonth()->addDays(14));
-            $dates->push($startDate->copy()->addMonths(2));
-            $dates->push($startDate->copy()->addMonths(2)->addDays(14));
-            $dates->push($endDate);
-        } elseif ($type === 'month') {
-            $startDate = Carbon::createFromDate($year, $nth, 1)->startOfDay();
-            $endDate = $startDate->copy()->endOfMonth()->endOfDay();
-
-            $dates->push($startDate);
-            $dates->push($startDate->copy()->addDays(4));
-            $dates->push($startDate->copy()->addDays(9));
-            $dates->push($startDate->copy()->addDays(14));
-            $dates->push($startDate->copy()->addDays(19));
-            $dates->push($startDate->copy()->addDays(24));
-            $dates->push($endDate);
-        } elseif ($type === 'week') {
-            $startDate = Carbon::now()->setISODate(
-                $year, $nth
-            )->startOfWeek()->startOfDay();
-            $endDate = $startDate->copy()->endOfWeek()->endOfDay();
-
-            $dates = range_between_dates($startDate, $endDate);
-        } elseif ($type === 'year') {
-            $startDate = Carbon::createFromDate($year, 1, 1)->startOfDay();
-            $endDate = Carbon::createFromDate($year, 12, 31)->endOfDay();
-
-            $dates->push($startDate);
-            $dates->push($startDate->copy()->addQuarter());
-            $dates->push($startDate->copy()->addQuarters(2));
-            $dates->push($startDate->copy()->addQuarters(3));
-            $dates->push($endDate);
-        } elseif ($type === 'all') {
-            $firstTransaction = $fund->voucher_transactions()->where([
-                'organization_id' => $this->organization_id
-            ])->orderBy(
-                'created_at'
-            )->first();
-
-            $startDate = $firstTransaction ? $firstTransaction->created_at->subDay() : Carbon::now();
-            $endDate = Carbon::now();
-
-            $dates = range_between_dates($startDate, $endDate, 8);
-        } else {
-            abort(403);
-            exit();
-        }
-
-        $dates = $dates->map(function (Carbon $date, $key) use ($fund, $dates, $product_category_id) {
-            if ($key > 0) {
-                $voucherQuery = $fund->voucher_transactions()->whereBetween(
-                    'voucher_transactions.created_at', [
-                        $dates[$key - 1]->copy()->endOfDay(),
-                        $date->copy()->endOfDay()
-                    ]
-                )->where([
-                    'organization_id' => $this->organization_id
-                ]);
-
-                if ($product_category_id) {
-                    if ($product_category_id === -1) {
-                        $voucherQuery = $voucherQuery->whereNull('voucher_transactions.product_id');
-                    } else {
-                        $voucherQuery = $voucherQuery->whereHas('product', function (Builder $query) use ($product_category_id) {
-                            return $query->where('product_category_id', $product_category_id);
-                        });
-                    }
-                }
-
-                return [
-                    "key" => $date->format('Y-m-d'),
-                    "value" => $voucherQuery->sum('voucher_transactions.amount')
-                ];
-            }
-
-            return [
-                "key" => $date->format('Y-m-d'),
-                "value" => 0
-            ];
-        });
-
-        if ($type === 'year') {
-            $dates->shift();
-        }
-
-        $transactions = $fund->voucher_transactions()->where([
-            'organization_id' => $this->organization_id
-        ])->whereBetween('voucher_transactions.created_at', [
-            $startDate->copy()->endOfDay(),
-            $endDate->copy()->endOfDay()
-        ]);
-
-        if ($product_category_id) {
-            if ($product_category_id === -1) {
-                $transactions->whereNull('voucher_transactions.product_id');
-            } else {
-                $transactions->whereHas('product', function (
-                    Builder $query
-                ) use ($product_category_id) {
-                    return $query->where('product_category_id', $product_category_id);
-                });
-            }
-        }
-
-        $fundUsageInRange = $fund->voucher_transactions()->whereBetween(
-            'voucher_transactions.created_at', [
-                $startDate->copy()->endOfDay(),
-                $endDate->copy()->endOfDay()
-            ]
-        );
-
-        if ($product_category_id) {
-            if ($product_category_id === -1) {
-                $fundUsageInRange = $fundUsageInRange->whereNull('voucher_transactions.product_id');
-            } else{
-                $fundUsageInRange = $fundUsageInRange->whereHas('product', function (
-                    Builder $query
-                ) use($product_category_id){
-                    return $query->where('product_category_id', $product_category_id);
-                });
-            }
-        }
-
-        $fundUsageInRange = $fundUsageInRange->sum('voucher_transactions.amount');
-        $fundUsageTotal = $fund->voucher_transactions();
-
-        if ($product_category_id) {
-            if ($product_category_id === -1) {
-                $fundUsageTotal = $fundUsageTotal->whereNull('voucher_transactions.product_id');
-            } else {
-                $fundUsageTotal = $fundUsageTotal->whereHas('product', function (
-                    Builder $query
-                ) use ($product_category_id) {
-                    return $query->where('product_category_id', $product_category_id);
-                });
-            }
-        }
-
-        $fundUsageTotal = $fundUsageTotal->sum('voucher_transactions.amount');
-
-        $providerUsageInRange = $dates->sum('value');
-        $providerUsageTotal = $fund->voucher_transactions()->where([
-            'organization_id' => $this->organization_id
-        ]);
-
-        if ($product_category_id) {
-            if ($product_category_id === -1) {
-                $providerUsageTotal = $providerUsageTotal->whereNull('voucher_transactions.product_id');
-            } else {
-                $providerUsageTotal = $providerUsageTotal->whereHas('product', function (
-                    Builder $query
-                ) use ($product_category_id) {
-                    return $query->where('product_category_id', $product_category_id);
-                });
-            }
-        }
-
-        $providerUsageTotal = $providerUsageTotal->sum('voucher_transactions.amount');
-        $avgTransaction = $transactions->average('voucher_transactions.amount');
-
-        return [
-            'dates' => $dates,
-            'usage' => $providerUsageInRange,
-            'transactions' => $transactions->count(),
-            'avg_transaction' => round($avgTransaction ?: 0, 2),
-            'share_in_range' => round($fundUsageInRange > 0 ? $providerUsageInRange / $fundUsageInRange : 0, 2),
-            'share_total' => round($fundUsageTotal > 0 ? $providerUsageTotal / $fundUsageTotal : 0, 2),
-        ];
     }
 
     /**
@@ -384,6 +197,30 @@ class FundProvider extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->state == self::STATE_PENDING;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAccepted(): bool
+    {
+        return $this->state == self::STATE_ACCEPTED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRejected(): bool
+    {
+        return $this->state == self::STATE_REJECTED;
+    }
+
+    /**
      * @param Request $request
      * @param Organization $organization
      * @param Builder|null $query
@@ -397,7 +234,7 @@ class FundProvider extends Model
         $fund_id = $request->input('fund_id');
         $fund_ids = $request->input('fund_ids');
         $organization_id = $request->input('organization_id');
-        $dismissed = $request->input('dismissed');
+        $state = $request->input('state');
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
 
@@ -428,12 +265,12 @@ class FundProvider extends Model
             $query->whereIn('fund_id', $fund_ids);
         }
 
-        if ($organization_id) {
-            $query->where('organization_id', $organization_id);
+        if ($state) {
+            $query->where('state', $state);
         }
 
-        if ($dismissed !== null) {
-            $query->where('dismissed', (bool) $dismissed);
+        if ($organization_id) {
+            $query->where('organization_id', $organization_id);
         }
 
         if ($allow_budget !== null) {
@@ -480,7 +317,7 @@ class FundProvider extends Model
             }
         }
 
-        return $query->orderBy('created_at')->orderBy('dismissed');
+        return $query->orderBy('created_at');
     }
 
     /**
@@ -525,11 +362,20 @@ class FundProvider extends Model
                 trans("$transKey.email") => $provider->email,
                 trans("$transKey.phone") => $provider->phone,
                 trans("$transKey.kvk") => $fundProvider->organization->kvk,
+                trans("$transKey.state") => $fundProvider->state_locale,
                 trans("$transKey.allow_budget") => $fundProvider->allow_budget ? 'Ja' : 'Nee',
                 trans("$transKey.allow_products") => $fundProvider->allow_products ? 'Ja' : 'Nee',
                 trans("$transKey.allow_some_products") => $hasIndividualProducts || $fundProvider->allow_products ? 'Ja' : 'Nee',
             ];
         })->values();
+    }
+
+    /**
+     * @return string
+     */
+    public function getStateLocaleAttribute(): string
+    {
+        return trans('states/fund_providers.' . $this->state);
     }
 
     /**
@@ -650,5 +496,29 @@ class FundProvider extends Model
         ]);
 
         return $chat->addSponsorMessage($message, $identity_address);
+    }
+
+    /**
+     * @param string $state
+     * @return void
+     */
+    public function setState(string $state): void
+    {
+        $originalState = $this->state;
+
+        if ($state === self::STATE_ACCEPTED && $this->isPending() && $this->fund->isTypeBudget()) {
+            $this->update([
+                'allow_budget' => true,
+                'allow_products' => true,
+            ]);
+        }
+
+        $approvedBefore = $this->isApproved();
+        $this->update(compact('state'));
+        $approvedAfter = $this->isApproved();
+
+        FundProviderStateUpdated::dispatch($this, compact([
+            'originalState', 'approvedBefore', 'approvedAfter',
+        ]));
     }
 }

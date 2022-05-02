@@ -1,5 +1,6 @@
 const path = __dirname;
 const logsPath = path + "/storage/logs/";
+const projectName = 'forus';
 
 const ignore_watch = [
     ".git",
@@ -20,6 +21,7 @@ const makeProcess = (name, args, options = {}) => {
     return ({
         name,
         args,
+        namespace: `${projectName}`,
         script: "./artisan",
         interpreter: "php",
         watch: true,
@@ -35,8 +37,8 @@ const makeProcess = (name, args, options = {}) => {
 
 module.exports = {
     apps: [
-        makeProcess("forus-emails", "queue:listen --queue=emails --sleep=3 --tries=3 --timeout=1200"),
-        makeProcess("forus-notifications", "queue:listen --queue=push_notifications --sleep=3 --tries=3 --timeout=1200"),
-        makeProcess("forus-media", "queue:listen --queue=media --sleep=3 --tries=3 --timeout=1200"),
+        makeProcess(`${projectName}-emails`, "queue:listen --queue=emails --sleep=3 --tries=3 --timeout=1200"),
+        makeProcess(`${projectName}-notifications`, "queue:listen --queue=push_notifications --sleep=3 --tries=3 --timeout=1200"),
+        makeProcess(`${projectName}-media`, "queue:listen --queue=media --sleep=3 --tries=3 --timeout=1200"),
     ]
 };

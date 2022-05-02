@@ -2,8 +2,10 @@
 
 namespace App\Policies;
 
+use App\Models\Employee;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
+use App\Scopes\Builders\EmployeeQuery;
 use App\Services\FileService\Models\File;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -12,33 +14,21 @@ class FilePolicy
     use HandlesAuthorization;
 
     /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * @param $identity_address
      * @return mixed
      */
-    public function viewAny(
-        $identity_address
-    ) {
+    public function viewAny($identity_address): bool
+    {
         return !empty($identity_address);
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param File $file
      * @return bool
      */
-    public function show(
-        $identity_address, File $file
-    ) {
+    public function show(string $identity_address, File $file): bool
+    {
         if (empty($identity_address)) {
             return false;
         }
@@ -51,53 +41,50 @@ class FilePolicy
         // is fund request proof
         if (strcmp($file->type, 'fund_request_record_proof')  === 0) {
             // is fund validator
-            return ($file->fileable instanceof FundRequestRecord) && in_array(
-                $identity_address,
-                $file->fileable->fund_request->fund->validatorEmployees());
+            return ($file->fileable instanceof FundRequestRecord) && EmployeeQuery::whereCanValidateRecords(
+                Employee::whereIdentityAddress($identity_address),
+                (array) $file->fileable->id
+            )->exists();
         }
 
         // is fund request proof
         if (strcmp($file->type, 'fund_request_clarification_proof')  === 0) {
             // is fund validator
-            return ($file->fileable instanceof FundRequestClarification) && in_array(
-                $identity_address,
-                $file->fileable->fund_request_record
-                    ->fund_request->fund->validatorEmployees());
+            return ($file->fileable instanceof FundRequestClarification) && EmployeeQuery::whereCanValidateRecords(
+                Employee::whereIdentityAddress($identity_address),
+                $file->fileable->fund_request_record()->select('fund_request_records.id')->getQuery()
+            )->exists();
         }
 
         return false;
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param File $file
      * @return bool
      */
-    public function download(
-        $identity_address, File $file
-    ) {
+    public function download(string $identity_address, File $file): bool
+    {
         return $this->show($identity_address, $file);
     }
 
     /**
-     * @param $identity_address
-     * @return mixed
+     * @param string $identity_address
+     * @return bool
      */
-    public function store(
-        $identity_address
-    ) {
+    public function store(string $identity_address): bool
+    {
         return !empty($identity_address);
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param File $file
      * @return bool
      */
-    public function destroy(
-        $identity_address,
-        File $file
-    ) {
+    public function destroy(string $identity_address, File $file): bool
+    {
         return (strcmp($file->identity_address, $identity_address) === 0);
     }
 }

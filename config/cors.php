@@ -40,7 +40,7 @@ return [
      */
     'allowed_headers' => [
         'Content-Type', 'Access-Control-Allow-Headers', 'Authorization',
-        'X-Requested-With', 'Locale', 'Client-Key', 'Client-Type', 'Accept',
+        'X-Requested-With', 'Locale', 'Client-Key', 'Client-Type', 'Client-Version', 'Accept',
         'Access-Token', 'Accept-Language'
     ],
 

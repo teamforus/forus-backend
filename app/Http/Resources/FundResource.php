@@ -9,15 +9,25 @@ use App\Scopes\Builders\FundRequestQuery;
 use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class FundResource
  * @property Fund $resource
  * @package App\Http\Resources
  */
-class FundResource extends Resource
+class FundResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'faq',
+        'tags',
+        'criteria.fund',
+        'organization.logo',
+        'organization.employees',
+        'organization.business_type',
+        'fund_config.implementation',
+        'provider_organizations_approved.employees',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -35,7 +45,7 @@ class FundResource extends Resource
 
         $data = array_merge($fund->only([
             'id', 'name', 'description', 'description_html', 'description_short',
-            'organization_id', 'state', 'notification_amount', 'type', 'archived',
+            'organization_id', 'state', 'notification_amount', 'type', 'type_locale', 'archived',
             'request_btn_text', 'external_link_text', 'external_link_url', 'faq_title', 'is_external',
             'balance_provider',
         ]), $fund->fund_config->only([

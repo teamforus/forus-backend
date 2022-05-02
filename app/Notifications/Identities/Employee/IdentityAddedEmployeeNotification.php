@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Identities\Employee;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Mail\User\EmployeeAddedMail;
 use App\Models\Implementation;
 use App\Services\Forus\Identity\Models\Identity;
@@ -20,8 +21,9 @@ class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
      */
     public function toMail(Identity $identity): void
     {
-        $client_type = $this->eventLog->data['client_type'] ?? client_type();
-        $implementation_key = $this->eventLog->data['implementation_key'] ?? implementation_key();
+        $request = BaseFormRequest::createFromGlobals();
+        $client_type = $this->eventLog->data['client_type'] ?? $request->client_type();
+        $implementation_key = $this->eventLog->data['implementation_key'] ?? $request->implementation_key();
 
         $confirmationLink = sprintf(
             "%s/confirmation/email/%s",

@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Api\Platform\Provider\Vouchers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Vouchers\ProductsVouchers\IndexProductVouchersRequest;
-use App\Http\Resources\Provider\ProviderVoucherResource;
-use App\Models\ProductReservation;
+use App\Http\Resources\Provider\App\ProviderVoucherResource;
+use App\Models\Product;
 use App\Models\VoucherToken;
 use App\Scopes\Builders\VoucherQuery;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -27,24 +26,15 @@ class ProductVouchersController extends Controller
         IndexProductVouchersRequest $request,
         VoucherToken $voucherToken
     ): AnonymousResourceCollection {
-        $this->authorize('useAsProvider', $voucherToken->voucher);
+        $this->authorize('viewAnyPublic', Product::class);
 
         $productVouchersQuery = VoucherQuery::whereProductVouchersCanBeScannedForFundBy(
             $voucherToken->voucher->product_vouchers()->getQuery(),
             $request->auth_address(),
-            $voucherToken->voucher->fund_id
+            $voucherToken->voucher->fund_id,
+            $request->input('organization_id')
         );
 
-        $productVouchersQuery->where(function(Builder $builder) {
-            $builder->whereDoesntHave('transactions');
-            $builder->whereDoesntHave('product_reservation', function(Builder $builder) {
-                $builder->where('state', '!=', ProductReservation::STATE_PENDING);
-                $builder->orWhereDate('expire_at', '<', now());
-            });
-        });
-
-        return ProviderVoucherResource::collection($productVouchersQuery->paginate(
-            $request->input('per_page', 10)
-        ));
+        return ProviderVoucherResource::queryCollection($productVouchersQuery, $request);
     }
 }

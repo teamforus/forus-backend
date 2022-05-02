@@ -76,6 +76,31 @@
             "content": "Aanmelding voor :fund_name is gewijzigd. Uw producten of diensten zijn niet meer zichtbaar in de webshop."
         }
     },
+    "notifications_fund_providers.state_accepted": {
+        "mail": {
+            "title": "Aanmelding als aanbieder is goedgekeurd",
+            "template": "notifications_fund_providers/state_accepted.md"
+        },
+        "push": {
+            "title": ":fund_name",
+            "content": "U bent goedgekeurd voor :fund_name."
+        },
+        "database": {
+            "title": "Aanmelding voor :fund_name is goedgekeurd.",
+            "content": "Dit betekent dat u vanaf nu tegoeden kunt scannen en aanbod kan leveren aan klanten die recht hebben op :fund_name. Uw producten of diensten worden vanaf nu zichtbaar in de webshop."
+        }
+    },
+    "notifications_fund_providers.state_rejected": {
+        "mail": {
+            "title": "Afgewezen als aanbieder",
+            "template": "notifications_fund_providers/state_rejected.md"
+        },
+        "push": {},
+        "database": {
+            "title": "Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen.",
+            "content": "Aanmelding voor :fund_name is gewijzigd. U bent niet meer gemachtigd om tegoeden te scannen."
+        }
+    },
     "notifications_fund_providers.sponsor_message": {
         "mail": {},
         "push": {},

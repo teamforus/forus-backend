@@ -2,6 +2,7 @@
 
 namespace App\Events\FundRequests;
 
+use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use Illuminate\Queue\SerializesModels;
@@ -13,16 +14,25 @@ abstract class BaseFundRequestEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $fundRequest;
+    protected FundRequest $fundRequest;
+    protected ?Employee $employee;
+    protected ?Employee $supervisorEmployee;
 
     /**
      * Create a new event instance.
      *
      * @param FundRequest $fundRequest
+     * @param Employee|null $employee
+     * @param Employee|null $supervisorEmployee
      */
-    public function __construct(FundRequest $fundRequest)
-    {
+    public function __construct(
+        FundRequest $fundRequest,
+        Employee $employee = null,
+        ?Employee $supervisorEmployee = null
+    ) {
         $this->fundRequest = $fundRequest;
+        $this->employee = $employee;
+        $this->supervisorEmployee = $supervisorEmployee;
     }
 
     /**
@@ -43,6 +53,22 @@ abstract class BaseFundRequestEvent
     public function getFund(): Fund
     {
         return $this->fundRequest->fund;
+    }
+
+    /**
+     * @return Employee|null
+     */
+    public function getEmployee(): ?Employee
+    {
+        return $this->employee;
+    }
+
+    /**
+     * @return Employee|null
+     */
+    public function getSupervisorEmployee(): ?Employee
+    {
+        return $this->supervisorEmployee;
     }
 
     /**

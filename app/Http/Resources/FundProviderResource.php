@@ -4,14 +4,13 @@ namespace App\Http\Resources;
 
 use App\Models\FundProvider;
 use App\Scopes\Builders\ProductQuery;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class FundProviderResource
  * @property FundProvider $resource
  * @package App\Http\Resources
  */
-class FundProviderResource extends Resource
+class FundProviderResource extends BaseJsonResource
 {
     public static $load = [
         'fund.logo.presets',
@@ -43,7 +42,7 @@ class FundProviderResource extends Resource
         $lastActivity = $fundProvider->getLastActivity();
 
         return array_merge($fundProvider->only([
-            'id', 'organization_id', 'fund_id', 'dismissed',
+            'id', 'organization_id', 'fund_id', 'state', 'state_locale',
             'allow_products', 'allow_some_products', 'allow_budget',
         ]), $this->productFields($fundProvider), [
             'fund' => new FundResource($fundProvider->fund),

@@ -17,19 +17,25 @@ class BaseJsonResource extends JsonResource
     public const LOAD_COUNT = [];
 
     /**
+     * @param string|null $append
      * @return array
      */
-    public static function load(): array
+    public static function load(?string $append = null): array
     {
-        return static::LOAD;
+        return $append ? array_map(function($load) use ($append) {
+            return "$append.$load";
+        }, static::LOAD) : static::LOAD;
     }
 
     /**
+     * @param string|null $append
      * @return array
      */
-    public static function load_count(): array
+    public static function load_count(?string $append = null): array
     {
-        return static::LOAD_COUNT;
+        return $append ? array_map(function($load) use ($append) {
+            return "$append.$load";
+        }, static::LOAD_COUNT) : static::LOAD_COUNT;
     }
 
     /**
@@ -65,10 +71,21 @@ class BaseJsonResource extends JsonResource
      * @param string|array $key
      * @return array
      */
-    protected function timestamps($model, ...$key): array {
+    protected function timestamps($model, ...$key): array
+    {
+        return static::staticTimestamps($model, $key);
+    }
+
+    /**
+     * @param $model
+     * @param string|array $key
+     * @return array
+     */
+    protected static function staticTimestamps($model, ...$key): array
+    {
         if (is_array($key[0] ?? null) || count($key) > 1) {
             return array_reduce(is_array($key[0] ?? null) ? $key[0] : $key, function($prev, $key) use ($model) {
-                return array_merge($prev, $this->timestamps($model, $key));
+                return array_merge($prev, static::staticTimestamps($model, $key));
             }, []);
         }
 
