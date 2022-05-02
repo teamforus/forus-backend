@@ -21,7 +21,9 @@ class MediaCompactResource extends Resource
      */
     public function toArray($request): ?array
     {
-        if (is_null($media = $this->resource)) {
+        $media = $this->resource;
+
+        if (!$media) {
             return null;
         }
 

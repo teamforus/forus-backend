@@ -3,6 +3,9 @@
 namespace App\Http\Requests\Api\Platform\Provider\Vouchers\ProductsVouchers;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Organization;
+use App\Scopes\Builders\OrganizationQuery;
+use Illuminate\Validation\Rule;
 
 class IndexProductVouchersRequest extends BaseFormRequest
 {
@@ -23,7 +26,14 @@ class IndexProductVouchersRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $organizationsQuery = OrganizationQuery::whereHasPermissions(
+            Organization::query(),
+            $this->auth_address(),
+            'scan_vouchers'
+        );
+
         return [
+            'organization_id' => 'nullable|in:' . $organizationsQuery->pluck('id')->join(','),
             'per_page' => 'numeric|between:1,100',
         ];
     }

@@ -14,7 +14,7 @@ class ClientTypeMiddleware
     /**
      * @var array
      */
-    private $except = [
+    public const EXCEPT = [
         'status',
         'digidResolve',
         'digidRedirect',
@@ -32,7 +32,7 @@ class ClientTypeMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $exclude = in_array($request->route()->getName(), $this->except);
+        $exclude = in_array($request->route()->getName(), static::EXCEPT);
 
         if (!$exclude && !in_array(
             $this->activeType($request),

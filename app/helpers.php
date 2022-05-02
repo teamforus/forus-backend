@@ -36,21 +36,6 @@ if (!function_exists('auth_address')) {
     }
 }
 
-if (!function_exists('auth_proxy_id')) {
-    /**
-     * Get the available user instance.
-     *
-     * @param bool $abortOnFail
-     * @param int $errorCode
-     * @return string|null
-     */
-    function auth_proxy_id($abortOnFail = false, $errorCode = 403): ?string {
-        $auth = auth_model($abortOnFail, $errorCode);
-
-        return $auth && method_exists($auth, 'getProxyId') ? $auth->getProxyId() : null;
-    }
-}
-
 if (!function_exists('auth_model')) {
     /**
      * @param bool $abortOnFail
@@ -171,7 +156,7 @@ if (!function_exists('currency_format_locale')) {
      */
     function currency_format_locale($number, $sign = '€ '): string
     {
-        $isWhole = ($number - round($number)) === (double) 0;
+        $isWhole = ($number - round($number)) === 0.0;
 
         return $sign . currency_format($number, $isWhole ? 0 : 2, ',', '.') . ($isWhole ? ',-' : '');
     }
@@ -255,16 +240,6 @@ if (!function_exists('client_type')) {
      */
     function client_type($default = null) {
         return request()->header('Client-Type', $default);
-    }
-}
-
-if (!function_exists('client_version')) {
-    /**
-     * @param null $default
-     * @return array|string
-     */
-    function client_version($default = null) {
-        return request()->header('Client-Version', $default);
     }
 }
 
@@ -509,13 +484,14 @@ if (!function_exists('make_qr_code')) {
      * @param string $type
      * @param string $value
      * @param int $size
-     * @return string|void
+     * @return string
      */
     function make_qr_code(string $type, string $value, int $size = 400): string
     {
-        return QrCode::format('png')->size($size)->margin(2)->generate(
-            json_encode(compact('type', 'value'))
-        );
+        return (string) QrCode::format('png')
+            ->size($size)
+            ->margin(2)
+            ->generate(json_encode(compact('type', 'value')));
     }
 }
 

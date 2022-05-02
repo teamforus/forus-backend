@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class IndexEmployeesRequest extends FormRequest
+class IndexEmployeesRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,10 +24,13 @@ class IndexEmployeesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page'  => 'numeric|between:1,100',
-            'role' => [
-                'nullable', 'string', 'exists:roles,key'
-            ]
+            'per_page'  => 'numeric|int|between:1,100',
+            'role' => 'nullable|string|exists:roles,key',
+            'roles' => 'nullable|array',
+            'roles.*' => 'nullable|string|exists:roles,key',
+            'permission' => 'nullable|string|exists:permissions,key',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'nullable|exists:permissions,key',
         ];
     }
 }

@@ -3,15 +3,21 @@
 namespace App\Http\Resources;
 
 use App\Models\Employee;
-use Illuminate\Http\Resources\Json\Resource;
+use App\Models\Role;
 
 /**
  * Class EmployeeResource
  * @property Employee $resource
  * @package App\Http\Resources
  */
-class EmployeeResource extends Resource
+class EmployeeResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'organization',
+        'roles.translations',
+        'roles.permissions',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -23,16 +29,13 @@ class EmployeeResource extends Resource
         $employee = $this->resource;
         $recordRepo = resolve('forus.services.record');
 
-        return collect($employee)->only([
-            'id', 'identity_address', 'organization_id'
-        ])->merge([
-            'organization' => $this->resource->organization->only([
-                'id', 'name'
-            ]),
+        return array_merge($employee->only('id', 'identity_address', 'organization_id'), [
             'roles' => RoleResource::collection($employee->roles),
-            'email' => $recordRepo->primaryEmailByAddress(
-                $employee->identity_address
-            ),
-        ])->toArray();
+            'permissions' => array_unique($employee->roles->reduce(function(array $list, Role $role) {
+                return array_merge($list, $role->permissions->pluck('key')->toArray());
+            }, [])),
+            'email' => $recordRepo->primaryEmailByAddress($employee->identity_address),
+            'organization' => $employee->organization->only('id', 'name'),
+        ]);
     }
 }

@@ -28,6 +28,10 @@ class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotificat
         $fundProvider = $this->eventLog->loggable;
         $fund = $fundProvider->fund;
 
+        if (!$fundProvider->isAccepted()) {
+            return;
+        }
+
         $this->sendMailNotification(
             $identity->primary_email->email,
             new ProviderApprovedMail(array_merge($this->eventLog->data, [

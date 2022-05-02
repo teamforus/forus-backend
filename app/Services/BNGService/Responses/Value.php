@@ -7,7 +7,7 @@ use App\Services\BNGService\Data\ResponseData;
 abstract class Value
 {
     protected $data = [];
-    protected $responseData;
+    protected ResponseData $responseData;
 
     /**
      * @param ResponseData $responseData

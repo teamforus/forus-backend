@@ -2,41 +2,31 @@
 
 namespace App\Exports;
 
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Employee;
 use App\Models\FundRequest;
-use App\Models\Organization;
-use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class FundRequestsExport implements FromCollection, WithHeadings
 {
-    protected $request;
     protected $data;
     protected $headers;
 
     /**
      * FundRequestsExport constructor.
      *
-     * @param Request $request
-     * @param Organization $organization
-     * @param string $identity_address
+     * @param BaseFormRequest $request
+     * @param Employee $employee
      */
-    public function __construct(
-        Request $request,
-        Organization $organization,
-        string $identity_address
-    ) {
-        $this->request = $request;
-
-        $this->data = FundRequest::exportSponsor(
-            $this->request,
-            $organization,
-            $identity_address
-        );
+    public function __construct(BaseFormRequest $request, Employee $employee)
+    {
+        $this->data = FundRequest::exportSponsor($request, $employee);
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection
+     * @return \Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|Collection
      */
     public function collection()
     {

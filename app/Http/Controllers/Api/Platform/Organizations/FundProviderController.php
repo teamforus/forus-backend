@@ -28,11 +28,7 @@ class FundProviderController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [FundProvider::class, $organization]);
 
-        return FundProviderResource::collection(
-            FundProvider::search($request, $organization)->with(
-                FundProviderResource::$load
-            )->paginate($request->input('per_page', 10))
-        );
+        return FundProviderResource::queryCollection(FundProvider::search($request, $organization), $request);
     }
 
     /**

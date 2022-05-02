@@ -12,12 +12,14 @@ use App\Models\Employee;
 use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Models\Organization;
+use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundRequestQuery;
+use App\Scopes\Builders\FundRequestRecordQuery;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
- * Class FundRequestResource
+ * Class ValidatorFundRequestResource
  * @property FundRequest $resource
  * @package App\Http\Resources
  */
@@ -26,11 +28,16 @@ class ValidatorFundRequestResource extends BaseJsonResource
     /**
      * @var string[]
      */
-    public static $load = [
-        'records.employee.organization',
+    public const LOAD = [
         'records.files',
+        'records.record_type',
+        'records.employee.organization',
+        'records.employee.roles.translations',
+        'records.employee.roles.permissions',
         'records.fund_request_clarifications',
+        'identity.primary_email',
         'fund.criteria.fund_criterion_validators.external_validator',
+        'fund.tags',
     ];
 
     /**
@@ -43,7 +50,10 @@ class ValidatorFundRequestResource extends BaseJsonResource
     {
         $recordRepo = resolve('forus.services.record');
         $fundRequest = $this->resource;
-        $criteria = FundCriterionResource::collection($fundRequest->fund->criteria);
+
+        /** @var Organization $organization */
+        $organization = $request->route('organization') or abort(403);
+        $allowedEmployees = $this->getAllowedRequestEmployeesQuery($fundRequest, $organization)->get();
 
         /** @var Organization $organization */
         $organization = $request->route('organization') or abort(403);
@@ -52,57 +62,90 @@ class ValidatorFundRequestResource extends BaseJsonResource
         return array_merge($fundRequest->only([
             'id', 'state', 'fund_id', 'note', 'lead_time_days', 'lead_time_locale',
         ]), [
-            'fund' => array_merge($fundRequest->fund->only([
-                'id', 'name', 'description', 'organization_id', 'state', 'notification_amount', 'type',
-            ]), [
-                'criteria' => $criteria,
-                'tags' => TagResource::collection($fundRequest->fund->tags),
-            ]),
             'bsn' => $bsn_enabled ? $recordRepo->bsnByAddress($fundRequest->identity_address) : null,
-            'records' => $this->getRecordsData($request, $fundRequest),
-            'replaced' => $fundRequest->isDisregarded() && $this->isReplaced($fundRequest),
+            'fund' => $this->fundDetails($fundRequest),
+            'email' => $fundRequest->identity->primary_email->email ?? null,
+            'records' => $this->getRecordsDetails($organization, $fundRequest),
+            'replaced' => $this->isReplaced($fundRequest),
+            'allowed_employees' => $allowedEmployees->map(fn(Employee $employee) => $employee->only([
+                'id', 'organization_id', 'identity_address',
+            ]))->toArray(),
         ], $this->timestamps($fundRequest, 'created_at', 'updated_at', 'resolved_at'));
     }
 
     /**
      * @param FundRequest $fundRequest
-     * @return bool
+     * @param Organization $organization
+     * @return Builder|Relation
      */
-    protected function isReplaced(FundRequest $fundRequest): bool
-    {
-        return $fundRequest->fund->fund_requests()->where(function(Builder $builder) use ($fundRequest) {
-            FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive($builder->where(function(Builder $builder) use ($fundRequest) {
-                $builder->where('id', '!=', $fundRequest->id);
-            }), $fundRequest->identity_address);
-        })->where('id', '!=', $fundRequest->id)->exists();
+    protected function getAllowedRequestEmployeesQuery(
+        FundRequest $fundRequest,
+        Organization $organization
+    ) {
+        $recordsQuery = $fundRequest->records_pending()->whereDoesntHave('employee');
+        $employeesQuery = $organization->employees();
+        $isSponsorOrganization = $organization->id === $fundRequest->fund->organization_id;
+
+        $isManagerQuery = $organization->employeesWithPermissionsQuery('manage_validators')->where([
+            'identity_address' => auth_address()
+        ]);
+
+        if (!$isSponsorOrganization && !$isManagerQuery->exists()) {
+            $employeesQuery->where('identity_address', auth_address());
+        }
+
+        return EmployeeQuery::whereCanValidateRecords(
+            $employeesQuery,
+            $recordsQuery->select('fund_request_records.id')->getQuery()
+        );
     }
 
     /**
-     * @param Request $request
+     * @param FundRequest $request
+     * @return array
+     */
+    protected function fundDetails(FundRequest $request): array
+    {
+        return array_merge($request->fund->only([
+            'id', 'name', 'description', 'organization_id', 'state', 'type',
+        ]), [
+            'criteria' => FundCriterionResource::collection($request->fund->criteria),
+            'tags' => TagResource::collection($request->fund->tags),
+            'has_person_bsn_api' => $request->fund->hasIConnectApiOin(),
+        ]);
+    }
+
+    /**
+     * @param FundRequest $request
+     * @return bool
+     */
+    protected function isReplaced(FundRequest $request): bool
+    {
+        return $request->isDisregarded() && FundRequestQuery::wherePendingOrApprovedAndVoucherIsActive(
+            $request->fund->fund_requests()->where('id', '!=', $request->id),
+            $request->identity_address
+        )->exists();
+    }
+
+    /**
+     * @param Organization $organization
      * @param FundRequest $fundRequest
      * @return array
      */
-    public function getRecordsData(Request $request, FundRequest $fundRequest): array
+    public function getRecordsDetails(Organization $organization, FundRequest $fundRequest): array
     {
-        /** @var Organization $organization */
-        $organization = $request->route('organization') or abort(403);
         $employee = $organization->findEmployee(auth_address()) or abort(403);
-
-        $availableRecords = $fundRequest->recordsWhereCanValidateQuery(
-            auth_address(),
-            $employee->id
-        )->pluck('fund_request_records.id')->toArray();
-
-        $records = [];
         $bsnFields = ['bsn', 'partner_bsn', 'bsn_hash', 'partner_bsn_hash'];
+        $availableRecords = FundRequestRecordQuery::whereEmployeeCanBeValidator(
+            $fundRequest->records(),
+            $employee,
+        )->pluck('fund_request_records.id');
 
-        foreach ($fundRequest->records as $record) {
-            if ($organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true)) {
-                $records[] = static::recordToArray($record, $employee, in_array($record->id, $availableRecords));
-            }
-        }
-
-        return $records;
+        return $fundRequest->records->filter(function(FundRequestRecord $record) use ($organization, $bsnFields) {
+            return $organization->bsn_enabled || !in_array($record->record_type_key, $bsnFields, true);
+        })->map(function(FundRequestRecord $record) use ($employee, $availableRecords) {
+            return static::recordToArray($record, $employee, $availableRecords->search($record->id) !== false);
+        })->toArray();
     }
 
     /**
@@ -110,39 +153,33 @@ class ValidatorFundRequestResource extends BaseJsonResource
      *
      * @param FundRequestRecord $record
      * @param Employee|null $employee
-     * @param bool $isValueReadable
+     * @param bool $isRecordAssignable
      * @return array
      */
     static function recordToArray(
         FundRequestRecord $record,
         Employee $employee,
-        bool $isValueReadable
+        bool $isRecordAssignable
     ): array {
-        $is_value_readable = $isValueReadable;
         $is_assigned = $record->employee_id === $employee->id;
-        $is_assignable = $is_value_readable && !$record->employee_id && $record->isPending();
+        $is_assignable = $isRecordAssignable && !$is_assigned && !$record->employee && $record->isPending();
 
-        $is_visible = $is_assignable || $is_assigned || $is_value_readable;
-        $recordTypes = collect(record_types_cached())->keyBy('key');
+        $baseFields = array_merge($record->only([
+            'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'note',
+        ]), [
+            'value' => $is_assignable || $is_assigned ? $record->value : null,
+        ]);
 
-        return array_merge($record->only(array_merge([
-            'id', 'state', 'record_type_key', 'fund_request_id',
-            'created_at', 'updated_at', 'employee_id', 'note',
-        ], $is_visible ? [
-            'value'
-        ] : [])), array_merge($is_assigned ? [
+        $filesAndClarifications = $is_assigned ? [
             'files' => FileResource::collection($record->files),
-            'clarifications' => FundRequestClarificationResource::collection(
-                $record->fund_request_clarifications
-            ),
-        ] : [
-            'files' => [],
-            'clarifications' => [],
-        ], [
+            'clarifications' => FundRequestClarificationResource::collection($record->fund_request_clarifications),
+        ] : [];
+
+        return array_merge($baseFields, $filesAndClarifications, [
             'employee' => new EmployeeResource($record->employee),
-            'record_type' => $recordTypes[$record->record_type_key],
-            'created_at_locale' => format_datetime_locale($record->created_at),
-            'updated_at_locale' => format_datetime_locale($record->updated_at),
-        ], compact('is_assignable', 'is_assigned', 'is_visible')));
+            'record_type' => $record->record_type->only('id', 'key', 'type', 'system', 'name'),
+            'is_assigned' => $is_assigned,
+            'is_assignable' => $is_assignable,
+        ], static::staticTimestamps($record, 'created_at', 'updated_at'));
     }
 }

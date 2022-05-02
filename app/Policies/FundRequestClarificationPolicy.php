@@ -53,7 +53,16 @@ class FundRequestClarificationPolicy
         FundRequest $request,
         Fund $fund
     ) {
-        return $this->update($identity_address, $requestClarification, $request, $fund);
+        if (!$this->checkIntegrityRequester($fund, $request, $requestClarification)) {
+            return $this->deny('fund_requests.invalid_endpoint');
+        }
+
+        // only fund requester is allowed to see records
+        if ($request->identity_address !== $identity_address) {
+            return $this->deny('fund_requests.not_requester');
+        }
+
+        return true;
     }
 
     /**
@@ -111,6 +120,7 @@ class FundRequestClarificationPolicy
      * @param FundRequest $request
      * @param Organization $organization
      * @return bool|\Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
      */
     public function viewValidator(
         string $identity_address,
