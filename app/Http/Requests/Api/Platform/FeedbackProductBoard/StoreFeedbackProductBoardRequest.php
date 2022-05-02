@@ -13,7 +13,7 @@ class StoreFeedbackProductBoardRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->isAuthenticated() && !empty(resolve('productboard_api'));
+        return $this->isAuthenticated() && !empty(resolve('productboard'));
     }
 
     /**
