@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddBackofficeNotEligibleRedirectUrlToFundConfigs
  * @noinspection PhpUnused
  */
 class AddBackofficeNotEligibleRedirectUrlToFundConfigs extends Migration
@@ -18,9 +17,14 @@ class AddBackofficeNotEligibleRedirectUrlToFundConfigs extends Migration
     public function up(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->string('backoffice_not_eligible_redirect_url', 200)
-                ->nullable()
-                ->after('backoffice_fallback');
+            $table->enum('backoffice_ineligible_policy', ['redirect', 'fund_request'])
+                ->default('fund_request')
+                ->after('backoffice_fallback')
+                ->nullable();
+
+            $table->string('backoffice_ineligible_redirect_url', 2000)
+                ->after('backoffice_ineligible_policy')
+                ->nullable();
         });
     }
 
@@ -32,7 +36,8 @@ class AddBackofficeNotEligibleRedirectUrlToFundConfigs extends Migration
     public function down(): void
     {
         Schema::table('fund_configs', function (Blueprint $table) {
-            $table->dropColumn('backoffice_not_eligible_redirect_url');
+            $table->dropColumn('backoffice_ineligible_policy');
+            $table->dropColumn('backoffice_ineligible_redirect_url');
         });
     }
 }

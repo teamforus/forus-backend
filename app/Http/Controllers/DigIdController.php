@@ -7,6 +7,7 @@ use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Services\BackofficeApiService\Responses\EligibilityResponse;
 use App\Services\DigIdService\Models\DigIdSession;
 
 /**
@@ -149,21 +150,39 @@ class DigIdController extends Controller
         Voucher::assignAvailableToIdentityByBsn($identity);
 
         if ($fund->organization->bsn_enabled && $hasBackoffice) {
-            $backofficeResponse = $fund->checkBackofficeIfAvailable($identity);
+            $response = $fund->checkBackofficeIfAvailable($identity);
+            $redirect = $this->handleBackofficeResponse($fund, $response);
 
-            if (!$backofficeResponse->isEligible() && $backofficeResponse->getLog()->success() &&
-                !empty($fund->fund_config->backoffice_not_eligible_redirect_url)) {
-                return redirect($fund->fund_config->backoffice_not_eligible_redirect_url);
-            }
-
-            if ($backofficeResponse && !$backofficeResponse->getLog()->success()) {
-                $params['backoffice_error'] = 1;
-                $params['backoffice_fallback'] = $fund->fund_config->backoffice_fallback;
+            if (is_string($redirect)) {
+                return redirect($redirect);
             }
         }
 
         return redirect(url_extend_get_params($session->session_final_url, array_merge([
             'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in',
-        ], $params)));
+        ], is_array($redirect ?? null) ? $params : [])));
+    }
+
+    /**
+     * @param Fund $fund
+     * @param EligibilityResponse|null $response
+     * @return string|array|null
+     */
+    protected function handleBackofficeResponse(Fund $fund, ?EligibilityResponse $response)
+    {
+        if (!$response) {
+            return null;
+        }
+
+        if ($response->getLog()->success()) {
+            if (!$response->isEligible() && $fund->fund_config->shouldRedirectOnIneligibility()) {
+                return $fund->fund_config->backoffice_ineligible_redirect_url;
+            }
+        }
+
+        return [
+            'backoffice_error' => 1,
+            'backoffice_fallback' => $fund->fund_config->backoffice_fallback,
+        ];
     }
 }

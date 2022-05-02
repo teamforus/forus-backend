@@ -33,7 +33,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $backoffice_key
  * @property string|null $backoffice_certificate
  * @property bool $backoffice_fallback
- * @property string|null $backoffice_not_eligible_redirect_url
+ * @property string|null $backoffice_ineligible_policy
+ * @property string|null $backoffice_ineligible_redirect_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -49,8 +50,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligiblePolicy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligibleRedirectUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeNotEligibleRedirectUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBunqAllowedIp($value)
@@ -74,9 +76,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class FundConfig extends Model
 {
+    public const BACKOFFICE_INELIGIBLE_POLICY_REDIRECT = 'redirect';
+    public const BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST = 'fund_request';
+
+    public const BACKOFFICE_INELIGIBLE_POLICIES = [
+        self::BACKOFFICE_INELIGIBLE_POLICY_REDIRECT,
+        self::BACKOFFICE_INELIGIBLE_POLICY_FUND_REQUEST,
+    ];
+
     protected $fillable = [
         'backoffice_enabled', 'backoffice_url', 'backoffice_key',
-        'backoffice_certificate', 'backoffice_fallback', 'backoffice_not_eligible_redirect_url',
+        'backoffice_certificate', 'backoffice_fallback',
+        'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
     ];
 
     /**
@@ -88,7 +99,8 @@ class FundConfig extends Model
         'csv_primary_key', 'subtract_transaction_costs',
         'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
         'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
-        'backoffice_certificate', 'backoffice_fallback', 'backoffice_not_eligible_redirect_url',
+        'backoffice_certificate', 'backoffice_fallback',
+        'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
     ];
 
@@ -137,5 +149,13 @@ class FundConfig extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldRedirectOnIneligibility(): bool
+    {
+        return $this->backoffice_ineligible_policy == self::BACKOFFICE_INELIGIBLE_POLICY_REDIRECT;
     }
 }
