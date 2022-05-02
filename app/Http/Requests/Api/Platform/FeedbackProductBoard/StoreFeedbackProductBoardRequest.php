@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Platform\FeedbackProductBoard;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreFeedbackProductBoardRequest extends FormRequest
+class StoreFeedbackProductBoardRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -13,7 +13,7 @@ class StoreFeedbackProductBoardRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->isAuthenticated() && !empty(resolve('productboard_api'));
     }
 
     /**
@@ -21,8 +21,13 @@ class StoreFeedbackProductBoardRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
-        return (new ValidateFeedbackProductBoardRequest())->rules();
+        return [
+            'title' => 'required|string|min:2|max:200',
+            'content' => 'required|string|min:2|max:4000',
+            'urgency' => 'nullable|in:low,medium,high',
+            'customer_email' => 'nullable|email',
+        ];
     }
 }

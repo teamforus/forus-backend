@@ -36,6 +36,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $iconnect_target_binding
  * @property string|null $iconnect_api_oin
  * @property string|null $iconnect_base_url
+ * @property string|null $backoffice_ineligible_policy
+ * @property string|null $backoffice_ineligible_redirect_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -51,6 +53,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeCertificate($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeEnabled($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeFallback($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligiblePolicy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeIneligibleRedirectUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FundConfig whereBackofficeUrl($value)

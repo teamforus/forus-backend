@@ -8,6 +8,6 @@ class ProductboardApi extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'productboard_api';
+        return 'productboard';
     }
 }

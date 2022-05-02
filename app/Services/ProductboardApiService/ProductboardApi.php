@@ -3,22 +3,21 @@
 namespace App\Services\ProductboardApiService;
 
 use GuzzleHttp\Client;
+use Illuminate\Support\Arr;
 
-/**
- * Class ProductboardApi
- * @package App\Services\ProductboardApiService
- */
 class ProductboardApi
 {
-    protected $api_url = "https://api.productboard.com/";
-    protected $api_key;
+    protected string $api_url = "https://api.productboard.com/";
+    protected string $api_key;
+    protected int $connect_timeout;
 
     /**
-     * ProductboardApi constructor.
+     * @param array $configs
      */
-    public function __construct()
+    public function __construct(array $configs)
     {
-        $this->api_key = config('forus.productboard_api.key');
+        $this->api_key = Arr::get($configs, 'access_token');
+        $this->connect_timeout = Arr::get($configs, 'connect_timeout', 10);
     }
 
     /**
@@ -26,7 +25,7 @@ class ProductboardApi
      *
      * @return string[]
      */
-    public function makeRequestHeaders(): array
+    protected function makeRequestHeaders(): array
     {
         return [
             'Authorization' => 'Bearer ' . $this->api_key,
@@ -42,10 +41,11 @@ class ProductboardApi
      * @param array $data
      * @return array
      */
-    protected function makeRequestOptions(string $method, array $data): array {
+    protected function makeRequestOptions(string $method, array $data): array
+    {
         return array_merge([
             'headers' => $this->makeRequestHeaders(),
-            'connect_timeout' => config('forus.productboard_api.connect_timeout', 10),
+            'connect_timeout' => $this->connect_timeout,
         ], $method === 'GET' ? [
             'query' => $data,
         ]: [
@@ -61,7 +61,7 @@ class ProductboardApi
      * @param array $data
      * @return array
      */
-    public function request(string $method, string $url, array $data = []): array
+    protected function request(string $method, string $url, array $data = []): array
     {
         $guzzleClient = new Client();
 
@@ -87,8 +87,8 @@ class ProductboardApi
      * @param array $data
      * @return array
      */
-    public function storeNote(array $data): array
+    public function create(array $data): array
     {
-        return $this->request('POST', $this->api_url. 'notes', $data);
+        return $this->request('POST', $this->api_url . 'notes', $data);
     }
 }

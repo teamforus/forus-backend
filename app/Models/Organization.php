@@ -141,7 +141,6 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereKvk($value)
  * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
  * @method static EloquentBuilder|Organization whereName($value)
- * @method static EloquentBuilder|Organization wherePersonBsnApiId($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)

@@ -204,7 +204,6 @@ return [
 
         App\Services\KeyPairGeneratorService\KeyPairGeneratorServiceProvider::class,
         App\Services\KvkApiService\KvkApiServiceProvider::class,
-        App\Services\ProductboardApiService\ProductboardApiServiceProvider::class,
 
         App\Services\FileService\FileServiceProvider::class,
         App\Services\MediaService\MediaServiceProvider::class,
@@ -221,6 +220,7 @@ return [
         App\Services\BackofficeApiService\BackofficeApiServiceProvider::class,
 
         App\Services\BNGService\BNGServiceProvider::class,
+        App\Services\ProductboardApiService\ProductboardApiServiceProvider::class,
     ],
 
     /*
