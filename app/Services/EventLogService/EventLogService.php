@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Fund;
 use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
+use App\Models\FundRequestRecord;
 use App\Models\FundTopUpTransaction;
 use App\Models\Implementation;
 use App\Models\Organization;
@@ -57,31 +58,30 @@ class EventLogService implements IEventLogService
      */
     public function modelToMeta(string $type, $model): array
     {
-        $modelMeta = [];
+        $modelMeta = [
+            'fund' => fn() => $this->fundMeta($model),
+            'fund_request' => fn() => $this->fundRequestMeta($model),
+            'fund_request_record' => fn() => $this->fundRequestRecordMeta($model),
+            'fund_request_clarification' => fn() => $this->fundRequestClarificationMeta($model),
+            'fund_top_up_transaction' => fn() => $this->fundTopUpTransactionMeta($model),
+            'sponsor' => fn() => $this->sponsorMeta($model),
+            'provider' => fn() => $this->providerMeta($model),
+            'product' => fn() => $this->productMeta($model),
+            'voucher' => fn() => $this->voucherMeta($model),
+            'organization' => fn() => $this->organizationMeta($model),
+            'employee' => fn() => $this->employeeMeta($model),
+            'product_reservation' => fn() => $this->productReservationMeta($model),
+            'voucher_transaction' => fn() => $this->voucherTransactionMeta($model),
+            'physical_card' => fn() => $this->physicalCardMeta($model),
+            'physical_card_request' => fn() => $this->physicalCardRequestMeta($model),
+            'bank' => fn() => $this->bankMeta($model),
+            'bank_connection' => fn() => $this->bankConnectionMeta($model),
+            'bank_connection_account' => fn() => $this->bankConnectionAccountMeta($model),
+            'voucher_transaction_bulk' => fn() => $this->voucherTransactionBulkMeta($model),
+            'implementation' => fn() => $this->implementationMeta($model),
+        ];
 
-        switch ($type) {
-            case 'fund': $modelMeta = $this->fundMeta($model); break;
-            case 'fund_request': $modelMeta = $this->fundRequestMeta($model); break;
-            case 'fund_request_clarification': $modelMeta = $this->fundRequestClarificationMeta($model); break;
-            case 'top_up_transaction': $modelMeta = $this->fundTopUpTransactionMeta($model); break;
-            case 'sponsor': $modelMeta = $this->sponsorMeta($model); break;
-            case 'provider': $modelMeta = $this->providerMeta($model); break;
-            case 'product': $modelMeta = $this->productMeta($model); break;
-            case 'voucher': $modelMeta = $this->voucherMeta($model); break;
-            case 'organization': $modelMeta = $this->organizationMeta($model); break;
-            case 'employee': $modelMeta = $this->employeeMeta($model); break;
-            case 'product_reservation': $modelMeta = $this->productReservationMeta($model); break;
-            case 'voucher_transaction': $modelMeta = $this->voucherTransactionMeta($model); break;
-            case 'physical_card': $modelMeta = $this->physicalCardMeta($model); break;
-            case 'physical_card_request': $modelMeta = $this->physicalCardRequestMeta($model); break;
-            case 'bank': $modelMeta = $this->bankMeta($model); break;
-            case 'bank_connection': $modelMeta = $this->bankConnectionMeta($model); break;
-            case 'bank_connection_account': $modelMeta = $this->bankConnectionAccountMeta($model); break;
-            case 'voucher_transaction_bulk': $modelMeta = $this->voucherTransactionBulkMeta($model); break;
-            case 'implementation': $modelMeta = $this->implementationMeta($model); break;
-        }
-
-        return $modelMeta;
+        return $modelMeta[$type] ? $modelMeta[$type]() : [];
     }
 
     /**
@@ -117,6 +117,23 @@ class EventLogService implements IEventLogService
             'fund_request_disregard_notify' => $fundRequest->disregard_notify,
             'fund_request_created_date' => $fundRequest->created_at->format('Y-m-d'),
             'fund_request_created_date_locale' => format_date_locale($fundRequest->created_at),
+        ];
+    }
+
+    /**
+     * @param FundRequestRecord $fundRequestRecord
+     * @return array
+     */
+    protected function fundRequestRecordMeta(FundRequestRecord $fundRequestRecord): array
+    {
+        return [
+            'fund_request_record_id' => $fundRequestRecord->id,
+            'fund_request_record_note' => $fundRequestRecord->note,
+            'fund_request_record_value' => $fundRequestRecord->value,
+            'fund_request_record_state' => $fundRequestRecord->state,
+            'fund_request_record_employee_id' => $fundRequestRecord->employee_id,
+            'fund_request_record_record_type_key' => $fundRequestRecord->record_type_key,
+            'fund_request_record_fund_criterion_id' => $fundRequestRecord->fund_criterion_id,
         ];
     }
 

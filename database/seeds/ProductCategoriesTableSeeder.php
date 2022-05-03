@@ -31,7 +31,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         }
 
         self::seedFile('taxonomy-with-ids');
-        self::seedFile('services-with-ids', true);
+        self::seedFile('services-with-ids');
 
         $model = new ProductCategory();
 
@@ -42,9 +42,8 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
     /**
      * @param $file
-     * @param bool $service
      */
-    private static function seedFile($file, bool $service = false): void
+    private static function seedFile($file): void
     {
         $taxonomies = self::loadTaxonomies($file, [
             'en' => 'en-US',
@@ -59,7 +58,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
             $parents = $depths['keys'][$depth - 1] ?? [];
 
             $categories = array_values(array_map(static function ($category) use (
-                $depth, $parents, &$translations, $service
+                $depth, $parents, &$translations
             ) {
                 $names = $category['names'][$depth - 1];
 
@@ -75,7 +74,6 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
                     'id' => $category['id'],
                     'key' => $category['keys'][$depth - 1],
                     'parent_id' => $depth > 1 ? $parents[$category['keys'][$depth - 2]] ?? null : null,
-                    'service' => $service,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -130,7 +128,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
 
         foreach ($locales as $localeKey => $locale) {
             array_set($taxonomiesRaw, $localeKey, collect(
-                explode("\n", file_get_contents(database_path(
+                explode("\n\r", file_get_contents(database_path(
                     sprintf('/seeds/db/%s.%s.txt', $file, $locale)
                 ))))->filter(function ($row) {
                 return !empty($row) && !starts_with($row, ['#']);

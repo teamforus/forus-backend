@@ -7,8 +7,8 @@ use Psr\Http\Message\ResponseInterface;
 class ResponseData
 {
     protected $data;
-    protected $code;
-    protected $headers;
+    protected int $code;
+    protected array $headers;
 
     /**
      * @param string|ResponseInterface $data

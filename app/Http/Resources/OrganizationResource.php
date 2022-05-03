@@ -29,7 +29,10 @@ class OrganizationResource extends Resource
      */
     public static function load($request = null): array
     {
-        $load = [];
+        $load = [
+            'tags',
+            'bank_connection_active',
+        ];
 
         self::isRequested('logo', $request) && array_push($load, 'logo');
         self::isRequested('funds', $request) && array_push($load, 'funds');
@@ -57,7 +60,7 @@ class OrganizationResource extends Resource
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = $organization->only([
                 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-                'phone_public', 'website_public'
+                'phone_public', 'website_public',
             ]);
         }
 

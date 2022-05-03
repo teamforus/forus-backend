@@ -30,10 +30,14 @@ class IndexProductsRequest extends BaseFormRequest
      */
     public function rules(): array
     {
+        $organizationsQuery = OrganizationQuery::whereHasPermissions(
+            Organization::query(),
+            $this->auth_address(),
+            'scan_vouchers'
+        );
+
         return [
-            'organization_id' => ['nullable', Rule::in(OrganizationQuery::whereHasPermissions(
-                Organization::query(), $this->auth_address(), 'scan_vouchers'
-            )->pluck('id')->toArray())],
+            'organization_id' => 'nullable|in:' . $organizationsQuery->pluck('id')->join(','),
             'reservable' => 'nullable|boolean',
             'per_page' => 'numeric|between:1,100',
         ];

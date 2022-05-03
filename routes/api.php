@@ -75,6 +75,7 @@ Route::group([], static function() use ($router) {
 Route::group(['middleware' => ['api.auth']], static function() use ($router) {
     $router->group(['prefix' => '/identity'], static function() use ($router) {
         $router->get('/', 'Api\IdentityController@getPublic');
+        $router->delete('/', 'Api\IdentityController@destroy');
         $router->resource('emails', 'Api\Identity\IdentityEmailsController', [
             'only' => ['index', 'show', 'store', 'destroy'],
             'parameters' => [

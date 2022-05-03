@@ -29,7 +29,6 @@ class SearchProductCategoriesRequest extends FormRequest
                 'nullable',
                 $this->input('parent_id') === 'null' ? '' : 'exists:product_categories,id'
             ],
-            'service' => 'boolean',
             'used' => 'boolean',
         ];
     }

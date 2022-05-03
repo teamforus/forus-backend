@@ -12,6 +12,7 @@ use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\EmployeeQuery;
 use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use App\Traits\ThrottleWithMeta;
@@ -28,8 +29,8 @@ class EmployeesController extends Controller
 {
     use ThrottleWithMeta;
 
-    private $recordRepo;
-    private $identityRepo;
+    private IRecordRepo $recordRepo;
+    private IIdentityRepo $identityRepo;
 
     public function __construct(
         IRecordRepo $recordRepo,
@@ -57,15 +58,19 @@ class EmployeesController extends Controller
         $this->authorize('show', [$organization]);
         $this->authorize('viewAny', [Employee::class, $organization]);
 
-        if ($request->has('role') && $role = $request->input('role')) {
-            $query = $organization->employeesOfRoleQuery($role);
-        } else {
-            $query = $organization->employees();
+        $query = $organization->employees();
+        $roleFilters = $request->only('role', 'roles');
+        $permissionFilters = $request->only('permission', 'permissions');
+
+        foreach ($roleFilters as $roleFilter) {
+            EmployeeQuery::whereHasRoleFilter($query, $roleFilter);
         }
 
-        return EmployeeResource::collection($query->paginate(
-            $request->input('per_page', 10)
-        ));
+        foreach ($permissionFilters as $permissionFilter) {
+            EmployeeQuery::whereHasPermissionFilter($query, $permissionFilter);
+        }
+
+        return EmployeeResource::queryCollection($query, $request);
     }
 
     /**

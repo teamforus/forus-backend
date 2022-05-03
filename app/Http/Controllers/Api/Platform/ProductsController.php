@@ -25,14 +25,16 @@ class ProductsController extends Controller
     {
         $this->authorize('viewAnyPublic', Product::class);
 
-        return ProductResource::collection(Product::search($request->only([
+        $query = Product::search($request->only([
             'fund_type', 'product_category_id', 'fund_id', 'price_type',
-            'unlimited_stock', 'organization_id', 'q', 'order_by', 'order_by_dir'
-        ]))->with(
-            ProductResource::load()
-        )->where($request->input('show_all', false) ? [] : [
-            'show_on_webshop' => true,
-        ])->paginate($request->input('per_page', 15)));
+            'unlimited_stock', 'organization_id', 'q', 'order_by', 'order_by_dir',
+        ]));
+
+        if (!$request->input('show_all', false)) {
+            $query->where('show_on_webshop', true);
+        }
+
+        return ProductResource::queryCollection($query, $request);
     }
 
     /**
@@ -61,7 +63,7 @@ class ProductsController extends Controller
             );
         }
 
-        return ProductResource::collection($resultProducts);
+        return ProductResource::collection($resultProducts->load(ProductResource::load()));
     }
 
     /**
@@ -73,6 +75,6 @@ class ProductsController extends Controller
     {
         $this->authorize('showPublic', $product);
 
-        return new ProductResource($product->load(ProductResource::load()));
+        return ProductResource::create($product);
     }
 }

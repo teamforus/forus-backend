@@ -11,8 +11,8 @@ use App\Scopes\Builders\FundProviderProductQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\UnauthorizedException;
 
 /**
  * Class StoreVoucherTransactionRequest
@@ -28,7 +28,16 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('useAsProvider', $this->voucher_address_or_physical_code->voucher);
+        $voucher = $this->voucher_address_or_physical_code->voucher;
+
+        if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType() && $this->has('product_id')) {
+            return Gate::allows('useAsProviderWithProducts', [
+                $voucher,
+                $this->input('product_id'),
+            ]);
+        }
+
+        return Gate::allows('useAsProvider', $voucher);
     }
 
     /**
@@ -39,14 +48,21 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     public function rules(): array
     {
         $voucher = $this->voucher_address_or_physical_code->voucher;
+        $commonRules = $this->commonRules();
 
         if ($voucher->fund->isTypeSubsidy()) {
-            $rules = $this->subsidyVoucherRules($voucher);
-        } else if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType()) {
-            $rules = $this->budgetVoucherRules($voucher);
+            return array_merge($this->subsidyVoucherRules($voucher), $commonRules);
         }
 
-        return array_merge($rules ?? [], $this->commonRules());
+        if ($voucher->fund->isTypeBudget() && $voucher->isBudgetType()) {
+            return array_merge($this->budgetVoucherRules($voucher), $commonRules);
+        }
+
+        if ($voucher->fund->isTypeBudget() && $voucher->isProductType()) {
+            return $commonRules;
+        }
+
+        throw new UnauthorizedException('Invalid voucher type.');
     }
 
     /**
@@ -66,18 +82,36 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
     private function budgetVoucherRules(Voucher $voucher): array
     {
         return [
+            'product_id' => [
+                $this->has('amount') ? 'nullable' :  'required',
+                'in:' . implode(',', $this->getValidBudgetProducts($voucher))
+            ],
             'amount' => [
-                'required',
+                $this->has('product_id') ? 'nullable' :  'required',
                 'numeric',
                 'min:.02',
                 'max:' . number_format($voucher->amount_available, 2, '.', ''),
             ],
             'organization_id' => [
-                'required',
+                $this->has('amount') ? 'required' :  'nullable',
                 'exists:organizations,id',
-                'in:' . $this->getValidOrganizations($voucher)->implode(',')
+                'in:' . $this->getValidOrganizations($voucher)->pluck('id')->implode(',')
             ],
         ];
+    }
+
+    /**
+     * @param Voucher $voucher
+     * @return array
+     */
+    private function getValidBudgetProducts(Voucher $voucher): array
+    {
+        return $this->has('organization_id') ? ProductQuery::whereAvailableForVoucher(
+            Product::query(),
+            $voucher,
+            Organization::whereId($this->input('organization_id'))->select('id'),
+            false
+        )->pluck('products.id')->toArray() : [];
     }
 
     /**
@@ -98,15 +132,40 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
 
     /**
      * @param Voucher $voucher
-     * @return Collection
+     * @return Builder
      */
-    private function getValidOrganizations(Voucher $voucher): Collection
+    private function getValidOrganizations(Voucher $voucher): Builder
     {
-        return OrganizationQuery::whereHasPermissionToScanVoucher(
-            Organization::query(),
-            $this->auth_address(),
-            $voucher
-        )->pluck('organizations.id');
+        if (!$this->has('product_id') && !$this->has('amount')) {
+            return Organization::where('id', '<', -999);
+        }
+
+        return Organization::query()->where(function(Builder $builder) use ($voucher) {
+            $builder->where(function(Builder $builder) use ($voucher) {
+                if ($this->has('product_id')) {
+                    if ($voucher->fund->isTypeSubsidy()) {
+                        $builder->whereHas('fund_providers', function(Builder $builder) use ($voucher) {
+                            $builder->whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
+                                FundProviderProductQuery::whereAvailableForSubsidyVoucher($builder, $voucher);
+                            });
+                        });
+                    } else {
+                        // Product approved to be bought by target voucher
+                        $builder->whereHas('products', function(Builder $builder) use ($voucher) {
+                            ProductQuery::whereAvailableForVoucher($builder, $voucher, null, false);
+                        });
+                    }
+                }
+
+                if ($this->has('amount')) {
+                    OrganizationQuery::whereHasPermissionToScanVoucher(
+                        $builder,
+                        $this->auth_address(),
+                        $voucher
+                    );
+                }
+            });
+        });
     }
 
     /**
@@ -115,17 +174,15 @@ class StoreVoucherTransactionRequest extends BaseFormRequest
      */
     private function getAvailableSubsidyProductIds($voucher): array
     {
-        $query = Product::whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
+        return Product::whereHas('fund_provider_products', function(Builder $builder) use ($voucher) {
             $organizations = $this->getValidOrganizations($voucher);
 
-            FundProviderProductQuery::whereAvailableForSubsidyVoucherFilter(
+            FundProviderProductQuery::whereAvailableForSubsidyVoucher(
                 $builder,
                 $voucher,
-                $organizations->toArray()
+                $organizations->select('id')
             );
-        });
-
-        return ProductQuery::inStockAndActiveFilter($query)->pluck('id')->toArray();
+        })->pluck('id')->toArray();
     }
 
     /**

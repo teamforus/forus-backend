@@ -89,9 +89,7 @@ class FundProviderController extends Controller
             $fund_providers->where('state', $state);
         }
 
-        return FundProviderResource::collection($fund_providers->with(
-            FundProviderResource::$load
-        )->get());
+        return FundProviderResource::queryCollection($fund_providers, $request);
     }
 
     /**

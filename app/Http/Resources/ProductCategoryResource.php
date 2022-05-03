@@ -25,7 +25,7 @@ class ProductCategoryResource extends Resource
     public function toArray($request): array
     {
         return $this->resource->only([
-            'id', 'key', 'name', 'service', 'parent_id',
+            'id', 'key', 'name', 'parent_id',
         ]);
     }
 }

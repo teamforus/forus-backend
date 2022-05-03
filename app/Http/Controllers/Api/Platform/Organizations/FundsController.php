@@ -55,9 +55,9 @@ class FundsController extends Controller
             $query->where('public', true);
         }
 
-        return FundResource::collection(FundQuery::sortByState($query, [
+        return FundResource::queryCollection(FundQuery::sortByState($query, [
             'active', 'waiting', 'paused', 'closed',
-        ])->paginate($request->input('per_page')));
+        ]), $request);
     }
 
     /**

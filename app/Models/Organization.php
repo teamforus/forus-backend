@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Traits\HasTags;
+use App\Scopes\Builders\EmployeeQuery;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OrganizationQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 
 /**
@@ -139,6 +141,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereKvk($value)
  * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
  * @method static EloquentBuilder|Organization whereName($value)
+ * @method static EloquentBuilder|Organization wherePersonBsnApiId($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
@@ -173,7 +176,7 @@ class Organization extends Model
         'business_type_id', 'is_sponsor', 'is_provider', 'is_validator',
         'validator_auto_accept_funds', 'manage_provider_products', 'description', 'description_text',
         'backoffice_available', 'reservations_budget_enabled', 'reservations_subsidy_enabled',
-        'reservations_auto_accept', 'bsn_enabled'
+        'reservations_auto_accept', 'bsn_enabled',
     ];
 
     /**
@@ -195,7 +198,7 @@ class Organization extends Model
         'reservations_auto_accept'              => 'boolean',
         'allow_batch_reservations'              => 'boolean',
         'pre_approve_external_funds'            => 'boolean',
-        'bsn_enabled'                           => 'boolean'
+        'bsn_enabled'                           => 'boolean',
     ];
 
     /**
@@ -471,10 +474,9 @@ class Organization extends Model
      */
     public function supplied_funds_approved(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        )->where(function(EloquentBuilder $builder) {
+        return $this->belongsToMany(Fund::class,'fund_providers')->where([
+            'fund_providers.state' => FundProvider::STATE_ACCEPTED
+        ])->where(function(EloquentBuilder $builder) {
             $builder->where('fund_providers.allow_budget', true);
             $builder->orWhere(function(EloquentBuilder $builder) {
                 $builder->where('fund_providers.allow_products', true);
@@ -493,6 +495,7 @@ class Organization extends Model
             Fund::class,
             'fund_providers'
         )->where(function(EloquentBuilder $builder) {
+            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
             $builder->where('fund_providers.allow_budget', true);
         });
     }
@@ -507,6 +510,7 @@ class Organization extends Model
             Fund::class,
             'fund_providers'
         )->where(static function(EloquentBuilder $builder) {
+            $builder->where('fund_providers.state', FundProvider::STATE_ACCEPTED);
             $builder->where('fund_providers.allow_products', true);
         });
     }
@@ -562,27 +566,21 @@ class Organization extends Model
     }
 
     /**
-     * @param $role
-     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @param string|array $role
+     * @return EloquentBuilder|Relation
      */
-    public function employeesOfRoleQuery($role) {
-        return $this->employees()->whereHas('roles', function(
-            EloquentBuilder $query
-        ) use ($role) {
-            $query->whereIn('key', (array) $role);
-        });
+    public function employeesOfRoleQuery($role)
+    {
+        return EmployeeQuery::whereHasRoleFilter($this->employees(), $role);
     }
 
     /**
-     * @param $permission
-     * @return EloquentBuilder|\Illuminate\Database\Eloquent\Relations\HasMany
+     * @param string|array $permission
+     * @return EloquentBuilder|Relation
      */
-    public function employeesWithPermissionsQuery($permission) {
-        return $this->employees()->whereHas('roles.permissions', static function(
-            EloquentBuilder $query
-        ) use ($permission) {
-            $query->whereIn('permissions.key', (array) $permission);
-        });
+    public function employeesWithPermissionsQuery($permission)
+    {
+        return EmployeeQuery::whereHasPermissionFilter($this->employees(), $permission);
     }
 
     /**

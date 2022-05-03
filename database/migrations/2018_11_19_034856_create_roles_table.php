@@ -19,7 +19,7 @@ class CreateRolesTable extends Migration
             $table->string('name', 60);
         });
 
-        resolve(RolesTableSeeder::class)->run();
+        resolve(RolesTableSeeder::class)->run(false);
     }
 
     /**

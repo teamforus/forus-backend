@@ -22,6 +22,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\BackofficeApiService\BackofficeApi;
@@ -76,6 +77,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Employee[] $employees_validator_managers
+ * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
  * @property-read Collection|\App\Models\FundFaq[] $faq
@@ -103,6 +106,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read float $budget_validated
  * @property-read string $description_html
  * @property-read bool $is_external
+ * @property-read string $type_locale
  * @property-read Media|null $logo
  * @property-read Collection|\App\Services\EventLogService\Models\EventLog[] $logs
  * @property-read int|null $logs_count
@@ -117,20 +121,10 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read int|null $provider_organizations_count
  * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved
  * @property-read int|null $provider_organizations_approved_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved_budget
- * @property-read int|null $provider_organizations_approved_budget_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_approved_products
- * @property-read int|null $provider_organizations_approved_products_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_declined
- * @property-read int|null $provider_organizations_declined_count
- * @property-read Collection|\App\Models\Organization[] $provider_organizations_pending
- * @property-read int|null $provider_organizations_pending_count
  * @property-read Collection|\App\Models\FundProvider[] $providers
  * @property-read int|null $providers_count
  * @property-read Collection|\App\Models\FundProvider[] $providers_allowed_products
  * @property-read int|null $providers_allowed_products_count
- * @property-read Collection|\App\Models\FundProvider[] $providers_approved
- * @property-read int|null $providers_approved_count
  * @property-read Collection|\App\Models\Tag[] $tags
  * @property-read int|null $tags_count
  * @property-read Collection|\App\Models\Tag[] $tags_provider
@@ -333,18 +327,6 @@ class Fund extends Model
     public function providers(): HasMany
     {
         return $this->hasMany(FundProvider::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function providers_approved(): HasMany
-    {
-        return $this->hasMany(FundProvider::class)->where(static function(Builder $builder) {
-            $builder->where('allow_budget', true);
-            $builder->orWhere('allow_products', true);
-            $builder->orWhere('allow_some_products', true);
-        });
     }
 
     /**
@@ -600,6 +582,18 @@ class Fund extends Model
     }
 
     /**
+     * @return string
+     * @noinspection PhpUnused
+     */
+    public function getTypeLocaleAttribute(): string
+    {
+        return [
+            self::TYPE_SUBSIDIES => 'Acties',
+            self::TYPE_BUDGET => 'Budget',
+        ][$this->type] ?? $this->type;
+    }
+
+    /**
      * @return float
      * @noinspection PhpUnused
      */
@@ -687,10 +681,9 @@ class Fund extends Model
      */
     public function provider_organizations_approved(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        )->where(static function(Builder $builder) {
+        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
+            'state' => FundProvider::STATE_ACCEPTED,
+        ])->where(static function(Builder $builder) {
             $builder->where('allow_budget', true);
             $builder->orWhere('allow_products', true);
             $builder->orWhere('allow_some_products', true);
@@ -701,61 +694,9 @@ class Fund extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      * @noinspection PhpUnused
      */
-    public function provider_organizations_approved_budget(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class,
-            'fund_providers'
-        )->where(static function(Builder $builder) {
-            $builder->where('allow_budget', true);
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function provider_organizations_approved_products(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class, 'fund_providers')->where(static function(Builder $builder) {
-            $builder->where('allow_products', true);
-        });
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function provider_organizations_declined(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
-            'allow_budget' => false,
-            'allow_products' => false,
-            'dismissed' => true,
-        ]);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
-    public function provider_organizations_pending(): BelongsToMany
-    {
-        return $this->belongsToMany(Organization::class, 'fund_providers')->where([
-            'allow_budget' => false,
-            'allow_products' => false,
-        ]);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     * @noinspection PhpUnused
-     */
     public function provider_organizations(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Organization::class,
-            'fund_providers'
-        );
+        return $this->belongsToMany(Organization::class, 'fund_providers');
     }
 
     /**
@@ -789,6 +730,24 @@ class Fund extends Model
             'id'
         )->whereHas('roles.permissions', static function(Builder $builder) {
             $builder->where('key', 'validate_records');
+        });
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function employees_validator_managers(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles.permissions', static function(Builder $builder) {
+            $builder->where('key', 'manage_validators');
         });
     }
 
@@ -1274,9 +1233,8 @@ class Fund extends Model
      * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(
-        ?FundCriterion $fundCriterion = null
-    ): array {
+    public function validatorEmployees(?FundCriterion $fundCriterion = null): array
+    {
         $employees = $this->employees_validators()->pluck('employees.identity_address');
         $externalEmployees = [];
 
@@ -1899,5 +1857,37 @@ class Fund extends Model
         }
 
         return $default;
+    }
+
+    /**
+     * @return void
+     */
+    public function hasIConnectApiOin(): bool
+    {
+        return $this->isIconnectApiConfigured() &&
+            $this->organization->bsn_enabled &&
+            !empty($this->fund_config->iconnect_target_binding) &&
+            !empty($this->fund_config->iconnect_api_oin) &&
+            !empty($this->fund_config->iconnect_base_url);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isIconnectApiConfigured(): bool
+    {
+        return !empty(IConnect::getConfigs());
+    }
+
+    /**
+     * @return IConnect|null
+     */
+    public function getIConnect(): ?IConnect
+    {
+        return $this->hasIConnectApiOin() ? new IConnect(
+            $this->fund_config->iconnect_api_oin,
+            $this->fund_config->iconnect_target_binding,
+            $this->fund_config->iconnect_base_url
+        ) : null;
     }
 }
