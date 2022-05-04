@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
+use App\Services\BankService\Resources\BankResource;
 use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\PaymentInfoData;
 use App\Services\BNGService\Exceptions\ApiException;
@@ -23,11 +25,13 @@ use bunq\Model\Generated\Endpoint\PaymentBatch;
 use bunq\Model\Generated\Object\Amount;
 use bunq\Model\Generated\Object\DraftPaymentEntry;
 use bunq\Model\Generated\Object\Pointer;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -643,5 +647,112 @@ class VoucherTransactionBulk extends Model
             $this->bank_connection->organization_id,
             $this->id
         ), array_filter(compact('success', 'error')));
+    }
+
+    /**
+     * @param Request $request
+     * @return Builder
+     */
+    public static function search(Request $request): Builder
+    {
+        /** @var Builder $query */
+        $query = self::query();
+
+        if ($request->has('state') && $state = $request->input('state')) {
+            $query->where('state', $state);
+        }
+
+        if ($request->has('from') && $from = $request->input('from')) {
+            $from = (Carbon::createFromFormat('Y-m-d', $from));
+
+            $query->where(
+                'created_at',
+                '>=',
+                $from->startOfDay()->format('Y-m-d H:i:s')
+            );
+        }
+
+        if ($request->has('to') && $to = $request->input('to')) {
+            $to = (Carbon::createFromFormat('Y-m-d', $to));
+
+            $query->where(
+                'created_at',
+                '<=',
+                $to->endOfDay()->format('Y-m-d H:i:s')
+            );
+        }
+
+        if ($amount_min = $request->input('amount_min')) {
+            $query->where('amount', '>=', $amount_min);
+        }
+
+        if ($amount_max = $request->input('amount_max')) {
+            $query->where('amount', '<=', $amount_max);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param ?Organization $provider
+     * @return Builder
+     */
+    public static function searchSponsor(
+        Request $request,
+        Organization $organization,
+        Organization $provider = null
+    ): Builder {
+        $builder = self::search($request);
+
+        if ($provider) {
+            $builder->where('organization_id', $provider->id);
+        }
+
+        return $builder;
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    private static function exportTransform(Builder $builder)
+    {
+        $transKey = "export.voucher_transactions_bulk";
+
+        return $builder->with([
+            'voucher_transactions.provider',
+        ])->get()->map(static function(
+            VoucherTransactionBulk $transactionBulk
+        ) use ($transKey) {
+            return [
+                trans("$transKey.id") => $transactionBulk->id,
+                trans("$transKey.amount") => currency_format(
+                    $transactionBulk->voucher_transactions->sum('amount')
+                ),
+                trans("$transKey.bank") => $transactionBulk->bank_connection->bank->name,
+                trans("$transKey.date_transaction") => format_datetime_locale($transactionBulk->created_at),
+                trans("$transKey.state") => trans("$transKey.state-values.$transactionBulk->state"),
+            ];
+        })->values();
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param Organization|null $provider
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function exportSponsor(
+        Request $request,
+        Organization $organization,
+        Organization $provider = null
+    ) {
+        return self::exportTransform(VoucherTransactionBulkQuery::order(
+            self::searchSponsor($request, $organization, $provider),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        ));
     }
 }

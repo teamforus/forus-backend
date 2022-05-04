@@ -737,6 +737,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     );
 
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@export"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/transaction-bulks',
         "Api\Platform\Organizations\Sponsor\TransactionBulksController"
