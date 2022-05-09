@@ -127,10 +127,10 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
         $taxonomiesNames = [];
 
         foreach ($locales as $localeKey => $locale) {
-            array_set($taxonomiesRaw, $localeKey, collect(
-                explode("\n\r", file_get_contents(database_path(
-                    sprintf('/seeds/db/%s.%s.txt', $file, $locale)
-                ))))->filter(function ($row) {
+            $data = file_get_contents(database_path(sprintf('/seeds/db/%s.%s.txt', $file, $locale)));
+            $data = explode(PHP_EOL, str_replace("\r\n", PHP_EOL, $data));
+
+            array_set($taxonomiesRaw, $localeKey, collect($data)->filter(function ($row) {
                 return !empty($row) && !starts_with($row, ['#']);
             })->map(function ($row) use ($localeKey, &$taxonomiesNames) {
                 [$id, $names] = explode(' - ', $row);

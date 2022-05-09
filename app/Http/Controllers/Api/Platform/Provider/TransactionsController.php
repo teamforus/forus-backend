@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Provider\ProviderVoucherTransactionEmployeeResource;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -33,8 +34,10 @@ class TransactionsController extends Controller
             ]));
         });
 
-        return ProviderVoucherTransactionEmployeeResource::collection($query->with(
-            ProviderVoucherTransactionEmployeeResource::$load
-        )->paginate($request->input('per_page')));
+        return ProviderVoucherTransactionEmployeeResource::queryCollection(VoucherTransactionQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ));
     }
 }
