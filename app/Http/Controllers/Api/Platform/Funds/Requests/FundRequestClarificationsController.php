@@ -32,10 +32,9 @@ class FundRequestClarificationsController extends Controller
             FundRequestClarification::class, $fundRequest, $fund
         ]);
 
-        return FundRequestClarificationResource::collection(
-            $fundRequest->clarifications()->paginate(
-                $request->input('per_page')
-            )
+        return FundRequestClarificationResource::queryCollection(
+            $fundRequest->clarifications(),
+            $request
         );
     }
 
@@ -44,20 +43,18 @@ class FundRequestClarificationsController extends Controller
      *
      * @param Fund $fund
      * @param FundRequest $fundRequest
-     * @param FundRequestClarification $fundRequestClarification
+     * @param FundRequestClarification $requestClarification
      * @return FundRequestClarificationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(
         Fund $fund,
         FundRequest $fundRequest,
-        FundRequestClarification $fundRequestClarification
+        FundRequestClarification $requestClarification
     ): FundRequestClarificationResource {
-        $this->authorize('viewRequester', [
-            $fundRequestClarification, $fundRequest, $fund
-        ]);
+        $this->authorize('viewRequester', [$requestClarification, $fundRequest, $fund]);
 
-        return new FundRequestClarificationResource($fundRequestClarification);
+        return FundRequestClarificationResource::create($requestClarification);
     }
 
     /**
@@ -66,7 +63,7 @@ class FundRequestClarificationsController extends Controller
      * @param UpdateFundRequestClarificationsRequest $request
      * @param Fund $fund
      * @param FundRequest $fundRequest
-     * @param FundRequestClarification $fundRequestClarification
+     * @param FundRequestClarification $requestClarification
      * @return FundRequestClarificationResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
@@ -74,23 +71,19 @@ class FundRequestClarificationsController extends Controller
         UpdateFundRequestClarificationsRequest $request,
         Fund $fund,
         FundRequest $fundRequest,
-        FundRequestClarification $fundRequestClarification
+        FundRequestClarification $requestClarification
     ): FundRequestClarificationResource {
-        $this->authorize('update', [
-            $fundRequestClarification, $fundRequest, $fund
-        ]);
+        $this->authorize('update', [$requestClarification, $fundRequest, $fund]);
 
-        $fundRequestClarification->update(array_merge($request->only([
-            'answer'
-        ]), [
+        $requestClarification->update(array_merge($request->only('answer'), [
             'answered_at' => now(),
             'state' => FundRequestClarification::STATE_ANSWERED,
         ]));
 
         foreach ($request->input('files', []) as $fileUid) {
-            $fundRequestClarification->attachFile(File::findByUid($fileUid));
+            $requestClarification->attachFile(File::findByUid($fileUid));
         }
 
-        return new FundRequestClarificationResource($fundRequestClarification);
+        return FundRequestClarificationResource::create($requestClarification);
     }
 }

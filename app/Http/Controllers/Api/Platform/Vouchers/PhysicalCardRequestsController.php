@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
-use App\Events\Vouchers\VoucherPhysicalCardRequestedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Vouchers\PhysicalCardRequests\StorePhysicalCardRequestRequest;
 use App\Http\Resources\PhysicalCardRequestResource;

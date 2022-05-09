@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class VoucherAssignedBudgetMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_budget';
+    protected string $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_budget';
 
     /**
      * @return Mailable

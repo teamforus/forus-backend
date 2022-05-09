@@ -3,6 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use App\Models\Organization;
 
+/**
+ * @noinspection PhpUnused
+ */
 class RemoveOrganizationOwnersFromEmployeesList extends Migration
 {
     /**

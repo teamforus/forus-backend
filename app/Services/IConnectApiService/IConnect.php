@@ -95,8 +95,8 @@ class IConnect
 
         try {
             return $guzzleClient->request(self::METHOD_GET, $url, $options);
-        } catch (\Throwable $exception) {
-            logger()->error($exception->getMessage());
+        } catch (\Throwable $e) {
+            logger()->error($e->getMessage());
             return null;
         }
     }

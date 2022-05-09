@@ -2,6 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * @noinspection PhpUnused
+ */
 class OrganizationIbanToUppercase extends Migration
 {
     /**

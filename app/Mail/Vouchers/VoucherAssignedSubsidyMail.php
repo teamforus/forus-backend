@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class VoucherAssignedSubsidyMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_subsidy';
+    protected string $notificationTemplateKey = 'notifications_identities.identity_voucher_assigned_subsidy';
 
     /**
      * @return Mailable

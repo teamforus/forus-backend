@@ -3,14 +3,13 @@
 namespace App\Http\Resources;
 
 use App\Models\VoucherTransaction;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class VoucherTransactionResource
  * @property VoucherTransaction $resource
  * @package App\Http\Resources
  */
-class VoucherTransactionResource extends Resource
+class VoucherTransactionResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -25,12 +24,6 @@ class VoucherTransactionResource extends Resource
         return array_merge($transaction->only([
             "id", "organization_id", "product_id", "address", "state", "payment_id",
         ]), [
-            'created_at' => $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : null,
-            'updated_at' => $transaction->updated_at ? $transaction->updated_at->format('Y-m-d H:i:s') : null,
-            'transfer' => $transaction->transfer_at ? $transaction->transfer_at->format('Y-m-d H:i:s') : null,
-            'created_at_locale' => format_datetime_locale($transaction->created_at),
-            'updated_at_locale' => format_datetime_locale($transaction->updated_at),
-            'transfer_at_locale' => format_datetime_locale($transaction->transfer_at),
             'cancelable' => $transaction->isCancelable(),
             'transaction_in' => $transaction->daysBeforeTransaction(),
             'amount' => currency_format($transaction->amount),
@@ -46,6 +39,6 @@ class VoucherTransactionResource extends Resource
             ]), [
                 'logo' => new MediaResource($transaction->voucher->fund->logo),
             ]),
-        ]);
+        ], $this->timestamps($transaction, 'created_at', 'updated_at', 'transfer_at'));
     }
 }

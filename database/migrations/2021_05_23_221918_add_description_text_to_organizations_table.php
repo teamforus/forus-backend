@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Organization;
 
 /**
- * Class AddDescriptionTextToOrganizationsTable
  * @noinspection PhpUnused
  */
 class AddDescriptionTextToOrganizationsTable extends Migration

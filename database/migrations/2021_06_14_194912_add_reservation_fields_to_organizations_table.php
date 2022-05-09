@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddReservationFieldsToOrganizationsTable
  * @noinspection PhpUnused
  */
 class AddReservationFieldsToOrganizationsTable extends Migration

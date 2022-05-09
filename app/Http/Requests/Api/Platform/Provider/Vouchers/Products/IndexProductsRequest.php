@@ -5,7 +5,6 @@ namespace App\Http\Requests\Api\Platform\Provider\Vouchers\Products;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
 use App\Scopes\Builders\OrganizationQuery;
-use Illuminate\Validation\Rule;
 
 /**
  * Class IndexProductsRequest

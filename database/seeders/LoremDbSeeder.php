@@ -1,50 +1,53 @@
 <?php
 
+namespace Database\Seeders;
+
+use App\Events\FundProviders\FundProviderApprovedBudget;
+use App\Events\FundProviders\FundProviderApprovedProducts;
+use App\Events\Funds\FundBalanceLowEvent;
+use App\Events\Funds\FundBalanceSuppliedEvent;
+use App\Events\Funds\FundCreatedEvent;
+use App\Events\Funds\FundEndedEvent;
+use App\Events\Funds\FundProviderApplied;
+use App\Events\Funds\FundStartedEvent;
 use App\Events\Organizations\OrganizationCreated;
+use App\Events\Products\ProductCreated;
+use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Models\BusinessType;
+use App\Models\Fund;
+use App\Models\FundProvider;
+use App\Models\Implementation;
+use App\Models\Office;
+use App\Models\Organization;
+use App\Models\Prevalidation;
+use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\VoucherTransaction;
+use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\ProductQuery;
+use App\Services\Forus\Record\Models\RecordType;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection as SupportCollection;
-use Carbon\Carbon;
-use App\Scopes\Builders\ProductQuery;
-use App\Models\Organization;
-use App\Models\ProductCategory;
-use App\Models\Office;
-use App\Models\Fund;
-use App\Models\Product;
-use App\Models\FundProvider;
-use App\Models\Prevalidation;
-use App\Models\Implementation;
-use App\Models\VoucherTransaction;
-use App\Events\Funds\FundCreatedEvent;
-use App\Events\Funds\FundEndedEvent;
-use App\Events\Funds\FundStartedEvent;
-use App\Events\Funds\FundBalanceLowEvent;
-use App\Events\Funds\FundBalanceSuppliedEvent;
-use App\Events\Funds\FundProviderApplied;
-use App\Services\Forus\Record\Models\RecordType;
-use App\Events\Products\ProductCreated;
-use App\Events\FundProviders\FundProviderApprovedBudget;
-use App\Events\FundProviders\FundProviderApprovedProducts;
-use App\Events\VoucherTransactions\VoucherTransactionCreated;
-use App\Scopes\Builders\FundQuery;
+use Kalnoy\Nestedset\Collection as NestedsetCollection;
 
 /**
  * Class LoremDbSeeder
  */
 class LoremDbSeeder extends Seeder
 {
-    private $tokenGenerator;
-    private $identityRepo;
-    private $recordRepo;
-    private $productCategories;
-    private $primaryEmail;
+    private mixed $tokenGenerator;
+    private mixed $identityRepo;
+    private mixed $recordRepo;
+    private array|NestedsetCollection $productCategories;
+    private mixed $primaryEmail;
 
-    private $countProviders;
-    private $countValidators;
-    private $countFundRequests;
-    private $fundRequestEmailPattern;
-    private $vouchersPerFund;
+    private mixed $countProviders;
+    private mixed $countValidators;
+    private mixed $countFundRequests;
+    private mixed $fundRequestEmailPattern;
+    private mixed $vouchersPerFund;
     private int $emailNth = 0;
 
     private array $implementations = [
@@ -128,7 +131,7 @@ class LoremDbSeeder extends Seeder
     /**
      * Run the database seeds
      *
-     * @throws Exception
+     * @throws \Throwable
      */
     public function run(): void
     {
@@ -213,7 +216,7 @@ class LoremDbSeeder extends Seeder
     /**
      * @param string $identity_address
      * @return array
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeSponsors(string $identity_address): array
     {
@@ -231,7 +234,7 @@ class LoremDbSeeder extends Seeder
     /**
      * @param string $identity_address
      * @param int $count
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeProviders(
         string $identity_address,
@@ -322,7 +325,7 @@ class LoremDbSeeder extends Seeder
     /**
      * @param string $identity_address
      * @param int $count
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeExternalValidators(
         string $identity_address,
@@ -342,7 +345,7 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param string $identity_address
-     * @throws Exception
+     * @throws \Throwable
      */
     public function applyFunds(string $identity_address): void
     {
@@ -428,7 +431,7 @@ class LoremDbSeeder extends Seeder
      * @return Organization[]
      * @param int $offices_count
      * @return array
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeOrganizations(
         string $prefix,
@@ -457,15 +460,15 @@ class LoremDbSeeder extends Seeder
      * @param string $identity_address
      * @param array $fields
      * @param int $offices_count
-     * @return Organization|\Illuminate\Database\Eloquent\Model
-     * @throws Exception
+     * @return Organization
+     * @throws \Throwable
      */
     public function makeOrganization(
         string $name,
         string $identity_address,
         array $fields = [],
         int $offices_count = 0
-    ) {
+    ): Organization {
         $organization = Organization::create(array_only(array_merge([
             'kvk' => '69599068',
             'iban' => env('DB_SEED_PROVIDER_IBAN'),
@@ -496,7 +499,7 @@ class LoremDbSeeder extends Seeder
      * @param int $count
      * @param array $fields
      * @return array
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeOffices(
         Organization $organization,
@@ -516,7 +519,7 @@ class LoremDbSeeder extends Seeder
      * @param Organization $organization
      * @param array $fields
      * @return Office
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeOffice(
         Organization $organization,
@@ -557,14 +560,14 @@ class LoremDbSeeder extends Seeder
      * @param Organization $organization
      * @param bool $active
      * @param array $fields
-     * @return Fund|\Illuminate\Database\Eloquent\Model
-     * @throws Exception
+     * @return Fund
+     * @throws \Throwable
      */
     public function makeFund(
         Organization $organization,
         bool $active = false,
         array $fields = []
-    ) {
+    ): Fund {
         $nth = 0;
 
         do {
@@ -613,12 +616,12 @@ class LoremDbSeeder extends Seeder
     /**
      * @param string $key
      * @param string $name
-     * @return Implementation|\Illuminate\Database\Eloquent\Model
+     * @return Implementation
      */
     public function makeImplementation(
         string $key,
         string $name
-    ) {
+    ): Implementation {
         $requiredDigidImplementations = array_map("str_slug", $this->fundsWithPhysicalCards);
         $informalCommunication = array_map("str_slug", $this->implementationsWithInformalCommunication);
 
@@ -794,7 +797,7 @@ class LoremDbSeeder extends Seeder
      * @param int $count
      * @param array $records
      * @return array
-     * @throws Exception
+     * @throws \Throwable
      */
     public function generatePrevalidationData(
         Fund $fund,
@@ -841,7 +844,7 @@ class LoremDbSeeder extends Seeder
      * @param int $count
      * @param array $fields
      * @return array
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeProducts(
         Organization $organization,
@@ -861,7 +864,7 @@ class LoremDbSeeder extends Seeder
      * @param Organization $organization
      * @param array $fields
      * @return Product
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeProduct(
         Organization $organization,
@@ -914,6 +917,7 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @return int
+     * @throws \Throwable
      */
     private function randomFakeBsn(): int
     {
@@ -922,7 +926,7 @@ class LoremDbSeeder extends Seeder
         do {
             try {
                 $bsn = random_int(100000000, 900000000);
-            } catch (Exception $e) {
+            } catch (\Throwable) {
                 $bsn = false;
             }
         } while ($bsn && in_array($bsn, $randomBsn, true));
@@ -932,7 +936,7 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @param $implementations
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeOtherImplementations($implementations): void {
         foreach ($implementations as $implementation) {
@@ -945,7 +949,7 @@ class LoremDbSeeder extends Seeder
     /**
      * Make fund requests
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
     public function makeFundRequests(): void {
         $requesters = [];
@@ -1036,7 +1040,7 @@ class LoremDbSeeder extends Seeder
      * @param null $default
      * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed
      */
-    public function config($key, $default = null)
+    public function config($key, $default = null): mixed
     {
         return config(sprintf('forus.seeders.lorem_db_seeder.%s', $key), $default);
     }
@@ -1087,9 +1091,9 @@ class LoremDbSeeder extends Seeder
     /**
      * @param Organization[] $sponsors
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
-    private function makeSponsorsFunds(array $sponsors)
+    private function makeSponsorsFunds(array $sponsors): void
     {
         foreach ($sponsors as $sponsor) {
             $this->makeSponsorFunds($sponsor);
@@ -1099,7 +1103,7 @@ class LoremDbSeeder extends Seeder
     /**
      * @param Organization $sponsor
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
     private function makeSponsorFunds(Organization $sponsor): void
     {
@@ -1145,7 +1149,7 @@ class LoremDbSeeder extends Seeder
     }
 
     /**
-     * @throws Exception
+     * @throws \Throwable
      */
     protected function appendPhysicalCards()
     {
@@ -1162,7 +1166,7 @@ class LoremDbSeeder extends Seeder
 
     /**
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
     private function makeVouchers(): void
     {

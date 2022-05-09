@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class UserLoginMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.user_login.title';
+    protected string $subjectKey = 'mails/system_mails.user_login.title';
 
     /**
      * @return Mailable

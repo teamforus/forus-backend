@@ -4,8 +4,8 @@ namespace App\Services\BNGService\Data;
 
 class AuthData
 {
-    protected $url;
-    protected $params;
+    protected string $url;
+    protected array $params;
 
     /**
      * @param string $url

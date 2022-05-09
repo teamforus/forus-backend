@@ -26,26 +26,12 @@ return [
     |
     */
 
-    'cloud' => env('FILESYSTEM_CLOUD', 's3'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Filesystem Disks
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure as many filesystem "disks" as you wish, and you
-    | may even configure multiple disks of the same driver. Defaults have
-    | been setup for each driver as an example of the required options.
-    |
-    | Supported Drivers: "local", "ftp", "s3", "rackspace"
-    |
-    */
-
     'disks' => [
 
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
+            'throw' => true,
         ],
 
         'public' => [
@@ -53,6 +39,7 @@ return [
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
             // 'visibility' => 'public',
+            'throw' => true,
         ],
 
         's3' => [
@@ -62,6 +49,7 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
+            'throw' => true,
         ],
 
         's3_media' => [
@@ -71,6 +59,7 @@ return [
             'region' => env('AWS_MEDIA_DEFAULT_REGION'),
             'bucket' => env('AWS_MEDIA_BUCKET'),
             'url' => env('AWS_MEDIA_URL'),
+            'throw' => true,
         ],
 
         's3_files' => [
@@ -80,6 +69,7 @@ return [
             'region' => env('AWS_FILES_DEFAULT_REGION'),
             'bucket' => env('AWS_FILES_BUCKET'),
             'url' => env('AWS_FILES_URL'),
+            'throw' => true,
         ],
 
         'ftp_physical_cards' => [
@@ -87,6 +77,7 @@ return [
             'host' => env('PHYSICAL_CARDS_FTP_HOST'),
             'username' => env('PHYSICAL_CARDS_FTP_USER'),
             'password' => env('PHYSICAL_CARDS_FTP_PASS'),
+            'throw' => true,
         ],
     ],
 

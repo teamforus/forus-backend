@@ -5,14 +5,11 @@ namespace App\Services\Forus\Record\Repositories\Interfaces;
 interface IRecordRepo {
     /**
      * Create or update records for given identity
-     * @param $identityAddress
+     * @param string $identityAddress
      * @param array $records
-     * @return \Illuminate\Support\Collection
+     * @return void
      */
-    public function updateRecords(
-        string $identityAddress,
-        array $records
-    );
+    public function updateRecords(string $identityAddress, array $records): void;
 
     /**
      * Get list all available record type keys
@@ -47,25 +44,21 @@ interface IRecordRepo {
         string $recordTypeKey,
         string $recordValue,
         string $excludeIdentity = null
-    );
+    ): bool;
 
     /**
      * Get identity id by email record
      * @param string $email
      * @return mixed|null
      */
-    public function identityAddressByEmail(
-        string $email
-    );
+    public function identityAddressByEmail(string $email);
 
     /**
      * Get identity id by email record
      * @param string $identityAddress
      * @return string|null
      */
-    public function primaryEmailByAddress(
-        string $identityAddress
-    );
+    public function primaryEmailByAddress(string $identityAddress): ?string;
 
     /**
      * Change identity primary_email record value
@@ -84,36 +77,28 @@ interface IRecordRepo {
      * @param string $identityAddress
      * @return string|null
      */
-    public function bsnByAddress(
-        string $identityAddress
-    );
+    public function bsnByAddress(string $identityAddress): ?string;
 
     /**
      * Get identity_address by bsn
      * @param string $bsn
      * @return string|null
      */
-    public function identityAddressByBsn(
-        string $bsn
-    ): ?string;
+    public function identityAddressByBsn(string $bsn): ?string;
 
     /**
      * Search identity_address by bsn
      * @param string $search
      * @return array
      */
-    public function identityAddressByBsnSearch(
-        string $search
-    ): array;
+    public function identityAddressByBsnSearch(string $search): array;
 
     /**
      * Get type id by key
      * @param string $key
      * @return int|null
      */
-    public function getTypeIdByKey(
-        string $key
-    );
+    public function getTypeIdByKey(string $key): ?int;
 
     /**
      * Add new record category to identity
@@ -122,20 +107,14 @@ interface IRecordRepo {
      * @param int $order
      * @return array|null
      */
-    public function categoryCreate(
-        string $identityAddress,
-        string $name,
-        int $order = 0
-    );
+    public function categoryCreate(string $identityAddress, string $name, int $order = 0): ?array;
 
     /**
      * Get identity record categories
      * @param string $identityAddress
      * @return array
      */
-    public function categoriesList(
-        string $identityAddress
-    );
+    public function categoriesList(string $identityAddress): array;
 
     /**
      * Get identity record category
@@ -143,25 +122,22 @@ interface IRecordRepo {
      * @param mixed $recordCategoryId
      * @return array|null
      */
-    public function categoryGet(
-        string $identityAddress,
-        $recordCategoryId
-    );
+    public function categoryGet(string $identityAddress, $recordCategoryId): ?array;
 
     /**
      * Update identity record category
      * @param string $identityAddress
-     * @param mixed $recordCategoryId
+     * @param mixed $categoryId
      * @param string|null $name
      * @param int|null $order
      * @return bool
      */
     public function categoryUpdate(
         string $identityAddress,
-        $recordCategoryId,
+        string $categoryId,
         string $name,
         int $order = null
-    );
+    ): bool;
 
     /**
      * Sort categories
@@ -169,22 +145,16 @@ interface IRecordRepo {
      * @param array $orders
      * @return void
      */
-    public function categoriesSort(
-        string $identityAddress,
-        array $orders
-    );
+    public function categoriesSort(string $identityAddress, array $orders): void;
 
     /**
      * Delete category
      * @param string $identityAddress
      * @param mixed $recordCategoryId
-     * @return mixed
+     * @return bool
      * @throws \Exception
      */
-    public function categoryDelete(
-        string $identityAddress,
-        $recordCategoryId
-    );
+    public function categoryDelete(string $identityAddress, $recordCategoryId): bool;
 
     /**
      * Get identity records
@@ -206,13 +176,13 @@ interface IRecordRepo {
     /**
      * Get identity record
      * @param string $identityAddress
-     * @param mixed $recordId
+     * @param int $recordId
      * @param bool $withTrashed
      * @return array
      */
     public function recordGet(
         string $identityAddress,
-        $recordId,
+        int $recordId,
         bool $withTrashed = false
     ): ?array;
 
@@ -239,10 +209,7 @@ interface IRecordRepo {
      * @param string $bsnValue
      * @return null|array
      */
-    public function setBsnRecord(
-        string $identityAddress,
-        string $bsnValue
-    );
+    public function setBsnRecord(string $identityAddress, string $bsnValue): ?array;
 
     /**
      * Update record
@@ -257,7 +224,7 @@ interface IRecordRepo {
         $recordId,
         $recordCategoryId = null,
         $order = null
-    );
+    ): bool;
 
     /**
      * Sort records
@@ -265,10 +232,7 @@ interface IRecordRepo {
      * @param array $orders
      * @return void
      */
-    public function recordsSort(
-        string $identityAddress,
-        array $orders
-    );
+    public function recordsSort(string $identityAddress, array $orders);
 
     /**
      * Delete record
@@ -277,10 +241,7 @@ interface IRecordRepo {
      * @return bool
      * @throws \Exception
      */
-    public function recordDelete(
-        string $identityAddress,
-        $recordId
-    );
+    public function recordDelete(string $identityAddress, $recordId): bool;
 
     /**
      * Make record validation qr-code data
@@ -288,10 +249,7 @@ interface IRecordRepo {
      * @param mixed $recordId
      * @return mixed
      */
-    public function makeValidationRequest(
-        string $identityAddress,
-        int $recordId
-    );
+    public function makeValidationRequest(string $identityAddress, int $recordId);
 
     /**
      * Approve validation request
@@ -315,8 +273,5 @@ interface IRecordRepo {
      * @param string $validationUuid
      * @return bool
      */
-    public function declineValidationRequest(
-        string $identityAddress,
-        string $validationUuid
-    ): bool;
+    public function declineValidationRequest(string $identityAddress, string $validationUuid): bool;
 }

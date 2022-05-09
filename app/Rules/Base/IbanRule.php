@@ -19,7 +19,7 @@ class IbanRule implements Rule
 
         try {
             $valid = $this->isValidIBAN($value);
-        } catch (\Exception $e) {}
+        } catch (\Throwable $e) {}
 
         return $valid;
     }

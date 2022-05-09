@@ -16,12 +16,9 @@ class OfficesController extends Controller
      * @param SearchOfficesRequest $request
      * @return AnonymousResourceCollection
      */
-    public function index(
-        SearchOfficesRequest $request
-    ): AnonymousResourceCollection {
-        return OfficeResource::collection(Office::search($request)->with(
-            OfficeResource::$load
-        )->get());
+    public function index(SearchOfficesRequest $request): AnonymousResourceCollection
+    {
+        return OfficeResource::queryCollection(Office::search($request), $request);
     }
 
     /**
@@ -32,6 +29,6 @@ class OfficesController extends Controller
      */
     public function show(Office $office): OfficeResource
     {
-        return new OfficeResource($office);
+        return OfficeResource::create($office);
     }
 }

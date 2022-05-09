@@ -11,7 +11,7 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class BalanceLowNotification extends BaseFundsNotification
 {
-    protected static $key = 'notifications_funds.balance_low';
+    protected static ?string $key = 'notifications_funds.balance_low';
     protected static $permissions = 'view_finances';
 
     /**

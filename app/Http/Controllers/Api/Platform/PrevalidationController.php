@@ -30,7 +30,7 @@ class PrevalidationController extends Controller
     {
         $this->authorize('store', Prevalidation::class);
 
-        return new PrevalidationResource(Prevalidation::storePrevalidations(
+        return PrevalidationResource::create(Prevalidation::storePrevalidations(
             Fund::find($request->input('fund_id')),
             [$request->input('data')]
         )->first());
@@ -51,9 +51,9 @@ class PrevalidationController extends Controller
             Fund::find($request->input('fund_id')),
             $request->input('data', []),
             $request->input('overwrite', [])
-        );
+        )->load(PrevalidationResource::LOAD);
 
-        return PrevalidationResource::collection($prevalidations->load(PrevalidationResource::$load));
+        return PrevalidationResource::collection($prevalidations);
     }
 
     /**
@@ -64,9 +64,8 @@ class PrevalidationController extends Controller
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
-    public function collectionHash(
-        UploadPrevalidationsRequest $request
-    ): array {
+    public function collectionHash(UploadPrevalidationsRequest $request): array
+    {
         $this->authorize('store', Prevalidation::class);
 
         $fund = Fund::find($request->input('fund_id'));
@@ -100,9 +99,7 @@ class PrevalidationController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAny', Prevalidation::class);
 
-        return PrevalidationResource::collection(Prevalidation::search($request)->with(
-            PrevalidationResource::$load
-        )->paginate($request->input('per_page')));
+        return PrevalidationResource::queryCollection(Prevalidation::search($request), $request);
     }
 
     /**
@@ -140,6 +137,6 @@ class PrevalidationController extends Controller
 
         $prevalidation->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

@@ -18,7 +18,7 @@ trait ThrottleWithMeta {
     /**
      * @var string
      */
-    private $throttleKeyPrefix = '';
+    private string $throttleKeyPrefix = '';
 
     /**
      * @param string $error
@@ -108,10 +108,7 @@ trait ThrottleWithMeta {
         throw new AuthorizationJsonException(json_encode([
             'error' => $error,
             'message' => $message,
-            'meta' => array_merge([
-                'title' => $title,
-                'message' => $message,
-            ], $meta)
+            'meta' => array_merge(compact('title', 'message'), $meta)
         ]), $code);
     }
 

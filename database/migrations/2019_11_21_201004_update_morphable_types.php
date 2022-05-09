@@ -11,9 +11,12 @@ use App\Models\Organization;
 use App\Models\ProductCategory;
 use App\Services\MediaService\Models\Media;
 
+/**
+ * @noinspection PhpUnused
+ */
 class UpdateMorphableTypes extends Migration
 {
-    private $morphMap = [
+    private array $morphMap = [
         'fund'              => Fund::class,
         'media'             => Media::class,
         'office'            => Office::class,

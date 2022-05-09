@@ -3,17 +3,16 @@
 namespace App\Http\Resources;
 
 use App\Models\ProductCategory;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class ProductCategoryResource
  * @property ProductCategory $resource
  * @package App\Http\Resources
  */
-class ProductCategoryResource extends Resource
+class ProductCategoryResource extends BaseJsonResource
 {
-    public static $load = [
-        'translations'
+    public const LOAD = [
+        'translations',
     ];
 
     /**

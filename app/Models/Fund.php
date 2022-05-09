@@ -46,15 +46,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $name
  * @property string|null $description
  * @property string|null $description_text
- * @property string|null $description_short
- * @property string|null $faq_title
- * @property string $request_btn_text
- * @property string|null $external_link_url
- * @property string $external_link_text
- * @property string|null $type
+ * @property string $type
  * @property string $state
- * @property string $balance
- * @property string $balance_provider
  * @property bool $archived
  * @property bool $public
  * @property bool $criteria_editable_after_start
@@ -144,25 +137,18 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static Builder|Fund query()
  * @method static Builder|Fund whereArchived($value)
  * @method static Builder|Fund whereAutoRequestsValidation($value)
- * @method static Builder|Fund whereBalance($value)
- * @method static Builder|Fund whereBalanceProvider($value)
  * @method static Builder|Fund whereCreatedAt($value)
  * @method static Builder|Fund whereCriteriaEditableAfterStart($value)
  * @method static Builder|Fund whereDefaultValidatorEmployeeId($value)
  * @method static Builder|Fund whereDescription($value)
- * @method static Builder|Fund whereDescriptionShort($value)
  * @method static Builder|Fund whereDescriptionText($value)
  * @method static Builder|Fund whereEndDate($value)
- * @method static Builder|Fund whereExternalLinkText($value)
- * @method static Builder|Fund whereExternalLinkUrl($value)
- * @method static Builder|Fund whereFaqTitle($value)
  * @method static Builder|Fund whereId($value)
  * @method static Builder|Fund whereName($value)
  * @method static Builder|Fund whereNotificationAmount($value)
  * @method static Builder|Fund whereNotifiedAt($value)
  * @method static Builder|Fund whereOrganizationId($value)
  * @method static Builder|Fund wherePublic($value)
- * @method static Builder|Fund whereRequestBtnText($value)
  * @method static Builder|Fund whereStartDate($value)
  * @method static Builder|Fund whereState($value)
  * @method static Builder|Fund whereType($value)
@@ -1001,7 +987,7 @@ class Fund extends Model
     public static function configuredFunds() {
         try {
             return static::query()->whereHas('fund_config')->get();
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             return collect();
         }
     }

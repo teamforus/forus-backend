@@ -5,6 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use App\Models\Voucher;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddReturnableFieldToVouchersTable extends Migration
 {
     /**

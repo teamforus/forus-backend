@@ -3,16 +3,17 @@
 namespace App\Http\Resources;
 
 use App\Models\FundProviderInvitation;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
- * Class FundProviderInvitationResource
  * @property FundProviderInvitation $resource
- * @package App\Http\Resources
  */
-class FundProviderInvitationResource extends Resource
+class FundProviderInvitationResource extends BaseJsonResource
 {
-    public static $load = [];
+    public const LOAD = [
+        'fund',
+        'from_fund',
+        'organization',
+    ];
 
     /**
      * Transform the resource into an array.
@@ -24,24 +25,13 @@ class FundProviderInvitationResource extends Resource
     {
         $invitation = $this->resource;
 
-        return collect($invitation)->only([
-            'id', 'state', 'allow_budget', 'allow_products'
-        ])->merge([
-            'expired'               => $invitation->expired,
-            'expire_at'             => $invitation->expire_at->format('Y-m-d H:i:s'),
-            'expire_at_locale'      => format_date_locale($invitation->expire_at),
-            'created_at'            => $invitation->created_at->format('Y-m-d H:i:s'),
-            'created_at_locale'     => format_datetime_locale(
-                $invitation->created_at
-            ),
-            'provider_organization' => new OrganizationResource(
-                $invitation->organization
-            ),
-            'sponsor_organization'  => new OrganizationResource(
-                $invitation->fund->organization
-            ),
+        return array_merge($invitation->only([
+            'id', 'state', 'allow_budget', 'allow_products', 'expired',
+        ]), [
             'fund'                  => new FundResource($invitation->fund),
             'from_fund'             => new FundResource($invitation->from_fund),
-        ])->toArray();
+            'provider_organization' => new OrganizationResource($invitation->organization),
+            'sponsor_organization'  => new OrganizationResource($invitation->fund->organization),
+        ], $this->timestamps($invitation, 'created_at', 'expire_at'));
     }
 }

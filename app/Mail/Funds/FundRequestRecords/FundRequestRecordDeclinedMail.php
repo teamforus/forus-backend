@@ -4,6 +4,7 @@ namespace App\Mail\Funds\FundRequestRecords;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * Class FundRequestCreatedMail
@@ -11,7 +12,7 @@ use Illuminate\Mail\Mailable;
  */
 class FundRequestRecordDeclinedMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = "notifications_identities.fund_request_record_declined";
+    protected string $notificationTemplateKey = "notifications_identities.fund_request_record_declined";
 
     /**
      * @return Mailable
@@ -25,6 +26,10 @@ class FundRequestRecordDeclinedMail extends ImplementationMail
      * @param array $data
      * @return array
      */
+    #[ArrayShape([
+        'webshop_link' => "string",
+        'webshop_button' => "string",
+    ])]
     protected function getMailExtraData(array $data): array
     {
         return [

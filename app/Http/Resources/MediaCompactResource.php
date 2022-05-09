@@ -4,14 +4,14 @@ namespace App\Http\Resources;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class MediaCompactResource
  * @property Media $resource
  * @package App\Http\Resources
  */
-class MediaCompactResource extends Resource
+class MediaCompactResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -37,7 +37,7 @@ class MediaCompactResource extends Resource
             'original_name', 'type', 'ext', 'uid', 'dominant_color'
         ]), [
             'dominant_color' => $media->dominant_color ?? null,
-            'sizes' => $presets
+            'sizes' => $presets,
         ]);
     }
 }

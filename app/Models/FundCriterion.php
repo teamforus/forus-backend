@@ -100,6 +100,6 @@ class FundCriterion extends Model
      */
     public function getDescriptionHtmlAttribute(): string
     {
-        return resolve('markdown')->convertToHtml($this->description ?? '');
+        return resolve('markdown.converter')->convert($this->description ?: '')->getContent();
     }
 }

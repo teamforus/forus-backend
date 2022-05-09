@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpIllegalPsrClassPathInspection */
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Schema;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Record\Models\Record;
 
+/**
+ * @noinspection PhpUnused
+ * @noinspection PhpIllegalPsrClassPathInspection
+ */
 class CreateIdentityEmailsTable extends Migration
 {
     /**
@@ -13,7 +17,7 @@ class CreateIdentityEmailsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('identity_emails', function (Blueprint $table) {
             $table->increments('id');
@@ -55,7 +59,7 @@ class CreateIdentityEmailsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('identity_emails');
     }

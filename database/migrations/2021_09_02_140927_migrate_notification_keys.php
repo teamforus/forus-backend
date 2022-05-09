@@ -5,6 +5,9 @@ use App\Models\Notification;
 use App\Models\FundRequest;
 use App\Services\EventLogService\Models\EventLog;
 
+/**
+ * @noinspection PhpUnused
+ */
 class MigrateNotificationKeys extends Migration
 {
     /**

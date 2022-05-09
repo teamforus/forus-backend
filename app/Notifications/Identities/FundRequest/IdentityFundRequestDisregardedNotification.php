@@ -8,7 +8,7 @@ use App\Services\Forus\Identity\Models\Identity;
 
 class IdentityFundRequestDisregardedNotification extends BaseIdentityFundRequestNotification
 {
-    protected static $key = 'notifications_identities.fund_request_disregarded';
+    protected static ?string $key = 'notifications_identities.fund_request_disregarded';
 
     /**
      * @param Identity $identity

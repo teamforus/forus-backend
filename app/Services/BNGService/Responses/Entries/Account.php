@@ -4,8 +4,8 @@ namespace App\Services\BNGService\Responses\Entries;
 
 class Account
 {
-    protected $iban;
-    protected $name = '';
+    protected string $iban;
+    protected string $name = '';
 
     /**
      * @param string $iban

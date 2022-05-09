@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 abstract class BaseOrganizationNotification extends BaseNotification
 {
-    protected static $scope;
+    protected static ?string $scope;
 
     /**
      * Permissions required to get the notification

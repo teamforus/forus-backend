@@ -3,15 +3,19 @@
 namespace App\Http\Resources;
 
 use App\Models\FundRequestClarification;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class FundRequestClarificationResource
  * @property FundRequestClarification $resource
  * @package App\Http\Resources
  */
-class FundRequestClarificationResource extends Resource
+class FundRequestClarificationResource extends BaseJsonResource
 {
+    public const LOAD = [
+        'files',
+        'fund_request_record.record_type',
+    ];
+
     /**
      * Transform the resource into an array.
      *
@@ -22,13 +26,9 @@ class FundRequestClarificationResource extends Resource
     {
         return array_merge(array_only($this->resource->toArray(), [
             'id', 'question', 'answer', 'fund_request_record_id', 'state',
-            'answered_at', 'created_at', 'updated_at',
         ]), [
-            'fund_request_record_name' => $this->resource->fund_request_record->record_type->name,
-            'answered_at_locale' => format_datetime_locale($this->resource->answered_at),
-            'created_at_locale' => format_datetime_locale($this->resource->created_at),
-            'updated_at_locale' => format_datetime_locale($this->resource->updated_at),
             'files' => FileResource::collection($this->resource->files),
-        ]);
+            'fund_request_record_name' => $this->resource->fund_request_record->record_type->name,
+        ], $this->timestamps($this->resource, 'answered_at', 'created_at', 'updated_at'));
     }
 }

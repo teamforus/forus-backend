@@ -5,14 +5,14 @@ namespace App\Http\Resources;
 use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\FundCriterionValidator;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class FundCriterionResource
  * @property FundCriterion $resource
  * @package App\Http\Resources
  */
-class FundCriterionResource extends Resource
+class FundCriterionResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -44,7 +44,6 @@ class FundCriterionResource extends Resource
                 ];
             })->toArray(),
             'record_type_name' => $recordTypes[$criterion->record_type_key],
-            'show_attachment' => $criterion->show_attachment ? true : false,
             'is_valid' => $is_valid
         ]);
     }

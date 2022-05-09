@@ -1,7 +1,11 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\NotificationTemplatesTableSeeder;
 
+/**
+ * @noinspection PhpUnused
+ */
 class SeedNotificationTemplatesTable extends Migration
 {
     /**
@@ -10,7 +14,7 @@ class SeedNotificationTemplatesTable extends Migration
      * @return void
      * @throws Exception
      */
-    public function up()
+    public function up(): void
     {
         (new NotificationTemplatesTableSeeder())->run();
     }

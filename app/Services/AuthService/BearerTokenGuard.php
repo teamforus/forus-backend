@@ -8,13 +8,13 @@ use Illuminate\Contracts\Auth\Guard;
 
 class BearerTokenGuard implements Guard
 {
-    protected $user;
-    protected $request;
-    protected $identityProvider;
+    protected Request $request;
+    protected UserProvider $identityProvider;
+    protected ?Authenticatable $user;
 
-        public function __construct(UserProvider $identityProvider, Request $request)
+    public function __construct(UserProvider $identityProvider, Request $request)
     {
-        $this->user = NULL;
+        $this->user = null;
         $this->request = $request;
         $this->identityProvider = $identityProvider;
     }
@@ -24,24 +24,33 @@ class BearerTokenGuard implements Guard
      *
      * @return bool
      */
-    public function check()
+    public function check(): bool
     {
-        return ! is_null($this->user());
+        return !is_null($this->user());
     }
 
-    public function guest()
+    /**
+     * @return bool
+     */
+    public function guest(): bool
     {
-        return ! $this->check();
+        return !$this->check();
     }
 
-    public function id()
+    /**
+     * @return int|mixed|string|null
+     */
+    public function id(): mixed
     {
         return $this->user() ? $this->user()->getAuthIdentifier() : null;
     }
 
-    public function user()
+    /**
+     * @return Authenticatable|null
+     */
+    public function user(): ?Authenticatable
     {
-        if (! is_null($this->user)) {
+        if (!is_null($this->user)) {
             return $this->user;
         }
 
@@ -53,29 +62,32 @@ class BearerTokenGuard implements Guard
     /**
      * Get the token for the current request.
      *
-     * @return string
+     * @return string|null
      */
-    public function getTokenForRequest()
+    public function getTokenForRequest(): ?string
     {
         return $this->request->bearerToken();
     }
 
-    public function validate(array $credentials = [])
+    /**
+     * @param array $credentials
+     * @return bool
+     */
+    public function validate(array $credentials = []): bool
     {
         $bearerToken = explode(' ', $this->request->headers->get('Authorization'));
         $accessToken = count($bearerToken) == 2 ? $bearerToken[1] : null;
 
         $user = $this->identityProvider->retrieveByCredentials([
-            'access_token' => $accessToken
+            'access_token' => $accessToken,
         ]);
 
-        if (! is_null($user)) {
+        if (!is_null($user)) {
             $this->setUser($user);
-
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -88,7 +100,11 @@ class BearerTokenGuard implements Guard
         $this->user = $user;
     }
 
-    public static function authenticate() {
-
+    /**
+     * @return bool
+     */
+    public function hasUser(): bool
+    {
+        return !is_null($this->user);
     }
 }

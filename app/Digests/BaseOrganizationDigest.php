@@ -18,10 +18,10 @@ abstract class BaseOrganizationDigest
     /**
      * @var string
      */
-    protected $requiredRelation = '';
-    protected $digestKey = '';
-    protected $identityRepo;
-    protected $employeePermissions = [];
+    protected string $requiredRelation = '';
+    protected string $digestKey = '';
+    protected IIdentityRepo $identityRepo;
+    protected array $employeePermissions = [];
 
     /**
      * @param NotificationService $notificationService

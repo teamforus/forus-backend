@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\JsonResponse;
 
 class ApiAuthMiddleware
 {
@@ -26,18 +27,16 @@ class ApiAuthMiddleware
         $proxyState = $request->user()->getProxyState();
         $address = $request->user()->getAddress();
 
-        switch ($proxyState) {
-            case 'pending': {
-                return response()->json([
-                    "message" => 'proxy_identity_pending'
-                ])->setStatusCode(401);
-            }
+        if ($proxyState == 'pending') {
+            return new JsonResponse([
+                "message" => 'proxy_identity_pending'
+            ], 401);
         }
 
         if (!$proxyId || !$address) {
-            return response()->json([
+            return new JsonResponse([
                 "message" => 'invalid_access_token'
-            ])->setStatusCode(401);
+            ], 401);
         }
 
         $request->attributes->set('identity', $address);

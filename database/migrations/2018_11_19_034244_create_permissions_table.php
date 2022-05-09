@@ -3,7 +3,11 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\PermissionsTableSeeder;
 
+/**
+ * @noinspection PhpUnused
+ */
 class CreatePermissionsTable extends Migration
 {
     /**
@@ -19,7 +23,7 @@ class CreatePermissionsTable extends Migration
             $table->string('name', '100');
         });
 
-        resolve(PermissionsTableSeeder::class)->run();
+        (new PermissionsTableSeeder)->run();
     }
 
     /**

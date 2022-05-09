@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class ProviderInvitationMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.provider_invitation.title';
+    protected string $subjectKey = 'mails/system_mails.provider_invitation.title';
 
     /**
      * @return Mailable

@@ -12,7 +12,7 @@ abstract class BaseFundEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $fund;
+    protected Fund $fund;
 
     /**
      * Create a new event instance.

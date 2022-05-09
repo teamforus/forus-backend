@@ -53,21 +53,24 @@ class MediaPreset extends Model
     /**
      * @return bool
      */
-    public function unlink() {
+    public function unlink(): bool
+    {
         return self::service()->deleteFile($this->path);
     }
 
     /**
-     * @return \App\Services\MediaService\mixeds
+     * @return string
      */
-    public function urlPublic() {
+    public function urlPublic(): string
+    {
         return self::service()->urlPublic($this->path);
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function storagePath() {
+    public function storagePath(): string
+    {
         return self::service()->path($this->path);
     }
 

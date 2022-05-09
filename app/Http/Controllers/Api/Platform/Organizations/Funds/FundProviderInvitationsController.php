@@ -39,9 +39,7 @@ class FundProviderInvitationsController extends Controller
             ]);
         }
 
-        return FundProviderInvitationResource::collection($providers->with(
-            FundProviderInvitationResource::$load
-        )->paginate($request->input('per_page')));
+        return FundProviderInvitationResource::queryCollection($providers, $request);
     }
 
     /**
@@ -60,7 +58,7 @@ class FundProviderInvitationsController extends Controller
     ): FundProviderInvitationResource {
         $this->authorize('showSponsor', [$invitation, $fund, $organization]);
 
-        return new FundProviderInvitationResource($invitation);
+        return FundProviderInvitationResource::create($invitation);
     }
 
     /**

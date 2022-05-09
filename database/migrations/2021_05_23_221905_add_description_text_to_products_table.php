@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Product;
 
 /**
- * Class AddDescriptionTextToProductsTable
  * @noinspection PhpUnused
  */
 class AddDescriptionTextToProductsTable extends Migration

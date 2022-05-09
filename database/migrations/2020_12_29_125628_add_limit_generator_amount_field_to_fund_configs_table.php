@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddLimitGeneratorAmountFieldToFundConfigsTable
  * @noinspection PhpUnused
  */
 class AddLimitGeneratorAmountFieldToFundConfigsTable extends Migration

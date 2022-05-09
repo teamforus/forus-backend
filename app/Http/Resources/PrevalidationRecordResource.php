@@ -3,14 +3,14 @@
 namespace App\Http\Resources;
 
 use App\Models\PrevalidationRecord;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class PrevalidationRecordResource
  * @property PrevalidationRecord $resource
  * @package App\Http\Resources
  */
-class PrevalidationRecordResource extends Resource
+class PrevalidationRecordResource extends JsonResource
 {
     /**
      * Transform the resource into an array.

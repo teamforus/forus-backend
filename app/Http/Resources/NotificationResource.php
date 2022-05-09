@@ -6,7 +6,6 @@ use App\Models\Implementation;
 use App\Models\NotificationTemplate;
 use App\Models\SystemNotification;
 use App\Services\EventLogService\Models\EventLog;
-use Illuminate\Http\Resources\Json\JsonResource;
 use App\Services\Forus\Identity\Models\DatabaseNotification;
 use Throwable;
 
@@ -15,7 +14,7 @@ use Throwable;
  * @property DatabaseNotification $resource
  * @package App\Http\Resources
  */
-class NotificationResource extends JsonResource
+class NotificationResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -34,20 +33,18 @@ class NotificationResource extends JsonResource
             'id' => $this->resource->id,
             'type' => $key,
             'seen' => $this->resource->read_at != null,
-            'created_at' => $this->resource->created_at->format('Y-m-d H:i:s'),
-            'created_at_locale' => format_datetime_locale($this->resource->created_at),
         ], $template ? [
             'title' => str_var_replace($template->title, $event->data),
             'description' => str_var_replace($template->content, $event->data),
-        ] : []);
+        ] : [], $this->timestamps($this->resource, 'created_at'));
     }
 
     /**
      * @param EventLog $event
-     * @return NotificationTemplate
+     * @return NotificationTemplate|null
      * @throws Throwable
      */
-    public function getTemplate(EventLog $event): NotificationTemplate
+    public function getTemplate(EventLog $event): ?NotificationTemplate
     {
         try {
             return SystemNotification::findTemplate(
@@ -55,23 +52,12 @@ class NotificationResource extends JsonResource
                 'database',
                 $event->data['implementation_key'] ?? Implementation::KEY_GENERAL
             );
-        } catch (Throwable $err) {
+        } catch (Throwable $e) {
             if ($logger = logger()) {
                 $logger->error(sprintf('Could not find template for "%s" notification.', $this->resource->data['key']));
             }
 
-            throw $err;
+            throw $e;
         }
-    }
-
-    /**
-     * @param string $prefix
-     * @param string $suffix
-     * @param array $data
-     * @return array|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Translation\Translator|string|null
-     */
-    function getTranslation(string $prefix, string $suffix, array $data)
-    {
-        return trans_fb($prefix . $suffix, trans($prefix, $data), $data);
     }
 }

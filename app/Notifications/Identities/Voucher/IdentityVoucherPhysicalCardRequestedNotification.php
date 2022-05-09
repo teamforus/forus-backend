@@ -11,8 +11,8 @@ use App\Mail\Vouchers\RequestPhysicalCardMail;
  */
 class IdentityVoucherPhysicalCardRequestedNotification extends BaseIdentityVoucherNotification
 {
-    protected static $key = 'notifications_identities.voucher_physical_card_requested';
-    protected static $scope = null;
+    protected static ?string $key = 'notifications_identities.voucher_physical_card_requested';
+    protected static ?string $scope = null;
 
     /**
      * @param Identity $identity

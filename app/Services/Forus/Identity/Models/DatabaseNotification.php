@@ -21,6 +21,8 @@ use Illuminate\Notifications\DatabaseNotification as DatabaseNotificationModel;
  * @method static \Illuminate\Database\Eloquent\Builder|DatabaseNotification newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|DatabaseNotification newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|DatabaseNotification query()
+ * @method static Builder|DatabaseNotification read()
+ * @method static Builder|DatabaseNotification unread()
  * @method static \Illuminate\Database\Eloquent\Builder|DatabaseNotification whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DatabaseNotification whereData($value)
  * @method static \Illuminate\Database\Eloquent\Builder|DatabaseNotification whereId($value)

@@ -12,7 +12,7 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundRequestNotification
 {
-    protected static $key = 'notifications_identities.fund_request_feedback_requested';
+    protected static ?string $key = 'notifications_identities.fund_request_feedback_requested';
 
     /**
      * @param Identity $identity

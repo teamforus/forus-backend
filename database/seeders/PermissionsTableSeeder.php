@@ -1,11 +1,13 @@
 <?php
 
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 use App\Models\Permission;
 
 class PermissionsTableSeeder extends Seeder
 {
-    protected  $permissions = [
+    protected array $permissions = [
         'manage_organization'       => "Manage organization",
         'manage_funds'              => "Manage funds",
         'manage_providers'          => "Manage providers",

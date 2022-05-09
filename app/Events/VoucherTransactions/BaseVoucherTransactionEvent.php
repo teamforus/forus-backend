@@ -17,7 +17,7 @@ abstract class BaseVoucherTransactionEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $voucherTransaction;
+    private VoucherTransaction $voucherTransaction;
 
     /**
      * Create a new event instance.

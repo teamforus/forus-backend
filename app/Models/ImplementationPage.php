@@ -92,6 +92,6 @@ class ImplementationPage extends Model
      */
     public function getContentHtmlAttribute(): string
     {
-        return resolve('markdown')->convertToHtml($this->content ?? '');
+        return resolve('markdown.converter')->convert($this->content ?: '')->getContent();
     }
 }

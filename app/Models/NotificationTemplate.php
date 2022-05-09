@@ -62,6 +62,6 @@ class NotificationTemplate extends Model
      */
     public function convertToHtml(): ?string
     {
-        return resolve('markdown')->convertToHtml($this->content);
+        return resolve('markdown.converter')->convert($this->content)->getContent();
     }
 }

@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddBackofficeAvailableFieldToOrganizationsTable
  * @noinspection PhpUnused
  */
 class AddBackofficeAvailableFieldToOrganizationsTable extends Migration
@@ -15,7 +14,7 @@ class AddBackofficeAvailableFieldToOrganizationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
             $table->boolean('backoffice_available')->default(false)->after('manage_provider_products');
@@ -27,7 +26,7 @@ class AddBackofficeAvailableFieldToOrganizationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('organizations', function (Blueprint $table) {
             $table->dropColumn('backoffice_available');

@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\NotificationTemplate;
-use App\Services\EventLogService\Interfaces\IEventLogService;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**

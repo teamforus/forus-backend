@@ -254,7 +254,7 @@ class ProductPolicy
         return $isSponsorManagingProducts &&
             $identityIsProviderManager &&
             $isSponsorForTheProvider &&
-            ($product ? $product->organization_id === $provider->id : true) &&
-            ($product ? $product->sponsor_organization_id === $sponsor->id : true);
+            (!$product || $product->organization_id === $provider->id) &&
+            (!$product || $product->sponsor_organization_id === $sponsor->id);
     }
 }

@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
  * @property int|null $root_id
  * @property int $_lft
  * @property int $_rgt
+ * @property int $service
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $children
@@ -31,7 +32,7 @@ use Illuminate\Http\Request;
  * @property-read ProductCategory|null $parent
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read ProductCategory $root_category
+ * @property-read ProductCategory|null $root_category
  * @property-read \App\Models\ProductCategoryTranslation|null $translation
  * @property-read Collection|\App\Models\ProductCategoryTranslation[] $translations
  * @property-read int|null $translations_count
@@ -91,6 +92,7 @@ use Illuminate\Http\Request;
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereParentId($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRgt($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRootId($value)
+ * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereService($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslationLike(string $translationField, $value, ?string $locale = null)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereUpdatedAt($value)
@@ -162,10 +164,7 @@ class ProductCategory extends Model
      */
     public function organizations(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Organization::class,
-            'organization_product_categories'
-        );
+        return $this->belongsToMany(Organization::class, 'organization_product_categories');
     }
 
     /**

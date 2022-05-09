@@ -11,8 +11,8 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityVoucherBudgetTransactionNotification extends BaseIdentityVoucherNotification
 {
-    protected static $key = 'notifications_identities.voucher_budget_transaction';
-    protected static $pushKey = "voucher.transaction";
+    protected static ?string $key = 'notifications_identities.voucher_budget_transaction';
+    protected static ?string $pushKey = "voucher.transaction";
 
     /**
      * @param Identity $identity

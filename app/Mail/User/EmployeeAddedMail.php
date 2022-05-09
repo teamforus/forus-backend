@@ -7,7 +7,7 @@ use Illuminate\Mail\Mailable;
 
 class EmployeeAddedMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_identities.added_employee';
+    protected string $notificationTemplateKey = 'notifications_identities.added_employee';
 
     /**
      * @return Mailable

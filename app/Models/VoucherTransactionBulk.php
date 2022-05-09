@@ -35,29 +35,9 @@ use Throwable;
 /**
  * App\Models\VoucherTransactionBulk
  *
- * @property int $id
- * @property int|null $bank_connection_id
- * @property string|null $payment_id
- * @property string|null $monetary_account_id
- * @property string $monetary_account_iban
- * @property string|null $monetary_account_name
- * @property string|null $code
- * @property string|null $access_token
- * @property string|null $redirect_token
- * @property string|null $auth_url
- * @property string|null $sepa_xml
- * @property \Illuminate\Support\Carbon|null $execution_date
- * @property int|null $implementation_id
- * @property array|null $auth_params
- * @property string $state
- * @property int $accepted_manually
- * @property int $state_fetched_times
- * @property string|null $state_fetched_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection
  * @property-read string $state_locale
- * @property-read \App\Models\Implementation|null $implementation
+ * @property-read \App\Models\Implementation $implementation
  * @property-read Collection|EventLog[] $logs
  * @property-read int|null $logs_count
  * @property-read Collection|\App\Models\VoucherTransaction[] $voucher_transactions
@@ -65,26 +45,6 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk newModelQuery()
  * @method static Builder|VoucherTransactionBulk newQuery()
  * @method static Builder|VoucherTransactionBulk query()
- * @method static Builder|VoucherTransactionBulk whereAcceptedManually($value)
- * @method static Builder|VoucherTransactionBulk whereAccessToken($value)
- * @method static Builder|VoucherTransactionBulk whereAuthParams($value)
- * @method static Builder|VoucherTransactionBulk whereAuthUrl($value)
- * @method static Builder|VoucherTransactionBulk whereBankConnectionId($value)
- * @method static Builder|VoucherTransactionBulk whereCode($value)
- * @method static Builder|VoucherTransactionBulk whereCreatedAt($value)
- * @method static Builder|VoucherTransactionBulk whereExecutionDate($value)
- * @method static Builder|VoucherTransactionBulk whereId($value)
- * @method static Builder|VoucherTransactionBulk whereImplementationId($value)
- * @method static Builder|VoucherTransactionBulk whereMonetaryAccountIban($value)
- * @method static Builder|VoucherTransactionBulk whereMonetaryAccountId($value)
- * @method static Builder|VoucherTransactionBulk whereMonetaryAccountName($value)
- * @method static Builder|VoucherTransactionBulk wherePaymentId($value)
- * @method static Builder|VoucherTransactionBulk whereRedirectToken($value)
- * @method static Builder|VoucherTransactionBulk whereSepaXml($value)
- * @method static Builder|VoucherTransactionBulk whereState($value)
- * @method static Builder|VoucherTransactionBulk whereStateFetchedAt($value)
- * @method static Builder|VoucherTransactionBulk whereStateFetchedTimes($value)
- * @method static Builder|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class VoucherTransactionBulk extends Model

@@ -6,14 +6,14 @@ use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class SponsorVoucherResource
  * @property Voucher $resource
  * @package App\Http\Resources\Sponsor
  */
-class SponsorVoucherResource extends Resource
+class SponsorVoucherResource extends JsonResource
 {
     /**
      * Transform the resource into an array.

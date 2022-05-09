@@ -67,9 +67,9 @@ class NotificationsTokensImportCommand extends Command
             try {
                 $notificationService->storeNotificationToken($identity_address, $token, $type);
                 $countSuccess++;
-            } catch (\Exception $exception) {
+            } catch (\Throwable $e) {
                 $this->error(sprintf('Could not import a token, line %s', $tokenRowKey + 2));
-                $this->error(sprintf('The error: %s', $exception->getMessage()));
+                $this->error(sprintf('The error: %s', $e->getMessage()));
                 $countError++;
             }
         }

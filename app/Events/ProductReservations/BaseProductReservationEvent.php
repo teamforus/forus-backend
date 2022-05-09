@@ -17,7 +17,7 @@ class BaseProductReservationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $productReservation;
+    protected ProductReservation $productReservation;
 
     /**
      * Create a new event instance.

@@ -42,9 +42,7 @@ class OfficesController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyPublic', [Office::class, $organization]);
 
-        return OfficeResource::collection($organization->offices()->paginate(
-            $request->input('per_page')
-        ));
+        return OfficeResource::queryCollection($organization->offices(), $request);
     }
 
     /**
@@ -79,7 +77,7 @@ class OfficesController extends Controller
             $office->attachMedia($media);
         }
 
-        return new OfficeResource($office);
+        return OfficeResource::create($office);
     }
 
     /**
@@ -93,7 +91,7 @@ class OfficesController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('show', [$office, $organization]);
 
-        return new OfficeResource($office);
+        return OfficeResource::create($office);
     }
 
     /**
@@ -128,7 +126,7 @@ class OfficesController extends Controller
             $office->attachMedia($media);
         }
 
-        return new OfficeResource($office);
+        return OfficeResource::create($office);
     }
 
     /**
@@ -147,6 +145,6 @@ class OfficesController extends Controller
 
         $office->delete();
 
-        return response()->json([]);
+        return new JsonResponse([]);
     }
 }

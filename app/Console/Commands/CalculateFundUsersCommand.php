@@ -44,6 +44,6 @@ class CalculateFundUsersCommand extends Command
 
         try {
             Fund::sendUserStatisticsReport($email);
-        } catch (\Exception $e) {}
+        } catch (\Throwable $e) {}
     }
 }

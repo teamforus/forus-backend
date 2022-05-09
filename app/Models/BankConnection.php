@@ -33,52 +33,20 @@ use Throwable;
 /**
  * App\Models\BankConnection
  *
- * @property int $id
- * @property int $bank_id
- * @property int $organization_id
- * @property int $implementation_id
- * @property int|null $bank_connection_account_id
- * @property string|null $consent_id
- * @property string|null $auth_url
- * @property array|null $auth_params
- * @property string $redirect_token
- * @property string $access_token
- * @property string $code
- * @property array $context
- * @property \Illuminate\Support\Carbon|null $session_expire_at
- * @property string $state
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read Bank $bank
+ * @property-read Bank|null $bank
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\BankConnectionAccount[] $bank_connection_accounts
  * @property-read int|null $bank_connection_accounts_count
  * @property-read \App\Models\BankConnectionAccount|null $bank_connection_default_account
  * @property-read string|null $iban
- * @property-read \App\Models\Implementation $implementation
+ * @property-read \App\Models\Implementation|null $implementation
  * @property-read \Illuminate\Database\Eloquent\Collection|EventLog[] $logs
  * @property-read int|null $logs_count
- * @property-read \App\Models\Organization $organization
+ * @property-read \App\Models\Organization|null $organization
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\VoucherTransactionBulk[] $voucher_transaction_bulks
  * @property-read int|null $voucher_transaction_bulks_count
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection query()
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAccessToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAuthParams($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereAuthUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankConnectionAccountId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereBankId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereConsentId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereContext($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereImplementationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereOrganizationId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereRedirectToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereSessionExpireAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class BankConnection extends Model
@@ -450,8 +418,8 @@ class BankConnection extends Model
             if ($this->bank->isBunq()) {
                 return $this->fetchConnectionMonetaryAccountsBunq();
             }
-        } catch (Throwable $exception) {
-            logger()->error($exception->getMessage());
+        } catch (Throwable $e) {
+            logger()->error($e->getMessage());
         }
 
         return null;
@@ -581,8 +549,8 @@ class BankConnection extends Model
             $balance = $response->getClosingBookedBalance();
 
             return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
-        } catch (\Exception $exception) {
-            logger()->error($exception->getMessage());
+        } catch (\Throwable $e) {
+            logger()->error($e->getMessage());
         }
 
         return null;
@@ -662,8 +630,8 @@ class BankConnection extends Model
                     $transaction->getTransactionDescription()
                 );
             }, $transactions);
-        } catch (Throwable $exception) {
-            logger()->error($exception->getMessage());
+        } catch (Throwable $e) {
+            logger()->error($e->getMessage());
         }
 
         return null;

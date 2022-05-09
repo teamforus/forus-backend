@@ -13,7 +13,7 @@ abstract class BaseVoucherEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $voucher;
+    protected Voucher $voucher;
 
     /**
      * Create a new event instance.

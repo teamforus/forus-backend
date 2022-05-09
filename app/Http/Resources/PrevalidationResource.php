@@ -3,16 +3,15 @@
 namespace App\Http\Resources;
 
 use App\Models\Prevalidation;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class PrevalidationResource
  * @property Prevalidation $resource
  * @package App\Http\Resources
  */
-class PrevalidationResource extends Resource
+class PrevalidationResource extends BaseJsonResource
 {
-    public static $load = [
+    public const LOAD = [
         'prevalidation_records.record_type.translations'
     ];
 
@@ -24,16 +23,16 @@ class PrevalidationResource extends Resource
      */
     public function toArray($request): array
     {
+        $isAssigned = auth()->id() === $this->resource->identity_address;
+
         $fields = array_merge([
             'id', 'uid', 'records_hash', 'uid_hash', 'state', 'exported', 'fund_id',
-        ], auth()->id() === $this->resource->identity_address ? [
-            'created_at', 'identity_address'
-        ] : []);
+        ], $isAssigned ? ['identity_address'] : []);
+
+        $records = $this->resource->prevalidation_records->sortByDesc('record_type_id');
 
         return array_merge($this->resource->only($fields), [
-            'records' => PrevalidationRecordResource::collection(
-                $this->resource->prevalidation_records->sortByDesc('record_type_id')
-            )
-        ]);
+            'records' => PrevalidationRecordResource::collection($records),
+        ], $isAssigned ? $this->timestamps('created_at') : []);
     }
 }

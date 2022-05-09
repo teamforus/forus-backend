@@ -3,6 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use App\Models\Prevalidation;
 
+/**
+ * @noinspection PhpUnused
+ */
 class UpdatePrevalidationHashes extends Migration
 {
     /**
