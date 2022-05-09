@@ -440,10 +440,10 @@ class Fund extends Model
 
     /**
      * @param array $tagIds
-     * @param $scope
+     * @param string $scope
      * @return void
      */
-    public function syncTags(array $tagIds, $scope = 'webshop')
+    public function syncTags(array $tagIds, string $scope = 'webshop'): void
     {
         $query = Tag::query();
 
@@ -467,7 +467,7 @@ class Fund extends Model
      * @param string $scope
      * @return void
      */
-    public function syncTagsOptional(?array $tagIds = null, $scope = 'webshop')
+    public function syncTagsOptional(?array $tagIds = null, string $scope = 'webshop'): void
     {
         if (!is_null($tagIds)) {
             $this->syncTags($tagIds, $scope);
@@ -828,7 +828,7 @@ class Fund extends Model
         $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, null,false, $daysTrusted);
 
         $validRecordsOfType = collect($recordsOfType)->map(static function($record) use (
-            $trustedIdentities, $organization, $criterion, $record_type, $daysTrusted
+            $trustedIdentities, $organization
         ) {
             $validations = collect($record['validations']);
             $validations = $validations->whereIn('identity_address', $trustedIdentities);
@@ -857,12 +857,14 @@ class Fund extends Model
     {
         /** @var FundConfigRecord $typeConfig */
         $typeConfig = $this->fund_config_records->where('record_type', $recordType)->first();
-        $typeConfigValue = $typeConfig ? $typeConfig->record_validity_days : null;
-        $fundConfigValue = $this->fund_config ? $this->fund_config->record_validity_days : null;
+        $typeConfigValue = $typeConfig->record_validity_days ?? null;
+        $fundConfigValue = $this->fund_config->record_validity_days ?? null;
 
         if ($typeConfigValue === 0) {
             return $typeConfigValue;
-        } else if ($typeConfigValue === null && $fundConfigValue === 0) {
+        }
+
+        if ($typeConfigValue === null && $fundConfigValue === 0) {
             return $fundConfigValue;
         }
 
@@ -997,6 +999,7 @@ class Fund extends Model
 
     /**
      * @return Fund[]|Builder[]|Collection|\Illuminate\Support\Collection
+     * @noinspection PhpUnused
      */
     public static function configuredFunds() {
         try {
@@ -1802,6 +1805,16 @@ class Fund extends Model
                 return null;
             }
 
+            $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
+
+            if ($partnerBsnResponse->getLog()->success() && ($partnerBsn = $partnerBsnResponse->getBsn())) {
+                $partnerIdentity = record_repo()->identityAddressByBsn($partnerBsn);
+
+                if ($partnerIdentity && $this->isTakenByPartner($partnerIdentity)) {
+                    return null;
+                }
+            }
+
             // check again for active vouchers
             $response = $backofficeApi->eligibilityCheck($bsn, $residencyResponse->getLog()->response_id);
 
@@ -1849,8 +1862,9 @@ class Fund extends Model
     /**
      * @param string $default
      * @return string|null
+     * @noinspection PhpUnused
      */
-    public function communicationType($default = 'formal'): string
+    public function communicationType(string $default = 'formal'): string
     {
         if ($this->fund_config && $this->fund_config->implementation) {
             return $this->fund_config->implementation->communicationType();
