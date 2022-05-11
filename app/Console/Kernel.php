@@ -26,6 +26,7 @@ use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
+use App\Models\Implementation;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -169,10 +170,13 @@ class Kernel extends ConsoleKernel
         /**
          * BankVoucherTransactionBulksBuildCommand
          */
-        $schedule->command('bank:bulks-build')
-            ->dailyAt(env('BANK_DAILY_BULK_BUILD_TIME', '09:00'))
-            ->withoutOverlapping()
-            ->onOneServer();
+        $bank_cron_times = Implementation::getAllBankCronTime();
+        foreach ($bank_cron_times as $bank_cron_time) {
+            $schedule->command('bank:bulks-build')
+                ->dailyAt($bank_cron_time)
+                ->withoutOverlapping()
+                ->onOneServer();
+        }
 
         /**
          * BankVoucherTransactionProcessZeroAmountCommand:

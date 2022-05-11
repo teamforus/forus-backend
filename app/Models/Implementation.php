@@ -13,6 +13,7 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -54,6 +55,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_shared_secret
  * @property string|null $digid_a_select_server
  * @property string|null $digid_forus_api_url
+ * @property \Illuminate\Support\Carbon|null $bank_cron_time
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Media|null $banner
@@ -786,5 +788,14 @@ class Implementation extends Model
     public static function defaultEmailColor(): string
     {
         return config('forus.mail_styles.color_primary');
+    }
+
+    /**
+     * @return array
+     */
+    public static function getAllBankCronTime() : array {
+        return Implementation::get()->pluck('bank_cron_time')->map(function ($time) {
+            return Carbon::createFromFormat('H:i:s', $time)->toTimeString('minute');
+        })->unique()->toArray();
     }
 }
