@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddBankCronTimeToImplementationsTable extends Migration
+class AddBankCronTimeToOrganizationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddBankCronTimeToImplementationsTable extends Migration
      */
     public function up()
     {
-        Schema::table('implementations', function (Blueprint $table) {
-            $table->time('bank_cron_time')->default('09:00')->after('digid_forus_api_url');
+        Schema::table('organizations', function (Blueprint $table) {
+            $table->time('bank_cron_time')->nullable()->default('09:00')->after('bsn_enabled');
         });
     }
 
@@ -25,7 +25,7 @@ class AddBankCronTimeToImplementationsTable extends Migration
      */
     public function down()
     {
-        Schema::table('implementations', function (Blueprint $table) {
+        Schema::table('organizations', function (Blueprint $table) {
             $table->dropColumn('bank_cron_time');
         });
     }

@@ -60,6 +60,7 @@ use Illuminate\Database\Query\Builder;
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
+ * @property \Illuminate\Support\Carbon|null $bank_cron_time
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -744,6 +745,19 @@ class Organization extends Model
         return Fund::create(array_merge([
             'organization_id' => $this->id,
         ], $attributes));
+    }
+
+    /**
+     * @return array
+     */
+    public static function getAllBankCronTime() : array {
+        return self::get()->pluck('bank_cron_time')->map(function ($time) {
+            if (empty($time)) {
+                return null;
+            }
+
+            return Carbon::createFromFormat('H:i:s', $time)->toTimeString('minute');
+        })->filter()->unique()->toArray();
     }
 
     /**
