@@ -35,6 +35,7 @@ use Illuminate\Http\Request;
  * @property string $payment_description
  * @property int $attempts
  * @property string $state
+ * @property string $initiator
  * @property string|null $last_attempt_at
  * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\FundProviderProduct|null $fund_provider_product
@@ -67,6 +68,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereIbanFrom($value)
  * @method static Builder|VoucherTransaction whereIbanTo($value)
  * @method static Builder|VoucherTransaction whereId($value)
+ * @method static Builder|VoucherTransaction whereInitiator($value)
  * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
  * @method static Builder|VoucherTransaction whereOrganizationId($value)
  * @method static Builder|VoucherTransaction wherePaymentDescription($value)
@@ -83,6 +85,7 @@ use Illuminate\Http\Request;
 class VoucherTransaction extends Model
 {
     use HasLogs;
+
     protected $perPage = 25;
 
     public const EVENT_BUNQ_TRANSACTION_SUCCESS = 'bunq_transaction_success';
@@ -101,6 +104,9 @@ class VoucherTransaction extends Model
         self::STATE_CANCELED,
     ];
 
+    public const INITIATOR_SPONSOR = 'sponsor';
+    public const INITIATOR_PROVIDER = 'provider';
+
     public const SORT_BY_FIELDS = [
         'id', 'amount', 'created_at', 'state', 'voucher_transaction_bulk_id',
         'fund_name', 'provider_name',
@@ -115,7 +121,7 @@ class VoucherTransaction extends Model
         'voucher_id', 'organization_id', 'product_id', 'fund_provider_product_id',
         'address', 'amount', 'state', 'payment_id', 'attempts', 'last_attempt_at',
         'iban_from', 'iban_to', 'payment_time', 'employee_id', 'transfer_at',
-        'voucher_transaction_bulk_id', 'payment_description',
+        'voucher_transaction_bulk_id', 'payment_description', 'initiator',
     ];
 
     protected $hidden = [

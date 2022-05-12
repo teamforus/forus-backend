@@ -519,6 +519,26 @@ class VoucherPolicy
     }
 
     /**
+     * Allows to make voucher transaction as sponsor for the given voucher and provider
+     * @param string $identity_address
+     * @param Voucher $voucher
+     * @param Organization $providerOrganization
+     * @return bool|\Illuminate\Auth\Access\Response
+     * @noinspection PhpUnused
+     */
+    public function useAsSponsor(
+        string $identity_address,
+        Voucher $voucher,
+        Organization $providerOrganization
+    ) {
+        if (!$voucher->fund->organization->identityCan($identity_address, 'make_direct_payments')) {
+            return false;
+        }
+
+        return $this->useAsProviderBase($providerOrganization->identity_address, $voucher);
+    }
+
+    /**
      * @param string $identity_address
      * @param Voucher $voucher
      * @return bool|\Illuminate\Auth\Access\Response
