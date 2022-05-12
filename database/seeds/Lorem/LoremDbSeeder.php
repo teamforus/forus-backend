@@ -255,6 +255,7 @@ class LoremDbSeeder extends Seeder
                     'organization_id'   => $organization->id,
                     'allow_budget'      => $fund->isTypeBudget() && random_int(0, 2),
                     'allow_products'    => $fund->isTypeBudget() && random_int(0, 2),
+                    'state'             => FundProvider::STATE_ACCEPTED,
                 ]);
 
                 FundProviderApplied::dispatch($fund, $provider);
@@ -281,6 +282,7 @@ class LoremDbSeeder extends Seeder
                 FundProviderApplied::dispatch($fund, $provider->updateModel([
                     'allow_products'    => $fund->isTypeBudget(),
                     'allow_budget'      => $fund->isTypeBudget(),
+                    'state'             => FundProvider::STATE_ACCEPTED,
                 ]));
             }
         }
