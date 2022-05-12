@@ -480,11 +480,8 @@ class VoucherTransactionBulk extends Model
     {
         /** @var Organization[]|Collection $sponsors */
         $sponsors = Organization::where(function (Builder $builder) {
-            $builder->whereTime(
-                'bank_cron_time', '>=', now()->floorMinute()
-            )->whereTime(
-                'bank_cron_time', '<=', now()->ceilMinute()
-            );
+            $builder->whereTime('bank_cron_time', '>=', now()->floorMinute());
+            $builder->whereTime('bank_cron_time', '<', now()->ceilMinute());
         })->whereHas('funds', function(Builder $builder) {
             FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);

@@ -13,7 +13,6 @@ use App\Services\MediaService\MediaPreset;
 use App\Services\MediaService\MediaService;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;

@@ -748,19 +748,6 @@ class Organization extends Model
     }
 
     /**
-     * @return array
-     */
-    public static function getAllBankCronTime() : array {
-        return self::get()->pluck('bank_cron_time')->map(function ($time) {
-            if (empty($time)) {
-                return null;
-            }
-
-            return Carbon::createFromFormat('H:i:s', $time)->toTimeString('minute');
-        })->filter()->unique()->toArray();
-    }
-
-    /**
      * @param Organization $validatorOrganization
      */
     public function detachExternalValidator(
