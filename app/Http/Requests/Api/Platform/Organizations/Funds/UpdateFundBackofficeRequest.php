@@ -53,6 +53,7 @@ class UpdateFundBackofficeRequest extends BaseFormRequest
     protected function notEligibleRedirectRules(): array
     {
         return [
+            'nullable',
             'required_if:backoffice_ineligible_policy,' . FundConfig::BACKOFFICE_INELIGIBLE_POLICY_REDIRECT,
             'string',
             'min:0',

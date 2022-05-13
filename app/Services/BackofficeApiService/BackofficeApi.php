@@ -103,15 +103,6 @@ class BackofficeApi
     }
 
     /**
-     * @return Fund
-     * @noinspection PhpUnused
-     */
-    public function getFund(): Fund
-    {
-        return $this->fund;
-    }
-
-    /**
      * Check API status
      *
      * @return FundBackofficeLog
@@ -365,11 +356,13 @@ class BackofficeApi
     /**
      * Get list of logs to be sent to the API
      *
+     * @param array $fundsId
      * @return FundBackofficeLog|Builder|\Illuminate\Database\Query\Builder
      */
-    public static function getNextLogInQueueQuery()
+    public static function getNextLogInQueueQuery(array $fundsId = [])
     {
         return FundBackofficeLog::query()
+            ->whereIn('fund_id', $fundsId)
             ->orderBy('created_at', 'ASC')
             ->where(function(Builder $builder) {
                 $builder->where('action', self::ACTION_REPORT_RECEIVED);
@@ -392,11 +385,12 @@ class BackofficeApi
     /**
      * Get next log int the queue to be sent to the API
      *
+     * @param array $fundsId
      * @return FundBackofficeLog|null
      */
-    protected static function getNextLogInQueue(): ?FundBackofficeLog
+    protected static function getNextLogInQueue(array $fundsId = []): ?FundBackofficeLog
     {
-        return self::getNextLogInQueueQuery()->first();
+        return self::getNextLogInQueueQuery($fundsId)->first();
     }
 
     /**
@@ -406,7 +400,9 @@ class BackofficeApi
      */
     public static function sendLogs(): void
     {
-        while ($log = self::getNextLogInQueue()) {
+        $funds = Fund::get()->filter(fn(Fund $fund) => $fund->isBackofficeApiAvailable());
+
+        while ($log = self::getNextLogInQueue($funds->pluck('id')->toArray())) {
             if (!$backofficeApi = $log->fund->getBackofficeApi()) {
                 continue;
             }
@@ -420,6 +416,10 @@ class BackofficeApi
                 $requestId = $log->voucher->backoffice_log_received->response_id ?? self::makeRequestId();
             } else {
                 $requestId = $log->request_id;
+            }
+
+            if ($log->action === self::ACTION_REPORT_RECEIVED) {
+                $body['eligible'] = $log->voucher->backoffice_log_eligible->response_body['eligible'] ?? false;
             }
 
             $response = $backofficeApi->request('POST', $endpoint, array_merge($body, [

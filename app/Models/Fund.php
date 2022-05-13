@@ -12,6 +12,7 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
@@ -1790,9 +1791,9 @@ class Fund extends Model
 
     /**
      * @param string $identity_address
-     * @return EligibilityResponse|null
+     * @return ResidencyResponse|EligibilityResponse|null
      */
-    public function checkBackofficeIfAvailable(string $identity_address): ?EligibilityResponse
+    public function checkBackofficeIfAvailable(string $identity_address)
     {
         $bsn = record_repo()->bsnByAddress($identity_address);
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
@@ -1802,7 +1803,7 @@ class Fund extends Model
             $residencyResponse = $backofficeApi->residencyCheck($bsn);
 
             if (!$residencyResponse->isResident()) {
-                return null;
+                return $residencyResponse;
             }
 
             $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
