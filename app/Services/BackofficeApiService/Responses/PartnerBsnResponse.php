@@ -3,6 +3,7 @@
 namespace App\Services\BackofficeApiService\Responses;
 
 use App\Models\FundBackofficeLog;
+use App\Services\BackofficeApiService\BackofficeApi;
 
 class PartnerBsnResponse
 {
@@ -18,11 +19,15 @@ class PartnerBsnResponse
     }
 
     /**
-     * @return string|null
+     * @return string|false|null
      */
-    public function getBsn(): ?string
+    public function getBsn()
     {
-        return $this->log->response_body['partner_bsn'] ?? null;
+        if ($this->log->state === BackofficeApi::STATE_SUCCESS) {
+            return $this->log->response_body['partner_bsn'] ?? false;
+        }
+
+        return null;
     }
 
     /**

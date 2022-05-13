@@ -12,6 +12,7 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -1703,7 +1704,8 @@ class Fund extends Model
      * @param ?string $identity_address
      * @return bool
      */
-    public function isTakenByPartner(?string $identity_address): bool {
+    public function isTakenByPartner(?string $identity_address): bool
+    {
         if (!$identity_address || !$identity = Identity::findByAddress($identity_address)) {
             return false;
         }
@@ -1791,29 +1793,33 @@ class Fund extends Model
 
     /**
      * @param string $identity_address
-     * @return ResidencyResponse|EligibilityResponse|null
+     * @return ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null
      */
     public function checkBackofficeIfAvailable(string $identity_address)
     {
-        $bsn = record_repo()->bsnByAddress($identity_address);
+        $recordRepo = record_repo();
+        $bsn = $recordRepo->bsnByAddress($identity_address);
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
 
         if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
             $backofficeApi = $this->getBackofficeApi();
+
+            // check for residency
             $residencyResponse = $backofficeApi->residencyCheck($bsn);
 
-            if (!$residencyResponse->isResident()) {
+            if (!$residencyResponse->getLog()->success() || !$residencyResponse->isResident()) {
                 return $residencyResponse;
             }
 
+            // check if taken by partner
             $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
+            $partnerBsn = $partnerBsnResponse->getBsn();
+            $partnerIdentity = $partnerBsn ? $recordRepo->identityAddressByBsn($partnerBsn) : null;
 
-            if ($partnerBsnResponse->getLog()->success() && ($partnerBsn = $partnerBsnResponse->getBsn())) {
-                $partnerIdentity = record_repo()->identityAddressByBsn($partnerBsn);
-
-                if ($partnerIdentity && $this->isTakenByPartner($partnerIdentity)) {
-                    return null;
-                }
+            if (!$partnerBsnResponse->getLog()->success() ||
+                ($partnerIdentity && $this->identityHasActiveVoucher($partnerIdentity)) ||
+                $this->isTakenByPartner($identity_address)) {
+                return $partnerBsnResponse;
             }
 
             // check again for active vouchers

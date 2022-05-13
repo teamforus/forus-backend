@@ -8,6 +8,7 @@ use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\DigIdService\Models\DigIdSession;
 
@@ -168,7 +169,7 @@ class DigIdController extends Controller
 
     /**
      * @param Fund $fund
-     * @param ResidencyResponse|EligibilityResponse $response
+     * @param ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null $response
      * @return string|array
      */
     protected function handleBackofficeResponse(Fund $fund, $response)
@@ -186,6 +187,11 @@ class DigIdController extends Controller
         // not resident
         if ($response instanceof ResidencyResponse && !$response->isResident()) {
             return $this->backofficeError('not_resident');
+        }
+
+        // is partner bsn
+        if ($response instanceof PartnerBsnResponse) {
+            return $this->backofficeError('taken_by_partner');
         }
 
         // not eligible
