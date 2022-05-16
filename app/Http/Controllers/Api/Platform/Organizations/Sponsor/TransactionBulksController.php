@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
-use App\Exports\VoucherExport;
+use App\Exports\VoucherTransactionBulkSponsorExport;
 use App\Exports\VoucherTransactionBulksSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\UpdateTransactionBulksRequest;
@@ -16,7 +16,6 @@ use App\Models\Voucher;
 use App\Models\VoucherTransactionBulk;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -44,11 +43,7 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        $query = VoucherTransactionBulk::query();
-
-        $query = $query->whereHas('bank_connection', function (Builder $builder) use ($organization) {
-            $builder->where('bank_connections.organization_id', $organization->id);
-        });
+        $query = VoucherTransactionBulk::searchSponsor($request, $organization);
 
         return VoucherTransactionBulkResource::queryCollection(VoucherTransactionBulkQuery::order(
             $query,
@@ -70,8 +65,8 @@ class TransactionBulksController extends Controller
         Organization $organization,
         VoucherTransactionBulk $voucherTransactionBulk
     ): VoucherTransactionBulkResource {
-        //$this->authorize('show', $organization);
-        //$this->authorize('show', [$voucherTransactionBulk, $organization]);
+        $this->authorize('show', $organization);
+        $this->authorize('show', [$voucherTransactionBulk, $organization]);
 
         return VoucherTransactionBulkResource::create($voucherTransactionBulk);
     }
@@ -135,6 +130,22 @@ class TransactionBulksController extends Controller
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
      */
+    public function getListExportFields(
+        IndexVouchersExportFieldsRequest $request,
+        Organization $organization
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+
+        return ExportFieldArrResource::collection(VoucherTransactionBulksSponsorExport::getExportFieldsList());
+    }
+
+    /**
+     * @param IndexVouchersExportFieldsRequest $request
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
+     */
     public function getExportFields(
         IndexVouchersExportFieldsRequest $request,
         Organization $organization
@@ -142,28 +153,51 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return ExportFieldArrResource::collection(VoucherTransactionBulksSponsorExport::getExportFieldsList(
-            $request->input('type', 'budget')
-        ));
+        return ExportFieldArrResource::collection(VoucherTransactionBulkSponsorExport::getExportFieldsList());
     }
 
     /**
      * @param IndexTransactionBulksRequest $request
      * @param Organization $organization
      * @return BinaryFileResponse
+     * @throws AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function exportList(
+        IndexTransactionBulksRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
+
+        $fields = $request->input('fields', VoucherTransactionBulksSponsorExport::getExportFieldsList());
+        $fileData = new VoucherTransactionBulksSponsorExport($request, $organization, $fields);
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
+
+        return resolve('excel')->download($fileData, $fileName);
+    }
+
+    /**
+     * @param IndexTransactionBulksRequest $request
+     * @param Organization $organization
+     * @param VoucherTransactionBulk $voucherTransactionBulk
+     * @return BinaryFileResponse
+     * @throws AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function export(
         IndexTransactionBulksRequest $request,
-        Organization $organization
+        Organization $organization,
+        VoucherTransactionBulk $voucherTransactionBulk
     ): BinaryFileResponse {
-//        $this->authorize('show', $organization);
-//        $this->authorize('viewAnySponsor', [VoucherTransactionBulk::class, $organization]);
+        $this->authorize('show', $organization);
+        $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        $fields = $request->input('fields');
-        $fileData = new VoucherTransactionBulksSponsorExport($request, $organization, $fields);
-        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_format', 'xls');
+        $fields = $request->input('fields', VoucherTransactionBulkSponsorExport::getExportFieldsList());
+        $fileData = new VoucherTransactionBulkSponsorExport($request, $voucherTransactionBulk, $fields);
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);
     }

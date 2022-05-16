@@ -2,18 +2,13 @@
 
 namespace App\Exports;
 
-use App\Models\Organization;
 use App\Models\VoucherTransactionBulk;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Illuminate\Support\Collection;
 
-/**
- * Class VoucherTransactionsSponsorExport
- * @package App\Exports
- */
-class VoucherTransactionBulksSponsorExport implements FromCollection, WithHeadings
+class VoucherTransactionBulkSponsorExport implements FromCollection, WithHeadings
 {
     protected Request $request;
     protected $data;
@@ -21,35 +16,35 @@ class VoucherTransactionBulksSponsorExport implements FromCollection, WithHeadin
 
     protected static array $fields = [
         ['id', 'ID'],
-        ['quantity', 'Aantal'],
         ['amount', 'Bedrag'],
-        ['bank_name', 'Bank naam'],
-        ['date_transaction', 'Datum transactie'],
+        ['date_transaction', 'Datum'],
+        ['fund_name', 'Fonds'],
+        ['provider', 'Aanbieder'],
         ['state', 'Status'],
     ];
 
     /**
      * @param Request $request
-     * @param Organization $organization
+     * @param VoucherTransactionBulk $transactionBulk
      * @param array $fields
      */
     public function __construct(
         Request $request,
-        Organization $organization,
+        VoucherTransactionBulk $transactionBulk,
         array $fields
     ) {
         $this->request = $request;
 
-        $this->data = VoucherTransactionBulk::exportListSponsor(
+        $this->data = VoucherTransactionBulk::exportSponsor(
             $this->request,
-            $organization,
+            $transactionBulk,
             $fields,
         );
     }
 
     /**
-    * @return Collection
-    */
+     * @return Collection
+     */
     public function collection(): Collection
     {
         return $this->data;

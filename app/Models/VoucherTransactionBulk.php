@@ -180,6 +180,14 @@ class VoucherTransactionBulk extends Model
     }
 
     /**
+     * @return BelongsTo
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    /**
      * @return string
      * @noinspection PhpUnused
      */
@@ -658,36 +666,42 @@ class VoucherTransactionBulk extends Model
         /** @var Builder $query */
         $query = self::query();
 
-        if ($request->has('state') && $state = $request->input('state')) {
-            $query->where('state', $state);
-        }
-
         if ($request->has('from') && $from = $request->input('from')) {
-            $from = (Carbon::createFromFormat('Y-m-d', $from));
-
-            $query->where(
-                'created_at',
-                '>=',
-                $from->startOfDay()->format('Y-m-d H:i:s')
+            $query->where('created_at','>=',
+                (Carbon::createFromFormat('Y-m-d', $from))->startOfDay()->format('Y-m-d H:i:s')
             );
         }
 
         if ($request->has('to') && $to = $request->input('to')) {
-            $to = (Carbon::createFromFormat('Y-m-d', $to));
-
-            $query->where(
-                'created_at',
-                '<=',
-                $to->endOfDay()->format('Y-m-d H:i:s')
+            $query->where('created_at','<=',
+                (Carbon::createFromFormat('Y-m-d', $to))->endOfDay()->format('Y-m-d H:i:s')
             );
         }
 
+        if ($request->has('state') && $state = $request->input('state')) {
+            $query->where('state', $state);
+        }
+
+        if ($quantity_min = $request->input('quantity_min')) {
+            $query->has('voucher_transactions', '>=', $quantity_min);
+        }
+
+        if ($quantity_max = $request->input('quantity_max')) {
+            $query->has('voucher_transactions', '<=', $quantity_max);
+        }
+
         if ($amount_min = $request->input('amount_min')) {
-            $query->where('amount', '>=', $amount_min);
+            $query->whereHas('voucher_transactions', function (Builder $builder) use ($amount_min) {
+                $builder->select(\DB::raw('SUM(amount) as total_amount'))
+                    ->having('total_amount', '>=', $amount_min);
+            });
         }
 
         if ($amount_max = $request->input('amount_max')) {
-            $query->where('amount', '<=', $amount_max);
+            $query->whereHas('voucher_transactions', function (Builder $builder) use ($amount_max) {
+                $builder->select(\DB::raw('SUM(amount) as total_amount'))
+                    ->having('total_amount', '<=', $amount_max);
+            });
         }
 
         return $query;
@@ -696,63 +710,90 @@ class VoucherTransactionBulk extends Model
     /**
      * @param Request $request
      * @param Organization $organization
-     * @param ?Organization $provider
      * @return Builder
      */
     public static function searchSponsor(
         Request $request,
-        Organization $organization,
-        Organization $provider = null
+        Organization $organization
     ): Builder {
-        $builder = self::search($request);
-
-        if ($provider) {
-            $builder->where('organization_id', $provider->id);
-        }
-
-        return $builder;
+        return self::search($request)->whereHas('bank_connection', function (Builder $builder) use ($organization) {
+            $builder->where('bank_connections.organization_id', $organization->id);
+        });
     }
 
     /**
      * @param Builder $builder
+     * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder)
+    private static function exportListTransform(Builder $builder, array $fields)
     {
-        $transKey = "export.voucher_transactions_bulk";
-
-        return $builder->with([
-            'voucher_transactions.provider',
-        ])->get()->map(static function(
+        return $builder->get()->map(static function(
             VoucherTransactionBulk $transactionBulk
-        ) use ($transKey) {
-            return [
-                trans("$transKey.id") => $transactionBulk->id,
-                trans("$transKey.amount") => currency_format(
+        ) use ($fields) {
+            return array_only([
+                "id" => $transactionBulk->id,
+                "quantity" => $transactionBulk->voucher_transactions_count,
+                "amount" => currency_format(
                     $transactionBulk->voucher_transactions->sum('amount')
                 ),
-                trans("$transKey.bank") => $transactionBulk->bank_connection->bank->name,
-                trans("$transKey.date_transaction") => format_datetime_locale($transactionBulk->created_at),
-                trans("$transKey.state") => trans("$transKey.state-values.$transactionBulk->state"),
-            ];
+                "bank_name" => $transactionBulk->bank_connection->bank->name,
+                "date_transaction" => format_datetime_locale($transactionBulk->created_at),
+                "state" => $transactionBulk->state,
+            ], $fields);
+        })->values();
+    }
+
+    /**
+     * @param VoucherTransactionBulk $transactionBulk
+     * @param array $fields
+     * @return Collection|\Illuminate\Support\Collection
+     */
+    private static function exportTransform(VoucherTransactionBulk $transactionBulk, array $fields)
+    {
+        return $transactionBulk->voucher_transactions->map(static function(
+            VoucherTransaction $transaction
+        ) use ($fields) {
+            return array_only([
+                "id" => $transaction->id,
+                "amount" => currency_format($transaction->amount),
+                "date_transaction" => format_datetime_locale($transaction->created_at),
+                "fund_name" => $transaction->voucher->fund->name,
+                "provider"  => Organization::find($transaction->organization_id)->name,
+                "state" => $transaction->state,
+            ], $fields);
         })->values();
     }
 
     /**
      * @param Request $request
      * @param Organization $organization
-     * @param Organization|null $provider
+     * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function exportListSponsor(
+        Request $request,
+        Organization $organization,
+        array $fields
+    ) {
+        return self::exportListTransform(VoucherTransactionBulkQuery::order(
+            self::searchSponsor($request, $organization),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        ), $fields);
+    }
+
+    /**
+     * @param Request $request
+     * @param VoucherTransactionBulk $transactionBulk
+     * @param array $fields
+     * @return Collection|\Illuminate\Support\Collection
      */
     public static function exportSponsor(
         Request $request,
-        Organization $organization,
-        Organization $provider = null
+        VoucherTransactionBulk $transactionBulk,
+        array $fields
     ) {
-        return self::exportTransform(VoucherTransactionBulkQuery::order(
-            self::searchSponsor($request, $organization, $provider),
-            $request->get('order_by'),
-            $request->get('order_dir')
-        ));
+        return self::exportTransform($transactionBulk, $fields);
     }
 }
