@@ -1231,4 +1231,26 @@ class Voucher extends Model
 
         return $this->transactions->count() + $this->product_vouchers->count();
     }
+
+    /**
+     * @param array $attributes
+     * @param bool $reviewRequired
+     * @return VoucherTransaction
+     */
+    public function makeTransaction(
+        array $attributes = [],
+        bool $reviewRequired = false
+    ): VoucherTransaction {
+        $data = array_merge([
+            'state' => 'pending',
+            'address' => resolve('token_generator')->address(),
+            'initiator' => VoucherTransaction::INITIATOR_PROVIDER,
+            'voucher_id' => $this->id,
+        ], $attributes);
+
+        return VoucherTransaction::create(array_merge($data, $reviewRequired ? [
+            'attempts' => 50,
+            'last_attempt_at' => now(),
+        ] : []));
+    }
 }
