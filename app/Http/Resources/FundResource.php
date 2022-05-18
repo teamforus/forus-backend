@@ -177,6 +177,7 @@ class FundResource extends BaseJsonResource
     {
         return $fund->fund_config ? $fund->fund_config->only([
             'backoffice_enabled', 'backoffice_url',
+            'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
             'backoffice_key', 'backoffice_certificate', 'backoffice_fallback',
         ]): null;
     }

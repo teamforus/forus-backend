@@ -7,6 +7,8 @@ use App\Http\Requests\DigID\StartDigIdRequest;
 use App\Models\Fund;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
+use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\DigIdService\Models\DigIdSession;
 
 /**
@@ -149,16 +151,68 @@ class DigIdController extends Controller
         Voucher::assignAvailableToIdentityByBsn($identity);
 
         if ($fund->organization->bsn_enabled && $hasBackoffice) {
-            $backofficeResponse = $fund->checkBackofficeIfAvailable($identity);
+            $response = $fund->checkBackofficeIfAvailable($identity);
+            $redirect = $this->handleBackofficeResponse($fund, $response);
 
-            if ($backofficeResponse && !$backofficeResponse->getLog()->success()) {
-                $params['backoffice_error'] = 1;
-                $params['backoffice_fallback'] = $fund->fund_config->backoffice_fallback;
+            if (is_string($redirect)) {
+                return redirect($redirect);
             }
+
+            $params = $redirect;
         }
 
         return redirect(url_extend_get_params($session->session_final_url, array_merge([
             'digid_success' => $isFirstSignUp ? 'signed_up' : 'signed_in',
         ], $params)));
+    }
+
+    /**
+     * @param Fund $fund
+     * @param ResidencyResponse|EligibilityResponse $response
+     * @return string|array
+     */
+    protected function handleBackofficeResponse(Fund $fund, $response)
+    {
+        // backoffice not available
+        if ($response === null) {
+            return [];
+        }
+
+        // backoffice not responding
+        if (!$response->getLog()->success()) {
+            return $this->backofficeError('no_response', $fund->fund_config->backoffice_fallback);
+        }
+
+        // not resident
+        if ($response instanceof ResidencyResponse && !$response->isResident()) {
+            return $this->backofficeError('not_resident');
+        }
+
+        // not eligible
+        if ($response instanceof EligibilityResponse && !$response->isEligible()) {
+            if ($fund->fund_config->shouldRedirectOnIneligibility()) {
+                // should redirect
+                return $fund->fund_config->backoffice_ineligible_redirect_url;
+            }
+
+            // should show error
+            return $this->backofficeError('not_eligible', true);
+        }
+
+        return [];
+    }
+
+    /**
+     * @param string $error_key
+     * @param bool $fallback
+     * @return array
+     */
+    protected function backofficeError(string $error_key, bool $fallback = false): array
+    {
+        return [
+            'backoffice_error' => 1,
+            'backoffice_error_key' => $error_key,
+            'backoffice_fallback' => $fallback ? 1 : 0,
+        ];
     }
 }
