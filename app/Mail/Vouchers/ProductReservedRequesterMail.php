@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class ProductReservedRequesterMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_identities.product_voucher_reserved';
+    protected string $notificationTemplateKey = 'notifications_identities.product_voucher_reserved';
 
     /**
      * @return Mailable

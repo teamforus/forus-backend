@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddAllowDirectRequestToFundConfigsTable
  * @noinspection PhpUnused
  */
 class AddAllowDirectRequestsToFundConfigsTable extends Migration

@@ -5,14 +5,14 @@ namespace App\Http\Resources;
 use Gate;
 use App\Models\Fund;
 use App\Models\Organization;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class OrganizationResource
  * @property Organization $resource
  * @package App\Http\Resources
  */
-class OrganizationResource extends Resource
+class OrganizationResource extends JsonResource
 {
     public const DEPENDENCIES = [
         'logo',

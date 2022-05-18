@@ -13,9 +13,9 @@ abstract class BaseBankConnectionEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $bankConnection;
-    protected $employee;
-    protected $data;
+    protected BankConnection $bankConnection;
+    protected ?Employee $employee;
+    protected array $data;
 
     /**
      * Create a new event instance.

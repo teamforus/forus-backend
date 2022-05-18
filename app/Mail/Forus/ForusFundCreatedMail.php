@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class ForusFundCreatedMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.forus_fund_created.title';
+    protected string $subjectKey = 'mails/system_mails.forus_fund_created.title';
 
     /**
      * @return Mailable

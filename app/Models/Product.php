@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Events\Products\ProductSoldOut;
 use App\Http\Requests\BaseFormRequest;
-use App\Mail\Vouchers\ProductSoldOutMail;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\ProductQuery;
@@ -179,6 +178,7 @@ class Product extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function sponsor_organization(): BelongsTo
     {
@@ -244,24 +244,25 @@ class Product extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function fund_providers(): BelongsToMany {
-        return $this->belongsToMany(
-            FundProvider::class,
-            'fund_provider_products'
-        )->whereNull('fund_provider_products.deleted_at');
+    public function fund_providers(): BelongsToMany
+    {
+        return $this->belongsToMany(FundProvider::class, 'fund_provider_products')
+            ->whereNull('fund_provider_products.deleted_at');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_provider_products(): HasMany {
+    public function fund_provider_products(): HasMany
+    {
         return $this->hasMany(FundProviderProduct::class);
     }
 
     /**
      * @return HasMany
      */
-    public function product_exclusions(): HasMany {
+    public function product_exclusions(): HasMany
+    {
         return $this->hasMany(FundProviderProductExclusion::class);
     }
 
@@ -269,7 +270,8 @@ class Product extends Model
      * Get fund logo
      * @return MorphOne
      */
-    public function photo(): MorphOne {
+    public function photo(): MorphOne
+    {
         return $this->morphOne(Media::class, 'mediable')->where([
             'type' => 'product_photo'
         ]);
@@ -278,7 +280,8 @@ class Product extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function fund_provider_chats(): HasMany {
+    public function fund_provider_chats(): HasMany
+    {
         return $this->hasMany(FundProviderChat::class);
     }
 
@@ -287,8 +290,10 @@ class Product extends Model
      *
      * @param $value
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function getSoldOutAttribute($value): bool {
+    public function getSoldOutAttribute($value): bool
+    {
         return (bool) $value;
     }
 
@@ -296,6 +301,7 @@ class Product extends Model
      * The product is expired
      *
      * @return bool
+     * @noinspection PhpUnused
      */
     public function getExpiredAttribute(): bool {
         return $this->expire_at && $this->expire_at->isPast();
@@ -306,7 +312,8 @@ class Product extends Model
      *
      * @return int
      */
-    public function countReserved(): int {
+    public function countReserved(): int
+    {
         return $this->vouchers_reserved()->count();
     }
 
@@ -315,7 +322,8 @@ class Product extends Model
      *
      * @return int
      */
-    public function countSold(): int {
+    public function countSold(): int
+    {
         return $this->voucher_transactions()->count();
     }
 
@@ -323,7 +331,8 @@ class Product extends Model
      * @return int
      * @noinspection PhpUnused
      */
-    public function getStockAmountAttribute(): int {
+    public function getStockAmountAttribute(): int
+    {
         return $this->total_amount - (
             $this->vouchers_reserved->count() +
             $this->voucher_transactions->count());
@@ -332,7 +341,8 @@ class Product extends Model
     /**
      * Update sold out state for the product
      */
-    public function updateSoldOutState(): void {
+    public function updateSoldOutState(): void
+    {
         if (!$this->unlimited_stock) {
             $totalProducts = $this->countReserved() + $this->countSold();
 
@@ -348,7 +358,8 @@ class Product extends Model
     /**
      * @return Builder
      */
-    public static function searchQuery(): Builder {
+    public static function searchQuery(): Builder
+    {
         $query = self::query();
         $activeFunds = Implementation::activeFundsQuery()->pluck('id')->toArray();
 
@@ -363,7 +374,8 @@ class Product extends Model
      * @param Request $request
      * @return Builder
      */
-    public static function searchSample(Request $request): Builder {
+    public static function searchSample(Request $request): Builder
+    {
         $query = self::searchQuery();
 
         if ($request->input('fund_type')) {

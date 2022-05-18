@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * @noinspection PhpUnused
+ */
 class DropMailJobsTable extends Migration
 {
     /**

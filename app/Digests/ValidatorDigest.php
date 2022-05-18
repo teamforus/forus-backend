@@ -22,9 +22,9 @@ class ValidatorDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    protected $requiredRelation = "funds";
-    protected $digestKey = "validator";
-    protected $employeePermissions = [
+    protected string $requiredRelation = "funds";
+    protected string $digestKey = "validator";
+    protected array $employeePermissions = [
         'validate_records'
     ];
 

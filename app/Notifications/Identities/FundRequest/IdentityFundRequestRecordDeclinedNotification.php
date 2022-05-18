@@ -12,8 +12,8 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityFundRequestRecordDeclinedNotification extends BaseIdentityFundRequestNotification
 {
-    protected static $key = 'notifications_identities.fund_request_record_declined';
-    protected static $scope = null;
+    protected static ?string $key = 'notifications_identities.fund_request_record_declined';
+    protected static ?string $scope = null;
 
     /**
      * @param Identity $identity

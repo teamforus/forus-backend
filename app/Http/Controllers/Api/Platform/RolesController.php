@@ -13,11 +13,9 @@ class RolesController extends Controller
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index()
+    public function index(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
-        return RoleResource::collection(
-            Role::all()->load(RoleResource::$load)
-        );
+        return RoleResource::queryCollection(Role::query(), Role::count());
     }
 
     /**
@@ -26,8 +24,8 @@ class RolesController extends Controller
      * @param Role $role
      * @return RoleResource
      */
-    public function show(Role $role)
+    public function show(Role $role): RoleResource
     {
-        return new RoleResource($role);
+        return RoleResource::create($role);
     }
 }

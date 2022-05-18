@@ -12,9 +12,9 @@ class Color
 {
     protected const LUMA_THRESHOLD = .75;
 
-    public $red;
-    public $green;
-    public $blue;
+    public int $red;
+    public int $green;
+    public int $blue;
 
     public function __construct(int $red = 0, int $green = 0, int $blue = 0)
     {
@@ -73,9 +73,9 @@ class Color
         }
 
         return new self(
-            rand(0 + $paddingLight, 255 - $paddingDark),
-            rand(0 + $paddingLight, 255 - $paddingDark),
-            rand(0 + $paddingLight, 255 - $paddingDark)
+            rand($paddingLight, 255 - $paddingDark),
+            rand($paddingLight, 255 - $paddingDark),
+            rand($paddingLight, 255 - $paddingDark)
         );
     }
 

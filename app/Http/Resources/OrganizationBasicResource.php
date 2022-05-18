@@ -3,7 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Organization;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
 /**
@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
  * @property Organization $resource
  * @package App\Http\Resources
  */
-class OrganizationBasicResource extends Resource
+class OrganizationBasicResource extends JsonResource
 {
     /**
      * Transform the resource into an array.

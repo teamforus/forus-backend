@@ -1,9 +1,13 @@
-<?php /** @noinspection PhpIllegalPsrClassPathInspection */
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * @noinspection PhpUnused
+ * @noinspection PhpIllegalPsrClassPathInspection
+ */
 class AddDeletedAtToIdentityProxiesTable extends Migration
 {
     /**
@@ -11,7 +15,7 @@ class AddDeletedAtToIdentityProxiesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         if (!Schema::hasColumn('identity_proxies', 'deleted_at')) {
             Schema::table('identity_proxies', function (Blueprint $table) {
@@ -25,5 +29,5 @@ class AddDeletedAtToIdentityProxiesTable extends Migration
      *
      * @return void
      */
-    public function down() {}
+    public function down(): void {}
 }

@@ -1,5 +1,7 @@
 <?php
 
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 use App\Models\Implementation;
 
@@ -9,26 +11,26 @@ class ImplementationsNotificationBrandingSeeder extends Seeder
      * Run the database seeds.
      *
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
     public function run(): void
     {
         $this->migrateImplementation(
             'general',
             '#315EFD',
-            database_path('/seeds/resources/mail_assets/general-logo.jpg')
+            database_path('/seeders/resources/mail_assets/general-logo.jpg')
         );
 
         $this->migrateImplementation(
             'nijmegen',
             '#EB0029',
-            database_path('/seeds/resources/mail_assets/nijmegen-logo.jpg')
+            database_path('/seeders/resources/mail_assets/nijmegen-logo.jpg')
         );
 
         $this->migrateImplementation(
             'groningen',
             '#E60103',
-            database_path('/seeds/resources/mail_assets/groningen-logo.jpg')
+            database_path('/seeders/resources/mail_assets/groningen-logo.jpg')
         );
     }
 
@@ -36,7 +38,7 @@ class ImplementationsNotificationBrandingSeeder extends Seeder
      * @param string $implementation_key
      * @param string $email_color
      * @param string $logo_path
-     * @throws Exception
+     * @throws \Throwable
      */
     public function migrateImplementation(
         string $implementation_key,

@@ -29,9 +29,11 @@ class IdentityEmailsController extends Controller
     {
         $this->authorize('viewAny', IdentityEmail::class);
 
-        return IdentityEmailResource::collection(IdentityEmail::where([
+        $query = IdentityEmail::where([
             'identity_address' => $request->auth_address()
-        ])->orderByDesc('primary')->orderBy('email')->get());
+        ])->orderByDesc('primary')->orderBy('email');
+
+        return IdentityEmailResource::queryCollection($query, (clone $query)->count());
     }
 
     /**

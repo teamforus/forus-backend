@@ -1,5 +1,7 @@
 <?php
 
+namespace Database\Seeders;
+
 use App\Models\Implementation;
 use App\Services\MediaService\Models\Media;
 
@@ -9,7 +11,7 @@ class ImplementationsTableSeeder extends DatabaseSeeder
      * Run the database seeds.
      *
      * @return void
-     * @throws Exception
+     * @throws \Throwable
      */
     public function run(): void
     {
@@ -44,7 +46,7 @@ class ImplementationsTableSeeder extends DatabaseSeeder
     }
 
     /**
-     * @throws Exception
+     * @throws \Throwable
      */
     protected function makeImplementationEmailLogoMedia(string $logoPath): Media
     {

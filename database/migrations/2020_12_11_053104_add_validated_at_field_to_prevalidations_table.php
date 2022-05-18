@@ -7,7 +7,6 @@ use App\Models\Prevalidation;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Class AddValidatedAtFieldToPrevalidationsTable
  * @noinspection PhpUnused
  */
 class AddValidatedAtFieldToPrevalidationsTable extends Migration

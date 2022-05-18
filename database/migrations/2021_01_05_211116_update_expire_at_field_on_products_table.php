@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class UpdateExpireAtFieldOnProductsTable
  * @noinspection PhpUnused
  */
 class UpdateExpireAtFieldOnProductsTable extends Migration
@@ -15,7 +14,7 @@ class UpdateExpireAtFieldOnProductsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         DB::getDoctrineSchemaManager()
             ->getDatabasePlatform()
@@ -30,5 +29,5 @@ class UpdateExpireAtFieldOnProductsTable extends Migration
      *
      * @return void
      */
-    public function down() {}
+    public function down(): void {}
 }

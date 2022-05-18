@@ -47,7 +47,6 @@ use App\Policies\VoucherTransactionPolicy;
 use App\Services\AuthService\BearerTokenGuard;
 use App\Services\AuthService\ServiceIdentityProvider;
 use App\Services\FileService\Models\File;
-use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use App\Services\MediaService\Models\Media;
 use Illuminate\Auth\Access\Gate;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
@@ -103,7 +102,7 @@ class AuthServiceProvider extends ServiceProvider
 
         // add custom guard provider
         Auth::provider('identity_service', function () {
-            return new ServiceIdentityProvider(app()->make(IIdentityRepo::class));
+            return new ServiceIdentityProvider();
         });
 
         // add custom guard

@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Voucher;
 
 /**
- * Class AddDeactivatedStateToVouchersTable
  * @noinspection PhpUnused
  */
 class AddDeactivatedStateToVouchersTable extends Migration

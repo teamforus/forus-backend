@@ -36,9 +36,9 @@ class BNGController extends Controller
             $connection->setMonetaryAccounts($connection->fetchConnectionMonetaryAccounts());
             $connection->setActive();
             $connection->updateFundBalances();
-        } catch (Throwable $exception) {
-            $error_message = $exception->getMessage();
-            $error_trace = $exception->getTraceAsString();
+        } catch (Throwable $e) {
+            $error_message = $e->getMessage();
+            $error_trace = $e->getTraceAsString();
 
             $request->logger()->error(json_encode(compact('error_message', 'error_trace'), 128));
             $connection->logError(compact('error_message'));
@@ -71,9 +71,9 @@ class BNGController extends Controller
 
             $bulk->update(compact('code', 'access_token'));
             $bulk->updatePaymentStatus();
-        } catch (Throwable $exception) {
-            $error_message = $exception->getMessage();
-            $error_trace = $exception->getTraceAsString();
+        } catch (Throwable $e) {
+            $error_message = $e->getMessage();
+            $error_trace = $e->getTraceAsString();
 
             $request->logger()->error(json_encode(compact('error_message', 'error_trace'), 128));
             $bulk->logError(compact('error_message'));

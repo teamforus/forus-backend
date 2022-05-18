@@ -8,6 +8,8 @@ use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TransactionsController extends Controller
 {
@@ -17,23 +19,17 @@ class TransactionsController extends Controller
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @param Fund $fund
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
      */
     public function index(
         IndexTransactionsRequest $request,
         Organization $organization,
         Fund $fund
-    ) {
-        $this->authorize('viewAnyPublic', [
-            VoucherTransaction::class, $fund, $organization
-        ]);
+    ): AnonymousResourceCollection {
+        $this->authorize('viewAnyPublic', [VoucherTransaction::class, $fund, $organization]);
 
-        return VoucherTransactionResource::collection(
-            $fund->voucher_transactions()->paginate(
-                $request->input('per_page', 10)
-            )
-        );
+        return VoucherTransactionResource::queryCollection($fund->voucher_transactions(), $request);
     }
 
     /**
@@ -49,11 +45,9 @@ class TransactionsController extends Controller
         Organization $organization,
         Fund $fund,
         VoucherTransaction $voucherTransaction
-    ) {
-        $this->authorize('showPublic', [
-            $voucherTransaction, $fund, $organization
-        ]);
+    ): VoucherTransactionResource {
+        $this->authorize('showPublic', [$voucherTransaction, $fund, $organization]);
 
-        return new VoucherTransactionResource($voucherTransaction);
+        return VoucherTransactionResource::create($voucherTransaction);
     }
 }

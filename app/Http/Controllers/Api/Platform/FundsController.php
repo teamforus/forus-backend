@@ -105,8 +105,8 @@ class FundsController extends Controller
             $voucher->assignToIdentity($request->auth_address());
         }
 
-        return response()->json([
-            'prevalidation' => $prevalidation ? new PrevalidationResource($prevalidation) : null,
+        return new JsonResponse([
+            'prevalidation' => $prevalidation ? PrevalidationResource::create($prevalidation) : null,
             'vouchers' => VoucherResource::collection($vouchersAvailable),
         ]);
     }

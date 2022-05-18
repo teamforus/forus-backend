@@ -12,7 +12,7 @@ use App\Models\Voucher;
  */
 class FixVoucherEmployeeId extends Migration
 {
-    protected $logService;
+    protected mixed $logService;
 
     public function __construct()
     {

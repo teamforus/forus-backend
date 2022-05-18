@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Product;
 
 /**
- * Class MakeProductPriceDiscountNonNullable
  * @noinspection PhpUnused
  */
 class MakeProductPriceDiscountNonNullable extends Migration
@@ -17,7 +16,7 @@ class MakeProductPriceDiscountNonNullable extends Migration
      * @return void
      * @throws \Doctrine\DBAL\Exception
      */
-    public function up()
+    public function up(): void
     {
         DB::getDoctrineSchemaManager()
             ->getDatabasePlatform()
@@ -38,7 +37,7 @@ class MakeProductPriceDiscountNonNullable extends Migration
      * @return void
      * @throws \Doctrine\DBAL\Exception
      */
-    public function down()
+    public function down(): void
     {
         DB::getDoctrineSchemaManager()
             ->getDatabasePlatform()

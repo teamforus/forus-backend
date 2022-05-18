@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\SystemNotificationsTableSeeder;
 
-/** @noinspection PhpUnused */
+/**
+ * @noinspection PhpUnused
+ */
 class SeedSystemNotificationsTable extends Migration
 {
     /**

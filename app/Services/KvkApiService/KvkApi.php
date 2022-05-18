@@ -52,7 +52,7 @@ class KvkApi
         try {
             $response = json_decode($this->makeApiCall($kvk_number), false);
             return is_object($response) ? $response : null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             if ($logger = logger()) {
                 $logger->error($e->getMessage());
             }

@@ -3,14 +3,14 @@
 namespace App\Http\Resources;
 
 use App\Models\FundFormula;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class FundCriterionResource
  * @property FundFormula $resource
  * @package App\Http\Resources
  */
-class FundFormulaResource extends Resource
+class FundFormulaResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -20,8 +20,6 @@ class FundFormulaResource extends Resource
      */
     public function toArray($request): array
     {
-        return $this->resource->only([
-            'type', 'amount', 'record_type_key'
-        ]);
+        return $this->resource->only('type', 'amount', 'record_type_key');
     }
 }

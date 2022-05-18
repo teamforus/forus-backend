@@ -30,10 +30,9 @@ class TransactionsController extends Controller
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
 
-        return VoucherTransactionResource::collection(
-            VoucherTransaction::searchVoucher($voucherToken->voucher, $request)->paginate(
-                $request->input('per_page', 25)
-            )
+        return VoucherTransactionResource::queryCollection(
+            VoucherTransaction::searchVoucher($voucherToken->voucher, $request),
+            $request
         );
     }
 
@@ -126,7 +125,7 @@ class TransactionsController extends Controller
 
         VoucherTransactionCreated::dispatch($transaction);
 
-        return new VoucherTransactionResource($transaction);
+        return VoucherTransactionResource::create($transaction);
     }
 
     /**
@@ -147,6 +146,6 @@ class TransactionsController extends Controller
             abort(404);
         }
 
-        return new VoucherTransactionResource($voucherTransaction);
+        return VoucherTransactionResource::create($voucherTransaction);
     }
 }

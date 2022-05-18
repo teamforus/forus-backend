@@ -43,9 +43,7 @@ class ProductsController extends Controller
             'sponsor_organization_id' => $sponsor->id
         ]))->latest();
 
-        return SponsorProviderProductResource::collection($query->with(
-            SponsorProviderProductResource::$load
-        )->paginate($request->input('per_page')));
+        return SponsorProviderProductResource::queryCollection($query, $request);
     }
 
     /**
@@ -70,7 +68,7 @@ class ProductsController extends Controller
             'sponsor_organization_id' => $sponsor->id,
         ]));
 
-        return (new SponsorProviderProductResource($product))->additional([
+        return SponsorProviderProductResource::create($product)->additional([
             'fund_provider' => null,
         ]);
     }
@@ -93,7 +91,7 @@ class ProductsController extends Controller
         $this->authorize('viewAnySponsor', [FundProvider::class, $sponsor]);
         $this->authorize('showSponsorProduct', [$product, $provider, $sponsor]);
 
-        return new SponsorProviderProductResource($product);
+        return SponsorProviderProductResource::create($product);
     }
 
     /**
@@ -119,7 +117,7 @@ class ProductsController extends Controller
         $product->updateFromRequest($request);
         ProductUpdated::dispatch($product);
 
-        return new SponsorProviderProductResource($product);
+        return SponsorProviderProductResource::create($product);
     }
 
     /**
@@ -142,6 +140,6 @@ class ProductsController extends Controller
 
         $product->delete();
 
-        return response()->json();
+        return new JsonResponse([]);
     }
 }

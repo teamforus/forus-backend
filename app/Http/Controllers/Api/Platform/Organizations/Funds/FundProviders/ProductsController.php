@@ -42,9 +42,7 @@ class ProductsController extends Controller
             $query = ProductQuery::queryFilter($query, $request->input('q'));
         }
 
-        return SponsorProviderProductResource::collection($query->with(
-            SponsorProviderProductResource::$load
-        )->paginate($request->input('per_page')));
+        return SponsorProviderProductResource::queryCollection($query, $request);
     }
 
     /**
@@ -65,8 +63,6 @@ class ProductsController extends Controller
     ): SponsorProviderProductResource {
         $this->authorize('showSponsor', [$fundProvider, $organization, $fund]);
 
-        return new SponsorProviderProductResource(
-            $product->load(SponsorProviderProductResource::$load)
-        );
+        return SponsorProviderProductResource::create($product);
     }
 }

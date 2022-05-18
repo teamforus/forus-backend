@@ -3,7 +3,6 @@
 namespace App\Http\Requests\BNG;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\VoucherTransactionBulk;
 
 abstract class BaseBNGRedirectRequest extends BaseFormRequest
 {

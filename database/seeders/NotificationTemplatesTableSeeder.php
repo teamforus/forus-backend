@@ -1,5 +1,7 @@
 <?php
 
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 use App\Models\Implementation;
 use App\Services\Forus\Notification\Repositories\NotificationRepo;
@@ -12,10 +14,10 @@ class NotificationTemplatesTableSeeder extends Seeder
      * @return void
      * @throws Exception
      */
-    public function run()
+    public function run(): void
     {
         $notificationsRepo = resolve(NotificationRepo::class);
-        $data = file_get_contents(database_path('seeds/resources/mail_templates/notification_templates.json'));
+        $data = file_get_contents(database_path('seeders/resources/mail_templates/notification_templates.json'));
         $data = json_decode($data, true);
         $generalImplementation = Implementation::general();
         $communicationTypes = ['formal', 'informal'];
@@ -40,7 +42,7 @@ class NotificationTemplatesTableSeeder extends Seeder
                     $templatePath = $template["template$keySuffix"] ?? $template["template"] ?? null;
 
                     if ($type === 'mail' && $templatePath) {
-                        $templatePath = database_path('seeds/resources/mail_templates/' . $templatePath);
+                        $templatePath = database_path('seeders/resources/mail_templates/' . $templatePath);
                         $content = file_exists($templatePath) ? file_get_contents($templatePath) : '';
                     } else {
                         $content = $template["content$keySuffix"] ?? $template["content"] ?? '';

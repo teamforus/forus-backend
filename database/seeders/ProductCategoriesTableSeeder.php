@@ -1,8 +1,11 @@
 <?php
 
+namespace Database\Seeders;
+
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductCategoryTranslation;
+use Illuminate\Support\Facades\Schema;
 
 class ProductCategoriesTableSeeder extends DatabaseSeeder
 {
@@ -108,7 +111,7 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
      * @param int $depth
      * @return array|bool
      */
-    public static function filterByDepth(array $rows, int $depth = 1)
+    public static function filterByDepth(array $rows, int $depth = 1): bool|array
     {
         return array_filter($rows, static function ($row) use ($depth) {
             return $row['depth'] === $depth;
@@ -121,13 +124,13 @@ class ProductCategoriesTableSeeder extends DatabaseSeeder
      * @param string $keyLocale
      * @return mixed
      */
-    public static function loadTaxonomies(string $file, array $locales, string $keyLocale)
+    public static function loadTaxonomies(string $file, array $locales, string $keyLocale): mixed
     {
         $taxonomiesRaw = [];
         $taxonomiesNames = [];
 
         foreach ($locales as $localeKey => $locale) {
-            $data = file_get_contents(database_path(sprintf('/seeds/db/%s.%s.txt', $file, $locale)));
+            $data = file_get_contents(database_path(sprintf('/seeders/db/%s.%s.txt', $file, $locale)));
             $data = explode(PHP_EOL, str_replace("\r\n", PHP_EOL, $data));
 
             array_set($taxonomiesRaw, $localeKey, collect($data)->filter(function ($row) {

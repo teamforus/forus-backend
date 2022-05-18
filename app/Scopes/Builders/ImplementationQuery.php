@@ -14,6 +14,6 @@ class ImplementationQuery
      */
     public static function whereQueryFilter(Builder $query, string $q): Builder
     {
-        return $query->where('name', 'LIKE', "%{$q}%");
+        return $query->where('name', 'LIKE', "%$q%");
     }
 }

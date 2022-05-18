@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class MakeHouseAdditionNullableOnPhysicalCardRequestsTable
  * @noinspection PhpUnused
  */
 class MakeHouseAdditionNullableOnPhysicalCardRequestsTable extends Migration
@@ -15,7 +14,7 @@ class MakeHouseAdditionNullableOnPhysicalCardRequestsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('physical_card_requests', function(Blueprint $table) {
             $table->string('house_addition', 20)->nullable()->change();
@@ -27,5 +26,5 @@ class MakeHouseAdditionNullableOnPhysicalCardRequestsTable extends Migration
      *
      * @return void
      */
-    public function down() {}
+    public function down(): void {}
 }

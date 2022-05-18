@@ -1001,7 +1001,7 @@ class Fund extends Model
     public static function configuredFunds() {
         try {
             return static::query()->whereHas('fund_config')->get();
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             return collect();
         }
     }

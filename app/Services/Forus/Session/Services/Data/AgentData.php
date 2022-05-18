@@ -93,7 +93,7 @@ class AgentData extends Parser
             }
 
             return 'Client onbekend';
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             return parent::toString();
         }
     }

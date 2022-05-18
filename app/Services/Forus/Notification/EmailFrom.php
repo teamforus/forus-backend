@@ -53,7 +53,7 @@ class EmailFrom
     }
 
     /**
-     * @return mixed|string
+     * @return string
      */
     public function getImplementationKey(): string
     {

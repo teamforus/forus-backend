@@ -27,9 +27,9 @@ class FundRequestsController extends Controller
     ): AnonymousResourceCollection {
         $this->authorize('viewAnyAsRequester', [FundRequest::class, $fund]);
 
-        return FundRequestResource::collection($fund->fund_requests()->where([
+        return FundRequestResource::queryCollection($fund->fund_requests()->where([
             'identity_address' => $request->auth_address()
-        ])->paginate($request->input('per_page')));
+        ]), $request);
     }
 
     /**
@@ -53,12 +53,13 @@ class FundRequestsController extends Controller
 
         FundRequestCreated::dispatch($fundRequest);
 
-        return new FundRequestResource($fundRequest);
+        return FundRequestResource::create($fundRequest);
     }
 
     /**
      * @param StoreFundRequestRequest $request
      * @param Fund $fund
+     * @noinspection PhpUnused
      */
     public function storeValidate(
         StoreFundRequestRequest $request,
@@ -76,6 +77,6 @@ class FundRequestsController extends Controller
     public function show(Fund $fund, FundRequest $fundRequest): FundRequestResource {
         $this->authorize('viewAsRequester', [$fundRequest, $fund]);
 
-        return new FundRequestResource($fundRequest);
+        return FundRequestResource::create($fundRequest);
     }
 }

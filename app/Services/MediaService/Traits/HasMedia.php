@@ -123,9 +123,9 @@ trait HasMedia
             $media->each(function(Media $media) {
                 resolve('media')->unlink($media);
             });
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             if ($logger = logger()) {
-                $logger->error($exception->getMessage());
+                $logger->error($e->getMessage());
             }
         }
     }

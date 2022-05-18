@@ -5,7 +5,6 @@ namespace App\Services\Forus\Identity\Repositories;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Identity\Models\IdentityEmail;
 use App\Services\Forus\Identity\Models\IdentityProxy;
-use App\Services\Forus\Record\Models\Record;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 
 class IdentityRepo implements Interfaces\IIdentityRepo
@@ -126,7 +125,6 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      * @param string $access_token
      * @return mixed
      */
-
     public function proxyIdByAccessToken(
         string $access_token = null
     ) {
@@ -198,9 +196,8 @@ class IdentityRepo implements Interfaces\IIdentityRepo
                 case "pin_code": $token = random_int(111111, 999999); break;
                 case "email_code": $token = $this->makeToken(128); break;
                 case "short_token":
-                case "confirmation_code":
-                    $token = $this->makeToken(200); break;
-                default: throw new \Exception(trans('identity-proxy.unknown_token_type')); break;
+                case "confirmation_code": $token = $this->makeToken(200); break;
+                default: throw new \Exception(trans('identity-proxy.unknown_token_type'));
             }
         } while(IdentityProxy::query()->where([
             'exchange_token' => $token
@@ -225,10 +222,9 @@ class IdentityRepo implements Interfaces\IIdentityRepo
     ) {
         try {
             $exchangeToken = $this->uniqExchangeToken($type);
-        } catch (\Exception $exception) {
-            logger()->error($exception->getMessage());
-            abort('400');
-            return false;
+        } catch (\Throwable $e) {
+            logger()->error($e->getMessage());
+            abort(400);
         }
 
         return $this->createProxy(
@@ -540,11 +536,11 @@ class IdentityRepo implements Interfaces\IIdentityRepo
      * @param string $search
      * @return array
      */
-    public function identityAddressesByEmailSearch(
-        string $search
-    ): array {
-        return IdentityEmail::where('email', 'LIKE', "%{$search}%")->where([
-            'primary' => true,
-        ])->pluck('identity_address')->toArray();
+    public function identityAddressesByEmailSearch(string $search): array
+    {
+        return IdentityEmail::where('email', 'LIKE', "%$search%")
+            ->where('primary', true)
+            ->pluck('identity_address')
+            ->toArray();
     }
 }

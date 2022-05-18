@@ -72,10 +72,10 @@ class MediaCleanupCommand extends Command
                     $media->clearMediasWithoutMediable()
                 );
             } else {
-                echo sprintf("√ Skipped.\n");
+                echo "√ Skipped.\n";
             }
         } else {
-            echo sprintf("√ No media without mediable found.\n");
+            echo "√ No media without mediable found.\n";
         }
     }
 
@@ -97,10 +97,10 @@ class MediaCleanupCommand extends Command
                     $media->clearExpiredMedias($minutes ?: 5 * 60)
                 );
             } else {
-                echo sprintf("√ Skipped.\n");
+                echo "√ Skipped.\n";
             }
         } else {
-            echo sprintf("√ No expired medias found.\n");
+            echo "√ No expired medias found.\n";
         }
     }
 
@@ -118,10 +118,10 @@ class MediaCleanupCommand extends Command
                 $this->confirm("Would you like to delete them?")) {
                 echo sprintf("√ %s files deleted.\n", $media->clearStorage());
             } else {
-                echo sprintf("√ Skipped.\n");
+                echo "√ Skipped.\n";
             }
         } else {
-            echo sprintf("√ No unused media files found.\n");
+            echo "√ No unused media files found.\n";
         }
     }
 }

@@ -15,6 +15,9 @@ use App\Mail\Forus\IdentityDestroyRequestMail;
 use App\Models\Implementation;
 use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Redirector;
 
 /**
  * Class IdentityController
@@ -110,14 +113,14 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+     * @return View|RedirectResponse|Redirector
      * @throws \Exception
      * @noinspection PhpUnused
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $exchangeToken
-    ) {
+    ): View|Redirector|RedirectResponse {
         $token = $exchangeToken;
         $isMobile = $request->input('is_mobile', false);
 
@@ -228,13 +231,13 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $emailToken
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return View|RedirectResponse|\Illuminate\Routing\Redirector
      * @noinspection PhpUnused
      */
     public function emailTokenRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $emailToken
-    ) {
+    ): View|Redirector|RedirectResponse {
         $exchangeToken = $emailToken;
         $clientType = $request->input('client_type');
         $implementationKey = $request->input('implementation_key');

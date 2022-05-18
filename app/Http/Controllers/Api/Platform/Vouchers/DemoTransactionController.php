@@ -16,9 +16,9 @@ class DemoTransactionController extends Controller
      * @param StoreTransactionRequest $request
      * @return DemoTransactionResource
      */
-    public function store(StoreTransactionRequest $request)
+    public function store(StoreTransactionRequest $request): DemoTransactionResource
     {
-        return new DemoTransactionResource(DemoTransaction::create([
+        return DemoTransactionResource::create(DemoTransaction::create([
             'token' => app('token_generator')->generate(16),
             'state' => 'pending'
         ]));
@@ -28,11 +28,11 @@ class DemoTransactionController extends Controller
      * Display the specified resource.
      *
      * @param DemoTransaction $transaction
-     * @return mixed
+     * @return DemoTransactionResource
      */
-    public function show(DemoTransaction $transaction)
+    public function show(DemoTransaction $transaction): DemoTransactionResource
     {
-        return new DemoTransactionResource($transaction);
+        return DemoTransactionResource::create($transaction);
     }
 
     /**
@@ -40,13 +40,13 @@ class DemoTransactionController extends Controller
      *
      * @param UpdateTransactionRequest $request
      * @param DemoTransaction $transaction
-     * @return mixed
+     * @return DemoTransactionResource
      */
     public function update(
         UpdateTransactionRequest $request,
         DemoTransaction $transaction
-    ) {
-        return new DemoTransactionResource($transaction->updateModel([
+    ): DemoTransactionResource {
+        return DemoTransactionResource::create($transaction->updateModel([
             'state' => $request->get('state')
         ]));
     }

@@ -3,16 +3,15 @@
 namespace App\Http\Resources;
 
 use App\Models\BusinessType;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class BusinessTypeResource
  * @property BusinessType $resource
  * @package App\Http\Resources
  */
-class BusinessTypeResource extends Resource
+class BusinessTypeResource extends BaseJsonResource
 {
-    public static $load = [
+    public const LOAD = [
         'translations'
     ];
 
@@ -28,8 +27,6 @@ class BusinessTypeResource extends Resource
             return null;
         }
 
-        return $this->resource->only([
-            'id', 'key', 'name'
-        ]);
+        return $this->resource->only('id', 'key', 'name');
     }
 }

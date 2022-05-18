@@ -1,8 +1,11 @@
 <?php
 
+namespace Database\Seeders;
+
 use App\Models\BusinessType;
 use App\Models\BusinessTypeTranslation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class BusinessTypesTableSeeder extends Seeder
 {
@@ -16,6 +19,10 @@ class BusinessTypesTableSeeder extends Seeder
         self::seed(true);
     }
 
+    /**
+     * @param $deleteExisting
+     * @return void
+     */
     public static function seed($deleteExisting = false): void
     {
         if ($deleteExisting) {
@@ -27,12 +34,15 @@ class BusinessTypesTableSeeder extends Seeder
             Schema::enableForeignKeyConstraints();
         }
 
-        self::seedFile('business-types-with-ids');
+        self::seedFile();
     }
 
-    private static function seedFile($file, bool $service = false): void
+    /**
+     * @return void
+     */
+    private static function seedFile(): void
     {
-        $list = self::loadTaxonomies($file, [
+        $list = self::loadTaxonomies('business-types-with-ids', [
             'nl' => 'nl-NL',
             'en' => 'en-US'
         ], 'en')->toArray();
@@ -44,7 +54,7 @@ class BusinessTypesTableSeeder extends Seeder
 
         $businessTypes = array_values(array_map(static function(
             $category
-        ) use ($date, $depth, &$translations, $service) {
+        ) use ($date, $depth, &$translations) {
             foreach ($category['names'][$depth - 1] as $locale => $name) {
                 $translations[] = [
                     'locale' => $locale,
@@ -75,14 +85,14 @@ class BusinessTypesTableSeeder extends Seeder
         string $file,
         array $locales,
         string $keyLocale
-    ) {
+    ): mixed {
         $taxonomiesRaw = [];
         $taxonomiesNames = [];
 
         foreach ($locales as $localeKey => $locale) {
             array_set($taxonomiesRaw, $localeKey, collect(
                 explode("\n", file_get_contents(database_path(
-                    sprintf('/seeds/db/%s.%s.txt', $file, $locale)
+                    sprintf('/seeders/db/%s.%s.txt', $file, $locale)
                 ))))->filter(function($row) {
                 return !empty($row) && !starts_with($row, ['#']);
             })->map(function($row) use ($localeKey, &$taxonomiesNames) {

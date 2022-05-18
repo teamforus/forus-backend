@@ -2,26 +2,46 @@
 
 namespace App\Libs\Markdown\Extensions\Youtube;
 
-use League\CommonMark\ConfigurableEnvironmentInterface;
+use League\CommonMark\Environment\EnvironmentBuilderInterface;
 use League\CommonMark\Event\DocumentParsedEvent;
-use League\CommonMark\Extension\ExtensionInterface;
-use Zoon\CommonMark\Ext\YouTubeIframe\YouTubeIframe;
-use Zoon\CommonMark\Ext\YouTubeIframe\YouTubeIframeProcessor;
-use Zoon\CommonMark\Ext\YouTubeIframe\YouTubeLongUrlParser;
-use Zoon\CommonMark\Ext\YouTubeIframe\YouTubeShortUrlParser;
+use League\CommonMark\Extension\ConfigurableExtensionInterface;
+use League\Config\ConfigurationBuilderInterface;
+use Nette\Schema\Expect;
 
-class YouTubeIframeExtension implements ExtensionInterface
+class YouTubeIframeExtension implements ConfigurableExtensionInterface
 {
     /**
-     * @param ConfigurableEnvironmentInterface $environment
+     * @param ConfigurationBuilderInterface $builder
+     * @return void
      */
-    public function register(ConfigurableEnvironmentInterface $environment): void {
+    public function configureSchema(ConfigurationBuilderInterface $builder): void
+    {
+        $builder->addSchema('youtube_iframe', Expect::structure([
+            'width' => Expect::string('640'),
+            'height' => Expect::string('480'),
+            'wrapper_class' => Expect::string()->nullable(),
+            'allow_full_screen' => Expect::bool(true),
+        ]));
+    }
+
+    /**
+     * @param EnvironmentBuilderInterface $environment
+     * @return void
+     */
+    public function register(EnvironmentBuilderInterface $environment): void
+    {
+        $configuration = $environment->getConfiguration();
+
         $environment->addEventListener(DocumentParsedEvent::class, new YouTubeIframeProcessor([
             new YouTubeLongUrlParser(),
             new YouTubeShortUrlParser(),
-        ]))->addInlineRenderer(YouTubeIframe::class, new YouTubeIframeRenderer(
-            (string) $environment->getConfig('youtube_iframe_wrapper_class', ''),
-            (bool) $environment->getConfig('youtube_iframe_allowfullscreen', true)
-        ));
+        ]));
+
+        $environment->addRenderer(YouTubeIframe::class, new YouTubeIframeRenderer([
+            'width' => $configuration->get('youtube_iframe.width'),
+            'height' => $configuration->get('youtube_iframe.height'),
+            'wrapper_class' => $configuration->get('youtube_iframe.wrapper_class'),
+            'allow_full_screen' => $configuration->get('youtube_iframe.allow_full_screen'),
+        ]));
     }
 }

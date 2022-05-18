@@ -80,7 +80,6 @@ use App\Services\Forus\Notification\Models\NotificationPreference;
 use App\Services\Forus\Notification\Models\NotificationUnsubscription;
 use App\Services\Forus\Notification\Models\NotificationUnsubscriptionToken;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
-use App\Services\Forus\Notification\Repositories\Data\NotificationType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -90,7 +89,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class NotificationRepo implements INotificationRepo
 {
-    protected static $notifications = [
+    protected static array $notifications = [
         // employee notifications
         IdentityAddedEmployeeNotification::class,
         IdentityChangedEmployeeRolesNotification::class,
@@ -174,7 +173,7 @@ class NotificationRepo implements INotificationRepo
      * Map between type keys and Mail classes
      * @var array
      */
-    protected static $mailMap = [
+    protected static array $mailMap = [
         // User generated emails
         'vouchers.send_voucher' => SendVoucherMail::class,
         'vouchers.share_voucher' => ShareProductVoucherMail::class,
@@ -205,7 +204,7 @@ class NotificationRepo implements INotificationRepo
      * List all push notification keys
      * @var array
      */
-    protected static $pushNotificationKeys = [
+    protected static array $pushNotificationKeys = [
         'voucher.assigned',
         'voucher.transaction',
         'employee.created',
@@ -227,7 +226,7 @@ class NotificationRepo implements INotificationRepo
      * Emails that you can't unsubscribe from
      * @var array
      */
-    protected static $mandatoryEmail = [
+    protected static array $mandatoryEmail = [
         'auth.user_login', 'auth.email_activation', 'vouchers.share_voucher',
         'vouchers.send_voucher', 'funds.balance_warning',
     ];
@@ -236,7 +235,7 @@ class NotificationRepo implements INotificationRepo
      * Push notifications that you can't unsubscribe from (currently none)
      * @var array
      */
-    protected static $mandatoryPushNotifications = [];
+    protected static array $mandatoryPushNotifications = [];
 
     /**
      * @return array

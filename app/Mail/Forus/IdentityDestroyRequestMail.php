@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class IdentityDestroyRequestMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.identity_destroy_request.title';
+    protected string $subjectKey = 'mails/system_mails.identity_destroy_request.title';
 
     /**
      * @return Mailable

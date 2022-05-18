@@ -31,7 +31,7 @@ use Illuminate\Http\Request;
  * @property-read ProductCategory|null $parent
  * @property-read Collection|\App\Models\Product[] $products
  * @property-read int|null $products_count
- * @property-read ProductCategory $root_category
+ * @property-read ProductCategory|null $root_category
  * @property-read \App\Models\ProductCategoryTranslation|null $translation
  * @property-read Collection|\App\Models\ProductCategoryTranslation[] $translations
  * @property-read int|null $translations_count
@@ -162,10 +162,7 @@ class ProductCategory extends Model
      */
     public function organizations(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Organization::class,
-            'organization_product_categories'
-        );
+        return $this->belongsToMany(Organization::class, 'organization_product_categories');
     }
 
     /**

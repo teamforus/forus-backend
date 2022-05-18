@@ -5,6 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\FundRequest;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddEmployeeIdToFundRequestRecordsTable extends Migration
 {
     /**

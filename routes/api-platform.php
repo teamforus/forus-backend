@@ -173,16 +173,9 @@ $router->group([], static function() use ($router) {
         $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
     });
 
-    $router->resource(
-        'provider-invitations',
-        "Api\Platform\FundProviderInvitationsController", [
-        'only' => [
-            'show', 'update'
-        ],
-        'parameters' => [
-            'provider-invitations' => 'fund_provider_invitation_token'
-        ]
-    ]);
+    $router->resource('provider-invitations', "Api\Platform\FundProviderInvitationsController")
+        ->parameter('provider-invitations', 'fund_provider_invitation_token')
+        ->only('show', 'update');
 
     $router->get('/bank-connections/redirect', "Api\Platform\BankConnectionsController@redirect")->name('bankOauthRedirect');
 });

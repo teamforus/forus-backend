@@ -54,7 +54,7 @@ class CheckOrganizationOfficePostcodesCommand extends Command
                     $office->updateGeoData();
                 }
             }
-        } catch (\Exception $e) {}
+        } catch (\Throwable $e) {}
     }
 
     /**

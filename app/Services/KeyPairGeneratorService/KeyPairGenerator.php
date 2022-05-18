@@ -28,7 +28,7 @@ class KeyPairGenerator
                     '0xdcc703c0E500B653Ca82273B7BFAd8045D85a470') {
                     throw new \Exception('Address is empty');
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 return null;
             }
         }

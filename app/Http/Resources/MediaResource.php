@@ -4,14 +4,14 @@ namespace App\Http\Resources;
 
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Models\MediaPreset;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class MediaResource
  * @property Media $resource
  * @package App\Http\Resources
  */
-class MediaResource extends Resource
+class MediaResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -32,8 +32,7 @@ class MediaResource extends Resource
         });
 
         return array_merge($media->only([
-            'identity_address', 'original_name', 'type', 'ext', 'uid', 'dominant_color',
-            'is_dark',
+            'identity_address', 'original_name', 'type', 'ext', 'uid', 'dominant_color', 'is_dark',
         ]), compact('sizes'));
     }
 }

@@ -1,11 +1,13 @@
 <?php
 
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 use App\Models\SystemNotification;
 
 class SystemNotificationsTableSeeder extends Seeder
 {
-    protected $systemNotifications = [
+    protected array $systemNotifications = [
         "notifications_identities.added_employee" => ["database", "mail", "push"],
         "notifications_identities.changed_employee_roles" => ["database"],
         "notifications_identities.removed_employee" => ["database", "push"],
@@ -90,7 +92,7 @@ class SystemNotificationsTableSeeder extends Seeder
         "notifications_physical_card_requests.physical_card_request_created" => [], // TODO can database notifications be removed
     ];
 
-    protected $optionalNotifications = [
+    protected array $optionalNotifications = [
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.state_accepted',
@@ -102,7 +104,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.voucher_expire_soon_budget',
     ];
 
-    protected $visibleNotifications = [
+    protected array $visibleNotifications = [
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.sponsor_message',
@@ -148,7 +150,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_fund_providers.bunq_transaction_success',
     ];
 
-    protected $editableNotifications = [
+    protected array $editableNotifications = [
         'notifications_fund_providers.approved_budget',
         'notifications_fund_providers.revoked_budget',
         'notifications_fund_providers.state_accepted',
@@ -169,7 +171,7 @@ class SystemNotificationsTableSeeder extends Seeder
         'notifications_identities.voucher_physical_card_requested',
     ];
 
-    protected $notificationGroups = [
+    protected array $notificationGroups = [
         "requester_fund_request" => [
             "notifications_identities.fund_request_created",
             "notifications_identities.fund_request_approved",

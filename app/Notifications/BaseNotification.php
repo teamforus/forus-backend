@@ -26,13 +26,13 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     public const SCOPE_PROVIDER = 'provider';
     public const SCOPE_VALIDATOR = 'validator';
 
-    protected static $key;
-    protected static $scope;
-    protected static $pushKey;
+    protected static ?string $key;
+    protected static ?string $scope;
+    protected static ?string $pushKey;
 
-    protected $eventLog;
+    protected ?EventLog $eventLog;
     protected $meta = [];
-    protected $implementation;
+    protected ?Implementation $implementation;
 
     public const VARIABLES = [
         "notifications_identities.added_employee" => [
@@ -378,13 +378,13 @@ abstract class BaseNotification extends Notification implements ShouldQueue
             $notification = new static($event, static::getMeta($event->loggable), $implementation);
 
             \Illuminate\Support\Facades\Notification::send($identities, $notification);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             if ($logger = logger()) {
                 $logger->error(sprintf(
                     "Unable to create notification:\n %s \n %s \n %s",
-                    $exception->getMessage(),
-                    $exception->getFile() . ": ". $exception->getLine(),
-                    $exception->getTraceAsString()
+                    $e->getMessage(),
+                    $e->getFile() . ": ". $e->getLine(),
+                    $e->getTraceAsString()
                 ));
             }
 

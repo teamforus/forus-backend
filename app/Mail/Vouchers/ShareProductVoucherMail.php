@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class ShareProductVoucherMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_identities.product_voucher_shared';
+    protected string $notificationTemplateKey = 'notifications_identities.product_voucher_shared';
 
     /**
      * @return Mailable

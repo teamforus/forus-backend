@@ -8,6 +8,6 @@ namespace App\Notifications\Organizations\Funds;
  */
 class FundUnArchivedNotification extends BaseFundsNotification
 {
-    protected static $key = 'notifications_funds.created';
+    protected static ?string $key = 'notifications_funds.created';
     protected static $permissions = 'view_funds';
 }

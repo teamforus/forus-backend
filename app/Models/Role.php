@@ -53,7 +53,7 @@ class Role extends Model
      * @var array
      */
     public array $translatedAttributes = [
-        'name', 'description'
+        'name', 'description',
     ];
 
     /**

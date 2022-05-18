@@ -22,10 +22,10 @@ class ProviderReservationsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    protected $requiredRelation = 'products.product_reservations';
-    protected $digestKey = 'provider_reservations';
+    protected string $requiredRelation = 'products.product_reservations';
+    protected string $digestKey = 'provider_reservations';
 
-    protected $employeePermissions = [
+    protected array $employeePermissions = [
         'manage_products',
     ];
 

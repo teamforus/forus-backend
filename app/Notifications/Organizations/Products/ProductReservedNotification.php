@@ -11,7 +11,7 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class ProductReservedNotification extends BaseProductsNotification
 {
-    protected static $key = 'notifications_products.reserved';
+    protected static ?string $key = 'notifications_products.reserved';
     protected static $permissions = 'manage_products';
 
     public function toMail(Identity $identity): void

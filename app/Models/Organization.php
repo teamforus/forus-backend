@@ -60,7 +60,7 @@ use Illuminate\Database\Query\Builder;
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
- * @property \Illuminate\Support\Carbon|null $bank_cron_time
+ * @property string|null $bank_cron_time
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -124,6 +124,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder|Organization whereBankCronTime($value)
  * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
@@ -142,7 +143,6 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereKvk($value)
  * @method static EloquentBuilder|Organization whereManageProviderProducts($value)
  * @method static EloquentBuilder|Organization whereName($value)
- * @method static EloquentBuilder|Organization wherePersonBsnApiId($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
  * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
@@ -454,10 +454,7 @@ class Organization extends Model
      */
     public function supplied_funds(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Fund::class,
-            'fund_providers'
-        );
+        return $this->belongsToMany(Fund::class, 'fund_providers');
     }
 
     /**

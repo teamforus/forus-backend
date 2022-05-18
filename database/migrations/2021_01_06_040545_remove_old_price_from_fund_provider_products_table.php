@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class RemoveOldPriceFromFundProviderProductsTable
  * @noinspection PhpUnused
  */
 class RemoveOldPriceFromFundProviderProductsTable extends Migration
@@ -15,7 +14,7 @@ class RemoveOldPriceFromFundProviderProductsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('fund_provider_products', function (Blueprint $table) {
             $table->dropColumn('old_price');
@@ -27,7 +26,7 @@ class RemoveOldPriceFromFundProviderProductsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('fund_provider_products', function (Blueprint $table) {
             $table->decimal('old_price')->nullable()->after('price');

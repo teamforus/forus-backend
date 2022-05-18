@@ -2,7 +2,6 @@
 
 namespace App\Services\Forus\Notification;
 
-use App\Services\Forus\Notification\Commands\NotificationsApnFeedbackCommand;
 use App\Services\Forus\Notification\Commands\NotificationsTokensImportCommand;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Repositories\NotificationRepo;
@@ -37,7 +36,6 @@ class NotificationServiceProvider extends ServiceProvider
         $this->app->bind(INotificationRepo::class, NotificationRepo::class);
 
         $this->commands([
-            NotificationsApnFeedbackCommand::class,
             NotificationsTokensImportCommand::class
         ]);
     }

@@ -4,13 +4,14 @@ namespace App\Mail\Funds\FundRequestClarifications;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * Notify requester about fund request clarification being requested by the sponsor/validator
  */
 class FundRequestClarificationRequestedMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
+    protected string $notificationTemplateKey = "notifications_identities.fund_request_feedback_requested";
 
     /**
      * @return Mailable
@@ -24,6 +25,11 @@ class FundRequestClarificationRequestedMail extends ImplementationMail
      * @param array $data
      * @return array
      */
+    #[ArrayShape([
+        'fund_request_clarification_question' => "string",
+        'webshop_clarification_link' => "string",
+        'webshop_clarification_button' => "string"
+    ])]
     protected function getMailExtraData(array $data): array
     {
         $linkTitle = $this->informalCommunication ? 'Ga naar je aanvraag' : 'Ga naar uw aanvraag';

@@ -18,28 +18,20 @@ class FundProviderChatResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        $fund_provider_chat = $this->resource;
+        $chat = $this->resource;
 
-        return array_merge($fund_provider_chat->only([
+        return array_merge($chat->only([
             'id', 'product_id', 'fund_provider_id', 'identity_address',
         ]), [
-            'fund_id' => $fund_provider_chat->fund_provider->fund_id,
-            'created_at' => $fund_provider_chat->created_at->format('Y-m-d'),
-            'updated_at' => $fund_provider_chat->updated_at->format('Y-m-d'),
-            'created_at_locale' => format_date_locale(
-                $fund_provider_chat->created_at
-            ),
-            'updated_at_locale' => format_date_locale(
-                $fund_provider_chat->updated_at
-            ),
-            'provider_unseen_messages' => $fund_provider_chat->messages()->where([
-                'provider_seen' => false
-            ])->count(),
-            'sponsor_unseen_messages' => $fund_provider_chat->messages()->where([
-                'sponsor_seen' => false
-            ])->count(),
+            'fund_id' => $chat->fund_provider->fund_id,
+            'created_at' => $chat->created_at->format('Y-m-d'),
+            'updated_at' => $chat->updated_at->format('Y-m-d'),
+            'created_at_locale' => format_date_locale($chat->created_at),
+            'updated_at_locale' => format_date_locale($chat->updated_at),
+            'provider_unseen_messages' => $chat->messages()->where('provider_seen', false)->count(),
+            'sponsor_unseen_messages' => $chat->messages()->where('sponsor_seen', false)->count(),
         ]);
     }
 }

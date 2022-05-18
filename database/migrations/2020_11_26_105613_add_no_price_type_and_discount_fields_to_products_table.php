@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddNoPriceTypeAndDiscountFieldsToProductsTable
  * @noinspection PhpUnused
  */
 class AddNoPriceTypeAndDiscountFieldsToProductsTable extends Migration

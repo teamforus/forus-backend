@@ -3,16 +3,15 @@
 namespace App\Http\Resources;
 
 use App\Models\Office;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class OfficeResource
  * @property Office $resource
  * @package App\Http\Resources
  */
-class OfficeResource extends Resource
+class OfficeResource extends BaseJsonResource
 {
-    public static $load = [
+    public const LOAD = [
         'photo.presets', 'organization.business_type.translations',
         'organization.logo', 'schedules',
     ];

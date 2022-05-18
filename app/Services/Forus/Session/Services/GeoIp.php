@@ -54,7 +54,7 @@ class GeoIp
                     self::countryToString($record->country),
                     self::cityToString($record->city)
                 );
-            } catch (\Exception $exception) {}
+            } catch (\Throwable $e) {}
         }
 
         return new LocationData($ip, null, null);

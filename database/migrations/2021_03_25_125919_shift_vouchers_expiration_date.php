@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use App\Models\Voucher;
 
 /**
- * Class ShiftVouchersExpirationDate
  * @noinspection PhpUnused
  */
 class ShiftVouchersExpirationDate extends Migration

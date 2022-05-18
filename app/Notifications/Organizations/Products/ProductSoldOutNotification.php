@@ -11,7 +11,7 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class ProductSoldOutNotification extends BaseProductsNotification
 {
-    protected static $key = 'notifications_products.sold_out';
+    protected static ?string $key = 'notifications_products.sold_out';
     protected static $permissions = 'manage_products';
 
     /**

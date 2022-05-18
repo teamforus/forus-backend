@@ -14,7 +14,7 @@ abstract class BaseProductsNotification extends BaseOrganizationNotification
     /**
      * @var string
      */
-    protected static $scope = self::SCOPE_PROVIDER;
+    protected static ?string $scope = self::SCOPE_PROVIDER;
 
     /**
      * @param \App\Models\Product $loggable

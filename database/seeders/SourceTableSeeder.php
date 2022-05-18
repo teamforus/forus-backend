@@ -1,5 +1,7 @@
 <?php
 
+namespace Database\Seeders;
+
 use App\Models\Source;
 
 class SourceTableSeeder extends DatabaseSeeder

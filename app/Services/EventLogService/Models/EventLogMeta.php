@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Services\EventLogService\Models\EventLogMeta
  *
- * @property-read \App\Services\EventLogService\Models\EventLog $event_log
+ * @property-read \App\Services\EventLogService\Models\EventLog|null $event_log
  * @method static \Illuminate\Database\Eloquent\Builder|EventLogMeta newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventLogMeta newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventLogMeta query()

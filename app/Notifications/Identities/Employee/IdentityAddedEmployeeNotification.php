@@ -12,8 +12,8 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityAddedEmployeeNotification extends BaseIdentityEmployeeNotification
 {
-    protected static $key = 'notifications_identities.added_employee';
-    protected static $pushKey = 'employee.created';
+    protected static ?string $key = 'notifications_identities.added_employee';
+    protected static ?string $pushKey = 'employee.created';
 
     /**
      * @param Identity $identity

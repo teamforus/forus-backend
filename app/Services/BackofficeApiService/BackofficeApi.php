@@ -19,8 +19,8 @@ use Illuminate\Support\Arr;
 class BackofficeApi
 {
     /** @var Fund */
-    protected $fund;
-    protected $recordRepo;
+    protected Fund $fund;
+    protected IRecordRepo $recordRepo;
 
     public const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
     public const ACTION_RESIDENCY_CHECK = 'residency_check';

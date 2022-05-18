@@ -3,16 +3,15 @@
 namespace App\Http\Resources;
 
 use App\Models\Role;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class RoleResource
  * @property Role $resource
  * @package App\Http\Resources
  */
-class RoleResource extends Resource
+class RoleResource extends BaseJsonResource
 {
-    public static array $load = [
+    public const LOAD = [
         'translations',
     ];
 

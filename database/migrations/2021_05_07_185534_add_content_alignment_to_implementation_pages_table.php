@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddContentAlignmentToImplementationPagesTable
  * @noinspection PhpUnused
  */
 class AddContentAlignmentToImplementationPagesTable extends Migration
@@ -15,7 +14,7 @@ class AddContentAlignmentToImplementationPagesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementation_pages', function (Blueprint $table) {
             $table->enum('content_alignment', [
@@ -29,7 +28,7 @@ class AddContentAlignmentToImplementationPagesTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementation_pages', function (Blueprint $table) {
             $table->dropColumn('content_alignment');

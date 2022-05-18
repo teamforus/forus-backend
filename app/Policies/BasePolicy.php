@@ -9,7 +9,7 @@ abstract class BasePolicy
 {
     use HandlesAuthorization;
 
-    private $policyErrorFilesRoot = "policies";
+    private string $policyErrorFilesRoot = "policies";
 
     /**
      * Name of prevalidation errors file.
@@ -24,7 +24,7 @@ abstract class BasePolicy
      */
     protected function deny(string $error, $code = 403): void
     {
-        $policyError = $titleKey = sprintf(
+        $policyError = sprintf(
             "%s/%s.%s",
             $this->policyErrorFilesRoot,
             $this->getPolicyKey(),

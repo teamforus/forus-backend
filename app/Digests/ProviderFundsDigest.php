@@ -23,9 +23,9 @@ class ProviderFundsDigest extends BaseOrganizationDigest
 {
     use Dispatchable;
 
-    protected $requiredRelation = 'fund_providers';
-    protected $digestKey = 'provider_funds';
-    protected $employeePermissions = [
+    protected string $requiredRelation = 'fund_providers';
+    protected string $digestKey = 'provider_funds';
+    protected array $employeePermissions = [
         'manage_provider_funds'
     ];
 

@@ -4,6 +4,8 @@ namespace App\Mail\User;
 
 use App\Mail\ImplementationMail;
 use Illuminate\Mail\Mailable;
+use JetBrains\PhpStorm\ArrayShape;
+use Symfony\Component\Mime\Email;
 
 /**
  * Class EmailActivationMail
@@ -11,7 +13,7 @@ use Illuminate\Mail\Mailable;
  */
 class EmailActivationMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.email_activation.title';
+    protected string $subjectKey = 'mails/system_mails.email_activation.title';
 
     /**
      * @return Mailable
@@ -21,7 +23,7 @@ class EmailActivationMail extends ImplementationMail
         $xSesConfigurationSet = env('MAIL_X_SES_CONFIGURATION_SET', false);
 
         if ($xSesConfigurationSet) {
-            $this->withSwiftMessage(function ($message) use ($xSesConfigurationSet) {
+            $this->withSymfonyMessage(function (Email $message) use ($xSesConfigurationSet) {
                 $message->getHeaders()->addTextHeader('X-SES-CONFIGURATION-SET', $xSesConfigurationSet);
             });
         }
@@ -33,6 +35,7 @@ class EmailActivationMail extends ImplementationMail
      * @param array $data
      * @return array
      */
+    #[ArrayShape(['link' => "string", 'button' => "string", 'platform' => "string"])]
     protected function getMailExtraData(array $data): array
     {
         $platform = [

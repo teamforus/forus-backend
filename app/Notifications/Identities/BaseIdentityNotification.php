@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 abstract class BaseIdentityNotification extends BaseNotification
 {
-    protected static $scope = self::SCOPE_WEBSHOP;
+    protected static ?string $scope = self::SCOPE_WEBSHOP;
 
     /**
      * @param Model $loggable
