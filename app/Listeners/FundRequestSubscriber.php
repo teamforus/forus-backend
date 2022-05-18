@@ -91,6 +91,7 @@ class FundRequestSubscriber
         if ($fundRequest->isApproved()) {
             /** @var Fund[] $funds */
             $funds = [];
+            $logScope = 'fund_request@' . $fundRequest->id;
             $sponsor = $fundRequest->fund->organization;
             $resolvePolicy = $sponsor->fund_request_resolve_policy;
             $sponsorFundsQuery = FundQuery::whereIsInternalConfiguredAndActive($sponsor->funds()->getQuery());
@@ -102,7 +103,7 @@ class FundRequestSubscriber
             }
 
             foreach ($funds as $fund) {
-                if (Gate::forUser($fundRequest->identity_address)->allows('apply', $fund)) {
+                if (Gate::forUser($fundRequest->identity_address)->allows('apply', [$fund, $logScope])) {
                     $fund->makeVoucher($fundRequest->identity_address);
                 }
             }

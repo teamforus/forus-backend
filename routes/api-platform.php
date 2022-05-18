@@ -727,15 +727,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
-        "Api\Platform\Organizations\Sponsor\TransactionsController", [
-            'only' => [
-                'index', 'show'
-            ],
-            'parameters' => [
-                'transactions' => 'transaction_address',
-            ]
-        ]
-    );
+        "Api\Platform\Organizations\Sponsor\TransactionsController"
+    )->parameters([
+        'transactions' => 'transaction_address',
+    ])->only('index', 'show', 'store');
 
     $router->resource(
         'organizations/{organization}/sponsor/transaction-bulks',

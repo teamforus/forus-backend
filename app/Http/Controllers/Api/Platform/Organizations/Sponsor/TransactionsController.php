@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\StoreTransactionRequest;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -15,8 +18,6 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Class TransactionsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
  * @noinspection PhpUnused
  */
 class TransactionsController extends Controller
@@ -55,6 +56,42 @@ class TransactionsController extends Controller
             $request->input('order_by'),
             $request->input('order_dir')
         ))->additional(compact('meta'));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param StoreTransactionRequest $request
+     * @param Organization $organization
+     * @return SponsorVoucherTransactionResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function store(
+        StoreTransactionRequest $request,
+        Organization $organization
+    ): SponsorVoucherTransactionResource {
+        $note = $request->input('note');
+        $voucher = Voucher::find($request->input('voucher_id'));
+        $provider = Organization::find($request->input('provider_id'));
+
+        $this->authorize('show', $organization);
+        $this->authorize('useAsSponsor', [$voucher, $provider]);
+
+        $transaction = $voucher->makeTransaction([
+            'amount' => $request->input('amount'),
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'employee_id' => $request->employee($organization)->id,
+            'organization_id' => $provider->id,
+        ]);
+
+        $note && $transaction->addNote('sponsor', $note);
+
+        VoucherTransactionCreated::dispatch($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []);
+
+        return SponsorVoucherTransactionResource::create($transaction);
     }
 
     /**

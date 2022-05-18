@@ -270,6 +270,7 @@ class FundsController extends Controller
         $fund->fund_config->update($request->only([
             'backoffice_enabled', 'backoffice_url', 'backoffice_key',
             'backoffice_certificate', 'backoffice_fallback',
+            'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         ]));
 
         return new FundResource($fund);

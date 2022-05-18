@@ -108,23 +108,20 @@ class TransactionsController extends Controller
             }
         }
 
-        /** @var VoucherTransaction $transaction */
-        $transaction = $voucher->transactions()->create(array_merge([
+        $transaction = $voucher->makeTransaction([
             'amount' => $amount,
             'product_id' => $product->id ?? null,
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
             'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProductId ?? null,
-            'address' => resolve('token_generator')->address(),
             'organization_id' => $organization->id,
-        ], $voucher->needsTransactionReview() ? [
-            'attempts' => 50,
-            'last_attempt_at' => now()
-        ] : []));
+        ], $voucher->needsTransactionReview());
 
         $note && $transaction->addNote('provider', $note);
 
-        VoucherTransactionCreated::dispatch($transaction);
+        VoucherTransactionCreated::dispatch($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []);
 
         return new VoucherTransactionResource($transaction);
     }

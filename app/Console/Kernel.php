@@ -170,7 +170,7 @@ class Kernel extends ConsoleKernel
          * BankVoucherTransactionBulksBuildCommand
          */
         $schedule->command('bank:bulks-build')
-            ->dailyAt(env('BANK_DAILY_BULK_BUILD_TIME', '09:00'))
+            ->everyMinute()
             ->withoutOverlapping()
             ->onOneServer();
 

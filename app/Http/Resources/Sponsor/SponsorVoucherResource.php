@@ -7,6 +7,7 @@ use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Support\Arr;
 
 /**
  * Class SponsorVoucherResource
@@ -28,6 +29,7 @@ class SponsorVoucherResource extends Resource
         $address = $voucher->token_without_confirmation->address ?? null;
         $physical_cards = $voucher->physical_cards()->first();
         $bsn_enabled = $voucher->fund->organization->bsn_enabled;
+        $amount_available = $voucher->fund->isTypeBudget() ? $voucher->amount_available_cached : 0;
 
         if ($voucher->is_granted && $voucher->identity_address) {
             $identity_email = $recordRepo->primaryEmailByAddress($voucher->identity_address);
@@ -37,8 +39,9 @@ class SponsorVoucherResource extends Resource
         return array_merge($voucher->only([
             'id', 'amount', 'note', 'identity_address', 'state', 'state_locale', 'is_granted',
             'expired', 'activation_code', 'activation_code_uid', 'has_transactions',
-            'in_use', 'limit_multiplier',
+            'in_use', 'limit_multiplier', 'fund_id',
         ]), [
+            'amount_available' => currency_format($amount_available),
             'history' => $this->getHistory($voucher),
             'source' => $voucher->employee_id ? 'employee' : 'user',
             'identity_bsn' => $identity_bsn ?? null,
@@ -80,14 +83,19 @@ class SponsorVoucherResource extends Resource
      */
     public function getHistory(Voucher $voucher): array
     {
-        return $voucher->sponsorHistoryLogs()->map(function (EventLog $log) {
-            $employee_id = $log->data['employee_id'] ?? null;
-            $employee_email = $employee_id ? $log->data['employee_email'] ?: null : null;
+        return $voucher->sponsorHistoryLogs()->reverse()->map(function (EventLog $log) {
+            $isTransaction = $log->event == 'transaction';
+            $initiator = Arr::get($log->data, 'voucher_transaction_initiator', 'provider');
+            $initiatorIsSponsor = $initiator == 'sponsor';
+
+            $notePattern = $isTransaction && $initiatorIsSponsor ? 'voucher_transaction_%s'  : '%s';
+            $employeePattern = $isTransaction && $initiatorIsSponsor ? 'voucher_transaction_%s'  : '%s';
 
             return array_merge($log->only('id', 'event', 'event_locale'), [
-                'employee_id' => $employee_id,
-                'employee_email' => $employee_email,
-                'note' => $log->data['note'] ?? '',
+                'employee_id' => Arr::get($log->data, sprintf($employeePattern, 'employee_id')),
+                'employee_email' => Arr::get($log->data, sprintf($employeePattern, 'employee_email')),
+                'note' => Arr::get($log->data, sprintf($notePattern, 'note')),
+                'initiator' => $isTransaction ? $initiator  : null,
                 'created_at' => $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : null,
                 'created_at_locale' => format_datetime_locale($log->created_at),
                 'updated_at' => $log->updated_at ? $log->updated_at->format('Y-m-d H:i:s') : null,

@@ -60,6 +60,7 @@ use Illuminate\Database\Query\Builder;
  * @property int $provider_throttling_value
  * @property string $fund_request_resolve_policy
  * @property bool $bsn_enabled
+ * @property \Illuminate\Support\Carbon|null $bank_cron_time
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -580,15 +581,6 @@ class Organization extends Model
     public function employeesWithPermissionsQuery($permission)
     {
         return EmployeeQuery::whereHasPermissionFilter($this->employees(), $permission);
-    }
-
-    /**
-     * @param string|array $role
-     * @return Collection|Employee[]
-     */
-    public function employeesOfRole($role): Collection
-    {
-        return $this->employeesOfRoleQuery($role)->get();
     }
 
     /**

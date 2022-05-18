@@ -479,7 +479,13 @@ class VoucherTransactionBulk extends Model
     public static function buildBulks(): void
     {
         /** @var Organization[]|Collection $sponsors */
-        $sponsors = Organization::whereHas('funds', function(Builder $builder) {
+        $sponsors = Organization::where(function (Builder $builder) {
+            $now = now();
+
+            $builder->whereNotNull('bank_cron_time');
+            $builder->whereTime('bank_cron_time', '>=', $now->clone()->floorMinute());
+            $builder->whereTime('bank_cron_time', '<', $now->clone()->ceilMinute());
+        })->whereHas('funds', function(Builder $builder) {
             FundQuery::whereIsInternal($builder);
             FundQuery::whereIsConfiguredByForus($builder);
 

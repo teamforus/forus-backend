@@ -90,17 +90,17 @@ class EventLogService implements IEventLogService
      */
     protected function fundMeta(Fund $fund): array
     {
-        return [
-            'fund_id' => $fund->id,
-            'fund_name' => $fund->name,
-            'fund_type' => $fund->type,
-            'fund_start_date' => $fund->start_date->format('Y-m-d'),
-            'fund_end_date' => $fund->start_date->clone()->addDay()->format('Y-m-d'),
-            'fund_end_date_minus1' => $fund->end_date->format('Y-m-d'),
-            'fund_start_date_locale' => format_date_locale($fund->start_date),
-            'fund_end_date_locale' => format_date_locale($fund->end_date->clone()->addDay()),
-            'fund_end_date_minus1_locale' => format_date_locale($fund->end_date),
-        ];
+        return $this->keyPrepend([
+            'id' => $fund->id,
+            'name' => $fund->name,
+            'type' => $fund->type,
+            'start_date' => $fund->start_date->format('Y-m-d'),
+            'end_date' => $fund->start_date->clone()->addDay()->format('Y-m-d'),
+            'end_date_minus1' => $fund->end_date->format('Y-m-d'),
+            'start_date_locale' => format_date_locale($fund->start_date),
+            'end_date_locale' => format_date_locale($fund->end_date->clone()->addDay()),
+            'end_date_minus1_locale' => format_date_locale($fund->end_date),
+        ], 'fund_');
     }
 
     /**
@@ -109,15 +109,15 @@ class EventLogService implements IEventLogService
      */
     protected function fundRequestMeta(FundRequest $fundRequest): array
     {
-        return [
-            'fund_request_id' => $fundRequest->id,
-            'fund_request_note' => $fundRequest->note,
-            'fund_request_state' => $fundRequest->state,
-            'fund_request_disregard_note' => $fundRequest->disregard_note,
-            'fund_request_disregard_notify' => $fundRequest->disregard_notify,
-            'fund_request_created_date' => $fundRequest->created_at->format('Y-m-d'),
-            'fund_request_created_date_locale' => format_date_locale($fundRequest->created_at),
-        ];
+        return $this->keyPrepend([
+            'id' => $fundRequest->id,
+            'note' => $fundRequest->note,
+            'state' => $fundRequest->state,
+            'disregard_note' => $fundRequest->disregard_note,
+            'disregard_notify' => $fundRequest->disregard_notify,
+            'created_date' => $fundRequest->created_at->format('Y-m-d'),
+            'created_date_locale' => format_date_locale($fundRequest->created_at),
+        ], 'fund_request_');
     }
 
     /**
@@ -126,15 +126,15 @@ class EventLogService implements IEventLogService
      */
     protected function fundRequestRecordMeta(FundRequestRecord $fundRequestRecord): array
     {
-        return [
-            'fund_request_record_id' => $fundRequestRecord->id,
-            'fund_request_record_note' => $fundRequestRecord->note,
-            'fund_request_record_value' => $fundRequestRecord->value,
-            'fund_request_record_state' => $fundRequestRecord->state,
-            'fund_request_record_employee_id' => $fundRequestRecord->employee_id,
-            'fund_request_record_record_type_key' => $fundRequestRecord->record_type_key,
-            'fund_request_record_fund_criterion_id' => $fundRequestRecord->fund_criterion_id,
-        ];
+        return $this->keyPrepend([
+            'id' => $fundRequestRecord->id,
+            'note' => $fundRequestRecord->note,
+            'value' => $fundRequestRecord->value,
+            'state' => $fundRequestRecord->state,
+            'employee_id' => $fundRequestRecord->employee_id,
+            'record_type_key' => $fundRequestRecord->record_type_key,
+            'fund_criterion_id' => $fundRequestRecord->fund_criterion_id,
+        ], 'fund_request_record_');
     }
 
     /**
@@ -143,10 +143,10 @@ class EventLogService implements IEventLogService
      */
     protected function fundRequestClarificationMeta(FundRequestClarification $fundRequest): array
     {
-        return [
-            'fund_request_clarification_id' => $fundRequest->id,
-            'fund_request_clarification_question' => $fundRequest->question,
-        ];
+        return $this->keyPrepend([
+            'id' => $fundRequest->id,
+            'question' => $fundRequest->question,
+        ], 'fund_request_clarification_');
     }
 
     /**
@@ -155,12 +155,12 @@ class EventLogService implements IEventLogService
      */
     protected function providerMeta(Organization $provider): array
     {
-        return [
-            'provider_id' => $provider->id,
-            'provider_name' => $provider->name,
-            'provider_email' => $provider->email,
-            'provider_phone' => $provider->phone,
-        ];
+        return $this->keyPrepend([
+            'id' => $provider->id,
+            'name' => $provider->name,
+            'email' => $provider->email,
+            'phone' => $provider->phone,
+        ], 'provider_');
     }
 
     /**
@@ -169,12 +169,12 @@ class EventLogService implements IEventLogService
      */
     protected function sponsorMeta(Organization $provider): array
     {
-        return [
-            'sponsor_id' => $provider->id,
-            'sponsor_name' => $provider->name,
-            'sponsor_phone' => $provider->phone,
-            'sponsor_email' => $provider->email,
-        ];
+        return $this->keyPrepend([
+            'id' => $provider->id,
+            'name' => $provider->name,
+            'phone' => $provider->phone,
+            'email' => $provider->email,
+        ], 'sponsor_');
     }
 
     /**
@@ -183,10 +183,10 @@ class EventLogService implements IEventLogService
      */
     protected function organizationMeta(Organization $organization): array
     {
-        return [
-            'organization_id' => $organization->id,
-            'organization_name' => $organization->name,
-        ];
+        return $this->keyPrepend([
+            'id' => $organization->id,
+            'name' => $organization->name,
+        ], 'organization_');
     }
 
     /**
@@ -195,12 +195,12 @@ class EventLogService implements IEventLogService
      */
     protected function productMeta(Product $product): array
     {
-        return [
-            'product_id' => $product->id,
-            'product_name' => $product->name,
-            'product_price' => currency_format($product->price),
-            'product_price_locale' => currency_format_locale($product->price),
-        ];
+        return $this->keyPrepend([
+            'id' => $product->id,
+            'name' => $product->name,
+            'price' => currency_format($product->price),
+            'price_locale' => currency_format_locale($product->price),
+        ], 'product_');
     }
 
     /**
@@ -209,11 +209,12 @@ class EventLogService implements IEventLogService
      */
     protected function employeeMeta(Employee $employee): array
     {
-        return [
-            'employee_id' => $employee->id,
-            'employee_roles' => $employee->roles->pluck('name')->join(', '),
-            'employee_email' => record_repo()->primaryEmailByAddress($employee->identity_address),
-        ];
+        return $this->keyPrepend([
+            'id' => $employee->id,
+            'roles' => $employee->roles->pluck('name')->join(', '),
+            'email' => $this->emailByAddress($employee->identity_address),
+            'organization_id' => $employee->organization_id,
+        ], 'employee_');
     }
 
     /**
@@ -222,12 +223,12 @@ class EventLogService implements IEventLogService
      */
     protected function productReservationMeta(ProductReservation $reservation): array
     {
-        return [
-            'product_reservation_id' => $reservation->id,
-            'product_reservation_state' => $reservation->state,
-            'product_reservation_amount' => currency_format($reservation->amount),
-            'product_reservation_amount_locale' => currency_format_locale($reservation->amount),
-        ];
+        return $this->keyPrepend([
+            'id' => $reservation->id,
+            'state' => $reservation->state,
+            'amount' => currency_format($reservation->amount),
+            'amount_locale' => currency_format_locale($reservation->amount),
+        ], 'product_reservation_');
     }
 
     /**
@@ -236,32 +237,36 @@ class EventLogService implements IEventLogService
      */
     protected function voucherMeta(Voucher $voucher): array
     {
-        return [
-            'voucher_id' => $voucher->id,
-            'voucher_amount' => currency_format($voucher->amount_available),
-            'voucher_amount_locale' => currency_format_locale($voucher->amount_available),
-            'voucher_expire_date' => $voucher->last_active_day->format('Y-m-d'),
-            'voucher_expire_date_locale' => format_date_locale($voucher->last_active_day),
-        ];
+        return $this->keyPrepend([
+            'id' => $voucher->id,
+            'amount' => currency_format($voucher->amount_available),
+            'amount_locale' => currency_format_locale($voucher->amount_available),
+            'expire_date' => $voucher->last_active_day->format('Y-m-d'),
+            'expire_date_locale' => format_date_locale($voucher->last_active_day),
+        ], 'voucher_');
     }
 
     /**
-     * @param VoucherTransaction $voucherTransaction
+     * @param VoucherTransaction $transaction
      * @return array
      */
-    protected function voucherTransactionMeta(VoucherTransaction $voucherTransaction): array
+    protected function voucherTransactionMeta(VoucherTransaction $transaction): array
     {
-        return [
-            'voucher_transaction_id' => $voucherTransaction->id,
-            'voucher_transaction_amount' => $voucherTransaction->amount,
-            'voucher_transaction_amount_locale' => currency_format_locale($voucherTransaction->amount),
-            'voucher_transaction_iban_to' => $voucherTransaction->iban_to,
-            'voucher_transaction_iban_from' => $voucherTransaction->iban_from,
-            'voucher_transaction_payment_time' => $voucherTransaction->payment_time,
-            'voucher_transaction_payment_time_locale' => format_date_locale($voucherTransaction->payment_time),
-            'voucher_transaction_created_at' => $voucherTransaction->created_at->format('Y-m-d'),
-            'voucher_transaction_created_at_locale' => format_date_locale($voucherTransaction->created_at),
-        ];
+        return $this->keyPrepend(array_merge([
+            'id' => $transaction->id,
+            'amount' => $transaction->amount,
+            'amount_locale' => currency_format_locale($transaction->amount),
+            'iban_to' => $transaction->iban_to,
+            'iban_from' => $transaction->iban_from,
+            'initiator' => $transaction->initiator,
+            'payment_time' => $transaction->payment_time,
+            'payment_time_locale' => format_date_locale($transaction->payment_time),
+            'created_at' => $transaction->created_at->format('Y-m-d'),
+            'created_at_locale' => format_date_locale($transaction->created_at),
+        ], $transaction->employee ? [
+            'employee_id' => $transaction->employee_id,
+            'employee_email' => $this->emailByAddress($transaction->employee->identity_address),
+        ] : []), 'voucher_transaction_');
     }
 
     /**
@@ -270,10 +275,10 @@ class EventLogService implements IEventLogService
      */
     protected function fundTopUpTransactionMeta(FundTopUpTransaction $transaction): array
     {
-        return [
-            'fund_top_up_amount' => $transaction->amount,
-            'fund_top_up_amount_locale' => currency_format($transaction->amount),
-        ];
+        return $this->keyPrepend([
+            'amount' => $transaction->amount,
+            'amount_locale' => currency_format($transaction->amount),
+        ], 'fund_top_up_');
     }
 
     /**
@@ -282,12 +287,12 @@ class EventLogService implements IEventLogService
      */
     protected function physicalCardMeta(PhysicalCard $physicalCard): array
     {
-        return [
-            'physical_card_id'                  => $physicalCard->id,
-            'physical_card_code'                => $physicalCard->code,
-            'physical_card_voucher_id'          => $physicalCard->voucher_id,
-            'physical_card_identity_address'    => $physicalCard->identity_address,
-        ];
+        return $this->keyPrepend([
+            'id' => $physicalCard->id,
+            'code' => $physicalCard->code,
+            'voucher_id' => $physicalCard->voucher_id,
+            'identity_address' => $physicalCard->identity_address,
+        ], 'physical_card_');
     }
 
     /**
@@ -296,14 +301,14 @@ class EventLogService implements IEventLogService
      */
     protected function physicalCardRequestMeta(PhysicalCardRequest $physicalCardRequest): array
     {
-        return [
-            'physical_card_request_id'              => $physicalCardRequest->id,
-            'physical_card_request_address'         => $physicalCardRequest->address,
-            'physical_card_request_house'           => $physicalCardRequest->house,
-            'physical_card_request_postcode'        => $physicalCardRequest->postcode,
-            'physical_card_request_city'            => $physicalCardRequest->city,
-            'physical_card_request_house_addition'  => $physicalCardRequest->house_addition,
-        ];
+        return $this->keyPrepend([
+            'id' => $physicalCardRequest->id,
+            'city' => $physicalCardRequest->city,
+            'house' => $physicalCardRequest->house,
+            'address' => $physicalCardRequest->address,
+            'postcode' => $physicalCardRequest->postcode,
+            'house_addition' => $physicalCardRequest->house_addition,
+        ], 'physical_card_request_i');
     }
 
     /**
@@ -312,10 +317,10 @@ class EventLogService implements IEventLogService
      */
     protected function bankMeta(Bank $bank): array
     {
-        return [
-            'bank_id' => $bank->id,
-            'bank_name' => $bank->name,
-        ];
+        return $this->keyPrepend([
+            'id' => $bank->id,
+            'name' => $bank->name,
+        ], 'bank_');
     }
 
     /**
@@ -326,48 +331,48 @@ class EventLogService implements IEventLogService
     {
         $expire_at = $bankConnection->session_expire_at;
 
-        return array_merge([
-            'bank_connection_id' => $bankConnection->id,
-            'bank_connection_state' => $bankConnection->state,
-            'bank_connection_bank_id' => $bankConnection->bank_id,
-            'bank_connection_session_expire_at' => $expire_at ? $expire_at->format('Y-m-d H:i:s') : null,
-            'bank_connection_implementation_id' => $bankConnection->implementation_id,
-        ]);
+        return $this->keyPrepend([
+            'id' => $bankConnection->id,
+            'state' => $bankConnection->state,
+            'bank_id' => $bankConnection->bank_id,
+            'session_expire_at' => $expire_at ? $expire_at->format('Y-m-d H:i:s') : null,
+            'implementation_id' => $bankConnection->implementation_id,
+        ], 'bank_connection_');
     }
 
     /**
-     * @param BankConnectionAccount $bankConnectionAccount
+     * @param BankConnectionAccount $account
      * @return array
      */
-    protected function bankConnectionAccountMeta(BankConnectionAccount $bankConnectionAccount): array
+    protected function bankConnectionAccountMeta(BankConnectionAccount $account): array
     {
-        return array_merge([
-            'bank_connection_account_id' => $bankConnectionAccount->id,
-            'bank_connection_account_monetary_account_id' => $bankConnectionAccount->monetary_account_id,
-            'bank_connection_account_monetary_account_iban' => $bankConnectionAccount->monetary_account_iban,
-            'bank_connection_account_monetary_account_name' => $bankConnectionAccount->monetary_account_name,
-        ]);
+        return $this->keyPrepend([
+            'id' => $account->id,
+            'monetary_account_id' => $account->monetary_account_id,
+            'monetary_account_iban' => $account->monetary_account_iban,
+            'monetary_account_name' => $account->monetary_account_name,
+        ], 'bank_connection_account_');
     }
 
     /**
-     * @param VoucherTransactionBulk $transactionBulk
+     * @param VoucherTransactionBulk $bulk
      * @return array
      */
-    protected function voucherTransactionBulkMeta(VoucherTransactionBulk $transactionBulk): array
+    protected function voucherTransactionBulkMeta(VoucherTransactionBulk $bulk): array
     {
-        return [
-            'transaction_bulk_id' => $transactionBulk->id,
-            'transaction_bulk_code' => $transactionBulk->code,
-            'transaction_bulk_state' => $transactionBulk->state,
-            'transaction_bulk_sepa_xml' => $transactionBulk->sepa_xml,
-            'transaction_bulk_auth_url' => $transactionBulk->auth_url,
-            'transaction_bulk_auth_params' => $transactionBulk->auth_params,
-            'transaction_bulk_payment_id' => $transactionBulk->payment_id,
-            'transaction_bulk_access_token' => $transactionBulk->access_token,
-            'transaction_bulk_execution_date' => $transactionBulk->execution_date,
-            'transaction_bulk_redirect_token' => $transactionBulk->redirect_token,
-            'transaction_bulk_monetary_account_id' => $transactionBulk->monetary_account_id,
-        ];
+        return $this->keyPrepend([
+            'id' => $bulk->id,
+            'code' => $bulk->code,
+            'state' => $bulk->state,
+            'sepa_xml' => $bulk->sepa_xml,
+            'auth_url' => $bulk->auth_url,
+            'auth_params' => $bulk->auth_params,
+            'payment_id' => $bulk->payment_id,
+            'access_token' => $bulk->access_token,
+            'execution_date' => $bulk->execution_date,
+            'redirect_token' => $bulk->redirect_token,
+            'monetary_account_id' => $bulk->monetary_account_id,
+        ], 'transaction_bulk_');
     }
 
     /**
@@ -376,10 +381,31 @@ class EventLogService implements IEventLogService
      */
     protected function implementationMeta(Implementation $implementation): array
     {
-        return [
-            'implementation_id' => $implementation->id,
-            'implementation_key' => $implementation->key,
-            'implementation_name' => $implementation->name,
-        ];
+        return $this->keyPrepend([
+            'id' => $implementation->id,
+            'key' => $implementation->key,
+            'name' => $implementation->name,
+        ], 'implementation_');
+    }
+
+    /**
+     * @param string $identity_address
+     * @return string|null
+     */
+    private function emailByAddress(string $identity_address): ?string
+    {
+        return resolve('forus.services.record')->primaryEmailByAddress($identity_address);
+    }
+
+    /**
+     * @param array $data
+     * @param string $prefix
+     * @return array
+     */
+    protected function keyPrepend(array $data, string $prefix): array
+    {
+        return array_reduce(array_keys($data), fn($arr, $key) => array_merge($arr, [
+            $prefix . $key => $data[$key],
+        ]), []);
     }
 }
