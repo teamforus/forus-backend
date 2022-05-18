@@ -12,6 +12,7 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -441,10 +442,10 @@ class Fund extends Model
 
     /**
      * @param array $tagIds
-     * @param $scope
+     * @param string $scope
      * @return void
      */
-    public function syncTags(array $tagIds, $scope = 'webshop')
+    public function syncTags(array $tagIds, string $scope = 'webshop'): void
     {
         $query = Tag::query();
 
@@ -468,7 +469,7 @@ class Fund extends Model
      * @param string $scope
      * @return void
      */
-    public function syncTagsOptional(?array $tagIds = null, $scope = 'webshop')
+    public function syncTagsOptional(?array $tagIds = null, string $scope = 'webshop'): void
     {
         if (!is_null($tagIds)) {
             $this->syncTags($tagIds, $scope);
@@ -829,7 +830,7 @@ class Fund extends Model
         $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, null,false, $daysTrusted);
 
         $validRecordsOfType = collect($recordsOfType)->map(static function($record) use (
-            $trustedIdentities, $organization, $criterion, $record_type, $daysTrusted
+            $trustedIdentities, $organization
         ) {
             $validations = collect($record['validations']);
             $validations = $validations->whereIn('identity_address', $trustedIdentities);
@@ -858,12 +859,14 @@ class Fund extends Model
     {
         /** @var FundConfigRecord $typeConfig */
         $typeConfig = $this->fund_config_records->where('record_type', $recordType)->first();
-        $typeConfigValue = $typeConfig ? $typeConfig->record_validity_days : null;
-        $fundConfigValue = $this->fund_config ? $this->fund_config->record_validity_days : null;
+        $typeConfigValue = $typeConfig->record_validity_days ?? null;
+        $fundConfigValue = $this->fund_config->record_validity_days ?? null;
 
         if ($typeConfigValue === 0) {
             return $typeConfigValue;
-        } else if ($typeConfigValue === null && $fundConfigValue === 0) {
+        }
+
+        if ($typeConfigValue === null && $fundConfigValue === 0) {
             return $fundConfigValue;
         }
 
@@ -998,6 +1001,7 @@ class Fund extends Model
 
     /**
      * @return Fund[]|Builder[]|Collection|\Illuminate\Support\Collection
+     * @noinspection PhpUnused
      */
     public static function configuredFunds() {
         try {
@@ -1700,7 +1704,8 @@ class Fund extends Model
      * @param ?string $identity_address
      * @return bool
      */
-    public function isTakenByPartner(?string $identity_address): bool {
+    public function isTakenByPartner(?string $identity_address): bool
+    {
         if (!$identity_address || !$identity = Identity::findByAddress($identity_address)) {
             return false;
         }
@@ -1788,19 +1793,33 @@ class Fund extends Model
 
     /**
      * @param string $identity_address
-     * @return ResidencyResponse|EligibilityResponse|null
+     * @return ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null
      */
     public function checkBackofficeIfAvailable(string $identity_address)
     {
-        $bsn = record_repo()->bsnByAddress($identity_address);
+        $recordRepo = record_repo();
+        $bsn = $recordRepo->bsnByAddress($identity_address);
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
 
         if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
             $backofficeApi = $this->getBackofficeApi();
+
+            // check for residency
             $residencyResponse = $backofficeApi->residencyCheck($bsn);
 
-            if (!$residencyResponse->isResident()) {
+            if (!$residencyResponse->getLog()->success() || !$residencyResponse->isResident()) {
                 return $residencyResponse;
+            }
+
+            // check if taken by partner
+            $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
+            $partnerBsn = $partnerBsnResponse->getBsn();
+            $partnerIdentity = $partnerBsn ? $recordRepo->identityAddressByBsn($partnerBsn) : null;
+
+            if (!$partnerBsnResponse->getLog()->success() ||
+                ($partnerIdentity && $this->identityHasActiveVoucher($partnerIdentity)) ||
+                $this->isTakenByPartner($identity_address)) {
+                return $partnerBsnResponse;
             }
 
             // check again for active vouchers
@@ -1850,8 +1869,9 @@ class Fund extends Model
     /**
      * @param string $default
      * @return string|null
+     * @noinspection PhpUnused
      */
-    public function communicationType($default = 'formal'): string
+    public function communicationType(string $default = 'formal'): string
     {
         if ($this->fund_config && $this->fund_config->implementation) {
             return $this->fund_config->implementation->communicationType();
