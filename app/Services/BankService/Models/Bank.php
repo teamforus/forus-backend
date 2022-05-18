@@ -12,9 +12,25 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Services\BankService\Models\Bank
  *
+ * @property int $id
+ * @property string $key
+ * @property string $name
+ * @property string|null $oauth_redirect_id
+ * @property string|null $oauth_redirect_url
+ * @property array $data
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Bank query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereOauthRedirectUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Bank whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class Bank extends Model

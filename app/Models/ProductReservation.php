@@ -27,6 +27,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $code
  * @property string $price_type
  * @property string $state
+ * @property string|null $first_name
+ * @property string|null $last_name
+ * @property string|null $user_note
  * @property string|null $note
  * @property \Illuminate\Support\Carbon|null $accepted_at
  * @property \Illuminate\Support\Carbon|null $canceled_at
@@ -56,8 +59,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereExpireAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFirstName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereFundProviderProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation wherePriceDiscount($value)
@@ -66,6 +71,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereRejectedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereUserNote($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProductReservation whereVoucherTransactionId($value)
  * @method static \Illuminate\Database\Query\Builder|ProductReservation withTrashed()

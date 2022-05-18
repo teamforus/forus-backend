@@ -20,7 +20,6 @@ use Illuminate\Http\Request;
  * @property int|null $root_id
  * @property int $_lft
  * @property int $_rgt
- * @property int $service
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Kalnoy\Nestedset\Collection|ProductCategory[] $children
@@ -92,7 +91,6 @@ use Illuminate\Http\Request;
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereParentId($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRgt($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereRootId($value)
- * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereService($value)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslation(string $translationField, $value, ?string $locale = null, string $method = 'whereHas', string $operator = '=')
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereTranslationLike(string $translationField, $value, ?string $locale = null)
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory whereUpdatedAt($value)

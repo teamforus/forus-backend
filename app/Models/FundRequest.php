@@ -25,7 +25,10 @@ use Illuminate\Http\Request;
  * @property int $fund_id
  * @property string $identity_address
  * @property string $note
- * @property string $state
+ * @property string $disregard_note
+ * @property bool $disregard_notify
+ * @property string|null $state
+ * @property \Illuminate\Support\Carbon|null $resolved_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\FundRequestClarification[] $clarifications
@@ -50,10 +53,13 @@ use Illuminate\Http\Request;
  * @method static Builder|FundRequest newQuery()
  * @method static Builder|FundRequest query()
  * @method static Builder|FundRequest whereCreatedAt($value)
+ * @method static Builder|FundRequest whereDisregardNote($value)
+ * @method static Builder|FundRequest whereDisregardNotify($value)
  * @method static Builder|FundRequest whereFundId($value)
  * @method static Builder|FundRequest whereId($value)
  * @method static Builder|FundRequest whereIdentityAddress($value)
  * @method static Builder|FundRequest whereNote($value)
+ * @method static Builder|FundRequest whereResolvedAt($value)
  * @method static Builder|FundRequest whereState($value)
  * @method static Builder|FundRequest whereUpdatedAt($value)
  * @mixin \Eloquent

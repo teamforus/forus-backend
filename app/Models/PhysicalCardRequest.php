@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property int $voucher_id
+ * @property int|null $employee_id
  * @property string $address
  * @property string $house
  * @property string|null $house_addition
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $city
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Employee $employee
+ * @property-read \App\Models\Employee|null $employee
  * @property-read \App\Models\Voucher $voucher
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest newQuery()
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereCity($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereEmployeeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereHouse($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereHouseAddition($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PhysicalCardRequest whereId($value)

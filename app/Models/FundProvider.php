@@ -27,7 +27,7 @@ use Carbon\Carbon;
  * @property bool $allow_budget
  * @property bool $allow_products
  * @property bool $allow_some_products
- * @property int $dismissed
+ * @property string $state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund
@@ -52,10 +52,10 @@ use Carbon\Carbon;
  * @method static Builder|FundProvider whereAllowProducts($value)
  * @method static Builder|FundProvider whereAllowSomeProducts($value)
  * @method static Builder|FundProvider whereCreatedAt($value)
- * @method static Builder|FundProvider whereDismissed($value)
  * @method static Builder|FundProvider whereFundId($value)
  * @method static Builder|FundProvider whereId($value)
  * @method static Builder|FundProvider whereOrganizationId($value)
+ * @method static Builder|FundProvider whereState($value)
  * @method static Builder|FundProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */

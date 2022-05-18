@@ -56,7 +56,11 @@ use Illuminate\Database\Query\Builder;
  * @property bool $manage_provider_products
  * @property bool $backoffice_available
  * @property bool $allow_batch_reservations
+ * @property bool $pre_approve_external_funds
  * @property int $provider_throttling_value
+ * @property string $fund_request_resolve_policy
+ * @property bool $bsn_enabled
+ * @property string|null $bank_cron_time
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\BankConnection|null $bank_connection_active
@@ -120,6 +124,8 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization query()
  * @method static EloquentBuilder|Organization whereAllowBatchReservations($value)
  * @method static EloquentBuilder|Organization whereBackofficeAvailable($value)
+ * @method static EloquentBuilder|Organization whereBankCronTime($value)
+ * @method static EloquentBuilder|Organization whereBsnEnabled($value)
  * @method static EloquentBuilder|Organization whereBtw($value)
  * @method static EloquentBuilder|Organization whereBusinessTypeId($value)
  * @method static EloquentBuilder|Organization whereCreatedAt($value)
@@ -127,6 +133,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereDescriptionText($value)
  * @method static EloquentBuilder|Organization whereEmail($value)
  * @method static EloquentBuilder|Organization whereEmailPublic($value)
+ * @method static EloquentBuilder|Organization whereFundRequestResolvePolicy($value)
  * @method static EloquentBuilder|Organization whereIban($value)
  * @method static EloquentBuilder|Organization whereId($value)
  * @method static EloquentBuilder|Organization whereIdentityAddress($value)
@@ -138,6 +145,7 @@ use Illuminate\Database\Query\Builder;
  * @method static EloquentBuilder|Organization whereName($value)
  * @method static EloquentBuilder|Organization wherePhone($value)
  * @method static EloquentBuilder|Organization wherePhonePublic($value)
+ * @method static EloquentBuilder|Organization wherePreApproveExternalFunds($value)
  * @method static EloquentBuilder|Organization whereProviderThrottlingValue($value)
  * @method static EloquentBuilder|Organization whereReservationsAutoAccept($value)
  * @method static EloquentBuilder|Organization whereReservationsBudgetEnabled($value)

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
  * @property int|null $employee_id
  * @property int|null $product_id
  * @property int|null $fund_provider_product_id
+ * @property int|null $voucher_transaction_bulk_id
  * @property string $amount
  * @property string|null $iban_from
  * @property string|null $iban_to
@@ -31,6 +32,7 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $payment_id
+ * @property string $payment_description
  * @property int $attempts
  * @property string $state
  * @property string|null $last_attempt_at
@@ -67,6 +69,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereId($value)
  * @method static Builder|VoucherTransaction whereLastAttemptAt($value)
  * @method static Builder|VoucherTransaction whereOrganizationId($value)
+ * @method static Builder|VoucherTransaction wherePaymentDescription($value)
  * @method static Builder|VoucherTransaction wherePaymentId($value)
  * @method static Builder|VoucherTransaction wherePaymentTime($value)
  * @method static Builder|VoucherTransaction whereProductId($value)
@@ -74,6 +77,7 @@ use Illuminate\Http\Request;
  * @method static Builder|VoucherTransaction whereTransferAt($value)
  * @method static Builder|VoucherTransaction whereUpdatedAt($value)
  * @method static Builder|VoucherTransaction whereVoucherId($value)
+ * @method static Builder|VoucherTransaction whereVoucherTransactionBulkId($value)
  * @mixin \Eloquent
  */
 class VoucherTransaction extends Model

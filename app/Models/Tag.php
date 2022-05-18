@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property int $id
  * @property string $name
  * @property string $key
+ * @property string $scope
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Fund[] $funds
  * @property-read int|null $funds_count
  * @method static \Illuminate\Database\Eloquent\Builder|Tag newModelQuery()
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static \Illuminate\Database\Eloquent\Builder|Tag whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Tag whereKey($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Tag whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Tag whereScope($value)
  * @mixin \Eloquent
  */
 class Tag extends Model
