@@ -220,6 +220,7 @@ return [
         App\Services\BackofficeApiService\BackofficeApiServiceProvider::class,
 
         App\Services\BNGService\BNGServiceProvider::class,
+        App\Services\ProductboardApiService\ProductboardApiServiceProvider::class,
     ],
 
     /*
