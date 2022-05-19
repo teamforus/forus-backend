@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Provider\Transactions;
 
-use App\Exports\VoucherTransactionsProviderFieldedExport;
+use App\Exports\VoucherTransactionsProviderExport;
 use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Arr;
@@ -14,7 +14,7 @@ class IndexTransactionsRequest extends BaseIndexTransactionsRequest
      */
     public function rules(): array
     {
-        $fields = Arr::pluck(VoucherTransactionsProviderFieldedExport::getExportFields(), 'key');
+        $fields = Arr::pluck(VoucherTransactionsProviderExport::getExportFields(), 'key');
 
         return array_merge(parent::rules(), [
             'fields' => 'nullable|array',

@@ -7,7 +7,7 @@ use App\Models\VoucherTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
-class VoucherTransactionsProviderFieldedExport extends BaseFieldedExport
+class VoucherTransactionsProviderExport extends BaseFieldedExport
 {
     protected Collection $data;
 

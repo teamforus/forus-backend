@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
-use App\Exports\VoucherTransactionsProviderFieldedExport;
+use App\Exports\VoucherTransactionsProviderExport;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Provider\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
@@ -57,7 +57,7 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        return ExportFieldArrResource::collection(VoucherTransactionsProviderFieldedExport::getExportFields());
+        return ExportFieldArrResource::collection(VoucherTransactionsProviderExport::getExportFields());
     }
 
     /**
@@ -79,7 +79,7 @@ class TransactionsController extends Controller
         $type = $request->input('data_format', 'xls');
 
         return resolve('excel')->download(
-            new VoucherTransactionsProviderFieldedExport($request, $organization, $fields),
+            new VoucherTransactionsProviderExport($request, $organization, $fields),
             date('Y-m-d H:i:s') . '.' . $type
         );
     }

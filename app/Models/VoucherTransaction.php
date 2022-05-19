@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Exports\VoucherTransactionsProviderFieldedExport;
+use App\Exports\VoucherTransactionsProviderExport;
 use App\Exports\VoucherTransactionsSponsorExport;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -367,7 +367,7 @@ class VoucherTransaction extends Model
     {
         $fieldLabels = array_pluck(array_merge(
             VoucherTransactionsSponsorExport::getExportFields(),
-            VoucherTransactionsProviderFieldedExport::getExportFields()
+            VoucherTransactionsProviderExport::getExportFields()
         ), 'name', 'key');
 
         $data = $builder->with('voucher.fund', 'provider')->get();

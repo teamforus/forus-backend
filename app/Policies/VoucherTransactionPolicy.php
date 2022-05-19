@@ -51,23 +51,6 @@ class VoucherTransactionPolicy
 
     /**
      * @param string $identity_address
-     * @param Fund|null $fund
-     * @param Organization|null $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function viewAnyPublic(
-        string $identity_address,
-        Fund $fund,
-        Organization $organization
-    ): bool {
-        // identity_address not required
-        return isset($identity_address) && $fund->public && (
-            $fund->organization_id === $organization->id);
-    }
-
-    /**
-     * @param string $identity_address
      * @param VoucherTransaction $transaction
      * @return bool
      */

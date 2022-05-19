@@ -109,17 +109,6 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->resource(
-        'organizations.funds.transactions',
-        "Api\Platform\Organizations\Funds\TransactionsController", [
-        'only' => [
-            'index', 'show',
-        ],
-        'parameters' => [
-            'transactions' => 'transaction_address',
-        ]
-    ]);
-
-    $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
         'only' => [
