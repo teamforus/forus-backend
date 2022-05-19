@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
 use App\Exports\VoucherTransactionsProviderExport;
-use App\Exports\VoucherTransactionsSponsorExport;
 use App\Http\Requests\Api\Platform\Organizations\Provider\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
@@ -75,7 +74,7 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        $fields = $request->input('fields', VoucherTransactionsSponsorExport::getExportFields());
+        $fields = $request->input('fields', VoucherTransactionsProviderExport::getExportFields());
         $type = $request->input('data_format', 'xls');
 
         return resolve('excel')->download(

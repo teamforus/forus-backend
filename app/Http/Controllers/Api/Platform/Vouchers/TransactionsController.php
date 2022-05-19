@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Vouchers\Transactions\IndexVoucherTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Organization;
@@ -18,14 +18,14 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param BaseIndexTransactionsRequest $request
+     * @param IndexVoucherTransactionsRequest $request
      * @param VoucherToken $voucherToken
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        BaseIndexTransactionsRequest $request,
-        VoucherToken                 $voucherToken
+        IndexVoucherTransactionsRequest $request,
+        VoucherToken                    $voucherToken
     ): AnonymousResourceCollection {
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);

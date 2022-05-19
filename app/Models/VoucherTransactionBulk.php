@@ -676,11 +676,10 @@ class VoucherTransactionBulk extends Model
         }
 
         if ($request->has('to')) {
-            $query->where(
-                'created_at',
-                '<=',
-                Carbon::createFromFormat('Y-m-d', $request->input('to'))->endOfDay()->format('Y-m-d H:i:s')
-            );
+            $query->where('created_at', '<=', Carbon::createFromFormat(
+                'Y-m-d',
+                $request->input('to')
+            )->endOfDay()->format('Y-m-d H:i:s'));
         }
 
         if ($request->has('state')) {
@@ -696,12 +695,6 @@ class VoucherTransactionBulk extends Model
         }
 
         if ($request->has('amount_min')) {
-            /*$query->addSelect([
-                'total_amount' => VoucherTransaction::query()->whereColumn([
-                    'voucher_transactions.voucher_transactions_bulk_id' => 'voucher_transactions_bulks.id',
-                ])->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`')
-            ]);*/
-
             $query->whereHas('voucher_transactions', function (Builder $builder) use ($request) {
                 $builder->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`');
                 $builder->having('total_amount', '>=', $request->input('amount_min'));
