@@ -134,9 +134,10 @@ class FundPolicy
     /**
      * @param $identity_address
      * @param Fund $fund
+     * @param string|null $logScope from where the policy is called
      * @return bool|\Illuminate\Auth\Access\Response
      */
-    public function apply($identity_address, Fund $fund)
+    public function apply($identity_address, Fund $fund, ?string $logScope)
     {
         if (empty($identity_address)) {
             return false;
@@ -152,6 +153,29 @@ class FundPolicy
 
         if (!$fund->isConfigured()) {
             return $this->deny(trans('fund.not_configured'));
+        }
+
+        if ($fund->isBackofficeApiAvailable() && $bsn = record_repo()->bsnByAddress($identity_address)) {
+            try {
+                $response = $fund->getBackofficeApi()->partnerBsn($bsn);
+
+                if (!$response->getLog()->success()) {
+                    throw new \Exception(implode("", [
+                        "Backoffice partner check response error: ",
+                        "scope: $logScope, fund_id: $fund->id, identity_address: $identity_address",
+                    ]));
+                }
+
+                $partnerBsn = $response->getBsn();
+                $partnerAddress = $partnerBsn ? record_repo()->identityAddressByBsn($partnerBsn) : false;
+
+                if ($partnerAddress && $fund->identityHasActiveVoucher($partnerAddress)) {
+                    return $this->deny(trans('fund.taken_by_partner'));
+                }
+            } catch (\Throwable $e) {
+                logger()->error("FundPolicy@apply: " . $e->getMessage());
+                return $this->deny(trans('fund.backoffice_error'));
+            }
         }
 
         if ($fund->fund_config->hash_partner_deny && $fund->isTakenByPartner($identity_address)) {

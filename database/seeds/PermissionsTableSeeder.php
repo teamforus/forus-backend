@@ -5,7 +5,7 @@ use App\Models\Permission;
 
 class PermissionsTableSeeder extends Seeder
 {
-    protected  $permissions = [
+    protected array $permissions = [
         'manage_organization'       => "Manage organization",
         'manage_funds'              => "Manage funds",
         'manage_providers'          => "Manage providers",
@@ -24,7 +24,8 @@ class PermissionsTableSeeder extends Seeder
         'validate_records'          => "Validate records",
         'scan_vouchers'             => "Scan vouchers",
         'view_funds'                => "See funds overview",
-        'view_person_bsn_data'      => "See person information by BSN"
+        'view_person_bsn_data'      => "See person information by BSN",
+        'make_direct_payments'      => "Make direct payments",
     ];
 
     /**

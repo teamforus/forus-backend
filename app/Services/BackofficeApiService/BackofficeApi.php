@@ -6,6 +6,7 @@ namespace App\Services\BackofficeApiService;
 use App\Models\Fund;
 use App\Models\FundBackofficeLog;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
 use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use GuzzleHttp\Client;
@@ -18,9 +19,8 @@ use Illuminate\Support\Arr;
  */
 class BackofficeApi
 {
-    /** @var Fund */
-    protected $fund;
-    protected $recordRepo;
+    protected Fund $fund;
+    protected IRecordRepo $recordRepo;
 
     public const ACTION_ELIGIBILITY_CHECK = 'eligibility_check';
     public const ACTION_RESIDENCY_CHECK = 'residency_check';
@@ -28,6 +28,8 @@ class BackofficeApi
     public const ACTION_REPORT_FIRST_USE = 'first_use';
     public const ACTION_REPORT_RECEIVED = 'received';
     public const ACTION_STATUS = 'status';
+
+    public const ACTION_PARTNER_BSN = 'partner_bsn';
 
     public const STATE_PENDING = 'pending';
     public const STATE_SUCCESS = 'success';
@@ -37,7 +39,8 @@ class BackofficeApi
     public const ATTEMPTS_INTERVAL = 8;
 
     /**
-     * SponsorApi constructor.
+     * @param IRecordRepo $recordRepo
+     * @param Fund $fund
      */
     public function __construct(IRecordRepo $recordRepo, Fund $fund)
     {
@@ -67,6 +70,15 @@ class BackofficeApi
     }
 
     /**
+     * @param string $bsn
+     * @return PartnerBsnResponse
+     */
+    public function partnerBsn(string $bsn): PartnerBsnResponse
+    {
+        return new PartnerBsnResponse($this->getPartnerBsn($bsn, self::makeRequestId()));
+    }
+
+    /**
      * Report to the API that a voucher was received by identity
      *
      * @param string $bsn
@@ -88,14 +100,6 @@ class BackofficeApi
     public function reportFirstUse(string $bsn, ?string $requestId = null): FundBackofficeLog
     {
         return $this->makeLog(self::ACTION_REPORT_FIRST_USE, $bsn, $requestId);
-    }
-
-    /**
-     * @return Fund
-     */
-    public function getFund(): Fund
-    {
-        return $this->fund;
     }
 
     /**
@@ -145,6 +149,18 @@ class BackofficeApi
     protected function checkEligibility(string $bsn, ?string $requestId): FundBackofficeLog
     {
         return $this->makeCheckRequest(self::ACTION_ELIGIBILITY_CHECK, $bsn, $requestId);
+    }
+
+    /**
+     * Make the request to the API to check BSN-number residency
+     *
+     * @param string $bsn
+     * @param string|null $requestId
+     * @return FundBackofficeLog
+     */
+    protected function getPartnerBsn(string $bsn, ?string $requestId): FundBackofficeLog
+    {
+        return $this->makeCheckRequest(self::ACTION_PARTNER_BSN, $bsn, $requestId);
     }
 
     /**
@@ -272,6 +288,7 @@ class BackofficeApi
             self::ACTION_REPORT_FIRST_USE => '/api/v1/funds',
             self::ACTION_REPORT_RECEIVED => '/api/v1/funds',
             self::ACTION_RESIDENCY_CHECK => '/api/v1/funds',
+            self::ACTION_PARTNER_BSN => '/api/v1/funds',
             self::ACTION_STATUS => '/api/v1/status',
         ][$action] ?? abort(403);
 
@@ -339,11 +356,13 @@ class BackofficeApi
     /**
      * Get list of logs to be sent to the API
      *
+     * @param array $fundsId
      * @return FundBackofficeLog|Builder|\Illuminate\Database\Query\Builder
      */
-    public static function getNextLogInQueueQuery()
+    public static function getNextLogInQueueQuery(array $fundsId = [])
     {
         return FundBackofficeLog::query()
+            ->whereIn('fund_id', $fundsId)
             ->orderBy('created_at', 'ASC')
             ->where(function(Builder $builder) {
                 $builder->where('action', self::ACTION_REPORT_RECEIVED);
@@ -366,11 +385,12 @@ class BackofficeApi
     /**
      * Get next log int the queue to be sent to the API
      *
+     * @param array $fundsId
      * @return FundBackofficeLog|null
      */
-    protected static function getNextLogInQueue(): ?FundBackofficeLog
+    protected static function getNextLogInQueue(array $fundsId = []): ?FundBackofficeLog
     {
-        return self::getNextLogInQueueQuery()->first();
+        return self::getNextLogInQueueQuery($fundsId)->first();
     }
 
     /**
@@ -380,7 +400,9 @@ class BackofficeApi
      */
     public static function sendLogs(): void
     {
-        while ($log = self::getNextLogInQueue()) {
+        $funds = Fund::get()->filter(fn(Fund $fund) => $fund->isBackofficeApiAvailable());
+
+        while ($log = self::getNextLogInQueue($funds->pluck('id')->toArray())) {
             if (!$backofficeApi = $log->fund->getBackofficeApi()) {
                 continue;
             }
@@ -394,6 +416,10 @@ class BackofficeApi
                 $requestId = $log->voucher->backoffice_log_received->response_id ?? self::makeRequestId();
             } else {
                 $requestId = $log->request_id;
+            }
+
+            if ($log->action === self::ACTION_REPORT_RECEIVED) {
+                $body['eligible'] = $log->voucher->backoffice_log_eligible->response_body['eligible'] ?? false;
             }
 
             $response = $backofficeApi->request('POST', $endpoint, array_merge($body, [

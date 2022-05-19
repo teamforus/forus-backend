@@ -18,7 +18,7 @@ trait ThrottleWithMeta {
     /**
      * @var string
      */
-    private $throttleKeyPrefix = '';
+    private string $throttleKeyPrefix = '';
 
     /**
      * @param string $error
