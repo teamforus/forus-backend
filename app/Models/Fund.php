@@ -1813,14 +1813,16 @@ class Fund extends Model
             }
 
             // check if taken by partner
-            $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
-            $partnerBsn = $partnerBsnResponse->getBsn();
-            $partnerIdentity = $partnerBsn ? $recordRepo->identityAddressByBsn($partnerBsn) : null;
+            if (env('ENABLE_BACKOFFICE_PARTNER_CHECK', false)) {
+                $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
+                $partnerBsn = $partnerBsnResponse->getBsn();
+                $partnerIdentity = $partnerBsn ? $recordRepo->identityAddressByBsn($partnerBsn) : null;
 
-            if (!$partnerBsnResponse->getLog()->success() ||
-                ($partnerIdentity && $this->identityHasActiveVoucher($partnerIdentity)) ||
-                $this->isTakenByPartner($identity_address)) {
-                return $partnerBsnResponse;
+                if (!$partnerBsnResponse->getLog()->success() ||
+                    ($partnerIdentity && $this->identityHasActiveVoucher($partnerIdentity)) ||
+                    $this->isTakenByPartner($identity_address)) {
+                    return $partnerBsnResponse;
+                }
             }
 
             // check again for active vouchers
