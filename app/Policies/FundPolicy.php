@@ -155,7 +155,9 @@ class FundPolicy
             return $this->deny(trans('fund.not_configured'));
         }
 
-        if ($fund->isBackofficeApiAvailable() && $bsn = record_repo()->bsnByAddress($identity_address)) {
+        if ($fund->isBackofficeApiAvailable() &&
+            env('ENABLE_BACKOFFICE_PARTNER_CHECK', false) &&
+            $bsn = record_repo()->bsnByAddress($identity_address)) {
             try {
                 $response = $fund->getBackofficeApi()->partnerBsn($bsn);
 
