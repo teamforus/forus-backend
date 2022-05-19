@@ -40,7 +40,7 @@ class VoucherTransactionBulksSponsorExport implements FromCollection, WithHeadin
     ) {
         $this->request = $request;
 
-        $this->data = VoucherTransactionBulk::exportListSponsor(
+        $this->data = VoucherTransactionBulk::exportSponsor(
             $this->request,
             $organization,
             $fields,
@@ -68,7 +68,7 @@ class VoucherTransactionBulksSponsorExport implements FromCollection, WithHeadin
     /**
      * @return array
      */
-    public static function getExportFieldsList() : array
+    public static function getExportFields() : array
     {
         return array_filter(array_map(function($row) {
             list($key, $name) = $row;

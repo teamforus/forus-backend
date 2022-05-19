@@ -35,7 +35,7 @@ class IndexTransactionsRequest extends FormRequest
             'to'            => 'date_format:Y-m-d',
             'amount_min'    => 'numeric|min:0',
             'amount_max'    => 'numeric|min:0',
-            'export_format' => 'nullable|in:csv,xls',
+            'data_format'   => 'nullable|in:csv,xls',
 
             'fund_ids'          => 'nullable|array',
             'fund_ids.*'        => 'required|exists:funds,id',

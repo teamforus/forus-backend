@@ -692,6 +692,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/provider/transactions/export-fields',
+        "Api\Platform\Organizations\Provider\TransactionsController@getExportFields"
+    );
 
     $router->get(
         'organizations/{organization}/provider/transactions/export',
@@ -725,6 +729,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
 
+    $router->get(
+        'organizations/{organization}/sponsor/transactions/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@getExportFields"
+    );
+
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
         "Api\Platform\Organizations\Sponsor\TransactionsController", [
@@ -738,22 +747,12 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->get(
-        'organizations/{organization}/sponsor/transaction-bulks/export-list-fields',
-        "Api\Platform\Organizations\Sponsor\TransactionBulksController@getListExportFields"
-    );
-
-    $router->get(
         'organizations/{organization}/sponsor/transaction-bulks/export-fields',
         "Api\Platform\Organizations\Sponsor\TransactionBulksController@getExportFields"
     );
 
     $router->get(
         'organizations/{organization}/sponsor/transaction-bulks/export',
-        "Api\Platform\Organizations\Sponsor\TransactionBulksController@exportList"
-    );
-
-    $router->get(
-        'organizations/{organization}/sponsor/transaction-bulks/{voucher_transaction_bulk}/export',
         "Api\Platform\Organizations\Sponsor\TransactionBulksController@export"
     );
 

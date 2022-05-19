@@ -293,6 +293,10 @@ class VoucherTransaction extends Model
             $query->where('amount', '<=', $amount_max);
         }
 
+        if ($request->has('bulk_transaction_id') && $bulk_transaction_id = $request->input('bulk_transaction_id')) {
+            $query->where('voucher_transaction_bulk_id', $bulk_transaction_id);
+        }
+
         if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
             $query->whereHas('voucher.fund', static function (Builder $query) use ($fund_state) {
                 $query->where('state', '=',  $fund_state);
@@ -368,49 +372,48 @@ class VoucherTransaction extends Model
 
     /**
      * @param Builder $builder
+     * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportTransform(Builder $builder)
+    private static function exportTransform(Builder $builder, array $fields)
     {
-        $transKey = "export.voucher_transactions";
-
         return $builder->with([
             'voucher.fund',
             'provider',
         ])->get()->map(static function(
             VoucherTransaction $transaction
-        ) use ($transKey) {
-            return [
-                trans("$transKey.id") => $transaction->id,
-                trans("$transKey.amount") => currency_format(
-                    $transaction->amount
-                ),
-                trans("$transKey.date_transaction") => format_datetime_locale($transaction->created_at),
-                trans("$transKey.date_payment") => format_datetime_locale($transaction->payment_time),
-                trans("$transKey.fund") => $transaction->voucher->fund->name,
-                trans("$transKey.provider") => $transaction->provider->name,
-                trans("$transKey.state") => trans("$transKey.state-values.$transaction->state"),
-            ];
+        ) use ($fields) {
+            return array_only([
+                "id" => $transaction->id,
+                "amount" => currency_format($transaction->amount),
+                "date_transaction" => format_datetime_locale($transaction->created_at),
+                "date_payment" => format_datetime_locale($transaction->payment_time),
+                "fund_name" => $transaction->voucher->fund->name,
+                "provider"  => $transaction->provider->name,
+                "state" => $transaction->state,
+            ], $fields);
         })->values();
     }
 
     /**
      * @param Request $request
      * @param Organization $organization
+     * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function exportProvider(Request $request, Organization $organization)
+    public static function exportProvider(Request $request, Organization $organization, array $fields)
     {
         return self::exportTransform(VoucherTransactionQuery::order(
             self::searchProvider($request, $organization),
             $request->get('order_by'),
             $request->get('order_dir')
-        ));
+        ), $fields);
     }
 
     /**
      * @param Request $request
      * @param Organization $organization
+     * @param array $fields
      * @param Fund|null $fund
      * @param Organization|null $provider
      * @return Builder[]|Collection|\Illuminate\Support\Collection
@@ -418,6 +421,7 @@ class VoucherTransaction extends Model
     public static function exportSponsor(
         Request $request,
         Organization $organization,
+        array $fields,
         Fund $fund = null,
         Organization $provider = null
     ) {
@@ -425,8 +429,9 @@ class VoucherTransaction extends Model
             self::searchSponsor($request, $organization, $fund, $provider),
             $request->get('order_by'),
             $request->get('order_dir')
-        ));
+        ), $fields);
     }
+
     /**
      * @param string $group
      * @param string $note

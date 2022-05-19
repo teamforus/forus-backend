@@ -732,10 +732,10 @@ class VoucherTransactionBulk extends Model
      * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    private static function exportListTransform(Builder $builder, array $fields)
+    private static function exportTransform(Builder $builder, array $fields)
     {
         return $builder->get()->map(static function(
-            VoucherTransactionBulk $transactionBulk
+            self $transactionBulk
         ) use ($fields) {
             return array_only([
                 "id" => $transactionBulk->id,
@@ -751,55 +751,20 @@ class VoucherTransactionBulk extends Model
     }
 
     /**
-     * @param VoucherTransactionBulk $transactionBulk
-     * @param array $fields
-     * @return Collection|\Illuminate\Support\Collection
-     */
-    private static function exportTransform(VoucherTransactionBulk $transactionBulk, array $fields)
-    {
-        return $transactionBulk->voucher_transactions->map(static function(
-            VoucherTransaction $transaction
-        ) use ($fields) {
-            return array_only([
-                "id" => $transaction->id,
-                "amount" => currency_format($transaction->amount),
-                "date_transaction" => format_datetime_locale($transaction->created_at),
-                "fund_name" => $transaction->voucher->fund->name,
-                "provider"  => Organization::find($transaction->organization_id)->name,
-                "state" => $transaction->state,
-            ], $fields);
-        })->values();
-    }
-
-    /**
      * @param Request $request
      * @param Organization $organization
      * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function exportListSponsor(
+    public static function exportSponsor(
         Request $request,
         Organization $organization,
         array $fields
     ) {
-        return self::exportListTransform(VoucherTransactionBulkQuery::order(
+        return self::exportTransform(VoucherTransactionBulkQuery::order(
             self::searchSponsor($request, $organization),
             $request->get('order_by'),
             $request->get('order_dir')
         ), $fields);
-    }
-
-    /**
-     * @param Request $request
-     * @param VoucherTransactionBulk $transactionBulk
-     * @param array $fields
-     * @return Collection|\Illuminate\Support\Collection
-     */
-    public static function exportSponsor(
-        Request $request,
-        VoucherTransactionBulk $transactionBulk,
-        array $fields
-    ) {
-        return self::exportTransform($transactionBulk, $fields);
     }
 }

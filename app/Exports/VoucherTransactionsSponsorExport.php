@@ -20,6 +20,16 @@ class VoucherTransactionsSponsorExport implements FromCollection, WithHeadings
     protected $data;
     protected $headers;
 
+    protected static array $fields = [
+        ['id', 'ID'],
+        ['amount', 'Bedrag'],
+        ['date_transaction', 'Datum transactie'],
+        ['date_payment', 'Datum betaling'],
+        ['fund_name', 'Fonds'],
+        ['provider', 'Aanbieder'],
+        ['state', 'Status'],
+    ];
+
     /**
      * VoucherTransactionsSponsorExport constructor.
      * @param Request $request
@@ -30,6 +40,7 @@ class VoucherTransactionsSponsorExport implements FromCollection, WithHeadings
     public function __construct(
         Request $request,
         Organization $organization,
+        array $fields,
         Fund $fund = null,
         Organization $provider = null
     ) {
@@ -38,6 +49,7 @@ class VoucherTransactionsSponsorExport implements FromCollection, WithHeadings
         $this->data = VoucherTransaction::exportSponsor(
             $this->request,
             $organization,
+            $fields,
             $fund,
             $provider
         );
@@ -59,5 +71,17 @@ class VoucherTransactionsSponsorExport implements FromCollection, WithHeadings
         return $this->data->map(function ($row) {
             return array_keys($row);
         })->flatten()->unique()->toArray();
+    }
+
+    /**
+     * @return array
+     */
+    public static function getExportFields() : array
+    {
+        return array_filter(array_map(function($row) {
+            list($key, $name) = $row;
+
+            return compact('key', 'name');
+        }, static::$fields));
     }
 }
