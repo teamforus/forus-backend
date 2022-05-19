@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Funds;
 
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Transactions\BaseIndexTransactionsRequest;
 use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Fund;
 use App\Models\Organization;
@@ -14,16 +14,16 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param IndexTransactionsRequest $request
+     * @param BaseIndexTransactionsRequest $request
      * @param Organization $organization
      * @param Fund $fund
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        IndexTransactionsRequest $request,
-        Organization $organization,
-        Fund $fund
+        BaseIndexTransactionsRequest $request,
+        Organization                 $organization,
+        Fund                         $fund
     ) {
         $this->authorize('viewAnyPublic', [
             VoucherTransaction::class, $fund, $organization

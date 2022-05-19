@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\Api\Platform\Organizations\Transactions;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;
 use App\Models\VoucherTransaction;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class IndexTransactionsRequest extends FormRequest
+abstract class BaseIndexTransactionsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,7 +28,7 @@ class IndexTransactionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'per_page'      => 'numeric|between:1,100',
+            'per_page'      => $this->perPageRule(),
             'q'             => 'nullable|string',
             'state'         => Rule::in(VoucherTransaction::STATES),
             'fund_state'    => Rule::in(Fund::STATES),

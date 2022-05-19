@@ -67,12 +67,7 @@ return [
         ]
     ],
 
-    'voucher_transactions_bulk' => [
-        'id' => 'ID',
-        'amount' => 'Bedrag',
-        'bank'   => 'Bank',
-        'date_transaction' => 'Datum betaling',
-        'state' => 'Status',
+    'voucher_transactions_bulks' => [
         'state-values' => [
             'draft'    => 'Draft',
             'error'    => 'Error',

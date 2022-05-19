@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
+use App\Exports\VoucherTransactionBulksExport;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
-use App\Services\BankService\Resources\BankResource;
 use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\PaymentInfoData;
 use App\Services\BNGService\Exceptions\ApiException;
@@ -177,14 +177,6 @@ class VoucherTransactionBulk extends Model
     public function voucher_transactions(): HasMany
     {
         return $this->hasMany(VoucherTransaction::class);
-    }
-
-    /**
-     * @return BelongsTo
-     */
-    public function organization(): BelongsTo
-    {
-        return $this->belongsTo(Organization::class);
     }
 
     /**
@@ -665,66 +657,65 @@ class VoucherTransactionBulk extends Model
 
     /**
      * @param Request $request
+     * @param Organization $organization
      * @return Builder
      */
-    public static function search(Request $request): Builder
+    public static function search(Request $request, Organization $organization): Builder
     {
-        /** @var Builder $query */
-        $query = self::query();
+        $query = self::whereHas('bank_connection', fn(Builder $builder) => [
+            'bank_connections.organization_id' => $organization->id,
+        ]);
 
-        if ($request->has('from') && $from = $request->input('from')) {
-            $query->where('created_at','>=',
-                (Carbon::createFromFormat('Y-m-d', $from))->startOfDay()->format('Y-m-d H:i:s')
+        $query->withCount('voucher_transactions');
+
+        if ($request->has('from')) {
+            $query->where('created_at', '>=', Carbon::createFromFormat(
+                'Y-m-d',
+                $request->input('from')
+            )->startOfDay()->format('Y-m-d H:i:s'));
+        }
+
+        if ($request->has('to')) {
+            $query->where(
+                'created_at',
+                '<=',
+                Carbon::createFromFormat('Y-m-d', $request->input('to'))->endOfDay()->format('Y-m-d H:i:s')
             );
         }
 
-        if ($request->has('to') && $to = $request->input('to')) {
-            $query->where('created_at','<=',
-                (Carbon::createFromFormat('Y-m-d', $to))->endOfDay()->format('Y-m-d H:i:s')
-            );
+        if ($request->has('state')) {
+            $query->where('state', $request->input('state'));
         }
 
-        if ($request->has('state') && $state = $request->input('state')) {
-            $query->where('state', $state);
+        if ($request->has('quantity_min')) {
+            $query->has('voucher_transactions', '>=', $request->input('quantity_min'));
         }
 
-        if ($quantity_min = $request->input('quantity_min')) {
-            $query->has('voucher_transactions', '>=', $quantity_min);
+        if ($request->has('quantity_max')) {
+            $query->has('voucher_transactions', '<=', $request->input('quantity_max'));
         }
 
-        if ($quantity_max = $request->input('quantity_max')) {
-            $query->has('voucher_transactions', '<=', $quantity_max);
-        }
+        if ($request->has('amount_min')) {
+            /*$query->addSelect([
+                'total_amount' => VoucherTransaction::query()->whereColumn([
+                    'voucher_transactions.voucher_transactions_bulk_id' => 'voucher_transactions_bulks.id',
+                ])->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`')
+            ]);*/
 
-        if ($amount_min = $request->input('amount_min')) {
-            $query->whereHas('voucher_transactions', function (Builder $builder) use ($amount_min) {
-                $builder->select(\DB::raw('SUM(amount) as total_amount'))
-                    ->having('total_amount', '>=', $amount_min);
+            $query->whereHas('voucher_transactions', function (Builder $builder) use ($request) {
+                $builder->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`');
+                $builder->having('total_amount', '>=', $request->input('amount_min'));
             });
         }
 
-        if ($amount_max = $request->input('amount_max')) {
-            $query->whereHas('voucher_transactions', function (Builder $builder) use ($amount_max) {
-                $builder->select(\DB::raw('SUM(amount) as total_amount'))
-                    ->having('total_amount', '<=', $amount_max);
+        if ($request->has('amount_max')) {
+            $query->whereHas('voucher_transactions', function (Builder $builder) use ($request) {
+                $builder->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`');
+                $builder->having('total_amount', '<=', $request->input('amount_max'));
             });
         }
 
         return $query;
-    }
-
-    /**
-     * @param Request $request
-     * @param Organization $organization
-     * @return Builder
-     */
-    public static function searchSponsor(
-        Request $request,
-        Organization $organization
-    ): Builder {
-        return self::search($request)->whereHas('bank_connection', function (Builder $builder) use ($organization) {
-            $builder->where('bank_connections.organization_id', $organization->id);
-        });
     }
 
     /**
@@ -734,20 +725,22 @@ class VoucherTransactionBulk extends Model
      */
     private static function exportTransform(Builder $builder, array $fields)
     {
-        return $builder->get()->map(static function(
-            self $transactionBulk
-        ) use ($fields) {
-            return array_only([
-                "id" => $transactionBulk->id,
-                "quantity" => $transactionBulk->voucher_transactions_count,
-                "amount" => currency_format(
-                    $transactionBulk->voucher_transactions->sum('amount')
-                ),
-                "bank_name" => $transactionBulk->bank_connection->bank->name,
-                "date_transaction" => format_datetime_locale($transactionBulk->created_at),
-                "state" => $transactionBulk->state,
-            ], $fields);
-        })->values();
+        $fieldLabels = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name', 'key');
+
+        $data = $builder->get()->map(fn(VoucherTransactionBulk $transactionBulk) => array_only([
+            "id" => $transactionBulk->id,
+            "quantity" => $transactionBulk->voucher_transactions_count,
+            "amount" => currency_format($transactionBulk->voucher_transactions->sum('amount')),
+            "bank_name" => $transactionBulk->bank_connection->bank->name,
+            "date_transaction" => format_datetime_locale($transactionBulk->created_at),
+            'state' => trans("export.voucher_transactions_bulks.state-values.$transactionBulk->state"),
+        ], $fields))->values();
+
+        return $data->map(function($item) use ($fieldLabels) {
+            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
+                $fieldLabels[$key] => $item[$key],
+            ]), []);
+        });
     }
 
     /**
@@ -756,13 +749,10 @@ class VoucherTransactionBulk extends Model
      * @param array $fields
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
-    public static function exportSponsor(
-        Request $request,
-        Organization $organization,
-        array $fields
-    ) {
+    public static function export(Request $request, Organization $organization, array $fields)
+    {
         return self::exportTransform(VoucherTransactionBulkQuery::order(
-            self::searchSponsor($request, $organization),
+            self::search($request, $organization),
             $request->get('order_by'),
             $request->get('order_dir')
         ), $fields);

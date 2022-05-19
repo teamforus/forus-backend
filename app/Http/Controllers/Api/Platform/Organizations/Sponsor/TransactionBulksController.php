@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
-use App\Exports\VoucherTransactionBulksSponsorExport;
-use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksExportFieldsRequest;
+use App\Exports\VoucherTransactionBulksExport;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\UpdateTransactionBulksRequest;
 use App\Http\Requests\BaseFormRequest;
@@ -11,7 +10,6 @@ use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
-use App\Models\Voucher;
 use App\Models\VoucherTransactionBulk;
 use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -42,7 +40,7 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        $query = VoucherTransactionBulk::searchSponsor($request, $organization);
+        $query = VoucherTransactionBulk::search($request, $organization);
 
         return VoucherTransactionBulkResource::queryCollection(VoucherTransactionBulkQuery::order(
             $query,
@@ -124,19 +122,17 @@ class TransactionBulksController extends Controller
     }
 
     /**
-     * @param IndexTransactionBulksExportFieldsRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
-    public function getExportFields(
-        IndexTransactionBulksExportFieldsRequest $request,
-        Organization $organization
-    ): AnonymousResourceCollection {
+    public function getExportFields(Organization $organization): AnonymousResourceCollection
+    {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+        $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        return ExportFieldArrResource::collection(VoucherTransactionBulksSponsorExport::getExportFields());
+        return ExportFieldArrResource::collection(VoucherTransactionBulksExport::getExportFields());
     }
 
     /**
@@ -154,8 +150,8 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        $fields = $request->input('fields', VoucherTransactionBulksSponsorExport::getExportFields());
-        $fileData = new VoucherTransactionBulksSponsorExport($request, $organization, $fields);
+        $fields = $request->input('fields', VoucherTransactionBulksExport::getExportFields());
+        $fileData = new VoucherTransactionBulksExport($request, $organization, $fields);
         $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);

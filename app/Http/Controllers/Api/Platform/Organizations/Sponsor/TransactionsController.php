@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherTransactionsSponsorExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsExportFieldsRequest;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\StoreTransactionRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTransactionRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Http\Controllers\Controller;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
@@ -98,17 +97,16 @@ class TransactionsController extends Controller
     }
 
     /**
-     * @param IndexTransactionsExportFieldsRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function getExportFields(
-        IndexTransactionsExportFieldsRequest $request,
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+        $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
         return ExportFieldArrResource::collection(VoucherTransactionsSponsorExport::getExportFields());
     }

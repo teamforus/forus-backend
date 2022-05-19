@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Exports\VoucherTransactionsProviderFieldedExport;
+use App\Exports\VoucherTransactionsSponsorExport;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\EventLogService\Traits\HasLogs;
 use Carbon\Carbon;
@@ -299,10 +301,6 @@ class VoucherTransaction extends Model
             $query->where('amount', '<=', $amount_max);
         }
 
-        if ($request->has('bulk_transaction_id') && $bulk_transaction_id = $request->input('bulk_transaction_id')) {
-            $query->where('voucher_transaction_bulk_id', $bulk_transaction_id);
-        }
-
         if ($request->has('fund_state') && $fund_state = $request->input('fund_state')) {
             $query->whereHas('voucher.fund', static function (Builder $query) use ($fund_state) {
                 $query->where('state', '=',  $fund_state);
@@ -315,25 +313,15 @@ class VoucherTransaction extends Model
     /**
      * @param Request $request
      * @param Organization $organization
-     * @param ?Fund $fund
-     * @param ?Organization $provider
      * @return Builder
      */
-    public static function searchSponsor(
-        Request $request,
-        Organization $organization,
-        Fund $fund = null,
-        Organization $provider = null
-    ): Builder {
+    public static function searchSponsor(Request $request, Organization $organization): Builder
+    {
         $builder = self::search($request)->whereHas('voucher.fund.organization', function (
             Builder $query
         ) use ($organization) {
             $query->where('id', $organization->id);
         });
-
-        if ($provider) {
-            $builder->where('organization_id', $provider->id);
-        }
 
         if ($voucher_transaction_bulk_id = $request->input('voucher_transaction_bulk_id')) {
             $builder->where(compact('voucher_transaction_bulk_id'));
@@ -341,12 +329,6 @@ class VoucherTransaction extends Model
 
         if ($request->input('pending_bulking')) {
             VoucherTransactionQuery::whereAvailableForBulking($builder);
-        }
-
-        if ($fund) {
-            $builder->whereHas('voucher', static function (Builder $builder) use ($fund) {
-                $builder->where('fund_id', $fund->id);
-            });
         }
 
         return $builder;
@@ -383,22 +365,28 @@ class VoucherTransaction extends Model
      */
     private static function exportTransform(Builder $builder, array $fields)
     {
-        return $builder->with([
-            'voucher.fund',
-            'provider',
-        ])->get()->map(static function(
-            VoucherTransaction $transaction
-        ) use ($fields) {
-            return array_only([
-                "id" => $transaction->id,
-                "amount" => currency_format($transaction->amount),
-                "date_transaction" => format_datetime_locale($transaction->created_at),
-                "date_payment" => format_datetime_locale($transaction->payment_time),
-                "fund_name" => $transaction->voucher->fund->name,
-                "provider"  => $transaction->provider->name,
-                "state" => $transaction->state,
-            ], $fields);
-        })->values();
+        $fieldLabels = array_pluck(array_merge(
+            VoucherTransactionsSponsorExport::getExportFields(),
+            VoucherTransactionsProviderFieldedExport::getExportFields()
+        ), 'name', 'key');
+
+        $data = $builder->with('voucher.fund', 'provider')->get();
+
+        $data = $data->map(fn(VoucherTransaction $transaction) => array_only([
+            'id' => $transaction->id,
+            'amount' => currency_format($transaction->amount),
+            'date_transaction' => format_datetime_locale($transaction->created_at),
+            'date_payment' => format_datetime_locale($transaction->payment_time),
+            'fund_name' => $transaction->voucher->fund->name,
+            'provider' => $transaction->provider->name,
+            'state' => trans("export.voucher_transactions.state-values.$transaction->state"),
+        ], $fields))->values();
+
+        return $data->map(function($item) use ($fieldLabels) {
+            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
+                $fieldLabels[$key] => $item[$key],
+            ]), []);
+        });
     }
 
     /**
@@ -420,19 +408,15 @@ class VoucherTransaction extends Model
      * @param Request $request
      * @param Organization $organization
      * @param array $fields
-     * @param Fund|null $fund
-     * @param Organization|null $provider
      * @return Builder[]|Collection|\Illuminate\Support\Collection
      */
     public static function exportSponsor(
         Request $request,
         Organization $organization,
-        array $fields,
-        Fund $fund = null,
-        Organization $provider = null
+        array $fields
     ) {
-        return self::exportTransform(VoucherTransactionQuery::order(
-            self::searchSponsor($request, $organization, $fund, $provider),
+        return static::exportTransform(VoucherTransactionQuery::order(
+            static::searchSponsor($request, $organization),
             $request->get('order_by'),
             $request->get('order_dir')
         ), $fields);

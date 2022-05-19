@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Transactions;
+namespace App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Fund;

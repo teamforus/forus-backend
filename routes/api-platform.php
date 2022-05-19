@@ -725,13 +725,13 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->get(
-        'organizations/{organization}/sponsor/transactions/export',
-        "Api\Platform\Organizations\Sponsor\TransactionsController@export"
+        'organizations/{organization}/sponsor/transactions/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@getExportFields"
     );
 
     $router->get(
-        'organizations/{organization}/sponsor/transactions/export-fields',
-        "Api\Platform\Organizations\Sponsor\TransactionsController@getExportFields"
+        'organizations/{organization}/sponsor/transactions/export',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
 
     $router->resource(

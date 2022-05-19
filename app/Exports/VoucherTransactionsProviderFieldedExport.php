@@ -7,7 +7,7 @@ use App\Models\VoucherTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
-class VoucherTransactionsSponsorExport extends BaseFieldedExport
+class VoucherTransactionsProviderFieldedExport extends BaseFieldedExport
 {
     protected Collection $data;
 
@@ -29,8 +29,8 @@ class VoucherTransactionsSponsorExport extends BaseFieldedExport
      * @param Organization $organization
      * @param array $fields
      */
-    public function __construct(Request $request, Organization $organization, array $fields)
+    public function __construct(Request $request, Organization $organization, array $fields = [])
     {
-        $this->data = VoucherTransaction::exportSponsor($request, $organization, $fields);
+        $this->data = VoucherTransaction::exportProvider($request, $organization, $fields);
     }
 }

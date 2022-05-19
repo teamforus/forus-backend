@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
-use App\Exports\VoucherTransactionsProviderExport;
+use App\Exports\VoucherTransactionsProviderFieldedExport;
 use App\Exports\VoucherTransactionsSponsorExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsExportFieldsRequest;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Provider\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
-use App\Models\Voucher;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
 use App\Scopes\Builders\VoucherTransactionQuery;
@@ -25,7 +23,7 @@ class TransactionsController extends Controller
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function index(
         IndexTransactionsRequest $request,
@@ -48,26 +46,25 @@ class TransactionsController extends Controller
     }
 
     /**
-     * @param IndexTransactionsExportFieldsRequest $request
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function getExportFields(
-        IndexTransactionsExportFieldsRequest $request,
         Organization $organization
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
+        $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        return ExportFieldArrResource::collection(VoucherTransactionsProviderExport::getExportFields());
+        return ExportFieldArrResource::collection(VoucherTransactionsProviderFieldedExport::getExportFields());
     }
 
     /**
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
@@ -82,7 +79,7 @@ class TransactionsController extends Controller
         $type = $request->input('data_format', 'xls');
 
         return resolve('excel')->download(
-            new VoucherTransactionsProviderExport($request, $organization, $fields),
+            new VoucherTransactionsProviderFieldedExport($request, $organization, $fields),
             date('Y-m-d H:i:s') . '.' . $type
         );
     }
