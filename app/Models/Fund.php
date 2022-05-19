@@ -591,6 +591,7 @@ class Fund extends Model
     {
         return [
             self::TYPE_SUBSIDIES => 'Acties',
+            self::TYPE_EXTERNAL => 'External',
             self::TYPE_BUDGET => 'Budget',
         ][$this->type] ?? $this->type;
     }

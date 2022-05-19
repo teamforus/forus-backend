@@ -94,9 +94,10 @@ class StoreBatchVoucherRequest extends BaseFormRequest
 
     /**
      * @param Fund $fund
-     * @return string|string[]
+     * @return string[]
      */
-    private function productIdRule(Fund $fund) {
+    private function productIdRule(Fund $fund): array
+    {
         $vouchers = $this->input('vouchers');
 
         return [
