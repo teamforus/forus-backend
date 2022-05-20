@@ -109,17 +109,6 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->resource(
-        'organizations.funds.transactions',
-        "Api\Platform\Organizations\Funds\TransactionsController", [
-        'only' => [
-            'index', 'show',
-        ],
-        'parameters' => [
-            'transactions' => 'transaction_address',
-        ]
-    ]);
-
-    $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
         'only' => [
@@ -692,6 +681,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/provider/transactions/export-fields',
+        "Api\Platform\Organizations\Provider\TransactionsController@getExportFields"
+    );
 
     $router->get(
         'organizations/{organization}/provider/transactions/export',
@@ -721,6 +714,11 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->get(
+        'organizations/{organization}/sponsor/transactions/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@getExportFields"
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/transactions/export',
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
@@ -731,6 +729,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     )->parameters([
         'transactions' => 'transaction_address',
     ])->only('index', 'show', 'store');
+
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@export"
+    );
 
     $router->resource(
         'organizations/{organization}/sponsor/transaction-bulks',

@@ -3,25 +3,25 @@
 namespace App\Exports;
 
 use App\Models\Organization;
-use App\Models\VoucherTransaction;
+use App\Models\VoucherTransactionBulk;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
-class VoucherTransactionsSponsorExport extends BaseFieldedExport
+/**
+ * Class VoucherTransactionsSponsorExport
+ * @package App\Exports
+ */
+class VoucherTransactionBulksExport extends BaseFieldedExport
 {
-    protected Collection $data;
-
     /**
      * @var array|string[]
      */
-    protected static array $exportFields = [
+    public static array $exportFields = [
         'id' => 'ID',
-        'amount' => 'Bedrag',
-        'date_transaction' => 'Datum transactie',
-        'date_payment' => 'Datum betaling',
-        'fund_name' => 'Fonds',
-        'provider' => 'Aanbieder',
         'state' => 'Status',
+        'amount' => 'Bedrag',
+        'quantity' => 'Aantal',
+        'bank_name' => 'Bank naam',
+        'date_transaction' => 'Datum transactie',
     ];
 
     /**
@@ -31,6 +31,6 @@ class VoucherTransactionsSponsorExport extends BaseFieldedExport
      */
     public function __construct(Request $request, Organization $organization, array $fields)
     {
-        $this->data = VoucherTransaction::exportSponsor($request, $organization, $fields);
+        $this->data = VoucherTransactionBulk::export($request, $organization, $fields);
     }
 }
