@@ -666,8 +666,6 @@ class VoucherTransactionBulk extends Model
             'bank_connections.organization_id' => $organization->id,
         ]);
 
-        $query->withCount('voucher_transactions');
-
         if ($request->has('from')) {
             $query->where('created_at', '>=', Carbon::createFromFormat(
                 'Y-m-d',

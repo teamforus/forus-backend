@@ -25,7 +25,7 @@ class TransactionsController extends Controller
      */
     public function index(
         IndexVoucherTransactionsRequest $request,
-        VoucherToken                    $voucherToken
+        VoucherToken $voucherToken
     ): AnonymousResourceCollection {
         $this->authorize('show', $voucherToken->voucher);
         $this->authorize('viewAny', [VoucherTransaction::class, $voucherToken]);
