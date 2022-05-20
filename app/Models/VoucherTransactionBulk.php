@@ -662,9 +662,9 @@ class VoucherTransactionBulk extends Model
      */
     public static function search(Request $request, Organization $organization): Builder
     {
-        $query = self::whereHas('bank_connection', fn(Builder $builder) => [
+        $query = self::whereHas('bank_connection', fn(Builder $q) => $q->where([
             'bank_connections.organization_id' => $organization->id,
-        ]);
+        ]));
 
         if ($request->has('from')) {
             $query->where('created_at', '>=', Carbon::createFromFormat(
