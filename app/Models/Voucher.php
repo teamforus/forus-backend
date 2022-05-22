@@ -708,7 +708,7 @@ class Voucher extends Model
      */
     public function getInUseAttribute(): bool
     {
-        return $this->usedCount(false) > 0;
+        return $this->usedCount('all', false) > 0;
     }
 
     /**
@@ -1220,16 +1220,17 @@ class Voucher extends Model
     }
 
     /**
+     * @param string $scope
      * @param bool $fresh
      * @return int
      */
-    public function usedCount(bool $fresh = true): int
+    public function usedCount(string $scope = 'all', bool $fresh = true): int
     {
-        if ($fresh) {
-            return $this->transactions()->count() + $this->product_vouchers()->count();
-        }
+        $transactions_count = $fresh ? $this->transactions()->count() : $this->transactions->count();
+        $reservations_count = $fresh ? $this->product_vouchers()->count() : $this->product_vouchers->count();
 
-        return $this->transactions->count() + $this->product_vouchers->count();
+        return (in_array($scope, ['all', 'transactions']) ? $transactions_count : 0) +
+            (in_array($scope, ['all', 'reservations']) ? $reservations_count : 0);
     }
 
     /**
