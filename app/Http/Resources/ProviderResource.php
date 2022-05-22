@@ -11,9 +11,8 @@ use App\Models\Organization;
  */
 class ProviderResource extends BaseJsonResource
 {
-
     public const LOAD = [
-        'business_type',
+        'business_type.translations',
         'offices.photo.presets',
         'offices.organization.business_type.translations',
         'offices.organization.logo.presets',
@@ -31,12 +30,13 @@ class ProviderResource extends BaseJsonResource
     {
         $organization = $this->resource;
 
-        return array_merge($organization->only([
+        return array_merge($organization->only(array_filter(array_merge([
             'id', 'name', 'description', 'business_type_id',
-            $organization->email_public ? 'email': '',
-            $organization->phone_public ? 'phone': '',
-            $organization->website_public ? 'website': ''
-        ]), [
+        ], [
+            $organization->email_public ? 'email': null,
+            $organization->phone_public ? 'phone': null,
+            $organization->website_public ? 'website': null,
+        ]))), [
             'description_html' => $organization->description_html,
             'business_type' => new BusinessTypeResource($organization->business_type),
             'offices' => OfficeResource::collection($organization->offices),
