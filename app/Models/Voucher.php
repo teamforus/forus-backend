@@ -67,7 +67,7 @@ use ZipArchive;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
- * @property-read bool $has_product_vouchers
+ * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
@@ -251,6 +251,7 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function identity(): BelongsTo
     {
@@ -259,6 +260,7 @@ class Voucher extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function backoffice_logs(): HasMany
     {
@@ -467,6 +469,7 @@ class Voucher extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getStateLocaleAttribute(): string
     {
@@ -690,16 +693,16 @@ class Voucher extends Model
      */
     public function getHasTransactionsAttribute(): bool
     {
-        return $this->transactions->count() > 0;
+        return $this->usedCount('transactions', false);
     }
 
     /**
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getHasProductVouchersAttribute(): bool
+    public function getHasReservationsAttribute(): bool
     {
-        return $this->product_vouchers->count() > 0;
+        return $this->usedCount('reservations', false);
     }
 
     /**
@@ -708,7 +711,7 @@ class Voucher extends Model
      */
     public function getInUseAttribute(): bool
     {
-        return $this->usedCount('all', false) > 0;
+        return $this->has_transactions || $this->has_reservations;
     }
 
     /**

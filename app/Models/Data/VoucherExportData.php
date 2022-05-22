@@ -66,8 +66,8 @@ class VoucherExportData
         ], [
             'granted' => $assigned ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
-            'has_transactions' => $this->voucher->usedCount('transactions', false) > 0 ? 'Ja': 'Nee',
-            'has_reservations' => $this->voucher->usedCount('reservations', false) > 0 ? 'Ja': 'Nee',
+            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
+            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
             'in_use_date' => format_date_locale($this->getFirstUsageDate()),
             'product_name' => $this->voucher->product ? $this->voucher->product->name : null,
         ], $bsnData, [
