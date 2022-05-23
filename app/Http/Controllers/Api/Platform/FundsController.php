@@ -121,7 +121,7 @@ class FundsController extends Controller
      */
     public function apply(Fund $fund): ?VoucherResource
     {
-        $this->authorize('apply', $fund);
+        $this->authorize('apply', [$fund, 'apply']);
 
         $identity_address = auth_address();
         $voucher = $fund->makeVoucher($identity_address);

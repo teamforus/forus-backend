@@ -192,6 +192,7 @@ class ProductReservation extends Model
 
     /**
      * @return BelongsTo
+     * @noinspection PhpUnused
      */
     public function fund_provider_product(): BelongsTo
     {
@@ -200,6 +201,7 @@ class ProductReservation extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getStateLocaleAttribute(): string
     {
@@ -230,20 +232,18 @@ class ProductReservation extends Model
     public function makeTransaction(?Employee $employee = null): VoucherTransaction
     {
         $fund_end_date = $this->voucher->fund->end_date;
+        $transfer_at = $fund_end_date->isPast() ? $fund_end_date : now()->closest(
+            now()->addDays(self::TRANSACTION_DELAY),
+            $fund_end_date
+        );
 
-        /** @var VoucherTransaction $transaction */
-        $transaction = $this->product_voucher->transactions()->create(array_merge([
-            'state' => 'pending',
+        $transaction = $this->product_voucher->makeTransaction(array_merge([
             'amount' => $this->amount,
-            'address' => token_generator()->address(),
             'product_id' => $this->product_id,
-            'transfer_at' => $fund_end_date->isPast() ? $fund_end_date : now()->closest(
-                now()->addDays(self::TRANSACTION_DELAY),
-                $fund_end_date
-            ),
+            'transfer_at' => $transfer_at,
             'employee_id' => $employee ? $employee->id : null,
-            'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
             'organization_id' => $this->product->organization_id,
+            'fund_provider_product_id' => $this->fund_provider_product_id ?? null,
         ]));
 
         VoucherTransactionCreated::dispatch($transaction);

@@ -13,8 +13,8 @@ use App\Scopes\Builders\ProductQuery;
 class ProductIdInStockRule extends BaseRule
 {
     protected $messageTransPrefix = 'validation.product_voucher.';
-    private $fund;
-    private $otherReservations;
+    private Fund $fund;
+    private ?array $otherReservations;
 
     /**
      * Create a new rule instance.
@@ -46,10 +46,6 @@ class ProductIdInStockRule extends BaseRule
 
         if ($product->sold_out) {
             return $this->rejectTrans('product_sold_out');
-        }
-
-        if ($product->price_type !== $product::PRICE_TYPE_REGULAR) {
-            return $this->rejectTrans('product_price_type_not_regular');
         }
 
         if ($product->sponsor_organization_id &&
