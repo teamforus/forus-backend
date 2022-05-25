@@ -27,7 +27,7 @@ class ImplementationResource extends JsonResource
         }
 
         return array_merge($implementation->only([
-            'id', 'key', 'name', 'url_webshop', 'informal_communication',
+            'id', 'key', 'name', 'url_webshop', 'informal_communication', 'organization_id',
         ]), [
             'has_provider_terms_page' => $this->hasTermsPage($implementation->page_provider),
         ]);

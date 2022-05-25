@@ -2,62 +2,35 @@
 
 namespace App\Exports;
 
-use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Collection;
 
-/**
- * Class VoucherTransactionsSponsorExport
- * @package App\Exports
- */
-class VoucherTransactionsSponsorExport implements FromCollection, WithHeadings
+class VoucherTransactionsSponsorExport extends BaseFieldedExport
 {
-    protected $request;
-    protected $data;
-    protected $headers;
+    protected Collection $data;
 
     /**
-     * VoucherTransactionsSponsorExport constructor.
+     * @var array|string[]
+     */
+    protected static array $exportFields = [
+        'id' => 'ID',
+        'amount' => 'Bedrag',
+        'date_transaction' => 'Datum transactie',
+        'date_payment' => 'Datum betaling',
+        'fund_name' => 'Fonds',
+        'provider' => 'Aanbieder',
+        'state' => 'Status',
+    ];
+
+    /**
      * @param Request $request
      * @param Organization $organization
-     * @param Fund|null $fund
-     * @param Organization|null $provider
+     * @param array $fields
      */
-    public function __construct(
-        Request $request,
-        Organization $organization,
-        Fund $fund = null,
-        Organization $provider = null
-    ) {
-        $this->request = $request;
-
-        $this->data = VoucherTransaction::exportSponsor(
-            $this->request,
-            $organization,
-            $fund,
-            $provider
-        );
-    }
-
-    /**
-    * @return Collection
-    */
-    public function collection(): Collection
+    public function __construct(Request $request, Organization $organization, array $fields)
     {
-        return $this->data;
-    }
-
-    /**
-     * @return array
-     */
-    public function headings(): array
-    {
-        return $this->data->map(function ($row) {
-            return array_keys($row);
-        })->flatten()->unique()->toArray();
+        $this->data = VoucherTransaction::exportSponsor($request, $organization, $fields);
     }
 }

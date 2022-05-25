@@ -21,7 +21,7 @@ class FundRequestRecordResource extends BaseJsonResource
     {
         $recordTypes = collect(record_types_cached())->keyBy('key');
 
-        return array_merge($this->resource->toArray(), array_merge([
+        return array_merge($this->resource->only([
             'id', 'state', 'record_type_key', 'fund_request_id', 'employee_id', 'value',
         ]), [
             'record_type' => $recordTypes[$this->resource->record_type_key],

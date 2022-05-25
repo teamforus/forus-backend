@@ -39,7 +39,7 @@ class IndexTransactionsRequest extends BaseFormRequest
             'to'                => 'date:Y-m-d',
             'amount_min'        => 'numeric|min:0',
             'amount_max'        => 'numeric|min:0',
-            'per_page'          => 'numeric|between:1,100',
+            'per_page'          => $this->perPageRule(),
         ];
     }
 }
