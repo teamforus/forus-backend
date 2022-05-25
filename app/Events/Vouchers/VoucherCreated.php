@@ -10,8 +10,8 @@ use App\Models\Voucher;
  */
 class VoucherCreated extends BaseVoucherEvent
 {
-    protected $notifyRequesterAdded;
-    protected $notifyRequesterReserved;
+    protected bool $notifyRequesterAdded;
+    protected bool $notifyRequesterReserved;
 
     /**
      * Create a new event instance.

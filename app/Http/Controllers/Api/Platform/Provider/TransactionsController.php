@@ -26,13 +26,11 @@ class TransactionsController extends Controller
         $this->authorize('viewAny', VoucherTransaction::class);
 
         $query = VoucherTransaction::search($request);
-        $query->whereHas('employee', static function(Builder $builder) use ($request) {
-            $builder->where(array_merge($request->only([
-                'organization_id'
-            ]), [
-                'identity_address' => $request->auth_address()
-            ]));
-        });
+        $query->whereHas('employee', fn(Builder $builder) => $builder->where(array_merge([
+            'identity_address' => $request->auth_address(),
+        ], $request->input('organization_id') ? [
+            'organization_id' => $request->input('organization_id'),
+        ]: [])))->where('initiator', VoucherTransaction::INITIATOR_PROVIDER);
 
         return ProviderVoucherTransactionEmployeeResource::queryCollection(VoucherTransactionQuery::order(
             $query,

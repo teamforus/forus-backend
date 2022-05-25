@@ -550,6 +550,7 @@ class Implementation extends Model
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 'pages' => $implementation->getPages(),
+                'has_productboard_integration' => !empty(resolve('productboard')),
             ]);
         }
 
