@@ -424,10 +424,16 @@ class Product extends Model
             ProductQuery::queryDeepFilter($query, $q);
         }
 
-        return $query->orderBy(
-            array_get($options, 'order_by', 'created_at'),
-            array_get($options, 'order_by_dir', 'desc')
-        )->orderBy('price_type')->orderBy('price_discount')->orderBy('created_at', 'desc');
+        $orderBy = array_get($options, 'order_by', 'created_at');
+        if ($orderBy === 'most_selling') {
+            $query->withCount('voucher_transactions');
+            $orderBy = 'voucher_transactions_count';
+        }
+
+        return $query->orderBy($orderBy, array_get($options, 'order_by_dir', 'desc'))
+            ->orderBy('price_type')
+            ->orderBy('price_discount')
+            ->orderBy('created_at', 'desc');
     }
 
     /**
