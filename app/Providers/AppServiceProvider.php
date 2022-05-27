@@ -17,6 +17,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
+use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
 use App\Models\NotificationTemplate;
 use App\Models\PhysicalCard;
@@ -62,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
         'implementation'                => Implementation::class,
         'product_category'              => ProductCategory::class,
         'implementation_page'           => ImplementationPage::class,
+        'implementation_block'          => ImplementationBlock::class,
         'product_reservation'           => ProductReservation::class,
         'physical_card_request'         => PhysicalCardRequest::class,
         'fund_request_record'           => FundRequestRecord::class,

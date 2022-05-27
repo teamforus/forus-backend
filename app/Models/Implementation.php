@@ -731,9 +731,40 @@ class Implementation extends Model
                 'external' => 0,
                 'external_url' => null,
             ] : []))->appendMedia($pageData['media_uid'] ?? [], 'cms_media');
+
+            $this->syncBlocks($pageModel, $pageData);
         }
 
         return $this;
+    }
+
+    /**
+     * @param $pageModel
+     * @param $pageData
+     * @return void
+     */
+    private function syncBlocks($pageModel, $pageData): void
+    {
+        // remove blocks not listed in the array
+        $block_ids = array_filter(array_pluck($pageData['blocks'], 'id'));
+        $pageModel->blocks()->whereNotIn('id', $block_ids)->delete();
+
+        if (isset($pageData['blocks'])) {
+            foreach ($pageData['blocks'] as $block) {
+                $blockData = array_only($block, [
+                    'media_uid', 'label', 'title', 'description', 'button_enabled', 'button_text', 'button_link'
+                ]);
+
+                /** @var ImplementationBLock $block */
+                if (isset($block['id'])) {
+                    $block = tap($pageModel->blocks()->find($block['id']))->update($blockData);
+                } else {
+                    $block = $pageModel->blocks()->create($blockData);
+                }
+
+                $block->appendMedia($blockData['media_uid'] ?? [], 'cms_media');
+            }
+        }
     }
 
     /**
@@ -747,7 +778,7 @@ class Implementation extends Model
             foreach (ImplementationPage::TYPES as $page_type) {
                 $localPages = $this->pages->filter(function(ImplementationPage $page) use ($page_type) {
                     return $page->page_type === $page_type && (
-                        $page->external ? $page->external_url : $page->content);
+                        ($page->external ? $page->external_url : $page->content) || $page->blocks->count());
                 });
 
                 if ($localPages->count() > 0) {
@@ -761,6 +792,11 @@ class Implementation extends Model
             return array_merge($page->only('page_type', 'external', 'content_alignment'), [
                 'content_html' => $page->external ? '' : $page->content_html,
                 'external_url' => $page->external ? $page->external_url : '',
+                'blocks'       => $page->blocks->map(function (ImplementationBlock $block) {
+                    $block['media'] = new MediaResource($block->photo);
+                    unset($block->photo);
+                    return $block;
+                })
             ]);
         })->keyBy('page_type');
     }

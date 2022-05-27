@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Services\MediaService\Traits\HasMedia;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\ImplementationPage
@@ -19,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $content_html
  * @property-read \App\Models\Implementation $implementation
+ * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
@@ -39,6 +42,7 @@ class ImplementationPage extends Model
 {
     use HasMedia;
 
+    const TYPE_HOME = 'home';
     const TYPE_EXPLANATION = 'explanation';
     const TYPE_PROVIDER = 'provider';
     const TYPE_PRIVACY = 'privacy';
@@ -55,6 +59,7 @@ class ImplementationPage extends Model
         self::TYPE_TERMS_AND_CONDITIONS,
         self::TYPE_FOOTER_CONTACT_DETAILS,
         self::TYPE_FOOTER_OPENING_TIMES,
+        self::TYPE_HOME,
     ];
 
     const TYPES_INTERNAL = [
@@ -93,5 +98,13 @@ class ImplementationPage extends Model
     public function getContentHtmlAttribute(): string
     {
         return resolve('markdown.converter')->convert($this->content ?: '')->getContent();
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(ImplementationBlock::class);
     }
 }

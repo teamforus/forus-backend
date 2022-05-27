@@ -32,6 +32,7 @@ class CmsMediaConfig extends MediaImageConfig
 
         $this->addPreset(new MediaImagePreset('thumbnail', 100, 100, false, 90));
         $this->addPreset((new MediaImagePreset('public', 1000, 1000, true))->setUpscale(false));
+        $this->addPreset(new MediaImagePreset('large', 1500, 1500, false));
         $this->addPreset(MediaImagePreset::createOriginal('original'));
     }
 }

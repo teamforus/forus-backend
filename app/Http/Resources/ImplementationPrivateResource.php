@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Implementation;
+use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
 
 /**
@@ -39,7 +40,13 @@ class ImplementationPrivateResource extends BaseJsonResource
             'pages' => array_reduce(ImplementationPage::TYPES, function(
                 array $pages, string $type
             ) use ($implementation) {
-                $page = $implementation->pages->where('page_type', $type)->first();
+                /** @var ImplementationPage $page */
+                $page = $implementation->pages()->with('blocks')->where('page_type', $type)->get()->first();
+                $page?->blocks->map(function (ImplementationBlock $block) {
+                    $block['media'] = new MediaResource($block->photo);
+                    unset($block->photo);
+                    return $block;
+                });
 
                 return array_merge($pages, [$type => $page ? $this->pageDetails($page) : null]);
             }, []),
@@ -98,8 +105,8 @@ class ImplementationPrivateResource extends BaseJsonResource
      */
     protected function pageDetails(?ImplementationPage $page): ?array
     {
-        return $page ? $page->only([
-            'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url',
-        ]) : null;
+        return $page?->only([
+            'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url', 'blocks'
+        ]);
     }
 }
