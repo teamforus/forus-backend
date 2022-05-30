@@ -368,6 +368,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'transactions' => 'demo_token',
     ])->only('store', 'show', 'update');
 
+    $router->post(
+        'organizations/{organization}/implementations/validate-blocks',
+        "Api\Platform\Organizations\ImplementationsController@storeBlocksValidate");
+
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/cms',
         "Api\Platform\Organizations\ImplementationsController@updateCms");

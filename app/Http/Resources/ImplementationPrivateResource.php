@@ -44,6 +44,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 $page = $implementation->pages()->with('blocks')->where('page_type', $type)->get()->first();
                 $page?->blocks->map(function (ImplementationBlock $block) {
                     $block['media'] = new MediaResource($block->photo);
+                    $block['description_html'] = $block->description_html;
                     unset($block->photo);
                     return $block;
                 });

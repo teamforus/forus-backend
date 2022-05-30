@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Platform\Organizations;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\IndexImplementationRequest;
+use App\Http\Requests\Api\Platform\Organizations\Implementations\StoreImplementationBlocksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationCmsRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationDigiDRequest;
 use App\Http\Requests\Api\Platform\Organizations\Implementations\UpdateImplementationEmailBrandingRequest;
@@ -13,6 +14,7 @@ use App\Models\Implementation;
 use App\Models\Organization;
 use App\Scopes\Builders\ImplementationQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\JsonResponse;
 
 class ImplementationsController extends Controller
 {
@@ -156,5 +158,21 @@ class ImplementationsController extends Controller
         return new ImplementationPrivateResource($implementation->updateModel($request->only([
             'email_color', 'email_signature',
         ]))->attachMediaByUid($request->input('email_logo_uid')));
+    }
+
+    /**
+     * @param StoreImplementationBlocksRequest $request
+     * @param Organization $organization
+     * @return JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function storeBlocksValidate(
+        StoreImplementationBlocksRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->authorize('show', $organization);
+
+        return response()->json([], $request->isAuthenticated() ? 200 : 403);
     }
 }

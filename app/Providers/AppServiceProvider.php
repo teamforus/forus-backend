@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Media\CmsMediaConfig;
 use App\Media\FundLogoMediaConfig;
 use App\Media\ImplementationBannerMediaConfig;
+use App\Media\ImplementationBlockMediaConfig;
 use App\Media\ImplementationMailLogoMediaConfig;
 use App\Media\OfficePhotoMediaConfig;
 use App\Media\ProductPhotoMediaConfig;
@@ -93,6 +94,7 @@ class AppServiceProvider extends ServiceProvider
             new RecordCategoryIconMediaConfig(),
             new ImplementationBannerMediaConfig(),
             new ImplementationMailLogoMediaConfig(),
+            new ImplementationBlockMediaConfig(),
         ]);
 
         FundProvider::observe(FundProviderObserver::class);

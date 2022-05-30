@@ -730,7 +730,7 @@ class Implementation extends Model
             ]), in_array($pageType, ImplementationPage::TYPES_INTERNAL) ? [
                 'external' => 0,
                 'external_url' => null,
-            ] : []))->appendMedia($pageData['media_uid'] ?? [], 'cms_media');
+            ] : []))->appendMedia($pageData['media_uid'] ?? [], 'implementation_block_media');
 
             $this->syncBlocks($pageModel, $pageData);
         }
@@ -762,7 +762,7 @@ class Implementation extends Model
                     $block = $pageModel->blocks()->create($blockData);
                 }
 
-                $block->appendMedia($blockData['media_uid'] ?? [], 'cms_media');
+                $block->appendMedia($blockData['media_uid'] ?? [], 'implementation_block_media');
             }
         }
     }
@@ -794,6 +794,7 @@ class Implementation extends Model
                 'external_url' => $page->external ? $page->external_url : '',
                 'blocks'       => $page->blocks->map(function (ImplementationBlock $block) {
                     $block['media'] = new MediaResource($block->photo);
+                    $block['description_html'] = $block->description_html;
                     unset($block->photo);
                     return $block;
                 })

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('implementation_page_id');
             $table->string('label', 200)->nullable();
             $table->string('title', 200);
-            $table->string('description', 2500);
+            $table->string('description', 5000);
             $table->boolean('button_enabled');
             $table->string('button_text', 200)->nullable();
             $table->string('button_link', 200)->nullable();
