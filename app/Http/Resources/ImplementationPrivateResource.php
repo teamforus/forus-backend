@@ -41,7 +41,8 @@ class ImplementationPrivateResource extends BaseJsonResource
                 array $pages, string $type
             ) use ($implementation) {
                 /** @var ImplementationPage $page */
-                $page = $implementation->pages()->with('blocks')->where('page_type', $type)->get()->first();
+                $page = $implementation->pages()->where('page_type', $type)->get()->first();
+
                 $page?->blocks->map(function (ImplementationBlock $block) {
                     $block['media'] = new MediaResource($block->photo);
                     $block['description_html'] = $block->description_html;
@@ -52,7 +53,7 @@ class ImplementationPrivateResource extends BaseJsonResource
                 return array_merge($pages, [$type => $page ? $this->pageDetails($page) : null]);
             }, []),
             'page_types' => ImplementationPage::TYPES,
-            'page_types_internal' => ImplementationPage::TYPES_INTERNAL
+            'page_types_internal' => ImplementationPage::TYPES_INTERNAL,
         ]);
 
         return array_merge(
@@ -106,8 +107,13 @@ class ImplementationPrivateResource extends BaseJsonResource
      */
     protected function pageDetails(?ImplementationPage $page): ?array
     {
-        return $page?->only([
-            'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url', 'blocks'
+        $block_list = ImplementationPage::getBlockListByPageKey($page->page_type);
+
+        return array_merge($page?->only([
+            'id', 'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url', 'blocks'
+        ]), [
+            'text_blocks'     => $block_list[ImplementationBlock::TYPE_TEXT],
+            'overview_blocks' => $block_list[ImplementationBlock::TYPE_OVERVIEW],
         ]);
     }
 }

@@ -26,6 +26,14 @@ class ImplementationBlock extends Model
 {
     use HasFactory, HasMedia, HasMarkdownDescription;
 
+    const TYPE_TEXT = 'text';
+    const TYPE_OVERVIEW = 'overview';
+
+    const TYPES = [
+        self::TYPE_TEXT,
+        self::TYPE_OVERVIEW,
+    ];
+
     /**
      * @var string[]
      */

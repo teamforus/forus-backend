@@ -752,7 +752,8 @@ class Implementation extends Model
         if (isset($pageData['blocks'])) {
             foreach ($pageData['blocks'] as $block) {
                 $blockData = array_only($block, [
-                    'media_uid', 'label', 'title', 'description', 'button_enabled', 'button_text', 'button_link'
+                    'type', 'key', 'media_uid', 'label', 'title', 'description',
+                    'button_enabled', 'button_text', 'button_link'
                 ]);
 
                 /** @var ImplementationBLock $block */

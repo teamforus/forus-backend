@@ -43,6 +43,9 @@ class ImplementationPage extends Model
     use HasMedia;
 
     const TYPE_HOME = 'home';
+    const TYPE_PRODUCTS = 'products';
+    const TYPE_PROVIDERS = 'providers';
+    const TYPE_FUNDS = 'funds';
     const TYPE_EXPLANATION = 'explanation';
     const TYPE_PROVIDER = 'provider';
     const TYPE_PRIVACY = 'privacy';
@@ -60,12 +63,34 @@ class ImplementationPage extends Model
         self::TYPE_FOOTER_CONTACT_DETAILS,
         self::TYPE_FOOTER_OPENING_TIMES,
         self::TYPE_HOME,
+        self::TYPE_PRODUCTS,
+        self::TYPE_PROVIDERS,
+        self::TYPE_FUNDS,
     ];
 
     const TYPES_INTERNAL = [
         self::TYPE_PROVIDER,
         self::TYPE_FOOTER_OPENING_TIMES,
         self::TYPE_FOOTER_CONTACT_DETAILS,
+    ];
+
+    const PAGE_BLOCK_LIST = [
+        self::TYPE_HOME => [
+            ImplementationBlock::TYPE_OVERVIEW  => ['funds_block'],
+            ImplementationBlock::TYPE_TEXT => ['below_header'],
+        ],
+        self::TYPE_PRODUCTS => [
+            ImplementationBlock::TYPE_OVERVIEW => [],
+            ImplementationBlock::TYPE_TEXT => ['above_product_list'],
+        ],
+        self::TYPE_PROVIDERS => [
+            ImplementationBlock::TYPE_OVERVIEW => [],
+            ImplementationBlock::TYPE_TEXT => ['above_provider_list'],
+        ],
+        self::TYPE_FUNDS => [
+            ImplementationBlock::TYPE_OVERVIEW => [],
+            ImplementationBlock::TYPE_TEXT => ['above_fund_list'],
+        ],
     ];
 
     /**
@@ -106,5 +131,19 @@ class ImplementationPage extends Model
     public function blocks(): HasMany
     {
         return $this->hasMany(ImplementationBlock::class);
+    }
+
+    /**
+     * @param $page_key
+     * @return \string[][]
+     */
+    public static function getBlockListByPageKey($page_key): array
+    {
+        $no_blocks = [
+            ImplementationBlock::TYPE_TEXT => [],
+            ImplementationBlock::TYPE_OVERVIEW => []
+        ];
+
+        return array_key_exists($page_key, self::PAGE_BLOCK_LIST) ? self::PAGE_BLOCK_LIST[$page_key] : $no_blocks;
     }
 }

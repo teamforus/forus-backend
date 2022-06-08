@@ -53,9 +53,9 @@ class UpdateImplementationCmsRequest extends FormRequest
 
             'pages.*.blocks.*' => 'nullable|array',
             'pages.*.blocks.*.label' => 'nullable|string|max:200',
-            'pages.*.blocks.*.title' => 'required|string|max:200',
+            'pages.*.blocks.*.title' => 'required_if:type,overview|string|max:200',
             'pages.*.blocks.*.description' => 'required|string|max:5000',
-            'pages.*.blocks.*.button_enabled' => 'required|boolean',
+            'pages.*.blocks.*.button_enabled' => 'required_if:type,overview|boolean',
             'pages.*.blocks.*.button_text' => 'nullable|required_if:blocks.*.button_enabled,1|string|max:200',
             'pages.*.blocks.*.button_link' => 'nullable|required_if:blocks.*.button_enabled,1|string|max:200',
         ];
