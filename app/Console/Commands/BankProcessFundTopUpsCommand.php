@@ -87,6 +87,10 @@ class BankProcessFundTopUpsCommand extends Command
         $bankConnection = $fund->organization->bank_connection_active;
         $payments = $bankConnection->fetchPayments();
 
+        if (!$payments) {
+            return;
+        }
+
         foreach ($fund->top_ups as $topUp) {
             foreach ($payments as $payment) {
                 $this->processPayment($payment, $topUp, $bankConnection);
