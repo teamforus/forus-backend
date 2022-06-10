@@ -122,6 +122,7 @@ use ZipArchive;
  * @method static Builder|Voucher whereState($value)
  * @method static Builder|Voucher whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property-read \Illuminate\Support\Carbon|null $in_use_date
  */
 class Voucher extends Model
 {
@@ -564,6 +565,7 @@ class Voucher extends Model
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder
+     * @throws \Exception
      */
     public static function searchSponsorQuery(
         BaseFormRequest $request,
@@ -655,6 +657,12 @@ class Voucher extends Model
             }, '<=', $count_per_identity_max);
         }
 
+        if (count(array_filter($request->only(['in_use_from', 'in_use_to']))) > 0) {
+            $query = VoucherQuery::whereInUseDateQuery(
+                $request->only(['in_use_from', 'in_use_to']), $query
+            );
+        }
+
         return $query->orderBy(
             $request->input('sort_by', 'created_at'),
             $request->input('sort_order', 'asc')
@@ -666,6 +674,7 @@ class Voucher extends Model
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder[]|Collection
+     * @throws \Exception
      */
     public static function searchSponsor(
         BaseFormRequest $request,
@@ -709,6 +718,25 @@ class Voucher extends Model
     public function getInUseAttribute(): bool
     {
         return $this->usedCount(false) > 0;
+    }
+
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     */
+    public function getInUseDateAttribute(): ?Carbon
+    {
+        $voucher = $this;
+        $productVouchers = $voucher->product_vouchers->whereNull('product_reservation_id');
+        $reservationVouchers = $voucher->product_vouchers->whereNotNull('product_reservation_id');
+        $reservationTransactions = $reservationVouchers->pluck('transactions')->flatten();
+
+        $models = $voucher->transactions->merge($reservationTransactions)->merge($productVouchers);
+
+        if ($models->count() > 0) {
+            return $models->sortBy('created_at')->first()->created_at;
+        }
+
+        return null;
     }
 
     /**

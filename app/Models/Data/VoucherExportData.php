@@ -66,7 +66,7 @@ class VoucherExportData
         ], [
             'granted' => $assigned ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
-            'in_use_date' => format_date_locale($this->getFirstUsageDate()),
+            'in_use_date' => format_date_locale($this->voucher->in_use_date),
             'product_name' => $this->voucher->product ? $this->voucher->product->name : null,
         ], $bsnData, [
             'identity_email' => $assigned ? ($identity ? $identity->primary_email->email : null) : null,
@@ -82,24 +82,5 @@ class VoucherExportData
         ]);
 
         return array_only($export_data, array_merge(['name'], $this->fields));
-    }
-
-    /**
-     * @return Carbon|null
-     */
-    public function getFirstUsageDate(): ?Carbon
-    {
-        $voucher = $this->voucher;
-        $productVouchers = $voucher->product_vouchers->whereNull('product_reservation_id');
-        $reservationVouchers = $voucher->product_vouchers->whereNotNull('product_reservation_id');
-        $reservationTransactions = $reservationVouchers->pluck('transactions')->flatten();
-
-        $models = $voucher->transactions->merge($reservationTransactions)->merge($productVouchers);
-
-        if ($models->count() > 0) {
-            return $models->sortBy('created_at')[0]->created_at;
-        }
-
-        return null;
     }
 }

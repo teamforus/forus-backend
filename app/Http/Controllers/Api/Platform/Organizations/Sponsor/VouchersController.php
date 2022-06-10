@@ -39,6 +39,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function index(

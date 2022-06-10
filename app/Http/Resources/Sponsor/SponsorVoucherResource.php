@@ -53,6 +53,7 @@ class SponsorVoucherResource extends JsonResource
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
+            'in_use_date' => format_date_locale($voucher->in_use_date),
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
             'expire_at' => $voucher->updated_at->format('Y-m-d'),
             'created_at_locale' => format_datetime_locale($voucher->created_at),
