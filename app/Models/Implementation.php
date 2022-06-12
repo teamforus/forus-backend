@@ -714,61 +714,6 @@ class Implementation extends Model
     }
 
     /**
-     * @param array $pages
-     * @return $this
-     */
-    public function updatePages(array $pages): self
-    {
-        foreach ($pages as $pageType => $pageData) {
-            /** @var ImplementationPage $pageModel */
-            $pageModel = $this->pages()->firstOrCreate([
-                'page_type' => $pageType,
-            ]);
-
-            $pageModel->updateModel(array_merge(array_only($pageData, [
-                'content', 'content_alignment', 'external', 'external_url',
-            ]), in_array($pageType, ImplementationPage::TYPES_INTERNAL) ? [
-                'external' => 0,
-                'external_url' => null,
-            ] : []))->appendMedia($pageData['media_uid'] ?? [], 'implementation_block_media');
-
-            $this->syncBlocks($pageModel, $pageData);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param $pageModel
-     * @param $pageData
-     * @return void
-     */
-    private function syncBlocks($pageModel, $pageData): void
-    {
-        // remove blocks not listed in the array
-        $block_ids = array_filter(array_pluck($pageData['blocks'], 'id'));
-        $pageModel->blocks()->whereNotIn('id', $block_ids)->delete();
-
-        if (isset($pageData['blocks'])) {
-            foreach ($pageData['blocks'] as $block) {
-                $blockData = array_only($block, [
-                    'type', 'key', 'media_uid', 'label', 'title', 'description',
-                    'button_enabled', 'button_text', 'button_link'
-                ]);
-
-                /** @var ImplementationBLock $block */
-                if (isset($block['id'])) {
-                    $block = tap($pageModel->blocks()->find($block['id']))->update($blockData);
-                } else {
-                    $block = $pageModel->blocks()->create($blockData);
-                }
-
-                $block->appendMedia($blockData['media_uid'] ?? [], 'implementation_block_media');
-            }
-        }
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Collection|Collection
      */
     private function getPages()

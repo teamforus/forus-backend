@@ -27,18 +27,18 @@ class ImplementationBlock extends Model
     use HasFactory, HasMedia, HasMarkdownDescription;
 
     const TYPE_TEXT = 'text';
-    const TYPE_OVERVIEW = 'overview';
+    const TYPE_DETAILED = 'detailed';
 
     const TYPES = [
         self::TYPE_TEXT,
-        self::TYPE_OVERVIEW,
+        self::TYPE_DETAILED,
     ];
 
     /**
      * @var string[]
      */
     protected $fillable = [
-        'implementation_page_id', 'label', 'title', 'description',
+        'implementation_page_id', 'key', 'type', 'label', 'title', 'description',
         'button_enabled', 'button_text', 'button_link'
     ];
 

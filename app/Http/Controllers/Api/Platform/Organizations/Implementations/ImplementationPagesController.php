@@ -8,7 +8,6 @@ use App\Http\Resources\ImplementationPageResource;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Organization;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ImplementationPagesController extends Controller
@@ -16,19 +15,18 @@ class ImplementationPagesController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Request $request
      * @param Organization $organization
      * @param Implementation $implementation
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        Request $request,
         Organization $organization,
         Implementation $implementation
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [Implementation::class, $organization]);
+        $this->authorize('view', [$implementation, $organization]);
 
         return ImplementationPageResource::collection($implementation->pages);
     }
@@ -73,8 +71,9 @@ class ImplementationPagesController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
 
-        $implementationPage->update($request->only('content', 'content_alignment', 'external' , 'external_url'));
-        $implementationPage->appendMedia($request->input('media_uid') ?? [], 'implementation_block_media');
+        $implementationPage->change($request->only(
+            'content', 'content_alignment', 'external', 'external_url', 'media_uid', 'blocks', 'page_type'
+        ));
 
         return new ImplementationPageResource($implementationPage);
     }

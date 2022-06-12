@@ -39,7 +39,7 @@ class ImplementationPageResource extends BaseJsonResource
             'blocks'            => $blocks,
             'implementation'    => $implementationPage->implementation->only('id', 'name', 'url_webshop'),
             'text_blocks'       => $block_list[ImplementationBlock::TYPE_TEXT],
-            'overview_blocks'   => $block_list[ImplementationBlock::TYPE_OVERVIEW],
+            'detailed_blocks'   => $block_list[ImplementationBlock::TYPE_DETAILED],
         ]);
     }
 }

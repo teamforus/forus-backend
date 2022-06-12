@@ -76,19 +76,19 @@ class ImplementationPage extends Model
 
     const PAGE_BLOCK_LIST = [
         self::TYPE_HOME => [
-            ImplementationBlock::TYPE_OVERVIEW  => ['funds_block'],
+            ImplementationBlock::TYPE_DETAILED  => ['funds_block'],
             ImplementationBlock::TYPE_TEXT => ['below_header'],
         ],
         self::TYPE_PRODUCTS => [
-            ImplementationBlock::TYPE_OVERVIEW => [],
+            ImplementationBlock::TYPE_DETAILED => [],
             ImplementationBlock::TYPE_TEXT => ['above_product_list'],
         ],
         self::TYPE_PROVIDERS => [
-            ImplementationBlock::TYPE_OVERVIEW => [],
+            ImplementationBlock::TYPE_DETAILED => [],
             ImplementationBlock::TYPE_TEXT => ['above_provider_list'],
         ],
         self::TYPE_FUNDS => [
-            ImplementationBlock::TYPE_OVERVIEW => [],
+            ImplementationBlock::TYPE_DETAILED => [],
             ImplementationBlock::TYPE_TEXT => ['above_fund_list'],
         ],
     ];
@@ -141,9 +141,55 @@ class ImplementationPage extends Model
     {
         $no_blocks = [
             ImplementationBlock::TYPE_TEXT => [],
-            ImplementationBlock::TYPE_OVERVIEW => []
+            ImplementationBlock::TYPE_DETAILED => []
         ];
 
         return array_key_exists($page_key, self::PAGE_BLOCK_LIST) ? self::PAGE_BLOCK_LIST[$page_key] : $no_blocks;
+    }
+
+    /**
+     * @param $pageData
+     * @return void
+     */
+    private function syncBlocks($pageData): void
+    {
+        // remove blocks not listed in the array
+        $block_ids = array_filter(array_pluck($pageData['blocks'], 'id'));
+        $this->blocks()->whereNotIn('id', $block_ids)->delete();
+
+        if (isset($pageData['blocks'])) {
+            foreach ($pageData['blocks'] as $block) {
+                $blockData = array_only($block, [
+                    'type', 'key', 'media_uid', 'label', 'title', 'description',
+                    'button_enabled', 'button_text', 'button_link'
+                ]);
+
+                /** @var ImplementationBLock $block */
+                if ($block = $this->blocks()->find($block['id'] ?? null)) {
+                    $block = tap($block)->update($blockData);
+                } else {
+                    $block = $this->blocks()->create($blockData);
+                }
+
+                $block->appendMedia($blockData['media_uid'] ?? [], 'implementation_block_media');
+            }
+        }
+    }
+
+    /**
+     * @param array $data
+     * @return $this
+     */
+    public function change(array $data) : self {
+        $this->updateModel(array_merge(array_only($data, [
+            'content', 'content_alignment', 'external', 'external_url',
+        ]), in_array($data['page_type'], ImplementationPage::TYPES_INTERNAL) ? [
+            'external' => 0,
+            'external_url' => null,
+        ] : []))->appendMedia($data['media_uid'] ?? [], 'implementation_block_media');
+
+        $this->syncBlocks($data);
+
+        return $this;
     }
 }

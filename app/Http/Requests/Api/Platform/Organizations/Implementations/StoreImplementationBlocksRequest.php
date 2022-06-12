@@ -34,7 +34,7 @@ class StoreImplementationBlocksRequest extends BaseFormRequest
             'blocks.*.label' => 'nullable|string|max:200',
             'blocks.*.title' => 'required|string|max:200',
             'blocks.*.description' => 'required|string|max:5000',
-            'blocks.*.button_enabled' => 'required|boolean',
+            'blocks.*.button_enabled' => 'nullable|boolean',
             'blocks.*.button_text' => 'nullable|required_if:blocks.*.button_enabled,1|string|max:200',
             'blocks.*.button_link' => 'nullable|required_if:blocks.*.button_enabled,1|string|max:200',
         ];

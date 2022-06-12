@@ -113,7 +113,7 @@ class ImplementationPrivateResource extends BaseJsonResource
             'id', 'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url', 'blocks'
         ]), [
             'text_blocks'     => $block_list[ImplementationBlock::TYPE_TEXT],
-            'overview_blocks' => $block_list[ImplementationBlock::TYPE_OVERVIEW],
+            'detailed_blocks' => $block_list[ImplementationBlock::TYPE_DETAILED],
         ]);
     }
 }
