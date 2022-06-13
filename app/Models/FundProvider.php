@@ -506,13 +506,6 @@ class FundProvider extends Model
     {
         $originalState = $this->state;
 
-        if ($state === self::STATE_ACCEPTED && $this->isPending() && $this->fund->isTypeBudget()) {
-            $this->update([
-                'allow_budget' => true,
-                'allow_products' => true,
-            ]);
-        }
-
         $approvedBefore = $this->isApproved();
         $this->update(compact('state'));
         $approvedAfter = $this->isApproved();
