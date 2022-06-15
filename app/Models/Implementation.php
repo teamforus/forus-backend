@@ -738,10 +738,9 @@ class Implementation extends Model
             return array_merge($page->only('page_type', 'external', 'content_alignment'), [
                 'content_html' => $page->external ? '' : $page->content_html,
                 'external_url' => $page->external ? $page->external_url : '',
-                'blocks'       => $page->blocks->map(function (ImplementationBlock $block) {
+                'blocks'       => $page?->blocks->map(function (ImplementationBlock $block) {
                     $block['media'] = new MediaResource($block->photo);
                     $block['description_html'] = $block->description_html;
-                    unset($block->photo);
                     return $block;
                 })
             ]);

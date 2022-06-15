@@ -393,10 +393,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\ImplementationsController"
     )->only('index', 'show');
 
-    $router->get(
-        'organizations/{organization}/implementations/{implementation}/implementation-pages/{implementation_page}',
-        "Api\Platform\Organizations\ImplementationsController@getImplementationPage");
-
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/implementation-pages',
         "Api\Platform\Organizations\Implementations\ImplementationPagesController"

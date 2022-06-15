@@ -30,26 +30,26 @@ class StoreImplementationBlocksRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'blocks.*' => 'nullable|array',
-            'blocks.*.label' => 'nullable|string|max:200',
-            'blocks.*.title' => 'required|string|max:200',
-            'blocks.*.description' => 'required|string|max:5000',
-            'blocks.*.button_enabled' => 'nullable|boolean',
-            'blocks.*.button_text' => 'nullable|required_if:blocks.*.button_enabled,1|string|max:200',
-            'blocks.*.button_link' => 'nullable|required_if:blocks.*.button_enabled,1|string|max:200',
+            'blocks.*'              => 'nullable|array',
+            'blocks.*.label'        => 'nullable|string|max:200',
+            'blocks.*.title'        => 'nullable|required_if:blocks.*.type,"detailed"|string|max:200',
+            'blocks.*.description'  => 'nullable|required_if:blocks.*.type,"detailed"|string|max:5000',
+            'blocks.*.button_enabled'   => 'nullable|boolean',
+            'blocks.*.button_text'      => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
+            'blocks.*.button_link'      => 'nullable|required_if:blocks.*.button_enabled,true|string|max:200',
         ];
     }
 
     /**
      * @return array
      */
-    public function attributes(): array
+    public function messages(): array
     {
-        $keys = array_dot(array_keys($this->rules()));
-
-        return array_combine($keys, array_map(static function($key) {
-            $value = last(explode('.', $key));
-            return trans_fb("validation.attributes." . $value, $value);
-        }, $keys));
+        return [
+            'blocks.*.title.required_if' => 'Het title veld is verplicht',
+            'blocks.*.description.required_if' => 'Het description veld is verplicht',
+            'blocks.*.button_text.required_if' => 'Het button text veld is verplicht',
+            'blocks.*.button_link.required_if' => 'Het button link veld is verplicht',
+        ];
     }
 }

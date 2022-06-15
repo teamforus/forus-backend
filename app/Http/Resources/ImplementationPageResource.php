@@ -27,7 +27,6 @@ class ImplementationPageResource extends BaseJsonResource
         $blocks = $implementationPage?->blocks->map(function (ImplementationBlock $block) {
             $block['media'] = new MediaResource($block->photo);
             $block['description_html'] = $block->description_html;
-            unset($block->photo);
             return $block;
         });
         $block_list = ImplementationPage::getBlockListByPageKey($implementationPage->page_type);
