@@ -59,4 +59,16 @@ class EmployeeQuery
             });
         });
     }
+
+    /**
+     * @param Builder|Relation $query
+     * @param string $q
+     * @return Builder|Relation
+     */
+    public static function whereQueryFilter($query, string $q)
+    {
+        return $query->whereIn(
+            'identity_address', identity_repo()->identityAddressesByEmailSearch($q)
+        );
+    }
 }
