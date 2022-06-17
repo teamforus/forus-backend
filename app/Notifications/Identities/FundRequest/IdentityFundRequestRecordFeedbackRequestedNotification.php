@@ -3,14 +3,10 @@
 namespace App\Notifications\Identities\FundRequest;
 
 use App\Mail\Funds\FundRequestClarifications\FundRequestClarificationRequestedMail;
-use App\Models\FundRequest;
+use App\Models\FundRequestRecord;
 use App\Services\Forus\Identity\Models\Identity;
 
-/**
- * Class IdentityFundRequestFeedbackRequestedNotification
- * @package App\Notifications\Identities\FundRequest
- */
-class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundRequestNotification
+class IdentityFundRequestRecordFeedbackRequestedNotification extends BaseIdentityFundRequestRecordNotification
 {
     protected static $key = 'notifications_identities.fund_request_feedback_requested';
 
@@ -19,8 +15,9 @@ class IdentityFundRequestFeedbackRequestedNotification extends BaseIdentityFundR
      */
     public function toMail(Identity $identity): void
     {
-        /** @var FundRequest $fundRequest */
-        $fundRequest = $this->eventLog->loggable;
+        /** @var FundRequestRecord $fundRequestRecord */
+        $fundRequestRecord = $this->eventLog->loggable;
+        $fundRequest = $fundRequestRecord->fund_request;
 
         $linkClarification = $fundRequest->fund->urlWebshop(sprintf(
             'funds/%s/requests/%s/clarifications/%s',
