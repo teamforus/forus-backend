@@ -137,12 +137,11 @@ class BulkPayment
 
         foreach ($this->payments as $payment) {
             $amount = $payment->getAmount();
-            $creditorName = preg_replace('/[^A-Za-z\d\-]/', '', $payment->getCreditor()->getName());
 
             $creditTransferTransactionInformation = $paymentInformation->addChild('CdtTrfTxInf');
             $creditTransferTransactionInformation->addChild('PmtId')->addChild('EndToEndId', $payment->getPaymentId());
             $creditTransferTransactionInformation->addChild('Amt')->addChild('InstdAmt', $amount->getAmount())->addAttribute('Ccy', $amount->getCurrency());
-            $creditTransferTransactionInformation->addChild('Cdtr')->addChild('Nm', $creditorName);
+            $creditTransferTransactionInformation->addChild('Cdtr')->addChild('Nm', htmlspecialchars($payment->getCreditor()->getName()));
             $creditTransferTransactionInformation->addChild('CdtrAcct')->addChild('Id')->addChild('IBAN', $payment->getCreditor()->getIban());
             $creditTransferTransactionInformation->addChild('RmtInf')->addChild('Ustrd', $payment->getDescription());
         }
