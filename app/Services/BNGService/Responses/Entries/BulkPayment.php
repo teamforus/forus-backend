@@ -119,7 +119,7 @@ class BulkPayment
         $groupHeader->addChild('CreDtTm', date('Y-m-d\TH:i:s'));
         $groupHeader->addChild('NbOfTxs', count($this->payments));
         $groupHeader->addChild('CtrlSum', $this->getPaymentsAmountSum());
-        $groupHeader->addChild('InitgPty')->addChild('Nm', $this->paymentInitiator->getName());
+        $groupHeader->addChild('InitgPty')->addChild('Nm', htmlspecialchars($this->paymentInitiator->getName()));
 
 
         $paymentInformation = $customerCreditTransferInitiation->addChild('PmtInf');
@@ -131,7 +131,7 @@ class BulkPayment
         $paymentInformation->addChild('PmtTpInf')->addChild('SvcLvl')->addChild('Cd', 'SEPA');
         $paymentInformation->addChild('ReqdExctnDt', $this->getRequestedExecutionDate());
 
-        $paymentInformation->addChild('Dbtr')->addChild('Nm', $this->debtor->getName());
+        $paymentInformation->addChild('Dbtr')->addChild('Nm', htmlspecialchars($this->debtor->getName()));
         $paymentInformation->addChild('DbtrAcct')->addChild('Id')->addChild('IBAN', $this->debtor->getIban());
         $paymentInformation->addChild('DbtrAgt')->addChild('FinInstnId');
 
@@ -143,7 +143,7 @@ class BulkPayment
             $creditTransferTransactionInformation->addChild('Amt')->addChild('InstdAmt', $amount->getAmount())->addAttribute('Ccy', $amount->getCurrency());
             $creditTransferTransactionInformation->addChild('Cdtr')->addChild('Nm', htmlspecialchars($payment->getCreditor()->getName()));
             $creditTransferTransactionInformation->addChild('CdtrAcct')->addChild('Id')->addChild('IBAN', $payment->getCreditor()->getIban());
-            $creditTransferTransactionInformation->addChild('RmtInf')->addChild('Ustrd', $payment->getDescription());
+            $creditTransferTransactionInformation->addChild('RmtInf')->addChild('Ustrd', htmlspecialchars($payment->getDescription()));
         }
 
         return $document->asXML();
