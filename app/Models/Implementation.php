@@ -526,14 +526,14 @@ class Implementation extends Model
             $implementation = self::active();
             $banner = $implementation->banner;
 
-            $request = BaseFormRequest::createFromBase(request());
-            $announcement = Announcement::search($request)->get();
+            $request = BaseFormRequest::createFromGlobals();
+            $announcements = Announcement::search($request)->get();
 
             $config = array_merge($config, [
                 'media' => self::getPlatformMediaConfig(),
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
-                'announcements' => AnnouncementResource::collection($announcement)->toArray(request()),
+                'announcements' => AnnouncementResource::collection($announcements)->toArray($request),
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',

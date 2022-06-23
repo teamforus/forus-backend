@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $type
  * @property string $title
  * @property string|null $description
- * @property \Illuminate\Support\Carbon $expire_at
+ * @property \Illuminate\Support\Carbon|null $expire_at
  * @property string $scope
  * @property bool $active
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -35,6 +36,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Announcement extends Model
 {
+    use HasMarkdownDescription;
+
     /**
      * @var string[]
      */
@@ -46,17 +49,15 @@ class Announcement extends Model
      * @var string[]
      */
     protected $casts = [
-        'expire_at' => 'datetime',
         'active' => 'boolean',
     ];
 
     /**
-     * @return string
+     * @var string[]
      */
-    public function getDescriptionHtmlAttribute(): string
-    {
-        return resolve('markdown.converter')->convert($this->description ?: '')->getContent();
-    }
+    protected $dates = [
+        'expire_at',
+    ];
 
     /**
      * @param BaseFormRequest $request
@@ -65,15 +66,15 @@ class Announcement extends Model
      */
     public static function search(BaseFormRequest $request, $query = null): Builder
     {
-        $query = $query ?: self::query();
-        $scope = $request->client_type();
+        $query = $query ?: static::query();
 
-        $query->where('scope', $scope);
-
-        $query->where('active', true)
-            ->where('expire_at', '>', now());
-
-        return $query->orderByDesc('created_at');
+        return $query
+            ->where('active', true)
+            ->whereIn('scope', [$request->client_type(), 'dashboards'])
+            ->where(function (Builder $builder) {
+                $builder->whereNull('expire_at');
+                $builder->orWhere('expire_at', '>', now());
+            })
+            ->orderByDesc('created_at');
     }
-
 }

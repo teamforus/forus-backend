@@ -33,11 +33,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $backoffice_key
  * @property string|null $backoffice_certificate
  * @property bool $backoffice_fallback
+ * @property string|null $backoffice_ineligible_policy
+ * @property string|null $backoffice_ineligible_redirect_url
  * @property string|null $iconnect_target_binding
  * @property string|null $iconnect_api_oin
  * @property string|null $iconnect_base_url
- * @property string|null $backoffice_ineligible_policy
- * @property string|null $backoffice_ineligible_redirect_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Fund $fund

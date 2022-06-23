@@ -15,12 +15,12 @@ return new class extends Migration
     {
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['warning', 'danger', 'success', 'primary', 'default']);
-            $table->string('title');
+            $table->enum('type', ['warning', 'danger', 'success', 'primary', 'default'])->default('danger');
+            $table->string('title', 2000);
             $table->text('description')->nullable();
-            $table->dateTime('expire_at');
-            $table->enum('scope', ['dashboards', 'sponsor', 'provider', 'validator']);
-            $table->boolean('active')->default(0);
+            $table->dateTime('expire_at')->nullable();
+            $table->enum('scope', ['dashboards', 'sponsor', 'provider', 'validator'])->default('sponsor');;
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }

@@ -6,9 +6,7 @@ use App\Models\Announcement;
 use Throwable;
 
 /**
- * Class AnnouncementResource
  * @property Announcement $resource
- * @package App\Http\Resources
  */
 class AnnouncementResource extends BaseJsonResource
 {
@@ -22,7 +20,7 @@ class AnnouncementResource extends BaseJsonResource
     public function toArray($request): array
     {
         return $this->resource->only([
-            'id', 'type', 'title', 'description', 'expire_at', 'scope', 'active', 'description_html',
+            'id', 'type', 'title', 'description_html',
         ]);
     }
 }
