@@ -16,7 +16,6 @@ use App\Console\Commands\MediaRegenerateCommand;
 use App\Console\Commands\NotifyAboutReachedNotificationFundAmount;
 use App\Console\Commands\NotifyAboutVoucherExpireCommand;
 use App\Console\Commands\Digests\SendAllDigestsCommand;
-use App\Console\Commands\Digests\SendDigestMailCommand;
 use App\Console\Commands\Digests\SendProviderFundsDigestCommand;
 use App\Console\Commands\Digests\SendProviderProductsDigestCommand;
 use App\Console\Commands\Digests\SendRequesterDigestCommand;
@@ -26,6 +25,7 @@ use App\Console\Commands\PhysicalCards\MigratePhysicalCardsCommand;
 use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
+use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -88,6 +88,7 @@ class Kernel extends ConsoleKernel
 
         // physical cards
         MigratePhysicalCardsCommand::class,
+        SendBackofficeLogsCommand::class,
     ];
 
     /**
@@ -142,6 +143,7 @@ class Kernel extends ConsoleKernel
 
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
+        $this->scheduleBackoffice($schedule);
         $this->scheduleQueue($schedule);
     }
 
@@ -237,6 +239,16 @@ class Kernel extends ConsoleKernel
             $schedule->command('queue:work --queue=' . env('NOTIFICATIONS_QUEUE_NAME', 'push_notifications'))
                 ->everyMinute()->withoutOverlapping()->onOneServer();
         }
+    }
+
+    /**
+     * @param Schedule $schedule
+     * @return void
+     */
+    private function scheduleBackoffice(Schedule $schedule)
+    {
+        $schedule->command('funds.backoffice:send-logs')
+            ->everyMinute()->withoutOverlapping()->onOneServer();
     }
 
     /**
