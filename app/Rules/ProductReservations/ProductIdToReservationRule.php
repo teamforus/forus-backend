@@ -85,6 +85,6 @@ class ProductIdToReservationRule extends BaseRule
         return ProductQuery::approvedForFundsAndActiveFilter(
             Product::query(),
             $voucher->fund_id
-        )->where('id', $product->id)->exists();
+        )->where('id', $product->id)->exists() || $this->reject('Product not available.');
     }
 }
