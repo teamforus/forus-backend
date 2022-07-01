@@ -41,6 +41,8 @@ class SearchProductsRequest extends FormRequest
             'order_by'              => 'nullable|in:name,created_at,price_min,price_max,price',
             'order_by_dir'          => 'nullable|in:asc,desc',
             'simplified'            => 'nullable|bool',
+            'postcode'              => 'nullable|string|max:100',
+            'distance'              => 'nullable|integer|max:1000',
         ];
     }
 }

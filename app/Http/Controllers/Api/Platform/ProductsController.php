@@ -26,8 +26,8 @@ class ProductsController extends Controller
         $this->authorize('viewAnyPublic', Product::class);
 
         $query = Product::search($request->only([
-            'fund_type', 'product_category_id', 'fund_id', 'price_type',
-            'unlimited_stock', 'organization_id', 'q', 'order_by', 'order_by_dir',
+            'fund_type', 'product_category_id', 'fund_id', 'price_type', 'unlimited_stock',
+            'organization_id', 'q', 'order_by', 'order_by_dir', 'postcode', 'distance',
         ]));
 
         if (!$request->input('show_all', false)) {

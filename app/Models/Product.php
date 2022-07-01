@@ -6,6 +6,7 @@ use App\Events\Products\ProductSoldOut;
 use App\Http\Requests\BaseFormRequest;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\OfficeQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\TrashedQuery;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -422,6 +423,18 @@ class Product extends Model
 
         if ($q = array_get($options, 'q')) {
             ProductQuery::queryDeepFilter($query, $q);
+        }
+
+        if (array_get($options, 'postcode') && array_get($options, 'distance')) {
+            $geocodeService = resolve('geocode_api');
+            $location = $geocodeService->getLocation(array_get($options, 'postcode') . ', Netherlands');
+
+            $query->whereHas('organization.offices', static function (Builder $builder) use ($location, $options) {
+                OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
+                    'lat' => $location ? $location['lat'] : 0,
+                    'lng' => $location ? $location['lng'] : 0,
+                ]);
+            });
         }
 
         return $query->orderBy(
