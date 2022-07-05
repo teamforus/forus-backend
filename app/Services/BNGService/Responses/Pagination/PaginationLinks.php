@@ -31,7 +31,7 @@ class PaginationLinks extends Value
      */
     public function getFirst(): ?PaginationLink
     {
-        return $this->data['first'] ? new PaginationLink($this->data['first']) : null;
+        return $this->data['first'] ? new PaginationLink(new ResponseData($this->data['first'])) : null;
     }
 
     /**
@@ -40,7 +40,7 @@ class PaginationLinks extends Value
      */
     public function getLast(): ?PaginationLink
     {
-        return $this->data['last'] ? new PaginationLink($this->data['last']) : null;
+        return $this->data['last'] ? new PaginationLink(new ResponseData($this->data['last'])) : null;
     }
 
     /**
@@ -49,7 +49,7 @@ class PaginationLinks extends Value
      */
     public function getNext(): ?PaginationLink
     {
-        return $this->data['next'] ? new PaginationLink($this->data['next']) : null;
+        return $this->data['next'] ? new PaginationLink(new ResponseData($this->data['next'])) : null;
     }
 
     /**
@@ -58,6 +58,6 @@ class PaginationLinks extends Value
      */
     public function getPrevious(): ?PaginationLink
     {
-        return $this->data['previous'] ? new PaginationLink($this->data['previous']) : null;
+        return $this->data['previous'] ? new PaginationLink(new ResponseData($this->data['previous'])) : null;
     }
 }

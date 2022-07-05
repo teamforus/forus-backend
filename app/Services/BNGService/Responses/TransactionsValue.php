@@ -2,6 +2,7 @@
 
 namespace App\Services\BNGService\Responses;
 
+use App\Services\BNGService\Data\ResponseData;
 use App\Services\BNGService\Responses\Pagination\PaginationLinks;
 
 class TransactionsValue extends Value
@@ -22,7 +23,7 @@ class TransactionsValue extends Value
         $transactions = $this->getTransactions()['booked'] ?? null;
 
         return is_array($transactions) ? array_map(function(array $transaction) {
-            return new TransactionValue($transaction);
+            return new TransactionValue(new ResponseData($transaction));
         }, $transactions) : null;
     }
 
@@ -31,7 +32,7 @@ class TransactionsValue extends Value
      */
     public function getTransactionsLinks(): PaginationLinks
     {
-        return new PaginationLinks($this->getTransactions()['_links']);
+        return new PaginationLinks(new ResponseData($this->getTransactions()['_links']));
     }
 
     /**
