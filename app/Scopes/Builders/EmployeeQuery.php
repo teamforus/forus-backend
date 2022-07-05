@@ -65,7 +65,7 @@ class EmployeeQuery
      * @param string $q
      * @return Builder|Relation
      */
-    public static function whereQueryFilter($query, string $q)
+    public static function whereQueryFilter(Relation|Builder $query, string $q): Relation|Builder
     {
         return $query->whereIn(
             'identity_address', identity_repo()->identityAddressesByEmailSearch($q)
