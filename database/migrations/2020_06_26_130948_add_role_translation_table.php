@@ -3,7 +3,11 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Database\Seeders\RolesTableSeeder;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddRoleTranslationTable extends Migration
 {
     /**
@@ -25,7 +29,7 @@ class AddRoleTranslationTable extends Migration
             )->references('id')->on('roles')->onDelete('cascade');
         });
 
-        resolve(RoleTranslationTableSeeder::class)->run();
+        (new RolesTableSeeder())->run();
     }
 
     /**

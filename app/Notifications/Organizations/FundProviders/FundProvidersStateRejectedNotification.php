@@ -2,8 +2,6 @@
 
 namespace App\Notifications\Organizations\FundProviders;
 
-use App\Mail\Funds\ProviderApprovedMail;
-use App\Mail\Funds\ProviderStateAcceptedMail;
 use App\Mail\Funds\ProviderStateRejectedMail;
 use App\Models\FundProvider;
 use App\Services\Forus\Identity\Models\Identity;
@@ -13,8 +11,8 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class FundProvidersStateRejectedNotification extends BaseFundProvidersNotification
 {
-    protected static $key = 'notifications_fund_providers.state_rejected';
-    protected static $pushKey = 'fund_providers.state_rejected';
+    protected static ?string $key = 'notifications_fund_providers.state_rejected';
+    protected static ?string $pushKey = 'fund_providers.state_rejected';
 
     /**
      * @var string[]

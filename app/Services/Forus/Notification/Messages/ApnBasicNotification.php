@@ -17,8 +17,8 @@ class ApnBasicNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    private $title;
-    private $body;
+    private ?string $title;
+    private ?string $body;
 
     /**
      * ApnBasicNotification constructor.

@@ -17,7 +17,7 @@ use App\Models\VoucherTransaction;
  */
 class ProviderVoucherTransactionResource extends BaseJsonResource
 {
-    public static $load = [
+    public const LOAD = [
         'provider',
         'provider.business_type.translations',
         'provider.logo.presets',

@@ -3,17 +3,16 @@
 namespace App\Http\Resources;
 
 use App\Models\ProductCategory;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class ProductCategoryResource
  * @property ProductCategory $resource
  * @package App\Http\Resources
  */
-class ProductCategoryResource extends Resource
+class ProductCategoryResource extends BaseJsonResource
 {
-    public static $load = [
-        'translations'
+    public const LOAD = [
+        'translations',
     ];
 
     /**
@@ -25,7 +24,7 @@ class ProductCategoryResource extends Resource
     public function toArray($request): array
     {
         return $this->resource->only([
-            'id', 'key', 'name', 'service', 'parent_id',
+            'id', 'key', 'name', 'parent_id',
         ]);
     }
 }

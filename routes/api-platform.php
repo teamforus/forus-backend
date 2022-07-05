@@ -109,17 +109,6 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->resource(
-        'organizations.funds.transactions',
-        "Api\Platform\Organizations\Funds\TransactionsController", [
-        'only' => [
-            'index', 'show',
-        ],
-        'parameters' => [
-            'transactions' => 'transaction_address',
-        ]
-    ]);
-
-    $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
         'only' => [
@@ -173,16 +162,9 @@ $router->group([], static function() use ($router) {
         $router->get('/digid/{digid_session_uid}/resolve', 'DigIdController@resolve')->name('digidResolve');
     });
 
-    $router->resource(
-        'provider-invitations',
-        "Api\Platform\FundProviderInvitationsController", [
-        'only' => [
-            'show', 'update'
-        ],
-        'parameters' => [
-            'provider-invitations' => 'fund_provider_invitation_token'
-        ]
-    ]);
+    $router->resource('provider-invitations', "Api\Platform\FundProviderInvitationsController")
+        ->parameter('provider-invitations', 'fund_provider_invitation_token')
+        ->only('show', 'update');
 
     $router->get('/bank-connections/redirect', "Api\Platform\BankConnectionsController@redirect")->name('bankOauthRedirect');
 });
@@ -464,6 +446,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         );
 
         $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/assign-employee',
+            "Api\Platform\Organizations\FundRequestsController@assignEmployee"
+        );
+
+        $router->patch(
+            'organizations/{organization}/fund-requests/{fund_request}/resign-employee',
+            "Api\Platform\Organizations\FundRequestsController@resignEmployee"
+        );
+
+        $router->patch(
             'organizations/{organization}/fund-requests/{fund_request}/approve',
             "Api\Platform\Organizations\FundRequestsController@approve"
         );
@@ -495,29 +487,26 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/records',
-            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController", [
-            'only' => [
-                'index', 'store', 'show',
-            ],
-            'parameters' => [
-                'records' => 'fund_request_record',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestRecordsController"
+        )->parameters([
+            'records' => 'fund_request_record',
+        ])->only( 'index', 'show', 'store');
 
         $router->resource(
             'organizations/{organization}/fund-requests/{fund_request}/clarifications',
-            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController", [
-            'only' => [
-                'index', 'show', 'store'
-            ],
-            'parameters' => [
-                'clarifications' => 'fund_request_clarification',
-            ]
-        ]);
+            "Api\Platform\Organizations\FundRequests\FundRequestClarificationsController"
+        )->parameters([
+            'clarifications' => 'fund_request_clarification',
+        ])->only( 'index', 'store', 'show');
 
         $router->get(
             'organizations/{organization}/fund-requests/export',
             "Api\Platform\Organizations\FundRequestsController@export"
+        );
+
+        $router->get(
+            'organizations/{organization}/fund-requests/{fund_request}/person',
+            "Api\Platform\Organizations\FundRequestsController@person"
         );
 
         $router->resource(
@@ -646,9 +635,9 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\OfficesController"
     )->only('index', 'show', 'store', 'update', 'destroy');
 
-    $router->resource('organizations.bank-connections', "Api\Platform\Organizations\BankConnectionsController")->only([
-        'index', 'show', 'store', 'update',
-    ])->parameter('bank-connections', 'bankConnection');
+    $router->resource('organizations.bank-connections', "Api\Platform\Organizations\BankConnectionsController")
+        ->parameter('bank-connections', 'bankConnection')
+        ->only('index', 'show', 'store', 'update');
 
     $router->resource(
         'organizations.validators',
@@ -685,6 +674,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/provider/transactions/export-fields',
+        "Api\Platform\Organizations\Provider\TransactionsController@getExportFields"
+    );
 
     $router->get(
         'organizations/{organization}/provider/transactions/export',
@@ -714,20 +707,30 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->get(
+        'organizations/{organization}/sponsor/transactions/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@getExportFields"
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/transactions/export',
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
 
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
-        "Api\Platform\Organizations\Sponsor\TransactionsController", [
-            'only' => [
-                'index', 'show'
-            ],
-            'parameters' => [
-                'transactions' => 'transaction_address',
-            ]
-        ]
+        "Api\Platform\Organizations\Sponsor\TransactionsController"
+    )->parameters([
+        'transactions' => 'transaction_address',
+    ])->only('index', 'show', 'store');
+
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@export"
     );
 
     $router->resource(
@@ -821,32 +824,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     );
 
-    $router->get(
-        'prevalidations/export',
-        'Api\Platform\PrevalidationController@export'
-    );
+    $router->get('prevalidations/export','Api\Platform\PrevalidationController@export');
+    $router->post('prevalidations/collection','Api\Platform\PrevalidationController@storeCollection');
+    $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
 
-    $router->post(
-        'prevalidations/collection',
-        'Api\Platform\PrevalidationController@storeCollection'
-    );
+    $router->resource('prevalidations', 'Api\Platform\PrevalidationController')
+        ->parameter('prevalidations', 'prevalidation_uid')
+        ->only('index', 'store', 'destroy');
 
-    $router->post(
-        'prevalidations/collection/hash',
-        'Api\Platform\PrevalidationController@collectionHash'
-    );
-
-    $router->resource(
-        'prevalidations',
-        'Api\Platform\PrevalidationController', [
-            'only' => [
-                'index', 'store', 'destroy',
-            ],
-            'parameters' => [
-                'prevalidations' => 'prevalidation_uid'
-            ]
-        ]
-    );
+    $router->resource('productboard', 'Api\Platform\ProductBoardController')
+        ->only('store');
 
     $router->resource(
         'employees',

@@ -3,6 +3,7 @@
 namespace App\Services\BNGService\Responses\Entries;
 
 use App\Services\BNGService\Data\PaymentInfoData;
+use App\Services\BNGService\Responses\Entries\Payment as PaymentBNG;
 use SimpleXMLElement;
 
 class BulkPayment
@@ -18,7 +19,7 @@ class BulkPayment
     /**
      * @param PaymentInitiator $paymentInitiator
      * @param Account $debtor
-     * @param array $payments
+     * @param PaymentBNG[] $payments
      * @param PaymentInfoData $paymentInfo
      * @param string|null $messageId
      */
@@ -48,6 +49,7 @@ class BulkPayment
 
     /**
      * @return PaymentInitiator
+     * @noinspection PhpUnused
      */
     public function getPaymentInitiator(): PaymentInitiator
     {
@@ -56,6 +58,7 @@ class BulkPayment
 
     /**
      * @return array
+     * @noinspection PhpUnused
      */
     public function getPayments(): array
     {
@@ -116,7 +119,7 @@ class BulkPayment
         $groupHeader->addChild('CreDtTm', date('Y-m-d\TH:i:s'));
         $groupHeader->addChild('NbOfTxs', count($this->payments));
         $groupHeader->addChild('CtrlSum', $this->getPaymentsAmountSum());
-        $groupHeader->addChild('InitgPty')->addChild('Nm', $this->paymentInitiator->getName());
+        $groupHeader->addChild('InitgPty')->addChild('Nm', htmlspecialchars($this->paymentInitiator->getName()));
 
 
         $paymentInformation = $customerCreditTransferInitiation->addChild('PmtInf');
@@ -128,7 +131,7 @@ class BulkPayment
         $paymentInformation->addChild('PmtTpInf')->addChild('SvcLvl')->addChild('Cd', 'SEPA');
         $paymentInformation->addChild('ReqdExctnDt', $this->getRequestedExecutionDate());
 
-        $paymentInformation->addChild('Dbtr')->addChild('Nm', $this->debtor->getName());
+        $paymentInformation->addChild('Dbtr')->addChild('Nm', htmlspecialchars($this->debtor->getName()));
         $paymentInformation->addChild('DbtrAcct')->addChild('Id')->addChild('IBAN', $this->debtor->getIban());
         $paymentInformation->addChild('DbtrAgt')->addChild('FinInstnId');
 
@@ -138,8 +141,9 @@ class BulkPayment
             $creditTransferTransactionInformation = $paymentInformation->addChild('CdtTrfTxInf');
             $creditTransferTransactionInformation->addChild('PmtId')->addChild('EndToEndId', $payment->getPaymentId());
             $creditTransferTransactionInformation->addChild('Amt')->addChild('InstdAmt', $amount->getAmount())->addAttribute('Ccy', $amount->getCurrency());
-            $creditTransferTransactionInformation->addChild('Cdtr')->addChild('Nm', $payment->getCreditor()->getName());
+            $creditTransferTransactionInformation->addChild('Cdtr')->addChild('Nm', htmlspecialchars($payment->getCreditor()->getName()));
             $creditTransferTransactionInformation->addChild('CdtrAcct')->addChild('Id')->addChild('IBAN', $payment->getCreditor()->getIban());
+            $creditTransferTransactionInformation->addChild('RmtInf')->addChild('Ustrd', htmlspecialchars($payment->getDescription()));
         }
 
         return $document->asXML();

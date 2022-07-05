@@ -21,40 +21,41 @@ class OrganizationPolicy
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param Organization $organization
      * @return bool
      */
-    public function show($identity_address, Organization $organization): bool
+    public function show(string $identity_address, Organization $organization): bool
     {
         return $organization->identityPermissions($identity_address)->count() > 0;
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function showFinances($identity_address, Organization $organization): bool
+    public function showFinances(string $identity_address, Organization $organization): bool
     {
         return $organization->identityCan($identity_address, 'view_finances');
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @return mixed
      */
-    public function store($identity_address): bool
+    public function store(string $identity_address): bool
     {
         return !empty($identity_address);
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param Organization $organization
      * @return bool
      */
-    public function update($identity_address, Organization $organization): bool
+    public function update(string $identity_address, Organization $organization): bool
     {
         return $organization->identityCan($identity_address, [
             'manage_organization'
@@ -62,24 +63,38 @@ class OrganizationPolicy
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewExternalFunds($identity_address, Organization $organization): bool
+    public function updateIban(string $identity_address, Organization $organization): bool
+    {
+        return $organization->identityCan($identity_address, [
+            'manage_organization'
+        ]) && $organization->identity_address === $identity_address;
+    }
+
+    /**
+     * @param string $identity_address
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewExternalFunds(string $identity_address, Organization $organization): bool
     {
         return $organization->identityCan($identity_address, 'manage_organization');
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param Organization $organization
      * @param Fund $externalFund
      * @return bool|\Illuminate\Auth\Access\Response
      * @noinspection PhpUnused
      */
     public function updateExternalFunds(
-        $identity_address,
+        string $identity_address,
         Organization $organization,
         Fund $externalFund
     ) {
@@ -104,11 +119,11 @@ class OrganizationPolicy
     }
 
     /**
-     * @param $identity_address
+     * @param string $identity_address
      * @param Organization $organization
      * @return bool
      */
-    public function listSponsorProviders($identity_address, Organization $organization): bool
+    public function listSponsorProviders(string $identity_address, Organization $organization): bool
     {
         return $organization->identityCan($identity_address, [
             'manage_providers', 'view_finances'
@@ -120,6 +135,7 @@ class OrganizationPolicy
      * @param Organization $organization
      * @param Organization $provider
      * @return bool
+     * @noinspection PhpUnused
      */
     public function viewSponsorProvider(
         string $identity_address,

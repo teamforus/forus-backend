@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class FundStatisticsMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.fund_statistics.title';
+    protected string $subjectKey = 'mails/system_mails.fund_statistics.title';
 
     /**
      * @return Mailable

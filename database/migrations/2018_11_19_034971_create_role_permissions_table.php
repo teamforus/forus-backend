@@ -3,7 +3,11 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\RolePermissionsTableSeeder;
 
+/**
+ * @noinspection PhpUnused
+ */
 class CreateRolePermissionsTable extends Migration
 {
     /**
@@ -25,7 +29,7 @@ class CreateRolePermissionsTable extends Migration
             )->references('id')->on('permissions')->onDelete('cascade');
         });
 
-        resolve(RolePermissionsTableSeeder::class)->run();
+        (new RolePermissionsTableSeeder())->run();
     }
 
     /**

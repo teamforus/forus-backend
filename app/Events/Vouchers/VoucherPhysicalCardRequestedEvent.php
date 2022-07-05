@@ -12,7 +12,7 @@ use App\Models\Voucher;
 class VoucherPhysicalCardRequestedEvent extends BaseVoucherEvent
 {
     protected $cardRequest;
-    protected $voucher;
+    protected Voucher $voucher;
     protected $shouldNotifyRequester;
 
     /**

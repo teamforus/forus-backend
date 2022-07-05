@@ -5,6 +5,9 @@ use App\Services\EventLogService\Models\EventLog;
 use App\Models\PhysicalCardRequest;
 use App\Models\Voucher;
 
+/**
+ * @noinspection PhpUnused
+ */
 class MigratePhysicalCardRequestCreationLogs extends Migration
 {
     /**

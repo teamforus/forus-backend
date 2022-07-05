@@ -38,6 +38,6 @@ class DemoTransaction extends Model
      * @var array
      */
     protected $fillable = [
-        'token', 'state'
+        'token', 'state',
     ];
 }

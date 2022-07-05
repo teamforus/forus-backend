@@ -34,7 +34,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
      *
      * @var string
      */
-    protected $migrationSource = "";
+    protected string $migrationSource = "";
 
     /**
      * Use voucher_relations table to find the new voucher.
@@ -188,7 +188,7 @@ class MigratePhysicalCardsCommand extends BaseCommand
             'relation_bsn' => $this->physicalCardRelationSubQuery(),
         ]);
 
-        return PhysicalCard::fromSub($builder, 'physical_cards');
+        return PhysicalCard::query()->fromSub($builder, 'physical_cards');
     }
 
     /**

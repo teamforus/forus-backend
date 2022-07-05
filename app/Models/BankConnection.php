@@ -450,8 +450,8 @@ class BankConnection extends Model
             if ($this->bank->isBunq()) {
                 return $this->fetchConnectionMonetaryAccountsBunq();
             }
-        } catch (Throwable $exception) {
-            logger()->error($exception->getMessage());
+        } catch (Throwable $e) {
+            logger()->error($e->getMessage());
         }
 
         return null;
@@ -581,8 +581,8 @@ class BankConnection extends Model
             $balance = $response->getClosingBookedBalance();
 
             return new BankBalance($balance->getBalanceAmount(), $balance->getBalanceCurrency());
-        } catch (\Exception $exception) {
-            logger()->error($exception->getMessage());
+        } catch (\Throwable $e) {
+            logger()->error($e->getMessage());
         }
 
         return null;
@@ -592,7 +592,7 @@ class BankConnection extends Model
      * @param int $count
      * @return BankPayment[]
      */
-    public function fetchPayments(int $count = 100): array
+    public function fetchPayments(int $count = 100): ?array
     {
         $bank_connection_default_account = $this->bank_connection_default_account;
         $monetary_account_id = $bank_connection_default_account->monetary_account_id ?? null;
@@ -662,8 +662,8 @@ class BankConnection extends Model
                     $transaction->getTransactionDescription()
                 );
             }, $transactions);
-        } catch (Throwable $exception) {
-            logger()->error($exception->getMessage());
+        } catch (Throwable $e) {
+            logger()->error($e->getMessage());
         }
 
         return null;

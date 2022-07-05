@@ -4,10 +4,10 @@ namespace App\Services\BankService\Values;
 
 class BankPayment
 {
-    protected $id;
-    protected $amount;
-    protected $currency;
-    protected $description;
+    protected string $id;
+    protected string $amount;
+    protected string $currency;
+    protected string $description;
 
     /**
      * @param string $id

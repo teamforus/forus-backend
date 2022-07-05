@@ -4,8 +4,8 @@ namespace App\Services\BNGService\Responses\Entries;
 
 class Amount
 {
-    protected $amount;
-    protected $currency;
+    protected string $amount;
+    protected string $currency;
 
     /**
      * @param string $amount

@@ -2,34 +2,26 @@
 
 namespace App\Http\Resources\Sponsor;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\VoucherTransactionNoteResource;
 use App\Models\VoucherTransaction;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class SponsorVoucherTransactionResource
  * @property VoucherTransaction $resource
  * @package App\Http\Resources\Sponsor
  */
-class SponsorVoucherTransactionResource extends Resource
+class SponsorVoucherTransactionResource extends BaseJsonResource
 {
     /**
      * @var string[]
      */
-    protected static $load = [
+    public const LOAD = [
         'voucher.fund:id,name,organization_id',
         'voucher.fund.organization.bank_connection_active.bank_connection_default_account',
         'provider:id,name,iban',
         'notes_sponsor',
     ];
-
-    /**
-     * @return array
-     */
-    public static function load(): array
-    {
-        return self::$load;
-    }
 
     /**
      * Transform the resource into an array.

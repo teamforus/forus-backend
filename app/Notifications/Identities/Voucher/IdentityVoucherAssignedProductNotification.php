@@ -11,9 +11,9 @@ use App\Models\Voucher;
  */
 class IdentityVoucherAssignedProductNotification extends BaseIdentityVoucherNotification
 {
-    protected static $key = 'notifications_identities.identity_voucher_assigned_product';
-    protected static $pushKey = 'voucher.assigned';
-    protected static $scope = null;
+    protected static ?string $key = 'notifications_identities.identity_voucher_assigned_product';
+    protected static ?string $pushKey = 'voucher.assigned';
+    protected static ?string $scope = null;
 
     /**
      * @param Identity $identity

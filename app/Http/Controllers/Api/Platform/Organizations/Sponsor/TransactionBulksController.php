@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Exports\VoucherTransactionBulksExport;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\IndexTransactionBulksRequest;
 use App\Http\Requests\Api\Platform\Organizations\Sponsor\TransactionBulks\UpdateTransactionBulksRequest;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\VoucherTransactionBulkResource;
 use App\Models\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\VoucherTransactionBulk;
-use Illuminate\Database\Eloquent\Builder;
+use App\Scopes\Builders\VoucherTransactionBulkQuery;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 /**
@@ -36,15 +40,13 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
 
-        $query = VoucherTransactionBulk::query();
+        $query = VoucherTransactionBulk::search($request, $organization);
 
-        $query = $query->whereHas('bank_connection', function (Builder $builder) use ($organization) {
-            $builder->where('bank_connections.organization_id', $organization->id);
-        });
-
-        return VoucherTransactionBulkResource::collection($query->with(
-            VoucherTransactionBulkResource::load()
-        )->paginate($request->input('per_page')));
+        return VoucherTransactionBulkResource::queryCollection(VoucherTransactionBulkQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ), $request);
     }
 
     /**
@@ -63,9 +65,7 @@ class TransactionBulksController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('show', [$voucherTransactionBulk, $organization]);
 
-        return new VoucherTransactionBulkResource($voucherTransactionBulk->load(
-            VoucherTransactionBulkResource::load()
-        ));
+        return VoucherTransactionBulkResource::create($voucherTransactionBulk);
     }
 
     /**
@@ -88,9 +88,7 @@ class TransactionBulksController extends Controller
         $bulks = VoucherTransactionBulk::buildBulksForOrganization($organization, $employee);
         $transactionBulks = VoucherTransactionBulk::query()->whereIn('id', $bulks);
 
-        return VoucherTransactionBulkResource::collection($transactionBulks->get()->load(
-            VoucherTransactionBulkResource::load()
-        ));
+        return VoucherTransactionBulkResource::queryCollection($transactionBulks);
     }
 
     /**
@@ -120,8 +118,42 @@ class TransactionBulksController extends Controller
             $transactionBulk->submitBulkToBNG($employee, $implementation);
         }
 
-        return new VoucherTransactionBulkResource($transactionBulk->load(
-            VoucherTransactionBulkResource::load()
-        ));
+        return VoucherTransactionBulkResource::create($transactionBulk);
+    }
+
+    /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(Organization $organization): AnonymousResourceCollection
+    {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
+
+        return ExportFieldArrResource::collection(VoucherTransactionBulksExport::getExportFields());
+    }
+
+    /**
+     * @param IndexTransactionBulksRequest $request
+     * @param Organization $organization
+     * @return BinaryFileResponse
+     * @throws AuthorizationException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
+    public function export(
+        IndexTransactionBulksRequest $request,
+        Organization $organization
+    ): BinaryFileResponse {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAny', [VoucherTransactionBulk::class, $organization]);
+
+        $fields = $request->input('fields', VoucherTransactionBulksExport::getExportFields());
+        $fileData = new VoucherTransactionBulksExport($request, $organization, $fields);
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
+
+        return resolve('excel')->download($fileData, $fileName);
     }
 }

@@ -52,23 +52,31 @@ class Role extends Model
      *
      * @var array
      */
-    public $translatedAttributes = [
-        'name', 'description'
+    public array $translatedAttributes = [
+        'name', 'description',
     ];
 
-    public function employees(): BelongsToMany {
-        return $this->belongsToMany(Employee::class, (
-        new EmployeeRole
-        )->getTable());
+    /**
+     * @return BelongsToMany
+     */
+    public function employees(): BelongsToMany
+    {
+        return $this->belongsToMany(Employee::class, (new EmployeeRole)->getTable());
     }
 
-    public function permissions(): BelongsToMany {
-        return $this->belongsToMany(Permission::class, (
-            new RolePermission
-        )->getTable());
+    /**
+     * @return BelongsToMany
+     */
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, (new RolePermission)->getTable());
     }
 
-    public function role_permissions(): HasMany {
+    /**
+     * @return HasMany
+     */
+    public function role_permissions(): HasMany
+    {
         return $this->hasMany(RolePermission::class);
     }
 }

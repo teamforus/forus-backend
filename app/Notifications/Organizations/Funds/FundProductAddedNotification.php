@@ -7,6 +7,6 @@ namespace App\Notifications\Organizations\Funds;
  */
 class FundProductAddedNotification extends BaseFundsNotification
 {
-    protected static $key = 'notifications_funds.product_added';
+    protected static ?string $key = 'notifications_funds.product_added';
     protected static $permissions = 'manage_providers';
 }

@@ -7,5 +7,5 @@ namespace App\Notifications\Identities\ProductReservation;
  */
 class IdentityProductReservationAcceptedNotification extends BaseProductReservationNotification
 {
-    protected static $key = 'notifications_identities.product_reservation_accepted';
+    protected static ?string $key = 'notifications_identities.product_reservation_accepted';
 }

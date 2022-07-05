@@ -11,8 +11,8 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityVoucherDeactivatedNotification extends BaseIdentityVoucherNotification
 {
-    protected static $scope = null;
-    protected static $key = 'notifications_identities.voucher_deactivated';
+    protected static ?string $scope = null;
+    protected static ?string $key = 'notifications_identities.voucher_deactivated';
 
     public function toMail(Identity $identity): void
     {

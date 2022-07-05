@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Fund;
 
 /**
- * Class AddDescriptionTextToFundsTable
  * @noinspection PhpUnused
  */
 class AddDescriptionTextToFundsTable extends Migration

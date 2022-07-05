@@ -39,8 +39,10 @@ class OrganizationValidator extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
-    public function fund_criteria_validators(): HasMany {
+    public function fund_criteria_validators(): HasMany
+    {
         return $this->hasMany(FundCriterionValidator::class);
     }
 

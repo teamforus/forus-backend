@@ -112,7 +112,7 @@ class MailBodyBuilder
         $globalStyles = 'text_left',
         ?string $textColor = null
     ): MailBodyBuilder {
-        $templateHtml = resolve('markdown')->convertToHtml($markdown);
+        $templateHtml = resolve('markdown.converter')->convert($markdown)->getContent();
         $templateHtml = str_var_replace($templateHtml, $data);
 
         return $this->markdownHtml($templateHtml, $globalStyles, $textColor);

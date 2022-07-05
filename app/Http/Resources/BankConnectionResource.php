@@ -29,10 +29,8 @@ class BankConnectionResource extends BaseJsonResource
             'account_default' => new BankConnectionAccountResource($this->resource->bank_connection_default_account),
             'accounts' => BankConnectionAccountResource::collection($this->resource->bank_connection_accounts),
             'state_locale' => trans( "bank-connections.states." . $this->resource->state),
-            'created_at' => $this->resource->created_at->format('Y-m-d H:i:s'),
-            'created_at_locale' => format_datetime_locale($this->resource->created_at),
         ], $this->resource->isPending() && $this->resource->auth_url ? [
             'auth_url' => $this->resource->auth_url,
-        ] : []);
+        ] : [], $this->timestamps($this->resource, 'created_at', 'updated_at'));
     }
 }

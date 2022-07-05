@@ -4,8 +4,8 @@ namespace App\Services\BankService\Values;
 
 class BankBalance
 {
-    protected $amount;
-    protected $currency;
+    protected string $amount;
+    protected string $currency;
 
     /**
      * @param string $amount

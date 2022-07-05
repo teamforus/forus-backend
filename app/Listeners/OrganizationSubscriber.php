@@ -33,7 +33,7 @@ class OrganizationSubscriber
                     $organization->offices()->create(array_only($office, ['address', 'lon', 'lat']));
                 }
             }
-        } catch (\Exception $e) { }
+        } catch (\Throwable $e) {}
     }
 
     /**

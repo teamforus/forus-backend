@@ -75,6 +75,7 @@ Route::group([], static function() use ($router) {
 Route::group(['middleware' => ['api.auth']], static function() use ($router) {
     $router->group(['prefix' => '/identity'], static function() use ($router) {
         $router->get('/', 'Api\IdentityController@getPublic');
+        $router->delete('/', 'Api\IdentityController@destroy');
         $router->resource('emails', 'Api\Identity\IdentityEmailsController', [
             'only' => ['index', 'show', 'store', 'destroy'],
             'parameters' => [
@@ -171,12 +172,3 @@ Route::group(['middleware' => ['api.auth']], static function() use ($router) {
 });
 
 Route::get('/status', 'Api\StatusController@getStatus')->name('status');
-
-if (env('APP_DEBUG', false) === true && env('APP_ENV') === 'dev') {
-    Route::group(['middleware' => ['api.auth']], static function() use ($router) {
-        $router->get('/debug', 'TestController@test');
-    });
-
-    Route::get('/debug/{implementation}/{frontend}/proxy', 'TestController@proxy');
-    Route::get('/debug/{implementation}/{frontend}/assets/{all}', 'TestController@asset')->where(['all' => '.*']);
-}

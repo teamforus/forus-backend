@@ -3,17 +3,16 @@
 namespace App\Http\Resources;
 
 use App\Models\Role;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class RoleResource
  * @property Role $resource
  * @package App\Http\Resources
  */
-class RoleResource extends Resource
+class RoleResource extends BaseJsonResource
 {
-    public static $load = [
-        'translations'
+    public const LOAD = [
+        'translations',
     ];
 
     /**
@@ -22,10 +21,8 @@ class RoleResource extends Resource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-        return collect($this->resource)->only([
-            'id', 'key', 'name', 'description'
-        ])->toArray();
+        return $this->resource->only('id', 'key', 'name', 'description');
     }
 }

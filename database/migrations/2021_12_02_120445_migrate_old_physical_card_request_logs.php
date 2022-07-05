@@ -5,6 +5,9 @@ use Illuminate\Database\Migrations\Migration;
 use App\Models\Notification;
 use App\Models\Implementation;
 
+/**
+ * @noinspection PhpUnused
+ */
 class MigrateOldPhysicalCardRequestLogs extends Migration
 {
     /**

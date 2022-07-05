@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Sponsor;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Http\Resources\ProductCategoryResource;
@@ -10,19 +11,15 @@ use App\Models\FundProviderChatMessage;
 use App\Models\FundProviderProduct;
 use App\Models\Product;
 use App\Scopes\Builders\TrashedQuery;
-use Illuminate\Http\Resources\Json\Resource;
 
 /**
  * Class SponsorVoucherResource
  * @property Product $resource
  * @package App\Http\Resources\Sponsor
  */
-class SponsorProviderProductResource extends Resource
+class SponsorProviderProductResource extends BaseJsonResource
 {
-    /**
-     * @var string[]
-     */
-    public static $load = [
+    public const LOAD = [
         'photo.presets',
         'vouchers_reserved',
         'product_category.translations',
@@ -79,9 +76,9 @@ class SponsorProviderProductResource extends Resource
             'unseen_messages' => FundProviderChatMessage::whereIn(
                 'fund_provider_chat_id', $product->fund_provider_chats()->pluck('id')
             )->where('provider_seen', '=', false)->count(),
-            'is_available' => $fundProvider ? $product->product_exclusions()->where([
+            'is_available' => !$fundProvider || $product->product_exclusions()->where([
                 'fund_provider_id' => $fundProvider->id,
-            ])->doesntExist() : true,
+            ])->doesntExist(),
         ], $fundProvider && $fundProvider->fund->isTypeSubsidy() ? [
             'deals_history' => $oldDeals->map(static function(FundProviderProduct $fundProviderProduct) {
                 return array_merge($fundProviderProduct->only(array_merge([

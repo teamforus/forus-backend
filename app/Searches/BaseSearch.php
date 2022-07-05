@@ -15,8 +15,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 class BaseSearch
 {
-    protected $filters;
-    protected $builder;
+    protected array $filters;
+    protected ?Builder $builder;
 
     /**
      * WebshopSearch constructor.

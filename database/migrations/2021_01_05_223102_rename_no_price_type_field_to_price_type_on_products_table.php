@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Product;
 
 /**
- * Class RenameNoPriceTypeFieldToPriceTypeOnProductsTable
  * @noinspection PhpUnused
  */
 class RenameNoPriceTypeFieldToPriceTypeOnProductsTable extends Migration
@@ -16,7 +15,7 @@ class RenameNoPriceTypeFieldToPriceTypeOnProductsTable extends Migration
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function up()
+    public function up(): void
     {
         DB::getDoctrineSchemaManager()
             ->getDatabasePlatform()
@@ -74,7 +73,7 @@ class RenameNoPriceTypeFieldToPriceTypeOnProductsTable extends Migration
      * @return void
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function down()
+    public function down(): void
     {
         DB::getDoctrineSchemaManager()
             ->getDatabasePlatform()

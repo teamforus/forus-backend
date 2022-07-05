@@ -11,7 +11,7 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class IdentityFundRequestCreatedNotification extends BaseIdentityFundRequestNotification
 {
-    protected static $key = 'notifications_identities.fund_request_created';
+    protected static ?string $key = 'notifications_identities.fund_request_created';
 
     /**
      * @param Identity $identity

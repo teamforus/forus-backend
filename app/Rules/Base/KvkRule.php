@@ -17,7 +17,7 @@ class KvkRule implements Rule
     {
         try {
             return (bool) resolve('kvk_api')->kvkNumberData($value);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             logger()->error($e->getMessage());
             return false;
         }

@@ -17,17 +17,19 @@ abstract class BaseVoucherTransactionEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $voucherTransaction;
+    private VoucherTransaction $voucherTransaction;
+    private array $logData;
 
     /**
      * Create a new event instance.
      *
-     * @param  VoucherTransaction $voucherTransaction
-     * @return void
+     * @param VoucherTransaction $voucherTransaction
+     * @param array $logData
      */
-    public function __construct(VoucherTransaction $voucherTransaction)
+    public function __construct(VoucherTransaction $voucherTransaction, array $logData = [])
     {
         $this->voucherTransaction = $voucherTransaction;
+        $this->logData = $logData;
     }
 
     /**
@@ -38,6 +40,16 @@ abstract class BaseVoucherTransactionEvent
     public function getVoucherTransaction(): VoucherTransaction
     {
         return $this->voucherTransaction;
+    }
+
+    /**
+     * Get raw log data
+     *
+     * @return array
+     */
+    public function getLogData(): array
+    {
+        return $this->logData;
     }
 
     /**

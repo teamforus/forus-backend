@@ -60,4 +60,30 @@ class FundRequestQuery
             });
         });
     }
+
+    /**
+     * @param Builder $builder
+     * @param string $q
+     * @return Builder
+     */
+    public static function whereQueryFilter(Builder $builder, string $q): Builder
+    {
+        $recordRepo = resolve('forus.services.record');
+
+        return $builder->where(function (Builder $query) use ($q, $recordRepo) {
+            $query->whereHas('fund', static function(Builder $builder) use ($q) {
+                $builder->where('name', 'LIKE', "%$q%");
+            });
+
+            $query->orWhereHas('identity.primary_email', static function(Builder $builder) use ($q) {
+                $builder->where('email', 'LIKE', "%$q%");
+            });
+
+            if ($bsn_identity_address = $recordRepo->identityAddressByBsn($q)) {
+                $query->orWhere('identity_address', '=', $bsn_identity_address);
+            }
+
+            $query->orWhere('id', '=', $q);
+        });
+    }
 }

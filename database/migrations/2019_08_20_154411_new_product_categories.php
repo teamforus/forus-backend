@@ -2,9 +2,9 @@
 
 use App\Models\ProductCategory;
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\ProductCategoriesTableSeeder;
 
 /**
- * Class NewProductCategories
  * @noinspection PhpUnused
  */
 class NewProductCategories extends Migration

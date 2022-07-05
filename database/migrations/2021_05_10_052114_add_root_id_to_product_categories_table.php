@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\ProductCategory;
 
 /**
- * Class AddRootIdToProductCategoriesTable
  * @noinspection PhpUnused
  */
 class AddRootIdToProductCategoriesTable extends Migration

@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Fund $from_fund
+ * @property-read \App\Models\Fund|null $from_fund
  * @property-read \App\Models\Fund $fund
  * @property-read Carbon $expire_at
  * @property-read bool $expired

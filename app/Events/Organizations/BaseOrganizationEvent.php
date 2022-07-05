@@ -12,7 +12,7 @@ abstract class BaseOrganizationEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    protected $organization;
+    protected Organization $organization;
 
     /**
      * Create a new event instance.

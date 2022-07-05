@@ -85,7 +85,7 @@ class StoreBatchVoucherRequest extends BaseFormRequest
      * @return string|string[]
      */
     private function amountRule(Fund $fund) {
-        return !$fund || $fund->isTypeBudget() ? [
+        return $fund->isTypeBudget() ? [
             'required_without:vouchers.*.product_id',
             'numeric',
             'between:.1,' . currency_format($fund->getMaxAmountPerVoucher()),
@@ -94,16 +94,20 @@ class StoreBatchVoucherRequest extends BaseFormRequest
 
     /**
      * @param Fund $fund
-     * @return string|string[]
+     * @return string[]
      */
-    private function productIdRule(Fund $fund) {
+    private function productIdRule(Fund $fund): array
+    {
         $vouchers = $this->input('vouchers');
 
-        return [
+        $rule = $fund->isTypeBudget() ? [
             'required_without:vouchers.*.amount',
+        ] : [];
+
+        return array_merge($rule, [
             'exists:products,id',
             new ProductIdInStockRule($fund, collect($vouchers)->countBy('product_id')->toArray())
-        ];
+        ]);
     }
 
     /**

@@ -3,7 +3,7 @@
 namespace App\Media;
 
 use App\Services\MediaService\MediaImagePreset;
-use \App\Services\MediaService\MediaImageConfig;
+use App\Services\MediaService\MediaImageConfig;
 
 /**
  * Class OrganizationLogoMediaConfig

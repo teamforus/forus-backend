@@ -7,6 +7,9 @@ use App\Models\Organization;
 use App\Models\Employee;
 use App\Models\Role;
 
+/**
+ * @noinspection PhpUnused
+ */
 class DropProviderIdentitiesTable extends Migration
 {
     /**

@@ -8,7 +8,7 @@ namespace App\Traits;
  * @property string $description_html
  * @property string $description_text
  * @package App\Traits
- * @extends Eloquent
+ * @mixin  \Eloquent
  */
 trait HasMarkdownDescription {
     /**
@@ -26,7 +26,7 @@ trait HasMarkdownDescription {
      */
     public function descriptionToHtml(): string
     {
-        return resolve('markdown')->convertToHtml($this->description ?: '');
+        return resolve('markdown.converter')->convert($this->description ?: '')->getContent();
     }
 
     /**

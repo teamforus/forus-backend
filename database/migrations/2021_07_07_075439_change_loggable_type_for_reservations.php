@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use App\Services\EventLogService\Models\EventLog;
 
 /**
- * Class ChangeLoggableTypeForReservations
  * @noinspection PhpUnused
  */
 class ChangeLoggableTypeForReservations extends Migration

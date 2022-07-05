@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class ChangeExpireStartAndEndDateFormats
  * @noinspection PhpUnused
  */
 class ChangeExpireStartAndEndDateFormats extends Migration
@@ -47,5 +46,5 @@ class ChangeExpireStartAndEndDateFormats extends Migration
      *
      * @return void
      */
-    public function down(): void { }
+    public function down(): void {}
 }

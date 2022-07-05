@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\MediaResource;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
@@ -131,7 +133,7 @@ class Implementation extends Model
     ];
 
     protected $perPage = 20;
-    protected static $generalModel;
+    protected static ?Implementation $generalModel = null;
 
     /**
      * @var string[]
@@ -208,6 +210,7 @@ class Implementation extends Model
     /**
      * Get fund banner
      * @return MorphOne
+     * @noinspection PhpUnused
      */
     public function banner(): MorphOne
     {
@@ -219,6 +222,7 @@ class Implementation extends Model
     /**
      * Get fund banner
      * @return MorphOne
+     * @noinspection PhpUnused
      */
     public function email_logo(): MorphOne
     {
@@ -286,7 +290,7 @@ class Implementation extends Model
     /**
      * @return array|string|null
      */
-    public static function activeKey()
+    public static function activeKey(): array|string|null
     {
         return request()->header('Client-Key', self::KEY_GENERAL);
     }
@@ -301,7 +305,7 @@ class Implementation extends Model
 
     /**
      * @param $key
-     * @return Implementation|null|Model
+     * @return Implementation|null
      */
     public static function byKey($key): ?Implementation
     {
@@ -419,18 +423,13 @@ class Implementation extends Model
      */
     public function urlFrontend(string $frontend, string $uri = ''): ?string
     {
-        switch ($frontend) {
-            case 'webshop':
-                return $this->urlWebshop($uri);
-            case 'sponsor':
-                return $this->urlSponsorDashboard($uri);
-            case 'provider':
-                return $this->urlProviderDashboard($uri);
-            case 'validator':
-                return $this->urlValidatorDashboard($uri);
-        }
-
-        return null;
+        return match ($frontend) {
+            'webshop' => $this->urlWebshop($uri),
+            'sponsor' => $this->urlSponsorDashboard($uri),
+            'provider' => $this->urlProviderDashboard($uri),
+            'validator' => $this->urlValidatorDashboard($uri),
+            default => null,
+        };
     }
 
     /**
@@ -517,7 +516,7 @@ class Implementation extends Model
 
         $ver = request()->input('ver');
 
-        if (preg_match('/[^a-z_\-0-9]/i', $value) || preg_match('/[^a-z_\-0-9]/i', $ver)) {
+        if (preg_match('/[^a-z_\-\d]/i', $value) || preg_match('/[^a-z_\-\d]/i', $ver)) {
             abort(403);
         }
 
@@ -527,10 +526,14 @@ class Implementation extends Model
             $implementation = self::active();
             $banner = $implementation->banner;
 
+            $request = BaseFormRequest::createFromGlobals();
+            $announcements = Announcement::search($request)->get();
+
             $config = array_merge($config, [
                 'media' => self::getPlatformMediaConfig(),
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+                'announcements' => AnnouncementResource::collection($announcements)->toArray($request),
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
@@ -553,6 +556,7 @@ class Implementation extends Model
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 'pages' => $implementation->getPages(),
+                'has_productboard_integration' => !empty(resolve('productboard')),
             ]);
         }
 
@@ -570,26 +574,26 @@ class Implementation extends Model
     }
 
     /**
-     * @return Collection
+     * @return array
      */
-    private static function getPlatformMediaConfig(): Collection
+    private static function getPlatformMediaConfig(): array
     {
-        return collect(MediaService::getMediaConfigs())->map(static function (
-            MediaImageConfig $mediaConfig
-        ) {
+        return array_map(function(MediaImageConfig $config) {
+            $sizes = array_filter($config->getPresets(), function(MediaPreset $mediaPreset) {
+                return get_class($mediaPreset) === MediaImagePreset::class;
+            });
+
+            $sizes = array_map(fn(MediaImagePreset $preset) => [
+                $preset->width,
+                $preset->height,
+                $preset->preserve_aspect_ratio,
+            ], $sizes);
+
             return [
-                'aspect_ratio' => $mediaConfig->getPreviewAspectRatio(),
-                'size' => collect($mediaConfig->getPresets())->map(static function (
-                    MediaPreset $mediaPreset
-                ) {
-                    return $mediaPreset instanceof MediaImagePreset ? [
-                        $mediaPreset->width,
-                        $mediaPreset->height,
-                        $mediaPreset->preserve_aspect_ratio,
-                    ] : null;
-                })
+                'aspect_ratio' => $config->getPreviewAspectRatio(),
+                'size' => $sizes,
             ];
-        });
+        }, MediaService::getMediaConfigs());
     }
 
     /**
@@ -713,7 +717,7 @@ class Implementation extends Model
      */
     public function getDescriptionHtmlAttribute(): string
     {
-        return resolve('markdown')->convertToHtml($this->description ?? '');
+        return resolve('markdown.converter')->convert($this->description ?? '')->getContent();
     }
 
     /**
@@ -778,13 +782,5 @@ class Implementation extends Model
         }
 
         return $this->header_text_color;
-    }
-
-    /**
-     * @return string
-     */
-    public static function defaultEmailColor(): string
-    {
-        return config('forus.mail_styles.color_primary');
     }
 }

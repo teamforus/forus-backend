@@ -14,7 +14,7 @@ use App\Scopes\Builders\ProductSubQuery;
  */
 class ProductIdToReservationRule extends BaseRule
 {
-    protected $messageTransPrefix = 'validation.product_reservation.';
+    protected string $messageTransPrefix = 'validation.product_reservation.';
     private $voucherAddress;
     private $priceType;
 
@@ -85,6 +85,6 @@ class ProductIdToReservationRule extends BaseRule
         return ProductQuery::approvedForFundsAndActiveFilter(
             Product::query(),
             $voucher->fund_id
-        )->where('id', $product->id)->exists();
+        )->where('id', $product->id)->exists() || $this->reject('Product not available.');
     }
 }

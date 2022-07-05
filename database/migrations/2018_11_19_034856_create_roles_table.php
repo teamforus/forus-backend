@@ -3,7 +3,11 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\RolesTableSeeder;
 
+/**
+ * @noinspection PhpUnused
+ */
 class CreateRolesTable extends Migration
 {
     /**
@@ -19,7 +23,7 @@ class CreateRolesTable extends Migration
             $table->string('name', 60);
         });
 
-        resolve(RolesTableSeeder::class)->run();
+        (new RolesTableSeeder())->run(false);
     }
 
     /**

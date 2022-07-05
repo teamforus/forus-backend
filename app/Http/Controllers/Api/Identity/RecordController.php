@@ -15,15 +15,14 @@ use App\Http\Controllers\Controller;
  */
 class RecordController extends Controller
 {
-    private $recordRepo;
+    private IRecordRepo $recordRepo;
 
     /**
      * RecordController constructor.
      * @param IRecordRepo $recordRepo
      */
-    public function __construct(
-        IRecordRepo $recordRepo
-    ) {
+    public function __construct(IRecordRepo $recordRepo)
+    {
         $this->recordRepo = $recordRepo;
     }
 
@@ -37,14 +36,14 @@ class RecordController extends Controller
         $recordRepo = $request->records_repo();
         $recordTypes = collect($recordRepo->getRecordTypes())->keyBy('key')->toArray();
 
-        return array_values(array_filter($this->recordRepo->recordsList(
+        return array_values(array_filter($recordRepo->recordsList(
             $request->auth_address(),
             $request->get('type'),
             $request->get('record_category_id'),
             (bool) $request->get('deleted', false)
         ), static function($record) use ($recordTypes) {
             if (env('HIDE_SYSTEM_RECORDS', false)) {
-                return (bool) !($recordTypes[$record['key']]['system'] ?? true);
+                return !($recordTypes[$record['key']]['system'] ?? true);
             }
 
             return $record;
@@ -70,6 +69,7 @@ class RecordController extends Controller
     /**
      * Validate records store request
      * @param RecordStoreRequest $request
+     * @noinspection PhpUnused
      */
     public function storeValidate(RecordStoreRequest $request): void {}
 
@@ -119,6 +119,7 @@ class RecordController extends Controller
     /**
      * Validate records update request
      * @param RecordUpdateRequest $request
+     * @noinspection PhpUnused
      */
     public function updateValidate(RecordUpdateRequest $request): void {}
 

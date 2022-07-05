@@ -4,6 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use App\Models\Permission;
 use App\Models\Role;
 
+/**
+ * @noinspection PhpUnused
+ */
 class AddViewFundsPermission extends Migration
 {
     /**

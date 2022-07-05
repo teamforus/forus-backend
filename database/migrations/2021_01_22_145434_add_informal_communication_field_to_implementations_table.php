@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddFormalCommunicationFieldToImplementationsTable
  * @noinspection PhpUnused
  */
 class AddInformalCommunicationFieldToImplementationsTable extends Migration
@@ -15,7 +14,7 @@ class AddInformalCommunicationFieldToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->boolean('informal_communication')->default(0)->after('lat');
@@ -27,7 +26,7 @@ class AddInformalCommunicationFieldToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->dropColumn('informal_communication');

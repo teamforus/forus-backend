@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api\Platform\Organizations\Provider;
 
 use App\Exports\VoucherTransactionsProviderExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Provider\Transactions\IndexTransactionsRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Provider\ProviderVoucherTransactionResource;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\VoucherTransactionQuery;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -19,7 +22,7 @@ class TransactionsController extends Controller
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function index(
         IndexTransactionsRequest $request,
@@ -28,24 +31,39 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        $transactionsQuery = VoucherTransaction::searchProvider($request, $organization)->with(
-            ProviderVoucherTransactionResource::$load
-        );
+        $query = VoucherTransaction::searchProvider($request, $organization);
         
         $meta = [
-            'total_amount' => currency_format($transactionsQuery->sum('amount'))
+            'total_amount' => currency_format((clone $query)->sum('amount')),
         ];
         
-        return ProviderVoucherTransactionResource::collection(
-            $transactionsQuery->paginate($request->input('per_page', 25))
-        )->additional(compact('meta'));
+        return ProviderVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ))->additional(compact('meta'));
+    }
+
+    /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(
+        Organization $organization
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
+
+        return ExportFieldArrResource::collection(VoucherTransactionsProviderExport::getExportFields());
     }
 
     /**
      * @param IndexTransactionsRequest $request
      * @param Organization $organization
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
@@ -56,10 +74,11 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnyProvider', [VoucherTransaction::class, $organization]);
 
-        $type = $request->input('export_format', 'xls');
+        $fields = $request->input('fields', VoucherTransactionsProviderExport::getExportFields());
+        $type = $request->input('data_format', 'xls');
 
         return resolve('excel')->download(
-            new VoucherTransactionsProviderExport($request, $organization),
+            new VoucherTransactionsProviderExport($request, $organization, $fields),
             date('Y-m-d H:i:s') . '.' . $type
         );
     }
@@ -77,8 +96,6 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showProvider', [$voucherTransaction, $organization]);
 
-        return new ProviderVoucherTransactionResource($voucherTransaction->load(
-            ProviderVoucherTransactionResource::$load
-        ));
+        return ProviderVoucherTransactionResource::create($voucherTransaction);
     }
 }

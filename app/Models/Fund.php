@@ -12,6 +12,8 @@ use App\Events\Vouchers\VoucherCreated;
 use App\Mail\Forus\FundStatisticsMail;
 use App\Scopes\Builders\VoucherQuery;
 use App\Services\BackofficeApiService\Responses\EligibilityResponse;
+use App\Services\BackofficeApiService\Responses\PartnerBsnResponse;
+use App\Services\BackofficeApiService\Responses\ResidencyResponse;
 use App\Services\EventLogService\Traits\HasDigests;
 use App\Services\EventLogService\Traits\HasLogs;
 use App\Models\Traits\HasTags;
@@ -22,6 +24,7 @@ use App\Scopes\Builders\FundQuery;
 use App\Services\FileService\Models\File;
 use App\Services\Forus\Identity\Models\Identity;
 use App\Services\Forus\Notification\EmailFrom;
+use App\Services\IConnectApiService\IConnect;
 use App\Services\MediaService\Models\Media;
 use App\Services\MediaService\Traits\HasMedia;
 use App\Services\BackofficeApiService\BackofficeApi;
@@ -76,6 +79,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property-read int|null $digests_count
  * @property-read Collection|\App\Models\Employee[] $employees
  * @property-read int|null $employees_count
+ * @property-read Collection|\App\Models\Employee[] $employees_validator_managers
+ * @property-read int|null $employees_validator_managers_count
  * @property-read Collection|\App\Models\Employee[] $employees_validators
  * @property-read int|null $employees_validators_count
  * @property-read Collection|\App\Models\FundFaq[] $faq
@@ -437,10 +442,10 @@ class Fund extends Model
 
     /**
      * @param array $tagIds
-     * @param $scope
+     * @param string $scope
      * @return void
      */
-    public function syncTags(array $tagIds, $scope = 'webshop')
+    public function syncTags(array $tagIds, string $scope = 'webshop'): void
     {
         $query = Tag::query();
 
@@ -464,7 +469,7 @@ class Fund extends Model
      * @param string $scope
      * @return void
      */
-    public function syncTagsOptional(?array $tagIds = null, $scope = 'webshop')
+    public function syncTagsOptional(?array $tagIds = null, string $scope = 'webshop'): void
     {
         if (!is_null($tagIds)) {
             $this->syncTags($tagIds, $scope);
@@ -586,6 +591,7 @@ class Fund extends Model
     {
         return [
             self::TYPE_SUBSIDIES => 'Acties',
+            self::TYPE_EXTERNAL => 'External',
             self::TYPE_BUDGET => 'Budget',
         ][$this->type] ?? $this->type;
     }
@@ -731,6 +737,24 @@ class Fund extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @noinspection PhpUnused
+     */
+    public function employees_validator_managers(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Employee::class,
+            Organization::class,
+            'id',
+            'organization_id',
+            'organization_id',
+            'id'
+        )->whereHas('roles.permissions', static function(Builder $builder) {
+            $builder->where('key', 'manage_validators');
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      * @noinspection PhpUnused
      */
@@ -807,7 +831,7 @@ class Fund extends Model
         $recordsOfType = $recordRepo->recordsList($identity_address, $record_type, null,false, $daysTrusted);
 
         $validRecordsOfType = collect($recordsOfType)->map(static function($record) use (
-            $trustedIdentities, $organization, $criterion, $record_type, $daysTrusted
+            $trustedIdentities, $organization
         ) {
             $validations = collect($record['validations']);
             $validations = $validations->whereIn('identity_address', $trustedIdentities);
@@ -836,12 +860,14 @@ class Fund extends Model
     {
         /** @var FundConfigRecord $typeConfig */
         $typeConfig = $this->fund_config_records->where('record_type', $recordType)->first();
-        $typeConfigValue = $typeConfig ? $typeConfig->record_validity_days : null;
-        $fundConfigValue = $this->fund_config ? $this->fund_config->record_validity_days : null;
+        $typeConfigValue = $typeConfig->record_validity_days ?? null;
+        $fundConfigValue = $this->fund_config->record_validity_days ?? null;
 
         if ($typeConfigValue === 0) {
             return $typeConfigValue;
-        } else if ($typeConfigValue === null && $fundConfigValue === 0) {
+        }
+
+        if ($typeConfigValue === null && $fundConfigValue === 0) {
             return $fundConfigValue;
         }
 
@@ -976,11 +1002,12 @@ class Fund extends Model
 
     /**
      * @return Fund[]|Builder[]|Collection|\Illuminate\Support\Collection
+     * @noinspection PhpUnused
      */
     public static function configuredFunds() {
         try {
             return static::query()->whereHas('fund_config')->get();
-        } catch (\Exception $exception) {
+        } catch (\Throwable $e) {
             return collect();
         }
     }
@@ -1212,9 +1239,8 @@ class Fund extends Model
      * @param FundCriterion|null $fundCriterion
      * @return array
      */
-    public function validatorEmployees(
-        ?FundCriterion $fundCriterion = null
-    ): array {
+    public function validatorEmployees(?FundCriterion $fundCriterion = null): array
+    {
         $employees = $this->employees_validators()->pluck('employees.identity_address');
         $externalEmployees = [];
 
@@ -1567,10 +1593,12 @@ class Fund extends Model
         $vouchersQuery = VoucherQuery::whereNotExpired($vouchersQuery);
         $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
         $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
 
         $vouchers_count = $vouchersQuery->count();
         $inactive_count = $inactiveVouchersQuery->count();
         $active_count = $activeVouchersQuery->count();
+        $deactivated_count = $deactivatedVouchersQuery->count();
         $inactive_percentage = $inactive_count ? $inactive_count / $vouchers_count * 100 : 0;
 
         return [
@@ -1582,6 +1610,8 @@ class Fund extends Model
             'inactive_amount'       => $inactiveVouchersQuery->sum('amount'),
             'inactive_count'        => $inactive_count,
             'inactive_percentage'   => currency_format($inactive_percentage),
+            'deactivated_amount'    => $deactivatedVouchersQuery->sum('amount'),
+            'deactivated_count'     => $deactivated_count,
         ];
     }
 
@@ -1601,14 +1631,17 @@ class Fund extends Model
         $vouchersQuery = VoucherQuery::whereNotExpired($query);
         $activeVouchersQuery = VoucherQuery::whereNotExpiredAndActive((clone $vouchersQuery));
         $inactiveVouchersQuery = VoucherQuery::whereNotExpiredAndPending((clone $vouchersQuery));
+        $deactivatedVouchersQuery = VoucherQuery::whereNotExpiredAndDeactivated((clone $vouchersQuery));
 
         $vouchers_amount = currency_format($vouchersQuery->sum('amount'));
         $active_vouchers_amount = currency_format($activeVouchersQuery->sum('amount'));
         $inactive_vouchers_amount = currency_format($inactiveVouchersQuery->sum('amount'));
+        $deactivated_vouchers_amount = currency_format($deactivatedVouchersQuery->sum('amount'));
 
         $vouchers_count = $vouchersQuery->count();
         $active_vouchers_count = $activeVouchersQuery->count();
         $inactive_vouchers_count = $inactiveVouchersQuery->count();
+        $deactivated_vouchers_count = $deactivatedVouchersQuery->count();
 
         foreach ($funds as $fund) {
             $budget += $fund->budget_total;
@@ -1622,7 +1655,8 @@ class Fund extends Model
             'budget', 'budget_left',
             'budget_used', 'budget_used_active_vouchers', 'transaction_costs',
             'vouchers_amount', 'vouchers_count', 'active_vouchers_amount', 'active_vouchers_count',
-            'inactive_vouchers_amount', 'inactive_vouchers_count'
+            'inactive_vouchers_amount', 'inactive_vouchers_count',
+            'deactivated_vouchers_amount', 'deactivated_vouchers_count'
         );
     }
 
@@ -1671,7 +1705,8 @@ class Fund extends Model
      * @param ?string $identity_address
      * @return bool
      */
-    public function isTakenByPartner(?string $identity_address): bool {
+    public function isTakenByPartner(?string $identity_address): bool
+    {
         if (!$identity_address || !$identity = Identity::findByAddress($identity_address)) {
             return false;
         }
@@ -1759,19 +1794,35 @@ class Fund extends Model
 
     /**
      * @param string $identity_address
-     * @return EligibilityResponse|null
+     * @return ResidencyResponse|PartnerBsnResponse|EligibilityResponse|null
      */
-    public function checkBackofficeIfAvailable(string $identity_address): ?EligibilityResponse
+    public function checkBackofficeIfAvailable(string $identity_address)
     {
-        $bsn = record_repo()->bsnByAddress($identity_address);
+        $recordRepo = record_repo();
+        $bsn = $recordRepo->bsnByAddress($identity_address);
         $alreadyHasActiveVoucher = $this->identityHasActiveVoucher($identity_address);
 
         if ($bsn && !$alreadyHasActiveVoucher && $this->isBackofficeApiAvailable()) {
             $backofficeApi = $this->getBackofficeApi();
+
+            // check for residency
             $residencyResponse = $backofficeApi->residencyCheck($bsn);
 
-            if (!$residencyResponse->isResident()) {
-                return null;
+            if (!$residencyResponse->getLog()->success() || !$residencyResponse->isResident()) {
+                return $residencyResponse;
+            }
+
+            // check if taken by partner
+            if (env('ENABLE_BACKOFFICE_PARTNER_CHECK', false)) {
+                $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
+                $partnerBsn = $partnerBsnResponse->getBsn();
+                $partnerIdentity = $partnerBsn ? $recordRepo->identityAddressByBsn($partnerBsn) : null;
+
+                if (!$partnerBsnResponse->getLog()->success() ||
+                    ($partnerIdentity && $this->identityHasActiveVoucher($partnerIdentity)) ||
+                    $this->isTakenByPartner($identity_address)) {
+                    return $partnerBsnResponse;
+                }
             }
 
             // check again for active vouchers
@@ -1821,13 +1872,46 @@ class Fund extends Model
     /**
      * @param string $default
      * @return string|null
+     * @noinspection PhpUnused
      */
-    public function communicationType($default = 'formal'): string
+    public function communicationType(string $default = 'formal'): string
     {
         if ($this->fund_config && $this->fund_config->implementation) {
             return $this->fund_config->implementation->communicationType();
         }
 
         return $default;
+    }
+
+    /**
+     * @return void
+     */
+    public function hasIConnectApiOin(): bool
+    {
+        return $this->isIconnectApiConfigured() &&
+            $this->organization->bsn_enabled &&
+            !empty($this->fund_config->iconnect_target_binding) &&
+            !empty($this->fund_config->iconnect_api_oin) &&
+            !empty($this->fund_config->iconnect_base_url);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isIconnectApiConfigured(): bool
+    {
+        return !empty(IConnect::getConfigs());
+    }
+
+    /**
+     * @return IConnect|null
+     */
+    public function getIConnect(): ?IConnect
+    {
+        return $this->hasIConnectApiOin() ? new IConnect(
+            $this->fund_config->iconnect_api_oin,
+            $this->fund_config->iconnect_target_binding,
+            $this->fund_config->iconnect_base_url
+        ) : null;
     }
 }

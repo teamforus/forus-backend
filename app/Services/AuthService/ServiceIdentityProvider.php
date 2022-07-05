@@ -4,18 +4,12 @@ namespace App\Services\AuthService;
 
 use App\Services\AuthService\Models\Identity;
 use App\Services\Forus\Identity\Repositories\IdentityRepo;
+use App\Services\Forus\Identity\Repositories\Interfaces\IIdentityRepo;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 
 class ServiceIdentityProvider implements UserProvider
 {
-    private $identityRepo;
-
-    public function __construct(IdentityRepo $identityRepo)
-    {
-        $this->identityRepo = $identityRepo;
-    }
-
     /**
      * Retrieve a user by the given credentials.
      *

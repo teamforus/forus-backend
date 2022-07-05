@@ -7,5 +7,5 @@ namespace App\Notifications\Identities\ProductReservation;
  */
 class IdentityProductReservationRejectedNotification extends BaseProductReservationNotification
 {
-    protected static $key = 'notifications_identities.product_reservation_rejected';
+    protected static ?string $key = 'notifications_identities.product_reservation_rejected';
 }

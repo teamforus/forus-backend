@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\Identity\IdentityAuthorizeCodeRequest;
 use App\Http\Requests\Api\Identity\IdentityAuthorizeTokenRequest;
+use App\Http\Requests\Api\Identity\IdentityDestroyRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailRedirectRequest;
 use App\Http\Requests\Api\IdentityAuthorizationEmailTokenRequest;
 use App\Http\Requests\Api\IdentityStoreRequest;
 use App\Http\Requests\Api\IdentityStoreValidateEmailRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BaseFormRequest;
+use App\Mail\Forus\IdentityDestroyRequestMail;
 use App\Models\Implementation;
-use App\Traits\ThrottleLoginAttempts;
+use App\Traits\ThrottleWithMeta;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Redirector;
 
 /**
  * Class IdentityController
@@ -20,6 +25,8 @@ use Illuminate\Http\JsonResponse;
  */
 class IdentityController extends Controller
 {
+    use ThrottleWithMeta;
+
     /**
      * Get identity details
      *
@@ -106,14 +113,14 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $exchangeToken
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
+     * @return View|RedirectResponse|Redirector
      * @throws \Exception
      * @noinspection PhpUnused
      */
     public function emailConfirmationRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $exchangeToken
-    ) {
+    ): View|Redirector|RedirectResponse {
         $token = $exchangeToken;
         $isMobile = $request->input('is_mobile', false);
 
@@ -224,13 +231,13 @@ class IdentityController extends Controller
      *
      * @param IdentityAuthorizationEmailRedirectRequest $request
      * @param string $emailToken
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return View|RedirectResponse|\Illuminate\Routing\Redirector
      * @noinspection PhpUnused
      */
     public function emailTokenRedirect(
         IdentityAuthorizationEmailRedirectRequest $request,
         string $emailToken
-    ) {
+    ): View|Redirector|RedirectResponse {
         $exchangeToken = $emailToken;
         $clientType = $request->input('client_type');
         $implementationKey = $request->input('implementation_key');
@@ -432,5 +439,28 @@ class IdentityController extends Controller
         $request->identity_repo()->destroyProxyIdentity($proxyDestroy);
 
         return response()->json(null);
+    }
+
+    /**
+     * @param IdentityDestroyRequest $request
+     * @return JsonResponse
+     * @throws \App\Exceptions\AuthorizationJsonException
+     */
+    public function destroy(IdentityDestroyRequest $request): JsonResponse
+    {
+        $this->maxAttempts = env('DELETE_IDENTITY_THROTTLE_ATTEMPTS', 10);
+        $this->decayMinutes = env('DELETE_IDENTITY_THROTTLE_DECAY', 10);
+        $this->throttleWithKey('to_many_attempts', $request, 'delete_identity');
+
+        if ($email = env('EMAIL_FOR_IDENTITY_DESTROY', false)) {
+            $request->notification_repo()->sendSystemMail(
+                $email, new IdentityDestroyRequestMail([
+                    'email' => $request->identity_repo()->getPrimaryEmail($request->auth_address()),
+                    'comment' => $request->get('comment')
+                ])
+            );
+        }
+
+        return new JsonResponse();
     }
 }

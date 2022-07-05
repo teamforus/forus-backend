@@ -157,11 +157,6 @@ class ProviderProductReservationBatchItemPermissionsRule extends BaseRule
         return $allowed ?: "Dit aanbod is niet geaccepteerd voor dit fonds.";
     }
 
-    public function reject($message): bool
-    {
-        return parent::reject($message);
-    }
-
     /**
      * Get the validation error message.
      *

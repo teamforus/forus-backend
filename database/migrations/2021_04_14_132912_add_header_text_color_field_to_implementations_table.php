@@ -5,7 +5,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Class AddHeaderTextColorFieldToImplementationsTable
  * @noinspection PhpUnused
  */
 class AddHeaderTextColorFieldToImplementationsTable extends Migration
@@ -15,7 +14,7 @@ class AddHeaderTextColorFieldToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->enum('header_text_color', ['dark', 'bright', 'auto'])->default('auto')->after('overlay_type');
@@ -27,7 +26,7 @@ class AddHeaderTextColorFieldToImplementationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('implementations', function (Blueprint $table) {
             $table->dropColumn('header_text_color');

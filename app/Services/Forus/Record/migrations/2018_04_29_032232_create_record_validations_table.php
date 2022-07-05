@@ -1,9 +1,13 @@
-<?php /** @noinspection PhpIllegalPsrClassPathInspection */
+<?php
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * @noinspection PhpUnused
+ * @noinspection PhpIllegalPsrClassPathInspection
+ */
 class CreateRecordValidationsTable extends Migration
 {
     /**
@@ -11,7 +15,7 @@ class CreateRecordValidationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('record_validations', function (Blueprint $table) {
             $table->increments('id');
@@ -34,7 +38,7 @@ class CreateRecordValidationsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('record_validations');
     }

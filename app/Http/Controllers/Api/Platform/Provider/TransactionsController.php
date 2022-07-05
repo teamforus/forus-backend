@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Platform\Provider\Transactions\IndexTransactionsRequest;
 use App\Http\Resources\Provider\ProviderVoucherTransactionEmployeeResource;
 use App\Models\VoucherTransaction;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -25,16 +26,16 @@ class TransactionsController extends Controller
         $this->authorize('viewAny', VoucherTransaction::class);
 
         $query = VoucherTransaction::search($request);
-        $query->whereHas('employee', static function(Builder $builder) use ($request) {
-            $builder->where(array_merge($request->only([
-                'organization_id'
-            ]), [
-                'identity_address' => $request->auth_address()
-            ]));
-        });
+        $query->whereHas('employee', fn(Builder $builder) => $builder->where(array_merge([
+            'identity_address' => $request->auth_address(),
+        ], $request->input('organization_id') ? [
+            'organization_id' => $request->input('organization_id'),
+        ]: [])))->where('initiator', VoucherTransaction::INITIATOR_PROVIDER);
 
-        return ProviderVoucherTransactionEmployeeResource::collection($query->with(
-            ProviderVoucherTransactionEmployeeResource::$load
-        )->paginate($request->input('per_page')));
+        return ProviderVoucherTransactionEmployeeResource::queryCollection(VoucherTransactionQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ));
     }
 }

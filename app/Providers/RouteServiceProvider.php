@@ -107,8 +107,6 @@ class RouteServiceProvider extends ServiceProvider
             } catch (ModelNotFoundException $exception) {}
 
             abort(404, $isCard ? "De pas is niet geactiveerd": 'De voucher is niet gevonden.');
-
-            return null;
         });
 
         $router->bind('voucher_token_address', static function ($address) {

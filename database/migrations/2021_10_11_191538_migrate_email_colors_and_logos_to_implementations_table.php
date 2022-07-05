@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Database\Seeders\ImplementationsNotificationBrandingSeeder;
 
 /**
  * @noinspection PhpUnused

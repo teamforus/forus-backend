@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class ProviderStateRejectedMail extends ImplementationMail
 {
-    protected $notificationTemplateKey = 'notifications_fund_providers.state_rejected';
+    protected string $notificationTemplateKey = 'notifications_fund_providers.state_rejected';
 
     /**
      * @return Mailable

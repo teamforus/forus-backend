@@ -19,10 +19,8 @@ class ProductPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function viewAny(
-        $identity_address,
-        Organization $organization
-    ): bool {
+    public function viewAny($identity_address, Organization $organization): bool
+    {
         return $organization->identityCan($identity_address, 'manage_products');
     }
 
@@ -30,7 +28,8 @@ class ProductPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function viewAnyPublic(): bool {
+    public function viewAnyPublic(): bool
+    {
         return true;
     }
 
@@ -40,10 +39,8 @@ class ProductPolicy
      * @return bool
      * @noinspection PhpUnused
      */
-    public function store(
-        $identity_address,
-        Organization $organization
-    ): bool {
+    public function store($identity_address, Organization $organization): bool
+    {
         $hard_limit = config('forus.features.dashboard.organizations.products.hard_limit');
         $count_products = $organization->products()->whereDoesntHave('sponsor_organization')->count();
   
@@ -254,7 +251,7 @@ class ProductPolicy
         return $isSponsorManagingProducts &&
             $identityIsProviderManager &&
             $isSponsorForTheProvider &&
-            ($product ? $product->organization_id === $provider->id : true) &&
-            ($product ? $product->sponsor_organization_id === $sponsor->id : true);
+            (!$product || $product->organization_id === $provider->id) &&
+            (!$product || $product->sponsor_organization_id === $sponsor->id);
     }
 }

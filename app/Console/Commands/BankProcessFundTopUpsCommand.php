@@ -33,7 +33,7 @@ class BankProcessFundTopUpsCommand extends Command
     /**
      * @var int Seconds to wait until next request to the API
      */
-    protected $fetchInterval = 5;
+    protected int $fetchInterval = 5;
 
     /**
      * Execute the console command.
@@ -87,6 +87,10 @@ class BankProcessFundTopUpsCommand extends Command
         $bankConnection = $fund->organization->bank_connection_active;
         $payments = $bankConnection->fetchPayments();
 
+        if (!$payments) {
+            return;
+        }
+
         foreach ($fund->top_ups as $topUp) {
             foreach ($payments as $payment) {
                 $this->processPayment($payment, $topUp, $bankConnection);
@@ -114,8 +118,8 @@ class BankProcessFundTopUpsCommand extends Command
 
         try {
             $this->applyTopUp($payment, $topUp, $connection);
-        } catch (Throwable $exception) {
-            resolve('log')->error($exception->getMessage());
+        } catch (Throwable $e) {
+            resolve('log')->error($e->getMessage());
         }
     }
 

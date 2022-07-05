@@ -11,7 +11,7 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class FundProviderAppliedNotification extends BaseFundsNotification
 {
-    protected static $key = 'notifications_funds.provider_applied';
+    protected static ?string $key = 'notifications_funds.provider_applied';
     protected static $permissions = 'manage_providers';
 
     /**

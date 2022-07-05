@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class SendVoucherMail extends ImplementationMail
 {
-    protected $subjectKey = 'mails/system_mails.voucher_send_to_email.title';
+    protected string $subjectKey = 'mails/system_mails.voucher_send_to_email.title';
 
     /**
      * @return Mailable

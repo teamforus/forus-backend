@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailable;
  */
 class ShareAppMail extends ImplementationMail
 {
-    protected $subjectKey = 'share/email.me_app_download_link.title';
+    protected string $subjectKey = 'share/email.me_app_download_link.title';
 
     /**
      * Build the message.

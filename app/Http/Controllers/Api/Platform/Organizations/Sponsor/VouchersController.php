@@ -355,6 +355,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @noinspection PhpUnused
      */
     public function getExportFields(
         IndexVouchersExportFieldsRequest $request,
@@ -363,7 +364,7 @@ class VouchersController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
-        return ExportFieldArrResource::collection(VoucherExport::getExportFieldsList(
+        return ExportFieldArrResource::collection(VoucherExport::getExportFields(
             $request->input('type', 'budget')
         ));
     }
@@ -382,7 +383,7 @@ class VouchersController extends Controller
         $this->authorize('viewAnySponsor', [Voucher::class, $organization]);
 
         $fund = $organization->findFund($request->get('fund_id'));
-        $fields = $request->input('fields', VoucherExport::getExportFieldsList('product'));
+        $fields = $request->input('fields', VoucherExport::getExportFields('product'));
         $qrFormat = $request->get('qr_format');
         $dataFormat = $request->get('data_format', 'csv');
 

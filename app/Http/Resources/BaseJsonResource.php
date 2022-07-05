@@ -7,7 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Http\Request;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -51,19 +51,20 @@ class BaseJsonResource extends JsonResource
 
     /**
      * @param Builder|Relation $query
-     * @param Request|null $request
+     * @param FormRequest|int|null $request
      * @return AnonymousResourceCollection
      */
-    public static function queryCollection(
-        $query,
-        Request $request = null
-    ): AnonymousResourceCollection {
-        $request = $request ?: BaseFormRequest::createFromBase(request());
+    public static function queryCollection($query, $request = null): AnonymousResourceCollection
+    {
+        if (!$request || $request instanceof FormRequest) {
+            $request = $request ?: BaseFormRequest::createFromBase(request());
+            $request = $request->input('per_page');
+        }
 
         return self::collection($query
             ->with(static::load())
             ->withCount(static::load_count())
-            ->paginate($request->input('per_page')));
+            ->paginate(is_numeric($request) ? $request : null));
     }
 
     /**
@@ -71,10 +72,21 @@ class BaseJsonResource extends JsonResource
      * @param string|array $key
      * @return array
      */
-    protected function timestamps($model, ...$key): array {
+    protected function timestamps($model, ...$key): array
+    {
+        return static::staticTimestamps($model, $key);
+    }
+
+    /**
+     * @param $model
+     * @param string|array $key
+     * @return array
+     */
+    protected static function staticTimestamps($model, ...$key): array
+    {
         if (is_array($key[0] ?? null) || count($key) > 1) {
             return array_reduce(is_array($key[0] ?? null) ? $key[0] : $key, function($prev, $key) use ($model) {
-                return array_merge($prev, $this->timestamps($model, $key));
+                return array_merge($prev, static::staticTimestamps($model, $key));
             }, []);
         }
 

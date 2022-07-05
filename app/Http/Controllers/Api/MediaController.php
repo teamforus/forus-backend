@@ -73,11 +73,8 @@ class MediaController extends Controller
                     'identity_address' => auth_address()
                 ]);
             }
-        } catch (\Exception $exception) {
-            logger()->error(sprintf(
-                "Media uploading failed: %s",
-                $exception->getMessage()
-            ));
+        } catch (\Throwable $e) {
+            logger()->error(sprintf("Media uploading failed: %s", $e->getMessage()));
         }
 
         return new MediaResource($media ?? null);

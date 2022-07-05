@@ -67,7 +67,7 @@ use ZipArchive;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
- * @property-read bool $has_product_vouchers
+ * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
@@ -251,6 +251,7 @@ class Voucher extends Model
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function identity(): BelongsTo
     {
@@ -259,6 +260,7 @@ class Voucher extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function backoffice_logs(): HasMany
     {
@@ -467,6 +469,7 @@ class Voucher extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getStateLocaleAttribute(): string
     {
@@ -690,16 +693,16 @@ class Voucher extends Model
      */
     public function getHasTransactionsAttribute(): bool
     {
-        return $this->transactions->count() > 0;
+        return $this->usedCount('transactions', false);
     }
 
     /**
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getHasProductVouchersAttribute(): bool
+    public function getHasReservationsAttribute(): bool
     {
-        return $this->product_vouchers->count() > 0;
+        return $this->usedCount('reservations', false);
     }
 
     /**
@@ -708,7 +711,7 @@ class Voucher extends Model
      */
     public function getInUseAttribute(): bool
     {
-        return $this->usedCount(false) > 0;
+        return $this->has_transactions || $this->has_reservations;
     }
 
     /**
@@ -835,7 +838,7 @@ class Voucher extends Model
     }
 
     /**
-     * @param Collection $vouchers
+     * @param Collection|Voucher[] $vouchers
      * @param array $fields
      * @param string $dataFormat
      * @param string|null $qrFormat
@@ -850,8 +853,6 @@ class Voucher extends Model
         $data = [];
 
         $domPdf = resolve('dompdf.wrapper');
-        $dataOnly = empty($qrFormat);
-
         $zipFile = tmpfile();
         $zipFilePath = stream_get_meta_data($zipFile)['uri'];
 
@@ -864,18 +865,19 @@ class Voucher extends Model
 
         foreach ($vouchers as $voucher) {
             do {
-                $voucherData = new VoucherExportData($voucher, $fields, $dataOnly);
-            } while(!$dataOnly && in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
+                $voucherData = new VoucherExportData($voucher, $fields, empty($qrFormat));
+            } while(in_array($voucherData->getName(), Arr::pluck($data, 'name'), true));
 
-            $data[] = [
+            $dataItem = $data[] = [
                 'name' => $voucherData->getName(),
+                'value' => $voucher->token_without_confirmation->address,
                 'values' => $voucherData->toArray(),
                 'voucherData' => $voucherData,
             ];
 
             if (in_array($qrFormat, ['png', 'all'])) {
-                $pngPath = sprintf("images/%s.png", $voucherData->getName());
-                $pngData = make_qr_code('voucher', $voucher->token_without_confirmation->address);
+                $pngPath = sprintf("images/%s.png", $dataItem['name']);
+                $pngData = make_qr_code('voucher', $dataItem['value']);
 
                 $zip->addFromString($pngPath, $pngData);
             }
@@ -905,7 +907,12 @@ class Voucher extends Model
 
         $zip->close();
 
-        $data = Arr::pluck($data, 'values');
+        $data = array_map(function($item) use ($qrFormat) {
+            return array_merge($item['values'], array_only($item, $qrFormat == 'data' ? [
+                'name', 'value',
+            ] : []));
+        }, $data);
+
         $files['zip'] = file_get_contents($zipFilePath);
 
         return compact('files', 'data');
@@ -1166,7 +1173,10 @@ class Voucher extends Model
      */
     public function reportBackofficeReceived(): ?FundBackofficeLog
     {
-        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_received;
+        $voucherShouldReport =
+            !$this->parent_id &&
+            $this->identity_address &&
+            !$this->backoffice_log_received()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
@@ -1186,11 +1196,14 @@ class Voucher extends Model
     }
 
     /**
-     * @return null
+     * @return FundBackofficeLog|null
      */
-    public function reportBackofficeFirstUse()
+    public function reportBackofficeFirstUse(): ?FundBackofficeLog
     {
-        $voucherShouldReport = $this->identity_address && !$this->parent_id && !$this->backoffice_log_first_use;
+        $voucherShouldReport =
+            !$this->parent_id &&
+            $this->identity_address &&
+            !$this->backoffice_log_first_use()->exists();
 
         if ($voucherShouldReport) {
             $backOffice = $this->fund->getBackofficeApi();
@@ -1210,15 +1223,38 @@ class Voucher extends Model
     }
 
     /**
+     * @param string $scope
      * @param bool $fresh
      * @return int
      */
-    public function usedCount(bool $fresh = true): int
+    public function usedCount(string $scope = 'all', bool $fresh = true): int
     {
-        if ($fresh) {
-            return $this->transactions()->count() + $this->product_vouchers()->count();
-        }
+        $transactions_count = $fresh ? $this->transactions()->count() : $this->transactions->count();
+        $reservations_count = $fresh ? $this->product_vouchers()->count() : $this->product_vouchers->count();
 
-        return $this->transactions->count() + $this->product_vouchers->count();
+        return (in_array($scope, ['all', 'transactions']) ? $transactions_count : 0) +
+            (in_array($scope, ['all', 'reservations']) ? $reservations_count : 0);
+    }
+
+    /**
+     * @param array $attributes
+     * @param bool $reviewRequired
+     * @return VoucherTransaction
+     */
+    public function makeTransaction(
+        array $attributes = [],
+        bool $reviewRequired = false
+    ): VoucherTransaction {
+        $data = array_merge([
+            'state' => 'pending',
+            'address' => resolve('token_generator')->address(),
+            'initiator' => VoucherTransaction::INITIATOR_PROVIDER,
+            'voucher_id' => $this->id,
+        ], $attributes);
+
+        return VoucherTransaction::create(array_merge($data, $reviewRequired ? [
+            'attempts' => 50,
+            'last_attempt_at' => now(),
+        ] : []));
     }
 }

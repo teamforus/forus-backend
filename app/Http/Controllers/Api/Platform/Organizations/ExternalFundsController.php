@@ -7,7 +7,7 @@ use App\Http\Requests\Api\Platform\Organizations\ExternalFunds\UpdateExternalFun
 use App\Models\FundRequest;
 use App\Scopes\Builders\FundCriteriaValidatorQuery;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use \Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Resources\ExternalFundResource;
 use App\Models\Fund;
 use App\Models\FundCriterion;

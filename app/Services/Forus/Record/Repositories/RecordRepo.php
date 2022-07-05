@@ -18,13 +18,9 @@ class RecordRepo implements IRecordRepo
      * @param array $records
      * @return void
      */
-    public function updateRecords(
-        string $identityAddress,
-        array $records
-    ) {
-        $recordTypes = RecordType::query()->pluck(
-            'id', 'key'
-        )->toArray();
+    public function updateRecords(string $identityAddress, array $records): void
+    {
+        $recordTypes = RecordType::pluck('id', 'key')->toArray();
 
         foreach ($records as $key => $value) {
             Record::firstOrCreate([
@@ -99,20 +95,15 @@ class RecordRepo implements IRecordRepo
      * Check if record type and value is already existing
      * @param string $recordTypeKey
      * @param string $recordValue
-     * @param mixed $excludeIdentity
-     * @return boolean
+     * @param string|null $excludeIdentity
+     * @return bool
      */
     public function isRecordExists(
         string $recordTypeKey,
         string $recordValue,
         string $excludeIdentity = null
-    ) {
-        /**
-         * @var RecordType $recordType
-         */
-        $recordType = RecordType::query()->where([
-            'key' => $recordTypeKey
-        ])->first();
+    ): bool {
+        $recordType = RecordType::where('key', $recordTypeKey)->first();
 
         if (!$recordType) {
             abort(403, trans('record.exceptions.unknown_record_type', [
@@ -120,7 +111,7 @@ class RecordRepo implements IRecordRepo
             ]));
         }
 
-        $record = Record::query()->where([
+        $record = Record::where([
             'record_type_id' => $recordType->id,
             'value' => $recordValue
         ]);
@@ -129,26 +120,18 @@ class RecordRepo implements IRecordRepo
             $record->where('identity_address', '!=', $excludeIdentity);
         }
 
-        return $record->count() != 0;
+        return $record->exists();
     }
 
 
     /**
      * Get identity id by email record
      * @param string $email
-     * @return mixed|null
+     * @return string|null
      */
-    public function identityAddressByEmail(
-        string $email
-    ) {
+    public function identityAddressByEmail(string $email): ?string
+    {
         return identity_repo()->getAddress($email);
-
-        /*$record = Record::query()->where([
-            'record_type_id' => $this->getTypeIdByKey('primary_email'),
-            'value' => $email,
-        ])->first();
-
-        return $record ? $record->identity_address : null;*/
     }
 
     /**
@@ -174,9 +157,11 @@ class RecordRepo implements IRecordRepo
      */
     public function identityAddressByBsnSearch(string $search): array
     {
-        return Record::where([
-            'record_type_id' => $this->getTypeIdByKey('bsn'),
-        ])->where('value', 'LIKE', "%{$search}%")->pluck('identity_address')->toArray();
+        return Record::query()
+            ->where('record_type_id', $this->getTypeIdByKey('bsn'))
+            ->where('value', 'LIKE', "%$search%")
+            ->pluck('identity_address')
+            ->toArray();
     }
 
     /**
@@ -213,9 +198,8 @@ class RecordRepo implements IRecordRepo
      * @param string $identityAddress
      * @return string|null
      */
-    public function bsnByAddress(
-        string $identityAddress
-    ) {
+    public function bsnByAddress(string $identityAddress): ?string
+    {
         $record = Record::query()->where([
             'record_type_id' => $this->getTypeIdByKey('bsn'),
             'identity_address' => $identityAddress,
@@ -229,10 +213,9 @@ class RecordRepo implements IRecordRepo
      * @param string $key
      * @return int|null
      */
-    public function getTypeIdByKey(
-        string $key
-    ) {
-        $recordType = RecordType::query()->where('key', $key)->first();
+    public function getTypeIdByKey(string $key): ?int
+    {
+        $recordType = RecordType::where('key', $key)->first();
         return $recordType ? $recordType->id : null;
     }
 
@@ -247,7 +230,7 @@ class RecordRepo implements IRecordRepo
         string $identityAddress,
         string $name,
         int $order = 0
-    ) {
+    ): ?array {
         $recordCategory = RecordCategory::create([
             'identity_address' => $identityAddress,
             'name' => $name,
@@ -262,10 +245,9 @@ class RecordRepo implements IRecordRepo
      * @param string $identityAddress
      * @return array
      */
-    public function categoriesList(
-        string $identityAddress
-    ) {
-        return RecordCategory::query()->where([
+    public function categoriesList(string $identityAddress): array
+    {
+        return RecordCategory::where([
             'identity_address' => $identityAddress
         ])->select([
             'id', 'name', 'order'
@@ -278,10 +260,8 @@ class RecordRepo implements IRecordRepo
      * @param mixed $recordCategoryId
      * @return array|null
      */
-    public function categoryGet(
-        string $identityAddress,
-        $recordCategoryId
-    ) {
+    public function categoryGet(string $identityAddress, $recordCategoryId): ?array
+    {
         $record =  RecordCategory::query()->where([
             'id' => $recordCategoryId,
             'identity_address' => $identityAddress
@@ -295,19 +275,19 @@ class RecordRepo implements IRecordRepo
     /**
      * Update identity record category
      * @param string $identityAddress
-     * @param mixed $recordCategoryId
+     * @param string $categoryId
      * @param string|null $name
      * @param int|null $order
      * @return bool
      */
     public function categoryUpdate(
         string $identityAddress,
-        $recordCategoryId,
+        string $categoryId,
         string $name = null,
         int $order = null
-    ) {
-        $record =  RecordCategory::query()->where([
-            'id' => $recordCategoryId,
+    ): bool {
+        $record =  RecordCategory::where([
+            'id' => $categoryId,
             'identity_address' => $identityAddress
         ])->first();
 
@@ -328,32 +308,24 @@ class RecordRepo implements IRecordRepo
      * @param array $orders
      * @return void
      */
-    public function categoriesSort(
-        string $identityAddress,
-        array $orders
-    ) {
-        $self = $this;
-
-        collect($orders)->each(function(
-            $categoryId, $order
-        ) use ($identityAddress, $self) {
-            $self->categoryUpdate($identityAddress, $categoryId, null, $order);
-        });
+    public function categoriesSort(string $identityAddress, array $orders): void
+    {
+        foreach ($orders as $categoryId => $order) {
+            $this->categoryUpdate($identityAddress, $categoryId, null, $order);
+        }
     }
 
     /**
      * Delete category
      * @param string $identityAddress
      * @param mixed $recordCategoryId
-     * @return mixed
+     * @return bool
      * @throws \Exception
      */
-    public function categoryDelete(
-        string $identityAddress,
-        $recordCategoryId
-    ) {
+    public function categoryDelete(string $identityAddress, $recordCategoryId): bool
+    {
         /** @var RecordCategory $recordCategory */
-        $recordCategory =  RecordCategory::query()->where([
+        $recordCategory = RecordCategory::query()->where([
             'id' => $recordCategoryId,
             'identity_address' => $identityAddress
         ])->first();
@@ -367,7 +339,7 @@ class RecordRepo implements IRecordRepo
         ]);
 
 
-        return !!$recordCategory->delete();
+        return (bool) $recordCategory->delete();
     }
 
 
@@ -471,13 +443,13 @@ class RecordRepo implements IRecordRepo
     /**
      * Get identity record
      * @param string $identityAddress
-     * @param mixed $recordId
+     * @param int $recordId
      * @param bool $withTrashed
      * @return array
      */
     public function recordGet(
         string $identityAddress,
-        $recordId,
+        int $recordId,
         bool $withTrashed = false
     ): ?array {
         /** @var Record $record */
@@ -572,10 +544,8 @@ class RecordRepo implements IRecordRepo
      * @param string $bsnValue
      * @return null|array
      */
-    public function setBsnRecord(
-        string $identityAddress,
-        string $bsnValue
-    ) {
+    public function setBsnRecord(string $identityAddress, string $bsnValue): ?array
+    {
         $recordType = $this->getTypeIdByKey('bsn');
 
         if (Record::where([
@@ -610,7 +580,7 @@ class RecordRepo implements IRecordRepo
         $recordId,
         $recordCategoryId = null,
         $order = null
-    ) {
+    ): bool {
         $update = collect();
         $update->put('record_category_id', $recordCategoryId);
 
@@ -622,6 +592,32 @@ class RecordRepo implements IRecordRepo
             'id' => $recordId,
             'identity_address' => $identityAddress
         ])->update($update->toArray());
+    }
+
+    /**
+     * Delete record
+     * @param string $identityAddress
+     * @param mixed $recordId
+     * @return bool
+     * @throws \Exception
+     */
+    public function recordDelete(string $identityAddress, $recordId): bool
+    {
+        if (empty($record = Record::query()->where([
+            'id' => $recordId,
+            'identity_address' => $identityAddress
+        ])->first())) {
+            return false;
+        }
+
+        if ($record['record_type_id'] ==
+            $this->getTypeIdByKey('primary_email')) {
+            abort(403,'record.exceptions.cant_delete_primary_email', [
+                'record_type_name' => $record->record_type->name
+            ]);
+        }
+
+        return !!$record->delete();
     }
 
     /**
@@ -641,34 +637,6 @@ class RecordRepo implements IRecordRepo
         ) use ($identityAddress, $self) {
             $self->recordUpdate($identityAddress, $recordId, null, $order);
         });
-    }
-
-    /**
-     * Delete record
-     * @param string $identityAddress
-     * @param mixed $recordId
-     * @return bool
-     * @throws \Exception
-     */
-    public function recordDelete(
-        string $identityAddress,
-        $recordId
-    ) {
-        if (empty($record = Record::query()->where([
-            'id' => $recordId,
-            'identity_address' => $identityAddress
-        ])->first())) {
-            return false;
-        }
-
-        if ($record['record_type_id'] ==
-            $this->getTypeIdByKey('primary_email')) {
-            abort(403,'record.exceptions.cant_delete_primary_email', [
-                'record_type_name' => $record->record_type->name
-            ]);
-        }
-
-        return !!$record->delete();
     }
 
     /**

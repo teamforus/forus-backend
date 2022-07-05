@@ -4,9 +4,9 @@ namespace App\Services\BankService\Values;
 
 class BankMonetaryAccount
 {
-    protected $id;
-    protected $iban;
-    protected $name;
+    protected string $id;
+    protected string $iban;
+    protected string $name;
 
     /**
      * @param string $id

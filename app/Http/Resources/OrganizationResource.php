@@ -5,14 +5,14 @@ namespace App\Http\Resources;
 use Gate;
 use App\Models\Fund;
 use App\Models\Organization;
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Class OrganizationResource
  * @property Organization $resource
  * @package App\Http\Resources
  */
-class OrganizationResource extends Resource
+class OrganizationResource extends JsonResource
 {
     public const DEPENDENCIES = [
         'logo',
@@ -60,7 +60,7 @@ class OrganizationResource extends Resource
         if (Gate::allows('organizations.update', $organization)) {
             $ownerData = $organization->only([
                 'iban', 'btw', 'phone', 'email', 'website', 'email_public',
-                'phone_public', 'website_public'
+                'phone_public', 'website_public',
             ]);
         }
 

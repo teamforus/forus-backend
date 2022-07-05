@@ -192,7 +192,6 @@ return [
         \Dusterio\AwsWorker\Integrations\LaravelServiceProvider::class,
 
         App\Services\TokenGeneratorService\TokenGeneratorServiceProvider::class,
-        App\Services\ApiRequestService\ApiRequestServiceProvider::class,
 
 
         /*
@@ -220,6 +219,7 @@ return [
         App\Services\BackofficeApiService\BackofficeApiServiceProvider::class,
 
         App\Services\BNGService\BNGServiceProvider::class,
+        App\Services\ProductboardApiService\ProductboardApiServiceProvider::class,
     ],
 
     /*

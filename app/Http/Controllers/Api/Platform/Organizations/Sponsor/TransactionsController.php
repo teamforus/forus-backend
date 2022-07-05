@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers\Api\Platform\Organizations\Sponsor;
 
+use App\Events\VoucherTransactions\VoucherTransactionCreated;
 use App\Exports\VoucherTransactionsSponsorExport;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Organizations\Sponsor\Transactions\StoreTransactionRequest;
+use App\Http\Resources\Arr\ExportFieldArrResource;
 use App\Http\Resources\Sponsor\SponsorVoucherTransactionResource;
 use App\Models\Organization;
+use App\Models\Voucher;
 use App\Models\VoucherTransaction;
-use App\Http\Controllers\Controller;
+use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Statistics\Funds\FinancialStatisticQueries;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Class TransactionsController
- * @package App\Http\Controllers\Api\Platform\Organizations\Sponsor
  * @noinspection PhpUnused
  */
 class TransactionsController extends Controller
@@ -49,9 +53,62 @@ class TransactionsController extends Controller
         $query = (new FinancialStatisticQueries())->getFilterTransactionsQuery($organization, $options, $query);
         $meta = compact('total_amount');
 
-        return SponsorVoucherTransactionResource::collection($query->with(
-            SponsorVoucherTransactionResource::load()
-        )->paginate($request->input('per_page')))->additional(compact('meta'));
+        return SponsorVoucherTransactionResource::queryCollection(VoucherTransactionQuery::order(
+            $query,
+            $request->input('order_by'),
+            $request->input('order_dir')
+        ))->additional(compact('meta'));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param StoreTransactionRequest $request
+     * @param Organization $organization
+     * @return SponsorVoucherTransactionResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function store(
+        StoreTransactionRequest $request,
+        Organization $organization
+    ): SponsorVoucherTransactionResource {
+        $note = $request->input('note');
+        $voucher = Voucher::find($request->input('voucher_id'));
+        $provider = Organization::find($request->input('provider_id'));
+
+        $this->authorize('show', $organization);
+        $this->authorize('useAsSponsor', [$voucher, $provider]);
+
+        $transaction = $voucher->makeTransaction([
+            'amount' => $request->input('amount'),
+            'initiator' => VoucherTransaction::INITIATOR_SPONSOR,
+            'employee_id' => $request->employee($organization)->id,
+            'organization_id' => $provider->id,
+        ]);
+
+        $note && $transaction->addNote('sponsor', $note);
+
+        VoucherTransactionCreated::dispatch($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []);
+
+        return SponsorVoucherTransactionResource::create($transaction);
+    }
+
+    /**
+     * @param Organization $organization
+     * @return AnonymousResourceCollection
+     * @throws AuthorizationException
+     * @noinspection PhpUnused
+     */
+    public function getExportFields(
+        Organization $organization
+    ): AnonymousResourceCollection {
+        $this->authorize('show', $organization);
+        $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
+
+        return ExportFieldArrResource::collection(VoucherTransactionsSponsorExport::getExportFields());
     }
 
     /**
@@ -70,8 +127,9 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('viewAnySponsor', [VoucherTransaction::class, $organization]);
 
-        $fileData = new VoucherTransactionsSponsorExport($request, $organization);
-        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('export_format', 'xls');
+        $fields = $request->input('fields', VoucherTransactionsSponsorExport::getExportFields());
+        $fileData = new VoucherTransactionsSponsorExport($request, $organization, $fields);
+        $fileName = date('Y-m-d H:i:s') . '.' . $request->input('data_format', 'xls');
 
         return resolve('excel')->download($fileData, $fileName);
     }
@@ -92,8 +150,6 @@ class TransactionsController extends Controller
         $this->authorize('show', $organization);
         $this->authorize('showSponsor', [$voucherTransaction, $organization]);
 
-        return new SponsorVoucherTransactionResource($voucherTransaction->load(
-            SponsorVoucherTransactionResource::load()
-        ));
+        return SponsorVoucherTransactionResource::create($voucherTransaction);
     }
 }

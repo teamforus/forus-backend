@@ -11,8 +11,8 @@ use App\Services\Forus\Identity\Models\Identity;
  */
 class FundProvidersApprovedBudgetNotification extends BaseFundProvidersNotification
 {
-    protected static $key = 'notifications_fund_providers.approved_budget';
-    protected static $pushKey = 'funds.provider_approved';
+    protected static ?string $key = 'notifications_fund_providers.approved_budget';
+    protected static ?string $pushKey = 'funds.provider_approved';
 
     /**
      * @var string[]

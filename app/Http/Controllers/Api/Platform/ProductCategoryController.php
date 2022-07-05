@@ -6,6 +6,7 @@ use App\Http\Requests\Api\Platform\SearchProductCategoriesRequest;
 use App\Http\Resources\ProductCategoryResource;
 use App\Http\Controllers\Controller;
 use App\Models\ProductCategory;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Class ProductCategoryController
@@ -19,15 +20,11 @@ class ProductCategoryController extends Controller
      * @param SearchProductCategoriesRequest $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(
-        SearchProductCategoriesRequest $request
-    ) {
-        $query = ProductCategory::search($request);
-
-        return ProductCategoryResource::collection(
-            $query->with(ProductCategoryResource::$load)->orderBy('id')->paginate(
-                $request->get('per_page', 200)
-            )
+    public function index(SearchProductCategoriesRequest $request): AnonymousResourceCollection
+    {
+        return ProductCategoryResource::queryCollection(
+            ProductCategory::search($request)->orderBy('id'),
+            $request
         );
     }
 
@@ -37,9 +34,8 @@ class ProductCategoryController extends Controller
      * @param ProductCategory $productCategory
      * @return ProductCategoryResource
      */
-    public function show(
-        ProductCategory $productCategory
-    ) {
-        return new ProductCategoryResource($productCategory);
+    public function show(ProductCategory $productCategory): ProductCategoryResource
+    {
+        return ProductCategoryResource::create($productCategory);
     }
 }
