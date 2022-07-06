@@ -402,6 +402,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/funds/{fund}/top-up',
         "Api\Platform\Organizations\FundsController@topUp");
 
+    $router->resource(
+        'organizations.funds.top-up-transactions',
+        "Api\Platform\Organizations\Funds\FundTopUpTransactionsController");
+
     $router->patch(
         'organizations/{organization}/funds/{fund}/criteria/validate',
         "Api\Platform\Organizations\FundsController@updateCriteriaValidate");
