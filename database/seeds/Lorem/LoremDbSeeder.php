@@ -372,6 +372,7 @@ class LoremDbSeeder extends Seeder
             }
 
             $voucher = $prevalidation->fund->makeVoucher($identity_address);
+            $prevalidation->fund->makeFundFormulaProductVouchers($identity_address);
 
             if (env('DB_SEED_NO_PRODUCT_VOUCHERS', false)) {
                 continue;
@@ -1159,9 +1160,13 @@ class LoremDbSeeder extends Seeder
 
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $this->vouchersPerFund; ++$i) {
-                $fund->makeVoucher($this->makeIdentity(), [
+                $identity_address = $this->makeIdentity();
+                $extra = [
                     'note' => 'Lorem seeder!',
-                ]);
+                ];
+
+                $fund->makeVoucher($identity_address, $extra);
+                $fund->makeFundFormulaProductVouchers($identity_address, $extra);
             }
         }
     }
