@@ -44,7 +44,8 @@
         "ralouphie/getallheaders": "2.0.5",
         "simplesoftwareio/simple-qrcode": "^2.0",
         "twilio/sdk": "^6.8.0",
-        "whichbrowser/parser": "^2.0.42"
+        "whichbrowser/parser": "^2.0.42",
+        "zoon/commonmark-ext-youtube-iframe": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

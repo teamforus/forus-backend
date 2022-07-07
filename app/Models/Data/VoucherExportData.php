@@ -12,10 +12,10 @@ use Illuminate\Support\Carbon;
  */
 class VoucherExportData
 {
-    protected $onlyData;
-    protected $voucher;
-    protected $fields;
-    protected $name;
+    protected ?bool $onlyData;
+    protected Voucher $voucher;
+    protected array $fields;
+    protected string $name;
 
     /**
      * VoucherExportData constructor.
@@ -66,6 +66,8 @@ class VoucherExportData
         ], [
             'granted' => $assigned ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
+            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
+            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
             'in_use_date' => format_date_locale($this->voucher->in_use_date),
             'product_name' => $this->voucher->product ? $this->voucher->product->name : null,
         ], $bsnData, [

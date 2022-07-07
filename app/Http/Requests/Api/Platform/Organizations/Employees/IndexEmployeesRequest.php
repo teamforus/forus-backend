@@ -24,6 +24,7 @@ class IndexEmployeesRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'q' => 'nullable|string|max:500',
             'per_page'  => 'numeric|int|between:1,100',
             'role' => 'nullable|string|exists:roles,key',
             'roles' => 'nullable|array',

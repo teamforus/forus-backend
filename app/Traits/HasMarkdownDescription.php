@@ -8,7 +8,7 @@ namespace App\Traits;
  * @property string $description_html
  * @property string $description_text
  * @package App\Traits
- * @extends Eloquent
+ * @mixin  \Eloquent
  */
 trait HasMarkdownDescription {
     /**
