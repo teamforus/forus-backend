@@ -1161,12 +1161,10 @@ class LoremDbSeeder extends Seeder
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $this->vouchersPerFund; ++$i) {
                 $identity_address = $this->makeIdentity();
-                $extra = [
-                    'note' => 'Lorem seeder!',
-                ];
+                $note = 'Lorem seeder!';
 
-                $fund->makeVoucher($identity_address, $extra);
-                $fund->makeFundFormulaProductVouchers($identity_address, $extra);
+                $fund->makeVoucher($identity_address, compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity_address, compact('note'));
             }
         }
     }

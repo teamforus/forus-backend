@@ -1142,19 +1142,22 @@ class Fund extends Model
     /**
      * @param string|null $identity_address
      * @param array $extraFields
-     * @return array
+     * @param Carbon|null $expireAt
+     * @return array|Voucher[]
      */
     public function makeFundFormulaProductVouchers(
         string $identity_address = null,
-        array $extraFields = []
+        array $extraFields = [],
+        Carbon $expireAt = null
     ): array {
         $vouchers = [];
+        $fundEndDate = $this->end_date;
 
         if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucherExpireAt = $fund_formula_product->product->expire_at && $this->end_date->gt(
-                    $fund_formula_product->product->expire_at
-                ) ? $fund_formula_product->product->expire_at : $this->end_date;
+                $productExpireDate = $fund_formula_product->product->expire_at;
+                $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
+                $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,

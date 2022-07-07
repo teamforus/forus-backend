@@ -125,9 +125,9 @@ class FundsController extends Controller
 
         $identity_address = auth_address();
         $voucher = $fund->makeVoucher($identity_address);
-        $fund->makeFundFormulaProductVouchers($identity_address);
+        $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($identity_address);
 
-        $voucher = $voucher ?: $fund->vouchers()->where([
+        $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([
             'identity_address' => $identity_address,
         ])->first();
 
