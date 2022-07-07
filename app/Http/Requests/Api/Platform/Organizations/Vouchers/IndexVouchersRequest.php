@@ -36,7 +36,7 @@ class IndexVouchersRequest extends BaseFormRequest
     public function rules(): array
     {
         $funds = $this->organization->funds()->pluck('funds.id');
-        $fields = Arr::pluck(VoucherExport::getExportFieldsList('product'), 'key');
+        $fields = Arr::pluck(VoucherExport::getExportFields('product'), 'key');
 
         return [
             'per_page'          => 'numeric|between:1,100',
@@ -62,7 +62,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'count_per_identity_min'    => 'nullable|numeric',
             'count_per_identity_max'    => 'nullable|numeric',
             'fields'            => 'nullable|array',
-            'fields.*'          => ['nullable', Rule::in($fields)]
+            'fields.*'          => ['nullable', Rule::in($fields)],
         ];
     }
 

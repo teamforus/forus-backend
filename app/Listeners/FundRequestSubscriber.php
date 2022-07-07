@@ -17,7 +17,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestRecord;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestApprovedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestDisregardedNotification;
-use App\Notifications\Identities\FundRequest\IdentityFundRequestFeedbackRequestedNotification;
+use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordFeedbackRequestedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestRecordDeclinedNotification;
 use App\Notifications\Identities\FundRequest\IdentityFundRequestResolvedNotification;
 use App\Notifications\Organizations\FundRequests\FundRequestCreatedValidatorNotification;
@@ -91,6 +91,7 @@ class FundRequestSubscriber
         if ($fundRequest->isApproved()) {
             /** @var Fund[] $funds */
             $funds = [];
+            $logScope = 'fund_request@' . $fundRequest->id;
             $sponsor = $fundRequest->fund->organization;
             $resolvePolicy = $sponsor->fund_request_resolve_policy;
             $sponsorFundsQuery = FundQuery::whereIsInternalConfiguredAndActive($sponsor->funds()->getQuery());
@@ -102,7 +103,7 @@ class FundRequestSubscriber
             }
 
             foreach ($funds as $fund) {
-                if (Gate::forUser($fundRequest->identity_address)->allows('apply', $fund)) {
+                if (Gate::forUser($fundRequest->identity_address)->allows('apply', [$fund, $logScope])) {
                     $fund->makeVoucher($fundRequest->identity_address);
                 }
             }
@@ -155,9 +156,7 @@ class FundRequestSubscriber
         $fundRequestRecord = $requestRecordEvent->getFundRequestRecord();
         $eventModels = $this->getFundRequestRecordLogModels($fundRequestRecord);
 
-        $event = $fundRequestRecord->log($fundRequestRecord::EVENT_APPROVED, $eventModels);
-
-        IdentityFundRequestRecordDeclinedNotification::send($event);
+        $fundRequestRecord->log($fundRequestRecord::EVENT_APPROVED, $eventModels);
     }
 
     /**
@@ -219,7 +218,7 @@ class FundRequestSubscriber
             'fund_request_clarification' => $clarification,
         ]);
 
-        IdentityFundRequestFeedbackRequestedNotification::send($fundRequestRecord->log(
+        IdentityFundRequestRecordFeedbackRequestedNotification::send($fundRequestRecord->log(
             $fundRequestRecord::EVENT_CLARIFICATION_REQUESTED,
             $eventModels
         ));

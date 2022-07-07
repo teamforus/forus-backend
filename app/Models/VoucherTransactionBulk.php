@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Events\VoucherTransactions\VoucherTransactionBunqSuccess;
+use App\Exports\VoucherTransactionBulksExport;
 use App\Models\Traits\HasDbTokens;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\VoucherTransactionBulkQuery;
 use App\Scopes\Builders\VoucherTransactionQuery;
 use App\Services\BNGService\BNGService;
 use App\Services\BNGService\Data\PaymentInfoData;
@@ -23,11 +25,13 @@ use bunq\Model\Generated\Endpoint\PaymentBatch;
 use bunq\Model\Generated\Object\Amount;
 use bunq\Model\Generated\Object\DraftPaymentEntry;
 use bunq\Model\Generated\Object\Pointer;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -368,8 +372,6 @@ class VoucherTransactionBulk extends Model
                 return $this;
             });
 
-            // This endpoint is throttled by bunq: You can do a maximum of 3 calls per 3 second to this endpoint.
-            sleep(2);
         } catch (Throwable $e) {
             logger()->error($e->getMessage() . "\n" . $e->getTraceAsString());
 
@@ -379,6 +381,9 @@ class VoucherTransactionBulk extends Model
                 'error_message' => $e->getMessage(),
             ], $employee);
         }
+
+        // This endpoint is throttled by bunq: You can do a maximum of 3 calls per 3 second to this endpoint.
+        sleep(2);
 
         return $this;
     }
@@ -649,5 +654,99 @@ class VoucherTransactionBulk extends Model
             $this->bank_connection->organization_id,
             $this->id
         ), array_filter(compact('success', 'error')));
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @return Builder
+     */
+    public static function search(Request $request, Organization $organization): Builder
+    {
+        $query = self::whereHas('bank_connection', fn(Builder $q) => $q->where([
+            'bank_connections.organization_id' => $organization->id,
+        ]));
+
+        if ($request->has('from')) {
+            $query->where('created_at', '>=', Carbon::createFromFormat(
+                'Y-m-d',
+                $request->input('from')
+            )->startOfDay()->format('Y-m-d H:i:s'));
+        }
+
+        if ($request->has('to')) {
+            $query->where('created_at', '<=', Carbon::createFromFormat(
+                'Y-m-d',
+                $request->input('to')
+            )->endOfDay()->format('Y-m-d H:i:s'));
+        }
+
+        if ($request->has('state')) {
+            $query->where('state', $request->input('state'));
+        }
+
+        if ($request->has('quantity_min')) {
+            $query->has('voucher_transactions', '>=', $request->input('quantity_min'));
+        }
+
+        if ($request->has('quantity_max')) {
+            $query->has('voucher_transactions', '<=', $request->input('quantity_max'));
+        }
+
+        if ($request->has('amount_min')) {
+            $query->whereHas('voucher_transactions', function (Builder $builder) use ($request) {
+                $builder->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`');
+                $builder->having('total_amount', '>=', $request->input('amount_min'));
+            });
+        }
+
+        if ($request->has('amount_max')) {
+            $query->whereHas('voucher_transactions', function (Builder $builder) use ($request) {
+                $builder->selectRaw('SUM(`voucher_transactions`.`amount`) as `total_amount`');
+                $builder->having('total_amount', '<=', $request->input('amount_max'));
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param Builder $builder
+     * @param array $fields
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    private static function exportTransform(Builder $builder, array $fields)
+    {
+        $fieldLabels = array_pluck(VoucherTransactionBulksExport::getExportFields(), 'name', 'key');
+
+        $data = $builder->get()->map(fn(VoucherTransactionBulk $transactionBulk) => array_only([
+            "id" => $transactionBulk->id,
+            "quantity" => $transactionBulk->voucher_transactions_count,
+            "amount" => currency_format($transactionBulk->voucher_transactions->sum('amount')),
+            "bank_name" => $transactionBulk->bank_connection->bank->name,
+            "date_transaction" => format_datetime_locale($transactionBulk->created_at),
+            'state' => trans("export.voucher_transactions_bulks.state-values.$transactionBulk->state"),
+        ], $fields))->values();
+
+        return $data->map(function($item) use ($fieldLabels) {
+            return array_reduce(array_keys($item), fn($obj, $key) => array_merge($obj, [
+                $fieldLabels[$key] => $item[$key],
+            ]), []);
+        });
+    }
+
+    /**
+     * @param Request $request
+     * @param Organization $organization
+     * @param array $fields
+     * @return Builder[]|Collection|\Illuminate\Support\Collection
+     */
+    public static function export(Request $request, Organization $organization, array $fields)
+    {
+        return self::exportTransform(VoucherTransactionBulkQuery::order(
+            self::search($request, $organization),
+            $request->get('order_by'),
+            $request->get('order_dir')
+        ), $fields);
     }
 }

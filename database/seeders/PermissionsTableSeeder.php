@@ -26,7 +26,8 @@ class PermissionsTableSeeder extends Seeder
         'validate_records'          => "Validate records",
         'scan_vouchers'             => "Scan vouchers",
         'view_funds'                => "See funds overview",
-        'view_person_bsn_data'      => "See person information by BSN"
+        'view_person_bsn_data'      => "See person information by BSN",
+        'make_direct_payments'      => "Make direct payments",
     ];
 
     /**

@@ -29,6 +29,7 @@ class VoucherTransactionsSubscriber
         $voucher = $transaction->voucher;
         $fund = $transaction->voucher->fund;
         $type = $voucher->isProductType() ? 'product' : ($fund->isTypeBudget() ? 'budget' : 'subsidy');
+        $logData = $event->getLogData();
 
         if (!$voucher->parent_id && $voucher->usedCount() == 1) {
             $voucher->reportBackofficeFirstUse();
@@ -49,18 +50,18 @@ class VoucherTransactionsSubscriber
         ];
 
         if ($type == 'product') {
-            $event = $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, $eventMeta);
+            $event = $voucher->log(Voucher::EVENT_TRANSACTION_PRODUCT, $eventMeta, $logData);
             IdentityProductVoucherTransactionNotification::send($event);
         } elseif ($type == 'budget') {
-            $event = $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta);
+            $event = $voucher->log(Voucher::EVENT_TRANSACTION, $eventMeta, $logData);
             IdentityVoucherBudgetTransactionNotification::send($event);
         } elseif ($type == 'subsidy') {
             $fundProviderProduct = $transaction->product->getSubsidyDetailsForFund($fund);
 
             if ($fundProviderProduct) {
-                $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, [
+                $eventLog = $voucher->log(Voucher::EVENT_TRANSACTION_SUBSIDY, $eventMeta, array_merge([
                     'subsidy_new_limit' => $fundProviderProduct->stockAvailableForVoucher($transaction->voucher),
-                ]);
+                ], $logData));
 
                 if ($transaction->voucher->identity_address) {
                     IdentityVoucherSubsidyTransactionNotification::send($eventLog);
@@ -89,7 +90,7 @@ class VoucherTransactionsSubscriber
                 'employee' => $transaction->employee,
                 'implementation' => $transaction->voucher->fund->getImplementation(),
                 'voucher_transaction' => $transaction,
-            ]);
+            ], $event->getLogData());
 
             FundProviderTransactionBunqSuccessNotification::send($event);
         }

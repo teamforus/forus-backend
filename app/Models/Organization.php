@@ -582,15 +582,6 @@ class Organization extends Model
     }
 
     /**
-     * @param string|array $role
-     * @return Collection|Employee[]
-     */
-    public function employeesOfRole($role): Collection
-    {
-        return $this->employeesOfRoleQuery($role)->get();
-    }
-
-    /**
      * @param array|int $fund_id
      * @return EloquentBuilder
      */

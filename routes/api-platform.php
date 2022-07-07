@@ -109,17 +109,6 @@ $router->group([], static function() use ($router) {
     ]);
 
     $router->resource(
-        'organizations.funds.transactions',
-        "Api\Platform\Organizations\Funds\TransactionsController", [
-        'only' => [
-            'index', 'show',
-        ],
-        'parameters' => [
-            'transactions' => 'transaction_address',
-        ]
-    ]);
-
-    $router->resource(
         'organizations.funds.providers',
         "Api\Platform\Organizations\Funds\FundProviderController", [
         'only' => [
@@ -655,9 +644,9 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\OfficesController"
     )->only('index', 'show', 'store', 'update', 'destroy');
 
-    $router->resource('organizations.bank-connections', "Api\Platform\Organizations\BankConnectionsController")->only([
-        'index', 'show', 'store', 'update',
-    ])->parameter('bank-connections', 'bankConnection');
+    $router->resource('organizations.bank-connections', "Api\Platform\Organizations\BankConnectionsController")
+        ->parameter('bank-connections', 'bankConnection')
+        ->only('index', 'show', 'store', 'update');
 
     $router->resource(
         'organizations.validators',
@@ -694,6 +683,10 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     ]);
 
+    $router->get(
+        'organizations/{organization}/provider/transactions/export-fields',
+        "Api\Platform\Organizations\Provider\TransactionsController@getExportFields"
+    );
 
     $router->get(
         'organizations/{organization}/provider/transactions/export',
@@ -723,20 +716,30 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
     );
 
     $router->get(
+        'organizations/{organization}/sponsor/transactions/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionsController@getExportFields"
+    );
+
+    $router->get(
         'organizations/{organization}/sponsor/transactions/export',
         "Api\Platform\Organizations\Sponsor\TransactionsController@export"
     );
 
     $router->resource(
         'organizations/{organization}/sponsor/transactions',
-        "Api\Platform\Organizations\Sponsor\TransactionsController", [
-            'only' => [
-                'index', 'show'
-            ],
-            'parameters' => [
-                'transactions' => 'transaction_address',
-            ]
-        ]
+        "Api\Platform\Organizations\Sponsor\TransactionsController"
+    )->parameters([
+        'transactions' => 'transaction_address',
+    ])->only('index', 'show', 'store');
+
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export-fields',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@getExportFields"
+    );
+
+    $router->get(
+        'organizations/{organization}/sponsor/transaction-bulks/export',
+        "Api\Platform\Organizations\Sponsor\TransactionBulksController@export"
     );
 
     $router->resource(
@@ -830,32 +833,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         ]
     );
 
-    $router->get(
-        'prevalidations/export',
-        'Api\Platform\PrevalidationController@export'
-    );
+    $router->get('prevalidations/export','Api\Platform\PrevalidationController@export');
+    $router->post('prevalidations/collection','Api\Platform\PrevalidationController@storeCollection');
+    $router->post('prevalidations/collection/hash', 'Api\Platform\PrevalidationController@collectionHash');
 
-    $router->post(
-        'prevalidations/collection',
-        'Api\Platform\PrevalidationController@storeCollection'
-    );
+    $router->resource('prevalidations', 'Api\Platform\PrevalidationController')
+        ->parameter('prevalidations', 'prevalidation_uid')
+        ->only('index', 'store', 'destroy');
 
-    $router->post(
-        'prevalidations/collection/hash',
-        'Api\Platform\PrevalidationController@collectionHash'
-    );
-
-    $router->resource(
-        'prevalidations',
-        'Api\Platform\PrevalidationController', [
-            'only' => [
-                'index', 'store', 'destroy',
-            ],
-            'parameters' => [
-                'prevalidations' => 'prevalidation_uid'
-            ]
-        ]
-    );
+    $router->resource('productboard', 'Api\Platform\ProductBoardController')
+        ->only('store');
 
     $router->resource(
         'employees',

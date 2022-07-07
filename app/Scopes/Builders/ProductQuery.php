@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\FundProviderProduct;
 use App\Models\Implementation;
 use App\Models\Product;
@@ -24,14 +25,19 @@ class ProductQuery
     public static function approvedForFundsFilter(Builder $query, $fund_id): Builder
     {
         return $query->where(static function(Builder $builder) use ($fund_id) {
-            $builder = self::whereFundNotExcluded($builder, $fund_id);
+            self::whereFundNotExcluded($builder, $fund_id);
 
             $builder->where(static function(Builder $builder) use ($fund_id) {
                 $builder->whereHas('fund_provider_products.fund_provider', static function(Builder $builder) use ($fund_id) {
                     $builder->whereIn('fund_id', (array) $fund_id);
+                    $builder->where('state', FundProvider::STATE_ACCEPTED);
+                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
                 });
 
                 $builder->orWhereHas('organization.fund_providers', static function(Builder $builder) use ($fund_id) {
+                    $builder->where('state', FundProvider::STATE_ACCEPTED);
+                    FundProviderQuery::whereApprovedForFundsFilter($builder, $fund_id);
+
                     $builder->where([
                         'allow_products' => TRUE,
                     ])->whereIn('fund_id', (array) $fund_id);
