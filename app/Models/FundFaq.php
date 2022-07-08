@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\MediaService\Traits\HasMedia;
 use App\Traits\HasMarkdownDescription;
 
 /**
@@ -27,7 +28,7 @@ use App\Traits\HasMarkdownDescription;
  */
 class FundFaq extends Model
 {
-    use HasMarkdownDescription;
+    use HasMedia, HasMarkdownDescription;
 
     protected $table = 'fund_faq';
 
