@@ -82,6 +82,8 @@ class ImplementationsController extends Controller
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         ]));
 
+        $implementation->addAnnouncement($request);
+
         $implementation->attachMediaByUid($request->input('banner_media_uid'));
         $implementation->appendMedia($request->input('media_uid', []), 'cms_media');
 

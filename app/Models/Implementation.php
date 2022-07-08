@@ -18,6 +18,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -75,6 +76,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \App\Models\ImplementationPage|null $page_privacy
  * @property-read \App\Models\ImplementationPage|null $page_provider
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $webshop_announcements
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
  * @property-read int|null $pages_count
  * @method static Builder|Implementation newModelQuery()
@@ -330,6 +333,22 @@ class Implementation extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function webshop_announcements(): HasMany
+    {
+        return $this->announcements()->where('scope', 'webshop');
+    }
+
+    /**
      * @return Builder
      */
     public static function activeFundsQuery(): Builder
@@ -502,6 +521,28 @@ class Implementation extends Model
     public function communicationType(): string
     {
         return $this->informal_communication ? 'informal' : 'formal';
+    }
+
+    /**
+     * @param Request $request
+     * @param string $scope
+     * @return $this
+     */
+    public function addAnnouncement(Request $request, string $scope = 'webshop'): Implementation
+    {
+        if ($request->has('announcement')) {
+            $announcement_values = array_merge($request->input('announcement'), [
+                'scope' => $scope
+            ]);
+
+            if ($announcement = $this->webshop_announcements()->first()) {
+                $announcement->update($announcement_values);
+            } else {
+                $this->webshop_announcements()->create($announcement_values);
+            }
+        }
+
+        return $this;
     }
 
     /**

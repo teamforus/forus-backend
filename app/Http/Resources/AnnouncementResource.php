@@ -20,7 +20,7 @@ class AnnouncementResource extends BaseJsonResource
     public function toArray($request): array
     {
         return $this->resource->only([
-            'id', 'type', 'title', 'description_html',
+            'id', 'type', 'title', 'description_html', 'scope'
         ]);
     }
 }

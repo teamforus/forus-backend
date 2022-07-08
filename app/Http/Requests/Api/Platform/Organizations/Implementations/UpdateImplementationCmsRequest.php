@@ -43,6 +43,13 @@ class UpdateImplementationCmsRequest extends FormRequest
             'overlay_type' => 'nullable|in:color,dots,lines,points,circles',
             'overlay_opacity' => 'nullable|numeric|min:0|max:100',
             'header_text_color' => 'nullable|in:bright,dark,auto',
+
+            'announcement'              => 'nullable|array',
+            'announcement.type'         => 'nullable|required_with:announcement|in:warning, danger, success, primary, default',
+            'announcement.title'        => 'nullable|required_with:announcement|string|max:2000',
+            'announcement.description'  => 'nullable|string|max:2000',
+            'announcement.expire_at'    => 'nullable|date_format:Y-m-d|after:today',
+            'announcement.active'       => 'nullable|boolean',
         ];
     }
 

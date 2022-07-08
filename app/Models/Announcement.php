@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $expire_at
  * @property string $scope
  * @property bool $active
+ * @property int $implementation_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
@@ -42,7 +43,7 @@ class Announcement extends Model
      * @var string[]
      */
     protected $fillable = [
-        'type', 'title', 'description', 'expire_at', 'scope', 'active',
+        'type', 'title', 'description', 'expire_at', 'scope', 'active', 'implementation_id'
     ];
 
     /**

@@ -34,6 +34,7 @@ class ImplementationPrivateResource extends BaseJsonResource
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
             'banner' => new MediaResource($implementation->banner),
+            'announcement' => $implementation->webshop_announcements()->get()->first()
         ]);
 
         $data = array_merge($data, [
