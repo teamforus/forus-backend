@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Http\Requests\BaseFormRequest;
+use App\Http\Resources\AnnouncementResource;
 use App\Http\Resources\MediaResource;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
@@ -524,10 +526,14 @@ class Implementation extends Model
             $implementation = self::active();
             $banner = $implementation->banner;
 
+            $request = BaseFormRequest::createFromGlobals();
+            $announcements = Announcement::search($request)->get();
+
             $config = array_merge($config, [
                 'media' => self::getPlatformMediaConfig(),
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
+                'announcements' => AnnouncementResource::collection($announcements)->toArray($request),
                 'digid' => $implementation->digidEnabled(),
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
@@ -550,6 +556,7 @@ class Implementation extends Model
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
                 'pages' => $implementation->getPages(),
+                'has_productboard_integration' => !empty(resolve('productboard')),
             ]);
         }
 

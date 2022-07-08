@@ -179,24 +179,6 @@ class FundProvider extends Model
     }
 
     /**
-     * @param $providerOrganizations
-     * @return array
-     */
-    public static function getFundProviders($providerOrganizations) : array {
-        $fundProviders = collect([]);
-
-        $providerOrganizations->each(function (Organization $organization) use (&$fundProviders) {
-            foreach ($organization->fund_providers as $fund_provider) {
-                if (!$fundProviders->contains('id', $fund_provider->id)) {
-                    $fundProviders->push($fund_provider);
-                }
-            }
-        });
-
-        return $fundProviders->toArray();
-    }
-
-    /**
      * @return bool
      */
     public function isPending(): bool
@@ -231,10 +213,6 @@ class FundProvider extends Model
         Organization $organization,
         Builder $query = null
     ): Builder {
-        $fund_id = $request->input('fund_id');
-        $fund_ids = $request->input('fund_ids');
-        $organization_id = $request->input('organization_id');
-        $state = $request->input('state');
         $allow_products = $request->input('allow_products');
         $allow_budget = $request->input('allow_budget');
 
@@ -257,20 +235,20 @@ class FundProvider extends Model
             });
         }
 
-        if ($fund_id) {
-            $query->where('fund_id', $fund_id);
+        if ($request->has('fund_id')) {
+            $query->where('fund_id', $request->input('fund_id'));
         }
 
-        if ($fund_ids) {
-            $query->whereIn('fund_id', $fund_ids);
+        if ($request->has('fund_ids')) {
+            $query->whereIn('fund_id', $request->input('fund_ids'));
         }
 
-        if ($state) {
-            $query->where('state', $state);
+        if ($request->has('state')) {
+            $query->where('state', $request->input('state'));
         }
 
-        if ($organization_id) {
-            $query->where('organization_id', $organization_id);
+        if ($request->has('organization_id')) {
+            $query->where('organization_id', $request->input('organization_id'));
         }
 
         if ($allow_budget !== null) {
@@ -372,6 +350,7 @@ class FundProvider extends Model
 
     /**
      * @return string
+     * @noinspection PhpUnused
      */
     public function getStateLocaleAttribute(): string
     {
@@ -505,13 +484,6 @@ class FundProvider extends Model
     public function setState(string $state): void
     {
         $originalState = $this->state;
-
-        if ($state === self::STATE_ACCEPTED && $this->isPending() && $this->fund->isTypeBudget()) {
-            $this->update([
-                'allow_budget' => true,
-                'allow_products' => true,
-            ]);
-        }
 
         $approvedBefore = $this->isApproved();
         $this->update(compact('state'));

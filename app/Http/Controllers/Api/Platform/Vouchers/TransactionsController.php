@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Platform\Vouchers;
 
 use App\Events\VoucherTransactions\VoucherTransactionCreated;
-use App\Http\Requests\Api\Platform\Organizations\Transactions\IndexTransactionsRequest;
+use App\Http\Requests\Api\Platform\Vouchers\Transactions\IndexVoucherTransactionsRequest;
 use App\Http\Requests\Api\Platform\Vouchers\Transactions\StoreVoucherTransactionRequest;
 use App\Http\Resources\VoucherTransactionResource;
 use App\Models\Organization;
@@ -18,13 +18,13 @@ class TransactionsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param IndexTransactionsRequest $request
+     * @param IndexVoucherTransactionsRequest $request
      * @param VoucherToken $voucherToken
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(
-        IndexTransactionsRequest $request,
+        IndexVoucherTransactionsRequest $request,
         VoucherToken $voucherToken
     ): AnonymousResourceCollection {
         $this->authorize('show', $voucherToken->voucher);
@@ -107,23 +107,20 @@ class TransactionsController extends Controller
             }
         }
 
-        /** @var VoucherTransaction $transaction */
-        $transaction = $voucher->transactions()->create(array_merge([
+        $transaction = $voucher->makeTransaction([
             'amount' => $amount,
             'product_id' => $product->id ?? null,
             'employee_id' => $organization->findEmployee($request->auth_address())->id,
             'state' => $transactionState,
             'fund_provider_product_id' => $fundProviderProductId ?? null,
-            'address' => resolve('token_generator')->address(),
             'organization_id' => $organization->id,
-        ], $voucher->needsTransactionReview() ? [
-            'attempts' => 50,
-            'last_attempt_at' => now()
-        ] : []));
+        ], $voucher->needsTransactionReview());
 
         $note && $transaction->addNote('provider', $note);
 
-        VoucherTransactionCreated::dispatch($transaction);
+        VoucherTransactionCreated::dispatch($transaction, $note ? [
+            'voucher_transaction_note' => $note,
+        ] : []);
 
         return VoucherTransactionResource::create($transaction);
     }

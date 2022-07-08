@@ -70,6 +70,10 @@ class EmployeesController extends Controller
             EmployeeQuery::whereHasPermissionFilter($query, $permissionFilter);
         }
 
+        if ($q = $request->get('q')) {
+            EmployeeQuery::whereQueryFilter($query, $q);
+        }
+
         return EmployeeResource::queryCollection($query, $request);
     }
 

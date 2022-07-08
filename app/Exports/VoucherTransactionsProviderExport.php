@@ -5,46 +5,32 @@ namespace App\Exports;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
-class VoucherTransactionsProviderExport implements FromCollection, WithHeadings
+class VoucherTransactionsProviderExport extends BaseFieldedExport
 {
-    protected $request;
-    protected $data;
-    protected $headers;
+    protected Collection $data;
 
     /**
-     * VoucherTransactionsProviderExport constructor.
+     * @var array|string[]
+     */
+    protected static array $exportFields = [
+        'id' => 'ID',
+        'amount' => 'Bedrag',
+        'date_transaction' => 'Datum transactie',
+        'date_payment' => 'Datum betaling',
+        'fund_name' => 'Fonds',
+        'provider' => 'Aanbieder',
+        'state' => 'Status',
+    ];
+
+    /**
      * @param Request $request
      * @param Organization $organization
+     * @param array $fields
      */
-    public function __construct(
-        Request $request,
-        Organization $organization
-    ) {
-        $this->request = $request;
-        $this->data = VoucherTransaction::exportProvider(
-            $this->request,
-            $organization
-        );
-    }
-
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    public function __construct(Request $request, Organization $organization, array $fields = [])
     {
-        return $this->data;
-    }
-
-    /**
-     * @return array
-     */
-    public function headings(): array
-    {
-        return $this->data->map(function ($row) {
-            return array_keys($row);
-        })->flatten()->unique()->toArray();
+        $this->data = VoucherTransaction::exportProvider($request, $organization, $fields);
     }
 }
