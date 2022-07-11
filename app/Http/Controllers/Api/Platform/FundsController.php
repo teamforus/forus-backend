@@ -39,8 +39,9 @@ class FundsController extends Controller
      */
     public function index(IndexFundsRequest $request): AnonymousResourceCollection
     {
-        $state = $request->input('state') === 'active_and_closed' ? [
+        $state = $request->input('state') === 'active_paused_and_closed' ? [
             Fund::STATE_CLOSED,
+            Fund::STATE_PAUSED,
             Fund::STATE_ACTIVE,
         ] : Fund::STATE_ACTIVE;
 
