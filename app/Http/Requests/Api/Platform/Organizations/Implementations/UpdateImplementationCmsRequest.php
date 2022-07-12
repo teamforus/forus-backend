@@ -62,7 +62,7 @@ class UpdateImplementationCmsRequest extends FormRequest
             'string',
             'exists:media,uid',
             new MediaUidRule('cms_media')
-        ];x
+        ];
     }
 
     /**
