@@ -5,11 +5,9 @@ namespace App\Scopes\Builders;
 
 use App\Models\ProductReservation;
 use App\Models\Voucher;
-use App\Models\VoucherTransaction;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as QBuilder;
-use Illuminate\Support\Arr;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
  * Class VoucherQuery
@@ -228,92 +226,27 @@ class VoucherQuery
             }
         });
     }
+
     /**
-     * @param array $options
-     * @param Builder|null $builder
+     * @param Builder|Relation $builder
+     * @param Carbon|null $fromDate
+     * @param Carbon|null $toDate
      * @return Builder
-     * @throws \Exception
      */
-    public static function whereInUseDateQuery(array $options, Builder $builder = null): Builder
-    {
-        if (count(array_filter(Arr::only($options, ['in_use_from', 'in_use_to']))) == 0) {
-            throw new \Exception("At least one filter is required.");
+    public static function whereInUseDateQuery(
+        Builder|Relation $builder,
+        Carbon $fromDate = null,
+        Carbon $toDate = null,
+    ): Builder {
+        if ($fromDate) {
+            $builder->where("first_use_date", '>=', $fromDate);
         }
 
-        $builder ?: Voucher::query();
-
-        $baseQuery = $builder->addSelect([
-            'transactions_date' => self::transactionOldest(),
-            'product_vouchers_reservation_date' => self::productVouchersWithReservationsTransactionOldest(),
-            'product_vouchers_date' => self::productVouchersWithoutReservationOldest(),
-        ])->getQuery();
-
-        $query = Voucher::query()->fromSub($baseQuery, 'vouchers');
-
-        $datesSql = 'LEAST(
-                Coalesce(`product_vouchers_date`,`product_vouchers_reservation_date`,`transactions_date`),
-                Coalesce(`product_vouchers_reservation_date`,`product_vouchers_date`,`transactions_date`),
-                Coalesce(`transactions_date`, `product_vouchers_date`,`product_vouchers_reservation_date`)
-                )';
-
-        $query->selectRaw($datesSql . ' as in_use_created_at');
-
-        if ($from = Arr::get($options, 'in_use_from')) {
-            $query->whereRaw($datesSql . ' >= "' . Carbon::parse($from)->startOfDay() . '"');
+        if ($toDate) {
+            $builder->where("first_use_date", '<=', $toDate);
         }
 
-        if ($to = Arr::get($options, 'in_use_to')) {
-            $query->whereRaw($datesSql . ' <= "' . Carbon::parse($to)->startOfDay() . '"');
-        }
-
-        return $query;
-    }
-
-    /**
-     * @return Builder
-     */
-    private static function transactionOldest(): Builder
-    {
-        return VoucherTransaction::whereColumn('voucher_transactions.voucher_id', 'vouchers.id')
-            ->select('created_at')
-            ->orderBy('created_at')
-            ->limit(1);
-    }
-
-    /**
-     * @return Builder
-     */
-    private static function productVouchersWithReservationsTransactionOldest(): Builder
-    {
-        return VoucherTransaction::whereIn('voucher_id', function(QBuilder $query) {
-            $query->selectSub(
-                Voucher::from('vouchers as product_voucher_reservations')
-                    ->select('id')
-                    ->whereColumn('product_voucher_reservations.parent_id', 'vouchers.id')
-                    ->where(function(Builder $builder) {
-                        VoucherQuery::whereIsProductVoucher($builder);
-                    })
-                    ->whereNotNull('product_reservation_id'), 'voucher_id');
-        })
-            ->select('created_at')
-            ->orderBy('created_at')
-            ->limit(1);
-    }
-
-    /**
-     * @return Builder
-     */
-    private static function productVouchersWithoutReservationOldest(): Builder
-    {
-        return Voucher::from('vouchers as product_vouchers')
-            ->whereColumn('product_vouchers.parent_id', 'vouchers.id')
-            ->where(function(Builder $builder) {
-                VoucherQuery::whereIsProductVoucher($builder);
-            })
-            ->whereNull('product_reservation_id')
-            ->select('created_at')
-            ->orderBy('created_at')
-            ->limit(1);
+        return $builder;
     }
 
     /**
