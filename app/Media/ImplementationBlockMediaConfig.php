@@ -22,6 +22,11 @@ class ImplementationBlockMediaConfig extends MediaImageConfig
     protected $type = self::TYPE_MULTIPLE;
 
     /**
+     * @var float
+     */
+    protected $preview_aspect_ratio = 1.36;
+
+    /**
      * FundLogoMediaConfig constructor.
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */
@@ -31,8 +36,8 @@ class ImplementationBlockMediaConfig extends MediaImageConfig
         $this->save_dominant_color = config('media.calc_dominant_color');
 
         $this->addPreset(new MediaImagePreset('thumbnail', 100, 100, false, 90));
-        $this->addPreset(new MediaImagePreset('public', 600, 440, false));
-        $this->addPreset(new MediaImagePreset('large', 1200, 880, false));
+        $this->addPreset(new MediaImagePreset('public', 600, 440, false, 95));
+        $this->addPreset(new MediaImagePreset('large', 1200, 880, false, 90));
         $this->addPreset(MediaImagePreset::createOriginal('original'));
     }
 }

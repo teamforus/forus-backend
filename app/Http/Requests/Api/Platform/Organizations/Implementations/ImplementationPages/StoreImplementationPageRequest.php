@@ -1,10 +1,17 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Implementations;
+namespace App\Http\Requests\Api\Platform\Organizations\Implementations\ImplementationPages;
 
+use App\Models\Implementation;
+use App\Models\ImplementationPage;
 use App\Rules\MediaUidRule;
+use Illuminate\Support\Arr;
+use Illuminate\Validation\Rule;
 
-class UpdateImplementationPageRequest extends StoreImplementationBlocksRequest
+/**
+ * @property-read Implementation $implementation
+ */
+class StoreImplementationPageRequest extends ValidateImplementationPageBlocksRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,6 +31,8 @@ class UpdateImplementationPageRequest extends StoreImplementationBlocksRequest
     public function rules(): array
     {
         return array_merge(parent::rules(), [
+            'state'                 => 'nullable|in:' . implode(',', ImplementationPage::STATES),
+            'page_type'             => $this->pageTypeRule(),
             'content'               => 'nullable|string|max:10000',
             'content_alignment'     => 'nullable|in:left,center,right',
             'external'              => 'present|boolean',
@@ -31,6 +40,18 @@ class UpdateImplementationPageRequest extends StoreImplementationBlocksRequest
             'media_uid'             => 'nullable|array',
             'media_uid.*'           => $this->mediaRule(),
         ]);
+    }
+
+    /**
+     * @return array
+     */
+    private function pageTypeRule(): array
+    {
+        return [
+            'required',
+            Rule::in(Arr::pluck(ImplementationPage::PAGE_TYPES, 'key')),
+            Rule::notIn($this->implementation->pages()->pluck('page_type')->toArray()),
+        ];
     }
 
     /**

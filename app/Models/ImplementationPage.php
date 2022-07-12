@@ -6,6 +6,8 @@ use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 
 /**
  * App\Models\ImplementationPage
@@ -13,16 +15,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $implementation_id
  * @property string|null $page_type
+ * @property string $state
  * @property string|null $content
  * @property string $content_alignment
  * @property string|null $external_url
  * @property bool $external
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
+ * @property-read int|null $blocks_count
  * @property-read string $content_html
  * @property-read \App\Models\Implementation $implementation
- * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read Collection|\App\Services\MediaService\Models\Media[] $medias
  * @property-read int|null $medias_count
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
@@ -35,12 +39,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage wherePageType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class ImplementationPage extends Model
 {
-    use HasMedia;
+    use HasMedia, SoftDeletes;
 
     const TYPE_HOME = 'home';
     const TYPE_PRODUCTS = 'products';
@@ -54,51 +59,66 @@ class ImplementationPage extends Model
     const TYPE_FOOTER_OPENING_TIMES = 'footer_opening_times';
     const TYPE_FOOTER_CONTACT_DETAILS = 'footer_contact_details';
 
-    const TYPES = [
-        self::TYPE_PROVIDER,
-        self::TYPE_EXPLANATION,
-        self::TYPE_PRIVACY,
-        self::TYPE_ACCESSIBILITY,
-        self::TYPE_TERMS_AND_CONDITIONS,
-        self::TYPE_FOOTER_CONTACT_DETAILS,
-        self::TYPE_FOOTER_OPENING_TIMES,
-        self::TYPE_HOME,
-        self::TYPE_PRODUCTS,
-        self::TYPE_PROVIDERS,
-        self::TYPE_FUNDS,
+    const STATE_DRAFT = 'draft';
+    const STATE_PUBLIC = 'public';
+
+    const STATES = [
+        self::STATE_DRAFT,
+        self::STATE_PUBLIC,
     ];
 
-    const TYPES_INTERNAL = [
-        self::TYPE_PROVIDER,
-        self::TYPE_FOOTER_OPENING_TIMES,
-        self::TYPE_FOOTER_CONTACT_DETAILS,
-    ];
-
-    const PAGE_BLOCK_LIST = [
-        self::TYPE_HOME => [
-            ImplementationBlock::TYPE_DETAILED  => ['funds_block'],
-            ImplementationBlock::TYPE_TEXT => ['below_header'],
-        ],
-        self::TYPE_PRODUCTS => [
-            ImplementationBlock::TYPE_DETAILED => [],
-            ImplementationBlock::TYPE_TEXT => ['above_product_list'],
-        ],
-        self::TYPE_PROVIDERS => [
-            ImplementationBlock::TYPE_DETAILED => [],
-            ImplementationBlock::TYPE_TEXT => ['above_provider_list'],
-        ],
-        self::TYPE_FUNDS => [
-            ImplementationBlock::TYPE_DETAILED => [],
-            ImplementationBlock::TYPE_TEXT => ['above_fund_list'],
-        ],
-    ];
+    const PAGE_TYPES = [[
+        'key' => self::TYPE_HOME,
+        'type' => 'static',
+        'blocks' => true,
+    ], [
+        'key' => self::TYPE_PRODUCTS,
+        'type' => 'static',
+        'blocks' => false,
+    ], [
+        'key' => self::TYPE_PROVIDERS,
+        'type' => 'static',
+        'blocks' => false,
+    ], [
+        'key' => self::TYPE_FUNDS,
+        'type' => 'static',
+        'blocks' => false,
+    ], [
+        'key' => self::TYPE_PROVIDER,
+        'type' => 'static',
+        'blocks' => true,
+    ], [
+        'key' => self::TYPE_EXPLANATION,
+        'type' => 'extra',
+        'blocks' => true,
+    ], [
+        'key' => self::TYPE_PRIVACY,
+        'type' => 'extra',
+        'blocks' => true,
+    ], [
+        'key' => self::TYPE_ACCESSIBILITY,
+        'type' => 'extra',
+        'blocks' => true,
+    ], [
+        'key' => self::TYPE_TERMS_AND_CONDITIONS,
+        'type' => 'extra',
+        'blocks' => true,
+    ], [
+        'key' => self::TYPE_FOOTER_CONTACT_DETAILS,
+        'type' => 'element',
+        'blocks' => false,
+    ], [
+        'key' => self::TYPE_FOOTER_OPENING_TIMES,
+        'type' => 'element',
+        'blocks' => false,
+    ]];
 
     /**
      * @var string[]
      */
     protected $fillable = [
         'implementation_id', 'page_type', 'content', 'content_alignment',
-        'external', 'external_url',
+        'external', 'external_url', 'state',
     ];
 
     /**
@@ -134,62 +154,69 @@ class ImplementationPage extends Model
     }
 
     /**
-     * @param $page_key
-     * @return \string[][]
-     */
-    public static function getBlockListByPageKey($page_key): array
-    {
-        $no_blocks = [
-            ImplementationBlock::TYPE_TEXT => [],
-            ImplementationBlock::TYPE_DETAILED => []
-        ];
-
-        return array_key_exists($page_key, self::PAGE_BLOCK_LIST) ? self::PAGE_BLOCK_LIST[$page_key] : $no_blocks;
-    }
-
-    /**
-     * @param $pageData
+     * @param array|null $blocks
      * @return void
      */
-    private function syncBlocks($pageData): void
+    public function syncBlocks(array $blocks = null): void
     {
+        if (is_null($blocks)) {
+            return;
+        }
+
         // remove blocks not listed in the array
-        $block_ids = array_filter(array_pluck($pageData['blocks'], 'id'));
+        $block_ids = array_filter(array_pluck($blocks, 'id'));
         $this->blocks()->whereNotIn('id', $block_ids)->delete();
 
-        if (isset($pageData['blocks'])) {
-            foreach ($pageData['blocks'] as $block) {
-                $blockData = array_only($block, [
-                    'type', 'key', 'media_uid', 'label', 'title', 'description',
-                    'button_enabled', 'button_text', 'button_link'
-                ]);
+        foreach ($blocks as $block) {
+            $blockData = array_only($block, [
+                'type', 'key', 'media_uid', 'label', 'title', 'description',
+                'button_enabled', 'button_text', 'button_link',
+            ]);
 
-                /** @var ImplementationBLock $block */
-                if ($block = $this->blocks()->find($block['id'] ?? null)) {
-                    $block = tap($block)->update($blockData);
-                } else {
-                    $block = $this->blocks()->create($blockData);
-                }
-
-                $block->appendMedia($blockData['media_uid'] ?? [], 'implementation_block_media');
+            /** @var ImplementationBLock $block */
+            if ($block = $this->blocks()->find($block['id'] ?? null)) {
+                $block->update($blockData);
+            } else {
+                $block = $this->blocks()->create($blockData);
             }
+
+            $block->attachMediaByUid($blockData['media_uid'] ?? null);
         }
     }
 
     /**
-     * @param array $data
-     * @return $this
+     * @param string $pageType
+     * @return bool
      */
-    public function change(array $data) : self {
-        $this->updateModel(array_merge(array_only($data, [
-            'content', 'content_alignment', 'external', 'external_url',
-        ]), in_array($data['page_type'], ImplementationPage::TYPES_INTERNAL) ? [
-            'external' => 0,
-            'external_url' => null,
-        ] : []))->appendMedia($data['media_uid'] ?? [], 'implementation_block_media');
+    public static function isInternalType(string $pageType): bool
+    {
+        return Arr::get(Arr::keyBy(self::PAGE_TYPES, 'key'), "$pageType.type", true);
+    }
 
-        $this->syncBlocks($data);
+    /**
+     * @return bool
+     */
+    public function isPublic(): bool
+    {
+        return $this->state === self::STATE_PUBLIC;
+    }
 
-        return $this;
+    /**
+     * @param string $pageType
+     * @return string
+     */
+    public static function webshopUriByPageType(string $pageType): string
+    {
+        return match($pageType) {
+            'provider',
+            'providers' => '/aanbieders',
+            'products' => '/aanbod',
+            'funds' => '/fondsen',
+            'explanation' => '/uitleg',
+            'privacy' => '/privacy',
+            'accessibility' => '/accessibility',
+            'terms_and_conditions' => '/algemene-voorwaarden',
+            default => '/',
+        };
     }
 }

@@ -27,10 +27,10 @@ trait HasMedia
 
     /**
      * @param string|null $uid
-     * @return $this
+     * @return static
      * @noinspection PhpUnused
      */
-    public function attachMediaByUid(?string $uid): self
+    public function attachMediaByUid(?string $uid): static
     {
         if ($uid && $media = resolve('media')->findByUid($uid)) {
             return $this->attachMedia($media);

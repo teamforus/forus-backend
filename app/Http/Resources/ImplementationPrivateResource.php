@@ -2,14 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Announcement;
 use App\Models\Implementation;
-use App\Models\ImplementationBlock;
 use App\Models\ImplementationPage;
 
-/**
- * Class ImplementationPrivateResource
- * @package App\Http\Resources
- */
 class ImplementationPrivateResource extends BaseJsonResource
 {
     /**
@@ -17,7 +13,7 @@ class ImplementationPrivateResource extends BaseJsonResource
      *
      * @param  \Illuminate\Http\Request  $request
      * @property Implementation $resource
-     * @return array
+     * @return ?array
      */
     public function toArray($request): ?array
     {
@@ -34,19 +30,14 @@ class ImplementationPrivateResource extends BaseJsonResource
             'communication_type' => $implementation->informal_communication ? 'informal' : 'formal',
             'overlay_opacity' => min(max(intval($implementation->overlay_opacity / 10) * 10, 0), 100),
             'banner' => new MediaResource($implementation->banner),
+            'announcement' => $this->getAnnouncement($implementation),
         ]);
 
         $data = array_merge($data, [
-            'pages' => array_reduce(ImplementationPage::TYPES, function(
-                array $pages, string $type
-            ) use ($implementation) {
-                /** @var ImplementationPage $page */
-                $page = $implementation->pages->where('page_type', $type)->first();
-
-                return array_merge($pages, [$type => $page ? $this->pageDetails($page) : null]);
-            }, []),
-            'page_types' => ImplementationPage::TYPES,
-            'page_types_internal' => ImplementationPage::TYPES_INTERNAL,
+            'pages' => ImplementationPageResource::collection($implementation->pages),
+            'page_types' => array_map(fn(array $pageType) => array_merge($pageType, [
+                'webshop_url' => $implementation->urlWebshop(ImplementationPage::webshopUriByPageType($pageType['key'])),
+            ]), ImplementationPage::PAGE_TYPES),
         ]);
 
         return array_merge(
@@ -95,13 +86,20 @@ class ImplementationPrivateResource extends BaseJsonResource
     }
 
     /**
-     * @param ImplementationPage|null $page
+     * @param Implementation $implementation
      * @return array|null
      */
-    protected function pageDetails(?ImplementationPage $page): ?array
+    private function getAnnouncement(Implementation $implementation): ?array
     {
-        return $page?->only([
-            'id', 'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url',
+        /** @var Announcement $announcement */
+        if (!$announcement = $implementation->webshop_announcements()->first()) {
+            return null;
+        }
+
+        return array_merge($announcement->only([
+            'id', 'type', 'title', 'description', 'description_html', 'scope', 'active',
+        ]), [
+            'expire_at' => $announcement?->expire_at->format('Y-m-d'),
         ]);
     }
 }

@@ -357,10 +357,6 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'transactions' => 'demo_token',
     ])->only('store', 'show', 'update');
 
-    $router->post(
-        'organizations/{organization}/implementations/validate-blocks',
-        "Api\Platform\Organizations\ImplementationsController@storeBlocksValidate");
-
     $router->patch(
         'organizations/{organization}/implementations/{implementation}/cms',
         "Api\Platform\Organizations\ImplementationsController@updateCms");
@@ -382,10 +378,16 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\ImplementationsController"
     )->only('index', 'show');
 
+    $router->post(
+        'organizations/{organization}/implementations/{implementation}/pages/validate-blocks',
+        "Api\Platform\Organizations\Implementations\ImplementationPagesController@storeBlocksValidate");
+
     $router->resource(
-        'organizations/{organization}/implementations/{implementation}/implementation-pages',
+        'organizations/{organization}/implementations/{implementation}/pages',
         "Api\Platform\Organizations\Implementations\ImplementationPagesController"
-    )->only('index', 'show', 'update');
+    )->parameters([
+        'pages' => 'implementation_page',
+    ])->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->resource(
         'organizations/{organization}/implementations/{implementation}/system-notifications',

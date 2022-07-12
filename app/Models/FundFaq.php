@@ -15,6 +15,8 @@ use App\Traits\HasMarkdownDescription;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $description_html
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Services\MediaService\Models\Media[] $medias
+ * @property-read int|null $medias_count
  * @method static \Illuminate\Database\Eloquent\Builder|FundFaq newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFaq newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FundFaq query()

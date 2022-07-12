@@ -6,6 +6,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Traits\HasMarkdownDescription;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\Announcement
@@ -36,13 +37,13 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Announcement extends Model
 {
-    use HasMarkdownDescription;
+    use HasMarkdownDescription, SoftDeletes;
 
     /**
      * @var string[]
      */
     protected $fillable = [
-        'type', 'title', 'description', 'expire_at', 'scope', 'active',
+        'type', 'title', 'description', 'expire_at', 'scope', 'active', 'implementation_id',
     ];
 
     /**
@@ -67,13 +68,19 @@ class Announcement extends Model
     public static function search(BaseFormRequest $request, $query = null): Builder
     {
         $query = $query ?: static::query();
+        $clientType = $request->client_type();
+        $implementation = $request->implementation();
+
+        if ($clientType !== $implementation::FRONTEND_WEBSHOP) {
+            $clientType = [$clientType, 'dashboards'];
+        }
 
         return $query
             ->where('active', true)
-            ->whereIn('scope', [$request->client_type(), 'dashboards'])
+            ->whereIn('scope', (array) $clientType)
             ->where(function (Builder $builder) {
                 $builder->whereNull('expire_at');
-                $builder->orWhere('expire_at', '>', now());
+                $builder->orWhere('expire_at', '>=', now()->startOfDay());
             })
             ->orderByDesc('created_at');
     }

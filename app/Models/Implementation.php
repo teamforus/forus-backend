@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\AnnouncementResource;
+use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
@@ -18,6 +19,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -77,6 +79,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
  * @property-read int|null $pages_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
+ * @property-read int|null $pages_public_count
  * @method static Builder|Implementation newModelQuery()
  * @method static Builder|Implementation newQuery()
  * @method static Builder|Implementation query()
@@ -170,10 +174,22 @@ class Implementation extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function pages(): HasMany
     {
         return $this->hasMany(ImplementationPage::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function pages_public(): HasMany
+    {
+        return $this->hasMany(ImplementationPage::class)->where([
+            'implementation_pages.state' => ImplementationPage::STATE_PUBLIC,
+        ]);
     }
 
     /**
@@ -285,6 +301,22 @@ class Implementation extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(Announcement::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function webshop_announcements(): HasMany
+    {
+        return $this->announcements()->where('scope', 'webshop');
     }
 
     /**
@@ -555,7 +587,7 @@ class Implementation extends Model
                 'implementation_name' => $implementation->name,
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
-                'pages' => $implementation->getPages(),
+                'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'has_productboard_integration' => !empty(resolve('productboard')),
             ]);
         }
@@ -721,40 +753,6 @@ class Implementation extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Collection|Collection
-     */
-    private function getPages()
-    {
-        $pages = self::general()->pages;
-
-        if (!$this->isGeneral()) {
-            foreach (ImplementationPage::TYPES as $page_type) {
-                $localPages = $this->pages->filter(function(ImplementationPage $page) use ($page_type) {
-                    return $page->page_type === $page_type && (
-                        ($page->external ? $page->external_url : $page->content) || $page->blocks->count());
-                });
-
-                if ($localPages->count() > 0) {
-                    $pageIndex = $pages->find($localPages->first());
-                    $pages[$pageIndex] = $localPages->first();
-                }
-            }
-        }
-
-        return $pages->map(static function(ImplementationPage $page) {
-            return array_merge($page->only('page_type', 'external', 'content_alignment'), [
-                'content_html' => $page->external ? '' : $page->content_html,
-                'external_url' => $page->external ? $page->external_url : '',
-                'blocks'       => $page?->blocks->map(function (ImplementationBlock $block) {
-                    $block['media'] = new MediaResource($block->photo);
-                    $block['description_html'] = $block->description_html;
-                    return $block;
-                })
-            ]);
-        })->keyBy('page_type');
-    }
-
-    /**
      * @return ?string
      */
     private function getBannerTextColor(): ?string
@@ -764,5 +762,28 @@ class Implementation extends Model
         }
 
         return $this->header_text_color;
+    }
+
+    /**
+     * @param array $attributes
+     * @return Announcement
+     */
+    public function addWebshopAnnouncement(array $attributes): Announcement
+    {
+        if (Arr::get($attributes, 'replace', false)) {
+            $this->webshop_announcements()->delete();
+        }
+
+        /** @var Announcement $announcement */
+        $announcement = $this->webshop_announcements()->firstOrCreate([], [
+            'active' => false,
+            'scope' => 'webshop',
+        ]);
+
+        $announcement->update(array_only($attributes, [
+            'type', 'title', 'description', 'expire_at', 'active',
+        ]));
+
+        return $announcement;
     }
 }
