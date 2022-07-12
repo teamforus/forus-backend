@@ -1340,13 +1340,15 @@ class Fund extends Model
 
     /**
      * Update faq question or create new fund question
+     *
      * @param array $question
-     * @return FundFaq|\Illuminate\Database\Eloquent\Model
+     * @return FundFaq
      */
     protected function syncQuestion(array $question): FundFaq
     {
         /** @var FundFaq $faq */
         $faq = $this->faq()->find($question['id'] ?? null) ?: $this->faq()->create();
+        $faq->appendMedia($question['description_media_uid'] ?? [], 'cms_media');
 
         return $faq->updateModel(array_only($question, ['title', 'description']));
     }
