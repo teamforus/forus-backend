@@ -99,7 +99,7 @@ class ImplementationPrivateResource extends BaseJsonResource
         return array_merge($announcement->only([
             'id', 'type', 'title', 'description', 'description_html', 'scope', 'active',
         ]), [
-            'expire_at' => $announcement?->expire_at->format('Y-m-d'),
+            'expire_at' => $announcement?->expire_at?->format('Y-m-d'),
         ]);
     }
 }
