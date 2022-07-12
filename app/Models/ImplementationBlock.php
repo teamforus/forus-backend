@@ -60,7 +60,7 @@ class ImplementationBlock extends Model
      */
     protected $fillable = [
         'implementation_page_id', 'key', 'type', 'label', 'title', 'description',
-        'button_enabled', 'button_text', 'button_link'
+        'button_enabled', 'button_text', 'button_link',
     ];
 
     /**
@@ -80,7 +80,7 @@ class ImplementationBlock extends Model
     public function photo(): MorphOne
     {
         return $this->morphOne(Media::class, 'mediable')->where([
-            'type' => 'implementation_block_media'
+            'type' => 'implementation_block_media',
         ]);
     }
 }

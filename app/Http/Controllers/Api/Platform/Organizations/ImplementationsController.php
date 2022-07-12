@@ -81,7 +81,11 @@ class ImplementationsController extends Controller
             'overlay_enabled', 'overlay_type', 'overlay_opacity', 'header_text_color',
         ]));
 
-        $implementation->addWebshopAnnouncement($request->input('announcement', []));
+        $implementation->addWebshopAnnouncement(
+            $request->input('announcement', []),
+            $request->boolean('reset')
+        );
+
         $implementation->attachMediaByUid($request->input('banner_media_uid'));
         $implementation->appendMedia($request->input('media_uid', []), 'cms_media');
 
@@ -96,6 +100,7 @@ class ImplementationsController extends Controller
      * @param Implementation $implementation
      * @return ImplementationPrivateResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @noinspection PhpUnused
      */
     public function updateDigiD(
         UpdateImplementationDigiDRequest $request,
@@ -106,7 +111,7 @@ class ImplementationsController extends Controller
         $this->authorize('updateDigiD', [$implementation, $organization]);
 
         $implementation->update($request->only([
-            'digid_app_id', 'digid_shared_secret', 'digid_a_select_server'
+            'digid_app_id', 'digid_shared_secret', 'digid_a_select_server',
         ]));
 
         return new ImplementationPrivateResource($implementation);

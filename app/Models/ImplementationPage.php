@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
  * @property string $content_alignment
  * @property string|null $external_url
  * @property bool $external
+ * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Collection|\App\Models\ImplementationBlock[] $blocks
@@ -30,10 +31,12 @@ use Illuminate\Support\Arr;
  * @property-read int|null $medias_count
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage newQuery()
+ * @method static \Illuminate\Database\Query\Builder|ImplementationPage onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage query()
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContent($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContentAlignment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)
@@ -41,6 +44,8 @@ use Illuminate\Support\Arr;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage wherePageType($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Query\Builder|ImplementationPage withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|ImplementationPage withoutTrashed()
  * @mixin \Eloquent
  */
 class ImplementationPage extends Model
@@ -157,18 +162,18 @@ class ImplementationPage extends Model
      * @param array|null $blocks
      * @return void
      */
-    public function syncBlocks(array $blocks = null): void
+    public function syncBlocks(?array $blocks = null): void
     {
-        if (is_null($blocks)) {
+        if ($blocks === null) {
             return;
         }
 
         // remove blocks not listed in the array
-        $block_ids = array_filter(array_pluck($blocks, 'id'));
+        $block_ids = array_filter(Arr::pluck($blocks, 'id'));
         $this->blocks()->whereNotIn('id', $block_ids)->delete();
 
         foreach ($blocks as $block) {
-            $blockData = array_only($block, [
+            $blockData = Arr::only($block, [
                 'type', 'key', 'media_uid', 'label', 'title', 'description',
                 'button_enabled', 'button_text', 'button_link',
             ]);
@@ -190,7 +195,10 @@ class ImplementationPage extends Model
      */
     public static function isInternalType(string $pageType): bool
     {
-        return Arr::get(Arr::keyBy(self::PAGE_TYPES, 'key'), "$pageType.type", true);
+        $pageType = Arr::keyBy(self::PAGE_TYPES, 'key')[$pageType] ?? null;
+        $type = $pageType['type'] ?? null;
+
+        return !$type || in_array($type, ['static', 'page_element']);
     }
 
     /**

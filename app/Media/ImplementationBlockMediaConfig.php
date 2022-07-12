@@ -5,10 +5,6 @@ namespace App\Media;
 use App\Services\MediaService\MediaImageConfig;
 use App\Services\MediaService\MediaImagePreset;
 
-/**
- * Class OrganizationLogoMediaConfig
- * @package App\Media
- */
 class ImplementationBlockMediaConfig extends MediaImageConfig
 {
     /**
@@ -27,7 +23,6 @@ class ImplementationBlockMediaConfig extends MediaImageConfig
     protected $preview_aspect_ratio = 1.36;
 
     /**
-     * FundLogoMediaConfig constructor.
      * @throws \App\Services\MediaService\Exceptions\MediaPresetAlreadyExistsException
      */
     public function __construct()

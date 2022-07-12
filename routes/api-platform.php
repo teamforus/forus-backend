@@ -386,7 +386,7 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         'organizations/{organization}/implementations/{implementation}/pages',
         "Api\Platform\Organizations\Implementations\ImplementationPagesController"
     )->parameters([
-        'pages' => 'implementation_page',
+        'pages' => 'implementationPage',
     ])->only('index', 'store', 'show', 'update', 'destroy');
 
     $router->resource(

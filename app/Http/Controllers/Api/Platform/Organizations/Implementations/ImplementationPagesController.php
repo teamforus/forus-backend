@@ -31,8 +31,8 @@ class ImplementationPagesController extends Controller
         Implementation $implementation
     ): AnonymousResourceCollection {
         $this->authorize('show', $organization);
-        $this->authorize('viewAny', [Implementation::class, $organization]);
-        $this->authorize('view', [$implementation, $organization]);
+        $this->authorize('updateCMS', [$implementation, $organization]);
+        $this->authorize('viewAny', [ImplementationPage::class, $implementation, $organization]);
 
         return ImplementationPageResource::collection($implementation->pages);
     }
@@ -53,6 +53,7 @@ class ImplementationPagesController extends Controller
     ): ImplementationPageResource {
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
+        $this->authorize('create', [ImplementationPage::class, $implementation, $organization]);
 
         $pageType = $request->input('page_type');
         $isInternalType = ImplementationPage::isInternalType($pageType);
@@ -68,22 +69,24 @@ class ImplementationPagesController extends Controller
         $page->appendMedia($data['media_uid'] ?? [], 'implementation_block_media');
         $page->syncBlocks($request->input('blocks'));
 
-
         return new ImplementationPageResource($page);
     }
 
     /**
      * @param ValidateImplementationPageBlocksRequest $request
      * @param Organization $organization
+     * @param Implementation $implementation
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @noinspection PhpUnused
      */
     public function storeBlocksValidate(
         ValidateImplementationPageBlocksRequest $request,
-        Organization $organization
+        Organization $organization,
+        Implementation $implementation
     ): JsonResponse {
         $this->authorize('show', $organization);
+        $this->authorize('updateCMS', [$implementation, $organization]);
 
         return new JsonResponse([], $request->isAuthenticated() ? 200 : 403);
     }
@@ -103,8 +106,8 @@ class ImplementationPagesController extends Controller
         ImplementationPage $implementationPage
     ): ImplementationPageResource {
         $this->authorize('show', $organization);
-        $this->authorize('viewAny', [Implementation::class, $organization]);
-        $this->authorize('view', [$implementation, $organization]);
+        $this->authorize('updateCMS', [$implementation, $organization]);
+        $this->authorize('view', [$implementationPage, $implementation, $organization]);
 
         return new ImplementationPageResource($implementationPage);
     }
@@ -127,6 +130,7 @@ class ImplementationPagesController extends Controller
     ): ImplementationPageResource {
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
+        $this->authorize('update', [$implementationPage, $implementation, $organization]);
 
         $data = array_merge($request->only([
             'state', 'content', 'content_alignment', 'external', 'external_url',
@@ -139,7 +143,7 @@ class ImplementationPagesController extends Controller
         ]);
 
         $implementationPage->update($data);
-        $implementationPage->appendMedia($data['media_uid'] ?? [], 'implementation_block_media');
+        $implementationPage->appendMedia($request->input('media_uid'), 'cms_media');
         $implementationPage->syncBlocks($request->input('blocks'));
 
         return new ImplementationPageResource($implementationPage);
@@ -161,6 +165,7 @@ class ImplementationPagesController extends Controller
     ): JsonResponse {
         $this->authorize('show', $organization);
         $this->authorize('updateCMS', [$implementation, $organization]);
+        $this->authorize('destroy', [$implementationPage, $implementation, $organization]);
 
         $implementationPage->delete();
 

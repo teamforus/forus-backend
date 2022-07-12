@@ -92,7 +92,7 @@ class ImplementationPrivateResource extends BaseJsonResource
     private function getAnnouncement(Implementation $implementation): ?array
     {
         /** @var Announcement $announcement */
-        if (!$announcement = $implementation->webshop_announcements()->first()) {
+        if (!$announcement = $implementation->announcements_webshop()->first()) {
             return null;
         }
 

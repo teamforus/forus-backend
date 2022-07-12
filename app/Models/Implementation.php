@@ -60,6 +60,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_forus_api_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
+ * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
  * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
@@ -304,19 +306,11 @@ class Implementation extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function announcements(): HasMany
-    {
-        return $this->hasMany(Announcement::class);
-    }
-
-    /**
      * @return HasMany
      */
-    public function webshop_announcements(): HasMany
+    public function announcements_webshop(): HasMany
     {
-        return $this->announcements()->where('scope', 'webshop');
+        return $this->hasMany(Announcement::class)->where('scope', 'webshop');
     }
 
     /**
@@ -766,21 +760,22 @@ class Implementation extends Model
 
     /**
      * @param array $attributes
+     * @param bool $replace
      * @return Announcement
      */
-    public function addWebshopAnnouncement(array $attributes): Announcement
+    public function addWebshopAnnouncement(array $attributes, bool $replace = false): Announcement
     {
-        if (Arr::get($attributes, 'replace', false)) {
-            $this->webshop_announcements()->delete();
+        if ($replace) {
+            $this->announcements_webshop()->delete();
         }
 
         /** @var Announcement $announcement */
-        $announcement = $this->webshop_announcements()->firstOrCreate([], [
+        $announcement = $this->announcements_webshop()->firstOrCreate([], [
             'active' => false,
             'scope' => 'webshop',
         ]);
 
-        $announcement->update(array_only($attributes, [
+        $announcement->update(Arr::only($attributes, [
             'type', 'title', 'description', 'expire_at', 'active',
         ]));
 
