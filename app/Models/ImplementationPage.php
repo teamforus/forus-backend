@@ -216,8 +216,8 @@ class ImplementationPage extends Model
     public static function webshopUriByPageType(string $pageType): string
     {
         return match($pageType) {
-            'provider',
             'providers' => '/aanbieders',
+            'provider' => '/aanbieders/aanmelden',
             'products' => '/aanbod',
             'funds' => '/fondsen',
             'explanation' => '/uitleg',

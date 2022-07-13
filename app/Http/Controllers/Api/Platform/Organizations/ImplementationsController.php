@@ -83,7 +83,7 @@ class ImplementationsController extends Controller
 
         $implementation->addWebshopAnnouncement(
             $request->input('announcement', []),
-            $request->boolean('reset')
+            $request->boolean('announcement.replace')
         );
 
         $implementation->attachMediaByUid($request->input('banner_media_uid'));

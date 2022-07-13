@@ -132,15 +132,14 @@ class ImplementationPagesController extends Controller
         $this->authorize('updateCMS', [$implementation, $organization]);
         $this->authorize('update', [$implementationPage, $implementation, $organization]);
 
+        $isInternalType = ImplementationPage::isInternalType($implementationPage->page_type);
+
         $data = array_merge($request->only([
             'state', 'content', 'content_alignment', 'external', 'external_url',
-        ]), $implementationPage::isInternalType($implementationPage->page_type) ? [
+        ]), $isInternalType ? [
             'external' => false,
             'external_url' => null,
-        ] : [
-            'content' => false,
-            'content_alignment' => false,
-        ]);
+        ] : []);
 
         $implementationPage->update($data);
         $implementationPage->appendMedia($request->input('media_uid'), 'cms_media');
