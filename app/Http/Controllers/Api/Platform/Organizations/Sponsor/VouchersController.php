@@ -39,6 +39,7 @@ class VouchersController extends Controller
      * @param Organization $organization
      * @return AnonymousResourceCollection
      * @throws AuthorizationException
+     * @throws Exception
      * @noinspection PhpUnused
      */
     public function index(
@@ -387,10 +388,10 @@ class VouchersController extends Controller
         $qrFormat = $request->get('qr_format');
         $dataFormat = $request->get('data_format', 'csv');
 
-        $vouchers = Voucher::searchSponsor($request, $organization, $fund)->load([
+        $vouchers = Voucher::searchSponsorQuery($request, $organization, $fund)->with([
             'transactions', 'voucher_relation', 'product', 'fund',
             'token_without_confirmation', 'identity.primary_email', 'product_vouchers'
-        ]);
+        ])->get();
 
         $exportData = Voucher::exportData($vouchers, $fields, $dataFormat, $qrFormat);
 

@@ -5,7 +5,9 @@ namespace App\Scopes\Builders;
 
 use App\Models\ProductReservation;
 use App\Models\Voucher;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
  * Class VoucherQuery
@@ -223,6 +225,28 @@ class VoucherQuery
                 });
             }
         });
+    }
+
+    /**
+     * @param Builder|Relation $builder
+     * @param Carbon|null $fromDate
+     * @param Carbon|null $toDate
+     * @return Builder
+     */
+    public static function whereInUseDateQuery(
+        Builder|Relation $builder,
+        Carbon $fromDate = null,
+        Carbon $toDate = null,
+    ): Builder {
+        if ($fromDate) {
+            $builder->where("first_use_date", '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $builder->where("first_use_date", '<=', $toDate);
+        }
+
+        return $builder;
     }
 
     /**

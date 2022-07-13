@@ -14,6 +14,7 @@ use App\Http\Requests\BaseFormRequest;
 use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
+use App\Scopes\Builders\VoucherSubQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -67,6 +68,7 @@ use ZipArchive;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
+ * @property-read \Illuminate\Support\Carbon|null $first_use_date
  * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
@@ -172,10 +174,6 @@ class Voucher extends Model
         self::STATE_ACTIVE,
         self::STATE_PENDING,
         self::STATE_DEACTIVATED,
-    ];
-
-    protected $withCount = [
-        'transactions'
     ];
 
     /**
@@ -567,6 +565,7 @@ class Voucher extends Model
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder
+     * @throws \Exception
      */
     public static function searchSponsorQuery(
         BaseFormRequest $request,
@@ -580,6 +579,8 @@ class Voucher extends Model
         $count_per_identity_min = $request->input('count_per_identity_min');
         $count_per_identity_max = $request->input('count_per_identity_max');
         $state = $request->input('state');
+        $in_use_from = $request->input('in_use_from');
+        $in_use_to = $request->input('in_use_to');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -658,24 +659,18 @@ class Voucher extends Model
             }, '<=', $count_per_identity_max);
         }
 
+        if ($in_use_from || $in_use_to) {
+            $query = VoucherQuery::whereInUseDateQuery(
+                VoucherSubQuery::appendFirstUseFields($query),
+                $in_use_from ? Carbon::parse($in_use_from)->startOfDay() : null,
+                $in_use_to ? Carbon::parse($in_use_to)->endOfDay() : null,
+            );
+        }
+
         return $query->orderBy(
             $request->input('sort_by', 'created_at'),
             $request->input('sort_order', 'asc')
         );
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Organization $organization
-     * @param Fund|null $fund
-     * @return Builder[]|Collection
-     */
-    public static function searchSponsor(
-        BaseFormRequest $request,
-        Organization $organization,
-        Fund $fund = null
-    ) {
-        return self::searchSponsorQuery($request, $organization, $fund)->get();
     }
 
     /**
@@ -711,7 +706,25 @@ class Voucher extends Model
      */
     public function getInUseAttribute(): bool
     {
-        return $this->has_transactions || $this->has_reservations;
+        return $this->first_use_date !== null;
+    }
+
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     * @noinspection PhpUnused
+     */
+    public function getFirstUseDateAttribute(): ?Carbon
+    {
+        if (key_exists('first_use_date', $this->attributes)) {
+            return $this->attributes['first_use_date'] ? Carbon::parse(
+                $this->attributes['first_use_date']
+            ) : null;
+        }
+
+        $model = VoucherSubQuery::appendFirstUseFields(static::query())->find($this->id);
+        $this->setAttribute('first_use_date', $model?->getAttribute('first_use_date'));
+
+        return $this->getAttribute('first_use_date');
     }
 
     /**

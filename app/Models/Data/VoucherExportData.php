@@ -3,7 +3,6 @@
 namespace App\Models\Data;
 
 use App\Models\Voucher;
-use Illuminate\Support\Carbon;
 
 /**
  * Class VoucherExportData
@@ -41,6 +40,7 @@ class VoucherExportData
 
     /**
      * @return Voucher
+     * @noinspection PhpUnused
      */
     public function getVoucher(): Voucher
     {
@@ -55,6 +55,7 @@ class VoucherExportData
         $sponsor = $this->voucher->fund->organization;
         $assigned = $this->voucher->identity_address && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
+        $firstUseDate = $this->voucher->first_use_date;
 
         $bsnData = $sponsor->bsn_enabled ? [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
@@ -68,7 +69,7 @@ class VoucherExportData
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
             'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
             'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
-            'in_use_date' => format_date_locale($this->getFirstUsageDate()),
+            'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
             'product_name' => $this->voucher->product ? $this->voucher->product->name : null,
         ], $bsnData, [
             'identity_email' => $assigned ? ($identity ? $identity->primary_email->email : null) : null,
@@ -84,24 +85,5 @@ class VoucherExportData
         ]);
 
         return array_only($export_data, array_merge(['name'], $this->fields));
-    }
-
-    /**
-     * @return Carbon|null
-     */
-    public function getFirstUsageDate(): ?Carbon
-    {
-        $voucher = $this->voucher;
-        $productVouchers = $voucher->product_vouchers->whereNull('product_reservation_id');
-        $reservationVouchers = $voucher->product_vouchers->whereNotNull('product_reservation_id');
-        $reservationTransactions = $reservationVouchers->pluck('transactions')->flatten();
-
-        $models = $voucher->transactions->merge($reservationTransactions)->merge($productVouchers);
-
-        if ($models->count() > 0) {
-            return $models->sortBy('created_at')[0]->created_at;
-        }
-
-        return null;
     }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Http\Resources\Sponsor;
 
+use App\Http\Resources\BaseJsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\OrganizationBasicResource;
 use App\Models\Voucher;
 use App\Services\EventLogService\Models\EventLog;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
 
 /**
@@ -14,7 +14,7 @@ use Illuminate\Support\Arr;
  * @property Voucher $resource
  * @package App\Http\Resources\Sponsor
  */
-class SponsorVoucherResource extends JsonResource
+class SponsorVoucherResource extends BaseJsonResource
 {
     /**
      * Transform the resource into an array.
@@ -30,6 +30,7 @@ class SponsorVoucherResource extends JsonResource
         $physical_cards = $voucher->physical_cards()->first();
         $bsn_enabled = $voucher->fund->organization->bsn_enabled;
         $amount_available = $voucher->fund->isTypeBudget() ? $voucher->amount_available_cached : 0;
+        $first_use_date = $voucher->first_use_date;
 
         if ($voucher->is_granted && $voucher->identity_address) {
             $identity_email = $recordRepo->primaryEmailByAddress($voucher->identity_address);
@@ -53,9 +54,11 @@ class SponsorVoucherResource extends JsonResource
             ]),
             'physical_card' => $physical_cards ? $physical_cards->only(['id', 'code']) : false,
             'product' => $voucher->isProductType() ? $this->getProductDetails($voucher) : null,
+            'first_use_date' => $first_use_date?->format('Y-m-d'),
+            'first_use_date_locale' => $first_use_date ? format_date_locale($first_use_date) : null,
             'created_at' => $voucher->created_at->format('Y-m-d H:i:s'),
-            'expire_at' => $voucher->updated_at->format('Y-m-d'),
             'created_at_locale' => format_datetime_locale($voucher->created_at),
+            'expire_at' => $voucher->updated_at->format('Y-m-d'),
             'expire_at_locale' => format_date_locale($voucher->expire_at),
         ]);
     }
