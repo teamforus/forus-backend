@@ -25,7 +25,7 @@ class IndexEmployeesRequest extends BaseFormRequest
     {
         return [
             'q' => 'nullable|string|max:500',
-            'per_page'  => 'numeric|int|between:1,100',
+            'per_page'  => 'numeric|int|between:1,9999',
             'role' => 'nullable|string|exists:roles,key',
             'roles' => 'nullable|array',
             'roles.*' => 'nullable|string|exists:roles,key',
