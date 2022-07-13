@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('title', 2000);
             $table->text('description')->nullable();
             $table->dateTime('expire_at')->nullable();
-            $table->enum('scope', ['dashboards', 'sponsor', 'provider', 'validator'])->default('sponsor');;
+            $table->enum('scope', ['dashboards', 'sponsor', 'provider', 'validator'])->default('sponsor');
             $table->boolean('active')->default(true);
             $table->timestamps();
         });

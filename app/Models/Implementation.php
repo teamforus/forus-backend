@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Http\Resources\AnnouncementResource;
+use App\Http\Resources\ImplementationPageResource;
 use App\Http\Resources\MediaResource;
 use App\Scopes\Builders\FundQuery;
 use App\Scopes\Builders\OfficeQuery;
@@ -18,6 +19,7 @@ use App\Services\MediaService\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -58,6 +60,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $digid_forus_api_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Announcement[] $announcements_webshop
+ * @property-read int|null $announcements_webshop_count
  * @property-read Media|null $banner
  * @property-read Media|null $email_logo
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\FundConfig[] $fund_configs
@@ -77,6 +81,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property-read \App\Models\ImplementationPage|null $page_terms_and_conditions
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages
  * @property-read int|null $pages_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ImplementationPage[] $pages_public
+ * @property-read int|null $pages_public_count
  * @method static Builder|Implementation newModelQuery()
  * @method static Builder|Implementation newQuery()
  * @method static Builder|Implementation query()
@@ -170,10 +176,22 @@ class Implementation extends Model
 
     /**
      * @return HasMany
+     * @noinspection PhpUnused
      */
     public function pages(): HasMany
     {
         return $this->hasMany(ImplementationPage::class);
+    }
+
+    /**
+     * @return HasMany
+     * @noinspection PhpUnused
+     */
+    public function pages_public(): HasMany
+    {
+        return $this->hasMany(ImplementationPage::class)->where([
+            'implementation_pages.state' => ImplementationPage::STATE_PUBLIC,
+        ]);
     }
 
     /**
@@ -285,6 +303,14 @@ class Implementation extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function announcements_webshop(): HasMany
+    {
+        return $this->hasMany(Announcement::class)->where('scope', 'webshop');
     }
 
     /**
@@ -555,7 +581,7 @@ class Implementation extends Model
                 'implementation_name' => $implementation->name,
                 'products_hard_limit' => config('forus.features.dashboard.organizations.products.hard_limit'),
                 'products_soft_limit' => config('forus.features.dashboard.organizations.products.soft_limit'),
-                'pages' => $implementation->getPages(),
+                'pages' => ImplementationPageResource::collection($implementation->pages_public->keyBy('page_type')),
                 'has_productboard_integration' => !empty(resolve('productboard')),
             ]);
         }
@@ -721,58 +747,6 @@ class Implementation extends Model
     }
 
     /**
-     * @param array $pages
-     * @return $this
-     */
-    public function updatePages(array $pages): self
-    {
-        foreach ($pages as $pageType => $pageData) {
-            /** @var ImplementationPage $pageModel */
-            $pageModel = $this->pages()->firstOrCreate([
-                'page_type' => $pageType,
-            ]);
-
-            $pageModel->updateModel(array_merge(array_only($pageData, [
-                'content', 'content_alignment', 'external', 'external_url',
-            ]), in_array($pageType, ImplementationPage::TYPES_INTERNAL) ? [
-                'external' => 0,
-                'external_url' => null,
-            ] : []))->appendMedia($pageData['media_uid'] ?? [], 'cms_media');
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Collection|Collection
-     */
-    private function getPages()
-    {
-        $pages = self::general()->pages;
-
-        if (!$this->isGeneral()) {
-            foreach (ImplementationPage::TYPES as $page_type) {
-                $localPages = $this->pages->filter(function(ImplementationPage $page) use ($page_type) {
-                    return $page->page_type === $page_type && (
-                        $page->external ? $page->external_url : $page->content);
-                });
-
-                if ($localPages->count() > 0) {
-                    $pageIndex = $pages->find($localPages->first());
-                    $pages[$pageIndex] = $localPages->first();
-                }
-            }
-        }
-
-        return $pages->map(static function(ImplementationPage $page) {
-            return array_merge($page->only('page_type', 'external', 'content_alignment'), [
-                'content_html' => $page->external ? '' : $page->content_html,
-                'external_url' => $page->external ? $page->external_url : '',
-            ]);
-        })->keyBy('page_type');
-    }
-
-    /**
      * @return ?string
      */
     private function getBannerTextColor(): ?string
@@ -782,5 +756,29 @@ class Implementation extends Model
         }
 
         return $this->header_text_color;
+    }
+
+    /**
+     * @param array $attributes
+     * @param bool $replace
+     * @return Announcement
+     */
+    public function addWebshopAnnouncement(array $attributes, bool $replace = false): Announcement
+    {
+        if ($replace) {
+            $this->announcements_webshop()->delete();
+        }
+
+        /** @var Announcement $announcement */
+        $announcement = $this->announcements_webshop()->firstOrCreate([], [
+            'active' => false,
+            'scope' => 'webshop',
+        ]);
+
+        $announcement->update(Arr::only($attributes, [
+            'type', 'title', 'description', 'expire_at', 'active',
+        ]));
+
+        return $announcement;
     }
 }
