@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use App\Models\Organization;
@@ -14,45 +15,45 @@ class ImplementationPagePolicy
     /**
      * Determine whether the user can view any implementation pages.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function viewAny(
-        string $identity_address,
+        Identity $identity,
         Implementation $implementation,
         Organization $organization
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation) &&
-            $organization->identityCan($identity_address, 'manage_implementation_cms');
+            $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
      * Determine whether the user can create implementation pages.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
     public function create(
-        string $identity_address,
+        Identity $identity,
         Implementation $implementation,
         Organization $organization
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation) &&
-            $organization->identityCan($identity_address, 'manage_implementation_cms');
+            $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
      * Determine whether the user can view the implementation page.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param ImplementationPage $implementationPage
      * @param Implementation $implementation
      * @param Organization $organization
@@ -60,20 +61,20 @@ class ImplementationPagePolicy
      * @noinspection PhpUnused
      */
     public function view(
-        string $identity_address,
+        Identity $identity,
         ImplementationPage $implementationPage,
         Implementation $implementation,
         Organization $organization
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation, $implementationPage) &&
-            $organization->identityCan($identity_address, 'manage_implementation_cms');
+            $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
      * Determine whether the user can update the implementation page.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param ImplementationPage $implementationPage
      * @param Implementation $implementation
      * @param Organization $organization
@@ -81,34 +82,34 @@ class ImplementationPagePolicy
      * @noinspection PhpUnused
      */
     public function update(
-        string $identity_address,
+        Identity $identity,
         ImplementationPage $implementationPage,
         Implementation $implementation,
         Organization $organization
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation, $implementationPage) &&
-            $organization->identityCan($identity_address, 'manage_implementation_cms');
+            $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
      * Determine whether the user can delete the implementation page.
      *
-     * @param string $identity_address
+     * @param Identity $identity
      * @param ImplementationPage $implementationPage
      * @param Implementation $implementation
      * @param Organization $organization
      * @return bool
      */
     public function destroy(
-        string $identity_address,
+        Identity $identity,
         ImplementationPage $implementationPage,
         Implementation $implementation,
         Organization $organization
     ): bool {
         return
             $this->checkIntegrity($organization, $implementation, $implementationPage) &&
-            $organization->identityCan($identity_address, 'manage_implementation_cms');
+            $organization->identityCan($identity, 'manage_implementation_cms');
     }
 
     /**
