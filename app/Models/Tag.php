@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @method static \Illuminate\Database\Eloquent\Builder|Tag whereScope($value)
  * @mixin \Eloquent
  */
-class Tag extends Model
+class Tag extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

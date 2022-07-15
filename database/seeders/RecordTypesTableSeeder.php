@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Services\Forus\Record\Models\RecordType;
+use App\Models\RecordType;
 
 class RecordTypesTableSeeder extends DatabaseSeeder
 {

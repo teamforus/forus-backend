@@ -3,7 +3,7 @@
 namespace App\Notifications\Identities\Voucher;
 
 use App\Models\Voucher;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 use App\Mail\Vouchers\RequestPhysicalCardMail;
 
 /**

@@ -49,6 +49,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property string|null $email_signature
  * @property bool $digid_enabled
  * @property bool $digid_required
+ * @property bool $digid_sign_up_allowed
  * @property string $digid_env
  * @property string|null $digid_app_id
  * @property string|null $digid_shared_secret
@@ -88,6 +89,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereDigidForusApiUrl($value)
  * @method static Builder|Implementation whereDigidRequired($value)
  * @method static Builder|Implementation whereDigidSharedSecret($value)
+ * @method static Builder|Implementation whereDigidSignUpAllowed($value)
  * @method static Builder|Implementation whereEmailColor($value)
  * @method static Builder|Implementation whereEmailFromAddress($value)
  * @method static Builder|Implementation whereEmailFromName($value)
@@ -112,7 +114,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @method static Builder|Implementation whereUrlWebshop($value)
  * @mixin \Eloquent
  */
-class Implementation extends Model
+class Implementation extends BaseModel
 {
     use HasMedia;
 
@@ -163,6 +165,7 @@ class Implementation extends Model
         'digid_required' => 'boolean',
         'overlay_opacity' => 'int',
         'overlay_enabled' => 'boolean',
+        'digid_sign_up_allowed' => 'boolean',
         'informal_communication' => 'boolean',
     ];
 
@@ -294,9 +297,9 @@ class Implementation extends Model
     }
 
     /**
-     * @return Implementation
+     * @return Implementation|null
      */
-    public static function active(): Implementation
+    public static function active(): ?Implementation
     {
         return self::byKey(self::activeKey());
     }
@@ -417,15 +420,16 @@ class Implementation extends Model
     /**
      * @param string $frontend
      * @param string $uri
+     * @param array $params
      * @return string|null
      */
-    public function urlFrontend(string $frontend, string $uri = ''): ?string
+    public function urlFrontend(string $frontend, string $uri = '', array $params = []): ?string
     {
         return match ($frontend) {
-            'webshop' => $this->urlWebshop($uri),
-            'sponsor' => $this->urlSponsorDashboard($uri),
-            'provider' => $this->urlProviderDashboard($uri),
-            'validator' => $this->urlValidatorDashboard($uri),
+            'webshop' => $this->urlWebshop($uri, $params),
+            'sponsor' => $this->urlSponsorDashboard($uri, $params),
+            'provider' => $this->urlProviderDashboard($uri, $params),
+            'validator' => $this->urlValidatorDashboard($uri, $params),
             default => null,
         };
     }
@@ -442,56 +446,42 @@ class Implementation extends Model
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlWebshop(string $uri = "/", array $getParams = []): string
+    public function urlWebshop(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_webshop, $uri), $getParams);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_webshop, $uri), $params);
     }
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlSponsorDashboard(string $uri = "/", array $getParams = []): string
+    public function urlSponsorDashboard(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_sponsor, $uri), $getParams);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_sponsor, $uri), $params);
     }
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlProviderDashboard(string $uri = "/", array $getParams = []): string
+    public function urlProviderDashboard(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_provider, $uri), $getParams);
+        return $this->buildFrontendUrl(http_resolve_url($this->url_provider, $uri), $params);
     }
 
     /**
      * @param string $uri
-     * @param array $getParams
+     * @param array $params
      * @return string
      */
-    public function urlValidatorDashboard(string $uri = "/", array $getParams = []): string
+    public function urlValidatorDashboard(string $uri = "/", array $params = []): string
     {
-        return $this->buildFrontendUrl(http_resolve_url($this->url_validator, $uri), $getParams);
-    }
-
-    /**
-     * @return bool
-     */
-    public function autoValidationEnabled(): bool
-    {
-        $oneActiveFund = $this->funds()->where(['state' => Fund::STATE_ACTIVE])->count() === 1;
-        $oneActiveFundWithAutoValidation = $this->funds()->where([
-                'state' => Fund::STATE_ACTIVE,
-                'auto_requests_validation' => true
-            ])->whereNotNull('default_validator_employee_id')->count() === 1;
-
-        return $oneActiveFund && $oneActiveFundWithAutoValidation;
+        return $this->buildFrontendUrl(http_resolve_url($this->url_validator, $uri), $params);
     }
 
     /**
@@ -529,6 +519,7 @@ class Implementation extends Model
                 'has_budget_funds' => self::hasFundsOfType(Fund::TYPE_BUDGET),
                 'has_subsidy_funds' => self::hasFundsOfType(Fund::TYPE_SUBSIDIES),
                 'digid' => $implementation->digidEnabled(),
+                'digid_sign_up_allowed' => $implementation->digid_sign_up_allowed,
                 'digid_mandatory' => $implementation->digid_required ?? true,
                 'digid_api_url' => rtrim($implementation->digid_forus_api_url ?: url('/'), '/') . '/api/v1',
                 'communication_type' => $implementation->communicationType(),
@@ -740,7 +731,7 @@ class Implementation extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Collection|Collection
      */
-    private function getPages()
+    private function getPages(): \Illuminate\Database\Eloquent\Collection|Collection
     {
         $pages = self::general()->pages;
 

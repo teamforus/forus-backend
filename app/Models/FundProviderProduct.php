@@ -49,7 +49,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Query\Builder|FundProviderProduct withoutTrashed()
  * @mixin \Eloquent
  */
-class FundProviderProduct extends Model
+class FundProviderProduct extends BaseModel
 {
     use SoftDeletes;
 

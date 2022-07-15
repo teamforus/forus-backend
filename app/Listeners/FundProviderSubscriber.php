@@ -2,10 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Events\FundProviders\FundProviderApplied;
 use App\Events\FundProviders\FundProviderApprovedBudget;
 use App\Events\FundProviders\FundProviderApprovedProducts;
-use App\Events\FundProviders\FundProviderReplied;
 use App\Events\FundProviders\FundProviderRevokedBudget;
 use App\Events\FundProviders\FundProviderRevokedProducts;
 use App\Events\FundProviders\FundProviderSponsorChatMessage;
@@ -44,6 +42,7 @@ class FundProviderSubscriber
 
     /**
      * @param FundProviderStateUpdated $event
+     * @noinspection PhpUnused
      */
     public function onStateUpdated(FundProviderStateUpdated $event): void
     {
@@ -76,6 +75,7 @@ class FundProviderSubscriber
 
     /**
      * @param FundProviderApprovedBudget $event
+     * @noinspection PhpUnused
      */
     public function onApprovedBudget(FundProviderApprovedBudget $event): void
     {
@@ -94,6 +94,7 @@ class FundProviderSubscriber
 
     /**
      * @param FundProviderApprovedProducts $event
+     * @noinspection PhpUnused
      */
     public function onApprovedProducts(FundProviderApprovedProducts $event): void
     {
@@ -112,6 +113,7 @@ class FundProviderSubscriber
 
     /**
      * @param FundProviderRevokedBudget $event
+     * @noinspection PhpUnused
      */
     public function onRevokedBudget(FundProviderRevokedBudget $event): void
     {
@@ -130,6 +132,7 @@ class FundProviderSubscriber
 
     /**
      * @param FundProviderRevokedProducts $event
+     * @noinspection PhpUnused
      */
     public function onRevokedProducts(FundProviderRevokedProducts $event): void
     {
@@ -148,6 +151,7 @@ class FundProviderSubscriber
 
     /**
      * @param FundProviderSponsorChatMessage $event
+     * @noinspection PhpUnused
      */
     public function onSponsorMessage(FundProviderSponsorChatMessage $event): void
     {
@@ -165,37 +169,17 @@ class FundProviderSubscriber
      * The events dispatcher
      *
      * @param Dispatcher $events
+     * @noinspection PhpUnused
      */
     public function subscribe(Dispatcher $events): void
     {
-        $events->listen(
-            FundProviderStateUpdated::class,
-            '\App\Listeners\FundProviderSubscriber@onStateUpdated'
-        );
+        $class = '\\' . static::class;
 
-        $events->listen(
-            FundProviderApprovedBudget::class,
-            '\App\Listeners\FundProviderSubscriber@onApprovedBudget'
-        );
-
-        $events->listen(
-            FundProviderApprovedProducts::class,
-            '\App\Listeners\FundProviderSubscriber@onApprovedProducts'
-        );
-
-        $events->listen(
-            FundProviderRevokedBudget::class,
-            '\App\Listeners\FundProviderSubscriber@onRevokedBudget'
-        );
-
-        $events->listen(
-            FundProviderRevokedProducts::class,
-            '\App\Listeners\FundProviderSubscriber@onRevokedProducts'
-        );
-
-        $events->listen(
-            FundProviderSponsorChatMessage::class,
-            '\App\Listeners\FundProviderSubscriber@onSponsorMessage'
-        );
+        $events->listen(FundProviderStateUpdated::class, "$class@onStateUpdated");
+        $events->listen(FundProviderApprovedBudget::class, "$class@onApprovedBudget");
+        $events->listen(FundProviderApprovedProducts::class, "$class@onApprovedProducts");
+        $events->listen(FundProviderRevokedBudget::class, "$class@onRevokedBudget");
+        $events->listen(FundProviderRevokedProducts::class, "$class@onRevokedProducts");
+        $events->listen(FundProviderSponsorChatMessage::class, "$class@onSponsorMessage");
     }
 }

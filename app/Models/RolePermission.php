@@ -18,7 +18,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|RolePermission whereRoleId($value)
  * @mixin \Eloquent
  */
-class RolePermission extends Model
+class RolePermission extends BaseModel
 {
     protected $fillable = [
         'role_id', 'permission_id'

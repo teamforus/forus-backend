@@ -20,7 +20,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|EmployeeRole whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class EmployeeRole extends Model
+class EmployeeRole extends BaseModel
 {
     protected $fillable = [
         'employee_id', 'role_id'

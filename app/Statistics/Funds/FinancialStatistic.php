@@ -3,7 +3,7 @@
 
 namespace App\Statistics\Funds;
 
-use App\Models\Model;
+use App\Models\BaseModel;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Carbon\Carbon;
@@ -170,13 +170,13 @@ class FinancialStatistic
         Builder $transactionsQuery,
         Carbon $dateFrom
     ): array  {
-        /** @var VoucherTransaction|Model|null $highest_transaction */
+        /** @var VoucherTransaction|BaseModel|null $highest_transaction */
         $highest_transaction = (clone $transactionsQuery)->orderByDesc('amount')->first();
         $transactionOverview = (clone $transactionsQuery)->selectRaw(
             'count(*) as `count`, sum(`amount`) as amount, min(`amount`) as lowest_transaction_amount'
         )->first();
 
-        /** @var VoucherTransaction|Model|null $highest_daily_transaction */
+        /** @var VoucherTransaction|BaseModel|null $highest_daily_transaction */
         $highest_daily_transaction = (clone $transactionsQuery)->groupBy(
             DB::raw('Date(`created_at`)')
         )->orderByDesc('amount')->selectRaw(

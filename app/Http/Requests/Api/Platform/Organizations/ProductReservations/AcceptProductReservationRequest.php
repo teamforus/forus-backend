@@ -7,10 +7,8 @@ use App\Models\Organization;
 use App\Models\ProductReservation;
 
 /**
- * Class AcceptProductReservationRequest
  * @property Organization $organization
  * @property ProductReservation $product_reservation
- * @package App\Http\Requests\Api\Platform\Organizations\ProductReservations
  */
 class AcceptProductReservationRequest extends BaseFormRequest
 {
@@ -22,7 +20,7 @@ class AcceptProductReservationRequest extends BaseFormRequest
     public function authorize(): bool
     {
         return $this->isAuthenticated() &&
-            $this->organization->identityCan('scan_vouchers') &&
+            $this->organization->identityCan($this->identity(), 'scan_vouchers') &&
             $this->organization->id === $this->product_reservation->product->organization_id;
     }
 

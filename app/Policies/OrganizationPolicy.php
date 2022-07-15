@@ -3,9 +3,11 @@
 namespace App\Policies;
 
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Scopes\Builders\FundQuery;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrganizationPolicy
@@ -21,140 +23,136 @@ class OrganizationPolicy
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      */
-    public function show(string $identity_address, Organization $organization): bool
+    public function show(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityPermissions($identity_address)->count() > 0;
+        return $organization->isEmployee($identity);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
-    public function showFinances(string $identity_address, Organization $organization): bool
+    public function showFinances(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'view_finances');
+        return $organization->identityCan($identity, 'view_finances');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @return mixed
      */
-    public function store(string $identity_address): bool
+    public function store(Identity $identity): bool
     {
-        return !empty($identity_address);
+        return $identity->exists;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      */
-    public function update(string $identity_address, Organization $organization): bool
+    public function update(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, [
-            'manage_organization'
-        ]);
+        return $organization->identityCan($identity, 'manage_organization');
     }
 
     /**
-     * @param string $identity_address
-     * @param Organization $organization
-     * @return bool
-     * @noinspection PhpUnused
-     */
-    public function updateIban(string $identity_address, Organization $organization): bool
-    {
-        return $organization->identityCan($identity_address, [
-            'manage_organization'
-        ]) && $organization->identity_address === $identity_address;
-    }
-
-    /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
-    public function viewExternalFunds(string $identity_address, Organization $organization): bool
+    public function updateIban(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_organization');
+        return $this->update($identity, $organization) && $organization->isOwner($identity);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
+     * @param Organization $organization
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewExternalFunds(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, 'manage_organization');
+    }
+
+    /**
+     * @param Identity $identity
      * @param Organization $organization
      * @param Fund $externalFund
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return Response|bool
      * @noinspection PhpUnused
      */
     public function updateExternalFunds(
-        string $identity_address,
+        Identity $identity,
         Organization $organization,
         Fund $externalFund
-    ) {
-        if (!FundQuery::whereExternalValidatorFilter(
-            Fund::query(), $organization->id
-        )->where('funds.id', $externalFund->id)->exists()) {
+    ): Response|bool {
+        if (!FundQuery::whereExternalValidatorFilter(Fund::query(), $organization->id)->where([
+            'funds.id' => $externalFund->id,
+        ])->exists()) {
             return $this->deny("Invalid fund id.");
         }
 
-        return $organization->identityCan($identity_address, 'manage_organization');
+        return $organization->identityCan($identity, 'manage_organization');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @return bool
      * @noinspection PhpUnused
      */
-    public function updateAutoAllowReservations(string $identity_address, Organization $organization): bool
+    public function updateAutoAllowReservations(Identity $identity, Organization $organization): bool
     {
-        return $identity_address && ($organization->identity_address === $identity_address);
+        return $organization->isOwner($identity);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      */
-    public function listSponsorProviders(string $identity_address, Organization $organization): bool
+    public function listSponsorProviders(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, [
+        return $organization->identityCan($identity, [
             'manage_providers', 'view_finances'
         ], false);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @param Organization $provider
      * @return bool
      * @noinspection PhpUnused
      */
     public function viewSponsorProvider(
-        string $identity_address,
+        Identity $identity,
         Organization $organization,
         Organization $provider
     ): bool {
         return $organization->whereHas('funds.providers', function(Builder $builder) use ($provider) {
             $builder->where('organization_id', $provider->id);
-        })->exists() && $this->listSponsorProviders($identity_address, $organization);
+        })->exists() && $this->listSponsorProviders($identity, $organization);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
      * @noinspection PhpUnused
      */
-    public function transferOwnership(string $identity_address, Organization $organization): bool
+    public function transferOwnership(Identity $identity, Organization $organization): bool
     {
-        return $identity_address && ($organization->identity_address === $identity_address);
+        return $organization->isOwner($identity);
     }
 }

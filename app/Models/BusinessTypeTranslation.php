@@ -18,7 +18,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|BusinessTypeTranslation whereName($value)
  * @mixin \Eloquent
  */
-class BusinessTypeTranslation extends Model
+class BusinessTypeTranslation extends BaseModel
 {
     //
 }

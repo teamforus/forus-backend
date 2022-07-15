@@ -4,10 +4,6 @@ namespace App\Http\Requests\Api\Identity\Sessions;
 
 use App\Http\Requests\BaseFormRequest;
 
-/**
- * Class IndexSessionsRequest
- * @package App\Http\Requests\Api\Identity\Sessions
- */
 class IndexSessionsRequest extends BaseFormRequest
 {
     /**
@@ -18,5 +14,15 @@ class IndexSessionsRequest extends BaseFormRequest
     public function authorize(): bool
     {
         return $this->isAuthenticated();
+    }
+
+    /**
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            'per_page' => $this->perPageRule(),
+        ];
     }
 }

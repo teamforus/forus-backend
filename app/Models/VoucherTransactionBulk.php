@@ -91,7 +91,7 @@ use Throwable;
  * @method static Builder|VoucherTransactionBulk whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class VoucherTransactionBulk extends Model
+class VoucherTransactionBulk extends BaseModel
 {
     use HasLogs, HasDbTokens;
 

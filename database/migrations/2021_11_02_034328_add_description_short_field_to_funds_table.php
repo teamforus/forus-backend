@@ -5,16 +5,12 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Fund;
 
-/**
- * @noinspection PhpUnused
- */
-class AddDescriptionShortFieldToFundsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
-     * @throws \Doctrine\DBAL\Exception
      */
     public function up(): void
     {
@@ -47,4 +43,4 @@ class AddDescriptionShortFieldToFundsTable extends Migration
             $table->dropColumn('description_short');
         });
     }
-}
+};

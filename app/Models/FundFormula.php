@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormula whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundFormula extends Model
+class FundFormula extends BaseModel
 {
     protected $fillable = [
         'id', 'fund_id', 'type', 'amount', 'record_type_key'

@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Organization;
 
-/**
- * @noinspection PhpUnused
- */
-class AddDescriptionTextToOrganizationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -39,4 +36,4 @@ class AddDescriptionTextToOrganizationsTable extends Migration
             $table->dropColumn("description_text");
         });
     }
-}
+};

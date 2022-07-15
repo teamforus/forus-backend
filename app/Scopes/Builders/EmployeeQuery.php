@@ -37,8 +37,10 @@ class EmployeeQuery
      * @param Builder|Relation|array $records
      * @return Builder|Relation
      */
-    public static function whereCanValidateRecords($query, $records)
-    {
+    public static function whereCanValidateRecords(
+        Builder|Relation $query,
+        Builder|Relation|array $records
+    ): Relation|Builder {
         return $query->where(function($builder) use ($records) {
             static::whereHasPermissionFilter($builder, 'validate_records');
 

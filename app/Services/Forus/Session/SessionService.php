@@ -5,7 +5,6 @@ namespace App\Services\Forus\Session;
 use App\Http\Requests\BaseFormRequest;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\Forus\Session\Models\SessionRequest;
-use Illuminate\Database\Eloquent\Model;
 
 class SessionService
 {
@@ -38,7 +37,7 @@ class SessionService
      * @param string|null $client_version
      * @param string|null $identity_proxy_id
      * @param string|null $identity_address
-     * @return Session|bool|Model
+     * @return Session|null
      */
     public function makeOrUpdateSession(
         string $ip,
@@ -46,22 +45,15 @@ class SessionService
         string $client_version = null,
         string $identity_proxy_id = null,
         string $identity_address = null
-    ) {
+    ): ?Session {
         $uid = self::makeUid($client_type, $identity_proxy_id, $identity_address);
+        $session = self::makeOrGetSession($uid, $identity_address, $identity_proxy_id);
 
-        if (!$session = self::getSession(
-            $uid, $identity_address, $identity_proxy_id
-        )) {
-            if (!$session = self::makeSession(
-                $uid, $identity_address, $identity_proxy_id
-            )) {
-                return false;
-            }
+        if (!$session) {
+            return null;
         }
 
-        $metasData = collect(compact(
-            'ip', 'client_type', 'client_version'
-        ))->merge([
+        $metasData = array_merge(compact('ip', 'client_type', 'client_version'), [
             'id' => request()->ip(),
             'method' => request()->method(),
             'endpoint' => request()->getRequestUri(),
@@ -69,22 +61,23 @@ class SessionService
         ]);
 
         $session->update([
-            'last_activity_at' => now()
+            'last_activity_at' => now(),
         ]);
 
         /** @var SessionRequest $sessionRequest */
-        $session->requests()->create($metasData->toArray());
+        $session->requests()->create($metasData);
 
         return $session;
     }
 
     /**
-     * @return Session|\Illuminate\Database\Eloquent\Builder|Model|object|null
+     * @return Session|null
      */
-    public static function currentSession() {
-        $request = BaseFormRequest::createFromGlobals();
-        $authAddress = $request->auth_address();
-        $authProxyId = $request->auth_proxy_id();
+    public static function currentSession(): ?Session
+    {
+        $request = BaseFormRequest::createFrom(request());
+        $authAddress = $request->identityProxy()?->identity_address;
+        $authProxyId = $request->identityProxy()?->id;
 
         return self::getSession(
             self::makeUid($request->client_type(), $authProxyId, $authAddress),
@@ -95,31 +88,39 @@ class SessionService
 
     /**
      * @param string $uid
-     * @param null $identity_address
-     * @param null $identity_proxy_id
-     * @return Session|\Illuminate\Database\Eloquent\Builder|Model|object|null
+     * @param string|null $identity_address
+     * @param int|null $identity_proxy_id
+     * @return Session|null
      */
     public static function getSession(
         string $uid,
-        $identity_address = null,
-        $identity_proxy_id = null
-    ) {
-        return Session::where(compact('uid', 'identity_address', 'identity_proxy_id'))->first();
+        ?string $identity_address = null,
+        ?int $identity_proxy_id = null
+    ): ?Session {
+        return Session::where([
+            'uid' => $uid,
+            'identity_address' => $identity_address,
+            'identity_proxy_id' => $identity_proxy_id,
+        ])->first();
     }
 
     /**
      * @param string $uid
-     * @param null $identity_address
-     * @param null $identity_proxy_id
+     * @param string|null $identity_address
+     * @param int|null $identity_proxy_id
      * @return Session|null
      */
-    public static function makeSession(string $uid,
-        $identity_address = null,
-        $identity_proxy_id = null
+    public static function makeOrGetSession(
+        string $uid,
+        ?string $identity_address = null,
+        ?int $identity_proxy_id = null,
     ): ?Session {
-        $sessionData = compact('uid', 'identity_address', 'identity_proxy_id');
-        Session::insertOrIgnore($sessionData);
+        Session::insertOrIgnore([
+            'uid' => $uid,
+            'identity_address' => $identity_address,
+            'identity_proxy_id' => $identity_proxy_id,
+        ]);
 
-        return Session::where($sessionData)->first();
+        return self::getSession($uid, $identity_address, $identity_proxy_id);
     }
 }

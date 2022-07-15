@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Services\Forus\Identity\Models\IdentityEmail;
+use App\Models\IdentityEmail;
 
 /**
  * Class IdentityEmailResource

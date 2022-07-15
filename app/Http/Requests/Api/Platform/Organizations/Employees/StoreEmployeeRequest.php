@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\Platform\Organizations\Employees;
 
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Organization;
-use Illuminate\Validation\Rules\NotIn;
 
 /**
  * Class StoreEmployeeRequest
@@ -30,25 +29,15 @@ class StoreEmployeeRequest extends BaseFormRequest
      */
     public function rules(): array
     {
-        $employees = $this->organization->employees->pluck('identity_address');
-        $employees->push($this->organization->identity_address);
-
-        $emails = $employees->map(static function($identity_address) {
-            return record_repo()->primaryEmailByAddress($identity_address);
-        })->toArray();
+        $employees = $this->organization->employees->load('identity.primary_email');
+        $emails = $employees->pluck('identity.primary_email.email');
+        $emails->push($this->organization->identity?->email);
 
         return [
-            'email'     => [
-                'required',
-                'email:strict',
-                new NotIn($emails),
-            ],
-            'roles'     => 'present|array',
-            'roles.*'   => 'exists:roles,id',
-            'target' => [
-                'nullable',
-                'alpha_dash',
-            ],
+            'email' => 'required|email:strict|' . $emails->filter()->join(','),
+            'roles' => 'present|array',
+            'roles.*' => 'exists:roles,id',
+            'target' => 'nullable|alpha_dash',
         ];
     }
 

@@ -24,7 +24,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|FundFormulaProduct whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class FundFormulaProduct extends Model
+class FundFormulaProduct extends BaseModel
 {
     /**
      * @var array

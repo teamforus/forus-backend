@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use JetBrains\PhpStorm\NoReturn;
 
 abstract class BaseCommand extends Command
 {
@@ -29,12 +30,20 @@ abstract class BaseCommand extends Command
 
     /**
      * @param string[] $list
+     * @param int $depth
      * @return void
      */
-    protected function printList(array $list = []): void
+    protected function printList(array $list = [], int $depth = 0): void
     {
         foreach ($list as $item) {
-            echo " - $item  \n";
+            if (is_string($item)) {
+                echo str_repeat("    ", $depth) . " - $item  \n";
+            }
+
+            if (is_array($item)) {
+                echo str_repeat("    ", $depth) . " - $item[0]  \n";
+                $this->printList($item[1], $depth + 1);
+            }
         }
     }
 

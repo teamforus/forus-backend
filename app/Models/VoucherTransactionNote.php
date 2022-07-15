@@ -26,7 +26,7 @@ namespace App\Models;
  * @method static \Illuminate\Database\Eloquent\Builder|VoucherTransactionNote whereVoucherTransactionId($value)
  * @mixin \Eloquent
  */
-class VoucherTransactionNote extends Model
+class VoucherTransactionNote extends BaseModel
 {
     /**
      * The attributes that are mass assignable.

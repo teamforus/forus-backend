@@ -52,8 +52,8 @@ class FundProviderResource extends BaseJsonResource
                 $fundProvider->organization
             ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
             'cancelable' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved(),
-            'last_activity' => $lastActivity ? $lastActivity->format('Y-m-d H:i:s') : null,
-            'last_activity_locale' => $lastActivity ? $lastActivity->diffForHumans(now()) : null,
+            'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),
+            'last_activity_locale' => $lastActivity?->diffForHumans(now()),
         ]);
     }
 

@@ -75,11 +75,8 @@ class BearerTokenGuard implements Guard
      */
     public function validate(array $credentials = []): bool
     {
-        $bearerToken = explode(' ', $this->request->headers->get('Authorization'));
-        $accessToken = count($bearerToken) == 2 ? $bearerToken[1] : null;
-
         $user = $this->identityProvider->retrieveByCredentials([
-            'access_token' => $accessToken,
+            'access_token' => $this->request->bearerToken(),
         ]);
 
         if (!is_null($user)) {

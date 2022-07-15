@@ -8,21 +8,17 @@ use App\Models\Voucher;
 use App\Rules\BaseRule;
 use App\Scopes\Builders\ProductSubQuery;
 
-/**
- * Class ProviderProductReservationBatchRule
- * @package App\Rules
- */
 class ProviderProductReservationBatchRule extends BaseRule
 {
-    protected $request;
-    protected $reservationsData = null;
+    protected BaseFormRequest $request;
+    protected ?array $reservationsData = null;
 
     /**
      * ProviderProductReservationBatchRule constructor.
      */
     public function __construct()
     {
-        $this->request = BaseFormRequest::createFromBase(request());
+        $this->request = BaseFormRequest::createFrom(request());
     }
 
     /**
@@ -47,7 +43,7 @@ class ProviderProductReservationBatchRule extends BaseRule
      * @param array $requiredFields
      * @return bool
      */
-    public function validateRequiredFields(array $reservations = [], $requiredFields = []): bool
+    public function validateRequiredFields(array $reservations = [], array $requiredFields = []): bool
     {
         $countAll = count($reservations);
         $fieldsData = array_combine($requiredFields, array_fill(0, count($requiredFields), []));
@@ -71,7 +67,7 @@ class ProviderProductReservationBatchRule extends BaseRule
     {
         $data = collect($reservations)->map(function($reservation) {
             $voucher = Voucher::findByPhysicalCard($reservation['number']);
-            $voucher_id = $voucher ? $voucher->id : null;
+            $voucher_id = $voucher?->id;
 
             return array_merge(compact('voucher', 'voucher_id'), $reservation);
         });

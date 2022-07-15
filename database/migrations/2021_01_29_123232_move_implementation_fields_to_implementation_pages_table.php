@@ -6,10 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\ImplementationPage;
 use App\Models\Implementation;
 
-/**
- * @noinspection PhpUnused
- */
-class MoveImplementationFieldsToImplementationPagesTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -59,4 +56,4 @@ class MoveImplementationFieldsToImplementationPagesTable extends Migration
             $table->text('description_providers')->after('description_steps')->nullable();
         });
     }
-}
+};

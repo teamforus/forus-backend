@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Implementation;
 use App\Models\ImplementationPage;
 
@@ -14,12 +15,13 @@ class ImplementationPrivateResource extends BaseJsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @property Implementation $resource
-     * @return array
+     * @param $request
+     * @return array|null
      */
     public function toArray($request): ?array
     {
+        $request = BaseFormRequest::createFrom($request);
+
         /** @var Implementation $implementation **/
         if (is_null($implementation = $this->resource)) {
             return null;
@@ -49,18 +51,23 @@ class ImplementationPrivateResource extends BaseJsonResource
 
         return array_merge(
             $data,
-            $this->managerDetails($implementation),
-            $this->managerCMSDetails($implementation)
+            $this->managerDetails($request, $implementation),
+            $this->managerCMSDetails($request, $implementation)
         );
     }
 
     /**
+     * @param BaseFormRequest $request
      * @param Implementation $implementation
      * @return array
      */
-    protected function managerDetails(Implementation $implementation): array
-    {
-        if ($implementation->organization->identityCan(auth()->id(), 'implementation_manager')) {
+    protected function managerDetails(
+        BaseFormRequest $request,
+        Implementation $implementation
+    ): array {
+        if ($implementation->organization->identityCan($request->identity(), [
+            'implementation_manager',
+        ])) {
             return $implementation->only([
                 'digid_app_id', 'digid_shared_secret', 'digid_a_select_server', 'digid_enabled',
                 'email_from_address', 'email_from_name',
@@ -71,14 +78,17 @@ class ImplementationPrivateResource extends BaseJsonResource
     }
 
     /**
+     * @param BaseFormRequest $request
      * @param Implementation $implementation
      * @return array
      */
-    protected function managerCMSDetails(Implementation $implementation): array
-    {
+    protected function managerCMSDetails(
+        BaseFormRequest $request,
+        Implementation $implementation
+    ): array {
         $generalImplementation = $implementation::general();
 
-        if ($implementation->organization->identityCan(auth()->id(), 'implementation_manager_cms')) {
+        if ($implementation->organization->identityCan($request->identity(), 'implementation_manager_cms')) {
             return [
                 'email_logo' => new MediaCompactResource($implementation->email_logo),
                 'email_logo_default' => new MediaCompactResource($generalImplementation->email_logo),
@@ -98,8 +108,8 @@ class ImplementationPrivateResource extends BaseJsonResource
      */
     protected function pageDetails(?ImplementationPage $page): ?array
     {
-        return $page ? $page->only([
+        return $page?->only([
             'page_type', 'content', 'content_alignment', 'content_html', 'external', 'external_url',
-        ]) : null;
+        ]);
     }
 }

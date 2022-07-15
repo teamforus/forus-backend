@@ -99,7 +99,7 @@ use Illuminate\Http\Request;
  * @method static \Kalnoy\Nestedset\QueryBuilder|ProductCategory withoutRoot()
  * @mixin \Eloquent
  */
-class ProductCategory extends Model
+class ProductCategory extends BaseModel
 {
     use Translatable, NodeTrait;
 

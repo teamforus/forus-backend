@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Api\File;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Rules\FileTypeRule;
-use Illuminate\Foundation\Http\FormRequest;
 
-class StoreFileRequest extends FormRequest
+class StoreFileRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

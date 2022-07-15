@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateVoucherTransactionBulksTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -42,4 +39,4 @@ class CreateVoucherTransactionBulksTable extends Migration
     {
         Schema::dropIfExists('voucher_transaction_bulks');
     }
-}
+};

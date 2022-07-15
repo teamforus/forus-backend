@@ -2,12 +2,12 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Requests\BaseFormRequest;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -39,10 +39,10 @@ class BaseJsonResource extends JsonResource
     }
 
     /**
-     * @param mixed $resource
+     * @param Model|Collection|array $resource
      * @return static
      */
-    public static function create($resource): self
+    public static function create(mixed $resource): static
     {
         return new static($resource instanceof Model ? $resource
             ->load(static::load())
@@ -51,14 +51,15 @@ class BaseJsonResource extends JsonResource
 
     /**
      * @param Builder|Relation $query
-     * @param FormRequest|int|null $request
+     * @param int|Request|null $request
      * @return AnonymousResourceCollection
      */
-    public static function queryCollection($query, $request = null): AnonymousResourceCollection
-    {
-        if (!$request || $request instanceof FormRequest) {
-            $request = $request ?: BaseFormRequest::createFromBase(request());
-            $request = $request->input('per_page');
+    public static function queryCollection(
+        Relation|Builder $query,
+        Request|int|null $request = null
+    ): AnonymousResourceCollection {
+        if (!$request || $request instanceof Request) {
+            $request = ($request ?: request())->input('per_page');
         }
 
         return self::collection($query

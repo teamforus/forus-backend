@@ -5,20 +5,18 @@ namespace App\Rules;
 use App\Models\Fund;
 use App\Models\FundCriterion;
 use App\Models\PrevalidationRecord;
+use App\Models\RecordType;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class PrevalidationItemRule extends BaseRule
 {
-    /**
-     * @var ?Fund null
-     */
-    private $fund;
-    private $prefix;
-    private $record_repo;
-    private $record_types;
-    private $csv_primary_key;
+    private ?Fund $fund;
+    private string $prefix;
+    private Collection $record_types;
+    private ?string $csv_primary_key;
 
     /**
      * PrevalidationItemRule constructor.
@@ -29,9 +27,8 @@ class PrevalidationItemRule extends BaseRule
     {
         $this->fund = $fund;
         $this->prefix = $prefix;
-        $this->record_repo = record_repo();
         $this->csv_primary_key = $fund->fund_config->csv_primary_key ?? null;
-        $this->record_types = collect($this->record_repo->getRecordTypes())->keyBy('key');
+        $this->record_types = RecordType::search()->keyBy('key');
     }
 
     /**
@@ -69,17 +66,15 @@ class PrevalidationItemRule extends BaseRule
      * @param $value
      * @return bool
      */
-    private function doesPrimaryKeyExists($value): bool {
+    private function doesPrimaryKeyExists($value): bool
+    {
         return PrevalidationRecord::where(function (Builder $builder) use ($value) {
-            $builder->where([
-                'record_type_id' => $this->record_repo->getTypeIdByKey($this->csv_primary_key),
-                'value' => $value
-            ])->whereHas('prevalidation', function(Builder $builder)  {
-                $builder->where([
-                    'identity_address' => auth_address(),
-                    'fund_id' => $this->fund->id
-                ]);
-            });
+            $builder->where('value', '=', $value);
+            $builder->whereRelation('record_type', 'record_types.key', '=', $this->csv_primary_key);
+            $builder->whereRelation('prevalidation', [
+                'identity_address' => auth()->id(),
+                'fund_id' => $this->fund->id
+            ]);
         })->exists();
     }
 
@@ -119,7 +114,7 @@ class PrevalidationItemRule extends BaseRule
             Validator::make([$key => $value], [
                 $fundCriterion->record_type_key => ['required', $typeKey, $operatorRule]
             ])->validate();
-        } catch (ValidationException $e) {
+        } catch (ValidationException) {
             return $this->reject(trans(
                 'validation.' . rtrim($operator, ':') . '.' . $typeKey,
                 $fundCriterion->only('value'))

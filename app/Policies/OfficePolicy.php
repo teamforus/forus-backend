@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Identity;
 use App\Models\Office;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -11,74 +12,74 @@ class OfficePolicy
     use HandlesAuthorization;
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Organization $organization
-     * @return bool
-     */
-    public function viewAny($identity_address, Organization $organization): bool
-    {
-        return $organization->identityCan($identity_address, 'manage_offices');
-    }
-
-    /**
      * @return bool
      * @noinspection PhpUnused
      */
-    public function viewAnyPublic(): bool
+    public function viewAny(Identity $identity, Organization $organization): bool
     {
-        return true;
+        return $organization->identityCan($identity, 'manage_offices');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity|null $identity
+     * @return bool
+     * @noinspection PhpUnused
+     */
+    public function viewAnyPublic(?Identity $identity): bool
+    {
+        return !$identity || $identity->exists;
+    }
+
+    /**
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function store($identity_address, Organization $organization): bool
+    public function store(Identity $identity, Organization $organization): bool
     {
-        return $organization->identityCan($identity_address, 'manage_offices');
+        return $organization->identityCan($identity, 'manage_offices');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Office $office
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function show($identity_address, Office $office, Organization $organization): bool
+    public function show(Identity $identity, Office $office, Organization $organization): bool
     {
-        return $this->update($identity_address, $office, $organization);
+        return $this->update($identity, $office, $organization);
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Office $office
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function update(
-        $identity_address,
-        Office $office,
-        Organization $organization
-    ): bool {
+    public function update(Identity $identity, Office $office, Organization $organization): bool
+    {
         if ($office->organization_id != $organization->id) {
             return false;
         }
 
-        return $office->organization->identityCan($identity_address, 'manage_offices');
+        return $office->organization->identityCan($identity, 'manage_offices');
     }
 
     /**
-     * @param $identity_address
+     * @param Identity $identity
      * @param Office $office
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function destroy(
-        $identity_address,
-        Office $office,
-        Organization $organization 
-    ): bool {
+    public function destroy(Identity $identity, Office $office, Organization $organization): bool
+    {
         if ($office->organization_id != $organization->id) {
             return false;
         }
@@ -87,6 +88,6 @@ class OfficePolicy
             return false;
         }
 
-        return $office->organization->identityCan($identity_address, 'manage_offices');
+        return $office->organization->identityCan($identity, 'manage_offices');
     }
 }

@@ -96,11 +96,11 @@ class Media extends Model
 
     /**
      * @param $uid
-     * @return self|Builder|Model|object|null
+     * @return Media|null
      */
-    public static function findByUid($uid)
+    public static function findByUid($uid): ?Media
     {
-        return self::where(compact('uid'))->first();
+        return self::whereUid(compact('uid'))->first();
     }
 
     /**

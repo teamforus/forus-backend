@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddAllowReservationsFieldToProductsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,4 +32,4 @@ class AddAllowReservationsFieldToProductsTable extends Migration
             $table->dropColumn('reservation_enabled', 'reservation_policy');
         });
     }
-}
+};

@@ -20,6 +20,7 @@ use App\Http\Resources\Sponsor\SponsorVoucherResource;
 use App\Models\Fund;
 use App\Models\Organization;
 use App\Models\Voucher;
+use App\Models\Identity;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -74,7 +75,7 @@ class VouchersController extends Controller
         $note       = $request->input('note');
         $email      = $request->input('email', false);
         $amount     = $fund->isTypeBudget() ? $request->input('amount', 0) : 0;
-        $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
+        $identity   = $email ? Identity::findOrMake($email)->address : null;
         $expire_at  = $request->input('expire_at', false);
         $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
         $product_id = $request->input('product_id');
@@ -143,7 +144,7 @@ class VouchersController extends Controller
             $note       = $voucher['note'] ?? null;
             $email      = $voucher['email'] ?? false;
             $amount     = $fund->isTypeBudget() ? $voucher['amount'] ?? 0 : 0;
-            $identity   = $email ? $request->identity_repo()->getOrMakeByEmail($email) : null;
+            $identity   = $email ? Identity::findOrMake($email)->address : null;
             $expire_at  = $voucher['expire_at'] ?? false;
             $expire_at  = $expire_at ? Carbon::parse($expire_at) : null;
             $product_id = $voucher['product_id'] ?? false;
@@ -228,7 +229,7 @@ class VouchersController extends Controller
         $email = $request->post('email');
 
         if ($email) {
-            $voucher->assignToIdentity($request->identity_repo()->getOrMakeByEmail($email));
+            $voucher->assignToIdentity(Identity::findOrMake($email));
         } else if ($organization->bsn_enabled && $bsn) {
             $voucher->setBsnRelation($bsn)->assignIfExists();
         }

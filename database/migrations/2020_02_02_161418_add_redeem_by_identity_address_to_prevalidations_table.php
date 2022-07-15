@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddRedeemByIdentityAddressToPrevalidationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -36,4 +33,4 @@ class AddRedeemByIdentityAddressToPrevalidationsTable extends Migration
             $table->dropColumn('redeemed_by_address');
         });
     }
-}
+};

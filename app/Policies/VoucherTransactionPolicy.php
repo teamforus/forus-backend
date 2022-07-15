@@ -3,75 +3,71 @@
 namespace App\Policies;
 
 use App\Models\Fund;
+use App\Models\Identity;
 use App\Models\Organization;
 use App\Models\VoucherTransaction;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-/**
- * Class VoucherTransactionPolicy
- * @package App\Policies
- */
 class VoucherTransactionPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAny(
-        string $identity_address
-    ): bool {
-        return !empty($identity_address);
+    public function viewAny(Identity $identity): bool
+    {
+        return $identity->exists;
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnySponsor(
-        string $identity_address,
-        Organization $organization
-    ): bool {
-        return $organization->identityCan($identity_address, 'view_finances');
+    public function viewAnySponsor(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, 'view_finances');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnyProvider(
-        string $identity_address,
-        Organization $organization
-    ): bool {
-        return $organization->identityCan($identity_address, 'view_finances');
+    public function viewAnyProvider(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, 'view_finances');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param VoucherTransaction $transaction
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function show(
-        string $identity_address,
-        VoucherTransaction $transaction
-    ): bool {
-        return !empty($identity_address) && ((strcmp(
-            $transaction->voucher->identity_address, $identity_address
-        ) === 0) || $transaction->voucher->fund->public);
+    public function show(Identity $identity, VoucherTransaction $transaction): bool
+    {
+        $isOwner = $transaction->voucher->identity_address === $identity->address;
+        $isPublic = $transaction->voucher->fund->public;
+
+        return $identity->exists && ($isOwner || $isPublic);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param VoucherTransaction $transaction
      * @param Organization|null $organization
      * @param Fund|null $fund
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showSponsor(
-        string $identity_address,
+        Identity $identity,
         VoucherTransaction $transaction,
         Organization $organization = null,
         Fund $fund = null
@@ -86,19 +82,20 @@ class VoucherTransactionPolicy
             }
         }
 
-        return $transaction->voucher->fund->organization->identityCan(
-            $identity_address, 'view_finances'
-        );
+        return $transaction->voucher->fund->organization->identityCan($identity, [
+            'view_finances',
+        ]);
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param VoucherTransaction $transaction
      * @param Organization|null $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showProvider(
-        string $identity_address,
+        Identity $identity,
         VoucherTransaction $transaction,
         Organization $organization = null
     ): bool {
@@ -106,11 +103,11 @@ class VoucherTransactionPolicy
             return false;
         }
 
-        return $transaction->provider->identityCan($identity_address, 'view_finances');
+        return $transaction->provider->identityCan($identity, 'view_finances');
     }
 
     /**
-     * @param string $identity_address
+     * @param Identity $identity
      * @param VoucherTransaction $transaction
      * @param Fund $fund
      * @param Organization $organization
@@ -118,14 +115,15 @@ class VoucherTransactionPolicy
      * @noinspection PhpUnused
      */
     public function showPublic(
-        string $identity_address,
+        Identity $identity,
         VoucherTransaction $transaction,
         Fund $fund,
         Organization $organization
     ): bool {
-        // identity_address not required
-        return isset($identity_address) && $fund->public && (
-            $fund->organization_id === $organization->id) && (
-                $transaction->voucher->fund_id === $fund->id);
+        return
+            $identity->exists &&
+            $fund->public &&
+            $fund->organization_id === $organization->id &&
+            $transaction->voucher->fund_id === $fund->id;
     }
 }

@@ -5,9 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Prevalidation;
 
 /**
- * Class PrevalidationResource
  * @property Prevalidation $resource
- * @package App\Http\Resources
  */
 class PrevalidationResource extends BaseJsonResource
 {

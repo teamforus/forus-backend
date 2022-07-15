@@ -4,10 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class AddOrganizationPublicInfoFlags extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -42,4 +39,4 @@ class AddOrganizationPublicInfoFlags extends Migration
             $table->dropColumn('website_public');
         });
     }
-}
+};

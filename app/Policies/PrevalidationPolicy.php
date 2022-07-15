@@ -3,52 +3,43 @@
 namespace App\Policies;
 
 use App\Exceptions\AuthorizationJsonException;
+use App\Models\Identity;
 use App\Models\Prevalidation;
 use App\Models\Voucher;
 use App\Scopes\Builders\VoucherQuery;
 
-/**
- * Class PrevalidationPolicy
- * @package App\Policies
- */
 class PrevalidationPolicy extends BasePolicy
 {
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAny(?string $identity_address): bool
+    public function viewAny(Identity $identity): bool
     {
-        return !empty($identity_address);
+        return $identity->exists;
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function show(?string $identity_address): bool
+    public function store(Identity $identity): bool
     {
-        return !empty($identity_address);
+        return $identity->exists;
     }
 
     /**
-     * @param string|null $identity_address
-     * @return bool
-     */
-    public function store(?string $identity_address): bool
-    {
-        return !empty($identity_address);
-    }
-
-    /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param Prevalidation $prevalidation
      * @return bool
      * @throws AuthorizationJsonException
+     * @noinspection PhpUnused
      */
-    public function redeem(?string $identity_address, Prevalidation $prevalidation): bool
+    public function redeem(Identity $identity, Prevalidation $prevalidation): bool
     {
-        if (empty($identity_address)) {
+        if (!$identity->exists) {
             return false;
         }
 
@@ -62,7 +53,7 @@ class PrevalidationPolicy extends BasePolicy
 
         if (VoucherQuery::whereNotExpired(Voucher::where([
             'fund_id' => $prevalidation->fund_id,
-            'identity_address' => $identity_address,
+            'identity_address' => $identity->address,
         ]))->exists()) {
             $this->deny('used_same_fund');
         }
@@ -71,23 +62,18 @@ class PrevalidationPolicy extends BasePolicy
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param Prevalidation $prevalidation
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function destroy(?string $identity_address, Prevalidation $prevalidation): bool
+    public function destroy(Identity $identity, Prevalidation $prevalidation): bool
     {
         $organization = $prevalidation->organization;
-        $isCreator = $prevalidation->identity_address === $identity_address;
-        $isOrganizationEmployee = false;
+        $isCreator = $prevalidation->identity_address === $identity->address;
+        $isValidator = $organization?->identityCan($identity, 'validate_records');
 
-        if ($organization) {
-            $isOrganizationEmployee = $organization->employeesWithPermissionsQuery([
-                'validate_records'
-            ])->where(compact('identity_address'))->exists();
-        }
-
-        return !$prevalidation->is_used && ($isCreator || $isOrganizationEmployee);
+        return ($isCreator || $isValidator) && !$prevalidation->is_used;
     }
 
     /**

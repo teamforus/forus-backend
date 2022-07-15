@@ -4,46 +4,47 @@ namespace App\Policies;
 
 use App\Models\Fund;
 use App\Models\FundProviderInvitation;
+use App\Models\Identity;
 use App\Models\Organization;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class FundProviderInvitationPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param Fund $fund
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnySponsor(
-        ?string $identity_address,
-        Fund $fund,
-        Organization $organization
-    ) {
+    public function viewAnySponsor(Identity $identity, Fund $fund, Organization $organization): bool
+    {
         if ($fund->organization_id != $organization->id) {
             return false;
         }
 
-        return $organization->identityCan($identity_address, [
+        return $organization->identityCan($identity, [
             'manage_providers', 'manage_funds'
         ]);
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param FundProviderInvitation $fundProviderInvitation
      * @param Fund $fund
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showSponsor(
-        ?string $identity_address,
+        Identity $identity,
         FundProviderInvitation $fundProviderInvitation,
         Fund $fund,
         Organization $organization
-    ) {
+    ): bool {
         if ($fund->organization_id != $organization->id) {
             return false;
         }
@@ -52,24 +53,25 @@ class FundProviderInvitationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, [
+        return $organization->identityCan($identity, [
             'manage_providers', 'manage_funds'
         ]);
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param Fund $fromFund
      * @param Fund $fund
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function storeSponsor(
-        ?string $identity_address,
+        Identity $identity,
         Fund $fromFund,
         Fund $fund,
         Organization $organization
-    ) {
+    ): bool {
         if ($fund->organization_id != $fromFund->organization_id) {
             return false;
         }
@@ -78,95 +80,89 @@ class FundProviderInvitationPolicy
             return false;
         }
 
-        return $organization->identityCan($identity_address, [
+        return $organization->identityCan($identity, [
             'manage_providers', 'manage_funds'
         ]);
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
-    public function viewAnyProvider(
-        ?string $identity_address,
-        Organization $organization
-    ) {
-        return $organization->identityCan($identity_address, [
-            'manage_provider_funds'
-        ]);
+    public function viewAnyProvider(Identity $identity, Organization $organization): bool
+    {
+        return $organization->identityCan($identity, 'manage_provider_funds');
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param FundProviderInvitation $invitation
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function showProvider(
-        ?string $identity_address,
+        Identity $identity,
         FundProviderInvitation $invitation,
         Organization $organization
-    ) {
-        return $this->acceptProvider(
-            $identity_address, $invitation, $organization
-        );
+    ): bool {
+        return $this->acceptProvider($identity, $invitation, $organization);
     }
 
     /**
-     * @param string|null $identity_address
+     * @param Identity $identity
      * @param FundProviderInvitation $invitation
      * @param Organization $organization
      * @return bool
+     * @noinspection PhpUnused
      */
     public function acceptProvider(
-        ?string $identity_address,
+        Identity $identity,
         FundProviderInvitation $invitation,
         Organization $organization
-    ) {
+    ): bool {
         if ($organization->id != $invitation->organization_id) {
             return false;
         }
 
-        return $organization->identityCan($identity_address, [
-            'manage_provider_funds'
-        ]);
+        return $organization->identityCan($identity, 'manage_provider_funds');
     }
 
     /**
      * Determine whether the user can view the fund provider invitation.
      *
-     * @param string|null $identity_address
-     * @param FundProviderInvitation $fundProviderInvitation
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @param Identity $identity
+     * @param FundProviderInvitation $invitation
+     * @return bool
+     * @noinspection PhpUnused
      */
-    public function showByToken(
-        ?string $identity_address,
-        FundProviderInvitation $fundProviderInvitation
-    ) {
-        return isset($identity_address) && !empty($fundProviderInvitation);
+    public function showByToken(Identity $identity, FundProviderInvitation $invitation): bool
+    {
+        return $identity->exists && $invitation->exists;
     }
 
     /**
      * Determine whether the user can accept the fund provider invitation.
      *
-     * @param string|null $identity_address
-     * @param FundProviderInvitation $fundProviderInvitation
-     * @return bool|\Illuminate\Auth\Access\Response
+     * @param Identity $identity
+     * @param FundProviderInvitation $invitation
+     * @return Response|bool
+     * @noinspection PhpUnused
      */
     public function acceptFundProviderInvitation(
-        ?string $identity_address,
-        FundProviderInvitation $fundProviderInvitation
-    ) {
-        if ($fundProviderInvitation->state == FundProviderInvitation::STATE_ACCEPTED) {
+        Identity $identity,
+        FundProviderInvitation $invitation
+    ): Response|bool {
+        if ($invitation->state == FundProviderInvitation::STATE_ACCEPTED) {
             return $this->deny("Invitation already approved!");
         }
 
-        if ($fundProviderInvitation->state == FundProviderInvitation::STATE_EXPIRED) {
+        if ($invitation->state == FundProviderInvitation::STATE_EXPIRED) {
             return $this->deny("Invitation expired!");
         }
 
-        return isset($identity_address) &&
-            $fundProviderInvitation->state == FundProviderInvitation::STATE_PENDING;
+        return $identity->exists && $invitation->state == FundProviderInvitation::STATE_PENDING;
     }
 }

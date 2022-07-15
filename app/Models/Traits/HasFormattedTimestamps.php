@@ -15,28 +15,32 @@ trait HasFormattedTimestamps
     /**
      * @return string|null
      */
-    public function getCreatedAtStringAttribute(): ?string {
-        return $this->created_at ? $this->created_at->format('Y-m-d H:i:s') : null;
+    public function getCreatedAtStringAttribute(): ?string
+    {
+        return $this->created_at?->format('Y-m-d H:i:s');
     }
 
     /**
      * @return string|null
      */
-    public function getCreatedAtStringLocaleAttribute(): ?string {
+    public function getCreatedAtStringLocaleAttribute(): ?string
+    {
         return $this->created_at ? format_datetime_locale($this->created_at) : null;
     }
 
     /**
      * @return string|null
      */
-    public function getUpdatedAtStringAttribute(): ?string {
-        return $this->updated_at ? $this->updated_at->format('Y-m-d H:i:s') : null;
+    public function getUpdatedAtStringAttribute(): ?string
+    {
+        return $this->updated_at?->format('Y-m-d H:i:s');
     }
 
     /**
      * @return string|null
      */
-    public function getUpdatedAtStringLocaleAttribute(): ?string {
+    public function getUpdatedAtStringLocaleAttribute(): ?string
+    {
         return $this->updated_at ? format_datetime_locale($this->updated_at) : null;
     }
 }

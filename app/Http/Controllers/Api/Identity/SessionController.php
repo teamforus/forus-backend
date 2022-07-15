@@ -4,15 +4,12 @@ namespace App\Http\Controllers\Api\Identity;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Identity\Sessions\IndexSessionsRequest;
+use App\Http\Requests\BaseFormRequest;
 use App\Services\Forus\Session\Models\Session;
 use App\Services\Forus\Session\Resources\SessionResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Class SessionController
- * @package App\Http\Controllers\Api\Identity
- */
 class SessionController extends Controller
 {
     /**
@@ -26,9 +23,12 @@ class SessionController extends Controller
     {
         $this->authorize('viewAny', Session::class);
 
-        return SessionResource::collection(Session::where([
-            'identity_address' => $request->auth_address()
-        ])->orderByDesc('last_activity_at')->paginate(20));
+        $query = Session::query()
+            ->where('identity_address', $request->auth_address())
+            ->whereHas('identity_proxy')
+            ->orderByDesc('last_activity_at');
+
+        return SessionResource::queryCollection($query);
     }
 
     /**
@@ -56,24 +56,28 @@ class SessionController extends Controller
     {
         $this->authorize('terminate', $session);
 
-        $session->terminate();
+        $session->terminate(false);
 
-        return response()->json([]);
+        return new JsonResponse();
     }
 
     /**
      * Display the specified resource.
      *
+     * @param BaseFormRequest $formRequest
      * @return JsonResponse
      * @throws \Illuminate\Auth\Access\AuthorizationException
      * @throws \Exception
+     * @noinspection PhpUnused
      */
-    public function terminateAll(): JsonResponse
+    public function terminateAll(BaseFormRequest $formRequest): JsonResponse
     {
         $this->authorize('terminateAll', Session::class);
 
-        Session::terminateAll(auth_address());
+        foreach ($formRequest->identity()->proxies as $proxy) {
+            $proxy->deactivateBySession(false);
+        }
 
-        return response()->json([]);
+        return new JsonResponse();
     }
 }

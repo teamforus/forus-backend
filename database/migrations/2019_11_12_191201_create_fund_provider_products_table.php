@@ -4,10 +4,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-/**
- * @noinspection PhpUnused
- */
-class CreateFundProviderProductsTable extends Migration
+
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -20,8 +18,6 @@ class CreateFundProviderProductsTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('fund_provider_id');
             $table->unsignedInteger('product_id');
-            // $table->unsignedInteger('organization_id');
-            // $table->unsignedInteger('fund_id');
             $table->timestamps();
         });
     }
@@ -35,4 +31,4 @@ class CreateFundProviderProductsTable extends Migration
     {
         Schema::dropIfExists('fund_provider_products');
     }
-}
+};

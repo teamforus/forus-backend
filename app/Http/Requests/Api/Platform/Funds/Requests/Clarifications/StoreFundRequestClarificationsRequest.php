@@ -2,16 +2,14 @@
 
 namespace App\Http\Requests\Api\Platform\Funds\Requests\Clarifications;
 
+use App\Http\Requests\BaseFormRequest;
 use App\Models\FundRequest;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Class StoreFundRequestClarificationsRequest
  * @property FundRequest $fund_request
- * @package App\Http\Requests\Api\Platform\Funds\Requests\Records\Clarifications
  */
-class StoreFundRequestClarificationsRequest extends FormRequest
+class StoreFundRequestClarificationsRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -20,7 +18,7 @@ class StoreFundRequestClarificationsRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->isAuthenticated();
     }
 
     /**

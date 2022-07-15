@@ -5,10 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 
-/**
- * @noinspection PhpUnused
- */
-class AddInitiatorColumnToVoucherTransactionsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -35,4 +32,4 @@ class AddInitiatorColumnToVoucherTransactionsTable extends Migration
             $table->dropColumn('initiator');
         });
     }
-}
+};

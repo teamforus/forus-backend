@@ -81,7 +81,7 @@ use Throwable;
  * @method static \Illuminate\Database\Eloquent\Builder|BankConnection whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class BankConnection extends Model
+class BankConnection extends BaseModel
 {
     use HasLogs, HasDbTokens;
 
@@ -220,7 +220,7 @@ class BankConnection extends Model
      * @param Employee $employee
      * @param Organization $organization
      * @param Implementation $implementation
-     * @return BankConnection|Model
+     * @return BankConnection|BaseModel
      */
     public static function addConnection(
         Bank $bank,
@@ -598,11 +598,11 @@ class BankConnection extends Model
         $monetary_account_id = $bank_connection_default_account->monetary_account_id ?? null;
 
         if ($monetary_account_id && $this->bank->isBunq()) {
-            return $this->fetchPaymentsBunq($monetary_account_id, $count);
+            return $this->fetchPaymentsBunq($monetary_account_id, $count) ?: [];
         }
 
         if ($monetary_account_id && $this->bank->isBNG()) {
-            return $this->fetchPaymentsBNG($monetary_account_id, $count);
+            return $this->fetchPaymentsBNG($monetary_account_id, $count) ?: [];
         }
 
         return [];

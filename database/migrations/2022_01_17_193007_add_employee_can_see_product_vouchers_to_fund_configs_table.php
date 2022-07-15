@@ -4,10 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * @noinspection PhpUnused
- */
-class AddEmployeeCanSeeProductVouchersToFundConfigsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -34,4 +31,4 @@ class AddEmployeeCanSeeProductVouchersToFundConfigsTable extends Migration
             $table->dropColumn('employee_can_see_product_vouchers');
         });
     }
-}
+};

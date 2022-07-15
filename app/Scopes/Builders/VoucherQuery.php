@@ -5,6 +5,8 @@ namespace App\Scopes\Builders;
 
 use App\Models\ProductReservation;
 use App\Models\Voucher;
+use App\Models\Identity;
+use App\Models\IdentityEmail;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -162,12 +164,12 @@ class VoucherQuery
             $builder->orWhere('activation_code', 'LIKE', "%$query%");
             $builder->orWhere('activation_code_uid', 'LIKE', "%$query%");
 
-            if ($email_identities = identity_repo()->identityAddressesByEmailSearch($query)) {
-                $builder->orWhereIn('identity_address', $email_identities);
+            if ($addresses = IdentityEmail::searchByEmail($query)->pluck('identity_address')) {
+                $builder->orWhereIn('identity_address', $addresses);
             }
 
-            if ($bsn_identities = record_repo()->identityAddressByBsnSearch($query)) {
-                $builder->orWhereIn('identity_address', $bsn_identities);
+            if ($bsn_identities = Identity::searchByBsn($query)?->pluck('address')) {
+                $builder->orWhereIn('identity_address', $bsn_identities->toArray());
             }
 
             $builder->orWhereHas('voucher_relation', function (Builder $builder) use ($query) {

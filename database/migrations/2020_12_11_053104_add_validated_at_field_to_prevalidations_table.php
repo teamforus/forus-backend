@@ -6,10 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Prevalidation;
 use Illuminate\Support\Facades\DB;
 
-/**
- * @noinspection PhpUnused
- */
-class AddValidatedAtFieldToPrevalidationsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -38,4 +35,4 @@ class AddValidatedAtFieldToPrevalidationsTable extends Migration
             $table->dropColumn('validated_at');
         });
     }
-}
+};

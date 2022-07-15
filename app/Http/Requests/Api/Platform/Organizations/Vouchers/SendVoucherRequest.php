@@ -8,10 +8,8 @@ use App\Models\Voucher;
 use App\Rules\IdentityEmailExistsRule;
 
 /**
- * Class SendVoucherRequest
  * @property-read Organization $organization
  * @property-read Voucher $voucher
- * @package App\Http\Requests\Api\Platform\Organizations\Vouchers
  */
 class SendVoucherRequest extends BaseFormRequest
 {
@@ -22,7 +20,8 @@ class SendVoucherRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->organization->identityCan($this->auth_address(), 'manage_vouchers') &&
+        return
+            $this->organization->identityCan($this->identity(), 'manage_vouchers') &&
             $this->voucher->fund->organization_id === $this->organization->id &&
             !$this->voucher->is_granted;
     }

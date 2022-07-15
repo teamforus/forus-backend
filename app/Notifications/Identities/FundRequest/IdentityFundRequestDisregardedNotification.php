@@ -4,7 +4,7 @@ namespace App\Notifications\Identities\FundRequest;
 
 use App\Mail\Funds\FundRequests\FundRequestDisregardedMail;
 use App\Models\FundRequest;
-use App\Services\Forus\Identity\Models\Identity;
+use App\Models\Identity;
 
 class IdentityFundRequestDisregardedNotification extends BaseIdentityFundRequestNotification
 {

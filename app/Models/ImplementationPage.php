@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $implementation_id
  * @property string|null $page_type
+ * @property string $state
  * @property string|null $content
  * @property string $content_alignment
  * @property string|null $external_url
  * @property bool $external
+ * @property string|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read string $content_html
@@ -27,15 +29,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContent($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereContentAlignment($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereExternalUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereImplementationId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage wherePageType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ImplementationPage whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-class ImplementationPage extends Model
+class ImplementationPage extends BaseModel
 {
     use HasMedia;
 

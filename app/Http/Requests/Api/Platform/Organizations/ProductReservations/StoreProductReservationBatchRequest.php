@@ -7,14 +7,10 @@ use App\Models\Organization;
 use App\Rules\ProductReservations\ProviderProductReservationBatchItemPermissionsRule;
 use App\Rules\ProductReservations\ProviderProductReservationBatchItemStockRule;
 use App\Rules\ProductReservations\ProviderProductReservationBatchRule;
-use App\Rules\RuleA;
-use App\Rules\RuleB;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * Class AcceptProductReservationRequest
  * @property Organization $organization
- * @package App\Http\Requests\Api\Platform\Organizations\ProductReservations
  */
 class StoreProductReservationBatchRequest extends BaseFormRequest
 {
@@ -25,7 +21,9 @@ class StoreProductReservationBatchRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return $this->isAuthenticated() && $this->organization->identityCan('scan_vouchers');
+        return
+            $this->isAuthenticated() &&
+            $this->organization->identityCan($this->identity(), 'scan_vouchers');
     }
 
     /**

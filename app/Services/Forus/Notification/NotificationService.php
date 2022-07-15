@@ -6,10 +6,10 @@ use App\Mail\Auth\UserLoginMail;
 use App\Mail\Digest\BaseDigestMail;
 use App\Mail\User\EmailActivationMail;
 use App\Mail\User\IdentityEmailVerificationMail;
+use App\Models\Identity;
 use App\Models\Implementation;
 use App\Services\Forus\Notification\Interfaces\INotificationRepo;
 use App\Services\Forus\Notification\Models\NotificationToken;
-use App\Services\Forus\Record\Repositories\Interfaces\IRecordRepo;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Config;
@@ -31,23 +31,17 @@ class NotificationService
     ];
 
     protected INotificationRepo $notificationRepo;
-    protected IRecordRepo $recordRepo;
     protected Mailer $mailer;
 
     /**
      * NotificationService constructor.
      *
      * @param Mailer $mailer
-     * @param IRecordRepo $recordRepo
      * @param INotificationRepo $notificationRepo
      */
-    public function __construct(
-        Mailer $mailer,
-        IRecordRepo $recordRepo,
-        INotificationRepo $notificationRepo
-    ) {
+    public function __construct(Mailer $mailer, INotificationRepo $notificationRepo)
+    {
         $this->mailer = $mailer;
-        $this->recordRepo = $recordRepo;
         $this->notificationRepo = $notificationRepo;
     }
 
@@ -293,13 +287,11 @@ class NotificationService
     protected function isUnsubscribed(string $email, Mailable $mailable): bool
     {
         $mailClass = get_class($mailable);
+        $identity = Identity::findByEmail($email);
 
         return $this->notificationRepo->isMailUnsubscribable($mailClass) && (
             $this->notificationRepo->isEmailUnsubscribed($email) ||
-            $this->notificationRepo->isEmailTypeUnsubscribed(
-                $this->recordRepo->identityAddressByEmail($email),
-                $mailClass
-            )
+            $this->notificationRepo->isEmailTypeUnsubscribed($identity->address, $mailClass)
         );
     }
 

@@ -40,7 +40,7 @@ use Illuminate\Http\Request;
  * @method static Builder|BusinessType withTranslation()
  * @mixin \Eloquent
  */
-class BusinessType extends Model
+class BusinessType extends BaseModel
 {
     use Translatable;
 

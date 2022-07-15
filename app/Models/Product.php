@@ -103,7 +103,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Query\Builder|Product withoutTrashed()
  * @mixin \Eloquent
  */
-class Product extends Model
+class Product extends BaseModel
 {
     use HasMedia, SoftDeletes, HasLogs, HasMarkdownDescription;
 
