@@ -4,6 +4,7 @@
 namespace App\Scopes\Builders;
 
 use App\Models\Fund;
+use App\Models\FundProvider;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -66,13 +67,18 @@ class FundQuery
                 $builder->where('type', '=', Fund::TYPE_BUDGET);
 
                 $builder->whereHas('providers', static function(Builder $builder) use ($product) {
+                    $builder->where('state', FundProvider::STATE_ACCEPTED);
+                    $builder->where('allow_products', '=', true);
+
                     $builder->whereHas('organization.products', static function(Builder $builder) use ($product) {
                         $builder->where('products.id', $product->id);
-                    })->where('allow_products', '=', true);
+                    });
                 });
             });
 
             $builder->orWhereHas('providers', static function(Builder $builder) use ($product) {
+                $builder->where('state', FundProvider::STATE_ACCEPTED);
+
                 $builder->whereHas('fund_provider_products', static function(Builder $builder) use ($product) {
                     $builder->where('product_id', $product->id);
                 });

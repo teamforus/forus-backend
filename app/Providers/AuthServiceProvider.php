@@ -11,6 +11,7 @@ use App\Models\FundRequest;
 use App\Models\FundRequestClarification;
 use App\Models\FundRequestRecord;
 use App\Models\Implementation;
+use App\Models\ImplementationPage;
 use App\Models\Office;
 use App\Models\FundProvider;
 use App\Models\PhysicalCard;
@@ -31,6 +32,7 @@ use App\Policies\FundRequestClarificationPolicy;
 use App\Policies\FundRequestPolicy;
 use App\Policies\FundRequestRecordPolicy;
 use App\Policies\IdentityEmailPolicy;
+use App\Policies\ImplementationPagePolicy;
 use App\Policies\ImplementationPolicy;
 use App\Policies\MediaPolicy;
 use App\Policies\PhysicalCardPolicy;
@@ -82,6 +84,7 @@ class AuthServiceProvider extends ServiceProvider
         BankConnection::class           => BankConnectionPolicy::class,
         FundProviderChat::class         => FundProviderChatPolicy::class,
         FundRequestRecord::class        => FundRequestRecordPolicy::class,
+        ImplementationPage::class       => ImplementationPagePolicy::class,
         VoucherTransaction::class       => VoucherTransactionPolicy::class,
         ProductReservation::class       => ProductReservationPolicy::class,
         PhysicalCardRequest::class      => PhysicalCardRequestPolicy::class,

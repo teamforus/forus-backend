@@ -26,6 +26,7 @@ use App\Console\Commands\UpdateFundProviderInvitationExpireStateCommand;
 use App\Console\Commands\UpdateNotificationTemplatesCommand;
 use App\Console\Commands\UpdateSystemNotificationsCommand;
 use App\Services\Forus\Session\Commands\UpdateSessionsExpirationCommand;
+use App\Services\BackofficeApiService\Commands\SendBackofficeLogsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -89,6 +90,7 @@ class Kernel extends ConsoleKernel
         // physical cards
         MigratePhysicalCardsCommand::class,
         UpdateSessionsExpirationCommand::class,
+        SendBackofficeLogsCommand::class,
     ];
 
     /**
@@ -143,6 +145,7 @@ class Kernel extends ConsoleKernel
 
         $this->scheduleBank($schedule);
         $this->scheduleDigest($schedule);
+        $this->scheduleBackoffice($schedule);
         $this->scheduleQueue($schedule);
         $this->scheduleAuthExpiration($schedule);
     }
@@ -255,7 +258,24 @@ class Kernel extends ConsoleKernel
          * UpdateSessionsExpirationCommand
          */
         $schedule->command('auth_sessions:update-expiration')
-            ->everyMinute()->withoutOverlapping()->onOneServer();
+            ->withoutOverlapping()
+            ->everyMinute()
+            ->onOneServer();
+    }
+
+    /**
+     * @param Schedule $schedule
+     * @return void
+     */
+    private function scheduleBackoffice(Schedule $schedule): void
+    {
+        /**
+         * SendBackofficeLogsCommand
+         */
+        $schedule->command('funds.backoffice:send-logs')
+            ->withoutOverlapping()
+            ->everyMinute()
+            ->onOneServer();
     }
 
     /**

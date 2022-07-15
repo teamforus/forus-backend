@@ -6,10 +6,6 @@ use App\Models\Implementation;
 use App\Models\ImplementationPage;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * Class ImplementationResource
- * @package App\Http\Resources
- */
 class ImplementationResource extends JsonResource
 {
     /**
@@ -17,7 +13,7 @@ class ImplementationResource extends JsonResource
      *
      * @param  \Illuminate\Http\Request  $request
      * @property Implementation $resource
-     * @return array
+     * @return ?array
      */
     public function toArray($request): ?array
     {

@@ -3,7 +3,6 @@
 namespace App\Models\Data;
 
 use App\Models\Voucher;
-use Illuminate\Support\Carbon;
 
 /**
  * Class VoucherExportData
@@ -12,10 +11,10 @@ use Illuminate\Support\Carbon;
  */
 class VoucherExportData
 {
-    protected $onlyData;
-    protected $voucher;
-    protected $fields;
-    protected $name;
+    protected ?bool $onlyData;
+    protected Voucher $voucher;
+    protected array $fields;
+    protected string $name;
 
     /**
      * VoucherExportData constructor.
@@ -41,6 +40,7 @@ class VoucherExportData
 
     /**
      * @return Voucher
+     * @noinspection PhpUnused
      */
     public function getVoucher(): Voucher
     {
@@ -55,6 +55,7 @@ class VoucherExportData
         $sponsor = $this->voucher->fund->organization;
         $assigned = $this->voucher->identity_address && $this->voucher->is_granted;
         $identity = $this->voucher->identity;
+        $firstUseDate = $this->voucher->first_use_date;
 
         $bsnData = $sponsor->bsn_enabled ? [
             'reference_bsn' => $this->voucher->voucher_relation->bsn ?? null,
@@ -66,7 +67,9 @@ class VoucherExportData
         ], [
             'granted' => $assigned ? 'Ja': 'Nee',
             'in_use' => $this->voucher->in_use ? 'Ja': 'Nee',
-            'in_use_date' => format_date_locale($this->getFirstUsageDate()),
+            'in_use_date' => $firstUseDate ? format_date_locale($firstUseDate) : null,
+            'has_transactions' => $this->voucher->has_transactions ? 'Ja': 'Nee',
+            'has_reservations' => $this->voucher->has_reservations ? 'Ja': 'Nee',
             'product_name' => $this->voucher->product?->name,
         ], $bsnData, [
             'identity_email' => $assigned ? ($identity?->email) : null,
@@ -82,24 +85,5 @@ class VoucherExportData
         ]);
 
         return array_only($export_data, array_merge(['name'], $this->fields));
-    }
-
-    /**
-     * @return Carbon|null
-     */
-    public function getFirstUsageDate(): ?Carbon
-    {
-        $voucher = $this->voucher;
-        $productVouchers = $voucher->product_vouchers->whereNull('product_reservation_id');
-        $reservationVouchers = $voucher->product_vouchers->whereNotNull('product_reservation_id');
-        $reservationTransactions = $reservationVouchers->pluck('transactions')->flatten();
-
-        $models = $voucher->transactions->merge($reservationTransactions)->merge($productVouchers);
-
-        if ($models->count() > 0) {
-            return $models->sortBy('created_at')[0]->created_at;
-        }
-
-        return null;
     }
 }

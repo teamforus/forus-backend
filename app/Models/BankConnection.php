@@ -592,7 +592,7 @@ class BankConnection extends BaseModel
      * @param int $count
      * @return BankPayment[]
      */
-    public function fetchPayments(int $count = 100): array
+    public function fetchPayments(int $count = 100): ?array
     {
         $bank_connection_default_account = $this->bank_connection_default_account;
         $monetary_account_id = $bank_connection_default_account->monetary_account_id ?? null;

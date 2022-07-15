@@ -251,36 +251,23 @@ class LoremDbSeeder extends Seeder
     }
 
     /**
-     * @param string $identity_address
+     * @param string $identityAddress
      * @param int $count
      * @throws \Throwable
      */
-    public function makeProviders(
-        string $identity_address,
-        int $count = 10
-    ): void {
-        $organizations = $this->makeOrganizations(
-            "Provider", 
-            $identity_address,
-            $count,
-            [],
-            $this->config('provider_offices_count')
-        );
+    public function makeProviders(string $identityAddress, int $count = 10): void
+    {
+        $countOffices = $this->config('provider_offices_count');
+        $organizations = $this->makeOrganizations("Provider", $identityAddress, $count, [], $countOffices);
 
-        foreach (collect($organizations)->random(ceil(count($organizations) / 2)) as $organization) {
-            /** @var Fund[] $funds */
-            $funds = Fund::get()->random(3);
-
-            foreach ($funds as $fund) {
-                /** @var FundProvider $provider */
-                $provider = $fund->providers()->create([
+        foreach (array_random($organizations, ceil(count($organizations) / 2)) as $organization) {
+            foreach (Fund::take(Fund::count() / 2)->get() as $fund) {
+                FundProviderApplied::dispatch($fund, $fund->providers()->create([
                     'organization_id'   => $organization->id,
                     'allow_budget'      => $fund->isTypeBudget() && random_int(0, 2),
                     'allow_products'    => $fund->isTypeBudget() && random_int(0, 2),
                     'state'             => FundProvider::STATE_ACCEPTED,
-                ]);
-
-                FundProviderApplied::dispatch($fund, $provider);
+                ]));
             }
         }
 
@@ -350,7 +337,7 @@ class LoremDbSeeder extends Seeder
         string $identity_address,
         int $count = 10
     ): void {
-        $organizations = $this->makeOrganizations("Validator", $identity_address,  $count);
+        $organizations = $this->makeOrganizations("Validator", $identity_address, $count);
 
         foreach ($organizations as $key => $organization) {
             $this->makeOffices($organization, random_int(1, 2));

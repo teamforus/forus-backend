@@ -18,6 +18,6 @@ abstract class BaseIdentityFundRequestRecordNotification extends BaseIdentityNot
      */
     public static function eligibleIdentities($loggable): Collection
     {
-        return Identity::whereAddress($loggable->fund_request->identity_address)->get();
+        return Identity::whereAddress($loggable->fund_request->identity)->get();
     }
 }

@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\ImplementationPage;
@@ -15,8 +18,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Implementation::get()->each(static function (Implementation $implementation) {
-            if (!$implementation->page_explanation()->exists()) {
+        Implementation::get()->each(function (Implementation $implementation) {
+            if (!$this->withTrashed($implementation->page_explanation())->exists()) {
                 $implementation->pages()->create([
                     'content'       => $implementation->description_steps ?? null,
                     'page_type'     => ImplementationPage::TYPE_EXPLANATION,
@@ -25,7 +28,7 @@ return new class extends Migration
                 ]);
             }
 
-            if (!$implementation->page_provider()->exists()) {
+            if (!$this->withTrashed($implementation->page_provider())->exists()) {
                 $implementation->pages()->create([
                     'content' => $implementation->description_providers ?? null,
                     'page_type' => ImplementationPage::TYPE_PROVIDER,
@@ -40,6 +43,12 @@ return new class extends Migration
                 'description_steps', 'description_providers', 'more_info_url', 'has_more_info_url',
             ]);
         });
+    }
+
+    private function withTrashed(Builder|Relation $builder): Builder|Relation
+    {
+        /** @var Builder|Relation|SoftDeletes $builder */
+        return $builder->withTrashed();
     }
 
     /**

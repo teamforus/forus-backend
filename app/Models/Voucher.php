@@ -15,6 +15,7 @@ use App\Models\Data\VoucherExportData;
 use App\Models\Traits\HasDbTokens;
 use App\Models\Traits\HasFormattedTimestamps;
 use App\Scopes\Builders\VoucherQuery;
+use App\Scopes\Builders\VoucherSubQuery;
 use App\Services\BackofficeApiService\BackofficeApi;
 use App\Services\EventLogService\Models\EventLog;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -69,7 +70,8 @@ use ZipArchive;
  * @property-read string|null $created_at_string_locale
  * @property-read bool $deactivated
  * @property-read bool $expired
- * @property-read bool $has_product_vouchers
+ * @property-read \Illuminate\Support\Carbon|null $first_use_date
+ * @property-read bool $has_reservations
  * @property-read bool $has_transactions
  * @property-read bool $in_use
  * @property-read bool $is_granted
@@ -176,10 +178,6 @@ class Voucher extends BaseModel
         self::STATE_DEACTIVATED,
     ];
 
-    protected $withCount = [
-        'transactions'
-    ];
-
     /**
      * The attributes that are mass assignable.
      *
@@ -253,6 +251,7 @@ class Voucher extends BaseModel
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @noinspection PhpUnused
      */
     public function identity(): BelongsTo
     {
@@ -568,6 +567,7 @@ class Voucher extends BaseModel
      * @param Organization $organization
      * @param Fund|null $fund
      * @return Builder
+     * @throws \Exception
      */
     public static function searchSponsorQuery(
         BaseFormRequest $request,
@@ -581,6 +581,8 @@ class Voucher extends BaseModel
         $count_per_identity_min = $request->input('count_per_identity_min');
         $count_per_identity_max = $request->input('count_per_identity_max');
         $state = $request->input('state');
+        $in_use_from = $request->input('in_use_from');
+        $in_use_to = $request->input('in_use_to');
 
         $query->whereHas('fund', static function(Builder $query) use ($organization, $fund) {
             $query->where('organization_id', $organization->id);
@@ -659,24 +661,18 @@ class Voucher extends BaseModel
             }, '<=', $count_per_identity_max);
         }
 
+        if ($in_use_from || $in_use_to) {
+            $query = VoucherQuery::whereInUseDateQuery(
+                VoucherSubQuery::appendFirstUseFields($query),
+                $in_use_from ? Carbon::parse($in_use_from)->startOfDay() : null,
+                $in_use_to ? Carbon::parse($in_use_to)->endOfDay() : null,
+            );
+        }
+
         return $query->orderBy(
             $request->input('sort_by', 'created_at'),
             $request->input('sort_order', 'asc')
         );
-    }
-
-    /**
-     * @param BaseFormRequest $request
-     * @param Organization $organization
-     * @param Fund|null $fund
-     * @return Collection|Voucher[]
-     */
-    public static function searchSponsor(
-        BaseFormRequest $request,
-        Organization $organization,
-        Fund $fund = null
-    ): Collection|Arrayable {
-        return self::searchSponsorQuery($request, $organization, $fund)->get();
     }
 
     /**
@@ -694,16 +690,16 @@ class Voucher extends BaseModel
      */
     public function getHasTransactionsAttribute(): bool
     {
-        return $this->transactions->count() > 0;
+        return $this->usedCount('transactions', false);
     }
 
     /**
      * @return bool
      * @noinspection PhpUnused
      */
-    public function getHasProductVouchersAttribute(): bool
+    public function getHasReservationsAttribute(): bool
     {
-        return $this->product_vouchers->count() > 0;
+        return $this->usedCount('reservations', false);
     }
 
     /**
@@ -712,7 +708,25 @@ class Voucher extends BaseModel
      */
     public function getInUseAttribute(): bool
     {
-        return $this->usedCount(false) > 0;
+        return $this->first_use_date !== null;
+    }
+
+    /**
+     * @return \Illuminate\Support\Carbon|null
+     * @noinspection PhpUnused
+     */
+    public function getFirstUseDateAttribute(): ?Carbon
+    {
+        if (key_exists('first_use_date', $this->attributes)) {
+            return $this->attributes['first_use_date'] ? Carbon::parse(
+                $this->attributes['first_use_date']
+            ) : null;
+        }
+
+        $model = VoucherSubQuery::appendFirstUseFields(static::query())->find($this->id);
+        $this->setAttribute('first_use_date', $model?->getAttribute('first_use_date'));
+
+        return $this->getAttribute('first_use_date');
     }
 
     /**
@@ -1225,16 +1239,17 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @param string $scope
      * @param bool $fresh
      * @return int
      */
-    public function usedCount(bool $fresh = true): int
+    public function usedCount(string $scope = 'all', bool $fresh = true): int
     {
-        if ($fresh) {
-            return $this->transactions()->count() + $this->product_vouchers()->count();
-        }
+        $transactions_count = $fresh ? $this->transactions()->count() : $this->transactions->count();
+        $reservations_count = $fresh ? $this->product_vouchers()->count() : $this->product_vouchers->count();
 
-        return $this->transactions->count() + $this->product_vouchers->count();
+        return (in_array($scope, ['all', 'transactions']) ? $transactions_count : 0) +
+            (in_array($scope, ['all', 'reservations']) ? $reservations_count : 0);
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Events\Products\ProductSoldOut;
 use App\Http\Requests\BaseFormRequest;
 use App\Notifications\Organizations\Funds\FundProductSubsidyRemovedNotification;
 use App\Scopes\Builders\FundQuery;
+use App\Scopes\Builders\OfficeQuery;
 use App\Scopes\Builders\ProductQuery;
 use App\Scopes\Builders\TrashedQuery;
 use App\Services\EventLogService\Traits\HasLogs;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 /**
  * App\Models\Product
@@ -394,40 +396,58 @@ class Product extends BaseModel
     {
         $query = $builder ?: self::searchQuery();
 
-        if ($fund_type = array_get($options, 'fund_type')) {
+        if ($fund_type = Arr::get($options, 'fund_type')) {
             $query = self::filterFundType($query, $fund_type);
         }
 
-        if ($product_category_id = array_get($options, 'product_category_id')) {
+        if ($product_category_id = Arr::get($options, 'product_category_id')) {
             $query = ProductQuery::productCategoriesFilter($query, $product_category_id);
         }
 
-        if ($fund_id = array_get($options, 'fund_id')) {
+        if ($fund_id = Arr::get($options, 'fund_id')) {
             $query = ProductQuery::approvedForFundsFilter($query, $fund_id);
         }
 
-        if ($price_type = array_get($options, 'price_type')) {
+        if ($price_type = Arr::get($options, 'price_type')) {
             $query = $query->where('price_type', $price_type);
         }
 
-        if (filter_bool(array_get($options, 'unlimited_stock'))) {
-            return ProductQuery::unlimitedStockFilter($query, array_get($options, 'unlimited_stock'));
+        if (filter_bool(Arr::get($options, 'unlimited_stock'))) {
+            return ProductQuery::unlimitedStockFilter($query, Arr::get($options, 'unlimited_stock'));
         }
 
-        if ($organization_id = array_get($options, 'organization_id')) {
+        if ($organization_id = Arr::get($options, 'organization_id')) {
             $query = $query->where('organization_id', $organization_id);
         }
 
         $query = ProductQuery::addPriceMinAndMaxColumn($query);
 
-        if ($q = array_get($options, 'q')) {
+        if ($q = Arr::get($options, 'q')) {
             ProductQuery::queryDeepFilter($query, $q);
         }
 
-        return $query->orderBy(
-            array_get($options, 'order_by', 'created_at'),
-            array_get($options, 'order_by_dir', 'desc')
-        )->orderBy('price_type')->orderBy('price_discount')->orderBy('created_at', 'desc');
+        if (array_get($options, 'postcode') && array_get($options, 'distance')) {
+            $geocodeService = resolve('geocode_api');
+            $location = $geocodeService->getLocation(array_get($options, 'postcode') . ', Netherlands');
+
+            $query->whereHas('organization.offices', static function (Builder $builder) use ($location, $options) {
+                OfficeQuery::whereDistance($builder, (int) array_get($options, 'distance'), [
+                    'lat' => $location ? $location['lat'] : 0,
+                    'lng' => $location ? $location['lng'] : 0,
+                ]);
+            });
+        }
+
+        $orderBy = Arr::get($options, 'order_by', 'created_at');
+        $orderBy = $orderBy === 'most_popular' ? 'voucher_transactions_count' : $orderBy;
+        $orderDir = Arr::get($options, 'order_by_dir', 'desc');
+
+        return $query
+            ->withCount('voucher_transactions')
+            ->orderBy($orderBy, $orderDir)
+            ->orderBy('price_type')
+            ->orderBy('price_discount')
+            ->orderBy('created_at', 'desc');
     }
 
     /**

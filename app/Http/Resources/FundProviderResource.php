@@ -6,13 +6,11 @@ use App\Models\FundProvider;
 use App\Scopes\Builders\ProductQuery;
 
 /**
- * Class FundProviderResource
  * @property FundProvider $resource
- * @package App\Http\Resources
  */
 class FundProviderResource extends BaseJsonResource
 {
-    public static $load = [
+    public static array $load = [
         'fund.logo.presets',
         'fund.providers',
         'fund.organization.logo',
@@ -51,7 +49,7 @@ class FundProviderResource extends BaseJsonResource
             'organization' => array_merge((new OrganizationWithPrivateResource(
                 $fundProvider->organization
             ))->toArray($request), $fundProvider->organization->only((array) 'iban')),
-            'cancelable' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved(),
+            'cancelable' => !$fundProvider->hasTransactions() && !$fundProvider->isApproved() && $fundProvider->isPending(),
             'last_activity' => $lastActivity?->format('Y-m-d H:i:s'),
             'last_activity_locale' => $lastActivity?->diffForHumans(now()),
         ]);
