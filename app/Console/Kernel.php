@@ -250,7 +250,7 @@ class Kernel extends ConsoleKernel
      */
     private function scheduleAuthExpiration(Schedule $schedule): void
     {
-        if (env('DISABLE_AUTH_EXPIRATION', true)) {
+        if (env('DISABLE_AUTH_EXPIRATION', false)) {
             return;
         }
 

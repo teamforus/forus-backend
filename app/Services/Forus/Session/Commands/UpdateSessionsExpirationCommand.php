@@ -17,7 +17,7 @@ class UpdateSessionsExpirationCommand extends BaseCommand
      *
      * @var string
      */
-    protected $signature = 'auth_sessions:update-expiration {--preview-only}';
+    protected $signature = 'auth_sessions:update-expiration {--dry-run}';
 
     /**
      * The console command description.
@@ -38,9 +38,9 @@ class UpdateSessionsExpirationCommand extends BaseCommand
             'sessions.last_request',
         ])->loadCount('sessions');
 
-        $previewOnly = $this->option('preview-only');
+        $dryRun = $this->option('dry-run');
 
-        if (!$previewOnly) {
+        if (!$dryRun) {
             foreach ($identityProxies as $identityProxy) {
                 $identityProxy->deactivateBySession();
             }

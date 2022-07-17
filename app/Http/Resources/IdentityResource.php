@@ -22,7 +22,7 @@ class IdentityResource extends BaseJsonResource
     {
         $request = BaseFormRequest::createFrom($request);
         $identity = $this->resource;
-        $email = $request->isMeApp() ? $identity->email ?: $identity->address : $identity->email;
+        $email = $request->isMeApp() ? $identity->email ?: 'Geen e-mailadres' : $identity->email;
 
         return array_merge([
             'address' => $identity->address,
