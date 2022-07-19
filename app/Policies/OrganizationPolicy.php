@@ -15,11 +15,12 @@ class OrganizationPolicy
     use HandlesAuthorization;
 
     /**
-     * @return mixed
+     * @param Identity|null $identity
+     * @return bool
      */
-    public function viewAny(): bool
+    public function viewAny(?Identity $identity): bool
     {
-        return true;
+        return !$identity || $identity->exists;
     }
 
     /**
