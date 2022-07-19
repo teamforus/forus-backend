@@ -1142,11 +1142,28 @@ class Fund extends BaseModel
             VoucherCreated::dispatch($voucher);
         }
 
+        return $voucher;
+    }
+
+    /**
+     * @param string|null $identity_address
+     * @param array $extraFields
+     * @param Carbon|null $expireAt
+     * @return array|Voucher[]
+     */
+    public function makeFundFormulaProductVouchers(
+        string $identity_address = null,
+        array $extraFields = [],
+        Carbon $expireAt = null
+    ): array {
+        $vouchers = [];
+        $fundEndDate = $this->end_date;
+
         if ($this->fund_formula_products->count() > 0) {
             foreach ($this->fund_formula_products as $fund_formula_product) {
-                $voucherExpireAt = $fund_formula_product->product->expire_at && $this->end_date->gt(
-                    $fund_formula_product->product->expire_at
-                ) ? $fund_formula_product->product->expire_at : $this->end_date;
+                $productExpireDate = $fund_formula_product->product->expire_at;
+                $voucherExpireAt = $productExpireDate && $fundEndDate->gt($productExpireDate) ? $productExpireDate : $fundEndDate;
+                $voucherExpireAt = $expireAt && $voucherExpireAt->gt($expireAt) ? $expireAt : $voucherExpireAt;
 
                 $voucher = $this->makeProductVoucher(
                     $identity_address,
@@ -1156,11 +1173,13 @@ class Fund extends BaseModel
                     $fund_formula_product->price
                 );
 
+                $vouchers[] = $voucher;
+
                 VoucherAssigned::broadcast($voucher);
             }
         }
 
-        return $voucher;
+        return $vouchers;
     }
 
     /**
@@ -1835,9 +1854,9 @@ class Fund extends BaseModel
             $response = $backofficeApi->eligibilityCheck($bsn, $residencyResponse->getLog()->response_id);
 
             if ($response->isEligible() && !$this->identityHasActiveVoucher($identity)) {
-                $voucher = $this->makeVoucher($identity->address, [
-                    'fund_backoffice_log_id' => $response->getLog()->id,
-                ]);
+                $extraFields = ['fund_backoffice_log_id' => $response->getLog()->id];
+                $voucher = $this->makeVoucher($identity->address, $extraFields);
+                $this->makeFundFormulaProductVouchers($identity->address, $extraFields);
 
                 $response->getLog()->update([
                     'voucher_id' => $voucher->id,

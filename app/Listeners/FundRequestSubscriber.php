@@ -101,6 +101,7 @@ class FundRequestSubscriber
             foreach ($funds as $fund) {
                 if (Gate::forUser($fundRequest->identity_address)->allows('apply', [$fund, $logScope])) {
                     $fund->makeVoucher($fundRequest->identity_address);
+                    $fund->makeFundFormulaProductVouchers($fundRequest->identity_address);
                 }
             }
 

@@ -124,11 +124,12 @@ class FundsController extends Controller
         $this->authorize('apply', [$fund, 'apply']);
 
         $voucher = $fund->makeVoucher($request->auth_address());
+        $formulaProductVouchers = $fund->makeFundFormulaProductVouchers($request->auth_address());
 
-        $voucher = $voucher ?: $fund->vouchers()->where([
+        $voucher = $voucher ?: array_first($formulaProductVouchers) ?: $fund->vouchers()->where([
             'identity_address' => $request->auth_address(),
         ])->first();
 
-        return $voucher ? VoucherResource::create($voucher) : null;
+        return $voucher ? new VoucherResource($voucher) : null;
     }
 }

@@ -795,6 +795,16 @@ class Voucher extends BaseModel
     }
 
     /**
+     * @return void
+     */
+    public function setPending(): void
+    {
+        $this->update(([
+            'state' => static::STATE_PENDING,
+        ]));
+    }
+
+    /**
      * @return bool
      */
     public function isDeactivated(): bool

@@ -384,6 +384,7 @@ class LoremDbSeeder extends Seeder
             }
 
             $voucher = $prevalidation->fund->makeVoucher($identity->address);
+            $prevalidation->fund->makeFundFormulaProductVouchers($identity->address);
 
             if (env('DB_SEED_NO_PRODUCT_VOUCHERS', false)) {
                 continue;
@@ -1144,15 +1145,15 @@ class LoremDbSeeder extends Seeder
      */
     private function makeVouchers(): void
     {
-        $funds = Fund::where(function(Builder $builder) {
-            FundQuery::whereActiveFilter($builder);
-        })->get();
+        $funds = Fund::where(fn(Builder $q) => FundQuery::whereActiveFilter($q))->get();
 
         foreach ($funds as $fund) {
             for ($i = 1; $i <= $this->vouchersPerFund; ++$i) {
-                $fund->makeVoucher($this->makeIdentity()->address, [
-                    'note' => 'Lorem seeder!',
-                ]);
+                $identity_address = $this->makeIdentity();
+                $note = 'Lorem seeder!';
+
+                $fund->makeVoucher($identity_address, compact('note'));
+                $fund->makeFundFormulaProductVouchers($identity_address, compact('note'));
             }
         }
     }
