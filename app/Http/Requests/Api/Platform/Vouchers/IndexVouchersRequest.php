@@ -33,6 +33,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'per_page' => 'nullable|numeric|between:1,100',
             'product_id' => 'nullable|exists:products,id',
             'type' => 'nullable|in:' . implode(',', Voucher::TYPES),
+            'can_be_used' => 'nullable|boolean'
         ];
     }
 }
