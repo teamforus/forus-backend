@@ -10,6 +10,7 @@ use App\Http\Resources\VoucherResource;
 use App\Models\Voucher;
 use App\Models\VoucherToken;
 use App\Http\Controllers\Controller;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -42,6 +43,10 @@ class VouchersController extends Controller
 
         if ($request->has('state')) {
             $query->where('state', $request->input('state'));
+        }
+
+        if ($request->has('can_be_used')) {
+            $request->input('can_be_used') ? VoucherQuery::whereCanBeUsedQuery($query) : VoucherQuery::whereCannotBeUsedQuery($query);
         }
 
         // todo: remove fallback pagination 1000, when apps are ready

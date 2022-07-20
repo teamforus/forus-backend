@@ -96,9 +96,27 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
+    public static function whereNotPending(Builder $builder): Builder
+    {
+        return $builder->where('state', '!=', Voucher::STATE_PENDING);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
     public static function whereDeactivated(Builder $builder): Builder
     {
         return $builder->where('state', Voucher::STATE_DEACTIVATED);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereNotDeactivated(Builder $builder): Builder
+    {
+        return $builder->where('state', '!=', Voucher::STATE_DEACTIVATED);
     }
 
     /**
@@ -278,5 +296,37 @@ class VoucherQuery
     public static function whereNotInUseQuery(Builder $builder): Builder
     {
         return static::whereInUseQuery($builder, false);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereCanBeUsedQuery(Builder $builder): Builder
+    {
+        return $builder->where(static function(Builder $builder) {
+            self::whereNotPending($builder);
+            self::whereNotExpired($builder);
+            self::whereNotDeactivated($builder);
+        });
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereCannotBeUsedQuery(Builder $builder): Builder
+    {
+        return $builder->where(static function(Builder $builder) {
+            self::wherePending($builder);
+
+            $builder->orWhere(static function(Builder $builder) {
+                self::whereExpired($builder);
+            });
+
+            $builder->orWhere(static function(Builder $builder) {
+                self::whereDeactivated($builder);
+            });
+        });
     }
 }
