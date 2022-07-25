@@ -729,7 +729,7 @@ class LoremDbSeeder extends Seeder
 
         return $url && $key && $cert ? [
             'backoffice_enabled' => true,
-            'backoffice_status' => true,
+            'backoffice_check_partner' => true,
             'backoffice_url' => $url,
             'backoffice_key' => $key,
             'backoffice_certificate' => $cert,

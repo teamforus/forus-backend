@@ -1832,7 +1832,7 @@ class Fund extends Model
             }
 
             // check if taken by partner
-            if (env('ENABLE_BACKOFFICE_PARTNER_CHECK', false)) {
+            if ($this->fund_config->backoffice_check_partner) {
                 $partnerBsnResponse = $backofficeApi->partnerBsn($bsn);
                 $partnerBsn = $partnerBsnResponse->getBsn();
                 $partnerIdentity = $partnerBsn ? $recordRepo->identityAddressByBsn($partnerBsn) : null;
