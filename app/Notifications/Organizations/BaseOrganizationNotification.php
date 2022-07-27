@@ -5,6 +5,7 @@ namespace App\Notifications\Organizations;
 use App\Models\Organization;
 use App\Notifications\BaseNotification;
 use App\Models\Identity;
+use App\Services\EventLogService\Models\EventLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -45,7 +46,7 @@ abstract class BaseOrganizationNotification extends BaseNotification
      * @return Collection
      * @throws \Exception
      */
-    public static function eligibleIdentities($loggable): Collection
+    public static function eligibleIdentities($loggable, EventLog $eventLog): Collection
     {
         $employeeAddresses = static::getOrganization($loggable)->employeesWithPermissionsQuery(
             self::getPermissions()

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Scopes\Builders\VoucherQuery;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;

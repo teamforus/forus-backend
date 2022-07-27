@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Platform\Organizations\Funds;
+namespace App\Http\Requests\Api\Platform\Organizations\Funds\FundProviders;
 
 use App\Models\FundProvider;
 use App\Rules\FundProviderProductSubsidyRule;
