@@ -23,10 +23,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Validator;
 
-/**
- * Class IdentityController
- * @package App\Http\Controllers\Api
- */
 class IdentityController extends Controller
 {
     use ThrottleWithMeta;

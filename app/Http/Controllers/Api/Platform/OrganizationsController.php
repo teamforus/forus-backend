@@ -21,10 +21,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
-/**
- * Class OrganizationsController
- * @package App\Http\Controllers\Api\Platform
- */
 class OrganizationsController extends Controller
 {
     /**

@@ -438,11 +438,27 @@ $router->group(['middleware' => 'api.auth'], static function() use ($router) {
         "Api\Platform\Organizations\FundsController"
     )->only('store', 'update', 'destroy');
 
+    $router->get(
+        'organizations/{organization}/funds/{fund}/identities',
+        "Api\Platform\Organizations\Funds\IdentitiesController@index");
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/identities/export',
+        "Api\Platform\Organizations\Funds\IdentitiesController@export");
+
+    $router->get(
+        'organizations/{organization}/funds/{fund}/identities/export-fields',
+        "Api\Platform\Organizations\Funds\IdentitiesController@exportFields");
+
+    $router->post(
+        'organizations/{organization}/funds/{fund}/identities/notification',
+        "Api\Platform\Organizations\Funds\IdentitiesController@sendIdentityNotification");
+
     $router->resource(
         'organizations.funds.provider-invitations',
         "Api\Platform\Organizations\Funds\FundProviderInvitationsController", [
     ])->parameters([
-        'provider-invitations' => 'fund_provider_invitations'
+        'provider-invitations' => 'fund_provider_invitations',
     ])->only('index', 'show', 'store');
 
     if (config('forus.features.dashboard.organizations.funds.fund_requests', FALSE)) {

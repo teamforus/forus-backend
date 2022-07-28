@@ -12,7 +12,7 @@ use App\Models\Identity;
 class FundProvidersRevokedBudgetNotification extends BaseFundProvidersNotification
 {
     protected static ?string $key = 'notifications_fund_providers.revoked_budget';
-    protected static $permissions = 'manage_provider_funds';
+    protected static string|array $permissions = 'manage_provider_funds';
 
     public function toMail(Identity $identity): void
     {
