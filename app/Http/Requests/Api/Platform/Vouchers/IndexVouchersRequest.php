@@ -5,10 +5,6 @@ namespace App\Http\Requests\Api\Platform\Vouchers;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Voucher;
 
-/**
- * Class IndexVouchersRequest
- * @package App\Http\Requests\Api\Platform\Vouchers
- */
 class IndexVouchersRequest extends BaseFormRequest
 {
     /**
@@ -18,7 +14,7 @@ class IndexVouchersRequest extends BaseFormRequest
      */
     public function authorize(): bool
     {
-        return !empty($this->auth_address());
+        return $this->isAuthenticated();
     }
 
     /**
@@ -33,7 +29,7 @@ class IndexVouchersRequest extends BaseFormRequest
             'per_page' => 'nullable|numeric|between:1,100',
             'product_id' => 'nullable|exists:products,id',
             'type' => 'nullable|in:' . implode(',', Voucher::TYPES),
-            'can_be_used' => 'nullable|boolean'
+            'archived' => 'nullable|boolean'
         ];
     }
 }

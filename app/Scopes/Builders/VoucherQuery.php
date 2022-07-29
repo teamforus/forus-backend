@@ -87,6 +87,15 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
+    public static function whereNotActive(Builder $builder): Builder
+    {
+        return $builder->where('state', '!=', Voucher::STATE_ACTIVE);
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
     public static function wherePending(Builder $builder): Builder
     {
         return $builder->where('state', Voucher::STATE_PENDING);
@@ -96,27 +105,9 @@ class VoucherQuery
      * @param Builder $builder
      * @return Builder
      */
-    public static function whereNotPending(Builder $builder): Builder
-    {
-        return $builder->where('state', '!=', Voucher::STATE_PENDING);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
     public static function whereDeactivated(Builder $builder): Builder
     {
         return $builder->where('state', Voucher::STATE_DEACTIVATED);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereNotDeactivated(Builder $builder): Builder
-    {
-        return $builder->where('state', '!=', Voucher::STATE_DEACTIVATED);
     }
 
     /**
@@ -168,6 +159,18 @@ class VoucherQuery
     public static function whereExpiredButActive(Builder $builder): Builder
     {
         return static::whereActive(static::whereExpired($builder));
+    }
+
+    /**
+     * @param Builder $builder
+     * @return Builder
+     */
+    public static function whereExpiredOrNotActive(Builder $builder): Builder
+    {
+        return $builder->where(function (Builder $builder) {
+            $builder->where(fn (Builder $builder) => static::whereExpired($builder));
+            $builder->orWhere(fn (Builder $builder) => static::whereNotActive($builder));
+        });
     }
 
     /**
@@ -296,37 +299,5 @@ class VoucherQuery
     public static function whereNotInUseQuery(Builder $builder): Builder
     {
         return static::whereInUseQuery($builder, false);
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereCanBeUsedQuery(Builder $builder): Builder
-    {
-        return $builder->where(static function(Builder $builder) {
-            self::whereNotPending($builder);
-            self::whereNotExpired($builder);
-            self::whereNotDeactivated($builder);
-        });
-    }
-
-    /**
-     * @param Builder $builder
-     * @return Builder
-     */
-    public static function whereCannotBeUsedQuery(Builder $builder): Builder
-    {
-        return $builder->where(static function(Builder $builder) {
-            self::wherePending($builder);
-
-            $builder->orWhere(static function(Builder $builder) {
-                self::whereExpired($builder);
-            });
-
-            $builder->orWhere(static function(Builder $builder) {
-                self::whereDeactivated($builder);
-            });
-        });
     }
 }
