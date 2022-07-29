@@ -904,7 +904,7 @@ class Fund extends BaseModel
                         $formula->record_type_key
                     );
 
-                    return is_numeric($record?->value) ? $record->value * $record['value'] : 0;
+                    return is_numeric($record?->value) ? $formula->amount * $record['value'] : 0;
                 }
                 default: return 0;
             }
