@@ -335,22 +335,30 @@ class BackofficeApi
      * @return array
      */
     protected function makeRequestOptions(string $method, array $data): array {
-        return array_merge([
+        $certClientTmpFile = (new TmpFile($this->fund->fund_config->backoffice_client_certificate));
+        $certClientKeyTmpFile = (new TmpFile($this->fund->fund_config->backoffice_client_certificate_key));
+
+        $options = array_merge([
             'headers' => $this->makeRequestHeaders(),
             'connect_timeout' => config('forus.backoffice_api.connect_timeout', 10),
             'cert' => [
-                config('forus.backoffice_api.cert_path'),
-                config('forus.backoffice_api.cert_pass')
+                $certClientTmpFile->path(),
+                $this->fund->fund_config->backoffice_client_certificate_pass ?: ''
             ],
             'ssl_key' => [
-                config('forus.backoffice_api.key_path'),
-                config('forus.backoffice_api.key_pass')
+                $certClientKeyTmpFile->path(),
+                $this->fund->fund_config->backoffice_client_certificate_key_pass ?: ''
             ],
         ], $method === 'GET' ? [
             'query' => $data,
         ]: [
             'json' => $data,
         ]);
+
+        $certClientTmpFile->close();
+        $certClientKeyTmpFile->close();
+
+        return $options;
     }
 
     /**

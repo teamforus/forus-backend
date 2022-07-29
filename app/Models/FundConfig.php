@@ -32,6 +32,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $backoffice_url
  * @property string|null $backoffice_key
  * @property string|null $backoffice_certificate
+ * @property string|null $backoffice_client_certificate
+ * @property string|null $backoffice_client_certificate_pass
+ * @property string|null $backoffice_client_certificate_key
+ * @property string|null $backoffice_client_certificate_key_pass
  * @property bool $backoffice_fallback
  * @property string|null $backoffice_ineligible_policy
  * @property string|null $backoffice_ineligible_redirect_url
@@ -106,6 +110,8 @@ class FundConfig extends Model
         'implementation_id', 'implementation', 'hash_partner_deny', 'limit_generator_amount',
         'backoffice_enabled', 'backoffice_status', 'backoffice_url', 'backoffice_key',
         'backoffice_certificate', 'backoffice_fallback',
+        'backoffice_client_certificate', 'backoffice_client_certificate_pass',
+        'backoffice_client_certificate_key', 'backoffice_client_certificate_key_pass',
         'backoffice_ineligible_policy', 'backoffice_ineligible_redirect_url',
         'allow_fund_requests', 'allow_prevalidations',
         'iconnect_target_binding', 'iconnect_api_oin', 'iconnect_base_url',
